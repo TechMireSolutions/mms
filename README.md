@@ -1,4 +1,4 @@
-# Management System (Monorepo)
+# Madrasa Management System (Monorepo)
 
 This repository contains the decoupled and modernized codebase for the Dar ul Quran application. It is structured as an NPM Workspace (monorepo) with separate frontend and backend directories.
 
