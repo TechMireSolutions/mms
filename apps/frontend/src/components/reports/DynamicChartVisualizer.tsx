@@ -13,7 +13,7 @@ import {
   Legend, Tooltip, XAxis, YAxis, CartesianGrid
 } from "recharts";
 import { getCollection } from "../../lib/db";
-import { METADATA_FIELDS, VisualizerConfig } from "./reportMetadata";
+import { METADATA_FIELDS, VisualizerConfig, type ReportCollection } from "./reportMetadata";
 
 interface CollectionMeta {
   name: string;
@@ -71,7 +71,7 @@ interface CustomWidget {
   id: string;
   title: string;
   category: string;
-  collection: "students" | "sessions" | "finance_invoices" | "attendance_records" | "hasanat_distributions" | "contacts";
+  collection: ReportCollection;
   chartType: "bar" | "line" | "area" | "pie" | "radar";
   xAxisField: string;
   operation: "count" | "sum" | "avg";

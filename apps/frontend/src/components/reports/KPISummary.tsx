@@ -16,6 +16,8 @@ import { STUDENTS, type Student } from "../../lib/studentsData";
 import { EXAMS, EXAM_RESULTS } from "../../lib/examinationData";
 import { SESSIONS_DATA, type Session } from "../../lib/sessionsData";
 import { DISTRIBUTIONS, type Distribution } from "../../lib/hasanatData";
+import { QUESTIONS, TESTS, RESULTS } from "../../lib/questionBankData";
+import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from "@mms/shared";
 import { METADATA_FIELDS, computeCustomCard as computeCustomCardShared, CustomCard, COLLECTION_OPTIONS } from "./reportMetadata";
 import DynamicCardBuilder from "./DynamicCardBuilder";
 
@@ -63,7 +65,9 @@ const CATEGORY_NAMES: Record<string, string> = {
   financial: "Financial",
   hasanat: "Hasanat",
   sessions: "Sessions",
-  academic: "Academic",
+  examinations: "Examinations",
+  questionBank: "Question Bank",
+  enrollments: "Enrollments",
   faculty: "Faculty",
   accounting: "Accounting",
 };
@@ -100,6 +104,9 @@ function computeCustomCard(
     attendance_records: AttendanceRecord[];
     hasanat_distributions: Distribution[];
     contacts: Contact[];
+    questions: QuestionBankQuestion[];
+    tests: QuestionBankTest[];
+    assessment_results: QuestionBankResult[];
   }
 ): KPIItem & { categories: string[] } {
   const result = computeCustomCardShared(card, collections);
@@ -252,6 +259,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   const examResults = useLiveCollection("exam_results", EXAM_RESULTS);
   const sessions = useLiveCollection("sessions", SESSIONS_DATA);
   const distributions = useLiveCollection("hasanat_distributions", DISTRIBUTIONS);
+  const qbQuestions = useLiveCollection("questions", QUESTIONS);
+  const qbTests = useLiveCollection("tests", TESTS);
+  const qbResults = useLiveCollection("assessment_results", RESULTS);
 
   const computedKPIs = useMemo(() => {
     // 1. Total Students
@@ -322,6 +332,26 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     });
     const passRate = totalResultsCount > 0 ? Math.round((passesCount / totalResultsCount) * 100) : 0;
     const passRateVal = `${passRate}%`;
+
+    // Question bank metrics
+    const qbQuestionCount = qbQuestions.length;
+    const qbTestCount = qbTests.length;
+    const qbSubmissionCount = qbResults.length;
+    let qbTotalObtained = 0;
+    let qbTotalMax = 0;
+    qbResults.forEach((res: QuestionBankResult) => {
+      const test = qbTests.find((t: QuestionBankTest) => t.id === res.testId);
+      if (!test) return;
+      const obtained = Object.values(res.scores).reduce((sum, v) => sum + v, 0);
+      const max = test.questionIds.reduce((sum, qid) => {
+        const q = qbQuestions.find((item: QuestionBankQuestion) => item.id === qid);
+        return sum + (q?.marks ?? 0);
+      }, 0);
+      qbTotalObtained += obtained;
+      qbTotalMax += max;
+    });
+    const qbAvgScoreVal =
+      qbTotalMax > 0 ? `${Math.round((qbTotalObtained / qbTotalMax) * 100)}%` : "0%";
 
     // 7. Capacity Used
     const activeSessionsList = sessions.filter(s => s.status === "active");
@@ -407,7 +437,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         color: "primary",
         trend: totalStudentsTrend,
         velocity: totalStudentsVelocity,
-        categories: ["students", "contacts", "academic", "faculty"],
+        categories: ["students", "enrollments"],
         isAvailable: category === "contacts" ? contacts.length > 0 : students.length > 0
       },
       {
@@ -417,7 +447,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         sub: "Last 30 days",
         color: "green",
         trend: avgAttendanceTrend,
-        categories: ["attendance", "academic", "faculty"],
+        categories: ["attendance"],
         isAvailable: records.length > 0
       },
       {
@@ -447,7 +477,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         sub: "All students",
         color: "amber",
         trend: "up",
-        categories: ["hasanat", "academic", "faculty"],
+        categories: ["hasanat"],
         isAvailable: distributions.length > 0
       },
       {
@@ -457,7 +487,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         sub: "Last exam cycle",
         color: "violet",
         trend: "flat",
-        categories: ["academic", "students"],
+        categories: ["examinations", "students"],
         isAvailable: examResults.length > 0 && exams.length > 0
       },
       {
@@ -467,7 +497,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         sub: capacitySub,
         color: "primary",
         trend: "up",
-        categories: ["sessions", "academic", "faculty"],
+        categories: ["sessions", "enrollments"],
         isAvailable: sessions.length > 0
       },
       {
@@ -510,10 +540,50 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         categories: ["contacts"],
         isAvailable: contacts.some(c => typeof c.rating === "number" && c.rating > 0)
       },
+      {
+        icon: BarChart2,
+        label: "Total Questions",
+        value: String(qbQuestionCount),
+        sub: "In question bank",
+        color: "primary",
+        trend: "up",
+        categories: ["questionBank"],
+        isAvailable: qbQuestionCount > 0,
+      },
+      {
+        icon: CalendarCheck,
+        label: "Generated Tests",
+        value: String(qbTestCount),
+        sub: "Auto-built papers",
+        color: "blue",
+        trend: "flat",
+        categories: ["questionBank"],
+        isAvailable: qbTestCount > 0,
+      },
+      {
+        icon: UserCheck,
+        label: "Test Submissions",
+        value: String(qbSubmissionCount),
+        sub: "Graded attempts",
+        color: "violet",
+        trend: "up",
+        categories: ["questionBank"],
+        isAvailable: qbSubmissionCount > 0,
+      },
+      {
+        icon: Target,
+        label: "Avg Test Score",
+        value: qbAvgScoreVal,
+        sub: "Across submissions",
+        color: "green",
+        trend: "flat",
+        categories: ["questionBank"],
+        isAvailable: qbSubmissionCount > 0 && qbTotalMax > 0,
+      },
     ];
 
     return items;
-  }, [contacts, records, invoices, students, exams, examResults, sessions, distributions, category]);
+  }, [contacts, records, invoices, students, exams, examResults, sessions, distributions, qbQuestions, qbTests, qbResults, category]);
 
   // Determine standard possible cards for this category and user role
   const standardPossibleCards = useMemo(() => {
@@ -551,6 +621,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     if (category === "financial" || category === "accounting") return "finance_invoices";
     if (category === "hasanat") return "hasanat_distributions";
     if (category === "sessions") return "sessions";
+    if (category === "examinations" || category === "enrollments") return "students";
+    if (category === "questionBank") return "questions";
     return "students";
   }, [category]);
 
@@ -585,10 +657,13 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         finance_invoices: invoices,
         attendance_records: records,
         hasanat_distributions: distributions,
-        contacts
+        contacts,
+        questions: qbQuestions,
+        tests: qbTests,
+        assessment_results: qbResults,
       });
     });
-  }, [customCards, students, sessions, invoices, records, distributions, contacts]);
+  }, [customCards, students, sessions, invoices, records, distributions, contacts, qbQuestions, qbTests, qbResults]);
 
   // Merge standard and custom possible cards, preventing duplicates if standard label is overridden
   const possibleCards = useMemo(() => {
@@ -613,14 +688,18 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         return invoices.length;
       case "hasanat": return distributions.length;
       case "sessions": return sessions.length;
-      case "academic":
-        return students.length + records.length + distributions.length + examResults.length;
+      case "examinations":
+        return examResults.length + exams.length;
+      case "questionBank":
+        return qbQuestions.length + qbTests.length + qbResults.length;
+      case "enrollments":
+        return students.length + sessions.length;
       case "faculty":
-        return students.length + records.length + distributions.length + sessions.length;
+        return 0;
       default:
         return 0;
     }
-  }, [category, students, contacts, records, invoices, distributions, examResults, sessions]);
+  }, [category, students, contacts, records, invoices, distributions, examResults, sessions, qbQuestions, qbTests, qbResults]);
 
   // User-configurable active visibility controls state
   const [selectedLabels, setSelectedLabels] = useState<string[]>(() => {

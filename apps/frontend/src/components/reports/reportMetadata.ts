@@ -5,12 +5,24 @@ import { INVOICES, type Invoice } from "../../lib/financeData";
 import { ATTENDANCE_RECORDS, type AttendanceRecord } from "../../lib/attendanceData";
 import { DISTRIBUTIONS, type Distribution } from "../../lib/hasanatData";
 import { type Contact } from "../../lib/contactFields";
+import { QUESTIONS, TESTS, RESULTS } from "../../lib/questionBankData";
+
+export type ReportCollection =
+  | "students"
+  | "sessions"
+  | "finance_invoices"
+  | "attendance_records"
+  | "hasanat_distributions"
+  | "contacts"
+  | "questions"
+  | "tests"
+  | "assessment_results";
 
 export interface CustomCard {
   id: string;
   role?: string;
   title: string;
-  collection: "students" | "sessions" | "finance_invoices" | "attendance_records" | "hasanat_distributions" | "contacts";
+  collection: ReportCollection;
   operation: "count" | "sum" | "avg" | "percentage";
   targetField?: string;
   filterField?: string;
@@ -30,7 +42,10 @@ export const COLLECTION_OPTIONS = [
   { value: "finance_invoices", label: "Invoices (Finance)" },
   { value: "attendance_records", label: "Attendance Records" },
   { value: "hasanat_distributions", label: "Hasanat Distributions" },
-  { value: "contacts", label: "Contacts" }
+  { value: "contacts", label: "Contacts" },
+  { value: "questions", label: "Question Bank Questions" },
+  { value: "tests", label: "Generated Tests" },
+  { value: "assessment_results", label: "Assessment Results" }
 ] as const;
 
 export const METADATA_FIELDS = {
@@ -130,7 +145,6 @@ export const METADATA_FIELDS = {
     defaultData: CONTACTS,
     fields: [
       { value: "lifecycleStage", label: "Lifecycle Stage (Lead/Employee/Student/Parent...)" },
-      { value: "personaId", label: "Persona (student/parent/staff/donor/general)" },
       { value: "gender", label: "Gender (male/female)" },
       { value: "city", label: "City" },
       { value: "state", label: "State" },
@@ -141,6 +155,46 @@ export const METADATA_FIELDS = {
     numericFields: [
       { value: "rating", label: "Rating (1-5)" }
     ]
+  },
+  questions: {
+    name: "Question Bank Questions",
+    dbKey: "questions",
+    defaultData: QUESTIONS,
+    fields: [
+      { value: "type", label: "Question Type" },
+      { value: "difficulty", label: "Difficulty" },
+      { value: "questionLanguage", label: "Question Language" },
+      { value: "marks", label: "Marks", isNumeric: true }
+    ],
+    numericFields: [
+      { value: "marks", label: "Marks" }
+    ]
+  },
+  tests: {
+    name: "Generated Tests",
+    dbKey: "tests",
+    defaultData: TESTS,
+    fields: [
+      { value: "difficulty", label: "Difficulty" },
+      { value: "categoryId", label: "Category" },
+      { value: "duration", label: "Duration", isNumeric: true },
+      { value: "createdAt", label: "Created Date" }
+    ],
+    numericFields: [
+      { value: "duration", label: "Duration" }
+    ]
+  },
+  assessment_results: {
+    name: "Assessment Results",
+    dbKey: "assessment_results",
+    defaultData: RESULTS,
+    fields: [
+      { value: "testId", label: "Test" },
+      { value: "studentName", label: "Student Name" },
+      { value: "studentId", label: "Student ID" },
+      { value: "submittedAt", label: "Submitted Date" }
+    ],
+    numericFields: []
   }
 } as const;
 
@@ -164,7 +218,10 @@ function calculateDynamicTrend(
     finance_invoices: "dueDate",
     attendance_records: "date",
     hasanat_distributions: "issuedDate",
-    contacts: "createdAt"
+    contacts: "createdAt",
+    questions: "",
+    tests: "createdAt",
+    assessment_results: "submittedAt"
   }[collectionName];
 
   if (!dateField || list.length === 0) return 0;
@@ -282,6 +339,9 @@ export function computeCustomCard(
     attendance_records: AttendanceRecord[];
     hasanat_distributions: Distribution[];
     contacts: Contact[];
+    questions: typeof QUESTIONS;
+    tests: typeof TESTS;
+    assessment_results: typeof RESULTS;
   }
 ) {
   const list = (collections[card.collection] as Record<string, unknown>[]) || [];
@@ -382,7 +442,7 @@ export function computeCustomCard(
 export interface VisualizerConfig {
   id: string;
   title: string;
-  collection: "students" | "sessions" | "finance_invoices" | "attendance_records" | "hasanat_distributions" | "contacts";
+  collection: ReportCollection;
   chartType: "bar" | "line" | "area" | "pie" | "radar";
   xAxisField: string;
   operation: "count" | "sum" | "avg" | "min" | "max";
@@ -420,12 +480,12 @@ export const DEFAULT_VISUALS: Record<string, VisualizerConfig> = {
     targetField: "discountAmt",
     activePalette: "accessibleColorblind"
   },
-  "visual-contacts-persona": {
-    id: "visual-contacts-persona",
-    title: "Contacts Volume by Personas",
+  "visual-contacts-stage": {
+    id: "visual-contacts-stage",
+    title: "Contacts Volume by Lifecycle Stages",
     collection: "contacts",
     chartType: "pie",
-    xAxisField: "personaId",
+    xAxisField: "lifecycleStage",
     operation: "count",
     activePalette: "accessibleColorblind"
   },

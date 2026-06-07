@@ -1,26 +1,26 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import WelcomeBanner from "../components/dashboard/WelcomeBanner";
 import StatsGrid from "../components/dashboard/StatsGrid";
 import QuickActionsPanel from "../components/dashboard/QuickActionsPanel";
 import NotificationsPanel from "../components/dashboard/NotificationsPanel";
-import RoleSwitcher from "../components/dashboard/RoleSwitcher";
+import { useViewerRole } from "@/hooks/useViewerRole";
 import { DashboardWidgets, CustomWidget, WidgetBuilder, getOrInitializeCustomWidgets } from "../components/reports/PinnedWidgets";
 import DynamicCardBuilder from "../components/reports/DynamicCardBuilder";
 import { METADATA_FIELDS, computeCustomCard as computeCustomCardShared, CustomCard, COLLECTION_OPTIONS } from "../components/reports/reportMetadata";
 
-import { getCollection, getObject, saveCollection } from "../lib/db";
+import { getCollection, getObject, getGlobalSettings, saveCollection } from "../lib/db";
 import { CONTACTS } from "../lib/contactsData";
 import { STUDENTS, type Student } from "../lib/studentsData";
 import { SESSIONS_DATA, type Session } from "../lib/sessionsData";
 import { INVOICES, type Invoice } from "../lib/financeData";
 import { ATTENDANCE_RECORDS, type AttendanceRecord } from "../lib/attendanceData";
 import { DISTRIBUTIONS, type Distribution } from "../lib/hasanatData";
+import { QUESTIONS, TESTS, RESULTS } from "../lib/questionBankData";
 import { type Contact } from "../lib/contactFields";
 import { revenueData as defaultRevenueData } from "../lib/dashboardData";
-import { type GlobalSettings, DEFAULT_GLOBAL_SETTINGS } from "@mms/shared";
 import { useAuth } from "@/lib/AuthContext";
+import useTranslation from "@/hooks/useTranslation";
 import {
   GraduationCap, CalendarCheck, BookOpen, UserCheck,
   DollarSign, AlertCircle, Star, TrendingUp, Receipt,
@@ -110,8 +110,9 @@ const BODIES = {
  * @returns React element representing the Dashboard view.
  */
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user: currentUser } = useAuth();
-  const [role, setRole] = useState("admin");
+  const role = useViewerRole();
   const [dbUpdateCounter, setDbUpdateCounter] = useState(0);
 
   const students = useMemo(() => getCollection<Student>("students", STUDENTS), [dbUpdateCounter]);
@@ -120,9 +121,12 @@ export default function Dashboard() {
   const attendanceRecords = useMemo(() => getCollection<AttendanceRecord>("attendance_records", ATTENDANCE_RECORDS), [dbUpdateCounter]);
   const hasanatDistributions = useMemo(() => getCollection<Distribution>("hasanat_distributions", DISTRIBUTIONS), [dbUpdateCounter]);
   const contacts = useMemo(() => getCollection<Contact>("contacts", CONTACTS), [dbUpdateCounter]);
+  const questions = useMemo(() => getCollection("questions", QUESTIONS), [dbUpdateCounter]);
+  const tests = useMemo(() => getCollection("tests", TESTS), [dbUpdateCounter]);
+  const assessmentResults = useMemo(() => getCollection("assessment_results", RESULTS), [dbUpdateCounter]);
   const revenueExpenses = useMemo(() => getCollection<{ revenue: number; expenses: number }>("revenue_expenses", defaultRevenueData), [dbUpdateCounter]);
 
-  const settings = useMemo(() => getObject<GlobalSettings>("global_settings", DEFAULT_GLOBAL_SETTINGS), [dbUpdateCounter]);
+  const settings = useMemo(() => getGlobalSettings(), [dbUpdateCounter]);
   const enabledModules = useMemo(() => settings.enabledModules || {}, [settings]);
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -415,7 +419,10 @@ export default function Dashboard() {
         finance_invoices: invoices,
         attendance_records: attendanceRecords,
         hasanat_distributions: hasanatDistributions,
-        contacts
+        contacts,
+        questions,
+        tests,
+        assessment_results: assessmentResults
       });
 
       return {
@@ -428,7 +435,7 @@ export default function Dashboard() {
         trend: result.trend || 0
       };
     });
-  }, [role, enabledModules, customWidgets, students, sessions, invoices, attendanceRecords, hasanatDistributions, contacts]);
+  }, [role, enabledModules, customWidgets, students, sessions, invoices, attendanceRecords, hasanatDistributions, contacts, questions, tests, assessmentResults]);
 
   const allCardsForRole = stats;
   const selectedCount = useMemo(() => {
@@ -449,10 +456,9 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div>
-            <h2 className="text-xl font-bold text-foreground">Dashboard</h2>
-            <p className="text-xs text-muted-foreground">Manage and monitor your madrasa parameters</p>
+            <h2 className="text-xl font-bold text-foreground">{t("dashboard.title")}</h2>
+            <p className="text-xs text-muted-foreground">{t("dashboard.subtitle")}</p>
           </div>
-          <RoleSwitcher role={role} onChange={setRole} />
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -465,7 +471,7 @@ export default function Dashboard() {
             type="button"
           >
             <Settings className="w-3.5 h-3.5" />
-            {isEditMode ? "Exit Customization" : "Customize Cards"}
+            {isEditMode ? t("dashboard.exitCustomization") : t("dashboard.customizeCards")}
           </button>
         </div>
       </div>
@@ -519,21 +525,21 @@ export default function Dashboard() {
                 <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-6 shadow-xl flex flex-col justify-between">
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Dashboard Cards Settings</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">Choose which metric cards to display in this module.</p>
+                      <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">{t("dashboard.cardsSettings")}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.cardsSettingsDesc")}</p>
                     </div>
 
                     <div className="flex items-center justify-between text-xs border-b border-border/50 pb-3">
                       <div className="space-y-0.5">
-                        <p className="font-semibold text-foreground">Selected: {selectedCount} Cards</p>
-                        <p className="text-[10px] text-muted-foreground">Data Volume: {dataByVolume} Records</p>
+                        <p className="font-semibold text-foreground">{t("dashboard.selectedCards", { count: selectedCount })}</p>
+                        <p className="text-[10px] text-muted-foreground">{t("dashboard.dataVolume", { count: dataByVolume })}</p>
                       </div>
                       <button
                         onClick={handleResetToDefaults}
                         className="px-2.5 py-1 rounded bg-muted hover:bg-muted/80 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
                         type="button"
                       >
-                        Reset to Defaults
+                        {t("dashboard.resetDefaults")}
                       </button>
                     </div>
 
@@ -555,7 +561,7 @@ export default function Dashboard() {
                               <p className="text-xs font-semibold text-foreground leading-tight">{card.title}</p>
                               <p className="text-[10px] text-muted-foreground flex items-center">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
-                                Active Data
+                                {t("dashboard.activeData")}
                               </p>
                             </div>
                           </label>
@@ -569,27 +575,27 @@ export default function Dashboard() {
                 <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-6 shadow-xl flex flex-col justify-between">
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Dashboard Charts Settings</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">Choose which analytics charts to display on the dashboard.</p>
+                      <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">{t("dashboard.chartsSettings")}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.chartsSettingsDesc")}</p>
                     </div>
 
                     <div className="flex items-center justify-between text-xs border-b border-border/50 pb-3">
                       <div className="space-y-0.5">
-                        <p className="font-semibold text-foreground">Pinned: {customWidgets.filter(w => w.isPinnedToDashboard).length} Charts</p>
-                        <p className="text-[10px] text-muted-foreground">Total Widgets: {customWidgets.length} Built</p>
+                        <p className="font-semibold text-foreground">{t("dashboard.pinnedCharts", { count: customWidgets.filter(w => w.isPinnedToDashboard).length })}</p>
+                        <p className="text-[10px] text-muted-foreground">{t("dashboard.totalWidgets", { count: customWidgets.length })}</p>
                       </div>
                       <button
                         onClick={handleResetWidgetsToDefaults}
                         className="px-2.5 py-1 rounded bg-muted hover:bg-muted/80 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
                         type="button"
                       >
-                        Reset to Defaults
+                        {t("dashboard.resetDefaults")}
                       </button>
                     </div>
 
                     <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                       {customWidgets.length === 0 ? (
-                        <p className="text-xs text-muted-foreground italic py-4 text-center">No widgets configured yet. Build them below.</p>
+                        <p className="text-xs text-muted-foreground italic py-4 text-center">{t("dashboard.noWidgets")}</p>
                       ) : (
                         customWidgets.map((widget) => {
                           return (
@@ -617,7 +623,7 @@ export default function Dashboard() {
                                 <button
                                   onClick={() => handleEditWidget(widget)}
                                   className="p-1 rounded border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                                  title="Edit Widget"
+                                  title={t("dashboard.editWidget")}
                                   type="button"
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
@@ -626,7 +632,7 @@ export default function Dashboard() {
                                   <button
                                     onClick={() => handleDeleteWidget(widget.id)}
                                     className="p-1 rounded border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                                    title="Delete Widget"
+                                    title={t("dashboard.deleteWidget")}
                                     type="button"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -648,7 +654,7 @@ export default function Dashboard() {
                       type="button"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      Create Custom Widget
+                      {t("dashboard.createWidget")}
                     </button>
                   </div>
                 </div>

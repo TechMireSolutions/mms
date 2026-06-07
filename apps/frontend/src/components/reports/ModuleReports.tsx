@@ -19,11 +19,12 @@ import AcademicReport from "./AcademicReport";
 import HasanatReport from "./HasanatReport";
 import SessionReport from "./SessionReport";
 import FacultyReport from "./FacultyReport";
+import QuestionBankReport from "./QuestionBankReport";
 import SavedReports from "./SavedReports";
 import { getReportVisual, VisualizerConfig } from "./reportMetadata";
 
 interface ModuleReportsProps {
-  category: "students" | "contacts" | "attendance" | "financial" | "academic" | "hasanat" | "sessions" | "faculty" | "saved";
+  category: "students" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";
   role?: string;
 }
 
@@ -59,6 +60,7 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
       case "attendance": return "attendance_records" as const;
       case "hasanat": return "hasanat_distributions" as const;
       case "contacts": return "contacts" as const;
+      case "questionBank": return "questions" as const;
       default: return undefined;
     }
   };
@@ -75,7 +77,11 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
       case "contacts":   return <ContactReport onEditVisual={handleEditVisual} />;
       case "attendance": return <AttendanceReport filters={filters} onEditVisual={handleEditVisual} />;
       case "financial":  return <FinancialReport  filters={filters} onEditVisual={handleEditVisual} />;
-      case "academic":   return <AcademicReport   filters={filters} onEditVisual={handleEditVisual} />;
+      case "academic":
+      case "examinations":
+        return <AcademicReport filters={filters} onEditVisual={handleEditVisual} />;
+      case "questionBank":
+        return <QuestionBankReport />;
       case "hasanat":    return <HasanatReport     filters={filters} onEditVisual={handleEditVisual} />;
       case "sessions":   return <SessionReport     filters={filters} onEditVisual={handleEditVisual} />;
       case "faculty":    return <FacultyReport onEditVisual={handleEditVisual} />;

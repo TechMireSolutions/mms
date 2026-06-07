@@ -20,6 +20,7 @@ import { INVOICES } from "../../lib/financeData";
 import { ATTENDANCE_RECORDS } from "../../lib/attendanceData";
 import { DISTRIBUTIONS } from "../../lib/hasanatData";
 import { SESSIONS_DATA, Session, Class } from "../../lib/sessionsData";
+import { QUESTIONS, TESTS, RESULTS } from "../../lib/questionBankData";
 import { METADATA_FIELDS, COLLECTION_OPTIONS, computeCustomCard, CustomCard } from "./reportMetadata";
 import SessionsTable from "../dashboard/SessionsTable";
 import OutstandingFeesTable from "../dashboard/OutstandingFeesTable";
@@ -37,7 +38,7 @@ export interface CustomWidget {
   id: string;
   title: string;
   category: string;
-  collection: "students" | "sessions" | "finance_invoices" | "attendance_records" | "hasanat_distributions" | "contacts";
+  collection: CustomCard["collection"];
   
   widgetType?: "kpi" | "progress" | "switch" | "chart" | "sessions-list" | "attendance-summary" | "fee-summary" | "outstanding-list" | "overdue-obligations" | "enrollment-trends" | "revenue-expenses" | "attendance-rate" | "hasanat-distribution" | "card";
 
@@ -54,7 +55,7 @@ export interface CustomWidget {
   switchStateKey?: string;
   switchLabelOn?: string;
   switchLabelOff?: string;
-  switchCollection?: "students" | "sessions" | "finance_invoices" | "attendance_records" | "hasanat_distributions" | "contacts";
+  switchCollection?: CustomCard["collection"];
   switchRecordId?: string;
   switchField?: string;
 
@@ -141,6 +142,9 @@ export function getWidgetCollections() {
   const attendance = getCollection("attendance_records", ATTENDANCE_RECORDS);
   const distributions = getCollection("hasanat_distributions", DISTRIBUTIONS);
   const sessions = getCollection("sessions", SESSIONS_DATA);
+  const questions = getCollection("questions", QUESTIONS);
+  const tests = getCollection("tests", TESTS);
+  const results = getCollection("assessment_results", RESULTS);
   
   return {
     students,
@@ -148,7 +152,10 @@ export function getWidgetCollections() {
     finance_invoices: invoices,
     attendance_records: attendance,
     hasanat_distributions: distributions,
-    contacts
+    contacts,
+    questions,
+    tests,
+    assessment_results: results
   };
 }
 
@@ -1070,7 +1077,7 @@ function WidgetDrilldownModal({
                       hasAction = false; // deleting is the action instead of toggling status
                     } else if (widget.collection === "contacts") {
                       name = String(item.name || "");
-                      info = `${item.email || "No Email"} • ${item.personaId || "lead"}`;
+                      info = `${item.email || "No Email"} • ${item.lifecycleStage || "lead"}`;
                       status = String(item.lifecycleStage || "lead");
                     } else if (widget.collection === "sessions") {
                       name = String(item.name || "");

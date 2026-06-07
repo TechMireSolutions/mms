@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useBrandPalette } from "@/lib/BrandingPaletteContext";
 import { Info } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, LineChart, Line, 
@@ -8,9 +9,9 @@ import {
 } from "recharts";
 import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import { METADATA_FIELDS } from "./reportMetadata";
+import { METADATA_FIELDS, type ReportCollection } from "./reportMetadata";
 
-const THEME_PALETTES: Record<string, string[]> = {
+const ALT_THEME_PALETTES: Record<string, string[]> = {
   accessibleColorblind: ["#0072B2", "#E69F00", "#009E73", "#F0E442", "#D55E00", "#CC79A7", "#56B4E9"],
   tolVibrant: ["#EE7733", "#0077BB", "#33BBEE", "#EE3377", "#CC3311", "#009988", "#BBBBBB"],
   tolMuted: ["#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#CC6677", "#882255", "#AA4499"],
@@ -24,7 +25,7 @@ const THEME_PALETTES: Record<string, string[]> = {
 export interface VisualizerConfig {
   id: string;
   title: string;
-  collection: "students" | "sessions" | "finance_invoices" | "attendance_records" | "hasanat_distributions" | "contacts";
+  collection: ReportCollection;
   chartType: "bar" | "line" | "area" | "pie" | "radar";
   xAxisField: string;
   operation: "count" | "sum" | "avg" | "min" | "max";
@@ -43,6 +44,14 @@ interface DynamicChartRendererProps {
  * Used to replace hardcoded charts with fully custom, user-editable graphics.
  */
 export default function DynamicChartRenderer({ config, height = 200 }: DynamicChartRendererProps): React.JSX.Element {
+  const brandPalette = useBrandPalette();
+  const THEME_PALETTES: Record<string, string[]> = useMemo(
+    () => ({
+      brand: [...brandPalette.charts],
+      ...ALT_THEME_PALETTES,
+    }),
+    [brandPalette],
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(400);
 
@@ -72,7 +81,7 @@ export default function DynamicChartRenderer({ config, height = 200 }: DynamicCh
   }, [containerWidth]);
 
   const activeMeta = METADATA_FIELDS[config.collection];
-  const currentColors = THEME_PALETTES[config.activePalette || "accessibleColorblind"] || THEME_PALETTES.accessibleColorblind;
+  const currentColors = THEME_PALETTES[config.activePalette || "brand"] || THEME_PALETTES.brand;
 
   const dbKey = activeMeta?.dbKey || "";
   const defaultData = (activeMeta?.defaultData as Record<string, unknown>[]) || [];
@@ -203,7 +212,7 @@ export default function DynamicChartRenderer({ config, height = 200 }: DynamicCh
     );
   }
 
-  const firstColor = currentColors[0] || "#3b82f6";
+  const firstColor = currentColors[0] || brandPalette.primary;
 
   const renderChartContent = () => {
     switch (config.chartType) {
