@@ -19,7 +19,7 @@ import SectionCard from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
 import Modal from '@/components/ui/Modal';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
-import { SettingsCallout, SettingsMetaBadge, SettingsPanel } from '@/components/settings/settingsShared';
+import { SettingsCallout, SettingsMetaBadge, SettingsPanel } from '@/components/settings/SettingsShared';
 
 function triggerDownload(fileName: string, jsonText: string): void {
   const blob = new Blob([jsonText], { type: 'application/json' });

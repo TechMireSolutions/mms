@@ -9,7 +9,7 @@ import {
 } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
-import { SettingsMetaBadge } from '@/components/settings/settingsShared';
+import { SettingsMetaBadge } from '@/components/settings/SettingsShared';
 
 export function UserRoleBadge({ roleId }: { roleId: string }): React.JSX.Element {
   const { t } = useTranslation();

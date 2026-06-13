@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import BrandingIdentityPreview from '@/components/settings/BrandingIdentityPreview';
-import { SettingsCallout, SettingsPanel } from '@/components/settings/settingsShared';
+import { SettingsCallout, SettingsPanel } from '@/components/settings/SettingsShared';
 import {
   FieldHint,
   ImageUploadField,
@@ -21,7 +21,7 @@ import {
   TAGLINE_MAX,
   LOGO_OPTIMIZE_OPTIONS,
   FAVICON_OPTIMIZE_OPTIONS,
-} from '@/components/settings/brandingShared';
+} from '@/components/settings/BrandingShared';
 
 /**
  * Institution identity — name, logo, contact, address, and social profiles.

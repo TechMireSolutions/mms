@@ -11,7 +11,7 @@ import {
   isValidSubdomain,
   validatePasswordPolicy,
 } from "@mms/shared";
-import { defaultFooterForMadrasa } from "@/components/settings/brandingShared";
+import { defaultFooterForMadrasa } from "@/components/settings/BrandingShared";
 import { applyBrandingTheme } from "@/lib/brandingTheme";
 import CreateMadrasa from "./steps/CreateMadrasa";
 import SelectPlan from "./steps/SelectPlan";

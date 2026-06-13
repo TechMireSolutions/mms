@@ -28,7 +28,7 @@ import {
   SettingsCallout,
   SettingsMetaBadge,
   SettingsPanel,
-} from '@/components/settings/settingsShared';
+} from '@/components/settings/SettingsShared';
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard, GraduationCap, Users, Calendar, UserCheck,

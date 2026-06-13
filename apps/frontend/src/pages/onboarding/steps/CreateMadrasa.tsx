@@ -25,7 +25,7 @@ import {
   TAGLINE_MAX,
   defaultFooterForMadrasa,
   LOGO_OPTIMIZE_OPTIONS,
-} from "@/components/settings/brandingShared";
+} from "@/components/settings/BrandingShared";
 
 interface CreateMadrasaProps {
   data: OnboardingData;

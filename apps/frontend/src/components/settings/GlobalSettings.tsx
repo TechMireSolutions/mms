@@ -39,7 +39,7 @@ import {
   SettingsMetaBadge,
   SettingsPanel,
   SettingsToggleRow,
-} from '@/components/settings/settingsShared';
+} from '@/components/settings/SettingsShared';
 
 function globalPreviewPatch(draft: GlobalSettingsData): Partial<GlobalSettingsData> {
   return {

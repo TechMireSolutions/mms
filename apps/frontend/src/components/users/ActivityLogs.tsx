@@ -9,7 +9,7 @@ import {
 import useTranslation from '@/hooks/useTranslation';
 import useGlobalSettings from '@/hooks/useGlobalSettings';
 import { DatePicker } from '../ui/DatePicker';
-import { ActivityActionBadge } from '@/components/users/userBadges';
+import { ActivityActionBadge } from '@/components/users/UserBadges';
 
 const PAGE_SIZE = 15;
 

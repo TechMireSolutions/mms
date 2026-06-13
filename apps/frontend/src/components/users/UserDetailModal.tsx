@@ -12,8 +12,8 @@ import useGlobalSettings from '@/hooks/useGlobalSettings';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
 import Modal from '@/components/ui/Modal';
-import { UserRoleBadge, UserStatusBadge } from '@/components/users/userBadges';
-import { SettingsMetaBadge } from '@/components/settings/settingsShared';
+import { UserRoleBadge, UserStatusBadge } from '@/components/users/UserBadges';
+import { SettingsMetaBadge } from '@/components/settings/SettingsShared';
 
 interface RowProps {
   label: string;

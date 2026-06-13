@@ -15,13 +15,13 @@ import Modal from '@/components/ui/Modal';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import BrandColorPanel from '@/components/settings/BrandColorPanel';
 import ThemeModeSelector from '@/components/settings/ThemeModeSelector';
-import { FieldHint, FOOTER_MAX } from '@/components/settings/brandingShared';
+import { FieldHint, FOOTER_MAX } from '@/components/settings/BrandingShared';
 import {
   SettingsCallout,
   SettingsColoursBadge,
   SettingsMetaBadge,
   SettingsPanel,
-} from '@/components/settings/settingsShared';
+} from '@/components/settings/SettingsShared';
 
 /**
  * All visual theming — display mode, brand colours, and footer (single settings tab).

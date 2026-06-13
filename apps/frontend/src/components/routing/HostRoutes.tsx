@@ -18,7 +18,7 @@ const Sessions = React.lazy(() => import("@/pages/Sessions"));
 const Finance = React.lazy(() => import("@/pages/Finance"));
 const HasanatCards = React.lazy(() => import("@/pages/HasanatCards"));
 const Examinations = React.lazy(() => import("@/pages/Examinations"));
-const QuestionBankPage = React.lazy(() => import("@/pages/QuestionBankPage"));
+const QuestionBankPage = React.lazy(() => import("@/pages/QuestionBank"));
 const SettingsPage = React.lazy(() => import("@/pages/Settings"));
 const Attendance = React.lazy(() => import("@/pages/Attendance"));
 const Users = React.lazy(() => import("@/pages/Users"));

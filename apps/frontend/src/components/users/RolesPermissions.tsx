@@ -20,8 +20,8 @@ import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { getObject, saveObject } from '@/lib/db';
 import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
-import { UserRoleBadge } from './userBadges';
-import { SettingsMetaBadge } from '@/components/settings/settingsShared';
+import { UserRoleBadge } from './UserBadges';
+import { SettingsMetaBadge } from '@/components/settings/SettingsShared';
 
 interface PermCellProps {
   checked: boolean;

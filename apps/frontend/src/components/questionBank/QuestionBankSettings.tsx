@@ -25,7 +25,7 @@ import DraggableFieldList from '../ui/DraggableFieldList';
 import SubTabBar, { type SubTab } from '@/components/ui/SubTabBar';
 import SettingsFormActions from '../ui/SettingsFormActions';
 import { Switch } from '../ui/switch';
-import { SettingsCallout, SettingsPanel } from '@/components/settings/settingsShared';
+import { SettingsCallout, SettingsPanel } from '@/components/settings/SettingsShared';
 import CategoryManager from './CategoryManager';
 
 interface QuestionBankSettingsProps {

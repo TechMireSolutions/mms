@@ -17,7 +17,7 @@ import {
   type BrandingThemeMode,
 } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
-import { SettingsMetaBadge } from '@/components/settings/settingsShared';
+import { SettingsMetaBadge } from '@/components/settings/SettingsShared';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';

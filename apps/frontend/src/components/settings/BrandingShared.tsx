@@ -314,7 +314,7 @@ export function SocialLinksEditor({ links, onChange }: SocialLinksEditorProps): 
   );
 }
 
-export { SettingsStatusBadges } from '@/components/settings/settingsShared';
+export { SettingsStatusBadges } from '@/components/settings/SettingsShared';
 
 export function defaultFooterForMadrasa(madrasaName: string, language = 'en'): string {
   return formatBrandingFooterDefault(madrasaName, language);
