@@ -1,0 +1,45 @@
+name: Deploy MMSv2 to Hetzner
+
+on:
+  push:
+    branches:
+      - main # Ya jo bhi aapki main branch ka naam hai
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # 1. Project directory mein jana
+            cd /var/www/mmsv2
+
+            # 2. Production code pull karna
+            git pull origin main
+
+            # 3. Node.js aur PNPM ko load karna (NVM environment check)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            export PATH="$HOME/.local/share/pnpm:$PATH"
+
+            # 4. Dependencies install karna
+            pnpm install --freeze-lockfile
+
+            # 5. Full Monorepo Build banana
+            pnpm run build
+
+            # 6. PM2 Apps ko safe restart dena
+            pm2 restart mmsv2-frontend
+            pm2 restart mmsv2-backend
+
+            echo "🚀 MMSv2 Successfully Deployed and Restarted!"
