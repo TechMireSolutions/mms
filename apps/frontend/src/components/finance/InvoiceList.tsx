@@ -7,7 +7,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { INVOICE_STATUSES, Invoice } from "../../lib/financeData";
+import { INVOICE_STATUSES, Invoice } from '@/lib/data/financeData';
 
 const STATUS_CFG: Record<string, { label: string, cls: string }> = {
   paid:      { label: "Paid",      cls: "bg-emerald-50 text-emerald-700 border-emerald-100" },

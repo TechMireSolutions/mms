@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useContactConfig } from "../lib/ContactConfigContext.js";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { FieldDefinition } from "@mms/shared";
 
 /**

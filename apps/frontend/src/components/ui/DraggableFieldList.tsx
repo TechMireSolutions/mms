@@ -144,8 +144,10 @@ export default function DraggableFieldList({
           <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-1.5 bg-card rounded-lg">
             {fields.map((field, index) => (
               <Draggable key={field.id} draggableId={field.id} index={index}>
-                {(drag, snapshot) => (
-                  <div ref={drag.innerRef} {...drag.draggableProps}>
+                {(drag, snapshot) => {
+                  const { style, ...draggableProps } = drag.draggableProps;
+                  return (
+                  <div ref={drag.innerRef} {...draggableProps} style={style as React.CSSProperties}>
                     <FieldItem
                       field={field}
                       isEnabled={enabledSet.has(field.id)}
@@ -156,7 +158,8 @@ export default function DraggableFieldList({
                       isDragging={snapshot.isDragging}
                     />
                   </div>
-                )}
+                );
+                }}
               </Draggable>
             ))}
             {provided.placeholder}

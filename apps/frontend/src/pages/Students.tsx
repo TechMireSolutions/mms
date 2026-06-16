@@ -21,7 +21,7 @@ import ErrorBoundary from "../components/ui/ErrorBoundary";
 import StudentList from "../components/students/StudentList";
 import StudentForm from "../components/students/StudentForm";
 import StudentsSettingsPanel from "../components/students/StudentsSettings";
-import { Student } from "../lib/studentsData";
+import { Student } from '@/lib/data/studentsData';
 import { type StudentsSettings, DEFAULT_STUDENTS_SETTINGS } from "@mms/shared";
 
 import ModuleReports from "../components/reports/ModuleReports";

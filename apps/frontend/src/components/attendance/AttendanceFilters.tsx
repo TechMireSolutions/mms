@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
-import { SESSIONS_DATA, TEACHERS } from "../../lib/sessionsData";
+import { SESSIONS_DATA, TEACHERS } from '@/lib/data/sessionsData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 export interface AttendanceFilterState {

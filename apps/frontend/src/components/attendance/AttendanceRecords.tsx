@@ -2,9 +2,10 @@ import React, { useState, useMemo } from "react";
 import { Search, Pencil, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
-import { ATTENDANCE_STATUSES, AttendanceRecord } from "../../lib/attendanceData";
-import { SESSIONS_DATA } from "../../lib/sessionsData";
+import { ATTENDANCE_STATUSES, AttendanceRecord } from '@/lib/data/attendanceData';
+import { SESSIONS_DATA } from '@/lib/data/sessionsData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
+import usePermissions from "@/hooks/usePermissions";
 import StatusBadge from "./StatusBadge";
 import StatusToggle from "./StatusToggle";
 import { AttendanceFilterState } from "./AttendanceFilters";
@@ -41,6 +42,7 @@ interface Session {
  * @returns {React.ReactElement} The rendered records table component.
  */
 export default function AttendanceRecords({ filters, role, records, setRecords }: AttendanceRecordsProps) {
+  const { can } = usePermissions();
   const sessions = useLiveCollection("sessions", SESSIONS_DATA);
   
   const allClasses = useMemo(() => {
@@ -74,7 +76,7 @@ export default function AttendanceRecords({ filters, role, records, setRecords }
     setRecords((prev) => prev.map((r) => r.id === id ? { ...r, [key]: value } : r));
 
   const deleteRecord = (id: string) => {
-    if (role !== "admin") return;
+    if (!can("users.manage")) return;
     setRecords((prev) => prev.filter((r) => r.id !== id));
   };
 
@@ -180,7 +182,7 @@ export default function AttendanceRecords({ filters, role, records, setRecords }
                   <td className="px-3 py-2.5 max-w-[160px] truncate text-xs text-muted-foreground">{r.notes || "—"}</td>
                   <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {role !== "accountant" && (
+                      {can("attendance.write") && (
                         <button 
                           onClick={() => setEditing(editing === r.id ? null : r.id)}
                           aria-label={editing === r.id ? "Cancel Edit" : "Edit Record"}
@@ -189,7 +191,7 @@ export default function AttendanceRecords({ filters, role, records, setRecords }
                           {editing === r.id ? <X className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
                         </button>
                       )}
-                      {role === "admin" && (
+                      {can("users.manage") && (
                         <button 
                           onClick={() => deleteRecord(r.id)}
                           aria-label="Delete Record"

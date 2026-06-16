@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import StatusBadge from "../ui/StatusBadge";
 import EmptyState from "../ui/EmptyState";
-import { calcAge, type Student } from "../../lib/studentsData";
-import { SESSIONS_DATA } from "../../lib/sessionsData";
+import { calcAge, type Student } from '@/lib/data/studentsData';
+import { SESSIONS_DATA } from '@/lib/data/sessionsData';
 import { formatDate, getObject } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { type StudentsSettings, DEFAULT_STUDENTS_SETTINGS } from "@mms/shared";

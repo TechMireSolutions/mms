@@ -4,9 +4,9 @@ import {
   ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, TooltipContentProps, TooltipPayloadEntry,
 } from "recharts";
-import { revenueData as defaultRevenueData, RevenuePoint } from "../../../lib/dashboardData";
+import { revenueData as defaultRevenueData, RevenuePoint } from '@/lib/data/dashboardData';
 import { getCollection } from "../../../lib/db";
-import { INVOICES, Invoice } from "../../../lib/financeData";
+import { INVOICES, Invoice } from '@/lib/data/financeData';
 
 /**
  * CustomTooltip for Revenue Chart.

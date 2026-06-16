@@ -1,11 +1,11 @@
-import { CONTACTS } from "../../lib/contactsData";
-import { STUDENTS, type Student } from "../../lib/studentsData";
-import { SESSIONS_DATA, type Session } from "../../lib/sessionsData";
-import { INVOICES, type Invoice } from "../../lib/financeData";
-import { ATTENDANCE_RECORDS, type AttendanceRecord } from "../../lib/attendanceData";
-import { DISTRIBUTIONS, type Distribution } from "../../lib/hasanatData";
+import { CONTACTS } from '@/lib/data/contactsData';
+import { STUDENTS, type Student } from '@/lib/data/studentsData';
+import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
+import { INVOICES, type Invoice } from '@/lib/data/financeData';
+import { ATTENDANCE_RECORDS, type AttendanceRecord } from '@/lib/data/attendanceData';
+import { DISTRIBUTIONS, type Distribution } from '@/lib/data/hasanatData';
 import { type Contact } from "../../lib/contactFields";
-import { QUESTIONS, TESTS, RESULTS } from "../../lib/questionBankData";
+import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
 
 export type ReportCollection =
   | "students"

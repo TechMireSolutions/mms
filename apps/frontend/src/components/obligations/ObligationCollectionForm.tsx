@@ -3,7 +3,7 @@ import { Receipt } from "lucide-react";
 import {
   MOCK_CURRENCIES, PAYMENT_MODES, generateReceiptNo,
   ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
-} from "../../lib/obligationsData";
+} from '@/lib/data/obligationsData';
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import ObligationModal from "./ObligationModal";
 import { DatePicker } from "../ui/DatePicker";
@@ -112,7 +112,7 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
         {label}{required ? " *" : ""}
       </label>
       {React.cloneElement(children as React.ReactElement<{ id?: string; "aria-invalid"?: boolean }>, { id: `form-${key}`, "aria-invalid": !!errors[key] })}
-      {errors[key] && <p className="text-xs text-red-500 mt-1" role="alert">{errors[key]}</p>}
+      {errors[key] && <p className="text-xs text-destructive mt-1" role="alert">{errors[key]}</p>}
     </div>
   );
 

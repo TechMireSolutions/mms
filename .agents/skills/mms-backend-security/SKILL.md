@@ -24,18 +24,23 @@ description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, rate lim
 
 Do **not** use raw `request.jwtVerify()` in route handlers.
 
+**Public exceptions:** `/api/auth/login|onboard|handoff|2fa/*`, `/api/workspace/*`, `/health`, `/ready`.
+
 ## RBAC on writes
 
 | Surface | Check |
 |---------|-------|
 | `POST /api/db/collections/:name` | `canWriteCollection` |
 | `POST /api/db/objects/:key` | `canWriteObject` |
-| `GET/POST /api/db/sync` | `canDownloadBulkSync` / `canBulkSync` (admin) |
-| `POST /api/db/reset` | Admin + tenant-scoped only |
-| REST mutations (students) | `canWriteCollection(user, 'students')` |
-| `/api/email/*` | Admin inline check |
+| `POST /api/db/reset` | `canResetTenantData` (admin) |
+| `POST /api/db/sync` | `canBulkSync` + `bodyLimit: MMS_SYNC_MAX_BODY_BYTES` |
+| REST mutations `/api/students`, `/api/contacts` | `canWriteCollection` |
+| REST reads `/api/students`, `/api/contacts` | `canReadCollection` |
+| `GET /api/db/collections/*` | `canReadCollection` |
+| `GET /api/db/objects/*` | `canReadObject` |
+| `/api/email/integration*` | `canWriteObject(user, 'email_integration')` |
 
-**Known gap:** `POST /api/contacts` — no write RBAC yet.
+Legacy unmapped collections: read allowed for staff write roles until per-module `*.read` is added.
 
 ## Ephemeral auth state
 
@@ -64,11 +69,12 @@ CORS: `credentials: true`; production requires explicit `ALLOWED_ORIGIN`.
 
 ## Tenant isolation checklist
 
-- [ ] Tenant from host header — not from client JSON body
-- [ ] Storage keys `t:{subdomain}:{logicalKey}` on server
+- [ ] Tenant from host header — not from client JSON body on protected routes
+- [ ] Storage keys `t:{subdomain}:{logicalKey}` on server (`database.ts` + `tenantContext.ts`)
 - [ ] JWT subdomain matches resolved tenant
 - [ ] Apex routes do not expose other tenants' data
 - [ ] Tests use `host: '{subdomain}.localhost'` in `inject()`
+- [ ] REST routes use `dbSyncService` so tenant prefix is applied automatically
 
 ## Secrets & logging
 
@@ -81,10 +87,19 @@ Never log: passwords, JWTs, refresh tokens, OTP codes, `passwordHash`, bulk PII 
 | `app.security.test.ts` | Unauthenticated deny, admin-only sync download |
 | `auth.integration.test.ts` | Subdomain login, refresh rotation, 2FA gate, tenant JWT binding |
 | `rbacService.test.ts` | Permission matrix |
+| `twoFactorService.test.ts` | OTP / refresh helpers |
 
 ```bash
 cd apps/backend && pnpm test
 ```
+
+## Route audit checklist (new PR)
+
+1. Is the route tenant-scoped? → `authenticateTenant`
+2. Is it a mutation? → `rbacService` or `requireAdmin`
+3. Is body validated? → Zod or JSON Schema before service layer
+4. Does it touch auth? → rate limit preserved
+5. Integration test with wrong-subdomain host returns `403`?
 
 ## Rules
 

@@ -11,9 +11,9 @@ import Step3Eligibility from "./wizard/Step3Eligibility";
 import Step4ClassAssignment from "./wizard/Step4ClassAssignment";
 import Step5FeeCalculation from "./wizard/Step5FeeCalculation";
 import Step6Confirmation from "./wizard/Step6Confirmation";
-import { suggestClass, runFullEligibility, Enrollment, CalculatedFee } from "../../lib/enrollmentData";
-import { STUDENTS, Student } from "../../lib/studentsData";
-import { SESSIONS_DATA, Session, Class } from "../../lib/sessionsData";
+import { suggestClass, runFullEligibility, Enrollment, CalculatedFee } from '@/lib/data/enrollmentData';
+import { STUDENTS, Student } from '@/lib/data/studentsData';
+import { SESSIONS_DATA, Session, Class } from '@/lib/data/sessionsData';
 import { getCollection, getObject } from "../../lib/db";
 import {
   type EnrollmentsSettings,

@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
-import { CONTACTS } from "@/lib/contactsData";
-import { SAMPLE_USERS } from "@/lib/usersData";
-import { MOCK_CONTACTS, MOCK_USERS } from "@/lib/obligationsData";
+import { CONTACTS } from "@/lib/data/contactsData";
+import { SAMPLE_USERS } from "@/lib/data/usersData";
+import { MOCK_CONTACTS, MOCK_USERS } from "@/lib/data/obligationsData";
 import type { Contact } from "@/lib/contactFields";
 
 /** Live contacts merged with obligation demo fixtures (deduped by id). */

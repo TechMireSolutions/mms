@@ -6,7 +6,7 @@
 import React, { useRef, useMemo } from "react";
 import { X, Printer, FileDown, Settings } from "lucide-react";
 import { loadTemplate, PAGE_SIZES, InvoiceTemplate } from "../../../lib/invoiceTemplateStore";
-import { MOCK_CURRENCIES, ObligationCollection, ObligationType, MujtahidRep, Mujtahid } from "../../../lib/obligationsData";
+import { MOCK_CURRENCIES, ObligationCollection, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../../hooks/useObligationLookups";
 import InvoicePrintPreview from "./InvoicePrintPreview";
 

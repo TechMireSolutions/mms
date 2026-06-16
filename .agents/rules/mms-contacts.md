@@ -11,11 +11,20 @@ trigger: model_decision
 | Area | Path |
 |------|------|
 | Page | `pages/Contacts.tsx` |
+| Query hooks | `hooks/useContacts.ts` (`useContacts`, `useContactMutations`, `useContactsCollection`) |
 | Config | `lib/ContactConfigContext.tsx` + `lib/contactConfig/*` (provider in `App.tsx` only) |
 | Field store | `lib/contactFieldsStore.ts` |
 | Types | `@mms/shared/contactTypes.ts` |
 | Forms | `components/contacts/form/*Tab.tsx`, `FormPrimitives.tsx` |
-| Backend | `routes/contacts.ts`, `services/whatsApp*.ts` |
+| Backend | `routes/contacts.ts`, `validation/contactSchemas.ts`, `services/whatsApp*.ts` |
+
+## Data layer
+
+Server-first via TanStack Query (`mms-query.md`):
+
+- **Read:** `useContactsCollection()` (Query + localStorage fallback for offline/KPI sync)
+- **Write:** `useContactMutations()` only — do not parallel `saveCollection` in page handlers
+- `fetchContacts` calls `saveCollection('contacts', …)` inside `queryFn` for dashboard widgets still on `useLiveCollection`
 
 ## Operations views
 
@@ -50,7 +59,7 @@ Lazy-load: `DuplicateDetection`, `WhatsAppPanel`, `ContactSyncPanel`.
 
 ## Copy / i18n
 
-- **Legacy:** `uiStrings` from `useContactConfig()` for contact toasts and toolbar copy
+- **Legacy:** `uiStrings` from `useContactConfig()` — ~24 Contacts files; migrate incrementally
 - **New copy:** add `contacts.*` keys to `appTranslations` and use `t()` — **do not extend `uiStrings`** (`mms-i18n.md`)
 - Field labels: registry `label` today; prefer `labelKey: AppTranslationKey` when adding fields (`mms-fields.md`)
 

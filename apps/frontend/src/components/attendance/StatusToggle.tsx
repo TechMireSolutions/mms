@@ -1,5 +1,5 @@
 import React from "react";
-import { ATTENDANCE_STATUSES } from "../../lib/attendanceData";
+import { ATTENDANCE_STATUSES } from '@/lib/data/attendanceData';
 
 interface StatusToggleProps {
   value: string;

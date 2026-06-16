@@ -1,11 +1,11 @@
 import React, { useMemo } from "react";
-import { useBrandPalette } from "@/lib/BrandingPaletteContext";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { Star, Gift, TrendingDown, Users } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { DISTRIBUTIONS, Distribution } from "../../lib/hasanatData";
+import { DISTRIBUTIONS, Distribution } from '@/lib/data/hasanatData';
 import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { apiJson } from "@/lib/apiClient";
 
 export const STUDENT_COUNT_QUERY_KEY = ["students", "count"] as const;

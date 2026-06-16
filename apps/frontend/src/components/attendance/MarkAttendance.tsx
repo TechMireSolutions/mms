@@ -4,10 +4,11 @@ import {
   CheckCircle2, XCircle, Save, Send, Users, Search,
   WifiOff, Wifi, MapPin, Lock, Scan, UploadCloud,
 } from "lucide-react";
-import { CLASS_STUDENTS, ClassStudent, ATTENDANCE_STATUSES, STATUS_MAP, AttendanceRecord, AttendanceStatus } from "../../lib/attendanceData";
-import { SESSIONS_DATA } from "../../lib/sessionsData";
+import { CLASS_STUDENTS, ClassStudent, ATTENDANCE_STATUSES, STATUS_MAP, AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
+import { SESSIONS_DATA } from '@/lib/data/sessionsData';
 import { getObject } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
+import usePermissions from "@/hooks/usePermissions";
 import StatusToggle from "./StatusToggle";
 import { AttendanceFilterState } from "./AttendanceFilters";
 import {
@@ -245,6 +246,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
  * MarkAttendance
  */
 export default function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
+  const { can } = usePermissions();
   const sessions = useLiveCollection("sessions", SESSIONS_DATA);
   
   const allClasses = useMemo(() => {
@@ -780,7 +782,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
               <Save className="w-3.5 h-3.5" aria-hidden="true" /> Save Draft
             </button>
             <button onClick={handleSubmit}
-              disabled={role === "accountant"}
+              disabled={!can("attendance.write")}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors">
               <Send className="w-3.5 h-3.5" aria-hidden="true" />
               {isOffline ? "Save Offline" : "Submit & Lock"}

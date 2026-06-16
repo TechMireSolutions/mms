@@ -1,5 +1,5 @@
 import React from "react";
-import { STATUS_MAP } from "../../lib/attendanceData";
+import { STATUS_MAP } from '@/lib/data/attendanceData';
 
 interface StatusBadgeProps {
   status: string;

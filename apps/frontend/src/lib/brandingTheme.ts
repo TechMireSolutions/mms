@@ -11,8 +11,8 @@ import {
   getScopedBrandingSettings,
   getScopedGlobalSettings,
 } from './settingsPreviewStore';
-import { getAppDomain } from './tenantConfig';
-import { isEntryPath } from './routes';
+import { getAppDomain } from './config/tenantConfig';
+import { isEntryPath } from './config/routes';
 import { isTenantHost, MMS_PLATFORM_GLOBAL_SETTINGS } from './themeScope';
 
 function resolveDocumentLanguage(storedLanguage: string, pathname: string): string {

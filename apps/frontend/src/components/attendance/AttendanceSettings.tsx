@@ -3,7 +3,7 @@ import { Save, RotateCcw, QrCode, Bell, Clock, Shield, Scan, ClipboardCheck } fr
 import {
   DEFAULT_ATT_SETTINGS,
   type AttendanceSettings as AttendanceSettingsData
-} from "../../lib/attendanceData";
+} from '@/lib/data/attendanceData';
 import {
   DEFAULT_ATTENDANCE_FIELD_DEFS,
   getSortedFields,

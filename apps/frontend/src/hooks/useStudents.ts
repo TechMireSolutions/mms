@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { STUDENT_COUNT_QUERY_KEY } from './useStudentCount';
-import type { Student } from '@/lib/studentsData';
+import type { Student } from '@/lib/data/studentsData';
 
 export const STUDENTS_QUERY_KEY = ['students', 'list'] as const;
 

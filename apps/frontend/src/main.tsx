@@ -23,6 +23,8 @@ if (!rootElement) {
   throw new Error("Failed to find the root element with ID 'root'.");
 }
 
+const app = <App />;
+
 ReactDOM.createRoot(rootElement).render(
-  <App />
+  import.meta.env.DEV ? <React.StrictMode>{app}</React.StrictMode> : app,
 )

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { parseSessionTimeoutMinutes, translateApp } from "@mms/shared";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import useGlobalSettings from "./useGlobalSettings";
 import { notify } from "@/lib/notify";
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
 import { getAuditLog } from "./MarkAttendance";
-import { SESSIONS_DATA } from "../../lib/sessionsData";
+import { SESSIONS_DATA } from '@/lib/data/sessionsData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { AttendanceFilterState } from "./AttendanceFilters";
 

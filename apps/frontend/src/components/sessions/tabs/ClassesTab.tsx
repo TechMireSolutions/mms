@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Edit2, Users, GraduationCap, X, Save } from "lucide-react";
-import { TEACHERS, Session, Class } from "../../../lib/sessionsData";
+import { TEACHERS, Session, Class } from '@/lib/data/sessionsData';
 
 const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
 const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
@@ -44,7 +44,7 @@ function ClassCard({ cls, onEdit, onDelete }: ClassCardProps) {
           <button aria-label={`Edit ${cls.name}`} onClick={() => onEdit(cls)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
             <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-          <button aria-label={`Delete ${cls.name}`} onClick={() => onDelete(cls.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-destructive transition-colors">
+          <button aria-label={`Delete ${cls.name}`} onClick={() => onDelete(cls.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { X, Save, Loader2, ReceiptText } from "lucide-react";
-import { PAYMENT_METHODS, Invoice, Payment } from "../../lib/financeData";
+import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
 import { getObject } from "../../lib/db";
 import {
   type FinanceSettings,

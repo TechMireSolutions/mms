@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { useBrandPalette } from "@/lib/BrandingPaletteContext";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { Info } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, LineChart, Line, 

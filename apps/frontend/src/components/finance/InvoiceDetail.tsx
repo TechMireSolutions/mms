@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { X, CheckCircle2, Clock, AlertCircle, ReceiptText, User, Calendar, CreditCard } from "lucide-react";
-import { Invoice } from "../../lib/financeData";
+import { Invoice } from '@/lib/data/financeData';
 
 const STATUS_CFG: Record<string, { label: string, cls: string, icon: React.ElementType }> = {
   paid:      { label: "Paid",      cls: "bg-emerald-50 text-emerald-700 border-emerald-100", icon: CheckCircle2 },

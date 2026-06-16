@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
-import { runEligibilityChecks, Student, StudentSession, EligibilityResult } from "../../lib/studentsData";
+import { runEligibilityChecks, Student, StudentSession, EligibilityResult } from '@/lib/data/studentsData';
 
 const STATUS_CONFIG = {
   pass: { Icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-100", bar: "bg-emerald-500", label: "Pass" },

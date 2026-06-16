@@ -60,9 +60,9 @@ const WIDGET_COLOR_MAP: Record<string, string> = {
 
 const ALERT_COLOR_MAP: Record<string, { bg: string; text: string; border: string; glow: string }> = {
   red: {
-    bg: "bg-red-500/10 dark:bg-red-950/20",
+    bg: "bg-destructive/10 dark:bg-red-950/20",
     text: "text-red-600 dark:text-red-400",
-    border: "border-red-500/30 dark:border-red-500/20",
+    border: "border-destructive/30 dark:border-destructive/20",
     glow: "shadow-[0_0_15px_rgba(239,68,68,0.15)]",
   },
   amber: {
@@ -93,7 +93,7 @@ const COLOR_MAP: Record<string, { bg: string; text: string; ring: string }> = {
   blue:    { bg: "bg-blue-500/10",    text: "text-blue-500",    ring: "ring-blue-500/20"    },
   violet:  { bg: "bg-violet-500/10",  text: "text-violet-500",  ring: "ring-violet-500/20"  },
   amber:   { bg: "bg-amber-500/10",   text: "text-amber-500",   ring: "ring-amber-500/20"   },
-  red:     { bg: "bg-red-500/10",     text: "text-red-500",     ring: "ring-red-500/20"     },
+  red:     { bg: "bg-destructive/10",     text: "text-destructive",     ring: "ring-destructive/20"     },
 };
 
 const ICONS_LIST: Record<string, React.ElementType> = {

@@ -6,26 +6,41 @@ trigger: model_decision
 
 ## Stack
 
-Fastify 5 · `@fastify/jwt` · `@fastify/cookie` · `@fastify/cors` · `@fastify/rate-limit` · Drizzle ORM + `pg` · Vitest · Zod (REST routes) · TypeScript ESM · `@mms/shared`.
+Fastify 5 · `@fastify/jwt` · `@fastify/cookie` · `@fastify/cors` · `@fastify/helmet` · `@fastify/rate-limit` · Drizzle ORM + `pg` · Vitest · Zod (REST routes) · TypeScript ESM · `@mms/shared`.
 
 ## Layout
 
 ```
 apps/backend/src/
-  app.ts                      # bootstrap, global hooks, route registration
-  index.ts                    # listen on :3000
-  middleware/authenticate.ts  # authenticateTenant
-  routes/*.ts                 # Fastify plugins (one domain per file)
+  app.ts                      # buildApp() — config, initDb, register plugins + routes
+  index.ts                    # listen, graceful shutdown
+  config/serverConfig.ts      # env validation (JWT, trustProxy, limits)
+  plugins/                    # Fastify cross-cutting registration
+    index.ts                  # registerPlugins()
+    security.ts               # helmet + rate-limit base
+    http.ts                   # cookie, cors, jwt
+    requestHooks.ts           # tenant ALS, cookies, failure logging
+  routes/
+    index.ts                  # registerRoutes() — all API prefixes
+    health.ts                 # /health, /ready
+    *.ts                      # one domain plugin per file
+  middleware/                 # authenticateTenant, authenticatePlatform
   validation/*Schemas.ts      # Zod for REST resources
-  services/*.ts               # business logic — routes delegate here
+  services/
+    auth/                     # session, 2FA, users, passwords, artifacts
+    platform/                 # apex super-user auth
+    email/                    # SMTP + integration config
+    whatsapp/                 # Puppeteer provider + queue (dev)
+    *.ts                      # domain services (contact, student, rbac, dbSync, …)
+  lib/                        # shared infra (tenantContext, httpErrors, syncLimits)
   db/
     schema.ts                 # Drizzle tables
-    database.ts               # collection/object CRUD, initDb, tenant key resolution
-    dbClient.ts               # Drizzle singleton (authArtifactService)
+    database.ts               # collection/object CRUD, initDb, pool
+    dbClient.ts               # Drizzle singleton
     minimalSeeds.ts           # onboard + tenant reset defaults
     migrations_drizzle/       # DDL + meta/_journal.json
     migrations/00N_*.ts       # idempotent data transforms
-  utils/tenantContext.ts      # AsyncLocalStorage tenant scope
+  __tests__/                  # Vitest (integration + unit)
 ```
 
 ## Environment
@@ -39,15 +54,14 @@ apps/backend/src/
 | `LOG_LEVEL` | No | Fastify logger level (default `info`) |
 | `NODE_ENV` | No | `production` tightens CORS |
 | `SEED_DEV_PASSWORD` | Dev only | Hashed users in legacy full-seed path |
+| `MMS_SYNC_MAX_BODY_BYTES` | No | Bulk sync upload cap (default 10 MiB) |
 
 ## App bootstrap (`apps/backend/src/app.ts`)
 
-1. `initDb()` — Drizzle DDL migrate, data migrations `001–003`, purge expired `auth_artifacts`
-2. Register `@fastify/rate-limit` (`global: false` — per-route scopes)
-3. Register `@fastify/cookie` before JWT
-4. Global `onRequest`: resolve tenant → `tenantStorage.run()` → `attachAccessTokenFromCookie()` (cookie → `Authorization` header)
-5. CORS `credentials: true`; production origin from `ALLOWED_ORIGIN`
-6. Register route plugins (table below)
+1. `loadServerConfig()` — JWT secret, trustProxy, body/request limits
+2. `initDb()` — Drizzle DDL migrate, data migrations `001–003`, purge expired `auth_artifacts`
+3. `registerPlugins()` — error handlers, helmet, rate-limit, cookie/cors/jwt, request hooks
+4. `registerRoutes()` — health + all `/api/*` plugins (see route map)
 
 ## Route map
 
@@ -56,9 +70,9 @@ apps/backend/src/
 | `/api/auth` | Mixed | Login/onboard **rate-limited** (10/min); `/me` → `authenticateTenant`; refresh/handoff/2FA public |
 | `/api/workspace` | **Public** | Apex registry + branding lookups — no `authenticateTenant` (`mms-tenant.md`) |
 | `/api/db` | `authenticateTenant` | Writes → `rbacService`; **GET + POST `/sync` admin-only** |
-| `/api/contacts` | `authenticateTenant` | REST CRUD + WhatsApp — Zod + `canWriteCollection(user, 'contacts')` on mutations |
+| `/api/contacts` | `authenticateTenant` | REST CRUD + WhatsApp — Zod; reads/writes via `canReadCollection` / `canWriteCollection` |
 | `/api/email` | `authenticateTenant` | Admin-only (`requireAdmin`) integration routes |
-| `/api/students` | `authenticateTenant` | REST CRUD pilot — Zod in `validation/studentSchemas.ts` |
+| `/api/students` | `authenticateTenant` | REST CRUD — Zod; reads/writes via `canReadCollection` / `canWriteCollection` |
 | `/health` | Public | Liveness |
 | `/ready` | Public | PostgreSQL ping (`pingDatabase`) — `503` when DB down |
 
@@ -147,14 +161,16 @@ Still authoritative for most modules. See `mms-data-layer.md` for sync contract.
 | Endpoint | RBAC |
 |----------|------|
 | `GET /sync` | **Admin only** (`canDownloadBulkSync`) |
-| `POST /sync` | Admin only (`canBulkSync`) |
+| `POST /sync` | Admin only (`canBulkSync`) — **body limit** `MMS_SYNC_MAX_BODY_BYTES` |
+| `GET /collections/:name` | `canReadCollection` |
+| `GET /objects/:key` | `canReadObject` (+ server-only filter) |
 | `POST /collections/:name` | `canWriteCollection` |
 | `POST /objects/:key` | `canWriteObject` + audit on `users`, `global_settings`, `branding` |
 | `POST /reset` | Admin — **tenant-scoped** reset to minimal seeds (not full DB drop) |
 
 Server-only object keys (`email_integration_secrets`) → `404` on read, `403` on write (`@mms/shared`).
 
-Branding writes call `syncWorkspaceFromBranding` after persist.
+Branding writes call `syncWorkspaceFromBranding` after persist. `global_settings` writes merge via `mergeGlobalSettings` before persist.
 
 ## Contacts + WhatsApp
 

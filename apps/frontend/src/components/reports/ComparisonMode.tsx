@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useBrandPalette } from "@/lib/BrandingPaletteContext";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { GitCompare, X } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,11 +7,11 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
-import { CONTACTS } from "../../lib/contactsData";
+import { CONTACTS } from '@/lib/data/contactsData';
 import { Contact } from "../../lib/contactFields";
-import { SESSIONS_DATA, Session } from "../../lib/sessionsData";
+import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import { useContactConfig, calculateProfileHealth } from "../../lib/ContactConfigContext";
+import { useContactConfig, calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
 
 interface ComparisonDataItem {
   metric: string;
@@ -269,7 +269,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
                       <td className="px-3 py-3 font-bold text-foreground">{row.metric}</td>
                       <td className="px-3 py-3 text-primary font-bold">{row.a.toLocaleString()}</td>
                       <td className="px-3 py-3 text-amber-600 font-bold">{row.b.toLocaleString()}</td>
-                      <td className={`px-3 py-3 text-xs font-black ${diff > 0 ? "text-emerald-600" : diff < 0 ? "text-red-500" : "text-muted-foreground"}`}>
+                      <td className={`px-3 py-3 text-xs font-black ${diff > 0 ? "text-emerald-600" : diff < 0 ? "text-destructive" : "text-muted-foreground"}`}>
                         {diff > 0 ? "+" : ""}{diff.toLocaleString()}
                       </td>
                     </tr>

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Award } from "lucide-react";
-import { CLASSES, STUDENTS, Exam, ExamResult } from "../../lib/examinationData";
+import { CLASSES, STUDENTS, Exam, ExamResult } from '@/lib/data/examinationData';
 import { getGrade } from "./gradeUtils";
 import StudentResultCard, { StudentResultItem } from "./StudentResultCard";
 import CertificatePreview from "./CertificatePreview";
@@ -94,7 +94,7 @@ export default function ResultsView({ exams, results }: ResultsViewProps): React
                 { label: "Students", value: stats.total, icon: "👥", color: "text-primary" },
                 { label: "Class Avg", value: `${stats.avg}%`, icon: "📊", color: "text-blue-600" },
                 { label: "Passed", value: stats.passed, icon: "✅", color: "text-emerald-600" },
-                { label: "Failed", value: stats.failed, icon: "❌", color: "text-red-500" },
+                { label: "Failed", value: stats.failed, icon: "❌", color: "text-destructive" },
               ].map((s) => (
                 <div key={s.label} className="rounded-xl border border-border bg-card p-3.5 text-center">
                   <p className="text-xl mb-0.5" aria-hidden="true">{s.icon}</p>
@@ -164,7 +164,7 @@ export default function ResultsView({ exams, results }: ResultsViewProps): React
                     </span>
 
                     {/* Pass/Fail */}
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${r.passed ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${r.passed ? "bg-emerald-50 text-emerald-700" : "bg-destructive/10 text-destructive"}`}>
                       {r.passed ? "PASS" : "FAIL"}
                     </span>
 

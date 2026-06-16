@@ -3,7 +3,7 @@ import { AlertCircle, X, LucideIcon, Upload, MapPin, BrainCircuit, FileText, Cam
 import { DatePicker } from "../../ui/DatePicker";
 import { Popover, PopoverTrigger, PopoverContent } from "../../ui/popover";
 import { optimizeImage, FieldDefinition } from "@mms/shared";
-import { useContactConfig } from "../../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { cn } from "../../../lib/utils";
 import AvatarCropper from "../AvatarCropper";
 import FormSelect from "../../ui/FormSelect";

@@ -13,7 +13,7 @@ import BudgetTab from "./tabs/BudgetTab";
 import EventsTab from "./tabs/EventsTab";
 import TabarrukTab from "./tabs/TabarrukTab";
 
-import { Session } from "../../lib/sessionsData";
+import { Session } from '@/lib/data/sessionsData';
 
 const TABS = [
   { id: "classes",   label: "Classes",   icon: GraduationCap },

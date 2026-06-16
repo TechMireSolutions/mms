@@ -20,19 +20,23 @@ saveCollection('collection_key', updated);
 import { useLiveCollection } from '../hooks/useLiveCollection';
 const items = useLiveCollection<MyType>('collection_key');
 
-// REST module (students)
-import { useStudents, useStudentMutations } from '@/hooks/useStudents';
+// REST modules (students, contacts)
+import { useStudents, useStudentMutations, useStudentsCollection } from '@/hooks/useStudents';
+import { useContacts, useContactMutations, useContactsCollection } from '@/hooks/useContacts';
 ```
 
-`local-database-update` event — dispatched by saves; do not duplicate.
+`local-database-update` event — dispatched by saves; `useLiveCollection` subscribes. Do not duplicate listeners.
 
 ## When to use which layer
 
 | Pattern | Use when |
 |---------|----------|
 | `useLiveCollection` + `saveCollection` | Legacy module CRUD via `/api/db/collections/*` |
-| TanStack Query + `apiJson` | Dedicated REST (`/api/students`, workspace) |
-| Hybrid cache | Query fetch may `saveCollection` for legacy KPI readers (students) |
+| TanStack Query + `apiJson` | Dedicated REST (`/api/students`, `/api/contacts`, workspace) |
+| Hybrid cache | Query `queryFn` calls `saveCollection` so KPI/report widgets on localStorage stay in sync |
+| `useXxxCollection()` | Page reads: Query when non-empty, else localStorage fallback (offline boot) |
+
+**Writes on REST modules:** use `useXxxMutations()` only — mutations invalidate Query; do not also `saveCollection` in the page for the same entity.
 
 ## Backend document store
 
@@ -51,7 +55,7 @@ import { useStudents, useStudentMutations } from '@/hooks/useStudents';
 | GET/POST | `/api/db/objects/:key` | POST → `canWriteObject`; server-only keys blocked |
 | POST | `/api/db/reset` | Admin — tenant-scoped minimal reseed |
 
-REST resources: `GET/POST/PUT/DELETE /api/students` (pilot).
+REST resources (pilots): `GET/POST/PUT/DELETE /api/students`, `/api/contacts`.
 
 ## Add new collection (legacy path)
 
@@ -63,32 +67,29 @@ REST resources: `GET/POST/PUT/DELETE /api/students` (pilot).
 ## Add new collection (modern path)
 
 1. Backend REST route + Zod (`mms-backend-api` skill)
-2. Query hooks on frontend
-3. Stop using `/api/db/collections/:name` for that entity
+2. Query hooks on frontend (`useQuery` + `useMutation`, export `QUERY_KEY`)
+3. Optional hybrid: `saveCollection` in `queryFn` + `useXxxCollection()` for reads
+4. Stop using `/api/db/collections/:name` for that entity
 
 ## Concurrency
 
 Full-array read-modify-write — merge concurrent edits to same collection.
 
-## Student hydration
+## Student / contact hydration
 
-`db.ts` hydrates students from linked contacts — preserve when editing links.
+`db.ts` hydrates students from linked contacts on read — preserve when editing links. Contact REST persists via `dbSyncService` on backend.
 
 ## Branding / global settings
 
 | Do | Don't |
 |----|-------|
-| `getBrandingSettings()` / `await saveBrandingSettings()` | `saveObject('branding', raw)` in settings panels |
-| Merge via `@mms/shared` helpers | Show "Saved" before server responds |
-
-## Sync pitfalls
-
-| Pitfall | Fix |
-|---------|-----|
-| Non-admin `syncDatabase()` fails 403 | Expected — only admins bulk-download; use collection GET or REST |
-| Apex host API calls | Tenant routes need subdomain host (Vite forwards `x-forwarded-host`) |
-| Stale UI after REST write | `invalidateQueries` on mutation |
+| `await saveBrandingSettings()` / `saveGlobalSettings()` | local-only save with false "saved" UI |
+| Server merge via `@mms/shared` helpers | Skip PostgreSQL on login sync |
 
 ## Rules
 
-`mms-data-layer.mdc`, `mms-query.mdc`, `mms-backend.mdc`, `mms-tenant.mdc`
+`mms-data-layer.mdc`, `mms-query.mdc`, `mms-frontend.mdc`
+
+## Related skills
+
+`mms-backend-api`, `mms-frontend`, `mms-contacts` (contacts REST pilot)

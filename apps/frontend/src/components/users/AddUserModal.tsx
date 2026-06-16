@@ -27,7 +27,7 @@ import {
   translateApp,
   validatePasswordPolicy,
 } from "@mms/shared";
-import { CONTACTS } from "../../lib/contactsData";
+import { CONTACTS } from '@/lib/data/contactsData';
 import type { Contact } from "../../lib/contactFields";
 import { getGlobalSettings, getObject } from "../../lib/db";
 import {

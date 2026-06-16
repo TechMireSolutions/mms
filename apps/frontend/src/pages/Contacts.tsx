@@ -29,13 +29,13 @@ function LazyFallback() {
     </div>
   );
 }
-import { CONTACTS } from "../lib/contactsData";
+import { CONTACTS } from '@/lib/data/contactsData';
 import { saveCollection } from "../lib/db";
 import { useContactsCollection, useContactMutations } from "../hooks/useContacts";
 import { notify } from "@/lib/notify";
 import {
   useContactConfig, useContactColumns, calculateProfileHealth
-} from "../lib/ContactConfigContext";
+} from '@/lib/contexts/ContactConfigContext';
 import {
   parsePhoneNumber,
   getPrimaryPhone,

@@ -7,8 +7,8 @@ import {
   User,
   Settings,
 } from "lucide-react";
-import { useAuth } from "@/lib/AuthContext";
-import { ROUTES } from "@/lib/routes";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { ROUTES } from "@/lib/config/routes";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {

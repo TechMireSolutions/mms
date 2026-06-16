@@ -5,10 +5,10 @@ import {
   ComposedChart, Area, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from "recharts";
-import { attendanceData as defaultAttendanceData, hasanatData as defaultHasanatData, AttendancePoint, HasanatPoint } from "../../../lib/dashboardData";
+import { attendanceData as defaultAttendanceData, hasanatData as defaultHasanatData, AttendancePoint, HasanatPoint } from '@/lib/data/dashboardData';
 import { getCollection } from "../../../lib/db";
-import { ATTENDANCE_RECORDS, AttendanceRecord } from "../../../lib/attendanceData";
-import { DISTRIBUTIONS, Distribution } from "../../../lib/hasanatData";
+import { ATTENDANCE_RECORDS, AttendanceRecord } from '@/lib/data/attendanceData';
+import { DISTRIBUTIONS, Distribution } from '@/lib/data/hasanatData';
 
 const AttTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
   if (!active || !payload?.length) return null;

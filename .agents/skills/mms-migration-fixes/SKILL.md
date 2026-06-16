@@ -14,7 +14,7 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | Auth seeds shape | `StoredUser` with `role` + `passwordHash` |
 | RBAC on `/api/db/*` writes | `rbacService` |
 | Nested `ContactConfigProvider` | Single mount in `App.tsx` |
-| JWT localStorage-only | httpOnly cookies + `apiClient` |
+| JWT localStorage-only | httpOnly cookies; `apiClient` cookie-only (`credentials: 'include'`) |
 | Tenant JWT binding | `authenticateTenant` middleware |
 | Bulk sync open download | Admin-only `canDownloadBulkSync` |
 | Global DB reset via API | Tenant-scoped `resetTenantData` |
@@ -22,6 +22,7 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | In-memory auth handoff | `auth_artifacts` table |
 | Client-side 2FA only | Server `twoFactorService` |
 | Orphan route guards | Canonical `ProtectedRoute` in `HostRoutes` |
+| Contacts REST + write RBAC | Full `/api/contacts` CRUD + `canWriteCollection` on mutations |
 
 ## Open priorities
 
@@ -29,35 +30,27 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 
 **Problem:** Most modules still use `/api/db/collections/:name`.
 
-**Fix:** Add REST route + Query hooks per module (students pilot done).
+**Fix:** Add REST route + Query hooks per module (**students** and **contacts** pilots done).
 
 **Skills:** `mms-backend-api`, `mms-data-sync`, `mms-query`
 
-### P1 — Contacts write RBAC
-
-**Problem:** `POST /api/contacts` has no `canWriteCollection` check.
-
-**Fix:** Add RBAC aligned with `contacts.write` permission.
-
-**Rules:** `mms-rbac.mdc`, `mms-security.mdc`
-
 ### P1 — Read RBAC (evaluate)
 
-**Problem:** Any authenticated user can read all tenant collections.
+**Problem:** Any authenticated user can read tenant collections and REST list endpoints.
 
 **Fix:** Role-based read matrix or collection-level ACL — design before implementing.
 
 ### P2 — `can()` registry coverage
 
-**Problem:** Inline `role ===` checks remain on some pages.
+**Problem:** Inline `role ===` checks remain (~8 files: Dashboard, KPI, Attendance, WelcomeBanner).
 
-**Fix:** Wire `usePermissions()` when touching modules.
+**Fix:** Wire `usePermissions()` / `can()` when touching modules (`mms-rbac.mdc`).
 
-### P2 — Remove legacy `mms_token` path
+### P2 — Remove legacy `mms_token` cleanup
 
-**Problem:** `apiClient` still reads localStorage token.
+**Problem:** `AuthContext` still `removeItem('mms_token')` on login/logout.
 
-**Fix:** Remove after confirming all clients use cookies.
+**Fix:** Remove after confirming no clients depend on localStorage token path.
 
 ### P2 — Sentry / client error reporting
 

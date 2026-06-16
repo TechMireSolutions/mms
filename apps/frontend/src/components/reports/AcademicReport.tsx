@@ -3,7 +3,7 @@ import { BookOpen, Trophy, TrendingUp, Star } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { EXAM_RESULTS, EXAMS, STUDENTS, ExamResult, Exam, ExamStudent } from "../../lib/examinationData";
+import { EXAM_RESULTS, EXAMS, STUDENTS, ExamResult, Exam, ExamStudent } from '@/lib/data/examinationData';
 import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { getGrade } from "../examination/gradeUtils";

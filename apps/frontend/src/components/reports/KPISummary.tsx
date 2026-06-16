@@ -9,18 +9,19 @@ import {
 import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useStudentsCollection } from "../../hooks/useStudents";
-import { CONTACTS } from "../../lib/contactsData";
+import { CONTACTS } from '@/lib/data/contactsData';
 import { type Contact } from "../../lib/contactFields";
-import { ATTENDANCE_RECORDS, type AttendanceRecord } from "../../lib/attendanceData";
-import { INVOICES, type Invoice } from "../../lib/financeData";
-import { STUDENTS, type Student } from "../../lib/studentsData";
-import { EXAMS, EXAM_RESULTS } from "../../lib/examinationData";
-import { SESSIONS_DATA, type Session } from "../../lib/sessionsData";
-import { DISTRIBUTIONS, type Distribution } from "../../lib/hasanatData";
-import { QUESTIONS, TESTS, RESULTS } from "../../lib/questionBankData";
+import { ATTENDANCE_RECORDS, type AttendanceRecord } from '@/lib/data/attendanceData';
+import { INVOICES, type Invoice } from '@/lib/data/financeData';
+import { STUDENTS, type Student } from '@/lib/data/studentsData';
+import { EXAMS, EXAM_RESULTS } from '@/lib/data/examinationData';
+import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
+import { DISTRIBUTIONS, type Distribution } from '@/lib/data/hasanatData';
+import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
 import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from "@mms/shared";
 import { METADATA_FIELDS, computeCustomCard as computeCustomCardShared, CustomCard, COLLECTION_OPTIONS } from "./reportMetadata";
 import DynamicCardBuilder from "./DynamicCardBuilder";
+import usePermissions from "@/hooks/usePermissions";
 
 interface KPIItem {
   icon: LucideIcon;
@@ -43,7 +44,7 @@ const COLOR: Record<string, ColorScheme> = {
   green:   { bg: "bg-emerald-50",   text: "text-emerald-600" },
   emerald: { bg: "bg-emerald-50",   text: "text-emerald-600" },
   blue:    { bg: "bg-blue-50",      text: "text-blue-600"    },
-  red:     { bg: "bg-red-50",       text: "text-red-500"     },
+  red:     { bg: "bg-red-50",       text: "text-destructive"     },
   amber:   { bg: "bg-amber-50",     text: "text-amber-600"   },
   violet:  { bg: "bg-violet-50",    text: "text-violet-600"  },
 };
@@ -55,7 +56,7 @@ interface TrendScheme {
 
 const TREND: Record<string, TrendScheme> = {
   up:   { cls: "text-emerald-500", arrow: "↑" },
-  down: { cls: "text-red-500",     arrow: "↓" },
+  down: { cls: "text-destructive",     arrow: "↓" },
   flat: { cls: "text-muted-foreground", arrow: "→" },
 };
 
@@ -252,6 +253,7 @@ function getDefaultCardConfig(category: string, label: string): CustomCard {
 }
 
 export default function KPISummary({ category, role }: KPISummaryProps): React.JSX.Element {
+  const { can } = usePermissions();
   const contacts = useLiveCollection("contacts");
   const records = useLiveCollection("attendance_records");
   const invoices = useLiveCollection("finance_invoices");
@@ -592,15 +594,15 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       const isInCategory = k.categories.includes(category);
       if (!isInCategory) return false;
 
-      if (role === "teacher") {
+      if (can("attendance.write") && !can("finance.write")) {
         return ["Total Students", "Avg Attendance", "Hasanat Awarded", "Capacity Used"].includes(k.label);
       }
-      if (role === "accountant") {
+      if (can("finance.write") && !can("attendance.write")) {
         return ["Fee Collected", "Outstanding", "Growth Rate"].includes(k.label);
       }
       return true;
     });
-  }, [computedKPIs, category, role]);
+  }, [computedKPIs, category, can]);
 
   // Load custom cards for this category
   const [customCards, setCustomCards] = useState<CustomCard[]>(() => {

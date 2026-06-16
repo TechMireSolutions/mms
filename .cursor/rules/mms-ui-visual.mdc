@@ -36,6 +36,10 @@ Role checks and API gates → **`mms-rbac.mdc`**. Summary: use `can()` / `usePer
 
 | Topic | Current | Target |
 |-------|---------|--------|
-| Role checks | Scattered `role ===` | `can()` — see `mms-rbac.mdc` |
-| Status colours | Many inline Tailwind | `StatusBadge` + config |
+| Role checks | Scattered `role ===` (~8 files) | `can()` — see `mms-rbac.mdc` |
+| Status colours | Inline `text-green-500` / `text-red-500` (~30 files) | `StatusBadge` + config |
 | Glassmorphism | Most modules | Consistent on all cards/panels |
+
+### Status colour debt (migrate when touching)
+
+Accounting, obligations, finance widgets, dashboard tables, reports — grep `text-green-500` / `text-red-500` under `apps/frontend/src/components/` and replace with `StatusBadge` or semantic tokens (`text-destructive`, theme `--success`).

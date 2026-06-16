@@ -1,8 +1,8 @@
 import React from "react";
 import { ArrowRight, ExternalLink, Loader2 } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
-import { ROUTES } from "@/lib/routes";
-import { getAppDomain, tenantUrl } from "@/lib/tenantConfig";
+import { ROUTES } from "@/lib/config/routes";
+import { getAppDomain, tenantUrl } from "@/lib/config/tenantConfig";
 import useTranslation from "@/hooks/useTranslation";
 import { useWorkspaceRegistry } from "@/hooks/useWorkspaceRegistry";
 import { Button } from "@/components/ui/button";

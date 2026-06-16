@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Palette, Monitor, Wand2, ImageIcon, AlertTriangle } from 'lucide-react';
 import { normalizeThemeMode } from '@mms/shared';
 import { extractLogoBrandColors } from '@/lib/extractLogoBrandColors';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES } from '@/lib/config/routes';
 import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';
 import { useThemeSettingsDraft } from '@/hooks/useThemeSettingsDraft';

@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Plus, Edit2, BookOpen, Calendar, Clock, Users, CheckCircle, AlertCircle, Circle } from "lucide-react";
-import { CLASSES, Exam } from "../../lib/examinationData";
+import { CLASSES, Exam } from '@/lib/data/examinationData';
 import { formatDate } from "../../lib/db";
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string; icon: React.ComponentType<{ className?: string }> }> = {

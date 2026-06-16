@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Phone, Mail, Edit2, Trash2, MessageCircle, MessageSquare, Star } from "lucide-react";
 import { getPrimaryPhone, getPrimaryEmail, hasWhatsApp, getDisplayName, Contact, FieldConfig } from "@mms/shared";
-import { useContactConfig, calculateProfileHealth } from "../../lib/ContactConfigContext";
+import { useContactConfig, calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
 import { EditableSelect } from "./form/FormPrimitives";
 
 import ContactAvatar from "./ContactAvatar";

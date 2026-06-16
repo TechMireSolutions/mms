@@ -1,10 +1,16 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { z } from 'zod';
 import { authenticateTenant } from '../middleware/authenticate.js';
-import { fetchCollection, persistCollection } from '../services/dbSyncService.js';
-import { canWriteCollection } from '../services/rbacService.js';
-import type { User } from '../services/authService.js';
-import { studentListSchema, studentRecordSchema } from '../validation/studentSchemas.js';
+import { canReadCollection, canWriteCollection } from '../services/rbacService.js';
+import {
+  createStudent,
+  deleteStudentById,
+  loadStudents,
+  parseStudentRecord,
+  updateStudentById,
+} from '../services/studentService.js';
+import type { User } from '@mms/shared';
+import { sendForbidden } from '../lib/httpErrors.js';
 
 const studentIdParams = z.object({ id: z.string().min(1) });
 
@@ -13,28 +19,26 @@ const studentIdParams = z.object({ id: z.string().min(1) });
  */
 export default async function studentsRoutes(
   fastify: FastifyInstance,
-  _options: FastifyPluginOptions
+  _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  fastify.get('/', async (_request, reply) => {
+  fastify.get('/', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'students')) return sendForbidden(reply);
     try {
-      const data = await fetchCollection('students');
-      const parsed = studentListSchema.safeParse(data ?? []);
-      if (!parsed.success) {
-        return reply.status(500).send({ type: 'validation_error', message: 'Invalid students data' });
-      }
-      return reply.send({ students: parsed.data });
+      return reply.send({ students: await loadStudents() });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to list students' });
     }
   });
 
-  fastify.get('/count', async (_request, reply) => {
+  fastify.get('/count', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'students')) return sendForbidden(reply);
     try {
-      const data = await fetchCollection('students');
-      const count = Array.isArray(data) ? data.length : 0;
-      return reply.send({ count });
+      const students = await loadStudents();
+      return reply.send({ count: students.length });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to count students' });
     }
@@ -42,62 +46,56 @@ export default async function studentsRoutes(
 
   fastify.post('/', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'students')) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Insufficient permissions' });
-    }
-    const parsed = studentRecordSchema.safeParse(request.body);
+    if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
+    const parsed = parseStudentRecord(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ type: 'validation_error', message: parsed.error.message });
     }
-    const existing = (await fetchCollection('students')) ?? [];
-    const list = Array.isArray(existing) ? [...existing] : [];
-    list.push(parsed.data);
-    await persistCollection('students', list);
-    return reply.status(201).send({ student: parsed.data });
+    try {
+      const student = await createStudent(parsed.data);
+      return reply.status(201).send({ student });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to create student' });
+    }
   });
 
   fastify.put<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'students')) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Insufficient permissions' });
-    }
+    if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
     const params = studentIdParams.safeParse(request.params);
-    const body = studentRecordSchema.safeParse(request.body);
+    const body = parseStudentRecord(request.body);
     if (!params.success || !body.success) {
       return reply.status(400).send({ type: 'validation_error', message: 'Invalid student payload' });
     }
-    const existing = (await fetchCollection('students')) ?? [];
-    if (!Array.isArray(existing)) {
-      return reply.status(500).send({ type: 'database_error', message: 'Invalid students collection' });
+    try {
+      const updated = await updateStudentById(params.data.id, {
+        ...body.data,
+        id: body.data.id ?? params.data.id,
+      });
+      if (!updated) {
+        return reply.status(404).send({ type: 'not_found', message: 'Student not found' });
+      }
+      return reply.send({ student: updated });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to update student' });
     }
-    const index = existing.findIndex((s) => String((s as { id: unknown }).id) === params.data.id);
-    if (index < 0) {
-      return reply.status(404).send({ type: 'not_found', message: 'Student not found' });
-    }
-    const next = [...existing];
-    next[index] = { ...body.data, id: body.data.id ?? params.data.id };
-    await persistCollection('students', next);
-    return reply.send({ student: next[index] });
   });
 
   fastify.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'students')) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Insufficient permissions' });
-    }
+    if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
     const params = studentIdParams.safeParse(request.params);
     if (!params.success) {
       return reply.status(400).send({ type: 'validation_error', message: 'Invalid student id' });
     }
-    const existing = (await fetchCollection('students')) ?? [];
-    if (!Array.isArray(existing)) {
-      return reply.status(500).send({ type: 'database_error', message: 'Invalid students collection' });
+    try {
+      const deleted = await deleteStudentById(params.data.id);
+      if (!deleted) {
+        return reply.status(404).send({ type: 'not_found', message: 'Student not found' });
+      }
+      return reply.send({ success: true });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to delete student' });
     }
-    const next = existing.filter((s) => String((s as { id: unknown }).id) !== params.data.id);
-    if (next.length === existing.length) {
-      return reply.status(404).send({ type: 'not_found', message: 'Student not found' });
-    }
-    await persistCollection('students', next);
-    return reply.send({ success: true });
   });
 }

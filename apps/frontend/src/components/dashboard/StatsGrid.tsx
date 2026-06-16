@@ -25,7 +25,7 @@ const COLOR_MAP: Record<string, ColorTheme> = {
   blue:    { bg: "bg-blue-500/10",    text: "text-blue-500",    ring: "ring-blue-500/20"    },
   violet:  { bg: "bg-violet-500/10",  text: "text-violet-500",  ring: "ring-violet-500/20"  },
   amber:   { bg: "bg-amber-500/10",   text: "text-amber-500",   ring: "ring-amber-500/20"   },
-  red:     { bg: "bg-red-500/10",     text: "text-red-500",     ring: "ring-red-500/20"     },
+  red:     { bg: "bg-destructive/10",     text: "text-destructive",     ring: "ring-destructive/20"     },
 };
 
 export interface StatItem {
@@ -94,7 +94,7 @@ export default function StatsGrid({
               <div className="flex items-center gap-1">
                 {stat.trend !== 0 && !isEditMode && (
                   <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
-                    isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
+                    isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
                   }`} aria-label={`Trend ${isPositive ? 'up' : 'down'} ${Math.abs(stat.trend)} percent`}>
                     {isPositive ? "+" : ""}{stat.trend}%
                   </span>

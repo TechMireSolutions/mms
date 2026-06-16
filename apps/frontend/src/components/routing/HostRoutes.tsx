@@ -1,14 +1,15 @@
 import React, { useEffect } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { useTenant } from "@/lib/TenantContext";
-import { ROUTES, TENANT_APP_PATHS } from "@/lib/routes";
-import { apexUrl } from "@/lib/tenantConfig";
+import { useTenant } from "@/lib/contexts/TenantContext";
+import { ROUTES, TENANT_APP_PATHS } from "@/lib/config/routes";
+import { apexUrl } from "@/lib/config/tenantConfig";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
+import PlatformProtectedRoute from "@/components/routing/PlatformProtectedRoute";
 import GuestRoute from "@/components/routing/GuestRoute";
 import TenantNotFoundScreen from "@/components/routing/TenantNotFoundScreen";
 import AppLayout from "@/components/layout/AppLayout";
-import PageNotFound from "@/lib/PageNotFound";
+import PageNotFound from "@/components/routing/PageNotFound";
 
 const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
 const Contacts = React.lazy(() => import("@/pages/Contacts"));
@@ -28,7 +29,7 @@ const Login = React.lazy(() => import("@/pages/auth/Login"));
 const ForgotPassword = React.lazy(() => import("@/pages/auth/ForgotPassword"));
 const TwoFactorAuth = React.lazy(() => import("@/pages/auth/TwoFactorAuth"));
 const OnboardingWizard = React.lazy(() => import("@/pages/onboarding/OnboardingWizard"));
-const ApexLanding = React.lazy(() => import("@/pages/ApexLanding"));
+const ApexHome = React.lazy(() => import("@/pages/ApexHome"));
 const ApexWorkspaceGate = React.lazy(() => import("@/pages/ApexWorkspaceGate"));
 
 function RedirectToApex({ path }: { path: string }): React.JSX.Element {
@@ -73,8 +74,10 @@ export default function HostRoutes(): React.JSX.Element {
   if (isApex) {
     return (
       <Routes>
-        <Route path={ROUTES.home} element={<ApexLanding />} />
-        <Route path={ROUTES.onboarding} element={<OnboardingWizard />} />
+        <Route path={ROUTES.home} element={<ApexHome />} />
+        <Route element={<PlatformProtectedRoute />}>
+          <Route path={ROUTES.onboarding} element={<OnboardingWizard />} />
+        </Route>
         <Route path={ROUTES.login} element={<ApexWorkspaceGate variant="login" showWorkspaceList />} />
         <Route
           path={ROUTES.forgotPassword}

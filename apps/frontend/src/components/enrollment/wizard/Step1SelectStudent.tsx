@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Search, User, Calendar } from "lucide-react";
-import { calcAge, Student } from "../../../lib/studentsData";
-import { Session } from "../../../lib/sessionsData";
+import { calcAge, Student } from '@/lib/data/studentsData';
+import { Session } from '@/lib/data/sessionsData';
 
 interface Step1SelectStudentProps {
   value: Student | null | undefined;

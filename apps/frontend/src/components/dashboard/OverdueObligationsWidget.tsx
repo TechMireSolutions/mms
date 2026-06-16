@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/lib/config/routes";
 
 export interface OverdueStudent {
   id: number;

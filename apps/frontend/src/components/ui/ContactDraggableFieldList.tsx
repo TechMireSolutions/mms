@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { GripVertical, Check, Settings2 } from "lucide-react";
-import { useContactConfig } from "../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 
 
 import { FieldDefinition } from "@mms/shared";
@@ -152,10 +152,10 @@ const FieldItem = memo(
           <button
             type="button"
             onClick={onDeleteField}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0 rounded text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
             title={uiStrings?.deleteFieldTitle || "Delete Field"}
           >
-            <span className="text-[10px] font-bold tracking-wider uppercase text-red-500">{uiStrings?.deleteField || "Del"}</span>
+            <span className="text-[10px] font-bold tracking-wider uppercase text-destructive">{uiStrings?.deleteField || "Del"}</span>
           </button>
         )}
       </div>
@@ -230,8 +230,10 @@ export default function DraggableFieldList({
           <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-1.5 bg-card rounded-lg">
             {fields.map((field, index) => (
               <Draggable key={field.key} draggableId={field.key} index={index}>
-                {(drag, snapshot) => (
-                  <div ref={drag.innerRef} {...drag.draggableProps} className="flex flex-col gap-1">
+                {(drag, snapshot) => {
+                  const { style, ...draggableProps } = drag.draggableProps;
+                  return (
+                  <div ref={drag.innerRef} {...draggableProps} style={style as React.CSSProperties} className="flex flex-col gap-1">
                     <FieldItem
                       field={field}
                       isEnabled={enabledSet.has(field.key)}
@@ -291,7 +293,8 @@ export default function DraggableFieldList({
                       </div>
                     )}
                   </div>
-                )}
+                );
+                }}
               </Draggable>
             ))}
             {provided.placeholder}

@@ -3,8 +3,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, AlertCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthLayout from "../../components/auth/AuthLayout";
-import { useAuth } from "../../lib/AuthContext";
-import { DEFAULT_AUTH_REDIRECT, ROUTES } from "../../lib/routes";
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { getGlobalSettings } from "../../lib/db";
 import {
   clear2FAState,
@@ -13,7 +13,7 @@ import {
 } from "../../lib/twoFactor";
 import { requiresTwoFactor } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
-import { apexUrl } from "../../lib/tenantConfig";
+import { apexUrl } from '@/lib/config/tenantConfig';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";

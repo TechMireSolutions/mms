@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Phone, Send } from "lucide-react";
-import { INVOICES, Invoice } from "../../lib/financeData";
+import { INVOICES, Invoice } from '@/lib/data/financeData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useStudentsCollection } from "../../hooks/useStudents";
 

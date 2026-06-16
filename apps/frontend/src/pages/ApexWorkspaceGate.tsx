@@ -1,10 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Globe } from "lucide-react";
+import { ArrowLeft, Globe } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import WorkspaceRegistryList from "@/components/routing/WorkspaceRegistryList";
 import ApexEntryNav from "@/components/routing/ApexEntryNav";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/lib/config/routes";
 import useTranslation from "@/hooks/useTranslation";
 
 export type ApexGateVariant = "default" | "login" | "forgotPassword" | "twoFactor" | "tenantOnly";
@@ -58,14 +58,6 @@ export default function ApexWorkspaceGate({
             actionLabelKey={isForgotPicker ? "apex.resetPasswordAt" : "auth.signInTo"}
           />
         ) : null}
-
-        <Link
-          to={ROUTES.onboarding}
-          className="inline-flex w-full items-center justify-center gap-2 py-3 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all"
-        >
-          {t("auth.createMadrasa")}
-          <ArrowRight className="w-4 h-4" aria-hidden />
-        </Link>
 
         <ApexEntryNav
           showForgotPasswordLink={variant === "login"}

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/lib/config/routes";
 import useTranslation from "@/hooks/useTranslation";
 
 interface ApexEntryNavProps {

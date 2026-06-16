@@ -9,10 +9,10 @@ import EmptyState from "../ui/EmptyState";
 
 const COLORS = ["#047857", "#0ea5e9", "#f59e0b", "#6366f1", "#ec4899", "#94a3b8"];
 
-import { CONTACTS } from "../../lib/contactsData";
+import { CONTACTS } from '@/lib/data/contactsData';
 import { Contact } from "../../lib/contactFields";
-import { calculateProfileHealth } from "../../lib/ContactConfigContext";
-import { STUDENTS, Student } from "../../lib/studentsData";
+import { calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
+import { STUDENTS, Student } from '@/lib/data/studentsData';
 
 export interface ContactStageItem {
   stage: string;

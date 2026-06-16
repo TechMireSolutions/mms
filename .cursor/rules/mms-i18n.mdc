@@ -25,7 +25,7 @@ Entry routes (login, 2FA, onboarding, apex) resolve to **English** regardless of
 |-------|-----|---------|
 | **App chrome** | `t('key')` via `useTranslation()` | Nav, settings, auth, toasts, modals, page titles — **default for all new UI** |
 | **Registry metadata** | `labelKey: AppTranslationKey` on fields/tabs/statuses | Resolved at render via `t(field.labelKey)` — prefer over inline `label` strings |
-| **Contact legacy** | `uiStrings` from `useContactConfig()` | Existing Contacts-only copy only — **do not add new keys**; migrate to `t('contacts.*')` when touching |
+| **Contact legacy** | `uiStrings` from `useContactConfig()` | ~24 Contacts files only — **do not add new keys**; migrate to `t('contacts.*')` when touching |
 
 ```tsx
 // ✅ App-wide toast

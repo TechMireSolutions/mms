@@ -4,9 +4,9 @@ import {
   ComposedChart, Area, Line, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, TooltipContentProps
 } from "recharts";
-import { enrollmentData as defaultEnrollmentData, EnrollmentPoint } from "../../../lib/dashboardData";
+import { enrollmentData as defaultEnrollmentData, EnrollmentPoint } from '@/lib/data/dashboardData';
 import { getCollection } from "../../../lib/db";
-import { STUDENTS, Student } from "../../../lib/studentsData";
+import { STUDENTS, Student } from '@/lib/data/studentsData';
 import { TrendingUp } from "lucide-react";
 
 /**

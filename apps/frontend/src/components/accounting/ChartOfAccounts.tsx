@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Plus, Pencil, Search, Download, EyeOff, Eye } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, Account, AccountType } from "../../lib/accountingData";
+import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
 import AccountModal from "./AccountModal";
 
 interface ChartOfAccountsProps {
@@ -165,7 +165,7 @@ export default function ChartOfAccounts({ accounts, onChange }: ChartOfAccountsP
                           </button>
                           {a.isActive === false
                             ? <button type="button" aria-label={`Reactivate ${a.name}`} onClick={() => handleReactivate(a.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-emerald-600 transition-colors"><Eye className="w-3.5 h-3.5" aria-hidden="true" /></button>
-                            : <button type="button" aria-label={`Deactivate ${a.name}`} onClick={() => handleDelete(a.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors"><EyeOff className="w-3.5 h-3.5" aria-hidden="true" /></button>
+                            : <button type="button" aria-label={`Deactivate ${a.name}`} onClick={() => handleDelete(a.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"><EyeOff className="w-3.5 h-3.5" aria-hidden="true" /></button>
                           }
                         </div>
                       </td>

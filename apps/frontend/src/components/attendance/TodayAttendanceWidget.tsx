@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import { UserCheck, Users, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ROUTES } from "@/lib/routes";
-import { ATTENDANCE_RECORDS, ATTENDANCE_STATUSES } from "../../lib/attendanceData";
-import { SESSIONS_DATA } from "../../lib/sessionsData";
+import { ROUTES } from "@/lib/config/routes";
+import { ATTENDANCE_RECORDS, ATTENDANCE_STATUSES } from '@/lib/data/attendanceData';
+import { SESSIONS_DATA } from '@/lib/data/sessionsData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 // Type definitions
@@ -101,7 +101,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
     })) as ClassBreakdown[];
   }, [displayRecords, allClasses]);
 
-  const rateColor = rate >= 90 ? "text-emerald-600" : rate >= 75 ? "text-amber-600" : "text-red-500";
+  const rateColor = rate >= 90 ? "text-emerald-600" : rate >= 75 ? "text-amber-600" : "text-destructive";
   const rateBarColor = rate >= 90 ? "bg-emerald-500" : rate >= 75 ? "bg-amber-500" : "bg-red-500";
 
   return (
@@ -179,7 +179,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
                     <div className={`h-full rounded-full ${c.rate >= 90 ? "bg-emerald-500" : c.rate >= 75 ? "bg-amber-500" : "bg-red-500"}`}
                       style={{ width: `${c.rate}%` }} />
                   </div>
-                  <span className={`text-xs font-bold w-10 text-right ${c.rate >= 90 ? "text-emerald-600" : c.rate >= 75 ? "text-amber-600" : "text-red-500"}`}>{c.rate}%</span>
+                  <span className={`text-xs font-bold w-10 text-right ${c.rate >= 90 ? "text-emerald-600" : c.rate >= 75 ? "text-amber-600" : "text-destructive"}`}>{c.rate}%</span>
                 </div>
               ))}
             </div>

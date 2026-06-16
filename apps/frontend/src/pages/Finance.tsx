@@ -16,7 +16,7 @@ import FinanceSettings from "../components/finance/FinanceSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
-import { INVOICES, PAYMENTS, Invoice, Payment } from "../lib/financeData";
+import { INVOICES, PAYMENTS, Invoice, Payment } from '@/lib/data/financeData';
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 

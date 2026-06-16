@@ -5,7 +5,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Distribution, Denomination, StockBatch } from "../../lib/hasanatData";
+import { Distribution, Denomination, StockBatch } from '@/lib/data/hasanatData';
 import { getObject } from "../../lib/db";
 import {
   DEFAULT_HASANAT_SETTINGS,

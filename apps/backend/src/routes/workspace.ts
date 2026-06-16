@@ -1,21 +1,13 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { mergeBrandingSettings, toPublicBranding } from '@mms/shared';
-import { getObject } from '../db/database.js';
 import {
   getWorkspace,
   getWorkspaceBySubdomain,
   isSubdomainAvailable,
   listPublicWorkspaces,
   normalizeSubdomainInput,
+  fetchPublicBrandingForSubdomain,
 } from '../services/workspaceService.js';
-import { getRequestTenant, runWithTenant } from '../utils/tenantContext.js';
-
-async function fetchPublicBrandingForSubdomain(subdomain: string) {
-  return runWithTenant(subdomain, async () => {
-    const raw = await getObject('branding');
-    return toPublicBranding(mergeBrandingSettings(raw as Record<string, unknown> | null));
-  });
-}
+import { getRequestTenant } from '../lib/tenantContext.js';
 
 export default async function workspaceRoutes(
   fastify: FastifyInstance,
@@ -23,16 +15,16 @@ export default async function workspaceRoutes(
 ): Promise<void> {
   fastify.get('/registry', async (_request, reply) => {
     if (getRequestTenant()) {
-      return reply.status(404).send({ message: 'Not found' });
+      return reply.status(404).send({ type: 'not_found', message: 'Not found' });
     }
     const workspaces = await listPublicWorkspaces();
     return reply.send({ workspaces });
   });
 
-  fastify.get('/public-branding', async (request, reply) => {
+  fastify.get('/public-branding', async (_request, reply) => {
     const workspace = await getWorkspace();
     if (!workspace) {
-      return reply.status(404).send({ message: 'No workspace configured' });
+      return reply.status(404).send({ type: 'not_found', message: 'No workspace configured' });
     }
     const branding = await fetchPublicBrandingForSubdomain(workspace.subdomain);
     return reply.send({ branding });
@@ -41,7 +33,7 @@ export default async function workspaceRoutes(
   fastify.get('/current', async (_request, reply) => {
     const workspace = await getWorkspace();
     if (!workspace) {
-      return reply.status(404).send({ message: 'No workspace configured' });
+      return reply.status(404).send({ type: 'not_found', message: 'No workspace configured' });
     }
     const branding = await fetchPublicBrandingForSubdomain(workspace.subdomain);
     return reply.send({ workspace, branding });
@@ -53,7 +45,7 @@ export default async function workspaceRoutes(
       const subdomain = normalizeSubdomainInput(request.params.subdomain);
       const workspace = await getWorkspaceBySubdomain(subdomain);
       if (!workspace) {
-        return reply.status(404).send({ message: 'Workspace not found' });
+        return reply.status(404).send({ type: 'not_found', message: 'Workspace not found' });
       }
       const branding = await fetchPublicBrandingForSubdomain(workspace.subdomain);
       return reply.send({

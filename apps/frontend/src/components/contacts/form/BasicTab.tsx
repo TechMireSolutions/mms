@@ -1,5 +1,5 @@
 import React from "react";
-import { useContactConfig } from "../../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { Field, CustomFieldInput } from "./FormPrimitives";
 import { useSortedFields } from "../../../hooks/useSortedFields";
 import useTranslation from "@/hooks/useTranslation";

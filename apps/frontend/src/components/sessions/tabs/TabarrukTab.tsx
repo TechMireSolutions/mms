@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Gift, X, Save, Edit2 } from "lucide-react";
-import { Session, TabarrukItem } from "../../../lib/sessionsData";
+import { Session, TabarrukItem } from '@/lib/data/sessionsData';
 import { DatePicker } from "../../ui/DatePicker";
 
 const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
@@ -167,7 +167,7 @@ export default function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
                       <button aria-label={`Edit ${item.item}`} onClick={() => { setEditEntry(item); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
-                      <button aria-label={`Delete ${item.item}`} onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100">
+                      <button aria-label={`Delete ${item.item}`} onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
                     </div>

@@ -30,7 +30,7 @@ import { useLiveCollection } from '../hooks/useLiveCollection';
 import { useIsAdminViewer, useViewerRole } from '@/hooks/useViewerRole';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { notify } from '@/lib/notify';
 
 /**

@@ -17,13 +17,13 @@ import { useStudentsCollection } from "@/hooks/useStudents";
 import { useContactsCollection } from "@/hooks/useContacts";
 import useGlobalSettings from "@/hooks/useGlobalSettings";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
-import { SESSIONS_DATA, type Session } from "../lib/sessionsData";
-import { INVOICES, type Invoice } from "../lib/financeData";
-import { ATTENDANCE_RECORDS, type AttendanceRecord } from "../lib/attendanceData";
-import { DISTRIBUTIONS, type Distribution } from "../lib/hasanatData";
-import { QUESTIONS, TESTS, RESULTS } from "../lib/questionBankData";
-import { revenueData as defaultRevenueData } from "../lib/dashboardData";
-import { useAuth } from "@/lib/AuthContext";
+import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
+import { INVOICES, type Invoice } from '@/lib/data/financeData';
+import { ATTENDANCE_RECORDS, type AttendanceRecord } from '@/lib/data/attendanceData';
+import { DISTRIBUTIONS, type Distribution } from '@/lib/data/hasanatData';
+import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
+import { revenueData as defaultRevenueData } from '@/lib/data/dashboardData';
+import { useAuth } from "@/lib/contexts/AuthContext";
 import useTranslation from "@/hooks/useTranslation";
 import {
   GraduationCap, CalendarCheck, BookOpen, UserCheck,

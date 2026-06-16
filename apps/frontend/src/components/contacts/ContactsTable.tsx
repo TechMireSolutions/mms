@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, Contact } from "@mms/shared";
 import { formatDate } from "@mms/shared";
-import { calculateProfileHealth, useContactConfig } from "../../lib/ContactConfigContext";
+import { calculateProfileHealth, useContactConfig } from '@/lib/contexts/ContactConfigContext';
 
 function GenderIcon({ gender }: { gender?: string }): React.JSX.Element | null {
   if (!gender) return null;

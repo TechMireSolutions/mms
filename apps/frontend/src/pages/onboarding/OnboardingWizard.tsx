@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, Sparkles } from "lucide-react";
 import WizardLayout from "../../components/onboarding/WizardLayout";
-import { ROUTES } from "../../lib/routes";
-import { tenantUrl, getAppDomain } from "../../lib/tenantConfig";
+import { ROUTES } from '@/lib/config/routes';
+import { tenantUrl, getAppDomain } from '@/lib/config/tenantConfig';
 import {
   DEFAULT_BRANDING_SETTINGS,
   DEFAULT_GLOBAL_SETTINGS,
@@ -16,7 +16,7 @@ import { applyBrandingTheme } from "@/lib/brandingTheme";
 import CreateMadrasa from "./steps/CreateMadrasa";
 import SelectPlan from "./steps/SelectPlan";
 import AdminSetup from "./steps/AdminSetup";
-import { useAuth } from "../../lib/AuthContext";
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export interface OnboardingData {
   name: string;

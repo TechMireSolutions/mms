@@ -2,15 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { X, ChevronRight, LogOut } from "lucide-react";
 import useBranding from "@/hooks/useBranding";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
 import useGlobalSettings from "@/hooks/useGlobalSettings";
 import useTranslation from "@/hooks/useTranslation";
-import { NAV_ITEMS } from "@/lib/navConfig";
-import { isNavPathActive, ROUTES } from "@/lib/routes";
+import { NAV_ITEMS } from "@/lib/config/navConfig";
+import { isNavPathActive, ROUTES } from "@/lib/config/routes";
+import { prefetchRoute } from "@/lib/routing/routePrefetch";
 
 export interface MobileSidebarProps {
   /** Boolean indicating if the mobile sidebar drawer is currently visible. */
@@ -165,6 +166,8 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                               key={sub.path}
                               to={sub.path}
                               onClick={onClose}
+                              onMouseEnter={() => prefetchRoute(sub.path)}
+                              onFocus={() => prefetchRoute(sub.path)}
                               className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 relative ${
                                 isSubActive
                                   ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
@@ -192,6 +195,8 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                 key={item.path}
                 to={item.path!}
                 onClick={onClose}
+                onMouseEnter={() => prefetchRoute(item.path!)}
+                onFocus={() => prefetchRoute(item.path!)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"

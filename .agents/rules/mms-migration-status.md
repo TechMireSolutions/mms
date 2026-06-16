@@ -12,19 +12,18 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Contact `uiStrings` map | Contacts module toasts/labels | New copy → `appTranslations` + `t()`; no new `uiStrings` keys |
 | TanStack Query | Students + contacts + workspace registry + auth; most modules still localStorage | New REST resources Query-first — `mms-query.md` |
 | `can()` permissions hook | Shipped; Enrollments + Attendance wired; registry partial | Full registry-driven matrix — `mms-rbac.md` |
-| Inline `role ===` checks | Dashboard + some modules remain | `can()` / `useViewerRole` — `mms-rbac.md` |
+| Inline `role ===` checks | Dashboard widget role filter remains (data personalization) | `can()` / `useViewerRole` — `mms-rbac.md` |
 | Custom tab provisioning | JSON document store only | Table + migration + CRUD per custom tab — `mms-fields.md` |
 | WebSockets | Not implemented | Replace polling for server push — `mms-core.md` |
 | Operations/Analytics sub-tabs | Residual inline bars in deep components | `SubTabBar` per `mms-ui-tabs.md` |
 | `category="academic"` in reports/KPI | Removed from module pages | Module-specific categories only (`mms-module-isolation.md`) |
 | Legacy entity forms | ObligationModal, some detail drawers | `FormModal` — `mms-ui-forms.md` |
-| Status colours inline | Many `text-green-500` / `text-red-500` | `StatusBadge` + config — `mms-ui-visual.md` |
+| Status colours inline | Residual in chart color maps | `StatusBadge` + semantic tokens — `mms-ui-visual.md` |
 | Automated tests | Shared + backend (auth, rbac, health, security); frontend apiClient + hooks; Playwright smoke in CI `e2e/` | Expand Playwright for login/onboard — `mms-testing.md` |
 | Server-first data | Students + contacts Query-first; most modules localStorage primary | Query + API authoritative for new modules — `mms-data-layer.md` |
 | Per-entity REST API | `/api/students` + `/api/contacts` CRUD; generic `/api/db` for rest | Resource routes + validation per domain — `mms-backend.md` |
 | Internal `fetch('/api/...')` | External OAuth only | All MMS API via `apiClient` — `mms-frontend.md` |
-| JWT in localStorage | Removed — httpOnly cookies only | Remove legacy token path when all clients migrated — `mms-auth.md` |
-| Collection read RBAC | Any authenticated tenant user can read collections + REST list endpoints | Role-based read matrix (evaluate) — `mms-rbac.md` |
+| JWT in localStorage | Removed — httpOnly cookies only; `apiClient` has no token reads | Remove `mms_token` cleanup in `AuthContext` when stable — `mms-auth.md` |
 | Client error reporting | Console/toasts only | Sentry or equivalent — `mms-observability.md` |
 | Global a11y pass | Partial (dropdowns only) | WCAG baseline on new UI — `mms-a11y.md` |
 
@@ -86,8 +85,14 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Playwright smoke | `e2e/smoke.spec.ts`, `e2e/interactive.spec.ts` |
 | Playwright in CI | API smoke job with Postgres + backend boot |
 | Contacts REST API | `/api/contacts` CRUD + Zod + `useContacts` Query hooks |
+| Attendance RBAC UI | `can()` for tabs, mark, edit, delete; role banner via `t()` |
+| Tenant workspace Query | `useWorkspaceBySubdomain` + `usePublicBranding` replace `useEffect` fetch |
+| Destructive colour tokens | `text-red-500` → `text-destructive` across frontend components |
 | Contacts write RBAC | `canWriteCollection` on contact mutations |
 | Legacy `mms_token` removed | Cookie-only session via `apiClient` |
 | Dashboard widget defaults | Permission-based via `can()` not inline `role ===` |
+| Collection read RBAC | `canReadCollection` / `canReadObject` on db + REST list endpoints |
+| Bulk sync body limit | `MMS_SYNC_MAX_BODY_BYTES` (default 10 MiB) on `POST /api/db/sync` |
+| Backend failure logging | Structured `onResponse` warn for 4xx/5xx with tenant + userId |
 
 Do not reintroduce resolved violations.

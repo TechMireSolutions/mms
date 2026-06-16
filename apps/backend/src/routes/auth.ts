@@ -6,17 +6,19 @@ import {
   isOnboardingAvailable,
   completeTwoFactorLogin,
   type User,
-} from '../services/authService.js';
-import { exchangeAuthHandoff } from '../services/authHandoffService.js';
-import { resendTwoFactorChallenge } from '../services/twoFactorService.js';
-import { resolveSubdomainFromRequest } from '../utils/tenantContext.js';
-import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from '../services/authCookieService.js';
+} from '../services/auth/authService.js';
+import { exchangeAuthHandoff } from '../services/auth/authHandoffService.js';
+import { resendTwoFactorChallenge } from '../services/auth/twoFactorService.js';
+import { resolveSubdomainFromRequest } from '../lib/tenantContext.js';
+import { AUTH_RATE_LIMIT } from '../lib/rateLimitConfig.js';
+import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from '../services/auth/authCookieService.js';
 import { authenticateTenant } from '../middleware/authenticate.js';
-import { deleteAuthArtifact } from '../services/authArtifactService.js';
+import { authenticatePlatform } from '../middleware/authenticatePlatform.js';
+import { deleteAuthArtifact } from '../services/auth/authArtifactService.js';
 import { getJwtExpiresIn } from '../services/globalSettingsService.js';
-import { getPublicUserById } from '../services/userService.js';
-import { runWithTenant } from '../utils/tenantContext.js';
-import { rotateRefreshToken, validateRefreshToken } from '../services/twoFactorService.js';
+import { getPublicUserById } from '../services/auth/userService.js';
+import { runWithTenant } from '../lib/tenantContext.js';
+import { rotateRefreshToken, validateRefreshToken } from '../services/auth/twoFactorService.js';
 
 interface LoginBody {
   email?: string;
@@ -72,11 +74,6 @@ const onboardSchema: FastifySchema = {
   }
 };
 
-const AUTH_RATE_LIMIT = {
-  max: 10,
-  timeWindow: '1 minute' as const,
-};
-
 export default async function authRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions
@@ -117,7 +114,10 @@ export default async function authRoutes(
       });
     });
 
-    inner.post<{ Body: OnboardBody }>('/onboard', { schema: onboardSchema }, async (request, reply) => {
+    inner.post<{ Body: OnboardBody }>(
+      '/onboard',
+      { schema: onboardSchema, preHandler: authenticatePlatform },
+      async (request, reply) => {
       const body = request.body;
 
       try {
@@ -154,11 +154,17 @@ export default async function authRoutes(
     inner.post<{ Body: { challengeId?: string; code?: string } }>('/2fa/verify', async (request, reply) => {
       const { challengeId, code } = request.body ?? {};
       if (!challengeId || !code) {
-        return reply.status(400).send({ message: 'challengeId and code are required' });
+        return reply.status(400).send({
+          type: 'validation_error',
+          message: 'challengeId and code are required',
+        });
       }
       const result = await completeTwoFactorLogin(challengeId, code, fastify.jwt, reply);
       if (!result) {
-        return reply.status(401).send({ message: 'Invalid or expired verification code' });
+        return reply.status(401).send({
+          type: 'invalid_credentials',
+          message: 'Invalid or expired verification code',
+        });
       }
       return reply.send({ user: result.user, requires2FA: false });
     });
@@ -166,11 +172,17 @@ export default async function authRoutes(
     inner.post<{ Body: { challengeId?: string } }>('/2fa/resend', async (request, reply) => {
       const challengeId = request.body?.challengeId;
       if (!challengeId) {
-        return reply.status(400).send({ message: 'challengeId is required' });
+        return reply.status(400).send({
+          type: 'validation_error',
+          message: 'challengeId is required',
+        });
       }
       const ok = await resendTwoFactorChallenge(challengeId);
       if (!ok) {
-        return reply.status(404).send({ message: 'Challenge not found or expired' });
+        return reply.status(404).send({
+          type: 'not_found',
+          message: 'Challenge not found or expired',
+        });
       }
       return reply.send({ success: true });
     });
@@ -237,13 +249,19 @@ export default async function authRoutes(
   fastify.post<{ Body: { code?: string } }>('/handoff', async (request, reply) => {
     const code = request.body?.code;
     if (!code) {
-      return reply.status(400).send({ message: 'Handoff code is required' });
+      return reply.status(400).send({
+        type: 'validation_error',
+        message: 'Handoff code is required',
+      });
     }
     const result = await exchangeAuthHandoff(code);
     if (!result) {
-      return reply.status(401).send({ message: 'Invalid or expired handoff code' });
+      return reply.status(401).send({
+        type: 'auth_required',
+        message: 'Invalid or expired handoff code',
+      });
     }
-    const { establishSession } = await import('../services/authService.js');
+    const { establishSession } = await import('../services/auth/authService.js');
     await establishSession(result.user, fastify.jwt, reply, true);
     return reply.send({ user: result.user });
   });

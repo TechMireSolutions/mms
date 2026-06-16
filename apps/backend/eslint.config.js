@@ -3,7 +3,7 @@ import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/**", "src/services/whatsAppProvider.ts", "src/services/whatsAppQueue.ts"] },
+  { ignores: ["dist/**", "src/services/whatsapp/whatsAppProvider.ts", "src/services/whatsapp/whatsAppQueue.ts"] },
   {
     files: ["src/**/*.ts"],
     extends: [pluginJs.configs.recommended, ...tseslint.configs.recommended],

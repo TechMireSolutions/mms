@@ -4,8 +4,8 @@ import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  UserCheck, ClipboardEdit, BookOpen, BarChart2, Settings,
-  ShieldCheck, ClipboardList, LayoutDashboard
+  UserCheck, ClipboardEdit, BookOpen, BarChart2,
+  ShieldCheck, ClipboardList,
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
@@ -20,15 +20,10 @@ import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { saveCollection, getObject, saveObject } from "../lib/db";
-import { ATTENDANCE_RECORDS, DEFAULT_ATT_SETTINGS, type AttendanceRecord } from "../lib/attendanceData";
+import { DEFAULT_ATT_SETTINGS, type AttendanceRecord } from '@/lib/data/attendanceData';
 import { useLiveCollection } from "../hooks/useLiveCollection";
-import { useViewerRole, type ViewerRole } from "@/hooks/useViewerRole";
+import { useViewerRole } from "@/hooks/useViewerRole";
 import usePermissions from "@/hooks/usePermissions";
-
-const ROLE_BADGE: Record<Exclude<ViewerRole, "admin">, string> = {
-  teacher: "bg-amber-50 text-amber-700",
-  accountant: "bg-blue-50 text-blue-700",
-};
 
 const DEFAULT_FILTERS = {
   sessionId: "",
@@ -55,7 +50,7 @@ export default function Attendance() {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const records = useLiveCollection("attendance_records");
   const [settings, setSettings] = useState(() => getObject("attendance_settings", DEFAULT_ATT_SETTINGS));
-  const [subTab, setSubTab]   = useState("fields");
+  const [subTab, setSubTab] = useState("fields");
 
   const setRecords = useCallback((updater: React.SetStateAction<AttendanceRecord[]>) => {
     const next = typeof updater === "function" ? updater(records) : updater;
@@ -66,27 +61,30 @@ export default function Attendance() {
     saveObject("attendance_settings", settings);
   }, [settings]);
 
-  const visibleTopTabs = PAGE_TABS.filter((t) => {
-    if (t.id === "configuration") return can("settings.global.write");
-    if (t.id === "analytics") return can("analytics.view") && role !== "accountant";
+  const canSeeAttendanceAnalytics = can("analytics.view")
+    && (can("users.manage") || can("attendance.write") || can("enrollments.write") || !can("finance.write"));
+
+  const visibleTopTabs = PAGE_TABS.filter((tab) => {
+    if (tab.id === "configuration") return can("settings.global.write");
+    if (tab.id === "analytics") return canSeeAttendanceAnalytics;
     return true;
   });
 
   const visibleOperationsTabs = useMemo(
     () => [
-      { id: "mark",    label: t("attendance.tabs.mark"),    icon: ClipboardEdit, roles: ["admin", "teacher"] as ViewerRole[] },
-      { id: "records", label: t("attendance.tabs.records"), icon: BookOpen,      roles: ["admin", "teacher", "accountant"] as ViewerRole[] },
-      { id: "audit",   label: t("attendance.tabs.audit"),   icon: ClipboardList, roles: ["admin"] as ViewerRole[] },
-    ].filter((tab) => tab.roles.includes(role)),
-    [t, role]
+      { id: "mark",    label: t("attendance.tabs.mark"),    icon: ClipboardEdit, visible: can("attendance.write") },
+      { id: "records", label: t("attendance.tabs.records"), icon: BookOpen,      visible: can("analytics.view") },
+      { id: "audit",   label: t("attendance.tabs.audit"),   icon: ClipboardList, visible: can("users.manage") },
+    ].filter((tab) => tab.visible),
+    [t, can],
   );
 
   const visibleAnalyticsTabs = useMemo(
     () => [
-      { id: "charts",  label: t("attendance.tabs.analyticsCharts"), icon: BarChart2,     roles: ["admin", "teacher"] as ViewerRole[] },
-      { id: "reports", label: t("attendance.tabs.reports"),         icon: ClipboardList, roles: ["admin", "teacher"] as ViewerRole[] },
-    ].filter((tab) => tab.roles.includes(role)),
-    [t, role]
+      { id: "charts",  label: t("attendance.tabs.analyticsCharts"), icon: BarChart2,     visible: canSeeAttendanceAnalytics },
+      { id: "reports", label: t("attendance.tabs.reports"),         icon: ClipboardList, visible: canSeeAttendanceAnalytics },
+    ].filter((tab) => tab.visible),
+    [t, canSeeAttendanceAnalytics],
   );
 
   const effectiveTab = visibleTopTabs.find((t) => t.id === activeTab) ? activeTab : "operations";
@@ -167,12 +165,12 @@ export default function Attendance() {
         panelIdPrefix="attendance-tab"
       >
       {/* Role info banner */}
-      {role !== "admin" && (
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium ${ROLE_BADGE[role]} border border-current/20`}>
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span className="font-bold capitalize">{role} view:</span>
-          {role === "teacher"    && "Can mark and view attendance for assigned classes. No admin settings access."}
-          {role === "accountant" && "View-only access to attendance records."}
+      {!can("users.manage") && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-muted text-muted-foreground border border-border">
+          <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+          <span className="font-bold capitalize">{t("attendance.roleBanner.label", { role })}</span>
+          {can("attendance.write") && !can("finance.write") && t("attendance.roleBanner.teacher")}
+          {can("finance.write") && !can("attendance.write") && t("attendance.roleBanner.accountant")}
         </div>
       )}
 

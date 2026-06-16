@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { registerAppNavigate, unregisterAppNavigate } from "@/lib/appNavigate";
+import { registerAppNavigate, unregisterAppNavigate } from "@/lib/routing/appNavigate";
 import { applyAppTheme } from "@/lib/brandingTheme";
 import { revertSettingsPreviews } from "@/lib/settingsPreview";
 

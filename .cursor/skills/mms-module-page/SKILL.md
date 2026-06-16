@@ -14,11 +14,11 @@ Operations  |  Analytics  |  Configuration
 
 Reference implementations:
 
-| Module | Data layer |
-|--------|------------|
-| `Contacts.tsx` | `useLiveCollection` (localStorage) |
-| `Students.tsx` | `useStudents` + `useStudentMutations` (REST + Query) |
-| `Finance.tsx` | `useLiveCollection` |
+| Module | Data layer | Primary hooks |
+|--------|------------|---------------|
+| `Students.tsx` | REST + Query (server-first) | `useStudents`, `useStudentMutations` |
+| `Contacts.tsx` | REST + Query + hybrid cache | `useContacts`, `useContactMutations`, `useContactsCollection` |
+| `Finance.tsx` | localStorage | `useLiveCollection` |
 
 ## Checklist
 
@@ -27,6 +27,7 @@ Reference implementations:
 - [ ] Nav entry in lib/navConfig.tsx (standalone or Academics subItems; set moduleId)
 - [ ] Registry: SYSTEM_MODULES + SYSTEM_MODULE_NAV + enabledModules default in @mms/shared
 - [ ] PageHeader with unconditional actions in .actions
+- [ ] ResponsiveAccordionTabs + useModuleTierTabs (mms-ui-tabs.mdc)
 - [ ] Operations: CRUD/list views
 - [ ] Analytics: KPISummary(category) + ModuleReports from components/reports/
 - [ ] Configuration: *Settings panel (Fields + Preferences sub-tabs)
@@ -34,15 +35,18 @@ Reference implementations:
 - [ ] Internal API via apiClient (mms-frontend.mdc)
 - [ ] Module settings object: {module}_settings via saveObject
 - [ ] Types/settings defaults in packages/shared/src/settingsTypes.ts
+- [ ] ErrorBoundary on Operations + Analytics tiers
+- [ ] can() for write/admin actions — not role === (mms-rbac.mdc)
 ```
 
 ## Data layer choice
 
 | Scenario | Pattern |
 |----------|---------|
-| Module has `/api/{resource}` routes | Query hooks in `hooks/use{Resource}.ts` — see `useStudents.ts` |
+| Module has `/api/{resource}` routes | Query hooks in `hooks/use{Resource}.ts` — see `useStudents.ts`, `useContacts.ts` |
 | Module uses generic `/api/db/collections` | `useLiveCollection` + `saveCollection` |
-| Migrating to REST | Replace live collection in page only after hooks ship; sync localStorage if KPI views still read it |
+| Migrating to REST | Ship Query hooks first; page uses `useXxxCollection()` if KPI widgets still on localStorage |
+| Dashboard/widgets need legacy data | `saveCollection` inside Query `queryFn` — hybrid pattern in `mms-query.mdc` |
 
 ## New module settings
 
@@ -66,16 +70,17 @@ Each tier is **module-scoped only** (`mms-module-isolation.mdc`):
 
 ## Responsive tabs
 
-Wrap tier navigation in `ResponsiveAccordionTabs` — `mms-ui-tabs.mdc`.
+Wrap tier navigation in `ResponsiveAccordionTabs` — `mms-ui-tabs.mdc`. Inner tiers use `SubTabBar`.
 
 ## Do not
 
-- Add a fourth top-level tab
+- Add a fourth top-level tier
 - Gate PageHeader CTAs on `activeTab`
 - Mount `*Settings` under `/settings` — Configuration tab only
 - Use raw `fetch('/api/...')` — use `apiClient`
-- Duplicate data paths (Query + `useLiveCollection` for same entity)
+- Duplicate data paths (Query mutations + parallel `saveCollection` writes for same entity)
+- Nest `ContactConfigProvider` on module pages
 
 ## Rules
 
-`mms-module-isolation.mdc`, `mms-ui-tabs.mdc`, `mms-settings-navigation.mdc`, `mms-config.mdc`, `mms-query.mdc`
+`mms-module-isolation.mdc`, `mms-ui-tabs.mdc`, `mms-settings-navigation.mdc`, `mms-config.mdc`, `mms-query.mdc`, `mms-frontend.mdc`

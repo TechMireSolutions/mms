@@ -31,4 +31,5 @@ export * from './questionBankTypes.js';
 export * from './utils.js';
 export * from './permissions.js';
 export * from './auditTypes.js';
+export * from './platformTypes.js';
 

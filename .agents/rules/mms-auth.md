@@ -44,9 +44,11 @@ JWT / API public shape: `User` from `@mms/shared` — `{ id, email, name, role, 
 
 | Layer | Mechanism |
 |-------|-----------|
-| Access | httpOnly cookie `mms_access` (JWT, 15 min, `SameSite=Lax`) + Bearer fallback |
+| Access | httpOnly cookie `mms_access` (JWT, 15 min, `SameSite=Lax`) |
 | Refresh | httpOnly cookie `mms_refresh` (opaque token; hash in `auth_artifacts`, 7 days) |
-| Legacy | `mms_token` in localStorage — **read-only** fallback in `apiClient`; do not write on login |
+| Frontend API | `apiClient` sends cookies via `credentials: 'include'` only — no `localStorage` token reads |
+| Legacy cleanup | `AuthContext` `removeItem('mms_token')` on login/logout — do not reintroduce token writes |
+| Backend verify | `attachAccessTokenFromCookie` copies `mms_access` → `Authorization` Bearer for `jwtVerify` |
 
 OTP codes: `crypto.randomInt()` — never `Math.random()`.
 

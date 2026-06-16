@@ -1,8 +1,8 @@
 import React from "react";
 import { User, BookOpen, Layers, DollarSign, CheckCircle2 } from "lucide-react";
-import { calcAge, Student } from "../../../lib/studentsData";
-import { Session, Class } from "../../../lib/sessionsData";
-import { CalculatedFee } from "../../../lib/enrollmentData";
+import { calcAge, Student } from '@/lib/data/studentsData';
+import { Session, Class } from '@/lib/data/sessionsData';
+import { CalculatedFee } from '@/lib/data/enrollmentData';
 import { getObject } from "../../../lib/db";
 import {
   type EnrollmentsSettings,

@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Loader2, Mail, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthLayout from "../../components/auth/AuthLayout";
-import { ROUTES } from "../../lib/routes";
-import { apexUrl } from "../../lib/tenantConfig";
+import { ROUTES } from '@/lib/config/routes';
+import { apexUrl } from '@/lib/config/tenantConfig';
 import useTranslation from "@/hooks/useTranslation";
 
 /**

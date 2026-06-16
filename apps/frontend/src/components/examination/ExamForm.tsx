@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { BookOpen } from "lucide-react";
 import FormModal from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
-import { CLASSES, Exam } from "../../lib/examinationData";
+import { CLASSES, Exam } from '@/lib/data/examinationData';
 import { toTitleCase } from "@mms/shared";
 import { getObject } from "../../lib/db";
 import {

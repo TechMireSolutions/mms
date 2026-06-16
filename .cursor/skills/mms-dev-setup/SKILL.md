@@ -11,9 +11,10 @@ description: Sets up and runs the MMS monorepo (pnpm, PostgreSQL, backend :3000,
 # From repo root
 pnpm install
 pnpm dev                         # turbo: backend + frontend (foreground)
-./restart_servers.sh             # recommended: Postgres + restart + health check
-./restart_servers.sh status      # verify :3000 / :5173
-./restart_servers.sh --quick     # skip cache clear / health wait
+./restart_servers.sh             # Postgres + pnpm dev (turbo) detached + health check
+./restart_servers.sh status      # verify :3000 / :5173; flags stale PIDs
+./restart_servers.sh --quick     # skip cache clear / shortened health wait
+./restart_servers.sh --separate  # two-process mode (backend then frontend)
 ./scripts/stop_servers.sh        # stop servers started by restart script
 ```
 
@@ -35,6 +36,10 @@ Create `apps/backend/.env` (never commit):
 |----------|-------|
 | `JWT_SECRET` | **Required** — server exits without it (e.g. `dev-local-change-me`) |
 | `DATABASE_URL` | Default `postgresql://postgres:postgres@localhost:5432/mms` |
+| `PLATFORM_ADMIN_EMAIL` | First platform super-user (apex only) — seeded when no platform users exist |
+| `PLATFORM_ADMIN_PASSWORD` | Platform super-user password (`SEED_DEV_PASSWORD` fallback) |
+
+**Apex (`http://localhost:5173/`):** platform sign-in for super-users who can create madrasas. **Tenant subdomains** use separate madrasa auth (`/api/auth/login`).
 
 Frontend uses Vite proxy `/api` → `:3000` with `credentials: 'include'` for cookie auth.
 

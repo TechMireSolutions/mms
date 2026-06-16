@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical, Plus, Check, Trash2, FileSpreadsheet, FileText, Settings, Database, Sliders } from "lucide-react";
-import { CONTACTS } from "../../lib/contactsData";
-import { STUDENTS } from "../../lib/studentsData";
-import { SESSIONS_DATA } from "../../lib/sessionsData";
-import { INVOICES } from "../../lib/financeData";
-import { ATTENDANCE_RECORDS } from "../../lib/attendanceData";
-import { DISTRIBUTIONS } from "../../lib/hasanatData";
-import { EXAM_RESULTS } from "../../lib/examinationData";
+import { CONTACTS } from '@/lib/data/contactsData';
+import { STUDENTS } from '@/lib/data/studentsData';
+import { SESSIONS_DATA } from '@/lib/data/sessionsData';
+import { INVOICES } from '@/lib/data/financeData';
+import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
+import { DISTRIBUTIONS } from '@/lib/data/hasanatData';
+import { EXAM_RESULTS } from '@/lib/data/examinationData';
 import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import { calculateProfileHealth } from "../../lib/ContactConfigContext";
+import { calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
 import { Contact } from "../../lib/contactFields";
 
 /** Data source keys available in the custom report builder. */

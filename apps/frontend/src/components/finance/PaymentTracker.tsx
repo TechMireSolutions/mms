@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { CreditCard } from "lucide-react";
-import { Payment } from "../../lib/financeData";
+import { Payment } from '@/lib/data/financeData';
 
 const METHOD_COLORS: Record<string, string> = {
   "Cash":          "bg-emerald-50 text-emerald-700 border-emerald-100",

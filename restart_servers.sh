@@ -8,6 +8,7 @@
 #   ./restart_servers.sh stop         # stop servers
 #   ./restart_servers.sh --quick      # skip vite cache clear & health wait
 #   ./restart_servers.sh --no-docker  # skip Postgres container
+#   ./restart_servers.sh --separate   # backend + frontend as two processes (debug)
 #
 set -euo pipefail
 
@@ -22,9 +23,11 @@ PG_USER="${MMS_PG_USER:-postgres}"
 PG_PASSWORD="${MMS_PG_PASSWORD:-postgres}"
 PG_DB="${MMS_PG_DB:-mms}"
 LOG_DIR="$ROOT_DIR/.logs"
+MAX_LOG_BYTES="${MMS_MAX_LOG_BYTES:-52428800}" # 50 MiB — rotate when larger
 
 QUICK=false
 NO_DOCKER=false
+SEPARATE=false
 CMD="restart"
 
 usage() {
@@ -37,14 +40,16 @@ Commands:
   stop       Stop frontend and backend
 
 Options:
-  --quick       Skip Vite cache clear and post-start health wait
+  --quick       Skip Vite cache clear and shorten post-start health wait
   --no-docker   Do not start or create the PostgreSQL Docker container
+  --separate    Start backend and frontend as two processes (default: pnpm dev / turbo)
   --help        Show this help
 
 After start:
   Frontend  http://localhost:5173
   Backend   http://localhost:3000/health
-  Logs      tail -f .logs/backend.log .logs/frontend.log
+  Logs      tail -f .logs/dev.log
+  Foreground (most stable)  pnpm dev
 EOF
 }
 
@@ -53,6 +58,7 @@ while [ $# -gt 0 ]; do
     restart|start|stop|status) CMD="$1"; shift ;;
     --quick) QUICK=true; shift ;;
     --no-docker) NO_DOCKER=true; shift ;;
+    --separate) SEPARATE=true; shift ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 1 ;;
   esac
@@ -94,6 +100,39 @@ kill_pid_file() {
     sleep 0.3
     kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
   fi
+}
+
+log_file_size() {
+  local file="$1"
+  if [ ! -f "$file" ]; then
+    echo 0
+    return
+  fi
+  stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0
+}
+
+rotate_log_if_huge() {
+  local file="$1"
+  [ -f "$file" ] || return 0
+  local size
+  size="$(log_file_size "$file")"
+  if [ "$size" -gt "$MAX_LOG_BYTES" ]; then
+    local backup="${file}.$(date +%Y%m%d-%H%M%S).bak"
+    log "Rotating oversized log $(basename "$file") (${size} bytes) → $(basename "$backup")"
+    mv "$file" "$backup"
+    : >"$file"
+  fi
+}
+
+rotate_logs_if_huge() {
+  rotate_log_if_huge "$LOG_DIR/dev.log"
+  rotate_log_if_huge "$LOG_DIR/backend.log"
+  rotate_log_if_huge "$LOG_DIR/frontend.log"
+}
+
+pid_alive() {
+  local pid="$1"
+  [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
 }
 
 kill_all_on_port() {
@@ -140,6 +179,8 @@ kill_repo_dev_processes() {
     [[ "$cmd" == *"$ROOT_DIR"* ]] || continue
 
     case "$cmd" in
+      *"turbo"*"run dev"*)                       label="turbo dev" ;;
+      *"$ROOT_DIR"*"pnpm dev"*)                  label="pnpm dev" ;;
       *"pnpm"*"--filter"*"mms-frontend"*"dev"*) label="frontend pnpm" ;;
       *"pnpm"*"--filter"*"mms-backend"*"dev"*)  label="backend pnpm" ;;
       *"$ROOT_DIR/apps/frontend"*"vite"*)       label="frontend vite" ;;
@@ -149,7 +190,7 @@ kill_repo_dev_processes() {
 
     log "Stopping orphan $label (pid $pid)..."
     kill -TERM "$pid" 2>/dev/null || true
-  done < <(pgrep -f "pnpm|vite|tsx" 2>/dev/null || true)
+  done < <(pgrep -f "pnpm|turbo|vite|tsx" 2>/dev/null || true)
 
   sleep 0.4
 
@@ -158,6 +199,8 @@ kill_repo_dev_processes() {
     cmd="$(ps -p "$pid" -o args= 2>/dev/null || true)"
     [[ "$cmd" == *"$ROOT_DIR"* ]] || continue
     case "$cmd" in
+      *"turbo"*"run dev"*|\
+      *"$ROOT_DIR"*"pnpm dev"*|\
       *"pnpm"*"--filter"*"mms-frontend"*"dev"*|\
       *"pnpm"*"--filter"*"mms-backend"*"dev"*|\
       *"$ROOT_DIR/apps/frontend"*"vite"*|\
@@ -165,7 +208,7 @@ kill_repo_dev_processes() {
         kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
         ;;
     esac
-  done < <(pgrep -f "pnpm|vite|tsx" 2>/dev/null || true)
+  done < <(pgrep -f "pnpm|turbo|vite|tsx" 2>/dev/null || true)
 }
 
 stop_servers() {
@@ -176,6 +219,7 @@ stop_servers() {
     log "Stopping MMS dev servers..."
   fi
 
+  kill_pid_file "$LOG_DIR/dev.pid" "turbo dev"
   kill_pid_file "$LOG_DIR/backend.pid" "backend"
   kill_pid_file "$LOG_DIR/frontend.pid" "frontend"
 
@@ -188,7 +232,7 @@ stop_servers() {
   kill_all_on_port "$BACKEND_PORT" "backend" || ports_clear=false
   kill_all_on_port "$FRONTEND_PORT" "frontend" || ports_clear=false
 
-  rm -f "$LOG_DIR/backend.pid" "$LOG_DIR/frontend.pid"
+  rm -f "$LOG_DIR/dev.pid" "$LOG_DIR/backend.pid" "$LOG_DIR/frontend.pid"
 
   if [ "$quiet" != true ]; then
     if [ "$ports_clear" = true ] \
@@ -315,29 +359,63 @@ check_prerequisites() {
   fi
 }
 
-# Start a long-lived dev process reparented to launchd (survives IDE / terminal exit).
-# Double-fork: inner subshell exits immediately so the nohup child is not tied to our shell.
+# Start a long-lived dev process detached from this shell (nohup + disown).
+# Do not wrap in a subshell — subshell exit can SIGHUP the process tree on macOS.
 launch_detached() {
   local logfile="$1"
-  local workdir="$2"
-  shift 2
-  local cmd=("$@")
-  local inner=""
-  local arg
+  local pidfile="$2"
+  local workdir="$3"
+  shift 3
+  local launcher_pid
+  local prev_dir="$PWD"
 
-  for arg in "${cmd[@]}"; do
-    inner+=" $(printf '%q' "$arg")"
-  done
+  cd "$workdir" || die "Cannot cd to $workdir"
+  nohup "$@" >>"$logfile" 2>&1 </dev/null &
+  launcher_pid=$!
+  echo "$launcher_pid" >"$pidfile"
+  disown -h "$launcher_pid" 2>/dev/null || true
+  cd "$prev_dir" || cd "$ROOT_DIR"
+}
 
-  (
-    cd "$workdir" || exit 1
-    nohup bash -c "exec${inner}" >>"$logfile" 2>&1 </dev/null &
-    exit 0
-  )
+wait_for_stable_ports() {
+  local probe="${1:-3}"
+  sleep "$probe"
+  if port_in_use "$BACKEND_PORT" && port_in_use "$FRONTEND_PORT"; then
+    return 0
+  fi
+  warn "Servers died within ${probe}s of starting — recent log:"
+  if [ -f "$LOG_DIR/dev.log" ]; then
+    tail -15 "$LOG_DIR/dev.log" >&2 || true
+  else
+    tail -8 "$LOG_DIR/backend.log" 2>/dev/null >&2 || true
+    tail -8 "$LOG_DIR/frontend.log" 2>/dev/null >&2 || true
+  fi
+  return 1
+}
+
+start_servers_turbo() {
+  log "Starting dev stack (pnpm dev / turbo) → $LOG_DIR/dev.log"
+  launch_detached "$LOG_DIR/dev.log" "$LOG_DIR/dev.pid" "$ROOT_DIR" \
+    pnpm dev
+}
+
+start_servers_separate() {
+  log "Starting backend → $LOG_DIR/backend.log"
+  launch_detached "$LOG_DIR/backend.log" "$LOG_DIR/backend.pid" "$ROOT_DIR/apps/backend" \
+    pnpm exec tsx watch src/index.ts
+
+  wait_for_http "http://localhost:$BACKEND_PORT/health" "Backend" 90 || true
+
+  log "Starting frontend → $LOG_DIR/frontend.log"
+  launch_detached "$LOG_DIR/frontend.log" "$LOG_DIR/frontend.pid" "$ROOT_DIR/apps/frontend" \
+    pnpm exec vite --host
+
+  wait_for_port "$FRONTEND_PORT" "Frontend" 45 || true
 }
 
 start_servers() {
   mkdir -p "$LOG_DIR"
+  rotate_logs_if_huge
   stop_servers true
 
   if [ "$QUICK" = false ]; then
@@ -345,24 +423,18 @@ start_servers() {
     rm -rf apps/frontend/node_modules/.vite 2>/dev/null || true
   fi
 
-  log "Starting backend → $LOG_DIR/backend.log"
-  launch_detached "$LOG_DIR/backend.log" "$ROOT_DIR/apps/backend" \
-    pnpm exec tsx watch src/index.ts
-
-  log "Starting frontend → $LOG_DIR/frontend.log"
-  if [ "$QUICK" = true ]; then
-    launch_detached "$LOG_DIR/frontend.log" "$ROOT_DIR/apps/frontend" \
-      pnpm exec vite --host
+  if [ "$SEPARATE" = true ]; then
+    start_servers_separate
   else
-    launch_detached "$LOG_DIR/frontend.log" "$ROOT_DIR/apps/frontend" \
-      pnpm exec vite --host --force
+    start_servers_turbo
   fi
 
   if [ "$QUICK" = true ]; then
-    sleep 3
+    sleep 4
   else
-    wait_for_port "$FRONTEND_PORT" "Frontend" 45 || true
     wait_for_http "http://localhost:$BACKEND_PORT/health" "Backend" 90 || true
+    wait_for_port "$FRONTEND_PORT" "Frontend" 45 || true
+    wait_for_stable_ports 5 || die "Servers not stable — run: pnpm dev in a dedicated terminal"
   fi
 
   save_port_pid "$BACKEND_PORT" "$LOG_DIR/backend.pid"
@@ -385,9 +457,32 @@ show_status() {
     warn "Docker: not available"
   fi
 
-  local be fe
+  local be fe saved_be saved_fe saved_dev
   be="$(port_listener_pids "$BACKEND_PORT" | tr '\n' ' ' | sed 's/ $//')"
   fe="$(port_listener_pids "$FRONTEND_PORT" | tr '\n' ' ' | sed 's/ $//')"
+
+  if [ -f "$LOG_DIR/dev.pid" ]; then
+    saved_dev="$(tr -d '[:space:]' <"$LOG_DIR/dev.pid")"
+    if [ -n "$saved_dev" ] && ! pid_alive "$saved_dev"; then
+      warn "Turbo launcher pid $saved_dev is dead (stale .logs/dev.pid)"
+    elif [ -n "$saved_dev" ]; then
+      ok "Turbo launcher: pid $saved_dev"
+    fi
+  fi
+
+  if [ -f "$LOG_DIR/backend.pid" ]; then
+    saved_be="$(tr -d '[:space:]' <"$LOG_DIR/backend.pid")"
+    if [ -n "$saved_be" ] && [ -z "$be" ] && ! pid_alive "$saved_be"; then
+      warn "Saved backend pid $saved_be is dead — run ./restart_servers.sh"
+    fi
+  fi
+  if [ -f "$LOG_DIR/frontend.pid" ]; then
+    saved_fe="$(tr -d '[:space:]' <"$LOG_DIR/frontend.pid")"
+    if [ -n "$saved_fe" ] && [ -z "$fe" ] && ! pid_alive "$saved_fe"; then
+      warn "Saved frontend pid $saved_fe is dead — run ./restart_servers.sh"
+    fi
+  fi
+
   if [ -n "$be" ]; then
     ok "Backend:  pid $be  http://localhost:$BACKEND_PORT/health"
     curl -sf "http://localhost:$BACKEND_PORT/health" 2>/dev/null && echo "" || warn "Backend health check failed"
@@ -396,20 +491,28 @@ show_status() {
   fi
   if [ -n "$fe" ]; then
     ok "Frontend: pid $fe  http://localhost:$FRONTEND_PORT"
+    curl -sf -o /dev/null "http://localhost:$FRONTEND_PORT/" 2>/dev/null \
+      && ok "Frontend HTTP check passed" \
+      || warn "Frontend port open but HTTP check failed"
   else
     warn "Frontend: not listening on port $FRONTEND_PORT"
   fi
 
-  if [ ! -f "$LOG_DIR/backend.log" ]; then
+  if [ ! -f "$LOG_DIR/dev.log" ] && [ ! -f "$LOG_DIR/backend.log" ]; then
     warn "No logs yet — run ./restart_servers.sh"
     return
   fi
   echo ""
-  echo "── backend.log (last 8 lines) ──"
-  tail -8 "$LOG_DIR/backend.log" 2>/dev/null || true
-  echo ""
-  echo "── frontend.log (last 5 lines) ──"
-  tail -5 "$LOG_DIR/frontend.log" 2>/dev/null || true
+  if [ -f "$LOG_DIR/dev.log" ]; then
+    echo "── dev.log (last 10 lines) ──"
+    tail -10 "$LOG_DIR/dev.log" 2>/dev/null || true
+  else
+    echo "── backend.log (last 8 lines) ──"
+    tail -8 "$LOG_DIR/backend.log" 2>/dev/null || true
+    echo ""
+    echo "── frontend.log (last 5 lines) ──"
+    tail -5 "$LOG_DIR/frontend.log" 2>/dev/null || true
+  fi
 }
 
 print_summary() {
@@ -422,10 +525,12 @@ print_summary() {
   Backend      http://localhost:$BACKEND_PORT/health
   Status       ./restart_servers.sh status
   Stop         ./restart_servers.sh stop
-  Logs         tail -f .logs/backend.log .logs/frontend.log
+  Logs         tail -f .logs/dev.log
+  Foreground   pnpm dev   (most stable — keep terminal open)
 
   Tip: if the browser shows a blank/error page, open a NEW tab
   (do not refresh chrome-error://) after servers are running.
+  ERR_CONNECTION_REFUSED usually means dev servers stopped — run status.
 
   Existing workspace example: http://dar-ul-quran.localhost:$FRONTEND_PORT/login
   (Each madrasa has its own subdomain — use apex only to create new ones.)

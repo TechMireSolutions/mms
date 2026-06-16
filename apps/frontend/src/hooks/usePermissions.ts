@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { roleHasPermission, type Permission } from "@mms/shared";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 export interface UsePermissionsResult {
   role: string | undefined;

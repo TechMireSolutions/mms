@@ -16,7 +16,7 @@ trigger: model_decision
 | When | Pattern |
 |------|---------|
 | **Existing module CRUD** | Keep `useLiveCollection` + `saveCollection` until intentionally migrated |
-| **Dedicated REST resource** (students) | Backend route → Query on FE; optional `saveCollection` cache sync after fetch — `mms-query.md` |
+| **Dedicated REST resource** (students, contacts) | Backend route → Query on FE; optional `saveCollection` cache sync after fetch — `mms-query.md` |
 | **Target end state** | PostgreSQL authoritative; browser cache invalidates via Query/WebSocket — not full-array local RMW |
 
 Do not add new features that write only to React state or localStorage without a PostgreSQL path (`mms-fields.md` gate).
@@ -46,7 +46,7 @@ window.dispatchEvent(new Event('local-database-update'));
 | GET/POST | `/api/db/objects/:key` | Auth + write RBAC on POST | One object |
 | POST | `/api/db/reset` | **Admin only** | Tenant-scoped reset to minimal seeds |
 
-Dedicated REST (e.g. `/api/students`) bypasses generic collection routes — prefer for new modules.
+Dedicated REST (e.g. `/api/students`, `/api/contacts`) bypasses generic collection routes — prefer for new modules.
 
 ## Seeds
 

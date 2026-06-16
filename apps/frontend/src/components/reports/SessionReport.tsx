@@ -4,8 +4,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line,
 } from "recharts";
-import { SESSIONS_DATA, Session } from "../../lib/sessionsData";
-import { STUDENTS, Student } from "../../lib/studentsData";
+import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
+import { STUDENTS, Student } from '@/lib/data/studentsData';
 import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";

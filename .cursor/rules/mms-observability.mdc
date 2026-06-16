@@ -1,6 +1,6 @@
 ---
 description: Logging, health checks, errors, and production diagnostics
-globs: apps/backend/src/app.ts,apps/backend/src/routes/**,apps/backend/src/services/**,apps/backend/src/middleware/**,apps/frontend/src/lib/notify.ts,apps/frontend/src/components/ui/ErrorBoundary.tsx,apps/frontend/src/lib/AuthContext.tsx,apps/frontend/src/lib/apiClient.ts
+globs: apps/backend/src/app.ts,apps/backend/src/routes/**,apps/backend/src/services/**,apps/backend/src/middleware/**,apps/frontend/src/lib/notify.ts,apps/frontend/src/components/ui/ErrorBoundary.tsx,apps/frontend/src/lib/contexts/AuthContext.tsx,apps/frontend/src/lib/apiClient.ts
 alwaysApply: false
 ---
 
@@ -9,7 +9,7 @@ alwaysApply: false
 ## Backend logging
 
 - Fastify logger via `LOG_LEVEL` env (`mms-ops.mdc`) — default `info` in prod
-- Log **structured context**: `requestId`, route, `userId` (when authenticated), tenant subdomain
+- **`onResponse` hook** (`app.ts`): log `statusCode`, method, url, tenant, `userId` on **4xx/5xx** only — no bodies
 - **Never log**: passwords, JWTs, refresh tokens, OTP codes, full `passwordHash`, bulk collection payloads with PII
 
 ```ts

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Users, LucideIcon, BrainCircuit, ShieldCheck, Zap } from "lucide-react";
 import { Contact, FieldConfig } from "@mms/shared";
-import { calculateProfileHealth, useContactConfig } from "../../lib/ContactConfigContext";
+import { calculateProfileHealth, useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
 
 interface ContactStatsBarProps {

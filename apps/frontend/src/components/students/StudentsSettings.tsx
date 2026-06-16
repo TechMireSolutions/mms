@@ -245,10 +245,13 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
 
                       return (
                         <Draggable key={field.id} draggableId={field.id} index={index}>
-                          {(drag, snapshot) => (
+                          {(drag, snapshot) => {
+                            const { style, ...draggableProps } = drag.draggableProps;
+                            return (
                             <div
                               ref={drag.innerRef}
-                              {...drag.draggableProps}
+                              {...draggableProps}
+                              style={style as React.CSSProperties}
                               className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-all select-none text-xs
                                 ${
                                   snapshot.isDragging
@@ -304,7 +307,8 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                                 </button>
                               )}
                             </div>
-                          )}
+                          );
+                          }}
                         </Draggable>
                       );
                     })}

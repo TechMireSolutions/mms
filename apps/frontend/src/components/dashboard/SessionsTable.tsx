@@ -1,6 +1,6 @@
 import React from "react";
 import { Users, MapPin, Radio } from "lucide-react";
-import { upcomingSessions as defaultSessions, UpcomingSessionItem } from "../../lib/dashboardData";
+import { upcomingSessions as defaultSessions, UpcomingSessionItem } from '@/lib/data/dashboardData';
 import { motion } from "framer-motion";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 

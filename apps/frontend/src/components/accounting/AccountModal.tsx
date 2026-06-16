@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { BookOpen } from "lucide-react";
-import { ACCOUNT_TYPES, ACCOUNT_SUBTYPES, ACCOUNT_TYPE_META, Account, AccountType } from "../../lib/accountingData";
+import { ACCOUNT_TYPES, ACCOUNT_SUBTYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
 import { getObject } from "../../lib/db";
 import {
   DEFAULT_ACCOUNTING_SETTINGS,

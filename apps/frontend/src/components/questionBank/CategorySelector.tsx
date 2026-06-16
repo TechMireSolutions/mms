@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import useTranslation from '@/hooks/useTranslation';
 import { createQuestionCategory, type AppTranslationKey, type QuestionCategory } from '@mms/shared';
-import { persistQuestionCategory } from '@/lib/questionBankCategories';
+import { persistQuestionCategory } from '@/lib/data/questionBankCategories';
 
 const INPUT =
   'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20';

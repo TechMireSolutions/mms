@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { X, Printer } from "lucide-react";
 import { getRankSuffix } from "./gradeUtils";
 import { StudentResultItem } from "./StudentResultCard";
-import { Exam } from "../../lib/examinationData";
+import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "../../lib/db";
 
 interface CertificatePreviewProps {

@@ -1,6 +1,6 @@
 import React from "react";
 import { BookOpen, Calendar, Users, DollarSign } from "lucide-react";
-import { Session } from "../../../lib/sessionsData";
+import { Session } from '@/lib/data/sessionsData';
 
 /**
  * Format a date string to a localized PK date.

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertTriangle, GitMerge, Check } from "lucide-react";
-import { useContactConfig } from "../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { applyTitleCaseToContact } from "@mms/shared";
 import {

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Scale, DollarSign, Download } from "lucide-react";
-import { computeFinancials, Account, JournalEntry, FiscalYear, AccountingSettings } from "../../lib/accountingData";
+import { computeFinancials, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
 
 interface StatCardProps {

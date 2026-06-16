@@ -2,8 +2,8 @@ import { useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { translateAppParams, type AppTranslationKey } from "@mms/shared";
 import useGlobalSettings from "./useGlobalSettings";
-import { useTenant } from "@/lib/TenantContext";
-import { isEntryPath } from "@/lib/routes";
+import { useTenant } from "@/lib/contexts/TenantContext";
+import { isEntryPath } from "@/lib/config/routes";
 
 /**
  * Reactive app-wide UI translations from global language preference.

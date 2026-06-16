@@ -8,16 +8,18 @@ import * as schema from './schema.js';
 import { getMinimalCollectionsForSeed, getMinimalObjects } from './minimalSeeds.js';
 import {
   WORKSPACES_COLLECTION,
+  PLATFORM_SUPER_USERS_OBJECT_KEY,
   tenantCollectionKey,
   tenantObjectKey,
   parseTenantScopedStorageKey,
   isServerOnlyObjectKey,
 } from '@mms/shared';
-import { getRequestTenant } from '../utils/tenantContext.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 import { runMigration001 } from './migrations/001_migrate_notification_settings.js';
 import { runMigration002 } from './migrations/002_migrate_global_settings_fields.js';
 import { runMigration003 } from './migrations/003_migrate_multi_tenant.js';
-import { purgeExpiredAuthArtifacts } from '../services/authArtifactService.js';
+import { purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
+import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { setDb } from './dbClient.js';
 
 function resolveCollectionStorageName(name: string): string {
@@ -28,7 +30,7 @@ function resolveCollectionStorageName(name: string): string {
 
 function resolveObjectStorageKey(key: string): string {
   const tenant = getRequestTenant();
-  if (!tenant) return key;
+  if (!tenant || key === PLATFORM_SUPER_USERS_OBJECT_KEY) return key;
   return tenantObjectKey(tenant, key);
 }
 
@@ -48,7 +50,10 @@ export async function initDb(): Promise<void> {
     const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/mms';
     
     pool = new Pool({
-      connectionString
+      connectionString,
+      max: Number(process.env.PG_POOL_MAX) || 20,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 10_000,
     });
     
     db = drizzle(pool, { schema });
@@ -65,6 +70,7 @@ export async function initDb(): Promise<void> {
     await runMigration002();
     await runMigration003();
     await purgeExpiredAuthArtifacts();
+    await ensurePlatformSuperUserFromEnv();
 
     // Check if seeding is necessary (if no collections exist)
     const results = await db.select({ count: sql<number>`count(*)` }).from(schema.collections);
@@ -343,6 +349,13 @@ export async function pingDatabase(): Promise<boolean> {
     return true;
   } catch {
     return false;
+  }
+}
+
+/** Gracefully close the PostgreSQL pool on shutdown. */
+export async function closeDatabase(): Promise<void> {
+  if (pool) {
+    await pool.end();
   }
 }
 

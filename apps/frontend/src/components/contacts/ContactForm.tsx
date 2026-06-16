@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { Phone, Mail, MapPin, Share2, User, Heart, LucideIcon } from "lucide-react";
 import { notify } from "@/lib/notify";
 import FormModal from "@/components/ui/FormModal";
-import { useContactConfig, useContactValidation, calculateProfileCompleteness, ValidationError } from "../../lib/ContactConfigContext";
+import { useContactConfig, useContactValidation, calculateProfileCompleteness, ValidationError } from '@/lib/contexts/ContactConfigContext';
 import { toTitleCase, applyTitleCaseToContact, normalizeToE164, parsePhoneNumber, Contact } from "@mms/shared";
 import BasicTab     from "./form/BasicTab";
 import PhoneTab     from "./form/PhoneTab";

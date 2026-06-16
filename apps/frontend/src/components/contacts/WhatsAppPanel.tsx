@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, MessageCircle, Send, User, Check, Loader2 } from "lucide-react";
 
 import { hasWhatsApp, getPrimaryPhone, Contact } from "@mms/shared";
-import { useContactConfig } from "../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { FormSelect } from "./form/FormPrimitives";
 

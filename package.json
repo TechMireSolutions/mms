@@ -11,8 +11,8 @@
     "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
-    "turbo": "^2.9.16"
+    "@playwright/test": "^1.61.0",
+    "turbo": "^2.9.18"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

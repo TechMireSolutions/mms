@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Users, UserCheck, UserX, TrendingUp } from "lucide-react";
 import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import { STUDENTS, Student } from "../../lib/studentsData";
+import { STUDENTS, Student } from '@/lib/data/studentsData';
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
 import EmptyState from "../ui/EmptyState";

@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react";
-import { useBrandPalette } from "@/lib/BrandingPaletteContext";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { motion } from "framer-motion";
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, PieChart, Pie, Cell, TooltipContentProps, TooltipPayloadEntry
 } from "recharts";
 import { TrendingUp, AlertCircle } from "lucide-react";
-import { MONTHLY_REVENUE, INVOICES } from "../../lib/financeData";
+import { MONTHLY_REVENUE, INVOICES } from '@/lib/data/financeData';
 
 const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
 
@@ -180,7 +180,7 @@ export default function ReportsPanel() {
         {/* Outstanding payments */}
         <section aria-label="Outstanding Payments" className="rounded-xl border border-border bg-card overflow-hidden">
           <header className="px-4 py-3 border-b border-border bg-red-50/50 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-500" aria-hidden="true" />
+            <AlertCircle className="w-4 h-4 text-destructive" aria-hidden="true" />
             <h3 className="text-sm font-bold text-foreground m-0">Outstanding Payments</h3>
           </header>
           <div className="divide-y divide-border/50">
@@ -194,7 +194,7 @@ export default function ReportsPanel() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-[13px] font-bold text-red-600 m-0">{fmt(balance)}</p>
-                    <p className={`text-[10px] font-semibold m-0 ${inv.status === "overdue" ? "text-red-500" : "text-amber-500"}`}>{inv.status}</p>
+                    <p className={`text-[10px] font-semibold m-0 ${inv.status === "overdue" ? "text-destructive" : "text-amber-500"}`}>{inv.status}</p>
                   </div>
                 </article>
               );

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Calendar, Clock, MapPin, X, Save, Edit2 } from "lucide-react";
-import { EVENT_TYPES, Session, SessionEvent } from "../../../lib/sessionsData";
+import { EVENT_TYPES, Session, SessionEvent } from '@/lib/data/sessionsData';
 import { DatePicker } from "../../ui/DatePicker";
 
 const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
@@ -162,7 +162,7 @@ export default function EventsTab({ session, onUpdate }: EventsTabProps) {
                       <button aria-label={`Edit ${ev.title}`} onClick={() => { setEditEvent(ev); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
-                      <button aria-label={`Delete ${ev.title}`} onClick={() => handleDelete(ev.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-destructive">
+                      <button aria-label={`Delete ${ev.title}`} onClick={() => handleDelete(ev.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
                     </div>

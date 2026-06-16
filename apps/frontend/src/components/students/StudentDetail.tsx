@@ -12,9 +12,9 @@ import {
   type StudentCustomField,
   getSortedStudentFields
 } from "@mms/shared";
-import { SESSIONS_DATA } from "../../lib/sessionsData";
-import { CONTACTS } from "../../lib/contactsData";
-import { calcAge, type Student } from "../../lib/studentsData";
+import { SESSIONS_DATA } from '@/lib/data/sessionsData';
+import { CONTACTS } from '@/lib/data/contactsData';
+import { calcAge, type Student } from '@/lib/data/studentsData';
 import type { Contact } from "../../lib/contactFields";
 import StatusBadge from "../ui/StatusBadge";
 

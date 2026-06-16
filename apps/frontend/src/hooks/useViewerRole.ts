@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 export type ViewerRole = "admin" | "teacher" | "accountant";
 export type EnrollmentViewerRole = "admin" | "staff" | "accountant";

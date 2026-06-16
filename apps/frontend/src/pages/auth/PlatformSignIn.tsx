@@ -1,0 +1,94 @@
+import React, { useState } from "react";
+import { AlertCircle, ArrowRight, Loader2, Lock, Mail } from "lucide-react";
+import AuthLayout from "@/components/auth/AuthLayout";
+import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
+import useTranslation from "@/hooks/useTranslation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+
+/**
+ * Apex-only sign-in for platform super-users who can provision new madrasas.
+ */
+export default function PlatformSignIn(): React.JSX.Element {
+  const { t } = useTranslation();
+  const { platformLogin, isLoadingPlatformAuth } = usePlatformAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: React.FormEvent): Promise<void> => {
+    event.preventDefault();
+    setError(null);
+    try {
+      await platformLogin(email.trim(), password);
+    } catch {
+      setError(t("platform.invalidCredentials"));
+    }
+  };
+
+  return (
+    <AuthLayout
+      title={t("platform.signInTitle")}
+      subtitle={t("platform.signInSubtitle")}
+    >
+      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+        {error ? (
+          <div
+            className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+            role="alert"
+          >
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
+            <span>{error}</span>
+          </div>
+        ) : null}
+
+        <div className="space-y-2">
+          <Label htmlFor="platform-email">{t("auth.email")}</Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+            <Input
+              id="platform-email"
+              type="email"
+              autoComplete="username"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-10 h-11"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="platform-password">{t("auth.password")}</Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+            <Input
+              id="platform-password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-10 h-11"
+            />
+          </div>
+        </div>
+
+        <Button type="submit" className="w-full h-11" disabled={isLoadingPlatformAuth}>
+          {isLoadingPlatformAuth ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+              {t("auth.signingIn")}
+            </>
+          ) : (
+            <>
+              {t("platform.signIn")}
+              <ArrowRight className="w-4 h-4" aria-hidden />
+            </>
+          )}
+        </Button>
+      </form>
+    </AuthLayout>
+  );
+}

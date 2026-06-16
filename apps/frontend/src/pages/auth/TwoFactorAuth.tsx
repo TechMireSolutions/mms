@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 import { maskEmail, requiresTwoFactor, resolveNotificationChannel } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
 import AuthLayout from "../../components/auth/AuthLayout";
-import { DEFAULT_AUTH_REDIRECT, ROUTES } from "../../lib/routes";
-import { useAuth } from "../../lib/AuthContext";
+import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import useGlobalSettings from "../../hooks/useGlobalSettings";
 import {
   getPendingChallengeId,

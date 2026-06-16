@@ -24,7 +24,7 @@ import SessionsSettings from "../components/sessions/SessionsSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import KPISummary from "../components/reports/KPISummary";
-import { SESSIONS_DATA, SESSION_TYPES, Session } from "../lib/sessionsData";
+import { SESSIONS_DATA, SESSION_TYPES, Session } from '@/lib/data/sessionsData';
 import { saveCollection, formatDate, getObject } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 import { SessionsSettings as SessionsSettingsData, DEFAULT_SESSIONS_SETTINGS } from "@mms/shared";

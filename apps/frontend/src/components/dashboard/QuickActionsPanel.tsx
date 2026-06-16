@@ -1,14 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { QUICK_ACTION_ROUTE_KEYS } from "@/lib/navConfig";
-import { ROUTES } from "@/lib/routes";
+import { QUICK_ACTION_ROUTE_KEYS } from "@/lib/config/navConfig";
+import { ROUTES } from "@/lib/config/routes";
 import {
   UserPlus, CalendarPlus, DollarSign,
   Star, FileText, Printer, BarChart3, UserCheck,
 } from "lucide-react";
 import { type AppTranslationKey } from "@mms/shared";
-import { UserRole } from "../../lib/dashboardData";
+import { UserRole } from '@/lib/data/dashboardData';
 import useGlobalSettings from "@/hooks/useGlobalSettings";
 import useTranslation from "@/hooks/useTranslation";
 

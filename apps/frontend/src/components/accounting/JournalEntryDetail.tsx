@@ -1,7 +1,7 @@
 import React from "react";
 import { X, Pencil, CheckCircle2, Clock, RotateCcw, Tag } from "lucide-react";
 import { motion } from "framer-motion";
-import { ACCOUNT_TYPE_META, Account, JournalEntry } from "../../lib/accountingData";
+import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
 
 interface JournalEntryDetailProps {
   entry: JournalEntry;

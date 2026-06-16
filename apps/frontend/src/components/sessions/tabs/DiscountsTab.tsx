@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Edit2, Tag, X, Save, ToggleLeft, ToggleRight } from "lucide-react";
-import { Session, Discount } from "../../../lib/sessionsData";
+import { Session, Discount } from '@/lib/data/sessionsData';
 
 const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
 const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
@@ -152,7 +152,7 @@ export default function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
                 <button aria-label={`Edit ${d.name}`} onClick={() => { setEditDiscount(d); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                   <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
-                <button aria-label={`Delete ${d.name}`} onClick={() => handleDelete(d.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-destructive transition-colors">
+                <button aria-label={`Delete ${d.name}`} onClick={() => handleDelete(d.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               </div>

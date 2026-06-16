@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Calendar } from "lucide-react";
 import FormModal from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
-import { SESSION_TYPES, Session } from "../../lib/sessionsData";
+import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
 import { toTitleCase } from "@mms/shared";
 import { getObject } from "../../lib/db";
 import {

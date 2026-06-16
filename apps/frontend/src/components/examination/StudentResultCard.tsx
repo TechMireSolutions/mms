@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { X, Award, Printer } from "lucide-react";
 import { getRankSuffix, GradeInfo } from "./gradeUtils";
-import { Exam } from "../../lib/examinationData";
+import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "../../lib/db";
 
 export interface StudentResultItem {

@@ -3,7 +3,7 @@ import {
   BarChart2, TrendingUp, Users, Layers,
   Search, Filter, ArrowUpRight, Receipt, AlertCircle, LucideIcon
 } from "lucide-react";
-import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from "../../lib/obligationsData";
+import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import ExportToolbar from "./ExportToolbar";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
@@ -41,7 +41,7 @@ function StatCard({ label, value, sub, icon: Icon, color = "primary", trend }: S
           <Icon className={`w-4.5 h-4.5 ${c.text}`} style={{ width: 18, height: 18 }} />
         </div>
         {trend !== undefined && (
-          <span className={`text-[11px] font-bold flex items-center gap-0.5 ${trend >= 0 ? "text-emerald-600" : "text-red-500"}`} aria-label={trend >= 0 ? "Positive trend" : "Negative trend"}>
+          <span className={`text-[11px] font-bold flex items-center gap-0.5 ${trend >= 0 ? "text-emerald-600" : "text-destructive"}`} aria-label={trend >= 0 ? "Positive trend" : "Negative trend"}>
             <ArrowUpRight className="w-3 h-3" style={{ transform: trend < 0 ? "rotate(180deg)" : undefined }} aria-hidden="true" />
             {Math.abs(trend)}%
           </span>

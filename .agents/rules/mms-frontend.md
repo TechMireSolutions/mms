@@ -6,6 +6,27 @@ trigger: model_decision
 
 App shell, bundles, and cross-cutting FE concerns. Module/UI detail lives in scoped rules (`mms-ui-*`, `mms-contacts`, `mms-query`, etc.).
 
+## Source layout
+
+| Path | Role |
+|------|------|
+| `pages/` | Route-level module shells, auth, apex landing |
+| `providers/` | Root provider composition (`AppProviders.tsx`) |
+| `components/{module}/` | Feature UI by domain |
+| `components/ui/` | shadcn/Radix primitives + MMS composites (`PageHeader`, `FormModal`, `SubTabBar`, `ErrorBoundary`) |
+| `components/routing/` | `HostRoutes`, guards, `PageNotFound`, `RouteLoadingFallback`, `RootErrorBoundary` |
+| `components/layout/` | `AppLayout`, sidebar |
+| `components/dev/` | Dev-only tooling (`QueryDevtools`) |
+| `hooks/` | Reusable hooks — server state + live collections |
+| `lib/apiClient.ts`, `lib/db.ts`, `lib/notify.ts` | Core infrastructure |
+| `lib/contexts/` | React contexts (`AuthContext`, `TenantContext`, …) |
+| `lib/config/` | `env`, `routes`, `navConfig`, `tenantConfig` |
+| `lib/routing/` | `appNavigate`, `routePrefetch` |
+| `lib/data/` | Module seed/mock collections (`*Data.ts`) |
+| `lib/contactConfig/` | Contact validation, prefs, profile metrics (split from context) |
+
+Path alias: `@/` → `apps/frontend/src/`
+
 ## API client (required)
 
 All **internal** MMS API calls use `lib/apiClient.ts`:
@@ -20,15 +41,17 @@ await apiFetch('/api/students/1', { method: 'DELETE' });
 | Do | Don't |
 |----|-------|
 | `apiFetch` / `apiJson` with `credentials: 'include'` | Raw `fetch('/api/...')` in hooks, contexts, or lib helpers |
-| External OAuth (Google, etc.) | — may use raw `fetch` to third-party URLs only |
+| External OAuth (Google People API, etc.) | — may use raw `fetch` to third-party URLs only |
 
-Legacy `mms_token` in localStorage is sent as Bearer fallback — do not add new localStorage token writes.
+**Session:** httpOnly cookies (`mms_access` / `mms_refresh`) — `apiClient` does **not** read `localStorage` tokens. `AuthContext` only `removeItem('mms_token')` on login/logout for legacy cleanup. Backend `attachAccessTokenFromCookie` copies cookie → `Authorization` for JWT verify (`mms-auth.md`).
 
 ## Bundle size
 
 Dynamic `import()` for heavy libs — never static entry imports:
 
 - `jspdf`, `jspdf-autotable`, `xlsx`, `html2canvas`
+
+Track main chunk on `pnpm build`; investigate regressions > 10% without new features.
 
 ## Images
 
@@ -43,32 +66,63 @@ Every image upload **must** be optimized client-side before persisting — `@mms
 | Piece | Path |
 |-------|------|
 | Entry | `src/main.tsx` → `App.tsx` |
-| Route tree | `components/routing/HostRoutes.tsx` (apex vs tenant — single tree) |
-| Guards | `ProtectedRoute`, `GuestRoute`, tenant gates |
-| Path constants | `lib/routes.ts` |
-| Nav | `lib/navConfig.tsx` |
+| Route tree | `components/routing/HostRoutes.tsx` (apex vs tenant — **single tree**, never both) |
+| Guards | `ProtectedRoute`, `GuestRoute`, `TenantBootGate`, `ApexWorkspaceGate` |
+| Path constants | `lib/config/routes.ts` (`ROUTES`, `TENANT_APP_PATHS`, `PUBLIC_PATHS`) |
+| Nav | `lib/config/navConfig.tsx` |
+| Imperative nav | `lib/routing/appNavigate.ts` via `RouterBridge` (logout redirects) |
+| Route prefetch | `lib/routing/routePrefetch.ts` on sidebar link hover/focus |
 
-- Lazy-load pages with `React.lazy` + `Suspense`
+- Lazy-load pages with `React.lazy` + `Suspense`; fallback uses `t('common.loading')` + `role="status"`
 - No orphan pages without routes
 - Do not add duplicate auth wrappers in `App.tsx` — guards live in `components/routing/` (`mms-auth.md`)
+- **Apex:** landing, onboarding, workspace gate — module paths redirect to gate
+- **Tenant:** `ProtectedRoute` → `AppLayout` → module pages
 
-## Provider tree (`App.tsx`)
+## Provider tree (`providers/AppProviders.tsx`)
 
 ```
-AuthProvider → QueryClientProvider → Router → BrandingPaletteProvider → TenantProvider → ContactConfigProvider
+RootErrorBoundary → AuthProvider → QueryClientProvider → Router → BrandingPaletteProvider → TenantProvider → PlatformAuthProvider → ContactConfigProvider
 ```
 
-`ContactConfigProvider` mounts **once** at root — never on child pages (`mms-contacts.md`).
+- `App.tsx` mounts `<AppProviders>` then `<AuthenticatedApp />` (auth gate + lazy `Suspense` routes)
+- `AuthenticatedApp` blocks only on **initial** `GET /api/auth/me` (`isLoadingAuth && !authChecked`) — not on login submit
+- `Toaster` + `QueryDevtools` sit inside `QueryClientProvider`, outside `Router`
+- `ContactConfigProvider` mounts **once** at root — never on child pages (`mms-contacts.md`)
+
+## TanStack Query defaults
+
+`lib/query-client.ts`: `refetchOnWindowFocus: false`, `retry: 1`. Per-hook `staleTime: 30_000` for REST lists.
 
 ## Data fetching
 
 | Data | Pattern | Owner |
 |------|---------|-------|
-| Dedicated REST resource (students, workspace) | TanStack Query + `apiJson` | `mms-query.md` |
+| Dedicated REST (`/api/students`, `/api/contacts`, workspace) | TanStack Query + `apiJson` | `mms-query.md` |
 | Local collections (most modules) | `useLiveCollection` + `saveCollection` | `mms-data-layer.md` |
 | Cross-view refresh (local) | `local-database-update` event | `mms-data-layer.md` |
 
-**Hybrid (students):** Query is source of truth; `useStudents` syncs to localStorage on fetch so KPI/reports stay consistent until those views migrate.
+### Module inventory (current)
+
+| Module / area | Data pattern |
+|---------------|--------------|
+| Students | Query (`useStudents`, `useStudentMutations`) |
+| Contacts | Query + hybrid (`useContacts`, `useContactsCollection`) |
+| Workspace registry (apex) | Query (`useWorkspaceRegistry`) |
+| Dashboard | Hybrid students/contacts + many `useLiveCollection` |
+| Finance, Accounting, Obligations, Hasanat, Sessions, Users, Attendance, Enrollments, Examinations, QuestionBank | `useLiveCollection` only |
+| Auth / tenant branding | `useEffect` + `apiJson` — migrate to Query when touched |
+
+**Hybrid pattern:** Query is source of truth; `saveCollection` on fetch keeps KPI/report widgets on localStorage in sync until those views migrate:
+
+```ts
+// hooks/useStudents.ts / useContacts.ts pattern
+export function useStudentsCollection() {
+  const { data: fromQuery = [] } = useStudents();
+  const fromLocal = useLiveCollection<Student>('students');
+  return fromQuery.length > 0 ? fromQuery : fromLocal;
+}
+```
 
 Avoid bare `fetch` in `useEffect` for server state.
 
@@ -85,9 +139,9 @@ Re-export from the original entry file so imports stay stable.
 
 ## Real-time
 
-- **Now:** event bus for localStorage sync
+- **Now:** `local-database-update` event bus for localStorage sync
 - **Target:** WebSockets for server push
-- **Banned:** `setInterval` polling loops
+- **Banned:** `setInterval` / `refetchInterval` polling loops
 
 ## Responsive
 
@@ -95,18 +149,24 @@ Re-export from the original entry file so imports stay stable.
 - Min 44×44px touch targets
 - Modals/drawers usable at 320px width
 - Flex/Grid + `min-w-0` — prevent overflow horizontal scroll
+- Multi-tab shells: `ResponsiveAccordionTabs` (`mms-ui-tabs.md`)
 
 ## Resilience & a11y
 
 - Lazy route `Suspense` fallbacks: accessible loading text (`t('common.loading')`)
 - Module pages: `ErrorBoundary` on Operations/Analytics content (`mms-observability.md`)
 - New UI: keyboard + `aria-label` baseline — `mms-a11y.md`
+- API/query failures: `notify.error` with `t()` — no silent `catch`
 
 ## Testing
 
-- Vitest env: `happy-dom` (`vitest.config.ts`) — provides `localStorage` for hook/client tests
-- Colocate `*.test.ts` next to source
+| Layer | Location |
+|-------|----------|
+| Unit | Vitest + `happy-dom` (`vitest.config.ts`); colocate `*.test.ts` |
+| E2E | `e2e/smoke.spec.ts`, `e2e/interactive.spec.ts` (repo root, Playwright) |
+
 - Mock `fetch` at boundaries; test `apiClient` sends `credentials: 'include'`
+- Expand Playwright for login/onboard when touching auth (`mms-testing.md`)
 
 ## Quality gate
 
@@ -115,5 +175,3 @@ After substantive edits:
 ```bash
 cd apps/frontend && pnpm typecheck && pnpm lint && pnpm test
 ```
-
-Track main chunk size on `pnpm build`; investigate regressions > 10% without new features.

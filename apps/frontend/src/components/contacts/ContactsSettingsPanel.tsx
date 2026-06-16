@@ -7,7 +7,7 @@ import {
   SETTINGS_LIST_OPTIONS, FieldDefinition, toTitleCase as sharedToTitleCase
 } from "@mms/shared";
 import { saveDefaultConfig, loadDefaultConfig } from "../../lib/contactFieldsStore";
-import { useContactConfig } from "../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/ContactDraggableFieldList";
 import ColumnCustomizer from "./ColumnCustomizer";

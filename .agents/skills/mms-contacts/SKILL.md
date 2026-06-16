@@ -1,6 +1,6 @@
 ---
 name: mms-contacts
-description: Implements Contact module features — forms, Kanban, WhatsApp status, field registry, ContactConfigContext, backend POST /api/contacts. Use when editing contacts, CRM, phone numbers, avatars, duplicate detection, or contact settings.
+description: Implements Contact module features — forms, Kanban, WhatsApp status, field registry, ContactConfigContext, backend /api/contacts REST. Use when editing contacts, CRM, phone numbers, avatars, duplicate detection, or contact settings.
 ---
 
 # MMS Contacts Workflow
@@ -10,21 +10,29 @@ description: Implements Contact module features — forms, Kanban, WhatsApp stat
 | Area | Path |
 |------|------|
 | Page | `apps/frontend/src/pages/Contacts.tsx` |
+| Query hooks | `apps/frontend/src/hooks/useContacts.ts` |
 | Types | `packages/shared/src/contactTypes.ts` |
 | Config context | `apps/frontend/src/lib/ContactConfigContext.tsx` |
 | Field store | `apps/frontend/src/lib/contactFieldsStore.ts` |
 | Form primitives | `apps/frontend/src/components/contacts/form/FormPrimitives.tsx` |
-| Backend save | `apps/backend/src/routes/contacts.ts` |
+| Backend REST | `apps/backend/src/routes/contacts.ts` |
+| Zod validation | `apps/backend/src/validation/contactSchemas.ts` |
 | WhatsApp | `apps/backend/src/services/whatsApp*.ts` |
 
-## Backend API
+## Backend API (`/api/contacts`)
+
+All routes require `authenticateTenant`. Mutations require `canWriteCollection(user, 'contacts')`.
 
 | Route | Auth | Notes |
 |-------|------|-------|
-| `POST /api/contacts` | `authenticateTenant` | E.164 normalize, title-case, persist collection, WhatsApp enqueue |
-| `GET /api/contacts/:id/whatsapp-status` | `authenticateTenant` | Status + UI indicator metadata |
+| `GET /` | Tenant JWT | List contacts |
+| `GET /count` | Tenant JWT | Count |
+| `POST /` | Write RBAC | E.164 normalize, title-case, persist, WhatsApp enqueue |
+| `PUT /:id` | Write RBAC | Update + WhatsApp side effects |
+| `DELETE /:id` | Write RBAC | Remove from collection |
+| `GET /:id/whatsapp-status` | Tenant JWT | Status + UI indicator metadata |
 
-**Open gap:** `POST /api/contacts` lacks `canWriteCollection(user, 'contacts')` — add when touching RBAC (`mms-rbac.mdc`).
+Data access: `dbSyncService.fetchCollection` / `persistCollection` (tenant-scoped automatically).
 
 Tests must use tenant host: `headers: { host: 'demo.localhost' }`.
 
@@ -38,13 +46,25 @@ Tests must use tenant host: `headers: { host: 'demo.localhost' }`.
 ## Workflow: phone / WhatsApp
 
 1. Normalize E.164 with `parsePhoneNumber` (`@mms/shared`) on save
-2. Backend `POST /api/contacts` triggers verification queue via `handleContactSaveOrUpdate`
+2. Backend `POST` / `PUT /api/contacts` triggers verification via `handleContactSaveOrUpdate`
 3. UI reads `GET /api/contacts/:id/whatsapp-status`
 4. **Never** add manual WhatsApp toggle in `PhoneTab`
 
 ## Provider rule
 
 `ContactConfigProvider` mounts **only** in `App.tsx`. Remove nesting from Contacts/Settings when touching those files.
+
+## Frontend data layer
+
+| Read | Write |
+|------|-------|
+| `useContactsCollection()` or `useContacts()` | `useContactMutations()` (`upsertContact`, `updateContact`, `deleteContact`) |
+
+`fetchContacts` syncs to localStorage via `saveCollection` for dashboard KPI widgets. Do not add parallel `saveCollection` writes in page handlers.
+
+## i18n debt
+
+New copy → `t('contacts.*')` in `appTranslations`. Legacy `uiStrings` (~24 files) — do not add new keys; migrate when touching.
 
 ## Do not reintroduce
 

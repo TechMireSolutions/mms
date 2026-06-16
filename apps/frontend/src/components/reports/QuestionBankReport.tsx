@@ -7,7 +7,7 @@ import type {
   QuestionBankTest,
 } from "@mms/shared";
 import { getQuestionCategoryIds } from "@mms/shared";
-import { RESULTS, QUESTIONS, TESTS } from "../../lib/questionBankData";
+import { RESULTS, QUESTIONS, TESTS } from '@/lib/data/questionBankData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import useTranslation from "@/hooks/useTranslation";
 import { useQuestionBankConfig } from "@/hooks/useQuestionBankConfig";

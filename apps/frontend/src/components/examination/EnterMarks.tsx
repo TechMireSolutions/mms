@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Save, CheckCircle2, Users } from "lucide-react";
-import { CLASSES, STUDENTS, Exam, ExamResult } from "../../lib/examinationData";
+import { CLASSES, STUDENTS, Exam, ExamResult } from '@/lib/data/examinationData';
 import { getGrade } from "./gradeUtils";
 
 interface EnterMarksProps {

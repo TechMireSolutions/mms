@@ -6,7 +6,7 @@ import type { AppTranslationKey } from "@mms/shared";
 import PageHeader from "../components/ui/PageHeader";
 import useTranslation from "@/hooks/useTranslation";
 import ResponsiveAccordionTabs, { type AccordionTabItem } from "@/components/ui/ResponsiveAccordionTabs";
-import { isSettingsSection, ROUTES, type SettingsSection } from "../lib/routes";
+import { isSettingsSection, ROUTES, type SettingsSection } from '@/lib/config/routes';
 
 const GlobalSettings = lazy(() => import("../components/settings/GlobalSettings"));
 const SystemModulesSettings = lazy(() => import("../components/settings/SystemModulesSettings"));

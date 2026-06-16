@@ -1,11 +1,11 @@
 import React, { useMemo } from "react";
-import { useBrandPalette } from "@/lib/BrandingPaletteContext";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   TrendingUp, TrendingDown, Scale, DollarSign, AlertCircle, CheckCircle2, Clock,
   ArrowUpRight, ArrowDownRight,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { computeFinancials, Account, JournalEntry, AccountingSettings, FiscalYear } from "../../lib/accountingData";
+import { computeFinancials, Account, JournalEntry, AccountingSettings, FiscalYear } from '@/lib/data/accountingData';
 
 interface KpiCardProps {
   label: string;
@@ -35,7 +35,7 @@ function KpiCard({ label, value, icon: Icon = null, sub = undefined, color = "bg
             </div>
           )}
           {trend !== undefined && (
-            <span className={`flex items-center gap-0.5 text-[11px] font-bold ${trend >= 0 ? "text-emerald-600" : "text-red-500"}`} aria-label={`Trend: ${trend}%`}>
+            <span className={`flex items-center gap-0.5 text-[11px] font-bold ${trend >= 0 ? "text-emerald-600" : "text-destructive"}`} aria-label={`Trend: ${trend}%`}>
               {trend >= 0 ? <ArrowUpRight className="w-3 h-3" aria-hidden="true" /> : <ArrowDownRight className="w-3 h-3" aria-hidden="true" />}
               {Math.abs(trend)}%
             </span>

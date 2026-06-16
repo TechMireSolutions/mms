@@ -1,8 +1,8 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { requiresTwoFactor } from "@mms/shared";
-import { useAuth } from "@/lib/AuthContext";
-import { DEFAULT_AUTH_REDIRECT, ROUTES } from "@/lib/routes";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { DEFAULT_AUTH_REDIRECT, ROUTES } from "@/lib/config/routes";
 import useGlobalSettings from "@/hooks/useGlobalSettings";
 import { is2FAPending, is2FAVerified } from "@/lib/twoFactor";
 

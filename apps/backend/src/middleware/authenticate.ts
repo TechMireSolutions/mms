@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { User } from '@mms/shared';
-import { getRequestTenant } from '../utils/tenantContext.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 
 export interface AuthenticatedRequest extends FastifyRequest {
   user: User & { twoFactorVerified?: boolean; tokenType?: string };
@@ -46,6 +46,14 @@ export async function authenticateTenant(
     reply.status(401).send({
       type: 'auth_required',
       message: 'Refresh token cannot access this resource',
+    });
+    return;
+  }
+
+  if (user.tokenType === 'platform_access') {
+    reply.status(401).send({
+      type: 'auth_required',
+      message: 'Platform session cannot access tenant resources',
     });
     return;
   }

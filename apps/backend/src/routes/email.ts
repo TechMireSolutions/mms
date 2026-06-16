@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyPluginOptions, FastifySchema } from 'fastify';
-import type { User } from '../services/authService.js';
+import type { User } from '@mms/shared';
 import {
   mergeEmailIntegrationConfig,
   type EmailIntegrationConfig,
@@ -9,14 +9,15 @@ import {
   markEmailIntegrationTestResult,
   saveEmailIntegrationConfig,
   saveEmailIntegrationSecrets,
-} from '../services/emailIntegrationService.js';
+} from '../services/email/emailIntegrationService.js';
 import {
   isEmailProviderId,
   sendTenantEmail,
   verifyEmailTransport,
-} from '../services/emailService.js';
+} from '../services/email/emailService.js';
 import { loadGlobalSettings } from '../services/globalSettingsService.js';
 import { authenticateTenant } from '../middleware/authenticate.js';
+import { canWriteObject } from '../services/rbacService.js';
 
 const integrationBodySchema: FastifySchema = {
   body: {
@@ -45,8 +46,11 @@ const verificationCodeSchema: FastifySchema = {
   },
 };
 
-function requireAdmin(user: User, reply: { status: (code: number) => { send: (body: unknown) => unknown } }): boolean {
-  if (user.role !== 'admin') {
+function requireEmailAdmin(
+  user: User,
+  reply: { status: (code: number) => { send: (body: unknown) => unknown } },
+): boolean {
+  if (!canWriteObject(user, 'email_integration')) {
     reply.status(403).send({
       type: 'forbidden',
       message: 'Administrator access is required for email integration settings',
@@ -64,7 +68,7 @@ export default async function emailRoutes(
 
   fastify.get('/integration', async (request, reply) => {
     const user = request.user as User;
-    if (!requireAdmin(user, reply)) return;
+    if (!requireEmailAdmin(user, reply)) return;
     const config = await loadEmailIntegrationConfig();
     return reply.send(config);
   });
@@ -74,7 +78,7 @@ export default async function emailRoutes(
     { schema: integrationBodySchema },
     async (request, reply) => {
       const user = request.user as User;
-      if (!requireAdmin(user, reply)) return;
+      if (!requireEmailAdmin(user, reply)) return;
 
       const body = request.body;
       if (!isEmailProviderId(body.providerId)) {
@@ -112,7 +116,7 @@ export default async function emailRoutes(
 
   fastify.post('/integration/test', async (request, reply) => {
     const user = request.user as User;
-    if (!requireAdmin(user, reply)) return;
+    if (!requireEmailAdmin(user, reply)) return;
 
     const verify = await verifyEmailTransport();
     if (!verify.sent) {

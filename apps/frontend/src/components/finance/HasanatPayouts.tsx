@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Gift, Plus, X, Save } from "lucide-react";
-import { HASANAT_PAYOUTS, HasanatPayout } from "../../lib/financeData";
+import { HASANAT_PAYOUTS, HasanatPayout } from '@/lib/data/financeData';
 import { DatePicker } from "../ui/DatePicker";
 
 const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";

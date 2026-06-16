@@ -5,7 +5,7 @@ import {
   DollarSign, TrendingDown, RefreshCw, BookOpen,
   Building2, Zap, Package, Home, UserCheck, Heart, Plus, Upload, Calendar
 } from "lucide-react";
-import { generateJERef, Account, JournalEntry, FiscalYear } from "../../lib/accountingData";
+import { generateJERef, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
 
 // ── Transaction Type Definitions ──────────────────────────────────────────────
@@ -101,11 +101,11 @@ const GROUP_COLORS: Record<string, Record<string, string>> = {
     icon: "text-emerald-600 bg-emerald-100",
   },
   red: {
-    card: "border-red-200 bg-red-50/60 hover:bg-red-50",
+    card: "border-red-200 bg-red-50/60 hover:bg-destructive/10",
     header: "bg-red-100 text-red-700 border-red-200",
     badge: "bg-red-100 text-red-700",
-    item: "border-red-200 hover:border-red-400 hover:bg-red-50",
-    selected: "border-red-500 bg-red-50 ring-2 ring-red-200",
+    item: "border-red-200 hover:border-red-400 hover:bg-destructive/10",
+    selected: "border-destructive bg-red-50 ring-2 ring-red-200",
     icon: "text-red-600 bg-red-100",
   },
   blue: {

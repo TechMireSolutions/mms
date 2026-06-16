@@ -4,7 +4,7 @@ import { Phone, Plus } from "lucide-react";
 import { normalizeToE164, parsePhoneNumber } from "@mms/shared";
 import { INPUT, LABEL, Field, FormEmptyState, RequiredBanner, CustomFieldInput, CustomFieldConfig, EditableSelect, COLLECTION_CARD, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
 import { useSortedFields } from "../../../hooks/useSortedFields";
-import { useContactConfig } from "../../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
 
 interface ContactPhone {

@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from "react";
 import { Search, Eye, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { ENROLLMENT_STATUSES, STATUS_MAP, Enrollment, EnrollmentStatus } from "../../lib/enrollmentData";
-import { SESSIONS_DATA, Session } from "../../lib/sessionsData";
+import { ENROLLMENT_STATUSES, STATUS_MAP, Enrollment, EnrollmentStatus } from '@/lib/data/enrollmentData';
+import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
 import { getCollection } from "../../lib/db";
-import { STUDENTS, Student } from "../../lib/studentsData";
+import { STUDENTS, Student } from '@/lib/data/studentsData';
 
 const PAGE_SIZE = 12;
 
@@ -52,7 +52,7 @@ export default function EnrollmentList({ enrollments, role, onView, onCancel }: 
   const paymentColor = (s: string): string => {
     if (s === "paid")    return "text-emerald-600";
     if (s === "pending") return "text-amber-600";
-    if (s === "overdue") return "text-red-500";
+    if (s === "overdue") return "text-destructive";
     return "text-muted-foreground";
   };
 

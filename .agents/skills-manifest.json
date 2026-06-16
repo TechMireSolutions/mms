@@ -15,7 +15,7 @@
     {
       "name": "mms-frontend",
       "path": "skills/mms-frontend",
-      "keywords": ["frontend", "react", "vite", "apiClient", "tanstack query", "hooks", "pages", "components"]
+      "keywords": ["frontend", "react", "vite", "apiClient", "tanstack query", "hooks", "pages", "components", "playwright", "contacts"]
     },
     {
       "name": "mms-module-page",

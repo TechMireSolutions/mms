@@ -1,5 +1,5 @@
 import { apiFetch } from "./apiClient";
-import { validateSessions } from "./sessionsData";
+import { validateSessions } from "./data/sessionsData";
 import {
   type BrandingSettings,
   type GlobalSettings,
@@ -13,7 +13,7 @@ import {
   tenantLocalStoragePrefix,
   validateWorkspaceBackupJson,
 } from "@mms/shared";
-import { getAppDomain } from "./tenantConfig";
+import { getAppDomain } from "./config/tenantConfig";
 
 /** Active workspace localStorage key prefix (`mms_` on apex, `mms_t:{slug}:` on tenant). */
 export function getWorkspaceLocalStoragePrefix(): string {

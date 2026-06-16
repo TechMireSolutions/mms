@@ -12,24 +12,28 @@ Canonical for permissions. UI visibility → `mms-ui-visual.mdc`; auth JWT shape
 
 | Function | Rule |
 |----------|------|
+| `canReadCollection` | `users` → `users.manage`; `contacts`/`students` → shared `*.read`; legacy collections → staff write roles |
+| `canReadObject` | `email_integration` → **admin only**; other objects → staff write roles |
 | `canWriteCollection` | `users` → **admin only**; others → admin, accountant, teacher, assistant_teacher |
 | `canWriteObject` | `global_settings`, `branding`, `email_integration` → **admin only** |
 | `canBulkSync` | **admin only** — `POST /api/db/sync` |
 | `canDownloadBulkSync` | **admin only** — `GET /api/db/sync` |
-| `/api/db/reset` | **admin only** (inline check in route) |
+| `/api/db/reset` | **admin only** (`canResetTenantData`) |
 | `/api/students` POST/PUT/DELETE | `canWriteCollection(user, 'students')` |
 | `/api/contacts` POST/PUT/DELETE | `canWriteCollection(user, 'contacts')` |
-| `/api/email/*` | **admin only** (inline `requireAdmin`) |
+| `/api/email/*` | **admin only** (`canWriteObject(user, 'email_integration')`) |
+| `GET /api/db/collections/:name` | `canReadCollection` |
+| `GET /api/db/objects/:key` | `canReadObject` (server-only keys → `404`) |
+| `GET /api/students`, `GET /api/contacts` | `canReadCollection` on list/count/status |
 
 ### Gaps (open)
 
 | Route | Gap |
 |-------|-----|
-| `GET /api/db/collections/*` | No read RBAC — any authenticated tenant user can read |
-| `GET /api/students`, `GET /api/contacts` | No read RBAC — any authenticated tenant user can list |
-| Dedicated REST routes (future) | Add per-resource checks mirroring collection rules |
+| Dedicated REST routes (future) | Add read/write checks mirroring collection rules |
+| Legacy collection read matrix | Unmapped collections use staff write roles until per-module `*.read` in registry |
 
-Apply `rbacService` on every **new** write or destructive route.
+Apply `rbacService` on every **new** read, write, or destructive route.
 
 ## Backend enforcement pattern
 
@@ -62,6 +66,22 @@ Denied → `403` + `type: 'forbidden'` — never empty `200`.
 - Legacy `useViewerRole()` — migrate when touching a module
 - Forbidden UI: **omit control** — not disabled placeholders (`mms-ui-visual.mdc`)
 - Backend is authoritative; UI gates are additive only
+
+### Migration hotspots (open)
+
+Replace `role ===` / `disabled={role === '…'}` when touching these files:
+
+| File | Pattern |
+|------|---------|
+| `pages/Dashboard.tsx` | Widget/category filtering by role |
+| `components/dashboard/WelcomeBanner.tsx` | Greeting/badge branches |
+| `components/reports/KPISummary.tsx` | Teacher/accountant KPI branches |
+| `pages/Attendance.tsx` | Role banner + mixed `can()` |
+| `components/attendance/MarkAttendance.tsx` | `disabled={role === 'accountant'}` |
+| `components/attendance/AttendanceRecords.tsx` | Admin-only action |
+| `lib/PageNotFound.tsx` | Admin-only link |
+
+**Wired with `can()`:** `Enrollments.tsx`, `Attendance.tsx` (tier visibility), `Dashboard.tsx` (partial). Do not add new inline role strings.
 
 ## Permission strings
 

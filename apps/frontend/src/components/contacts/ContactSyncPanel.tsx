@@ -6,7 +6,7 @@ import {
   Users, Loader2,
 } from "lucide-react";
 
-import { useContactConfig } from "../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { normalizeToE164, parsePhoneNumber, Contact } from "@mms/shared";
 
 

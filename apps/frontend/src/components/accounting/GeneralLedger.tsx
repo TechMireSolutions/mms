@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Download } from "lucide-react";
-import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeLedger, Account, JournalEntry, AccountType } from "../../lib/accountingData";
+import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeLedger, Account, JournalEntry, AccountType } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
 
 interface GeneralLedgerProps {

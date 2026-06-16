@@ -1,37 +1,16 @@
 import React, { useEffect, Suspense } from "react";
 import { applyAppTheme } from "./lib/brandingTheme";
 import { SETTINGS_PREVIEW_EVENT } from "./lib/settingsPreview";
-import { BrandingPaletteProvider } from "./lib/BrandingPaletteContext";
-import { Toaster } from "@/components/ui/toaster"
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router } from 'react-router-dom';
-import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import { ContactConfigProvider } from "./lib/ContactConfigContext";
+import { useAuth } from '@/lib/contexts/AuthContext';
+import UserNotRegisteredError from '@/components/routing/UserNotRegisteredError';
 import RouterBridge from '@/components/routing/RouterBridge';
 import HostRoutes from '@/components/routing/HostRoutes';
-import { TenantProvider } from '@/lib/TenantContext';
-import useTranslation from '@/hooks/useTranslation';
-
-const LoadingFallback = (): React.JSX.Element => {
-  const { t } = useTranslation();
-  return (
-    <div
-      className="flex items-center justify-center min-h-[50vh] w-full"
-      role="status"
-      aria-live="polite"
-    >
-      <span className="sr-only">{t('common.loading')}</span>
-      <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" aria-hidden="true" />
-    </div>
-  );
-};
+import RouteLoadingFallback from '@/components/routing/RouteLoadingFallback';
+import { AppProviders } from '@/providers/AppProviders';
 
 const AuthenticatedApp = (): React.JSX.Element | null => {
   const { isLoadingAuth, authError, authChecked } = useAuth();
 
-  // Only block the app on the initial auth check — not during login/onboard submit
   if (isLoadingAuth && !authChecked) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background" role="status" aria-live="polite">
@@ -52,17 +31,13 @@ const AuthenticatedApp = (): React.JSX.Element | null => {
   return (
     <>
       <RouterBridge />
-      <Suspense fallback={<LoadingFallback />}>
+      <Suspense fallback={<RouteLoadingFallback />}>
         <HostRoutes />
       </Suspense>
     </>
   );
 };
 
-/**
- * Root Application component. Wraps the main routes in authentication,
- * caching providers, router wrappers, and toast overlays.
- */
 function App(): React.JSX.Element {
   useEffect(() => {
     applyAppTheme();
@@ -83,21 +58,10 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <BrandingPaletteProvider>
-            <TenantProvider>
-              <ContactConfigProvider>
-                <AuthenticatedApp />
-              </ContactConfigProvider>
-            </TenantProvider>
-          </BrandingPaletteProvider>
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+    <AppProviders>
+      <AuthenticatedApp />
+    </AppProviders>
   );
 }
 
-export default App
+export default App;

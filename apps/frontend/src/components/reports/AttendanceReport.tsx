@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { UserCheck, Users, AlertTriangle, Award, Pencil } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { ATTENDANCE_RECORDS, AttendanceRecord } from "../../lib/attendanceData";
-import { Session } from "../../lib/sessionsData";
+import { ATTENDANCE_RECORDS, AttendanceRecord } from '@/lib/data/attendanceData';
+import { Session } from '@/lib/data/sessionsData';
 import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
@@ -140,7 +140,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
   const rateColor = (rate: number): string => {
     if (rate >= 90) return "text-emerald-600";
     if (rate >= 75) return "text-amber-600";
-    return "text-red-500";
+    return "text-destructive";
   };
 
   const rateBar = (rate: number): React.JSX.Element => {
@@ -208,7 +208,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
                     <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold">{s.perfectAttendance}</span>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-[11px] font-semibold">{s.belowThreshold}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[11px] font-semibold">{s.belowThreshold}</span>
                   </td>
                 </tr>
               ))}
@@ -244,7 +244,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
                   <td className="px-3 py-2.5 font-medium text-foreground">{s.studentName}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{s.class}</td>
                   <td className="px-3 py-2.5 text-emerald-600 font-medium">{s.present}</td>
-                  <td className="px-3 py-2.5 text-red-500 font-medium">{s.absent}</td>
+                  <td className="px-3 py-2.5 text-destructive font-medium">{s.absent}</td>
                   <td className="px-3 py-2.5 text-amber-600 font-medium">{s.late}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{s.total}</td>
                   <td className="px-3 py-2.5 w-32">{rateBar(s.rate)}</td>

@@ -1,0 +1,54 @@
+import { describe, expect, it } from "vitest";
+import type { User } from "@mms/shared";
+import { canBulkSync, canReadCollection, canReadObject, canResetTenantData, canWriteCollection, canWriteObject } from "../services/rbacService.js";
+
+const admin: User = { id: "1", email: "a@test.com", name: "Admin", role: "admin", workspaceSubdomain: "demo" };
+const teacher: User = { id: "2", email: "t@test.com", name: "Teacher", role: "teacher", workspaceSubdomain: "demo" };
+const accountant: User = { id: "3", email: "c@test.com", name: "Acct", role: "accountant", workspaceSubdomain: "demo" };
+
+const viewer: User = { id: "4", email: "v@test.com", name: "Viewer", role: "viewer", workspaceSubdomain: "demo" };
+
+describe("rbacService", () => {
+  it("restricts users collection to admin", () => {
+    expect(canWriteCollection(admin, "users")).toBe(true);
+    expect(canWriteCollection(teacher, "users")).toBe(false);
+  });
+
+  it("allows write roles on general collections", () => {
+    expect(canWriteCollection(teacher, "students")).toBe(true);
+    expect(canWriteCollection(accountant, "students")).toBe(true);
+  });
+
+  it("restricts students read to roles with students.read", () => {
+    expect(canReadCollection(admin, "students")).toBe(true);
+    expect(canReadCollection(teacher, "students")).toBe(true);
+    expect(canReadCollection(viewer, "students")).toBe(false);
+  });
+
+  it("restricts contacts read to roles with contacts.read", () => {
+    expect(canReadCollection(accountant, "contacts")).toBe(true);
+    expect(canReadCollection(viewer, "contacts")).toBe(false);
+  });
+
+  it("restricts branding to admin", () => {
+    expect(canWriteObject(admin, "branding")).toBe(true);
+    expect(canWriteObject(accountant, "branding")).toBe(false);
+  });
+
+  it("restricts email integration to admin", () => {
+    expect(canWriteObject(admin, "email_integration")).toBe(true);
+    expect(canWriteObject(teacher, "email_integration")).toBe(false);
+    expect(canReadObject(admin, "email_integration")).toBe(true);
+    expect(canReadObject(teacher, "email_integration")).toBe(false);
+  });
+
+  it("restricts bulk sync to admin", () => {
+    expect(canBulkSync(admin)).toBe(true);
+    expect(canBulkSync(teacher)).toBe(false);
+  });
+
+  it("restricts tenant reset to admin", () => {
+    expect(canResetTenantData(admin)).toBe(true);
+    expect(canResetTenantData(teacher)).toBe(false);
+  });
+});

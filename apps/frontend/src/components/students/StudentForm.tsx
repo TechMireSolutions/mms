@@ -1,19 +1,19 @@
 import React, { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Plus, User, Mail, Phone, Calendar, Sparkles, Users, Lock, Camera, Upload } from "lucide-react";
-import { CONTACTS } from "../../lib/contactsData";
+import { CONTACTS } from '@/lib/data/contactsData';
 import { toTitleCase, optimizeImage, cn } from "../../lib/utils";
 import { saveCollection, getObject } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import type { Contact } from "../../lib/contactFields";
-import type { Student } from "../../lib/studentsData";
+import type { Student } from '@/lib/data/studentsData';
 import {
   type StudentsSettings,
   DEFAULT_STUDENTS_SETTINGS,
   type StudentCustomField,
   getSortedStudentFields
 } from "@mms/shared";
-import { useContactConfig } from "../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import useTranslation from "@/hooks/useTranslation";

@@ -22,7 +22,7 @@ import ErrorBoundary from "../components/ui/ErrorBoundary";
 import {
   CHART_OF_ACCOUNTS, JOURNAL_ENTRIES,
   DEFAULT_SETTINGS, DEFAULT_FISCAL_YEARS, CURRENCIES,
-} from "../lib/accountingData";
+} from '@/lib/data/accountingData';
 import { saveCollection, getObject, saveObject } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 

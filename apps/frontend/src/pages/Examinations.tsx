@@ -15,7 +15,7 @@ import ResultsView from "../components/examination/ResultsView";
 import ExaminationsSettings from "../components/examination/ExaminationsSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
-import { EXAMS, EXAM_RESULTS, Exam, ExamResult } from "../lib/examinationData";
+import { EXAMS, EXAM_RESULTS, Exam, ExamResult } from '@/lib/data/examinationData';
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, AlertTriangle, Calendar, User, DollarSign, X, ChevronRight } from "lucide-react";
-import { notifications as defaultNotifications, UserRole } from "../../lib/dashboardData";
+import { notifications as defaultNotifications, UserRole } from '@/lib/data/dashboardData';
 import { getObject } from "../../lib/db";
 import useTranslation from "@/hooks/useTranslation";
 
@@ -19,7 +19,7 @@ interface NotificationsPanelProps {
 }
 
 const ICONS: Record<string, { icon: React.ElementType; bg: string; text: string }> = {
-  fee: { icon: DollarSign, bg: "bg-red-50", text: "text-red-500" },
+  fee: { icon: DollarSign, bg: "bg-red-50", text: "text-destructive" },
   event: { icon: Calendar, bg: "bg-blue-50", text: "text-blue-500" },
   student: { icon: User, bg: "bg-emerald-50", text: "text-emerald-600" },
   attendance: { icon: AlertTriangle, bg: "bg-amber-50", text: "text-amber-600" },

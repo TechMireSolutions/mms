@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Tag, Loader2, BookOpen, User, Clock, MapPin } from "lucide-react";
-import { DISCOUNT_TYPES, Student, StudentSession } from "../../lib/studentsData";
+import { DISCOUNT_TYPES, Student, StudentSession } from '@/lib/data/studentsData';
 
 interface FeeRowProps {
   label: string;

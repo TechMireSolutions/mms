@@ -2,7 +2,8 @@ import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Calendar } from "lucide-react";
 import { getIntlLocaleForLanguage } from "@mms/shared";
-import { SESSIONS_DATA } from "../../lib/sessionsData";
+import type { AppTranslationKey } from "@mms/shared";
+import { SESSIONS_DATA } from '@/lib/data/sessionsData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useStudentsCollection } from "../../hooks/useStudents";
 import useTranslation from "@/hooks/useTranslation";
@@ -11,6 +12,18 @@ interface WelcomeBannerProps {
   role?: "admin" | "teacher" | "accountant" | string;
 }
 
+const GREETING_BY_ROLE: Record<string, AppTranslationKey> = {
+  teacher: "dashboard.greeting.teacher",
+  accountant: "dashboard.greeting.accountant",
+  admin: "dashboard.greeting.admin",
+};
+
+const BADGE_BY_ROLE: Record<string, AppTranslationKey> = {
+  teacher: "dashboard.badge.teacher",
+  accountant: "dashboard.badge.accountant",
+  admin: "dashboard.badge.admin",
+};
+
 /**
  * Dashboard welcome header with role-specific messaging and localized date.
  */
@@ -18,17 +31,9 @@ export default function WelcomeBanner({ role = "admin" }: WelcomeBannerProps): R
   const { t, language } = useTranslation();
   const sessions = useLiveCollection("sessions", SESSIONS_DATA);
   const students = useStudentsCollection();
-
-  const greetingKey = role === "teacher"
-    ? "dashboard.greeting.teacher"
-    : role === "accountant"
-      ? "dashboard.greeting.accountant"
-      : "dashboard.greeting.admin";
-  const badgeKey = role === "teacher"
-    ? "dashboard.badge.teacher"
-    : role === "accountant"
-      ? "dashboard.badge.accountant"
-      : "dashboard.badge.admin";
+  const normalizedRole = (role ?? "admin").toLowerCase();
+  const greetingKey = GREETING_BY_ROLE[normalizedRole] ?? "dashboard.greeting.admin";
+  const badgeKey = BADGE_BY_ROLE[normalizedRole] ?? "dashboard.badge.admin";
 
   const today = useMemo(
     () =>
@@ -43,14 +48,14 @@ export default function WelcomeBanner({ role = "admin" }: WelcomeBannerProps): R
 
   let subtitle = t("dashboard.overview");
 
-  if (role === "teacher") {
+  if (normalizedRole === "teacher") {
     const teacherSessionsCount = sessions.filter((s) =>
       (s.classes || []).some((c: { teacherId?: string; teacherName?: string }) => c.teacherId === "t1" || c.teacherName?.includes("Ibrahim"))
     ).length;
     subtitle = teacherSessionsCount === 1
       ? t("dashboard.sessionsTodayOne")
       : t("dashboard.sessionsToday", { count: teacherSessionsCount });
-  } else if (role === "admin") {
+  } else if (normalizedRole === "admin") {
     const activeCount = students.filter((s) => s.status === "active").length;
     subtitle = t("dashboard.overview");
     if (activeCount > 0) {

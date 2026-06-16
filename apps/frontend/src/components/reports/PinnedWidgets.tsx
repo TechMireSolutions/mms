@@ -14,13 +14,13 @@ import {
   PolarAngleAxis, PolarRadiusAxis, Radar, CartesianGrid 
 } from "recharts";
 import { getCollection, saveCollection } from "../../lib/db";
-import { CONTACTS } from "../../lib/contactsData";
-import { STUDENTS } from "../../lib/studentsData";
-import { INVOICES } from "../../lib/financeData";
-import { ATTENDANCE_RECORDS } from "../../lib/attendanceData";
-import { DISTRIBUTIONS } from "../../lib/hasanatData";
-import { SESSIONS_DATA, Session, Class } from "../../lib/sessionsData";
-import { QUESTIONS, TESTS, RESULTS } from "../../lib/questionBankData";
+import { CONTACTS } from '@/lib/data/contactsData';
+import { STUDENTS } from '@/lib/data/studentsData';
+import { INVOICES } from '@/lib/data/financeData';
+import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
+import { DISTRIBUTIONS } from '@/lib/data/hasanatData';
+import { SESSIONS_DATA, Session, Class } from '@/lib/data/sessionsData';
+import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
 import { METADATA_FIELDS, COLLECTION_OPTIONS, computeCustomCard, CustomCard } from "./reportMetadata";
 import SessionsTable from "../dashboard/SessionsTable";
 import OutstandingFeesTable from "../dashboard/OutstandingFeesTable";
@@ -241,7 +241,7 @@ function WidgetDrilldownModal({
                             ["active", "paid", "present", "customer"].includes(status.toLowerCase())
                               ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
                               : ["inactive", "unpaid", "absent", "lead", "cancelled"].includes(status.toLowerCase())
-                              ? "bg-red-500/10 text-red-500 border-red-500/20"
+                              ? "bg-destructive/10 text-destructive border-destructive/20"
                               : "bg-amber-500/10 text-amber-500 border-amber-500/20"
                           }`}>
                             {status}
@@ -383,7 +383,7 @@ function CustomWidgetRenderer({
           </div>
           {computed.trend !== 0 && (
             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-              isPositive ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-red-500/10 text-red-500 border border-red-500/20"
+              isPositive ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-destructive/10 text-destructive border border-destructive/20"
             }`}>
               {isPositive ? "+" : ""}{computed.trend}%
             </span>
@@ -628,7 +628,7 @@ function CustomWidgetRenderer({
         </div>
         
         {isAlert && (
-          <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20 animate-pulse">
+          <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-destructive bg-destructive/10 px-2 py-0.5 rounded-full border border-destructive/20 animate-pulse">
             <ShieldAlert className="w-2.5 h-2.5" />
             Alert Level
           </span>
@@ -2129,7 +2129,7 @@ export function WidgetBuilder({
                       onChange={(e) => setThresholdColor(e.target.value as "red" | "amber" | "yellow")}
                       className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
                     >
-                      <option value="red" className="text-red-500 bg-background">Critical Red</option>
+                      <option value="red" className="text-destructive bg-background">Critical Red</option>
                       <option value="amber" className="text-amber-500 bg-background">Warning Amber</option>
                       <option value="yellow" className="text-yellow-500 bg-background">Notice Yellow</option>
                     </select>

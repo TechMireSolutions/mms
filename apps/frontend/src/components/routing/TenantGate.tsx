@@ -1,9 +1,9 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { useTenant } from "@/lib/TenantContext";
-import { ROUTES } from "@/lib/routes";
-import { apexUrl } from "@/lib/tenantConfig";
+import { useTenant } from "@/lib/contexts/TenantContext";
+import { ROUTES } from "@/lib/config/routes";
+import { apexUrl } from "@/lib/config/tenantConfig";
 
 /**
  * Onboarding & marketing — only on the apex domain (not tenant subdomains).

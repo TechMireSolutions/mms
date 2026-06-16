@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { DESIGNATED_FOR_OPTIONS, ObligationType } from "../../lib/obligationsData";
+import { DESIGNATED_FOR_OPTIONS, ObligationType } from '@/lib/data/obligationsData';
 import ObligationModal from "./ObligationModal";
 
 export type DesignatedFor = "Syed" | "Non-Syed" | "Both" | "None";
@@ -102,7 +102,7 @@ export default function ObligationTypeManager({ types, onChange }: ObligationTyp
                       <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
                     <button type="button" aria-label={`Delete ${t.name}`} onClick={() => handleDelete(t.id)}
-                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors">
+                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors">
                       <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
                   </div>
@@ -156,7 +156,7 @@ function ObligationTypeForm({ initial, onSave, onCancel }: ObligationTypeFormPro
         <input id="type-name" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
           aria-invalid={!!errors.name} />
-        {errors.name && <p className="text-xs text-red-500 mt-1" role="alert">{errors.name}</p>}
+        {errors.name && <p className="text-xs text-destructive mt-1" role="alert">{errors.name}</p>}
       </div>
       <div>
         <label htmlFor="type-designated" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Designated For *</label>

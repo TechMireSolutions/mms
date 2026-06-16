@@ -1,9 +1,9 @@
 import React from "react";
 import { X, User, BookOpen, Layers, DollarSign, Clock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { STATUS_MAP, Enrollment } from "../../lib/enrollmentData";
+import { STATUS_MAP, Enrollment } from '@/lib/data/enrollmentData';
 import { getCollection } from "../../lib/db";
-import { STUDENTS, Student } from "../../lib/studentsData";
+import { STUDENTS, Student } from '@/lib/data/studentsData';
 
 interface SectionProps {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;

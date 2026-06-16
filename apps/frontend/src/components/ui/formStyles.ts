@@ -1,3 +1,6 @@
+/** Shared validation error line below form fields. */
+export const FORM_ERROR = 'text-xs text-destructive mt-1';
+
 /** Shared label class for modal / registry-driven forms. */
 export const FORM_LABEL =
   'mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground';

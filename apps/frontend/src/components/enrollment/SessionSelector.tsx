@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, Users, MapPin, Check, AlertTriangle } from "lucide-react";
-import { calcAge, Student } from "../../lib/studentsData";
-import { SESSIONS_DATA, Session } from "../../lib/sessionsData";
+import { calcAge, Student } from '@/lib/data/studentsData';
+import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
 import { getCollection } from "../../lib/db";
 
 const TYPE_COLORS: Record<string, string> = {

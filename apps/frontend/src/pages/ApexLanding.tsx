@@ -2,8 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import WorkspaceRegistryList from "@/components/routing/WorkspaceRegistryList";
-import { ROUTES } from "@/lib/routes";
-import { getAppDomain } from "@/lib/tenantConfig";
+import { ROUTES } from "@/lib/config/routes";
+import { getAppDomain } from "@/lib/config/tenantConfig";
 import useTranslation from "@/hooks/useTranslation";
 
 /**

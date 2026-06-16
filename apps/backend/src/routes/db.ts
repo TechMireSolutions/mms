@@ -9,22 +9,25 @@ import {
   persistObject,
   SyncPayload
 } from '../services/dbSyncService.js';
-import type { User } from '../services/authService.js';
-import { canBulkSync, canDownloadBulkSync, canWriteCollection, canWriteObject } from '../services/rbacService.js';
+import { canBulkSync, canDownloadBulkSync, canReadCollection, canReadObject, canResetTenantData, canWriteCollection, canWriteObject } from '../services/rbacService.js';
 import { authenticateTenant } from '../middleware/authenticate.js';
 import {
   applyTitleCaseToContact,
   isServerOnlyObjectKey,
   mergeBrandingSettings,
+  mergeGlobalSettings,
   type BrandingSettings,
+  type GlobalSettings,
 } from '@mms/shared';
-import { getRequestTenant } from '../utils/tenantContext.js';
+import type { User } from '@mms/shared';
+import { getRequestTenant } from '../lib/tenantContext.js';
 import { syncWorkspaceFromBranding } from '../services/workspaceService.js';
 import {
   recordAudit,
   AUDITED_COLLECTIONS,
   AUDITED_OBJECTS,
 } from '../services/auditService.js';
+import { SYNC_MAX_BODY_BYTES } from '../lib/syncLimits.js';
 
 // Input validation schema for Bulk Sync Upload
 const syncSchema: FastifySchema = {
@@ -132,38 +135,42 @@ export default async function dbRoutes(
   });
 
   // Bulk sync upload: Save all data
-  fastify.post<{ Body: SyncPayload }>('/sync', { schema: syncSchema }, async (request, reply) => {
-    const user = request.user as User;
-    if (!canBulkSync(user)) {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: 'Only administrators can perform bulk database sync'
-      });
-    }
-    try {
-      const payload = request.body;
-      if (payload.collections && payload.collections.contacts) {
-        payload.collections.contacts = payload.collections.contacts.map((item) =>
-          applyTitleCaseToContact(item as Record<string, unknown>)
-        );
+  fastify.post<{ Body: SyncPayload }>(
+    '/sync',
+    { schema: syncSchema, bodyLimit: SYNC_MAX_BODY_BYTES },
+    async (request, reply) => {
+      const user = request.user as User;
+      if (!canBulkSync(user)) {
+        return reply.status(403).send({
+          type: 'forbidden',
+          message: 'Only administrators can perform bulk database sync',
+        });
       }
-      await synchronizeData(payload);
-      return reply.send({ success: true });
-    } catch (error) {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: 'Failed to synchronize database snapshot'
-      });
-    }
-  });
+      try {
+        const payload = request.body;
+        if (payload.collections?.contacts) {
+          payload.collections.contacts = payload.collections.contacts.map((item) =>
+            applyTitleCaseToContact(item as Record<string, unknown>),
+          );
+        }
+        await synchronizeData(payload);
+        return reply.send({ success: true });
+      } catch {
+        return reply.status(500).send({
+          type: 'database_error',
+          message: 'Failed to synchronize database snapshot',
+        });
+      }
+    },
+  );
 
   // Reset database to defaults — admin role required
   fastify.post('/reset', async (request, reply) => {
     const user = request.user as User;
-    if (user.role !== 'admin') {
+    if (!canResetTenantData(user)) {
       return reply.status(403).send({
         type: 'forbidden',
-        message: 'Only administrators can reset the database'
+        message: 'Only administrators can reset the database',
       });
     }
     try {
@@ -179,8 +186,15 @@ export default async function dbRoutes(
 
   // Get a specific collection
   fastify.get<{ Params: { name: string } }>('/collections/:name', { schema: collectionParamsSchema }, async (request, reply) => {
+    const user = request.user as User;
+    const { name } = request.params;
+    if (!canReadCollection(user, name)) {
+      return reply.status(403).send({
+        type: 'forbidden',
+        message: `You do not have permission to read collection "${name}"`,
+      });
+    }
     try {
-      const { name } = request.params;
       const data = await fetchCollection(name);
       if (data === null) {
         return reply.send([]);
@@ -255,12 +269,19 @@ export default async function dbRoutes(
 
   // Get a specific object (KV)
   fastify.get<{ Params: { key: string } }>('/objects/:key', { schema: objectParamsSchema }, async (request, reply) => {
+    const user = request.user as User;
+    const { key } = request.params;
     try {
-      const { key } = request.params;
       if (isServerOnlyObjectKey(key)) {
         return reply.status(404).send({
           type: 'not_found',
           message: `Object with key "${key}" not found`,
+        });
+      }
+      if (!canReadObject(user, key)) {
+        return reply.status(403).send({
+          type: 'forbidden',
+          message: `You do not have permission to read object "${key}"`,
         });
       }
       const data = await fetchObject(key);
@@ -300,7 +321,9 @@ export default async function dbRoutes(
       const data =
         key === 'branding'
           ? mergeBrandingSettings(raw as Partial<BrandingSettings>)
-          : raw;
+          : key === 'global_settings'
+            ? mergeGlobalSettings(raw as Partial<GlobalSettings>)
+            : raw;
 
       await persistObject(key, data);
 

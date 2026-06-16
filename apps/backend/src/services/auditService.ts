@@ -1,6 +1,7 @@
+import { randomBytes } from 'node:crypto';
 import { AUDIT_LOG_COLLECTION, type AuditLogEntry } from '@mms/shared';
 import { fetchCollection, persistCollection } from './dbSyncService.js';
-import { getRequestTenant } from '../utils/tenantContext.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 
 export interface RecordAuditInput {
   userId: string;
@@ -19,7 +20,7 @@ export async function recordAudit(input: RecordAuditInput): Promise<void> {
     const existing = (await fetchCollection(AUDIT_LOG_COLLECTION)) as AuditLogEntry[];
     const rows = Array.isArray(existing) ? existing : [];
     const entry: AuditLogEntry = {
-      id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+      id: `audit_${Date.now()}_${randomBytes(4).toString('hex')}`,
       at: new Date().toISOString(),
       userId: input.userId,
       userEmail: input.userEmail,

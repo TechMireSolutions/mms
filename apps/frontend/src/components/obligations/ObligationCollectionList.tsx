@@ -3,7 +3,7 @@ import { Plus, Eye, Search, Receipt, Printer } from "lucide-react";
 import {
   MOCK_CURRENCIES,
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
-} from "../../lib/obligationsData";
+} from '@/lib/data/obligationsData';
 import useDebounce from "../../hooks/useDebounce";
 import { useMergedObligationContacts } from "../../hooks/useObligationLookups";
 

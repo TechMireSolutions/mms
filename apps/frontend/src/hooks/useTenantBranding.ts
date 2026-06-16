@@ -1,8 +1,5 @@
-import { useEffect, useState } from "react";
-import { type PublicBranding } from "@mms/shared";
-import { cachePublicBranding } from "@/lib/db";
-import { apiJson } from "@/lib/apiClient";
-import { useTenant } from "@/lib/TenantContext";
+import { useTenant } from "@/lib/contexts/TenantContext";
+import { usePublicBranding } from "@/hooks/usePublicBranding";
 
 /**
  * Blocks tenant auth UI until workspace branding has been fetched from the server.
@@ -10,34 +7,22 @@ import { useTenant } from "@/lib/TenantContext";
  */
 export function useTenantBranding(): { ready: boolean } {
   const { isApex, workspaceLoading, workspace } = useTenant();
-  const [fallbackDone, setFallbackDone] = useState(isApex);
+  const needsFallback = !isApex && !workspaceLoading && workspace === null;
+  const { isPending, isFetching, isFetched } = usePublicBranding(needsFallback);
 
-  useEffect(() => {
-    if (isApex || workspaceLoading || workspace) {
-      setFallbackDone(true);
-      return;
-    }
+  if (isApex) {
+    return { ready: true };
+  }
 
-    let cancelled = false;
-    setFallbackDone(false);
+  if (workspaceLoading) {
+    return { ready: false };
+  }
 
-    void apiJson<{ branding?: PublicBranding }>("/api/workspace/public-branding")
-      .then((data) => {
-        if (!cancelled && data.branding) {
-          cachePublicBranding(data.branding);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setFallbackDone(true);
-      });
+  if (workspace !== null) {
+    return { ready: true };
+  }
 
-    return () => {
-      cancelled = true;
-    };
-  }, [isApex, workspaceLoading, workspace]);
-
-  const ready = isApex || (!workspaceLoading && (workspace !== null || fallbackDone));
-
+  const ready = !needsFallback || (isFetched && !isPending && !isFetching);
   return { ready };
 }
 

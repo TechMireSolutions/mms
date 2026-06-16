@@ -5,7 +5,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ColumnCustomizer from "./ColumnCustomizer";
-import { useContactConfig } from "@/lib/ContactConfigContext";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import useTranslation from "@/hooks/useTranslation";
 
 interface SortOption {

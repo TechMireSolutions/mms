@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
-import { useBrandPalette } from "@/lib/BrandingPaletteContext";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { Users, DollarSign, TrendingUp, BookOpen } from "lucide-react";
-import { ENROLLMENT_STATUSES, Enrollment } from "../../lib/enrollmentData";
+import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
 
 interface KPIProps {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
@@ -91,7 +91,7 @@ export default function EnrollmentReports({ enrollments }: EnrollmentReportsProp
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KPI icon={Users}      label="Total Enrollments" value={total}    sub={`${confirmed} confirmed`} />
         <KPI icon={TrendingUp} label="Confirmed"          value={confirmed} sub={`${pending} pending`}   color="bg-emerald-50 text-emerald-700" />
-        <KPI icon={BookOpen}   label="Cancelled"          value={cancelled} sub="This period"            color="bg-red-50 text-red-500" />
+        <KPI icon={BookOpen}   label="Cancelled"          value={cancelled} sub="This period"            color="bg-red-50 text-destructive" />
         <KPI icon={DollarSign} label="Revenue Due"        value={`PKR ${totalFees.toLocaleString()}`} sub={`Paid: PKR ${paidFees.toLocaleString()}`} color="bg-amber-50 text-amber-700" />
       </div>
 

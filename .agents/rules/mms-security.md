@@ -10,14 +10,14 @@ Canonical for security beyond RBAC matrices (`mms-rbac.md`) and auth session sha
 
 | Surface | Current | Residual risk | Target |
 |---------|---------|---------------|--------|
-| Session storage | httpOnly cookies `mms_access` / `mms_refresh` + Bearer fallback | XSS still dangerous for session fixation | Remove legacy `mms_token` localStorage writes |
+| Session storage | httpOnly cookies; FE `apiClient` cookie-only; backend copies cookie → Bearer | XSS still dangerous for session fixation | Remove `mms_token` cleanup path when stable |
 | API auth | JWT in cookie or `Authorization` header | Stolen token until expiry | Short access TTL (15m) + opaque refresh rotation |
 | Multi-tenant isolation | `t:{subdomain}:{key}` + `authenticateTenant` | Misconfigured proxy host header | Always trust `x-forwarded-host` from Vite/nginx only |
 | Bulk sync download | `GET /api/db/sync` **admin-only** | Large payload exfiltration by admin | Payload size limits (target) |
-| Bulk sync upload | `POST /api/db/sync` admin-only | Payload abuse | Size limits + request timeout (target) |
+| Bulk sync upload | `POST /api/db/sync` admin-only + **10 MiB body limit** (`MMS_SYNC_MAX_BODY_BYTES`) | Payload abuse | Request timeout (target) |
 | 2FA | Server-side challenge in `auth_artifacts`; OTP hashed | SMS channel not fully wired | Email/SMS via tenant settings |
 | CSRF | Cookie session with `SameSite=Lax` | Cross-site POST from malicious origin | `SameSite=Strict` + CSRF token for cookie-only mutations (evaluate) |
-| REST mutations | `canWriteCollection` on students + contacts REST | Read endpoints open to all tenant users | Role-based read matrix (evaluate) |
+| REST mutations | `canWriteCollection` on students + contacts REST | Read endpoints use `canReadCollection` | Extend `*.read` for new REST resources |
 
 ## Required on every auth/write change
 
@@ -85,9 +85,8 @@ Stable `type` codes — frontend maps to `t('errors.*')` (`mms-i18n.md`). Never 
 
 | Gap | Status |
 |-----|--------|
-| Read RBAC on `GET /api/db/collections/*` and REST list endpoints | Open — any authenticated tenant user can read |
-| Refresh token replay | Rotation deletes old artifact — verify in tests when changing auth |
-| Bulk sync payload limits | Open — size/timeout guards (target) |
+| Refresh token replay | Rotation deletes old artifact — covered in `auth.integration.test.ts` |
+| Bulk sync request timeout | Open — timeout guard (target) |
 
 ## Checklist (PR)
 

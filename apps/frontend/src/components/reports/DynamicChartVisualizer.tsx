@@ -1080,7 +1080,7 @@ export default function DynamicChartVisualizer({
                     title="Export PDF Report"
                     type="button"
                   >
-                    <FileText className="w-3.5 h-3.5 text-red-500" />
+                    <FileText className="w-3.5 h-3.5 text-destructive" />
                   </button>
                   <button
                     onClick={() => setShowPdfSettings(!showPdfSettings)}

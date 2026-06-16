@@ -368,7 +368,7 @@ function FieldRow({
   if (confirming) {
     return (
       <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/50">
-        <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
+        <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
         <p className="flex-1 text-xs text-red-700 dark:text-red-400 font-medium">
           Delete <strong>{field.label}</strong>? This cannot be undone.
         </p>
@@ -413,7 +413,7 @@ function FieldRow({
           <span className="text-sm font-semibold text-foreground">{field.label}</span>
           <span className="text-[11px] text-muted-foreground">{typeLabel}</span>
           {field.required && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50">
               Required
             </span>
           )}
@@ -446,7 +446,7 @@ function FieldRow({
       <button
         type="button"
         onClick={() => setConfirming(true)}
-        className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600 transition-colors"
+        className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-red-600 transition-colors"
         aria-label={`Delete ${field.label}`}
       >
         <Trash2 className="w-3.5 h-3.5" />

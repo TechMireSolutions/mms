@@ -1,6 +1,6 @@
 ---
 description: Frontend hooks — live data, Query, sorted fields, branding
-globs: apps/frontend/src/hooks/**,apps/frontend/src/lib/ContactConfigContext.tsx,apps/frontend/src/lib/contactConfig/**
+globs: apps/frontend/src/hooks/**,apps/frontend/src/lib/ContactConfigContext.tsx,apps/frontend/src/lib/contactConfig/**,apps/frontend/src/lib/TenantContext.tsx
 alwaysApply: false
 ---
 
@@ -13,42 +13,55 @@ Colocate in `apps/frontend/src/hooks/`. Pure logic used in 2+ modules → extrac
 | Hook | Purpose |
 |------|---------|
 | `useWorkspaceRegistry()` | Apex workspace list |
-| `useStudents()` | Student list from `/api/students` |
-| `useStudentMutations()` | create / update / delete students |
-| `useStudentCount()` | Count from `/api/students/count` |
-| `useContacts()` | Contact list from `/api/contacts` |
-| `useContactMutations()` | upsert / update / delete contacts |
-| `useContactsCollection()` | Query-first with localStorage fallback |
+| `useStudents()` / `useStudentMutations()` | Student REST CRUD |
+| `useStudentsCollection()` | Query-first students + localStorage fallback |
+| `useStudentCount()` | `GET /api/students/count` |
+| `useContacts()` / `useContactMutations()` | Contact REST CRUD |
+| `useContactsCollection()` | Query-first contacts + localStorage fallback |
 
-Pattern: `enabled: isAuthenticated`, export `QUERY_KEY` constant, use `apiJson` in `queryFn` (`mms-query.mdc`).
+Pattern: `enabled: isAuthenticated`, export `QUERY_KEY` constant, use `apiJson` in `queryFn`, `saveCollection` in fetch when hybrid (`mms-query.mdc`).
 
 ## `useLiveCollection(key, seed?)`
 
 Reactive read of a localStorage collection. Subscribes to `local-database-update`.
 
 ```ts
-// ✅ Reactive (contacts, finance, etc.)
-const contacts = useLiveCollection('contacts');
+// ✅ Reactive (finance, obligations, etc.)
+const sessions = useLiveCollection('sessions');
 
 // ❌ Stale after external saves
 const [items] = useState(() => getCollection('contacts', CONTACTS));
 ```
 
-**Note:** `Students.tsx` uses `useStudents` (Query) — not `useLiveCollection('students')`.
+**Note:** `Students.tsx` / `Contacts.tsx` use Query collection hooks — not raw `useLiveCollection` for primary CRUD.
+
+## Domain lookups
+
+| Hook | Purpose |
+|------|---------|
+| `useObligationLookups()` | Obligation reference data via live collections |
+| `useQuestionBankConfig()` | Question bank field/config state |
+| `useWorkspaceRoles()` | Workspace role metadata |
 
 ## `useSortedFields(registry, tabKey?)`
 
 Fields filtered by `enabled`, sorted by `order`. Use with `FormPrimitives` — not hardcoded field lists.
 
-## `useGlobalSettings()`
+## Settings & branding
 
-Reactive `global_settings` (incl. `enabledModules`, theme). One-shot reads outside React: `getGlobalSettings()`.
+| Hook | Purpose |
+|------|---------|
+| `useGlobalSettings()` | Reactive `global_settings` (incl. `enabledModules`, theme) |
+| `useBranding()` | Branding CSS variables from `branding` object |
+| `useBrandingDraft()` / `useThemeSettingsDraft()` / `useSettingsDraft()` | Settings preview before save (`mms-config.mdc`) |
+| `useBrandedDashboardChartColors()` | Chart palette from branding |
+| `useTenantBranding()` | Blocks auth UI until public branding fetched |
+| `useWorkspaceBySubdomain()` | TanStack Query workspace lookup by subdomain |
+| `usePublicBranding()` | Fallback public branding query |
 
-## `useBranding()`
+One-shot reads outside React: `getGlobalSettings()`, `getBrandingSettings()`.
 
-Branding CSS variables from `branding` object. Do not hardcode primary colours.
-
-## Contact config
+## Contact config (context-backed)
 
 | Hook / export | Source |
 |---------------|--------|
@@ -59,25 +72,33 @@ Branding CSS variables from `branding` object. Do not hardcode primary colours.
 
 Provider at `App.tsx` root only — never nest on child pages.
 
-## `useBodyScrollLock(active?)`
+## RBAC & viewer
 
-Reference-counted scroll lock for modals. Pair with `overscroll-contain` on scroll body. Never set `document.body.style.overflow` manually.
+| Hook | Purpose |
+|------|---------|
+| `usePermissions()` / `can()` | `@mms/shared` permission matrix — **prefer over `role ===`** |
+| `useViewerRole()` / `useIsAdminViewer()` | Legacy role normalization — migrate when touching module |
 
-## `useTranslation()`
+Hotspots still on `role ===`: `Dashboard.tsx`, `WelcomeBanner.tsx`, `KPISummary.tsx`, `Attendance.tsx`, `MarkAttendance.tsx` (`mms-rbac.mdc`).
 
-Returns `t`, `lang`, `dir`. All new user-facing copy uses `t('key')` — `mms-i18n.mdc`.
+## UI shell & UX
 
-## `usePermissions()` / `can()`
+| Hook | Purpose |
+|------|---------|
+| `useModuleTierTabs()` | Operations / Analytics / Configuration |
+| `useConfigSubTabs()` / `usePersistedTabState()` | Sub-tab persistence |
+| `useTranslation()` | `t`, `lang`, `dir` — all new copy via `t()` |
+| `useBodyScrollLock(active?)` | Reference-counted modal scroll lock |
+| `useSessionTimeout()` | Idle logout from global settings |
+| `useDebounce()` | Input debouncing |
+| `use-mobile.tsx` | Responsive breakpoint helper |
 
-Delegates to `@mms/shared` `roleHasPermission` — `mms-rbac.mdc`.
-
-## Settings preview
-
-`useSettingsDraft`, `useBrandingDraft`, `useThemeSettingsDraft` — `mms-config.mdc`.
+Never set `document.body.style.overflow` manually — use `useBodyScrollLock`.
 
 ## New hooks checklist
 
 - [ ] No polling — events or TanStack Query
 - [ ] Internal API via `apiClient`
 - [ ] Export query keys when using Query
+- [ ] `enabled: isAuthenticated` for tenant REST
 - [ ] Test pure wrappers where ROI is high (`mms-testing.mdc`)

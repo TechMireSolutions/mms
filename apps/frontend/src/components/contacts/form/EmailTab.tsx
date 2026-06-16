@@ -4,7 +4,7 @@ import { Mail, Plus } from "lucide-react";
 
 import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
 import { useSortedFields } from "../../../hooks/useSortedFields";
-import { useContactConfig } from "../../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
 
 interface ContactEmail {

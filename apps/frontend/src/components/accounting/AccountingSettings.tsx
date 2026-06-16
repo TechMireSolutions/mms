@@ -3,7 +3,7 @@ import {
   DollarSign, Calendar, Plus, Pencil, Trash2,
   CheckCircle2, Lock, Clock, Save, RotateCcw, BookOpen
 } from "lucide-react";
-import { CURRENCIES, Account, AccountingSettings as SettingsType, FiscalYear } from "../../lib/accountingData";
+import { CURRENCIES, Account, AccountingSettings as SettingsType, FiscalYear } from '@/lib/data/accountingData';
 import {
   DEFAULT_ACCOUNT_FIELD_DEFS,
   DEFAULT_ACCOUNTING_SETTINGS,
@@ -139,7 +139,7 @@ function FYModal({ initial, onSave, onClose }: FYModalProps) {
               <label htmlFor="fy-label" className="text-xs font-semibold text-muted-foreground uppercase">Label *</label>
               <input id="fy-label" value={form.label || ""} onChange={(e) => setForm({ ...form, label: e.target.value })}
                 placeholder="e.g. FY 2026–27" className={`mt-1 ${inp}`} required />
-              {errors.label && <p className="text-xs text-red-500 mt-1 m-0" role="alert">{errors.label}</p>}
+              {errors.label && <p className="text-xs text-destructive mt-1 m-0" role="alert">{errors.label}</p>}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -150,7 +150,7 @@ function FYModal({ initial, onSave, onClose }: FYModalProps) {
                   onChange={(val) => setForm({ ...form, startDate: val })}
                   required
                 />
-                {errors.startDate && <p className="text-xs text-red-500 mt-1 m-0" role="alert">{errors.startDate}</p>}
+                {errors.startDate && <p className="text-xs text-destructive mt-1 m-0" role="alert">{errors.startDate}</p>}
               </div>
               <div>
                 <label htmlFor="fy-end" className="text-xs font-semibold text-muted-foreground uppercase">End Date *</label>
@@ -160,7 +160,7 @@ function FYModal({ initial, onSave, onClose }: FYModalProps) {
                   onChange={(val) => setForm({ ...form, endDate: val })}
                   required
                 />
-                {errors.endDate && <p className="text-xs text-red-500 mt-1 m-0" role="alert">{errors.endDate}</p>}
+                {errors.endDate && <p className="text-xs text-destructive mt-1 m-0" role="alert">{errors.endDate}</p>}
               </div>
             </div>
             <div>
@@ -393,7 +393,7 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
                                 <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                               </button>
                               <button type="button" aria-label={`Delete ${fy.label}`} onClick={() => handleDeleteFY(fy.id)} disabled={fy.status === "active"}
-                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                                 <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                               </button>
                             </div>

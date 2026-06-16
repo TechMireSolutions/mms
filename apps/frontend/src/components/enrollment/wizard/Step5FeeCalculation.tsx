@@ -1,8 +1,8 @@
 import React from "react";
 import { DollarSign, Tag, Info } from "lucide-react";
-import { calcFee, CalculatedFee } from "../../../lib/enrollmentData";
-import { Student } from "../../../lib/studentsData";
-import { Session } from "../../../lib/sessionsData";
+import { calcFee, CalculatedFee } from '@/lib/data/enrollmentData';
+import { Student } from '@/lib/data/studentsData';
+import { Session } from '@/lib/data/sessionsData';
 
 interface Step5FeeCalculationProps {
   student: Student | null | undefined;

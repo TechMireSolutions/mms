@@ -101,7 +101,7 @@ export default function MujtahidManager({ mujtahids, reps, onChangeMujtahids, on
                     <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                   </button>
                   <button type="button" aria-label={`Delete ${m.name}`} onClick={() => handleDeleteMujtahid(m.id)}
-                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors">
+                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </button>
                 </div>
@@ -120,7 +120,7 @@ export default function MujtahidManager({ mujtahids, reps, onChangeMujtahids, on
                             <Pencil className="w-3 h-3" aria-hidden="true" />
                           </button>
                           <button type="button" aria-label={`Delete representative ${r.name}`} onClick={() => handleDeleteRep(r.id)}
-                            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors">
+                            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors">
                             <Trash2 className="w-3 h-3" aria-hidden="true" />
                           </button>
                         </div>
@@ -172,7 +172,7 @@ function NameForm({ initial, onSave, onCancel, label }: NameFormProps) {
         <input id="name-form-input" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
           aria-invalid={!!error} />
-        {error && <p className="text-xs text-red-500 mt-1" role="alert">{error}</p>}
+        {error && <p className="text-xs text-destructive mt-1" role="alert">{error}</p>}
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <button type="button" onClick={onCancel}

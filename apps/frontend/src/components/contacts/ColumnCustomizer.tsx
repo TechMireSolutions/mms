@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Settings2, GripVertical, Eye, EyeOff, RotateCcw } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useContactConfig } from "../../lib/ContactConfigContext";
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
 
 /**

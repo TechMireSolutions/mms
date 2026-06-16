@@ -20,7 +20,7 @@ import WakalaTypeManager from "../components/obligations/WakalaTypeManager";
 import { 
   OBLIGATION_TYPES, MUJTAHIDS, MUJTAHID_REPS, WAKALA_TYPES, OBLIGATION_DISTRIBUTIONS, OBLIGATION_COLLECTIONS,
   ObligationType, Mujtahid, MujtahidRep, WakalaType, ObligationDistribution, ObligationCollection
-} from "../lib/obligationsData";
+} from '@/lib/data/obligationsData';
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 import ErrorBoundary from "../components/ui/ErrorBoundary";

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useBrandPalette } from "@/lib/BrandingPaletteContext";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -8,8 +8,8 @@ import {
   CLASS_STUDENTS, ClassStudent,
   calcClassStats, calcStudentRate, getMonthlyTrend, ATTENDANCE_STATUSES, AttendanceRecord,
   AttendanceStatus,
-} from "../../lib/attendanceData";
-import { SESSIONS_DATA } from "../../lib/sessionsData";
+} from '@/lib/data/attendanceData';
+import { SESSIONS_DATA } from '@/lib/data/sessionsData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
 

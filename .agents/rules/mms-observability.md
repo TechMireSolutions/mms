@@ -7,7 +7,7 @@ trigger: model_decision
 ## Backend logging
 
 - Fastify logger via `LOG_LEVEL` env (`mms-ops.md`) — default `info` in prod
-- Log **structured context**: `requestId`, route, `userId` (when authenticated), tenant subdomain
+- **`onResponse` hook** (`app.ts`): log `statusCode`, method, url, tenant, `userId` on **4xx/5xx** only — no bodies
 - **Never log**: passwords, JWTs, refresh tokens, OTP codes, full `passwordHash`, bulk collection payloads with PII
 
 ```ts

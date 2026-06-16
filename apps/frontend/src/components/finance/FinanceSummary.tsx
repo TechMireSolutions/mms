@@ -1,9 +1,9 @@
 import React from "react";
-import { useBrandPalette } from "@/lib/BrandingPaletteContext";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { motion } from "framer-motion";
 import { TrendingUp, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, Tooltip, TooltipProps } from "recharts";
-import { INVOICES, MONTHLY_REVENUE } from "../../lib/financeData";
+import { INVOICES, MONTHLY_REVENUE } from '@/lib/data/financeData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;

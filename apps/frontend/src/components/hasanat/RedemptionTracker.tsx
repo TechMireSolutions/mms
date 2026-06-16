@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gift, Plus, Star, X } from "lucide-react";
-import { REDEMPTIONS, Redemption, Distribution } from "../../lib/hasanatData";
+import { REDEMPTIONS, Redemption, Distribution } from '@/lib/data/hasanatData';
 import { DatePicker } from "../ui/DatePicker";
 
 const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";

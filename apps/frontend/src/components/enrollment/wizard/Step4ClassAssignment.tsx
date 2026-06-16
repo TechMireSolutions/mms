@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Layers, AlertTriangle, Users, CheckCircle2 } from "lucide-react";
-import { Session, Class } from "../../../lib/sessionsData";
-import { Student } from "../../../lib/studentsData";
+import { Session, Class } from '@/lib/data/sessionsData';
+import { Student } from '@/lib/data/studentsData';
 
 interface Step4ClassAssignmentProps {
   session: Session | null | undefined;

@@ -18,11 +18,11 @@ description: Adds or modifies Fastify routes, middleware (authenticateTenant), s
 
 ```
 app.ts
-  onRequest: tenantStorage + attachAccessTokenFromCookie
-  routes/*.ts  →  middleware/authenticate.ts (authenticateTenant)
-               →  services/*.ts
-               →  services/dbSyncService.ts (collection/object from routes)
-               →  db/database.ts | authArtifactService.ts
+  plugins/     → security, http, requestHooks
+  routes/      → thin Fastify plugins
+  middleware/  → authenticateTenant | authenticatePlatform
+  services/    → business logic by domain (auth/, platform/, email/, whatsapp/, …)
+  db/          → database.ts + dbSyncService for JSON documents
 ```
 
 **Never** query `pg` from route handlers. REST routes use **`dbSyncService`**, not direct `database.ts` imports.

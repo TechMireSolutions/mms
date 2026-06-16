@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Search, TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
-import { JournalEntry, Account } from "../../lib/accountingData";
+import { JournalEntry, Account } from '@/lib/data/accountingData';
 
 // Money-in account IDs (asset accounts that receive income)
 const MONEY_IN_CREDITS = ["a4000","a4100","a4200","a4300","a4400"]; // Revenue accounts
@@ -106,12 +106,12 @@ export default function CashbookView({ entries, accounts, fmt }: CashbookViewPro
           <p className="text-lg font-bold text-emerald-700 mt-1 m-0">{fmt(totalIn)}</p>
         </article>
         <article className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
-          <TrendingDown className="w-5 h-5 text-red-500 mx-auto mb-1" aria-hidden="true" />
+          <TrendingDown className="w-5 h-5 text-destructive mx-auto mb-1" aria-hidden="true" />
           <h4 className="text-[10px] font-bold text-red-600 uppercase tracking-wide m-0">Money Out</h4>
           <p className="text-lg font-bold text-red-600 mt-1 m-0">{fmt(totalOut)}</p>
         </article>
         <article className={`rounded-xl border p-4 text-center ${balance >= 0 ? "border-primary/30 bg-primary/5" : "border-red-200 bg-red-50"}`}>
-          <ArrowUpDown className={`w-5 h-5 mx-auto mb-1 ${balance >= 0 ? "text-primary" : "text-red-500"}`} aria-hidden="true" />
+          <ArrowUpDown className={`w-5 h-5 mx-auto mb-1 ${balance >= 0 ? "text-primary" : "text-destructive"}`} aria-hidden="true" />
           <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide m-0">Net Balance</h4>
           <p className={`text-lg font-bold mt-1 m-0 ${balance >= 0 ? "text-primary" : "text-red-600"}`}>{fmt(Math.abs(balance))}</p>
         </article>

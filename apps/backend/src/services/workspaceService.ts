@@ -10,12 +10,20 @@ import {
   WORKSPACES_COLLECTION,
 } from '@mms/shared';
 import { getCollection, saveCollection, getObject } from '../db/database.js';
-import { getRequestTenant, runWithTenant } from '../utils/tenantContext.js';
+import { getRequestTenant, runWithTenant } from '../lib/tenantContext.js';
 
 async function listWorkspaces(): Promise<Workspace[]> {
   const raw = await getCollection(WORKSPACES_COLLECTION);
   if (!Array.isArray(raw)) return [];
   return raw as Workspace[];
+}
+
+/** Public branding for a workspace subdomain (login shell, registry cards). */
+export async function fetchPublicBrandingForSubdomain(subdomain: string) {
+  return runWithTenant(subdomain, async () => {
+    const raw = await getObject('branding');
+    return toPublicBranding(mergeBrandingSettings(raw as Record<string, unknown> | null));
+  });
 }
 
 export function normalizeSubdomainInput(value: string): string {
@@ -27,10 +35,7 @@ export async function listPublicWorkspaces(): Promise<PublicWorkspaceSummary[]> 
   const workspaces = await listWorkspaces();
   const summaries = await Promise.all(
     workspaces.map(async (ws) => {
-      const branding = await runWithTenant(ws.subdomain, async () => {
-        const raw = await getObject('branding');
-        return toPublicBranding(mergeBrandingSettings(raw as Record<string, unknown> | null));
-      });
+      const branding = await fetchPublicBrandingForSubdomain(ws.subdomain);
       const logoUrl = branding.logoUrl?.trim();
       return {
         subdomain: ws.subdomain,

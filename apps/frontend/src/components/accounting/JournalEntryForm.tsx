@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Plus, Trash2, AlertCircle, CheckCircle2, Tag, BookOpen } from "lucide-react";
-import { ACCOUNT_TYPE_META, JOURNAL_TAGS, generateJERef, Account, JournalEntry, FiscalYear, JournalLine } from "../../lib/accountingData";
+import { ACCOUNT_TYPE_META, JOURNAL_TAGS, generateJERef, Account, JournalEntry, FiscalYear, JournalLine } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import { Button } from "../ui/button";
@@ -153,7 +153,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                 onChange={(val) => setForm({ ...form, date: val })}
                 required
               />
-              {errors.date && <p className="text-xs text-red-500 mt-1" role="alert">{errors.date}</p>}
+              {errors.date && <p className="text-xs text-destructive mt-1" role="alert">{errors.date}</p>}
             </div>
             <div>
               <label htmlFor="je-fy" className="text-xs font-semibold text-muted-foreground uppercase">Financial Year</label>
@@ -166,7 +166,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
               <label htmlFor="je-desc" className="text-xs font-semibold text-muted-foreground uppercase">Narration / Description *</label>
               <input id="je-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
                 placeholder="e.g. Student fee collection for Spring 2026…" className={inp} aria-invalid={!!errors.description} />
-              {errors.description && <p className="text-xs text-red-500 mt-1" role="alert">{errors.description}</p>}
+              {errors.description && <p className="text-xs text-destructive mt-1" role="alert">{errors.description}</p>}
             </div>
           </fieldset>
 
@@ -233,7 +233,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                               {acc.type} · {ACCOUNT_TYPE_META[acc.type]?.normalBalance === "debit" ? "Dr normal" : "Cr normal"}
                             </span>
                           )}
-                          {errors[`line${idx}`] && <p className="text-[10px] text-red-500 m-0" role="alert">{errors[`line${idx}`]}</p>}
+                          {errors[`line${idx}`] && <p className="text-[10px] text-destructive m-0" role="alert">{errors[`line${idx}`]}</p>}
                         </td>
                         <td className="px-3 py-2 hidden md:table-cell">
                           <input 
@@ -274,7 +274,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                             aria-label={`Remove line ${idx + 1}`}
                             onClick={() => removeLine(idx)} 
                             disabled={form.lines.length <= 2}
-                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-30"
+                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors disabled:opacity-30"
                           >
                             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
@@ -298,8 +298,8 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
               {isBalanced ? <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> : <AlertCircle className="w-4 h-4" aria-hidden="true" />}
               {isBalanced ? "Entry is balanced — Debits equal Credits" : `Out of balance — Difference: ${Math.abs(totalDebit - totalCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
             </div>
-            {errors.lines   && <p className="text-xs text-red-500 mt-1" role="alert">{errors.lines}</p>}
-            {errors.balance && <p className="text-xs text-red-500 mt-1" role="alert">{errors.balance}</p>}
+            {errors.lines   && <p className="text-xs text-destructive mt-1" role="alert">{errors.lines}</p>}
+            {errors.balance && <p className="text-xs text-destructive mt-1" role="alert">{errors.balance}</p>}
           </fieldset>
 
         </form>

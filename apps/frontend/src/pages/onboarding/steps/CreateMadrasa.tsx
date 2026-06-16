@@ -8,7 +8,7 @@ import {
   slugifySubdomain,
 } from "@mms/shared";
 import { applyBrandingTheme } from "@/lib/brandingTheme";
-import { getAppDomain } from "@/lib/tenantConfig";
+import { getAppDomain } from "@/lib/config/tenantConfig";
 import useTranslation from "@/hooks/useTranslation";
 import SectionCard from "@/components/ui/SectionCard";
 import { Input } from "@/components/ui/input";

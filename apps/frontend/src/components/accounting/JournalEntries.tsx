@@ -11,7 +11,7 @@ import JournalEntryForm from "./JournalEntryForm";
 import JournalEntryDetail from "./JournalEntryDetail";
 import SimpleTransactionWizard from "./SimpleTransactionWizard";
 import CashbookView from "./CashbookView";
-import { createReversalEntry, JOURNAL_TAGS, Account, JournalEntry, FiscalYear, AccountingSettings } from "../../lib/accountingData";
+import { createReversalEntry, JOURNAL_TAGS, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
 
 interface QuickActionType {
@@ -272,7 +272,7 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                     return (
                       <article key={entry.id} className="flex items-center gap-4 px-4 py-3 rounded-xl border border-border bg-card hover:bg-muted/20 transition-colors">
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isIn ? "bg-emerald-100" : "bg-red-100"}`} aria-hidden="true">
-                          {isIn ? <TrendingUp className="w-4 h-4 text-emerald-600" /> : <TrendingUp className="w-4 h-4 text-red-500 rotate-180" />}
+                          {isIn ? <TrendingUp className="w-4 h-4 text-emerald-600" /> : <TrendingUp className="w-4 h-4 text-destructive rotate-180" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-semibold text-foreground truncate m-0">{entry.description}</h4>
@@ -468,7 +468,7 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                               </button>
                               <button type="button" aria-label={`Delete entry ${entry.ref}`} onClick={() => handleDelete(entry.id)}
-                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors">
+                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors">
                                 <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                               </button>
                             </>
@@ -499,7 +499,7 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                   <td colSpan={2} className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">
                     {Math.abs(grandDebit - grandCredit) < 0.01
                       ? <span className="text-emerald-600">✓ Balanced</span>
-                      : <span className="text-red-500">Diff: {fmt(Math.abs(grandDebit - grandCredit))}</span>
+                      : <span className="text-destructive">Diff: {fmt(Math.abs(grandDebit - grandCredit))}</span>
                     }
                   </td>
                 </tr>

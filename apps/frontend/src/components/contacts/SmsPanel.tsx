@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, MessageSquare, Send, User } from 'lucide-react';
 import { Contact, getPrimaryPhone } from '@mms/shared';
-import { useContactConfig } from '../../lib/ContactConfigContext';
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { openDeviceSmsComposer } from '@/lib/deviceSms';
 import { notify } from '@/lib/notify';

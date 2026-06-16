@@ -1,6 +1,6 @@
 import React, { useState, useMemo, lazy, Suspense } from "react";
 import { Receipt, Printer } from "lucide-react";
-import { MOCK_CURRENCIES, ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from "../../lib/obligationsData";
+import { MOCK_CURRENCIES, ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import ObligationModal from "./ObligationModal";
 import InvoiceTemplateEditor from "./invoice/InvoiceTemplateEditor";

@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
-import { ROUTES } from "@/lib/routes";
-import { apexUrl } from "@/lib/tenantConfig";
+import { ROUTES } from "@/lib/config/routes";
+import { apexUrl } from "@/lib/config/tenantConfig";
 import useTranslation from "@/hooks/useTranslation";
 
 interface TenantNotFoundScreenProps {

@@ -6,7 +6,7 @@
 import React from "react";
 import { PAGE_SIZES, resolveField, InvoiceTemplate, TemplateElement, FieldLookupInfo } from "../../../lib/invoiceTemplateStore";
 import { getObject } from "../../../lib/db";
-import { ObligationCollection } from "../../../lib/obligationsData";
+import { ObligationCollection } from '@/lib/data/obligationsData';
 
 interface Branding {
   madrasaName: string;
