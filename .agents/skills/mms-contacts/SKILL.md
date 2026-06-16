@@ -1,6 +1,6 @@
 ---
 name: mms-contacts
-description: Implements Contact module features — forms, Kanban, WhatsApp status, field registry, ContactConfigContext, CSV/VCF sync. Use when editing contacts, CRM, phone numbers, avatars, duplicate detection, or contact settings.
+description: Implements Contact module features — forms, Kanban, WhatsApp status, field registry, ContactConfigContext, backend POST /api/contacts. Use when editing contacts, CRM, phone numbers, avatars, duplicate detection, or contact settings.
 ---
 
 # MMS Contacts Workflow
@@ -17,6 +17,17 @@ description: Implements Contact module features — forms, Kanban, WhatsApp stat
 | Backend save | `apps/backend/src/routes/contacts.ts` |
 | WhatsApp | `apps/backend/src/services/whatsApp*.ts` |
 
+## Backend API
+
+| Route | Auth | Notes |
+|-------|------|-------|
+| `POST /api/contacts` | `authenticateTenant` | E.164 normalize, title-case, persist collection, WhatsApp enqueue |
+| `GET /api/contacts/:id/whatsapp-status` | `authenticateTenant` | Status + UI indicator metadata |
+
+**Open gap:** `POST /api/contacts` lacks `canWriteCollection(user, 'contacts')` — add when touching RBAC (`mms-rbac.mdc`).
+
+Tests must use tenant host: `headers: { host: 'demo.localhost' }`.
+
 ## Workflow: add form field
 
 1. Add to field registry in `@mms/shared` or `contact_field_config` object
@@ -27,7 +38,7 @@ description: Implements Contact module features — forms, Kanban, WhatsApp stat
 ## Workflow: phone / WhatsApp
 
 1. Normalize E.164 with `parsePhoneNumber` (`@mms/shared`) on save
-2. Backend `POST /api/contacts` triggers verification queue
+2. Backend `POST /api/contacts` triggers verification queue via `handleContactSaveOrUpdate`
 3. UI reads `GET /api/contacts/:id/whatsapp-status`
 4. **Never** add manual WhatsApp toggle in `PhoneTab`
 
@@ -41,4 +52,8 @@ description: Implements Contact module features — forms, Kanban, WhatsApp stat
 
 ## Rules
 
-`.cursor/rules/mms-contacts.mdc`
+`.cursor/rules/mms-contacts.mdc`, `mms-backend.mdc`, `mms-rbac.mdc`
+
+## Related skills
+
+`mms-backend-api`, `mms-data-sync`

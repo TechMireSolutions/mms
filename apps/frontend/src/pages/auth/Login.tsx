@@ -8,10 +8,8 @@ import { DEFAULT_AUTH_REDIRECT, ROUTES } from "../../lib/routes";
 import { getGlobalSettings } from "../../lib/db";
 import {
   clear2FAState,
-  dispatch2FACode,
   is2FAVerified,
   mark2FAVerified,
-  start2FAChallenge,
 } from "../../lib/twoFactor";
 import { requiresTwoFactor } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
@@ -132,10 +130,6 @@ export default function Login(): React.ReactElement {
       const { requires2FA } = await login(trimmedEmail, password);
       persistRememberedEmail(trimmedEmail, rememberMe);
       if (requires2FA) {
-        const settings = getGlobalSettings();
-        const authUser = JSON.parse(localStorage.getItem("mms_user") || "{}") as { email?: string };
-        const code = start2FAChallenge();
-        await dispatch2FACode(settings, authUser.email || trimmedEmail, code);
         navigate(ROUTES.twoFactor, { replace: true, state: { from: redirectTo } });
         return;
       }

@@ -12,12 +12,10 @@ Workflow: `.github/workflows/ci.yml` on `push` / `pull_request` to `main`.
 |------|---------|-------|
 | Install | `pnpm install --frozen-lockfile` | root |
 | Typecheck | `pnpm typecheck` | all packages via turbo |
-| Lint | `pnpm lint` | `apps/frontend` only |
-| Test | `pnpm test` | **Target** — all packages when suite exists (`mms-testing.md`) |
+| Lint | `pnpm lint` | `apps/frontend` + `apps/backend` |
+| Test | `pnpm test` | all packages via turbo |
 
 Node **22**, pnpm **11** — match local dev (`mms-ops.md`).
-
-Backend ESLint: **target** — add when `apps/backend` configures lint; until then typecheck covers BE types.
 
 ## Agent discipline
 
@@ -25,7 +23,9 @@ After non-trivial changes:
 
 ```bash
 pnpm typecheck
+pnpm test
 cd apps/frontend && pnpm lint   # when touching frontend
+cd apps/backend && pnpm lint    # when touching backend
 ```
 
 - Fix CI failures before declaring work complete.

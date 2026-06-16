@@ -43,7 +43,9 @@ Use `ReportExportBar` pattern:
 
 ## Dashboard widgets
 
-`PinnedWidgets` — config from `reports_*` collections/objects, not hardcoded in `Dashboard.tsx`.
+## Widgets
+
+`PinnedWidgets.tsx` — config from `reports_*` collections/objects. Shared logic split into `components/reports/pinnedWidgets/` (types, widgetDataUtils, widgetDefaults). Re-export from `PinnedWidgets.tsx` for stable imports.
 
 ## Rules
 

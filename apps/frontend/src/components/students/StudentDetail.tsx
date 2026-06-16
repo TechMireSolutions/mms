@@ -4,7 +4,8 @@ import {
   X, Edit2, MessageCircle, Phone, Mail,
   Calendar, User, Clock, BookOpen, GraduationCap, Users, Sparkles
 } from "lucide-react";
-import { getCollection, formatDate, getObject } from "../../lib/db";
+import { formatDate, getObject } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import {
   type StudentsSettings,
   DEFAULT_STUDENTS_SETTINGS,
@@ -33,8 +34,8 @@ const DETAIL_TABS = [
  */
 export default function StudentDetail({ student, onClose, onEdit }: StudentDetailProps): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<string>("overview");
-  const sessions = getCollection("sessions", SESSIONS_DATA);
-  const contacts = getCollection("contacts", CONTACTS);
+  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const contacts = useLiveCollection<Contact>("contacts", CONTACTS);
 
   const settings = useMemo(() => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS), []);
   const fields = settings.fields || DEFAULT_STUDENTS_SETTINGS.fields || {};
@@ -360,7 +361,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             {session.classes && session.classes.length > 0 ? (
                               <div className="text-[10px] text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg">
                                 <p className="font-semibold uppercase tracking-wider text-[8px] text-muted-foreground/80">Class Assignments</p>
-                                {session.classes.map((cls) => (
+                                {session.classes.map((cls: { id: string; name?: string; teacherName?: string; room?: string; schedule?: string }) => (
                                   <div key={cls.id} className="flex justify-between gap-1.5">
                                     <span className="font-medium text-foreground">{cls.name} (by {cls.teacherName})</span>
                                     <span>Room: {cls.room || "—"}</span>

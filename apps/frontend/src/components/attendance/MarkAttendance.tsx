@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { CLASS_STUDENTS, ClassStudent, ATTENDANCE_STATUSES, STATUS_MAP, AttendanceRecord, AttendanceStatus } from "../../lib/attendanceData";
 import { SESSIONS_DATA } from "../../lib/sessionsData";
-import { getCollection, getObject } from "../../lib/db";
+import { getObject } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import StatusToggle from "./StatusToggle";
 import { AttendanceFilterState } from "./AttendanceFilters";
 import {
@@ -244,14 +245,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
  * MarkAttendance
  */
 export default function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
-  let fetchedSessions: Session[] = [];
-  try {
-    fetchedSessions = getCollection("sessions", SESSIONS_DATA) || [];
-  } catch (error) {
-    console.error("Failed to fetch sessions for MarkAttendance:", error);
-  }
-
-  const sessions = useMemo(() => fetchedSessions, [fetchedSessions]);
+  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

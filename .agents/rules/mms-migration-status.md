@@ -10,7 +10,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 |------|---------------|----------------|
 | Hardcoded labels/colours | Widespread in modules | Config/registry + `t()` — `mms-i18n.md` |
 | Contact `uiStrings` map | Contacts module toasts/labels | New copy → `appTranslations` + `t()`; no new `uiStrings` keys |
-| TanStack Query | Barely used (`PageNotFound` mock only) | New API work via Query — `mms-query.md` |
+| TanStack Query | Students + contacts + workspace registry + auth; most modules still localStorage | New REST resources Query-first — `mms-query.md` |
 | `can()` permissions hook | Shipped; Enrollments + Attendance wired; registry partial | Full registry-driven matrix — `mms-rbac.md` |
 | Inline `role ===` checks | Dashboard + some modules remain | `can()` / `useViewerRole` — `mms-rbac.md` |
 | Custom tab provisioning | JSON document store only | Table + migration + CRUD per custom tab — `mms-fields.md` |
@@ -19,12 +19,14 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | `category="academic"` in reports/KPI | Removed from module pages | Module-specific categories only (`mms-module-isolation.md`) |
 | Legacy entity forms | ObligationModal, some detail drawers | `FormModal` — `mms-ui-forms.md` |
 | Status colours inline | Many `text-green-500` / `text-red-500` | `StatusBadge` + config — `mms-ui-visual.md` |
-| Automated tests | Shared + backend rbac/health; no e2e yet | Vitest + route tests + CI `pnpm test` — `mms-testing.md` |
-| Server-first data | localStorage primary; students count pilot | Query + API authoritative for new modules — `mms-data-layer.md` |
-| Per-entity REST API | Generic `/api/db` + `/api/students/count` pilot | Resource routes + validation per domain — `mms-backend.md` |
-| Global a11y pass | Partial (dropdowns only) | WCAG baseline on new UI — `mms-a11y.md` |
-| JWT in localStorage | Current SPA pattern | Evaluate httpOnly session + refresh rotation — `mms-security.md` |
+| Automated tests | Shared + backend (auth, rbac, health, security); frontend apiClient + hooks; Playwright smoke in CI `e2e/` | Expand Playwright for login/onboard — `mms-testing.md` |
+| Server-first data | Students + contacts Query-first; most modules localStorage primary | Query + API authoritative for new modules — `mms-data-layer.md` |
+| Per-entity REST API | `/api/students` + `/api/contacts` CRUD; generic `/api/db` for rest | Resource routes + validation per domain — `mms-backend.md` |
+| Internal `fetch('/api/...')` | External OAuth only | All MMS API via `apiClient` — `mms-frontend.md` |
+| JWT in localStorage | Removed — httpOnly cookies only | Remove legacy token path when all clients migrated — `mms-auth.md` |
+| Collection read RBAC | Any authenticated tenant user can read collections + REST list endpoints | Role-based read matrix (evaluate) — `mms-rbac.md` |
 | Client error reporting | Console/toasts only | Sentry or equivalent — `mms-observability.md` |
+| Global a11y pass | Partial (dropdowns only) | WCAG baseline on new UI — `mms-a11y.md` |
 
 ## Recently resolved
 
@@ -64,5 +66,28 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Contacts collection form tab i18n | Phone, email, address, social collection controls via `t()` |
 | Contacts form primitives + relation i18n | FormPrimitives, Basic, Relationships, Emergency visible copy via `t()` |
 | Backend route tests | `/health`, `/ready`, `rbacService` Vitest |
+| Auth integration tests | Login subdomain guard, refresh rotation, 2FA gate, tenant JWT binding, RBAC deny |
+| Refresh token security | Opaque cookies + `auth_artifacts` validation; OTP via `crypto.randomInt()` |
+| `apiClient` standardization | Workspace, tenant, email integration, auth hooks use `apiFetch`/`apiJson` |
+| Students server-first | `useStudents` + `useStudentMutations`; localStorage cache sync on fetch |
+| ContactConfigContext split | `lib/contactConfig/` submodules; context re-exports |
+| PinnedWidgets split | `pinnedWidgets/` types, utils, defaults |
+| Frontend Vitest env | `happy-dom` for localStorage in client tests |
+| Backend ESLint in CI | `apps/backend/eslint.config.js` + CI lint step |
+| Tenant JWT binding | `authenticateTenant` on protected routes; subdomain match enforced |
+| Bulk sync download RBAC | `GET /api/db/sync` admin-only via `canDownloadBulkSync` |
+| Tenant-scoped DB reset | `POST /api/db/reset` → `resetTenantData()` not full DB drop |
+| httpOnly session cookies | `mms_access` / `mms_refresh` via `authCookieService` |
+| Server-side 2FA | `twoFactorService` + `auth_artifacts`; client no longer validates OTP |
+| DB-backed auth handoff | `authHandoffService` + `auth_artifacts` replaces in-memory map |
+| Minimal tenant seeds | `minimalSeeds.ts` for onboard/reset; no massive mock auto-seed |
+| Students REST API | `/api/students` CRUD + Zod + `useStudents` Query hooks |
+| Deploy readiness check | `curl /ready` after PM2 restart in deploy workflow |
+| Playwright smoke | `e2e/smoke.spec.ts`, `e2e/interactive.spec.ts` |
+| Playwright in CI | API smoke job with Postgres + backend boot |
+| Contacts REST API | `/api/contacts` CRUD + Zod + `useContacts` Query hooks |
+| Contacts write RBAC | `canWriteCollection` on contact mutations |
+| Legacy `mms_token` removed | Cookie-only session via `apiClient` |
+| Dashboard widget defaults | Permission-based via `can()` not inline `role ===` |
 
 Do not reintroduce resolved violations.

@@ -4,58 +4,95 @@ trigger: model_decision
 
 # MMS Security
 
-Canonical for security beyond RBAC matrices (`mms-rbac.md`) and auth shape (`mms-auth.md`).
+Canonical for security beyond RBAC matrices (`mms-rbac.md`) and auth session shape (`mms-auth.md`).
 
 ## Threat model (current)
 
-| Surface | Current | Risk | Target |
-|---------|---------|------|--------|
-| JWT storage | `localStorage` (SPA) | XSS can exfiltrate token | Document + mitigate XSS; evaluate httpOnly cookie session (`mms-migration-status.md`) |
-| API auth | Bearer JWT on `/api/*` | Stolen token = full access until expiry | Short TTL + refresh rotation (target); rate limits on auth |
-| Multi-tenant data | `t:{subdomain}:{key}` prefix | Cross-tenant read/write if host/header wrong | Always resolve tenant from `x-forwarded-host`; never trust client-supplied tenant id in body |
-| Bulk sync | `POST /api/db/sync` | Large payload abuse | Admin-only + size limits (target) |
+| Surface | Current | Residual risk | Target |
+|---------|---------|---------------|--------|
+| Session storage | httpOnly cookies `mms_access` / `mms_refresh` + Bearer fallback | XSS still dangerous for session fixation | Remove legacy `mms_token` localStorage writes |
+| API auth | JWT in cookie or `Authorization` header | Stolen token until expiry | Short access TTL (15m) + opaque refresh rotation |
+| Multi-tenant isolation | `t:{subdomain}:{key}` + `authenticateTenant` | Misconfigured proxy host header | Always trust `x-forwarded-host` from Vite/nginx only |
+| Bulk sync download | `GET /api/db/sync` **admin-only** | Large payload exfiltration by admin | Payload size limits (target) |
+| Bulk sync upload | `POST /api/db/sync` admin-only | Payload abuse | Size limits + request timeout (target) |
+| 2FA | Server-side challenge in `auth_artifacts`; OTP hashed | SMS channel not fully wired | Email/SMS via tenant settings |
+| CSRF | Cookie session with `SameSite=Lax` | Cross-site POST from malicious origin | `SameSite=Strict` + CSRF token for cookie-only mutations (evaluate) |
+| REST mutations | `canWriteCollection` on students + contacts REST | Read endpoints open to all tenant users | Role-based read matrix (evaluate) |
 
 ## Required on every auth/write change
 
-- [ ] **`rbacService`** on new `/api/db/*` writes (`mms-rbac.md`)
-- [ ] **Rate limit** `POST /api/auth/login` and `POST /api/auth/onboard` — use `@fastify/rate-limit` or equivalent; return `429` with stable `type`
-- [ ] **Validate bodies** — Fastify JSON Schema (backend) or Zod (frontend before submit)
-- [ ] **No secrets in logs** — passwords, tokens, `passwordHash`, PII dumps
-- [ ] **CORS** — `ALLOWED_ORIGIN` in production (`mms-ops.md`); no `*` with credentials
+- [ ] **`authenticateTenant`** on tenant-scoped protected routes (`mms-backend.md`)
+- [ ] **`rbacService`** on new `/api/db/*` writes and REST mutations (`mms-rbac.md`)
+- [ ] **Rate limit** `POST /api/auth/login` and `POST /api/auth/onboard` — `@fastify/rate-limit`; return `429` with stable `type`
+- [ ] **Validate bodies** — Fastify JSON Schema or Zod before service layer
+- [ ] **No secrets in logs** — passwords, JWTs, refresh tokens, OTP codes, `passwordHash`, bulk PII
+- [ ] **CORS** — `ALLOWED_ORIGIN` in production; `credentials: true` requires explicit origin (no `*`)
 
 ## Tenant isolation
 
-1. Backend resolves tenant from forwarded host / workspace context — not from arbitrary JSON fields.
-2. Frontend `tenantLocalStoragePrefix` must match server key scheme (`mms-data-layer.md`, `mms-tenant.md`).
-3. Apex routes must not read tenant `collections`/`objects` without explicit workspace context.
-4. When adding routes that return collections, verify caller tenant matches storage prefix.
+1. Backend resolves tenant from `Host` / `X-Forwarded-Host` → `tenantStorage` (AsyncLocalStorage) — **never** from client JSON `subdomain` fields on protected routes.
+2. JWT payload `workspaceSubdomain` **must match** resolved tenant (`authenticateTenant`).
+3. `GET /api/auth/me` requires tenant host — apex calls return `403` (by design).
+4. Frontend `tenantLocalStoragePrefix` must match server key scheme (`mms-data-layer.md`, `mms-tenant.md`).
+5. Apex routes (`/api/workspace/registry`) must not expose other tenants' collection data.
 
-## Headers & transport (target)
+## Auth artifacts (`auth_artifacts` table)
 
-| Control | Target |
-|---------|--------|
-| HTTPS | Required in production |
-| `Strict-Transport-Security` | Enable at reverse proxy |
-| `Content-Security-Policy` | Restrict script sources in production deploy |
-| `X-Content-Type-Options` | `nosniff` at proxy |
+| `kind` | TTL | Purpose |
+|--------|-----|---------|
+| `handoff` | 2 min | Cross-subdomain onboarding session exchange |
+| `two_factor_challenge` | 10 min | Hashed OTP pending verification |
+| `refresh_token` | 7 days | Opaque refresh token hash (rotation on `/api/auth/refresh`) |
 
-Bearer JWT in SPA: CSRF not required on API if no cookie session — document this in deploy runbooks.
+- One-time consume via `takeAuthArtifact` where applicable
+- `purgeExpiredAuthArtifacts()` on startup
+- **Drizzle journal** must include migration when adding SQL — or startup fails
 
-## Audit trail (target)
+## Passwords & OTP
 
-Settings, RBAC, and user mutations should append to an `audit_log` collection or table:
+- Hash: scrypt in `passwordService.ts` — `timingSafeEqual` on verify
+- OTP: `crypto.randomInt()` in `twoFactorService` — **never** `Math.random()`
+- Policy: `assertPasswordMeetsPolicy()` on onboard
 
-- `who` (user id), `what` (action + entity), `when` (ISO), `tenant`, `before`/`after` snapshot (diff or hash)
+## Headers & transport (production)
 
-Until implemented: do not claim audit compliance in UI copy.
+| Control | Where |
+|---------|-------|
+| HTTPS | Reverse proxy / Hetzner |
+| `Strict-Transport-Security` | Proxy |
+| `Content-Security-Policy` | Proxy (target) |
+| `X-Content-Type-Options: nosniff` | Proxy |
+
+Document cookie + CORS origin in deploy runbook (`mms-ops.md`).
+
+## Audit trail (current)
+
+`auditService` appends to `audit_log` **collection** on writes to:
+
+- `users` collection
+- `global_settings` object
+- `branding` object
+
+Fields: `userId`, `userEmail`, `action`, `entityType`, `entityId`, `summary`, timestamp.
+
+Target: relational `audit_log` table with retention policy (`mms-database.md`).
 
 ## Error responses
 
-Use stable `type` codes (`auth_required`, `forbidden`, `validation_error`, …) — frontend maps to `t('errors.*')` (`mms-i18n.md`). Never return stack traces to clients in production.
+Stable `type` codes — frontend maps to `t('errors.*')` (`mms-i18n.md`). Never return stack traces in production.
+
+## Known gaps (do not regress)
+
+| Gap | Status |
+|-----|--------|
+| Read RBAC on `GET /api/db/collections/*` and REST list endpoints | Open — any authenticated tenant user can read |
+| Refresh token replay | Rotation deletes old artifact — verify in tests when changing auth |
+| Bulk sync payload limits | Open — size/timeout guards (target) |
 
 ## Checklist (PR)
 
-- [ ] New write route has RBAC + validation
+- [ ] New write route: `authenticateTenant` + RBAC + validation
 - [ ] Login/onboard rate limited if touching auth routes
-- [ ] Tenant-scoped reads/writes verified for multi-tenant paths
-- [ ] No token/password logging
+- [ ] Tenant JWT binding tested for new protected routes
+- [ ] No token/password/OTP logging
+- [ ] Migration journal updated if `auth_artifacts` schema changes

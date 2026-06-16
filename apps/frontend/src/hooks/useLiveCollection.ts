@@ -11,7 +11,10 @@ import { getCollection } from "../lib/db";
  * @param {T[]} defaultData - Seeding and fallback data if the collection is uninitialized.
  * @returns {T[]} The reactive, live collection data array.
  */
-export function useLiveCollection<T>(dbKey: string, defaultData: T[]): T[] {
+export function useLiveCollection<T = any>(
+  dbKey: string,
+  defaultData: T[] = [] as T[],
+): T[] {
   const defaultDataRef = useRef(defaultData);
   defaultDataRef.current = defaultData;
 

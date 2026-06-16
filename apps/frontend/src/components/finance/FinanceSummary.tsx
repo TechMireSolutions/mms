@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, Tooltip, TooltipProps } from "recharts";
 import { INVOICES, MONTHLY_REVENUE } from "../../lib/financeData";
-import { getCollection } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
 
@@ -18,7 +18,7 @@ const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
  */
 export default function FinanceSummary() {
   const { primary, secondary, charts } = useBrandPalette();
-  const invoices = React.useMemo(() => getCollection("finance_invoices", INVOICES), []);
+  const invoices = useLiveCollection("finance_invoices", INVOICES);
 
   const totalCollected = invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.finalAmt, 0);
   const totalOutstanding = invoices.filter((i) => ["pending", "overdue", "partial"].includes(i.status)).reduce((s, i) => s + (i.finalAmt - (i.paidAmt || 0)), 0);

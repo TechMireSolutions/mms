@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/routes";
 import { ATTENDANCE_RECORDS, ATTENDANCE_STATUSES } from "../../lib/attendanceData";
 import { SESSIONS_DATA } from "../../lib/sessionsData";
-import { getCollection } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 // Type definitions
 interface ClassInfo {
@@ -46,16 +46,8 @@ interface ClassBreakdown {
  * @returns {React.ReactElement} The rendered widget component.
  */
 export default function TodayAttendanceWidget({ title }: { title?: string }) {
-  // Explicit error handling around data fetching
-  let attendanceRecords: AttendanceRecord[] = [];
-  let sessions: Session[] = [];
-  try {
-    attendanceRecords = getCollection("attendance_records", ATTENDANCE_RECORDS) || [];
-    sessions = getCollection("sessions", SESSIONS_DATA) || [];
-  } catch (error) {
-    console.error("Failed to fetch attendance records or sessions:", error);
-    // Continue with empty arrays if fallback fails
-  }
+  const attendanceRecords = useLiveCollection<AttendanceRecord>("attendance_records", ATTENDANCE_RECORDS);
+  const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
 
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

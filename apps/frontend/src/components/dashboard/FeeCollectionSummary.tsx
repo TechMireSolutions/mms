@@ -1,7 +1,7 @@
 import React from "react";
 import { TrendingUp } from "lucide-react";
-import { getCollection } from "../../lib/db";
 import { INVOICES, Invoice } from "../../lib/financeData";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 /**
  * FeeCollectionSummary Component
@@ -12,13 +12,7 @@ import { INVOICES, Invoice } from "../../lib/financeData";
  * @returns {React.ReactElement} The fee collection summary widget.
  */
 export default function FeeCollectionSummary({ title }: { title?: string }) {
-  let invoices: Invoice[] = [];
-  try {
-    invoices = getCollection("finance_invoices", INVOICES);
-  } catch (error) {
-    console.error("Failed to load invoices:", error);
-    invoices = INVOICES;
-  }
+  const invoices = useLiveCollection<Invoice>("finance_invoices", INVOICES);
 
   // Calculate overall metrics
   let totalCollected = 0;

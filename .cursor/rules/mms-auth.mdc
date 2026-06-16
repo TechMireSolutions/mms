@@ -1,6 +1,6 @@
 ---
-description: Authentication, users shape, JWT, RBAC targets
-globs: apps/backend/src/routes/auth.ts,apps/backend/src/services/authService.ts,apps/backend/src/services/userService.ts,apps/frontend/src/lib/AuthContext.tsx,apps/frontend/src/components/users/**,apps/frontend/src/pages/auth/**,packages/shared/src/index.ts
+description: Authentication, users shape, session cookies, auth artifacts, tenant session binding
+globs: apps/backend/src/routes/auth.ts,apps/backend/src/middleware/authenticate.ts,apps/backend/src/services/authService.ts,apps/backend/src/services/userService.ts,apps/backend/src/services/twoFactorService.ts,apps/backend/src/services/authCookieService.ts,apps/backend/src/services/authArtifactService.ts,apps/backend/src/services/authHandoffService.ts,apps/frontend/src/lib/AuthContext.tsx,apps/frontend/src/lib/apiClient.ts,apps/frontend/src/lib/twoFactor.ts,apps/frontend/src/components/users/**,apps/frontend/src/pages/auth/**,packages/shared/src/index.ts
 alwaysApply: false
 ---
 
@@ -13,53 +13,92 @@ interface StoredUser {
   id: string;
   email: string;
   name: string;
-  role: string;          // singular — NOT roles[]
-  passwordHash: string;  // scrypt "salt:hash" hex
+  role: string;              // singular — NOT roles[]
+  workspaceSubdomain: string;
+  passwordHash: string;      // scrypt "salt:hash" hex
   createdAt: string;
 }
 ```
 
-JWT / API public shape: `User` from `@mms/shared` — `{ id, email, name, role }`.
+JWT / API public shape: `User` from `@mms/shared` — `{ id, email, name, role, workspaceSubdomain }`.
 
 ## Seeds & UI alignment
 
-- Seeds must include `passwordHash` and `role`. `roles: ['admin']` without hash **breaks login and onboarding**.
+- Seeds must include `passwordHash`, `role`, and `workspaceSubdomain`. `roles: ['admin']` without hash **breaks login**.
 - UI fields for 2FA, `status`, `roles[]` in seeds are **display-only** until backend enforces them.
 
 ## Endpoints
 
 | Route | Auth | Notes |
 |-------|------|-------|
-| `POST /api/auth/login` | Public | Returns JWT |
-| `POST /api/auth/onboard` | Public | First admin only → 409 if admin exists |
-| `GET /api/auth/me` | JWT | Current user |
-| `POST /api/auth/logout` | — | Client discards token (stateless JWT) |
+| `POST /api/auth/login` | Public (tenant host) | Rate-limited; subdomain required; may return `requires2FA` + `challengeId` |
+| `POST /api/auth/onboard` | Public (apex) | New workspace + admin user |
+| `POST /api/auth/2fa/verify` | Public | Completes server-side challenge in `auth_artifacts` |
+| `POST /api/auth/2fa/resend` | Public | Re-issues OTP for active challenge |
+| `POST /api/auth/refresh` | Cookie | Opaque `mms_refresh` → validate artifact → rotate → new cookie pair |
+| `POST /api/auth/handoff` | Public | One-time code from `auth_artifacts` (`kind: handoff`) |
+| `GET /api/auth/me` | **`authenticateTenant`** | Tenant host required; JWT subdomain must match host |
+| `POST /api/auth/logout` | — | Clears `mms_access` / `mms_refresh` cookies |
 
 `JWT_SECRET` required at startup.
 
+## Session storage
+
+| Layer | Mechanism |
+|-------|-----------|
+| Access | httpOnly cookie `mms_access` (JWT, 15 min, `SameSite=Lax`) + Bearer fallback |
+| Refresh | httpOnly cookie `mms_refresh` (opaque token; hash in `auth_artifacts`, 7 days) |
+| Legacy | `mms_token` in localStorage — **read-only** fallback in `apiClient`; do not write on login |
+
+OTP codes: `crypto.randomInt()` — never `Math.random()`.
+
+## Auth artifacts (PostgreSQL)
+
+Ephemeral auth state lives in `auth_artifacts` — **not** in-memory `Map`.
+
+| `kind` | TTL | Purpose |
+|--------|-----|---------|
+| `handoff` | 2 min | Cross-subdomain session exchange |
+| `two_factor_challenge` | 10 min | Hashed OTP pending verification |
+| `refresh_token` | 7 days | Opaque refresh hash; rotated on `/api/auth/refresh` |
+
+Details: `mms-security.mdc`, `mms-database.mdc`.
+
+## Tenant session binding
+
+Protected tenant routes use **`authenticateTenant`** (`middleware/authenticate.ts`):
+
+- Valid JWT from cookie or Bearer
+- Resolved tenant subdomain on host / `x-forwarded-host`
+- `user.workspaceSubdomain === tenant`
+- Rejects refresh tokens and incomplete 2FA (`twoFactorVerified === false`)
+
+Do **not** call raw `request.jwtVerify()` in route handlers.
+
 ## RBAC
 
-Enforcement rules → **`mms-rbac.mdc`** (`rbacService`, `can()` hook target, registry `permissions`).
-
-JWT / login shape only in this file — do not duplicate collection write matrices here.
-
-## Session storage (current vs target)
-
-| Approach | Status | Notes |
-|----------|--------|-------|
-| Bearer JWT in `localStorage` | **Current** | Simple SPA; vulnerable to XSS token theft — mitigate XSS strictly (`mms-security.mdc`) |
-| httpOnly cookie + refresh | **Target** | Prefer for production hardening; requires CSRF strategy if cookie-based |
-
-Until migration: never log token; clear on logout; treat XSS in rich text fields as security bugs.
+Enforcement → **`mms-rbac.mdc`** (`rbacService`, `can()` hook, registry `permissions`).
 
 ## Frontend
 
-- Token in `localStorage`; `AuthProvider` at app root
-- **Single guard set** in `components/routing/`: `GuestRoute`, `ProtectedRoute`, `TenantGate`, `HostRoutes` — `ProtectedRoute.tsx` is canonical and used by `HostRoutes`
-- Do **not** add a second auth wrapper in `App.tsx`, module pages, or layouts; remove duplicate imports when editing `App.tsx` (`mms-frontend.mdc`)
+- `AuthProvider` at app root — session via cookies + `GET /api/auth/me` on tenant host
+- **Single guard set:** `GuestRoute`, `ProtectedRoute`, `HostRoutes` in `components/routing/`
+- 2FA: `lib/twoFactor.ts` calls server verify/resend — not client-side OTP validation
+- `checkAppState` / auth effects — `useCallback`; mount-only; do not block UI on `/health`
+- All auth API calls through `apiClient` (`credentials: 'include'`)
 - Never log token or password values
 
 ## Password handling
 
 - Hash/verify only in `userService` (scrypt + `timingSafeEqual`)
-- Never send or store plaintext passwords outside the login/onboard request handler
+- Never send or store plaintext passwords outside login/onboard handlers
+
+## Tests
+
+| File | Scope |
+|------|-------|
+| `auth.integration.test.ts` | Login subdomain, refresh rotation, 2FA gate, tenant JWT binding |
+| `app.security.test.ts` | Unauthenticated deny |
+| `twoFactorService.test.ts` | OTP/refresh helpers |
+
+Skill: `mms-auth-users`.

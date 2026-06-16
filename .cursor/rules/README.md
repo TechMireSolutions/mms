@@ -28,6 +28,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | RBAC / `can()` / `rbacService` | `mms-rbac.mdc` | `mms-auth`, `mms-ui-visual` (pointers only) |
 | CI pipeline | `mms-ci.mdc` | `mms-ops` (one-line pointer) |
 | TanStack Query | `mms-query.mdc` | `mms-frontend`, `mms-data-layer` |
+| Frontend shell, apiClient, providers | `mms-frontend.mdc` | `mms-query`, `mms-hooks` |
 | `@mms/shared` exports | `mms-shared-dry.mdc` | — |
 | React hooks (live data, i18n, permissions) | `mms-hooks.mdc` | `mms-data-layer`, `mms-i18n`, `mms-rbac` |
 | Contacts CRM module | `mms-contacts.mdc` | `mms-config` (provider mount only) |
@@ -62,7 +63,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-query.mdc` | TanStack Query for REST APIs |
 | `mms-ui-rendering.mdc` | Forms, tables, notify |
 | `mms-ui-visual.mdc` | Glassmorphism, charts, permissions visibility |
-| `mms-frontend.mdc` | Vite, routing, responsive |
+| `mms-frontend.mdc` | Vite, routing, apiClient, providers, responsive |
 | `mms-database.mdc` | Drizzle, migrations |
 | `mms-backend.mdc` | Fastify API |
 | `mms-contacts.mdc` | Contact module |
@@ -87,7 +88,7 @@ After editing `.mdc` files, run: `bash .agents/scripts/sync-rules.sh`
 
 ## PR / change checklist
 
-- [ ] `pnpm typecheck`
+- [ ] `pnpm typecheck` && `pnpm test`
 - [ ] Frontend lint if touched: `cd apps/frontend && pnpm lint`
 - [ ] No new hardcoded labels/colours — see `mms-i18n.mdc` (en/ar/ur/fa) + registries
 - [ ] Module tiers respect `mms-module-isolation.mdc`

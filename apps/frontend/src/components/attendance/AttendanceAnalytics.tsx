@@ -10,7 +10,7 @@ import {
   AttendanceStatus,
 } from "../../lib/attendanceData";
 import { SESSIONS_DATA } from "../../lib/sessionsData";
-import { getCollection } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
 
 interface StatCardProps {
@@ -73,14 +73,7 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
     () => [primary, "#ef4444", secondary, charts[3]],
     [primary, secondary, charts],
   );
-  let fetchedSessions: Session[] = [];
-  try {
-    fetchedSessions = getCollection("sessions", SESSIONS_DATA) || [];
-  } catch (error) {
-    console.error("Failed to fetch sessions for AttendanceAnalytics:", error);
-  }
-
-  const sessions = useMemo(() => fetchedSessions, [fetchedSessions]);
+  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

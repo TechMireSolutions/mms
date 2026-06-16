@@ -1,9 +1,7 @@
 import React, { useState, useMemo, lazy, Suspense } from "react";
 import { Receipt, Printer } from "lucide-react";
-import { MOCK_CONTACTS, MOCK_CURRENCIES, MOCK_USERS, ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from "../../lib/obligationsData";
-import { CONTACTS } from "../../lib/contactsData";
-import { SAMPLE_USERS } from "../../lib/usersData";
-import { getCollection } from "../../lib/db";
+import { MOCK_CURRENCIES, ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from "../../lib/obligationsData";
+import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import ObligationModal from "./ObligationModal";
 import InvoiceTemplateEditor from "./invoice/InvoiceTemplateEditor";
 
@@ -51,27 +49,8 @@ export default function ObligationCollectionDetail({ collection, obligationTypes
   const [showPrint, setShowPrint] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
 
-  const contacts = useMemo(() => {
-    const live = getCollection("contacts", CONTACTS);
-    const merged = [...live];
-    MOCK_CONTACTS.forEach((mc) => {
-      if (!merged.some((c) => String(c.id) === String(mc.id))) {
-        merged.push(mc as unknown as (typeof live)[number]);
-      }
-    });
-    return merged;
-  }, []);
-
-  const users = useMemo(() => {
-    const live = getCollection("users", SAMPLE_USERS);
-    const merged = [...live];
-    MOCK_USERS.forEach((mu) => {
-      if (!merged.some((u) => String(u.id) === String(mu.id))) {
-        merged.push(mu as unknown as (typeof live)[number]);
-      }
-    });
-    return merged;
-  }, []);
+  const contacts = useMergedObligationContacts();
+  const users = useMergedObligationUsers();
 
   const getContact = (id?: string | number | null) => contacts.find((c) => String(c.id) === String(id));
   const getCurrency = (id: string) => MOCK_CURRENCIES.find((c) => c.id === id);

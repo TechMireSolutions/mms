@@ -1,99 +1,69 @@
-import {
-  resolveNotificationChannel,
-  type GlobalSettings,
-} from "@mms/shared";
-import { sendEmailNotification, sendSmsNotification } from "./notifications";
+import { apiFetch, apiJson } from './apiClient';
 
-const PENDING_KEY = "mms_2fa_pending";
-const VERIFIED_KEY = "mms_2fa_verified";
-const CODE_KEY = "mms_2fa_code";
-const CODE_EXP_KEY = "mms_2fa_code_exp";
-const CODE_TTL_MS = 10 * 60 * 1000;
+const CHALLENGE_KEY = 'mms_2fa_challenge';
+const VERIFIED_KEY = 'mms_2fa_verified';
 
-export function is2FAPending(): boolean {
-  return sessionStorage.getItem(PENDING_KEY) === "1";
+export function getPendingChallengeId(): string | null {
+  return sessionStorage.getItem(CHALLENGE_KEY);
+}
+
+export function setPendingChallengeId(challengeId: string): void {
+  sessionStorage.setItem(CHALLENGE_KEY, challengeId);
 }
 
 export function is2FAVerified(): boolean {
-  return sessionStorage.getItem(VERIFIED_KEY) === "1";
-}
-
-export function clear2FAState(): void {
-  sessionStorage.removeItem(PENDING_KEY);
-  sessionStorage.removeItem(VERIFIED_KEY);
-  sessionStorage.removeItem(CODE_KEY);
-  sessionStorage.removeItem(CODE_EXP_KEY);
-}
-
-function generateCode(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-/** Starts a 2FA challenge and returns the one-time code (for dispatch/logging). */
-export function start2FAChallenge(): string {
-  const code = generateCode();
-  sessionStorage.setItem(PENDING_KEY, "1");
-  sessionStorage.removeItem(VERIFIED_KEY);
-  sessionStorage.setItem(CODE_KEY, code);
-  sessionStorage.setItem(CODE_EXP_KEY, String(Date.now() + CODE_TTL_MS));
-  return code;
-}
-
-export function verify2FACode(input: string): boolean {
-  const stored = sessionStorage.getItem(CODE_KEY);
-  const exp = Number(sessionStorage.getItem(CODE_EXP_KEY));
-  if (!stored || !Number.isFinite(exp) || Date.now() > exp) return false;
-  return input.replace(/\s/g, "") === stored;
+  return sessionStorage.getItem(VERIFIED_KEY) === '1';
 }
 
 export function mark2FAVerified(): void {
-  sessionStorage.setItem(VERIFIED_KEY, "1");
-  sessionStorage.removeItem(PENDING_KEY);
-  sessionStorage.removeItem(CODE_KEY);
-  sessionStorage.removeItem(CODE_EXP_KEY);
+  sessionStorage.setItem(VERIFIED_KEY, '1');
+  sessionStorage.removeItem(CHALLENGE_KEY);
 }
 
-export interface TwoFactorDispatchResult {
-  channel: "email" | "sms" | "none";
-  delivered: boolean;
+export function clear2FAState(): void {
+  sessionStorage.removeItem(CHALLENGE_KEY);
+  sessionStorage.removeItem(VERIFIED_KEY);
 }
 
-/**
- * Dispatches a 2FA code when master notification toggles allow it.
- * Returns channel used; logs code in dev when no channel is enabled.
- */
-export async function dispatch2FACode(
-  settings: GlobalSettings,
-  email: string,
-  code: string
-): Promise<TwoFactorDispatchResult> {
-  const channel = resolveNotificationChannel(settings);
+export function is2FAPending(): boolean {
+  return Boolean(getPendingChallengeId()) && !is2FAVerified();
+}
 
-  if (channel === "email") {
-    const delivered = await sendEmailNotification(
-      {
-        to: email,
-        subject: "MMS verification code",
-        body: `Your verification code is ${code}. It expires in 10 minutes.`,
-      },
-      settings
-    );
-    return { channel: "email", delivered };
+export async function verify2FACode(challengeId: string, code: string): Promise<boolean> {
+  try {
+    await apiJson<{ user: unknown }>('/api/auth/2fa/verify', {
+      method: 'POST',
+      body: JSON.stringify({ challengeId, code }),
+    });
+    mark2FAVerified();
+    return true;
+  } catch {
+    return false;
   }
+}
 
-  if (channel === "sms") {
-    const delivered = sendSmsNotification(
-      {
-        to: email,
-        body: `MMS verification code: ${code}`,
-      },
-      settings
-    );
-    return { channel: "sms", delivered };
+export async function resend2FACode(challengeId: string): Promise<boolean> {
+  try {
+    await apiJson('/api/auth/2fa/resend', {
+      method: 'POST',
+      body: JSON.stringify({ challengeId }),
+    });
+    return true;
+  } catch {
+    return false;
   }
+}
 
-  if (import.meta.env.DEV) {
-    console.info(`[MMS] 2FA code (notifications off): ${code}`);
+/** @deprecated Server dispatches codes on login; kept for API compatibility. */
+export function start2FAChallenge(): string {
+  const existing = getPendingChallengeId();
+  return existing ?? '';
+}
+
+/** @deprecated */
+export async function dispatch2FACode(): Promise<void> {
+  const challengeId = getPendingChallengeId();
+  if (challengeId) {
+    await resend2FACode(challengeId);
   }
-  return { channel: "none", delivered: false };
 }

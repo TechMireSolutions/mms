@@ -16,7 +16,7 @@ trigger: model_decision
 | When | Pattern |
 |------|---------|
 | **Existing module CRUD** | Keep `useLiveCollection` + `saveCollection` until intentionally migrated |
-| **New domain API** | Backend service + route → TanStack Query on FE; optional localStorage cache — `mms-query.md` |
+| **Dedicated REST resource** (students) | Backend route → Query on FE; optional `saveCollection` cache sync after fetch — `mms-query.md` |
 | **Target end state** | PostgreSQL authoritative; browser cache invalidates via Query/WebSocket — not full-array local RMW |
 
 Do not add new features that write only to React state or localStorage without a PostgreSQL path (`mms-fields.md` gate).
@@ -36,22 +36,25 @@ After local writes that should refresh other views:
 window.dispatchEvent(new Event('local-database-update'));
 ```
 
-## Sync API (JWT required)
+## Sync API (JWT/cookie + `authenticateTenant`)
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/db/sync` | Full snapshot |
-| POST | `/api/db/sync` | Bulk upsert |
-| GET/POST | `/api/db/collections/:name` | One collection |
-| GET/POST | `/api/db/objects/:key` | One object |
-| POST | `/api/db/reset` | Admin only — dev/test |
+| Method | Path | RBAC | Purpose |
+|--------|------|------|---------|
+| GET | `/api/db/sync` | **Admin only** | Full tenant snapshot download |
+| POST | `/api/db/sync` | **Admin only** | Bulk upsert |
+| GET/POST | `/api/db/collections/:name` | Auth + write RBAC on POST | One collection |
+| GET/POST | `/api/db/objects/:key` | Auth + write RBAC on POST | One object |
+| POST | `/api/db/reset` | **Admin only** | Tenant-scoped reset to minimal seeds |
+
+Dedicated REST (e.g. `/api/students`) bypasses generic collection routes — prefer for new modules.
 
 ## Seeds
 
 | Location | When |
 |----------|------|
-| `apps/backend/src/db/seeds.json` | Backend empty DB |
-| `apps/frontend/src/lib/*Data.ts` | Frontend localStorage fallback |
+| `minimalSeeds.ts` + `getMinimalObjects()` | **New tenant onboard** and tenant reset — empty collections |
+| `seeds.json` | Legacy full demo — initial empty-DB seed only if used |
+| `apps/frontend/src/lib/*Data.ts` | **Deprecated** for auto-seed — use `[]` defaults (`getCollection` skips empty seed push) |
 
 Keep shapes aligned with `@mms/shared` and `userService` (`users` need `role` + `passwordHash`).
 

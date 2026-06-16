@@ -31,7 +31,7 @@ function LazyFallback() {
 }
 import { CONTACTS } from "../lib/contactsData";
 import { saveCollection } from "../lib/db";
-import { useLiveCollection } from "../hooks/useLiveCollection";
+import { useContactsCollection, useContactMutations } from "../hooks/useContacts";
 import { notify } from "@/lib/notify";
 import {
   useContactConfig, useContactColumns, calculateProfileHealth
@@ -130,7 +130,8 @@ function ContactsInner() {
 
   const [isLoading,       setIsLoading]       = useState(true);
 
-  const rawContacts = useLiveCollection("contacts", CONTACTS);
+  const { upsertContact, deleteContact } = useContactMutations();
+  const rawContacts = useContactsCollection();
 
   const contacts = useMemo(() => {
     const country = prefs?.defaultCountry || "";
@@ -249,23 +250,29 @@ function ContactsInner() {
   const handleNew  = useCallback(() => { setEditContact(null); setShowForm(true); }, []);
 
   const handleSave = useCallback((data: Contact) => {
-    saveContacts((cs) => editContact
-      ? cs.map((c) => c.id === editContact.id ? { ...c, ...data } : c)
-      : [...cs, { ...data, id: Date.now() }]
-    );
-    setShowForm(false);
-    setEditContact(null);
-  }, [editContact, saveContacts]);
+    const payload = editContact
+      ? { ...editContact, ...data }
+      : { ...data, id: data.id ?? Date.now() };
+    void upsertContact.mutateAsync(payload).then(() => {
+      setShowForm(false);
+      setEditContact(null);
+    }).catch(() => {
+      notify.error(t("settings.serverSaveFailed"));
+    });
+  }, [editContact, upsertContact, t]);
 
   const handleDelete = useCallback((id: string | number) => {
     const c = contacts.find((x) => x.id === id);
-    notify.info(t("contacts.deletedTitle"), {
-      description: c?.name
-        ? t("contacts.deletedDescription", { name: c.name })
-        : t("contacts.deletedDescriptionDefault"),
+    void deleteContact.mutateAsync(String(id)).then(() => {
+      notify.info(t("contacts.deletedTitle"), {
+        description: c?.name
+          ? t("contacts.deletedDescription", { name: c.name })
+          : t("contacts.deletedDescriptionDefault"),
+      });
+    }).catch(() => {
+      notify.error(t("settings.serverSaveFailed"));
     });
-    saveContacts((cs) => cs.filter((x) => x.id !== id));
-  }, [contacts, t, saveContacts]);
+  }, [contacts, t, deleteContact]);
 
   const handleExportCSV = () => {
     const headers = visibleColumns.map((c) => c.label);

@@ -1,4 +1,4 @@
-import { CONTACTS } from "./contactsData.js";
+import { apiFetch } from "./apiClient";
 import { validateSessions } from "./sessionsData";
 import {
   type BrandingSettings,
@@ -64,7 +64,7 @@ interface ContactRecord extends Record<string, unknown> {
  */
 function hydrateStudents(studentsList: StudentRecord[]): StudentRecord[] {
   if (!Array.isArray(studentsList)) return studentsList;
-  const contacts = getCollection<ContactRecord>("contacts", CONTACTS as ContactRecord[]);
+  const contacts = getCollection<ContactRecord>("contacts", []);
   return studentsList.map((student) => {
     if (!student) return student;
     const hydrated = { ...student };
@@ -158,17 +158,9 @@ function setSyncStatus(status: SyncStatus): void {
   }
 }
 
-/**
- * Generates authorization headers using the current token in localStorage.
- *
- * @param {string} [token] - Optional token override.
- * @returns {Record<string, string>} Headers dictionary.
- */
-function getHeaders(token?: string): Record<string, string> {
-  const t = token || localStorage.getItem("mms_token");
+function getHeaders(): Record<string, string> {
   return {
     "Content-Type": "application/json",
-    ...(t ? { "Authorization": `Bearer ${t}` } : {})
   };
 }
 
@@ -186,15 +178,10 @@ export interface ServerSyncResult {
 
 async function syncToServer(url: string, body: unknown): Promise<ServerSyncResult> {
   try {
-    const token = localStorage.getItem("mms_token");
-    if (!token) {
-      return { ok: false, status: 401 };
-    }
-
     setSyncStatus('syncing');
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: "POST",
-      headers: getHeaders(token),
+      headers: getHeaders(),
       body: JSON.stringify(body)
     });
     if (!response.ok) {
@@ -218,13 +205,10 @@ async function syncToServer(url: string, body: unknown): Promise<ServerSyncResul
  * @param {string} [token] - The authentication token.
  * @returns {Promise<void>}
  */
-export async function syncDatabase(token?: string): Promise<void> {
+export async function syncDatabase(): Promise<void> {
   try {
-    const activeToken = token || localStorage.getItem("mms_token");
-    if (!activeToken) return;
-
-    const response = await fetch("/api/db/sync", {
-      headers: getHeaders(activeToken)
+    const response = await apiFetch("/api/db/sync", {
+      headers: getHeaders()
     });
 
     if (response.ok) {
@@ -268,7 +252,7 @@ export async function syncDatabase(token?: string): Promise<void> {
  * @param {T[]} defaultData - Fallback data used if the collection does not exist.
  * @returns {T[]} The loaded collection.
  */
-export function getCollection<T>(key: string, defaultData: T[]): T[] {
+export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]): T[] {
   try {
     const saved = localStorage.getItem(scopedStorageKey(key));
     if (saved !== null) {
@@ -283,7 +267,9 @@ export function getCollection<T>(key: string, defaultData: T[]): T[] {
         return collection;
       }
     }
-    // Seed locally, and sync to backend
+    if (defaultData.length === 0) {
+      return [];
+    }
     let dataToSave = defaultData;
     if (key === "students") {
       dataToSave = normalizeStudentsBeforeSave(defaultData as unknown as StudentRecord[]) as unknown as T[];

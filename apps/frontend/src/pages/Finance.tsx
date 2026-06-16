@@ -15,6 +15,7 @@ import PaymentTracker from "../components/finance/PaymentTracker";
 import FinanceSettings from "../components/finance/FinanceSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
+import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { INVOICES, PAYMENTS, Invoice, Payment } from "../lib/financeData";
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
@@ -38,8 +39,8 @@ export default function Finance() {
   const [activeTab, setActiveTab] = useState("operations");
   const [activeSubTab, setActiveSubTab] = useState("invoices");
   const [subTab, setSubTab] = useState("fields");
-  const invoices = useLiveCollection("finance_invoices", INVOICES);
-  const payments = useLiveCollection("finance_payments", PAYMENTS);
+  const invoices = useLiveCollection("finance_invoices");
+  const payments = useLiveCollection("finance_payments");
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const [recordInvoice, setRecordInvoice] = useState<Invoice | null>(null);
 
@@ -82,6 +83,7 @@ export default function Finance() {
 
         <AnimatePresence mode="wait">
           <motion.div key={activeTab + "-" + activeSubTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-4">
+            <ErrorBoundary>
             {activeTab === "analytics" && (
               <div className="space-y-4">
                 <KPISummary category="financial" />
@@ -101,6 +103,7 @@ export default function Finance() {
 
             {activeTab === "operations" && activeSubTab === "invoices" && <InvoiceList invoices={invoices} onView={setViewInvoice} onRecord={setRecordInvoice} />}
             {activeTab === "operations" && activeSubTab === "payments" && <PaymentTracker payments={payments} />}
+            </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </ResponsiveAccordionTabs>

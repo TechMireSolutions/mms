@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Receipt } from "lucide-react";
 import {
-  MOCK_CONTACTS, MOCK_CURRENCIES, MOCK_USERS, PAYMENT_MODES, generateReceiptNo,
+  MOCK_CURRENCIES, PAYMENT_MODES, generateReceiptNo,
   ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
 } from "../../lib/obligationsData";
-import { CONTACTS } from "../../lib/contactsData";
-import { SAMPLE_USERS } from "../../lib/usersData";
-import { getCollection } from "../../lib/db";
+import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import ObligationModal from "./ObligationModal";
 import { DatePicker } from "../ui/DatePicker";
 
@@ -55,27 +53,8 @@ export interface ObligationCollectionFormProps {
  * @returns {React.ReactElement}
  */
 export default function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
-  const contacts = useMemo(() => {
-    const live = getCollection("contacts", CONTACTS);
-    const merged = [...live];
-    MOCK_CONTACTS.forEach((mc) => {
-      if (!merged.some((c) => String(c.id) === String(mc.id))) {
-        merged.push(mc as unknown as (typeof live)[number]);
-      }
-    });
-    return merged;
-  }, []);
-
-  const users = useMemo(() => {
-    const live = getCollection("users", SAMPLE_USERS);
-    const merged = [...live];
-    MOCK_USERS.forEach((mu) => {
-      if (!merged.some((u) => String(u.id) === String(mu.id))) {
-        merged.push(mu as unknown as (typeof live)[number]);
-      }
-    });
-    return merged;
-  }, []);
+  const contacts = useMergedObligationContacts();
+  const users = useMergedObligationUsers();
 
   const [form, setForm] = useState<FormState>({ ...EMPTY, receipt_no: generateReceiptNo(existingCollections) });
   const [errors, setErrors] = useState<Record<string, string>>({});

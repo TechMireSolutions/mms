@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Plus, User, Mail, Phone, Calendar, Sparkles, Users, Lock, Camera, Upload } from "lucide-react";
 import { CONTACTS } from "../../lib/contactsData";
 import { toTitleCase, optimizeImage, cn } from "../../lib/utils";
-import { getCollection, saveCollection, getObject } from "../../lib/db";
+import { saveCollection, getObject } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import type { Contact } from "../../lib/contactFields";
 import type { Student } from "../../lib/studentsData";
 import {
@@ -317,7 +318,7 @@ export interface StudentFormProps {
 
 export default function StudentForm({ student, students, onClose, onSave }: StudentFormProps): JSX.Element {
   const { t } = useTranslation();
-  const [contacts, setContacts] = useState<Contact[]>(() => getCollection("contacts", CONTACTS));
+  const contacts = useLiveCollection<Contact>("contacts", CONTACTS);
   const [data, setData] = useState<StudentFormData>(() => ({ ...EMPTY, ...student }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -396,7 +397,6 @@ export default function StudentForm({ student, students, onClose, onSave }: Stud
     const updatedContacts = contacts.map((c) =>
       String(c.id) === String(data.contactId) ? { ...c, avatar: avatarUrl } : c
     );
-    setContacts(updatedContacts);
     saveCollection("contacts", updatedContacts);
   };
 
@@ -494,7 +494,6 @@ export default function StudentForm({ student, students, onClose, onSave }: Stud
     };
 
     const updatedContacts = [...contacts, contactObj];
-    setContacts(updatedContacts);
     saveCollection("contacts", updatedContacts);
 
     if (createType === "student") {

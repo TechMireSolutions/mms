@@ -13,6 +13,11 @@
       "keywords": ["install", "pnpm", "dev server", "env", "postgresql", "typecheck", "lint"]
     },
     {
+      "name": "mms-frontend",
+      "path": "skills/mms-frontend",
+      "keywords": ["frontend", "react", "vite", "apiClient", "tanstack query", "hooks", "pages", "components"]
+    },
+    {
       "name": "mms-module-page",
       "path": "skills/mms-module-page",
       "keywords": ["module page", "operations", "analytics", "configuration", "new module"]
@@ -30,12 +35,12 @@
     {
       "name": "mms-data-sync",
       "path": "skills/mms-data-sync",
-      "keywords": ["db.ts", "localStorage", "sync", "useLiveCollection", "collections"]
+      "keywords": ["db.ts", "localStorage", "sync", "useLiveCollection", "collections", "admin sync", "students api"]
     },
     {
       "name": "mms-auth-users",
       "path": "skills/mms-auth-users",
-      "keywords": ["auth", "login", "jwt", "users", "password", "rbac", "onboard"]
+      "keywords": ["auth", "login", "cookies", "2fa", "refresh token", "auth artifacts", "authenticateTenant", "users", "rbac"]
     },
     {
       "name": "mms-shared-package",
@@ -45,7 +50,12 @@
     {
       "name": "mms-backend-api",
       "path": "skills/mms-backend-api",
-      "keywords": ["fastify", "backend", "api route", "whatsapp service"]
+      "keywords": ["fastify", "backend", "api route", "authenticateTenant", "zod", "drizzle migration", "students", "whatsapp"]
+    },
+    {
+      "name": "mms-backend-security",
+      "path": "skills/mms-backend-security",
+      "keywords": ["security", "authenticateTenant", "tenant isolation", "rbac", "cookies", "rate limit", "auth artifacts"]
     },
     {
       "name": "mms-reports-export",
@@ -55,12 +65,12 @@
     {
       "name": "mms-migration-fixes",
       "path": "skills/mms-migration-fixes",
-      "keywords": ["migration", "tech debt", "seed mismatch", "nested provider"]
+      "keywords": ["migration", "tech debt", "security debt", "contacts rbac", "rest migration"]
     },
     {
       "name": "mms-code-review",
       "path": "skills/mms-code-review",
-      "keywords": ["code review", "pr review", "compliance", "audit"]
+      "keywords": ["code review", "pr review", "compliance", "audit", "backend security", "authenticateTenant"]
     }
   ],
   "rules": {

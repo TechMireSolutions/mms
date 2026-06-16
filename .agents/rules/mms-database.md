@@ -8,48 +8,85 @@ trigger: model_decision
 
 - PostgreSQL (`DATABASE_URL`) — **not SQLite**
 - Drizzle ORM — `apps/backend/src/db/schema.ts`
-- Pool via `pg` in `database.ts`
+- Connection pool via `pg` in `database.ts`
+- `dbClient.ts` — `setDb()` / `getDb()` singleton for `authArtifactService` (avoids circular imports)
 
-## Current schema
+## Schema (`schema.ts`)
 
-```ts
-collections(name PK, data text)  // JSON stringified arrays
-objects(key PK, data text)       // JSON stringified singletons
-```
+| Table | Purpose |
+|-------|---------|
+| `collections` | `name` PK, `data` text — JSON-stringified **arrays** |
+| `objects` | `key` PK, `data` text — JSON-stringified **singletons** |
+| `auth_artifacts` | Ephemeral auth — `id`, `kind`, `payload`, `expires_at`, `created_at` |
+
+Logical domain data lives as JSON inside `collections` / `objects`, keyed per tenant:
+
+- Tenant collection: `t:{subdomain}:{logicalName}`
+- Tenant object: `t:{subdomain}:{logicalKey}`
+- Global: `workspaces` collection (unprefixed)
+
+Tenant key resolution happens in `database.ts` via `getRequestTenant()` from `tenantContext.ts`.
 
 ## Migrations
 
 | Type | Location | Rule |
 |------|----------|------|
-| DDL | `migrations_drizzle/` via drizzle-kit | One atomic migration per schema change |
-| Data | `migrations/00N_*.ts` | Idempotent TypeScript transforms |
+| DDL | `migrations_drizzle/` + `meta/_journal.json` | **One migration per schema change**; journal entry required |
+| Data | `migrations/00N_*.ts` | Idempotent TypeScript transforms (`001`–`003`) |
 
-- Applied on startup in `initDb()`.
-- No raw SQL in application code.
-- No batched retroactive manual SQL files.
+- Applied on startup in `initDb()`
+- `purgeExpiredAuthArtifacts()` after migrations
+- No ad-hoc raw SQL in application route code
+- `resetTenantData()` — deletes tenant-scoped rows only; reseeds **minimal** defaults
+
+**DDL migrations shipped:** `0001_auth_artifacts.sql` (auth_artifacts table).
 
 ## Seeds
 
-`seeds.json` + `seeds.ts` — when `collections` table is empty.
+| Source | When |
+|--------|------|
+| `getMinimalCollectionsForSeed()` | New tenant onboard + empty collections |
+| `getMinimalObjects()` | Default settings objects only |
+| `seeds.json` | Legacy full demo data — **not** used for new tenant onboard |
 
-Align with `@mms/shared` defaults and `StoredUser` shape (`role`, `passwordHash`).
+Align `users` with `StoredUser`: singular `role`, `passwordHash` (scrypt), `workspaceSubdomain`.
+
+`SEED_DEV_PASSWORD` env for dev hashed users in full seed path.
 
 ## Access pattern
 
 ```
-route handler → service → database.ts (getCollection/saveCollection/getObject/saveObject)
+route handler → service → dbSyncService.ts → database.ts
+                       → authArtifactService.ts → dbClient.getDb()
 ```
+
+REST resource routes (`students`, `contacts`) use `dbSyncService.fetchCollection` / `persistCollection` — not direct `database.ts` imports.
 
 Never import `pg` in route files.
 
-## resetDatabase
+## reset / destructive ops
 
-`POST /api/db/reset` — admin JWT only. Drops `__drizzle_migrations` and reseeds. Dev/test only.
+| Endpoint | Scope | Who |
+|----------|-------|-----|
+| `POST /api/db/reset` | **Current tenant only** — deletes `t:{tenant}:*` rows, reseeds minimal | Admin JWT |
+| `resetDatabase()` | Full DB drop + reseed — **dev/internal only**, not exposed via API | — |
+
+Do not reintroduce global multi-tenant wipe via `/api/db/reset`.
+
+## Server-only keys
+
+`email_integration_secrets` and similar — listed in `@mms/shared` `SERVER_ONLY_OBJECT_KEYS`. Filtered from sync reads and client object GET.
 
 ## Future relational custom fields
 
-When implementing custom tabs/fields per `mms-fields.md`: add real `pgTable` definitions, one drizzle-kit migration per change, keep document store for legacy collections until migrated.
+When implementing custom tabs/fields per `mms-fields.md`:
 
-## Audit & compliance (target)
+1. Add real `pgTable` definitions to `schema.ts`
+2. `drizzle-kit generate` + update `meta/_journal.json`
+3. Keep document store for legacy collections until migrated
 
-`audit_log` table: `id`, `tenant`, `userId`, `action`, `entityType`, `entityId`, `payload`, `createdAt` — append-only; no updates/deletes except retention job (`mms-security.md`).
+## Audit (current + target)
+
+**Current:** `audit_log` **collection** (JSON documents) via `auditService`.
+
+**Target:** dedicated `audit_log` **table**: `id`, `tenant`, `userId`, `action`, `entityType`, `entityId`, `payload`, `createdAt` — append-only.

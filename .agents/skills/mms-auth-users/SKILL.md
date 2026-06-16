@@ -1,6 +1,6 @@
 ---
 name: mms-auth-users
-description: Fixes or extends MMS authentication, JWT, userService, seeds alignment, login/onboard, and RBAC. Use when editing auth routes, users collection, AuthContext, login, passwords, roles, or permissions.
+description: Fixes or extends MMS authentication, httpOnly cookies, opaque refresh tokens, server-side 2FA, auth artifacts, userService, seeds alignment, login/onboard, handoff, and RBAC. Use when editing auth routes, middleware/authenticate, users collection, AuthContext, login, passwords, roles, or permissions.
 ---
 
 # MMS Auth & Users Workflow
@@ -8,46 +8,92 @@ description: Fixes or extends MMS authentication, JWT, userService, seeds alignm
 ## Canonical stored user
 
 ```ts
-{ id, email, name, role, passwordHash, createdAt }
-// role: string — NOT roles[]
-// passwordHash: scrypt "salt:hash" hex
+interface StoredUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;              // singular — NOT roles[]
+  workspaceSubdomain: string;
+  passwordHash: string;      // scrypt "salt:hash" hex
+  createdAt: string;
+}
 ```
 
 Public API/JWT: `User` from `@mms/shared`.
 
-## Fix seed mismatch (known debt)
+## Session model
 
-`apps/backend/src/db/seeds.json` users use `roles[]` without `passwordHash`. Migration options:
+| Mechanism | Details |
+|-----------|---------|
+| `mms_access` cookie | JWT access token, httpOnly, 15 min, `SameSite=Lax` |
+| `mms_refresh` cookie | Opaque token; hash stored in `auth_artifacts` (`kind: refresh_token`) |
+| Bearer header | Fallback for legacy clients / tests |
+| `mms_token` localStorage | **Read-only** fallback in `apiClient` — do not write on login |
 
-1. Transform seed users to `StoredUser` with hashed dev passwords, or
-2. Strip auth fields from seed display users and rely on `/api/auth/onboard`
+### Flows
 
-`userExistsWithRole('admin')` checks `role === 'admin'` — seed `roles: ['admin']` does **not** count.
+| Flow | Endpoints |
+|------|-----------|
+| Login | `POST /api/auth/login` → cookies or `requires2FA` + `challengeId` |
+| 2FA | `POST /api/auth/2fa/verify` → sets cookies |
+| Refresh | `POST /api/auth/refresh` → validates artifact, rotates, new cookies |
+| Handoff | `POST /api/auth/handoff` → one-time code from `auth_artifacts` |
+| Session check | `GET /api/auth/me` — requires **tenant** host + `authenticateTenant` |
+| Logout | `POST /api/auth/logout` → clears cookies |
 
-## Add auth-protected endpoint
+OTP: `crypto.randomInt()` in `twoFactorService` — never `Math.random()`.
 
-1. Register route under plugin with `preHandler: jwtVerify`
-2. Validate body with Fastify JSON Schema
-3. Check role server-side for destructive ops
+## Add auth-protected tenant endpoint
+
+1. `fastify.addHook('preHandler', authenticateTenant)` — **not** raw `jwtVerify`
+2. Validate body (Zod or JSON Schema)
+3. `rbacService` for writes
 4. Return `{ type, message }` on error
+5. Test with `host: '{subdomain}.localhost'` in `inject()`
 
-## Frontend
+## Add public auth endpoint
 
-- `AuthContext` — token in localStorage
-- Route gate via `AuthenticatedApp` in `App.tsx`
+1. Register inside rate-limited block in `auth.ts` if brute-force sensitive
+2. Do **not** require tenant for onboard (apex) — but login **requires** tenant subdomain
+3. Store ephemeral state in `authArtifactService` — not in-memory `Map`
+
+## Frontend alignment
+
+- `AuthContext` — `apiClient` with `credentials: 'include'`
+- `checkAppState` / `checkUserAuth` — `useCallback`; mount-only effect; **do not** block UI on `/health`
+- Guards: `ProtectedRoute`, `GuestRoute`, `HostRoutes` only
+- 2FA: `lib/twoFactor.ts` calls server verify/resend — not client-side OTP storage
 - Never log tokens/passwords
 
 ## UI vs backend
 
-2FA, `status`, multi-role UI in `components/users/` — implement backend before implying enforcement.
+2FA, `status`, multi-role UI in `components/users/` — backend must enforce before UI implies security.
 
-## Files
+## Tests
 
-- `apps/backend/src/services/userService.ts`
-- `apps/backend/src/services/authService.ts`
-- `apps/backend/src/routes/auth.ts`
-- `apps/frontend/src/lib/AuthContext.tsx`
+| File | Scope |
+|------|-------|
+| `auth.integration.test.ts` | Login subdomain, refresh, tenant JWT binding, 2FA gate |
+| `app.security.test.ts` | Unauthenticated deny |
+| `services/twoFactorService.test.ts` | OTP/refresh helpers |
+| `services/rbacService.test.ts` | Permission matrix |
+
+Mock `initDb`, `authArtifactService`, `userService` in integration tests.
+
+## Key files
+
+| Area | Path |
+|------|------|
+| Middleware | `middleware/authenticate.ts` |
+| Cookies / OTP hash | `services/authCookieService.ts` |
+| Login/onboard | `services/authService.ts` |
+| Users | `services/userService.ts` |
+| 2FA | `services/twoFactorService.ts` |
+| Artifacts DB | `services/authArtifactService.ts` |
+| Handoff | `services/authHandoffService.ts` |
+| Routes | `routes/auth.ts` |
+| Frontend | `lib/AuthContext.tsx`, `lib/apiClient.ts`, `lib/twoFactor.ts` |
 
 ## Rules
 
-`.cursor/rules/mms-auth.mdc`
+`mms-auth.mdc`, `mms-security.mdc`, `mms-rbac.mdc`, `mms-database.mdc` (auth_artifacts)

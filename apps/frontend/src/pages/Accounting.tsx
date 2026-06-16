@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,6 +18,7 @@ import FinancialReports from "../components/accounting/FinancialReports";
 import AccountingSettings from "../components/accounting/AccountingSettings";
 import AccountingDashboard from "../components/accounting/AccountingDashboard";
 import KPISummary from "../components/reports/KPISummary";
+import ErrorBoundary from "../components/ui/ErrorBoundary";
 import {
   CHART_OF_ACCOUNTS, JOURNAL_ENTRIES,
   DEFAULT_SETTINGS, DEFAULT_FISCAL_YEARS, CURRENCIES,
@@ -25,13 +26,24 @@ import {
 import { saveCollection, getObject, saveObject } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 
-const SUB_TABS = [
-  { id: "overview",  label: "Overview",          icon: LayoutDashboard },
-  { id: "journal",   label: "Journal Entries",   icon: List },
-  { id: "ledger",    label: "General Ledger",    icon: BookMarked },
-  { id: "trial",     label: "Trial Balance",     icon: Scale },
-  { id: "coa",       label: "Chart of Accounts", icon: BookOpen },
-];
+const SUB_TAB_IDS = ["overview", "journal", "ledger", "trial", "coa"] as const;
+type SubTabId = (typeof SUB_TAB_IDS)[number];
+
+const SUB_TAB_ICONS: Record<SubTabId, React.ElementType> = {
+  overview: LayoutDashboard,
+  journal: List,
+  ledger: BookMarked,
+  trial: Scale,
+  coa: BookOpen,
+};
+
+const SUB_TAB_KEYS: Record<SubTabId, "accounting.tabs.overview" | "accounting.tabs.journal" | "accounting.tabs.ledger" | "accounting.tabs.trial" | "accounting.tabs.coa"> = {
+  overview: "accounting.tabs.overview",
+  journal: "accounting.tabs.journal",
+  ledger: "accounting.tabs.ledger",
+  trial: "accounting.tabs.trial",
+  coa: "accounting.tabs.coa",
+};
 
 /**
  * Accounting and bookkeeping page component.
@@ -43,12 +55,20 @@ export default function Accounting() {
   const PAGE_TABS = useModuleTierTabs();
   const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
+  const SUB_TABS = useMemo(
+    () => SUB_TAB_IDS.map((id) => ({
+      id,
+      label: t(SUB_TAB_KEYS[id]),
+      icon: SUB_TAB_ICONS[id],
+    })),
+    [t]
+  );
   const [activeTab, setActiveTab]     = useState("operations");
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [configSubTab, setConfigSubTab] = useState<"fields" | "preferences">("fields");
-  const accounts = useLiveCollection("accounting_accounts", CHART_OF_ACCOUNTS);
-  const entries = useLiveCollection("accounting_entries", JOURNAL_ENTRIES);
-  const fiscalYears = useLiveCollection("accounting_fiscal_years", DEFAULT_FISCAL_YEARS);
+  const accounts = useLiveCollection("accounting_accounts");
+  const entries = useLiveCollection("accounting_entries");
+  const fiscalYears = useLiveCollection("accounting_fiscal_years");
   const [settings,   setSettings]    = useState(() => getObject("accounting_settings", DEFAULT_SETTINGS));
 
   const setAccounts = useCallback((updater: typeof accounts | ((prev: typeof accounts) => typeof accounts)) => {
@@ -120,6 +140,7 @@ export default function Accounting() {
           exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
           className="space-y-4">
 
+          <ErrorBoundary>
           {activeTab === "analytics" && (
             <div className="space-y-4">
               <KPISummary category="accounting" />
@@ -166,6 +187,7 @@ export default function Accounting() {
               />
             </div>
           )}
+          </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>

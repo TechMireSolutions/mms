@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useStudentsCollection } from "../../hooks/useStudents";
 import { CONTACTS } from "../../lib/contactsData";
 import { type Contact } from "../../lib/contactFields";
 import { ATTENDANCE_RECORDS, type AttendanceRecord } from "../../lib/attendanceData";
@@ -251,17 +252,17 @@ function getDefaultCardConfig(category: string, label: string): CustomCard {
 }
 
 export default function KPISummary({ category, role }: KPISummaryProps): React.JSX.Element {
-  const contacts = useLiveCollection("contacts", CONTACTS);
-  const records = useLiveCollection("attendance_records", ATTENDANCE_RECORDS);
-  const invoices = useLiveCollection("finance_invoices", INVOICES);
-  const students = useLiveCollection("students", STUDENTS);
-  const exams = useLiveCollection("exams", EXAMS);
-  const examResults = useLiveCollection("exam_results", EXAM_RESULTS);
-  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
-  const distributions = useLiveCollection("hasanat_distributions", DISTRIBUTIONS);
-  const qbQuestions = useLiveCollection("questions", QUESTIONS);
-  const qbTests = useLiveCollection("tests", TESTS);
-  const qbResults = useLiveCollection("assessment_results", RESULTS);
+  const contacts = useLiveCollection("contacts");
+  const records = useLiveCollection("attendance_records");
+  const invoices = useLiveCollection("finance_invoices");
+  const students = useStudentsCollection();
+  const exams = useLiveCollection("exams");
+  const examResults = useLiveCollection("exam_results");
+  const sessions = useLiveCollection("sessions");
+  const distributions = useLiveCollection("hasanat_distributions");
+  const qbQuestions = useLiveCollection("questions");
+  const qbTests = useLiveCollection("tests");
+  const qbResults = useLiveCollection("assessment_results");
 
   const computedKPIs = useMemo(() => {
     // 1. Total Students
@@ -342,8 +343,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     qbResults.forEach((res: QuestionBankResult) => {
       const test = qbTests.find((t: QuestionBankTest) => t.id === res.testId);
       if (!test) return;
-      const obtained = Object.values(res.scores).reduce((sum, v) => sum + v, 0);
-      const max = test.questionIds.reduce((sum, qid) => {
+      const obtained = Object.values(res.scores).reduce((sum: number, v) => sum + (v as number), 0);
+      const max = test.questionIds.reduce((sum: number, qid: string) => {
         const q = qbQuestions.find((item: QuestionBankQuestion) => item.id === qid);
         return sum + (q?.marks ?? 0);
       }, 0);

@@ -23,6 +23,7 @@ import {
 } from "../lib/obligationsData";
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
+import ErrorBoundary from "../components/ui/ErrorBoundary";
 
 /**
  * Obligations management component.
@@ -53,12 +54,12 @@ export default function Obligations() {
   const [activeSubTab, setActiveSubTab] = useState("summary");
   const [activeConfigTab, setActiveConfigTab] = useState("types");
 
-  const obligationTypes = useLiveCollection("obligation_types", OBLIGATION_TYPES);
-  const mujtahids = useLiveCollection("mujtahids", MUJTAHIDS);
-  const reps = useLiveCollection("mujtahid_reps", MUJTAHID_REPS);
-  const wakalaTypes = useLiveCollection("wakala_types", WAKALA_TYPES);
-  const distributions = useLiveCollection("obligation_distributions", OBLIGATION_DISTRIBUTIONS);
-  const collections = useLiveCollection("obligation_collections", OBLIGATION_COLLECTIONS);
+  const obligationTypes = useLiveCollection("obligation_types");
+  const mujtahids = useLiveCollection("mujtahids");
+  const reps = useLiveCollection("mujtahid_reps");
+  const wakalaTypes = useLiveCollection("wakala_types");
+  const distributions = useLiveCollection("obligation_distributions");
+  const collections = useLiveCollection("obligation_collections");
 
   const [showForm, setShowForm] = useState(false);
   const [viewCollection, setViewCollection] = useState<ObligationCollection | null>(null);
@@ -127,6 +128,7 @@ export default function Obligations() {
           exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
           className="space-y-4">
 
+          <ErrorBoundary>
           {effectiveTab === "analytics" && (
             <ObligationsSummaryComponent
               collections={collections}
@@ -186,6 +188,7 @@ export default function Obligations() {
               onChangeDistributions={(d) => saveCollection("obligation_distributions", d)}
             />
           )}
+          </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>

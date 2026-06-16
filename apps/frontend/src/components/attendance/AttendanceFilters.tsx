@@ -3,7 +3,7 @@ import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
 import { SESSIONS_DATA, TEACHERS } from "../../lib/sessionsData";
-import { getCollection } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 export interface AttendanceFilterState {
   sessionId: string;
@@ -41,15 +41,7 @@ interface Session {
  */
 export default function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps) {
   const [open, setOpen] = useState(true);
-
-  let fetchedSessions: Session[] = [];
-  try {
-    fetchedSessions = getCollection("sessions", SESSIONS_DATA) || [];
-  } catch (error) {
-    console.error("Failed to fetch sessions for filters:", error);
-  }
-
-  const sessions = useMemo(() => fetchedSessions, [fetchedSessions]);
+  const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA as Session[]);
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

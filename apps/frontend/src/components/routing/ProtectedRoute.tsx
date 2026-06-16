@@ -4,7 +4,7 @@ import { requiresTwoFactor } from "@mms/shared";
 import { useAuth } from "@/lib/AuthContext";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from "@/lib/routes";
 import useGlobalSettings from "@/hooks/useGlobalSettings";
-import { is2FAVerified } from "@/lib/twoFactor";
+import { is2FAPending, is2FAVerified } from "@/lib/twoFactor";
 
 /**
  * Requires an authenticated session. Redirects guests to login with return path.
@@ -16,6 +16,9 @@ export default function ProtectedRoute(): React.JSX.Element {
   const location = useLocation();
 
   if (!isAuthenticated) {
+    if (is2FAPending()) {
+      return <Navigate to={ROUTES.twoFactor} replace state={{ from: location.pathname }} />;
+    }
     return (
       <Navigate
         to={ROUTES.login}

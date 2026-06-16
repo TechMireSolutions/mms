@@ -126,7 +126,7 @@ export default function Sessions() {
   const PAGE_TABS = useModuleTierTabs();
   const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
-  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const sessions = useLiveCollection("sessions");
   const settings = getObject<SessionsSettingsData>("sessions_settings", DEFAULT_SESSIONS_SETTINGS);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<SessionStatus[]>([]);
@@ -270,8 +270,8 @@ export default function Sessions() {
                     </thead>
                     <tbody className="divide-y divide-border/50">
                       {filtered.map((s) => {
-                        const totalEnrolled = s.classes?.reduce((sum, c) => sum + c.enrolled, 0) ?? 0;
-                        const totalCapacity = s.classes?.reduce((sum, c) => sum + c.capacity, 0) ?? 0;
+                        const totalEnrolled = s.classes?.reduce((sum: number, c: { enrolled: number }) => sum + c.enrolled, 0) ?? 0;
+                        const totalCapacity = s.classes?.reduce((sum: number, c: { capacity: number }) => sum + c.capacity, 0) ?? 0;
                         const statusCfg = STATUS_CONFIG[s.status as SessionStatus] ?? STATUS_CONFIG.active;
                         return (
                           <tr key={s.id} onClick={() => setDetailSession(s)} className="hover:bg-muted/20 cursor-pointer transition-colors group">

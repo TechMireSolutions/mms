@@ -5,7 +5,7 @@ import {
   getObject as dbGetObject,
   saveObject as dbSaveObject,
   getAllData as dbGetAllData,
-  resetDatabase as dbResetDatabase,
+  resetTenantData as dbResetTenantData,
   runInTransaction
 } from '../db/database.js';
 
@@ -52,12 +52,10 @@ export async function synchronizeData(payload: SyncPayload): Promise<void> {
 }
 
 /**
- * Resets the database schema and seeds default data.
- *
- * @returns {Promise<void>}
+ * Resets the current tenant to minimal defaults (scoped; does not drop global tables).
  */
 export async function resetToDefaults(): Promise<void> {
-  await dbResetDatabase();
+  await dbResetTenantData();
 }
 
 /**

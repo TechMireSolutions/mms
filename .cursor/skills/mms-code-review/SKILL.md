@@ -1,6 +1,6 @@
 ---
 name: mms-code-review
-description: Reviews MMS code against project rules, skills, and migration status. Use when reviewing PRs, doing a code review, checking rule compliance, or auditing changes before merge.
+description: Reviews MMS code against project rules, skills, and migration status. Use when reviewing PRs, doing a code review, checking rule compliance, or auditing backend/frontend changes before merge.
 ---
 
 # MMS Code Review
@@ -9,7 +9,9 @@ description: Reviews MMS code against project rules, skills, and migration statu
 
 ```bash
 pnpm typecheck
+pnpm test
 cd apps/frontend && pnpm lint
+cd apps/backend && pnpm lint
 ```
 
 ## Checklist
@@ -17,46 +19,51 @@ cd apps/frontend && pnpm lint
 ### Architecture
 - [ ] Shared types/utils in `@mms/shared` (not duplicated)
 - [ ] No frontend → backend direct imports
-- [ ] routes → services → database (backend)
-- [ ] `useLiveCollection` for reactive collection reads
+- [ ] Backend: routes → services → database (no `pg` in routes)
+- [ ] Correct data layer: Query for REST resources, `useLiveCollection` for legacy modules
+
+### Backend API
+- [ ] Tenant protected routes use **`authenticateTenant`** — not raw `jwtVerify`
+- [ ] `host` / `x-forwarded-host` tested in `inject()` tests for tenant routes
+- [ ] Zod or JSON Schema on write bodies
+- [ ] `rbacService` on writes; admin-only on sync download/upload
+- [ ] Drizzle migration + **`_journal.json`** entry if schema changed
+- [ ] Stable error `type` codes; no stack traces in responses
+
+### Frontend API
+- [ ] Internal MMS calls use `apiFetch` / `apiJson` — no raw `fetch('/api/...')`
+- [ ] `credentials: 'include'` via apiClient
+- [ ] Query hooks export stable `QUERY_KEY` constants
+- [ ] Mutations invalidate affected queries
+- [ ] No duplicate data path (Query + `useLiveCollection` for same entity)
 
 ### UI / config
-- [ ] No hardcoded labels/colours/status maps
+- [ ] No hardcoded labels/colours/status maps — `t()` + registries
 - [ ] Fields/tabs from registry
-- [ ] PageHeader.actions for page CTAs
 - [ ] Module tier: Operations | Analytics | Configuration
 
 ### Field persistence (new/changed fields)
 - [ ] Field on `@mms/shared` type + `DEFAULT_*` + merge helper
-- [ ] Read via `getObject` / `getCollection` / typed settings getter
-- [ ] Write reaches PostgreSQL (`saveCollection`, `saveObject`, or `await save*Settings()`)
+- [ ] Write reaches PostgreSQL
 - [ ] UI control bound to save path — not orphaned `useState`
-- [ ] Seeds updated if field is part of default documents
-- [ ] Reviewer can point to the exact DB write line (`rg` field key across layers)
-
-### Contacts / providers
-- [ ] No nested `ContactConfigProvider`
-- [ ] No manual WhatsApp toggles
-- [ ] E.164 phone normalization
 
 ### Auth / security
 - [ ] No secrets in diff
-- [ ] DTO validation on write endpoints
-- [ ] User shape matches `StoredUser` if touching users/seeds
-- [ ] No `any`; no silent catch
-- [ ] `rbacService` on new writes; rate limit if touching login/onboard (`mms-security.mdc`)
-- [ ] Tenant-scoped paths use forwarded host — not client tenant id in body
+- [ ] OTP uses `crypto.randomInt()` — not `Math.random()`
+- [ ] Rate limit preserved on login/onboard when touching auth
+- [ ] No in-memory auth handoff / 2FA maps — use `auth_artifacts`
+- [ ] `AuthContext` mount effect stable (`useCallback`) — no render loops
 
-### Testing & observability
-- [ ] New `@mms/shared` pure helpers have unit tests (`mms-testing.mdc`)
-- [ ] API failures surfaced via `notify.error` + `t()`; heavy sections in `ErrorBoundary`
+### Testing
+- [ ] New `@mms/shared` pure helpers have unit tests
+- [ ] Auth/RBAC/tenant changes have `inject()` tests
+- [ ] Frontend tests use happy-dom when touching apiClient/hooks
 
 ### Accessibility
-- [ ] Icon buttons have `aria-label`; forms use `t()` labels (`mms-a11y.mdc`)
+- [ ] Icon buttons have `aria-label`; forms use `t()` labels
 
 ### Performance
 - [ ] jspdf/xlsx/html2canvas dynamically imported
-- [ ] Image uploads via `optimizeImage` (AVIF); canvas exports via `canvasToOptimizedDataUrl`. No direct `canvas.toDataURL`/`toBlob` or raw FileReader persistence
 
 ### Scope
 - [ ] No drive-by refactors
@@ -64,12 +71,12 @@ cd apps/frontend && pnpm lint
 
 ## Severity
 
-- **Critical:** security, auth bypass, data loss, type errors
-- **Major:** rule violations that will spread debt (new hardcoded fields, nested providers)
+- **Critical:** security bypass, missing `authenticateTenant`, cross-tenant data leak, data loss
+- **Major:** missing RBAC on writes, raw fetch, dual data paths, broken migration journal
 - **Minor:** style, optional DRY
 
 ## References
 
-- Rules: `.cursor/rules/`
+- Backend rules: `mms-backend.mdc`, `mms-security.mdc`, `mms-database.mdc`, `mms-rbac.mdc`
 - Debt: `mms-migration-status.mdc`
-- Skills: `.cursor/skills/`
+- Skills: `mms-backend-api`, `mms-auth-users`, `mms-data-sync`, `mms-frontend`

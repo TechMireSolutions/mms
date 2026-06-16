@@ -39,6 +39,23 @@ async function findUserByEmailAndWorkspace(
   );
 }
 
+async function findUserById(id: string): Promise<StoredUser | undefined> {
+  const users = await getAllUsers();
+  return users.find((u) => u.id === id);
+}
+
+export async function getPublicUserById(id: string): Promise<PublicUser | null> {
+  const user = await findUserById(id);
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    workspaceSubdomain: user.workspaceSubdomain,
+  };
+}
+
 /**
  * Creates and persists a new user account for a workspace.
  * Throws if the email is already registered on the same subdomain.

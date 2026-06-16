@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getCollection } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { ROUTES } from "@/lib/routes";
 
 export interface OverdueStudent {
@@ -45,13 +45,7 @@ function urgencyBadge(days: number): UrgencyBadge {
  * @returns {React.ReactElement} The overdue obligations widget.
  */
 export default function OverdueObligationsWidget({ title }: { title?: string }) {
-  let overdueStudents: OverdueStudent[] = [];
-  try {
-    overdueStudents = getCollection("overdue_obligations", DEFAULT_OVERDUE_STUDENTS);
-  } catch (error) {
-    console.error("Failed to load overdue obligations:", error);
-    overdueStudents = DEFAULT_OVERDUE_STUDENTS;
-  }
+  const overdueStudents = useLiveCollection<OverdueStudent>("overdue_obligations", DEFAULT_OVERDUE_STUDENTS);
 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<number>>(new Set());

@@ -5,19 +5,23 @@ import StatsGrid from "../components/dashboard/StatsGrid";
 import QuickActionsPanel from "../components/dashboard/QuickActionsPanel";
 import NotificationsPanel from "../components/dashboard/NotificationsPanel";
 import { useViewerRole } from "@/hooks/useViewerRole";
+import usePermissions from "@/hooks/usePermissions";
+import type { Permission } from "@mms/shared";
 import { DashboardWidgets, CustomWidget, WidgetBuilder, getOrInitializeCustomWidgets } from "../components/reports/PinnedWidgets";
 import DynamicCardBuilder from "../components/reports/DynamicCardBuilder";
-import { METADATA_FIELDS, computeCustomCard as computeCustomCardShared, CustomCard, COLLECTION_OPTIONS } from "../components/reports/reportMetadata";
+import { METADATA_FIELDS, computeCustomCard as computeCustomCardShared, CustomCard, COLLECTION_OPTIONS, type ReportCollection } from "../components/reports/reportMetadata";
 
-import { getCollection, getObject, getGlobalSettings, saveCollection } from "../lib/db";
-import { CONTACTS } from "../lib/contactsData";
-import { STUDENTS, type Student } from "../lib/studentsData";
+import { getCollection, saveCollection } from "../lib/db";
+import { useLiveCollection } from "@/hooks/useLiveCollection";
+import { useStudentsCollection } from "@/hooks/useStudents";
+import { useContactsCollection } from "@/hooks/useContacts";
+import useGlobalSettings from "@/hooks/useGlobalSettings";
+import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { SESSIONS_DATA, type Session } from "../lib/sessionsData";
 import { INVOICES, type Invoice } from "../lib/financeData";
 import { ATTENDANCE_RECORDS, type AttendanceRecord } from "../lib/attendanceData";
 import { DISTRIBUTIONS, type Distribution } from "../lib/hasanatData";
 import { QUESTIONS, TESTS, RESULTS } from "../lib/questionBankData";
-import { type Contact } from "../lib/contactFields";
 import { revenueData as defaultRevenueData } from "../lib/dashboardData";
 import { useAuth } from "@/lib/AuthContext";
 import useTranslation from "@/hooks/useTranslation";
@@ -99,6 +103,18 @@ const BODIES = {
   accountant: AccountantDashboard,
 };
 
+function defaultWidgetCollection(can: (permission: Permission) => boolean): ReportCollection {
+  if (can("students.write") || can("users.manage")) return "students";
+  if (can("attendance.write")) return "sessions";
+  return "finance_invoices";
+}
+
+function defaultWidgetCategory(can: (permission: Permission) => boolean): string {
+  if (can("students.write") || can("users.manage")) return "students";
+  if (can("attendance.write")) return "sessions";
+  return "financial";
+}
+
 // ── Main Dashboard ──────────────────────────────────────────────────────────
 /**
  * Dashboard Page Component
@@ -113,21 +129,21 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
   const role = useViewerRole();
-  const [dbUpdateCounter, setDbUpdateCounter] = useState(0);
+  const { can } = usePermissions();
+  const globalSettings = useGlobalSettings();
 
-  const students = useMemo(() => getCollection<Student>("students", STUDENTS), [dbUpdateCounter]);
-  const sessions = useMemo(() => getCollection<Session>("sessions", SESSIONS_DATA), [dbUpdateCounter]);
-  const invoices = useMemo(() => getCollection<Invoice>("finance_invoices", INVOICES), [dbUpdateCounter]);
-  const attendanceRecords = useMemo(() => getCollection<AttendanceRecord>("attendance_records", ATTENDANCE_RECORDS), [dbUpdateCounter]);
-  const hasanatDistributions = useMemo(() => getCollection<Distribution>("hasanat_distributions", DISTRIBUTIONS), [dbUpdateCounter]);
-  const contacts = useMemo(() => getCollection<Contact>("contacts", CONTACTS), [dbUpdateCounter]);
-  const questions = useMemo(() => getCollection("questions", QUESTIONS), [dbUpdateCounter]);
-  const tests = useMemo(() => getCollection("tests", TESTS), [dbUpdateCounter]);
-  const assessmentResults = useMemo(() => getCollection("assessment_results", RESULTS), [dbUpdateCounter]);
-  const revenueExpenses = useMemo(() => getCollection<{ revenue: number; expenses: number }>("revenue_expenses", defaultRevenueData), [dbUpdateCounter]);
+  const students = useStudentsCollection();
+  const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
+  const invoices = useLiveCollection<Invoice>("finance_invoices", INVOICES);
+  const attendanceRecords = useLiveCollection<AttendanceRecord>("attendance_records", ATTENDANCE_RECORDS);
+  const hasanatDistributions = useLiveCollection<Distribution>("hasanat_distributions", DISTRIBUTIONS);
+  const contacts = useContactsCollection();
+  const questions = useLiveCollection("questions", QUESTIONS);
+  const tests = useLiveCollection("tests", TESTS);
+  const assessmentResults = useLiveCollection("assessment_results", RESULTS);
+  const revenueExpenses = useLiveCollection<{ revenue: number; expenses: number }>("revenue_expenses", defaultRevenueData);
 
-  const settings = useMemo(() => getGlobalSettings(), [dbUpdateCounter]);
-  const enabledModules = useMemo(() => settings.enabledModules || {}, [settings]);
+  const enabledModules = globalSettings.enabledModules || {};
 
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -173,7 +189,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     const handleUpdate = () => {
-      setDbUpdateCounter((prev) => prev + 1);
       try {
         const savedCards = localStorage.getItem("mms_dashboard_disabled_cards") || localStorage.getItem("dashboard_disabled_cards");
         if (savedCards) {
@@ -490,7 +505,7 @@ export default function Dashboard() {
                 {isWidgetBuilderOpen && (
                   <div className="mb-6">
                     <WidgetBuilder
-                      initialCollection={role === "admin" ? "students" : (role === "teacher" ? "sessions" : "finance_invoices")}
+                      initialCollection={defaultWidgetCollection(can)}
                       editWidgetConfig={editingWidget}
                       onCancelEdit={() => {
                         setIsWidgetBuilderOpen(false);
@@ -510,7 +525,7 @@ export default function Dashboard() {
                         setEditingWidget(null);
                         window.dispatchEvent(new Event("local-database-update"));
                       }}
-                      category={role === "admin" ? "students" : (role === "teacher" ? "sessions" : "financial")}
+                      category={defaultWidgetCategory(can)}
                       mode="dashboard"
                       initialWidgetType={widgetBuilderType}
                     />
@@ -674,6 +689,7 @@ export default function Dashboard() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
         >
+          <ErrorBoundary>
           <StatsGrid
             stats={visibleStats}
             customCardIds={activeCustomCards.map((c) => c.id)}
@@ -695,10 +711,12 @@ export default function Dashboard() {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
+          </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
 
       {/* Pinned Custom Widgets */}
+      <ErrorBoundary>
       <DashboardWidgets 
         widgets={customWidgets.filter((w) => w.isPinnedToDashboard)} 
         onUnpin={handleUnpinWidget} 
@@ -706,6 +724,7 @@ export default function Dashboard() {
         onEditWidget={handleEditWidget}
         onDeleteWidget={handleDeleteWidget}
       />
+      </ErrorBoundary>
 
       {/* Role body */}
       <AnimatePresence mode="wait">
@@ -716,7 +735,9 @@ export default function Dashboard() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
+          <ErrorBoundary>
           <Body enabled={enabledModules} sectionSettings={sectionSettings} isEditMode={isEditMode} />
+          </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
     </div>

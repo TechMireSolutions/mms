@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { type PublicBranding } from "@mms/shared";
 import { cachePublicBranding } from "@/lib/db";
+import { apiJson } from "@/lib/apiClient";
 import { useTenant } from "@/lib/TenantContext";
 
 /**
@@ -20,10 +21,8 @@ export function useTenantBranding(): { ready: boolean } {
     let cancelled = false;
     setFallbackDone(false);
 
-    void fetch("/api/workspace/public-branding")
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as { branding?: PublicBranding };
+    void apiJson<{ branding?: PublicBranding }>("/api/workspace/public-branding")
+      .then((data) => {
         if (!cancelled && data.branding) {
           cachePublicBranding(data.branding);
         }

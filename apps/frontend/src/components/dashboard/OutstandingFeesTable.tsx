@@ -1,9 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Phone, Send } from "lucide-react";
-import { getCollection } from "../../lib/db";
 import { INVOICES, Invoice } from "../../lib/financeData";
-import { STUDENTS, Student } from "../../lib/studentsData";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useStudentsCollection } from "../../hooks/useStudents";
 
 /**
  * OutstandingFeesTable Component
@@ -14,17 +14,8 @@ import { STUDENTS, Student } from "../../lib/studentsData";
  * @returns {React.ReactElement} The outstanding fees table widget.
  */
 export default function OutstandingFeesTable({ title }: { title?: string }) {
-  let invoices: Invoice[] = [];
-  let students: Student[] = [];
-
-  try {
-    invoices = getCollection("finance_invoices", INVOICES);
-    students = getCollection("students", STUDENTS);
-  } catch (error) {
-    console.error("Failed to load outstanding fees data:", error);
-    invoices = INVOICES;
-    students = STUDENTS;
-  }
+  const invoices = useLiveCollection<Invoice>("finance_invoices", INVOICES);
+  const students = useStudentsCollection();
 
   const list = invoices
     .filter((inv) => inv.status !== "paid" && inv.status !== "cancelled")

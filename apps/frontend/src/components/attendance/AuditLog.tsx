@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
-// @ts-ignore - Assuming this will be converted to TSX later
 import { getAuditLog } from "./MarkAttendance";
 import { SESSIONS_DATA } from "../../lib/sessionsData";
-import { getCollection } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { AttendanceFilterState } from "./AttendanceFilters";
 
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {
@@ -68,14 +67,7 @@ function describeEntry(e: AuditEntry): string {
  * @returns {React.ReactElement} The rendered audit log component.
  */
 export default function AuditLog({ filters }: AuditLogProps) {
-  let fetchedSessions: Session[] = [];
-  try {
-    fetchedSessions = getCollection("sessions", SESSIONS_DATA) || [];
-  } catch (error) {
-    console.error("Failed to fetch sessions for AuditLog:", error);
-  }
-
-  const sessions = useMemo(() => fetchedSessions, [fetchedSessions]);
+  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

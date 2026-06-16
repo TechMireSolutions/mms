@@ -1,30 +1,18 @@
-import { randomBytes } from 'node:crypto';
 import type { AuthResult } from './authService.js';
-
-interface HandoffEntry {
-  result: AuthResult;
-  expiresAt: number;
-}
+import { putAuthArtifact, takeAuthArtifact, createArtifactId } from './authArtifactService.js';
 
 const HANDOFF_TTL_MS = 2 * 60 * 1000;
-const handoffs = new Map<string, HandoffEntry>();
 
 /**
- * One-time auth handoff for cross-subdomain redirect after onboarding.
+ * One-time auth handoff stored in PostgreSQL (survives restarts, multi-instance safe).
  */
-export function createAuthHandoff(result: AuthResult): string {
-  const code = randomBytes(24).toString('hex');
-  handoffs.set(code, {
-    result,
-    expiresAt: Date.now() + HANDOFF_TTL_MS,
-  });
+export async function createAuthHandoff(result: AuthResult): Promise<string> {
+  const code = createArtifactId();
+  await putAuthArtifact('handoff', result, HANDOFF_TTL_MS, code);
   return code;
 }
 
-export function exchangeAuthHandoff(code: string): AuthResult | null {
-  const entry = handoffs.get(code);
-  if (!entry) return null;
-  handoffs.delete(code);
-  if (Date.now() > entry.expiresAt) return null;
-  return entry.result;
+export async function exchangeAuthHandoff(code: string): Promise<AuthResult | null> {
+  const entry = await takeAuthArtifact<AuthResult>(code, 'handoff');
+  return entry?.payload ?? null;
 }

@@ -3,13 +3,11 @@
  * Shows a print-ready preview of the invoice for a specific collection.
  * Supports Print and Export PDF actions.
  */
-import React, { useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import { X, Printer, FileDown, Settings } from "lucide-react";
 import { loadTemplate, PAGE_SIZES, InvoiceTemplate } from "../../../lib/invoiceTemplateStore";
-import { MOCK_CONTACTS, MOCK_USERS, MOCK_CURRENCIES, ObligationCollection, ObligationType, MujtahidRep, Mujtahid } from "../../../lib/obligationsData";
-import { CONTACTS } from "../../../lib/contactsData";
-import { SAMPLE_USERS } from "../../../lib/usersData";
-import { getCollection } from "../../../lib/db";
+import { MOCK_CURRENCIES, ObligationCollection, ObligationType, MujtahidRep, Mujtahid } from "../../../lib/obligationsData";
+import { useMergedObligationContacts, useMergedObligationUsers } from "../../../hooks/useObligationLookups";
 import InvoicePrintPreview from "./InvoicePrintPreview";
 
 export interface PrintInvoiceModalProps {
@@ -40,31 +38,17 @@ export default function PrintInvoiceModal({
   const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
   const printRef = useRef<HTMLDivElement>(null);
 
-  const contacts = getCollection("contacts", CONTACTS);
-  const users = getCollection("users", SAMPLE_USERS);
+  const liveContacts = useMergedObligationContacts();
+  const liveUsers = useMergedObligationUsers();
 
-  const mergedContacts = [...contacts];
-  MOCK_CONTACTS.forEach((mc) => {
-    if (!mergedContacts.some((c) => String(c.id) === String(mc.id))) {
-      mergedContacts.push(mc as unknown as (typeof contacts)[number]);
-    }
-  });
-
-  const mergedUsers = [...users];
-  MOCK_USERS.forEach((mu) => {
-    if (!mergedUsers.some((u) => String(u.id) === String(mu.id))) {
-      mergedUsers.push(mu as unknown as (typeof users)[number]);
-    }
-  });
-
-  const lookups = {
-    contacts: mergedContacts,
-    users: mergedUsers,
+  const lookups = useMemo(() => ({
+    contacts: liveContacts,
+    users: liveUsers,
     currencies: MOCK_CURRENCIES,
     obligationTypes,
     mujtahids,
     reps,
-  };
+  }), [liveContacts, liveUsers, obligationTypes, mujtahids, reps]);
 
   const handlePrint = () => {
     const content = printRef.current;

@@ -15,6 +15,7 @@ import RedemptionTracker from "../components/hasanat/RedemptionTracker";
 import HasanatSettings from "../components/hasanat/HasanatSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
+import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { DENOMINATIONS, STOCK_BATCHES, DISTRIBUTIONS, Denomination, StockBatch, Distribution } from "../lib/hasanatData";
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
@@ -46,9 +47,9 @@ export default function HasanatCards() {
   const [activeTab, setActiveTab] = useState("operations");
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [configSubTab, setConfigSubTab] = useState<"denominations" | "fields" | "preferences">("denominations");
-  const denoms = useLiveCollection("hasanat_denoms", DENOMINATIONS);
-  const batches = useLiveCollection("hasanat_batches", STOCK_BATCHES);
-  const distributions = useLiveCollection("hasanat_distributions", DISTRIBUTIONS);
+  const denoms = useLiveCollection("hasanat_denoms");
+  const batches = useLiveCollection("hasanat_batches");
+  const distributions = useLiveCollection("hasanat_distributions");
 
   const totalStock = batches.reduce((s, b) => s + b.quantity, 0);
   const totalRemaining = batches.reduce((s, b) => s + b.remaining, 0);
@@ -104,6 +105,7 @@ export default function HasanatCards() {
           transition={{ duration: 0.2 }}
           className="space-y-4"
         >
+          <ErrorBoundary>
           {effectiveTab === "analytics" && (
             <div className="space-y-4">
               <KPISummary category="hasanat" />
@@ -127,6 +129,7 @@ export default function HasanatCards() {
           {effectiveTab === "operations" && effectiveSubTab === "stock"         && <StockManager batches={batches} denoms={denoms} onUpdate={(b) => saveCollection("hasanat_batches", b)} />}
           {effectiveTab === "operations" && effectiveSubTab === "distribute"    && <DistributionManager distributions={distributions} denoms={denoms} batches={batches} onUpdate={(d) => saveCollection("hasanat_distributions", d)} />}
           {effectiveTab === "operations" && effectiveSubTab === "redemptions"   && <RedemptionTracker distributions={distributions} onUpdateDistributions={(d) => saveCollection("hasanat_distributions", d)} />}
+          </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>

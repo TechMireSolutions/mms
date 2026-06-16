@@ -1,5 +1,6 @@
 import fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
+import cookie from '@fastify/cookie';
 import jwt from '@fastify/jwt';
 import rateLimit from '@fastify/rate-limit';
 import dotenv from 'dotenv';
@@ -11,15 +12,12 @@ import emailRoutes from './routes/email.js';
 import workspaceRoutes from './routes/workspace.js';
 import studentsRoutes from './routes/students.js';
 import { tenantStorage, resolveSubdomainFromRequest } from './utils/tenantContext.js';
+import { attachAccessTokenFromCookie } from './services/authCookieService.js';
 
 dotenv.config();
 
 /**
  * Builds the Fastify application instance.
- * Initializes plugins, initializes database schema, and registers routing.
- *
- * @throws {Error} If the JWT_SECRET environment variable is not configured.
- * @returns {Promise<FastifyInstance>} The configured Fastify instance.
  */
 export async function buildApp(): Promise<FastifyInstance> {
   const jwtSecret = process.env.JWT_SECRET;
@@ -42,15 +40,19 @@ export async function buildApp(): Promise<FastifyInstance> {
     global: false,
   });
 
+  await app.register(cookie);
+
   app.addHook('onRequest', (request, _reply, done) => {
     const subdomain = resolveSubdomainFromRequest(
       request.hostname,
       request.headers['x-forwarded-host']
     );
-    tenantStorage.run(subdomain, () => done());
+    tenantStorage.run(subdomain, () => {
+      attachAccessTokenFromCookie(request);
+      done();
+    });
   });
 
-  // Register CORS — restrict to a specific origin in production
   const isProd = process.env.NODE_ENV === 'production';
   const allowedOrigin = process.env.ALLOWED_ORIGIN || 'http://localhost:5173';
 
@@ -59,12 +61,10 @@ export async function buildApp(): Promise<FastifyInstance> {
     credentials: true,
   });
 
-  // Register JWT — secret is validated above, no insecure fallback
   await app.register(jwt, {
     secret: jwtSecret,
   });
 
-  // Register routes
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(workspaceRoutes, { prefix: '/api/workspace' });
   await app.register(dbRoutes, { prefix: '/api/db' });

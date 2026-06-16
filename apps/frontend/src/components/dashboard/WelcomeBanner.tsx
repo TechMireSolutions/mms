@@ -2,10 +2,9 @@ import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Calendar } from "lucide-react";
 import { getIntlLocaleForLanguage } from "@mms/shared";
-import { getCollection } from "../../lib/db";
 import { SESSIONS_DATA } from "../../lib/sessionsData";
-import { INVOICES } from "../../lib/financeData";
-import { STUDENTS } from "../../lib/studentsData";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useStudentsCollection } from "../../hooks/useStudents";
 import useTranslation from "@/hooks/useTranslation";
 
 interface WelcomeBannerProps {
@@ -17,6 +16,8 @@ interface WelcomeBannerProps {
  */
 export default function WelcomeBanner({ role = "admin" }: WelcomeBannerProps): React.JSX.Element {
   const { t, language } = useTranslation();
+  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const students = useStudentsCollection();
 
   const greetingKey = role === "teacher"
     ? "dashboard.greeting.teacher"
@@ -43,27 +44,17 @@ export default function WelcomeBanner({ role = "admin" }: WelcomeBannerProps): R
   let subtitle = t("dashboard.overview");
 
   if (role === "teacher") {
-    try {
-      const sessions = getCollection("sessions", SESSIONS_DATA);
-      const teacherSessionsCount = sessions.filter((s) =>
-        (s.classes || []).some((c) => c.teacherId === "t1" || c.teacherName?.includes("Ibrahim"))
-      ).length;
-      subtitle = teacherSessionsCount === 1
-        ? t("dashboard.sessionsTodayOne")
-        : t("dashboard.sessionsToday", { count: teacherSessionsCount });
-    } catch {
-      subtitle = t("dashboard.sessionsTodayOne");
-    }
+    const teacherSessionsCount = sessions.filter((s) =>
+      (s.classes || []).some((c: { teacherId?: string; teacherName?: string }) => c.teacherId === "t1" || c.teacherName?.includes("Ibrahim"))
+    ).length;
+    subtitle = teacherSessionsCount === 1
+      ? t("dashboard.sessionsTodayOne")
+      : t("dashboard.sessionsToday", { count: teacherSessionsCount });
   } else if (role === "admin") {
-    try {
-      const students = getCollection("students", STUDENTS);
-      const activeCount = students.filter((s) => s.status === "active").length;
-      subtitle = t("dashboard.overview");
-      if (activeCount > 0) {
-        subtitle = `${t("dashboard.overview")} (${activeCount})`;
-      }
-    } catch {
-      subtitle = t("dashboard.overview");
+    const activeCount = students.filter((s) => s.status === "active").length;
+    subtitle = t("dashboard.overview");
+    if (activeCount > 0) {
+      subtitle = `${t("dashboard.overview")} (${activeCount})`;
     }
   }
 

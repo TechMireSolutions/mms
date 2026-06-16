@@ -38,8 +38,8 @@ export default function Examinations(): React.JSX.Element {
   const [activeSubTab, setActiveSubTab] = useState("exams");
   const [configSubTab, setConfigSubTab] = useState<"fields" | "preferences">("fields");
 
-  const exams = useLiveCollection("exams", EXAMS);
-  const examResults = useLiveCollection("exam_results", EXAM_RESULTS);
+  const exams = useLiveCollection("exams");
+  const examResults = useLiveCollection("exam_results");
   const [showExamForm, setShowExamForm] = useState(false);
   const [editExam, setEditExam] = useState<Exam | null>(null);
 

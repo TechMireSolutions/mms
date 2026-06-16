@@ -26,9 +26,24 @@ Detect via `TenantContext` / `isTenantHost()` / `themeScope.ts`.
 
 ## Auth handoff
 
-Workspace selection / auth handoff flows use `workspaceService` + `/api/workspace` + dedicated apex routes — do not stash tenant tokens on apex localStorage.
+Workspace selection / auth handoff flows use `workspaceService` + `/api/workspace` + `authHandoffService` (one-time codes in `auth_artifacts`, TTL 2 min).
+
+Do not stash tenant tokens on apex localStorage. Frontend uses `POST /api/auth/handoff` after onboard.
 
 Apex workspace list uses TanStack Query (`useWorkspaceRegistry`) — `mms-query.md`.
+
+## Backend tenant resolution
+
+**File:** `apps/backend/src/utils/tenantContext.ts`
+
+| Step | Behavior |
+|------|----------|
+| `onRequest` hook | `resolveSubdomainFromRequest(hostname, x-forwarded-host)` |
+| Storage | `tenantStorage.run(subdomain, …)` — AsyncLocalStorage for request scope |
+| Protected routes | `authenticateTenant` — JWT `workspaceSubdomain` must match resolved tenant |
+| Cookie auth | `attachAccessTokenFromCookie` copies `mms_access` → `Authorization` before JWT verify |
+
+Login and `/api/auth/me` require **tenant host** — apex calls to tenant endpoints return `403` by design.
 
 ## Security
 

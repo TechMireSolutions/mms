@@ -8,13 +8,10 @@ import AuthLayout from "../../components/auth/AuthLayout";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from "../../lib/routes";
 import { useAuth } from "../../lib/AuthContext";
 import useGlobalSettings from "../../hooks/useGlobalSettings";
-import { getGlobalSettings } from "../../lib/db";
 import {
-  dispatch2FACode,
-  is2FAPending,
+  getPendingChallengeId,
   is2FAVerified,
-  mark2FAVerified,
-  start2FAChallenge,
+  resend2FACode,
   verify2FACode,
 } from "../../lib/twoFactor";
 
@@ -24,11 +21,12 @@ const CODE_LENGTH = 6;
  * Two-factor verification after login when global settings require it.
  */
 export default function TwoFactorAuth(): React.JSX.Element {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, checkUserAuth } = useAuth();
   const settings = useGlobalSettings();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const challengeId = getPendingChallengeId();
   const redirectTo =
     (location.state as { from?: string } | null)?.from ?? DEFAULT_AUTH_REDIRECT;
 
@@ -56,19 +54,15 @@ export default function TwoFactorAuth(): React.JSX.Element {
 
   useEffect(() => {
     if (resendCountdown <= 0) return;
-    const t = setTimeout(() => setResendCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setResendCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
   }, [resendCountdown]);
 
-  if (!isAuthenticated) {
+  if (!challengeId && !isAuthenticated) {
     return <Navigate to={ROUTES.login} replace />;
   }
 
-  if (!requiresTwoFactor(settings, user)) {
-    return <Navigate to={redirectTo} replace />;
-  }
-
-  if (is2FAVerified()) {
+  if (isAuthenticated && (!requiresTwoFactor(settings, user) || is2FAVerified())) {
     return <Navigate to={redirectTo} replace />;
   }
 
@@ -102,7 +96,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    if (!isComplete) {
+    if (!isComplete || !challengeId) {
       setError("Please enter all 6 digits");
       return;
     }
@@ -110,15 +104,12 @@ export default function TwoFactorAuth(): React.JSX.Element {
     setError("");
 
     const entered = code.join("");
-    if (verify2FACode(entered)) {
-      mark2FAVerified();
+    const ok = await verify2FACode(challengeId, entered);
+    if (ok) {
+      await checkUserAuth();
       navigate(redirectTo, { replace: true });
     } else {
-      setError(
-        is2FAPending()
-          ? "Invalid or expired code. Please try again."
-          : "No active verification. Request a new code."
-      );
+      setError("Invalid or expired code. Please try again.");
       setCode(Array(CODE_LENGTH).fill(""));
       inputs.current[0]?.focus();
     }
@@ -126,9 +117,12 @@ export default function TwoFactorAuth(): React.JSX.Element {
   };
 
   const handleResend = async (): Promise<void> => {
-    const globalSettings = getGlobalSettings();
-    const newCode = start2FAChallenge();
-    await dispatch2FACode(globalSettings, user?.email ?? "", newCode);
+    if (!challengeId) return;
+    const ok = await resend2FACode(challengeId);
+    if (!ok) {
+      setError("Could not resend code. Return to sign in and try again.");
+      return;
+    }
     setResendCountdown(30);
     setError("");
     setCode(Array(CODE_LENGTH).fill(""));

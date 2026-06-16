@@ -1,11 +1,10 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import useConfigSubTabs from "@/hooks/useConfigSubTabs";
 import useTranslation from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  UserPlus, GraduationCap, Filter, ChevronDown, Users, Settings,
-  LayoutDashboard, BarChart2,
+  UserPlus, GraduationCap, Filter, ChevronDown, Users,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
@@ -19,21 +18,57 @@ import FilterChips from "../components/ui/FilterChips";
 import ActionButton from "../components/ui/ActionButton";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 
-// Students Imports
 import StudentList from "../components/students/StudentList";
 import StudentForm from "../components/students/StudentForm";
 import StudentsSettingsPanel from "../components/students/StudentsSettings";
-import { STUDENTS, Student } from "../lib/studentsData";
+import { Student } from "../lib/studentsData";
 import { type StudentsSettings, DEFAULT_STUDENTS_SETTINGS } from "@mms/shared";
 
-// Generic Reports & DB Utils
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import { saveCollection, getObject } from "../lib/db";
-import { useLiveCollection } from "../hooks/useLiveCollection";
 import useStudentCount from "@/hooks/useStudentCount";
+import { useStudents, useStudentMutations, type StudentRecord } from "@/hooks/useStudents";
 
 const STUDENT_STATUS_OPTIONS = ["active", "inactive", "suspended"];
+
+function applyGrNumberMigration(
+  rawStudents: StudentRecord[],
+  settings: StudentsSettings,
+): { students: Student[]; didMigrate: boolean } {
+  const template = settings.grNumberTemplate || "{seq}-{year}";
+  const digits = settings.grNumberDigits || 4;
+  const restartAnnually = settings.grNumberRestartAnnually !== false;
+
+  let migrated = false;
+  const migratedList = rawStudents.map((s, idx) => {
+    if (!s.grNumber) {
+      migrated = true;
+      const regDate = (s.registeredDate as string | undefined) || new Date().toISOString().split("T")[0];
+      const year = regDate ? new Date(regDate).getFullYear() : new Date().getFullYear();
+
+      let nextSeq = 1;
+      if (restartAnnually) {
+        const yearlyStudents = rawStudents.slice(0, idx).filter((x) => {
+          const xDate = (x.registeredDate as string | undefined) || "";
+          if (xDate.startsWith(String(year))) return true;
+          if (x.grNumber && String(x.grNumber).includes(String(year))) return true;
+          return false;
+        });
+        nextSeq = yearlyStudents.length + 1;
+      } else {
+        nextSeq = idx + 1;
+      }
+
+      const seqStr = String(nextSeq).padStart(digits, "0");
+      const autoGr = template.replace("{seq}", seqStr).replace("{year}", String(year));
+      return { ...s, grNumber: autoGr } as unknown as Student;
+    }
+    return s as unknown as Student;
+  });
+
+  return { students: migratedList, didMigrate: migrated };
+}
 
 /**
  * Students Directory and Records Page.
@@ -44,54 +79,29 @@ export default function Students() {
   const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const { data: serverCount } = useStudentCount();
+  const { data: rawStudents = [], isLoading } = useStudents();
+  const { createStudent, updateStudent, deleteStudent } = useStudentMutations();
   const [activeTab, setActiveTab] = useState("operations");
 
-  const settings = useMemo(() => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS), []);
-  const rawStudents = useLiveCollection("students", STUDENTS);
+  const settings = useMemo(
+    () => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS),
+    [],
+  );
 
-  const { students, didMigrate } = useMemo(() => {
-    const template = settings.grNumberTemplate || "{seq}-{year}";
-    const digits = settings.grNumberDigits || 4;
-    const restartAnnually = settings.grNumberRestartAnnually !== false;
+  const { students, didMigrate } = useMemo(
+    () => applyGrNumberMigration(rawStudents, settings),
+    [rawStudents, settings],
+  );
 
-    let migrated = false;
-    const migratedList = rawStudents.map((s, idx) => {
-      if (!s.grNumber) {
-        migrated = true;
-        const regDate = s.registeredDate || new Date().toISOString().split("T")[0];
-        const year = regDate ? new Date(regDate).getFullYear() : new Date().getFullYear();
-
-        let nextSeq = 1;
-        if (restartAnnually) {
-          const yearlyStudents = rawStudents.slice(0, idx).filter((x) => {
-            const xDate = x.registeredDate || "";
-            if (xDate.startsWith(String(year))) return true;
-            if (x.grNumber && x.grNumber.includes(String(year))) return true;
-            return false;
-          });
-          nextSeq = yearlyStudents.length + 1;
-        } else {
-          nextSeq = idx + 1;
-        }
-
-        const seqStr = String(nextSeq).padStart(digits, "0");
-        const autoGr = template.replace("{seq}", seqStr).replace("{year}", String(year));
-        return { ...s, grNumber: autoGr };
-      }
-      return s;
-    });
-
-    return { students: migratedList, didMigrate: migrated };
-  }, [rawStudents, settings]);
-
+  const migrationAppliedRef = useRef(false);
   useEffect(() => {
-    if (didMigrate) saveCollection("students", students);
-  }, [didMigrate, students]);
-
-  const saveStudents = useCallback((updater: Student[] | ((prev: Student[]) => Student[])) => {
-    const next = typeof updater === "function" ? updater(students) : updater;
-    saveCollection("students", next);
-  }, [students]);
+    if (!didMigrate || migrationAppliedRef.current) return;
+    migrationAppliedRef.current = true;
+    saveCollection("students", students);
+    for (const s of students) {
+      updateStudent.mutate({ id: String(s.id), student: s as unknown as StudentRecord });
+    }
+  }, [didMigrate, students, updateStudent]);
 
   const [studentSearch, setStudentSearch] = useState("");
   const [studentFilterStatus, setStudentFilterStatus] = useState<string[]>([]);
@@ -112,10 +122,24 @@ export default function Students() {
   }, [students, studentSearch, studentFilterStatus, studentFilterGender]);
 
   const handleSaveStudent = (data: Student) => {
-    if (editStudent) saveStudents((ss) => ss.map((s) => s.id === data.id ? data : s));
-    else saveStudents((ss) => [...ss, data]);
-    setShowStudentForm(false);
-    setEditStudent(null);
+    if (editStudent) {
+      updateStudent.mutate(
+        { id: String(data.id), student: data as unknown as StudentRecord },
+        {
+          onSuccess: () => {
+            setShowStudentForm(false);
+            setEditStudent(null);
+          },
+        },
+      );
+    } else {
+      createStudent.mutate(data as unknown as StudentRecord, {
+        onSuccess: () => {
+          setShowStudentForm(false);
+          setEditStudent(null);
+        },
+      });
+    }
   };
 
   const toggleStudentStatus = (s: string) =>
@@ -246,14 +270,25 @@ export default function Students() {
             />
 
             <ErrorBoundary>
-              <StudentList
-                students={filteredStudents}
-                layout={settings.defaultViewLayout}
-                onEdit={(s: Student) => { setEditStudent(s); setShowStudentForm(true); }}
-                onDelete={(id: string) => saveStudents((ss) => ss.filter((s) => s.id !== id))}
-                onBulkDelete={(ids) => saveStudents((ss) => ss.filter((s) => !ids.includes(s.id)))}
-                onBulkStatusChange={(ids, status) => saveStudents((ss) => ss.map((s) => ids.includes(s.id) ? { ...s, status } : s))}
-              />
+              {isLoading ? (
+                <p className="text-sm text-muted-foreground px-1">Loading students…</p>
+              ) : (
+                <StudentList
+                  students={filteredStudents}
+                  layout={settings.defaultViewLayout}
+                  onEdit={(s: Student) => { setEditStudent(s); setShowStudentForm(true); }}
+                  onDelete={(id: string) => deleteStudent.mutate(String(id))}
+                  onBulkDelete={(ids) => ids.forEach((id) => deleteStudent.mutate(String(id)))}
+                  onBulkStatusChange={(ids, status) => {
+                    for (const id of ids) {
+                      const student = students.find((s) => s.id === id);
+                      if (student) {
+                        updateStudent.mutate({ id: String(id), student: { ...student, status } as unknown as StudentRecord });
+                      }
+                    }
+                  }}
+                />
+              )}
             </ErrorBoundary>
           </motion.div>
         ) : activeTab === "analytics" ? (
@@ -295,9 +330,7 @@ export default function Students() {
       </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      {/* overlays/modals */}
       <AnimatePresence>
-        {/* Student Form Modal */}
         {showStudentForm && (
           <StudentForm
             student={editStudent ?? undefined}

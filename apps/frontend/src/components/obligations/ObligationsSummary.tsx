@@ -3,9 +3,8 @@ import {
   BarChart2, TrendingUp, Users, Layers,
   Search, Filter, ArrowUpRight, Receipt, AlertCircle, LucideIcon
 } from "lucide-react";
-import { MOCK_USERS, ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from "../../lib/obligationsData";
-import { SAMPLE_USERS } from "../../lib/usersData";
-import { getCollection } from "../../lib/db";
+import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from "../../lib/obligationsData";
+import { useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import ExportToolbar from "./ExportToolbar";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import useDebounce from "../../hooks/useDebounce";
@@ -97,16 +96,7 @@ export interface ObligationsSummaryProps {
 export default function ObligationsSummary({
   collections, obligationTypes, reps, mujtahids, wakalaTypes, distributions
 }: ObligationsSummaryProps) {
-  const users = useMemo(() => {
-    const live = getCollection("users", SAMPLE_USERS);
-    const merged = [...live];
-    MOCK_USERS.forEach((mu) => {
-      if (!merged.some((u) => String(u.id) === String(mu.id))) {
-        merged.push(mu as unknown as (typeof live)[number]);
-      }
-    });
-    return merged;
-  }, []);
+  const users = useMergedObligationUsers();
 
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo]     = useState("");

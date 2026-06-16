@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
 import { ATTENDANCE_STATUSES, AttendanceRecord } from "../../lib/attendanceData";
 import { SESSIONS_DATA } from "../../lib/sessionsData";
-import { getCollection } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import StatusBadge from "./StatusBadge";
 import StatusToggle from "./StatusToggle";
 import { AttendanceFilterState } from "./AttendanceFilters";
@@ -41,14 +41,7 @@ interface Session {
  * @returns {React.ReactElement} The rendered records table component.
  */
 export default function AttendanceRecords({ filters, role, records, setRecords }: AttendanceRecordsProps) {
-  let fetchedSessions: Session[] = [];
-  try {
-    fetchedSessions = getCollection("sessions", SESSIONS_DATA) || [];
-  } catch (error) {
-    console.error("Failed to fetch sessions for AttendanceRecords:", error);
-  }
-
-  const sessions = useMemo(() => fetchedSessions, [fetchedSessions]);
+  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

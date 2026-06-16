@@ -16,15 +16,24 @@ pnpm install          # install all workspaces
 pnpm dev              # frontend + backend via turbo
 pnpm build            # build shared → apps
 pnpm typecheck        # tsc all packages
+pnpm test             # Vitest — shared, backend, frontend
 ```
 
-CI runs the same typecheck + frontend lint — see **`mms-ci.md`**.
+CI runs typecheck + lint + test — see **`mms-ci.md`**.
 
 Per-app:
 
 ```bash
-cd apps/frontend && pnpm lint && pnpm typecheck
-cd apps/backend && pnpm dev
+cd apps/frontend && pnpm lint && pnpm typecheck && pnpm test
+cd apps/backend && pnpm dev && pnpm typecheck && pnpm test && pnpm lint
+```
+
+Helper scripts:
+
+```bash
+./restart_servers.sh              # Postgres + restart + health check
+./restart_servers.sh status       # check :3000 / :5173
+./scripts/stop_servers.sh          # stop dev servers
 ```
 
 ## Environment
@@ -34,17 +43,25 @@ cd apps/backend && pnpm dev
 | `VITE_API_URL` | frontend | dev default via Vite proxy `/api` → `:3000` |
 | `JWT_SECRET` | backend | **yes** — server refuses start without it |
 | `DATABASE_URL` | backend | default `postgresql://postgres:postgres@localhost:5432/mms` |
-| `ALLOWED_ORIGIN` | backend | production CORS |
+| `ALLOWED_ORIGIN` | backend | production CORS (must match frontend origin with `credentials: true`) |
 | `NODE_ENV` | backend | `production` tightens CORS |
-| `LOG_LEVEL` | backend | optional |
+| `LOG_LEVEL` | backend | optional — Fastify logger level |
+| `SEED_DEV_PASSWORD` | backend | optional — dev password for full seed users |
 
-Add `.env.example` files when introducing new vars — never commit real `.env`.
+Create `apps/backend/.env` locally — never commit real secrets. See root and per-app `.env.example`.
 
 ## Database
 
 - PostgreSQL — **not** SQLite (ignore stale `DATABASE_PATH` in Dockerfile until fixed).
-- Drizzle migrations run on backend startup.
-- Empty DB → seeds from `apps/backend/src/db/seeds.json`.
+- Drizzle DDL migrations in `migrations_drizzle/` — **journal entry required** in `meta/_journal.json`.
+- Data migrations `001–003` run on startup in `initDb()`.
+- Empty DB → legacy full seed from `seeds.json`; **new tenant onboard** uses `minimalSeeds.ts`.
+
+## Session / cookies (dev)
+
+- Auth uses httpOnly cookies `mms_access` / `mms_refresh` — frontend must use `credentials: 'include'` (`apiClient`).
+- Vite proxy forwards cookies and `x-forwarded-host` for tenant resolution.
+- Test tenant API with host header: `demo.localhost` (not bare `localhost`).
 
 ## Docker (backend)
 
@@ -59,8 +76,10 @@ Add `.env.example` files when introducing new vars — never commit real `.env`.
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET http://localhost:3000/health` | Liveness — used by `AuthContext` on load |
-| `GET /ready` | **Target** — DB connectivity for orchestrators (`mms-observability.md`) |
+| `GET http://localhost:3000/health` | Liveness — process up |
+| `GET http://localhost:3000/ready` | Readiness — PostgreSQL ping; returns `503` if DB down |
+
+Deploy should curl `/ready` after PM2 restart (`mms-observability.md`).
 
 ## Production deploy (target)
 

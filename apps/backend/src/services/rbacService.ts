@@ -41,3 +41,8 @@ export function canWriteObject(user: User, key: string): boolean {
 export function canBulkSync(user: User): boolean {
   return user.role === 'admin';
 }
+
+/** Bulk sync download is admin-only — exports full tenant snapshot. */
+export function canDownloadBulkSync(user: User): boolean {
+  return canBulkSync(user);
+}

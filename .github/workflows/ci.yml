@@ -32,3 +32,55 @@ jobs:
 
       - run: pnpm lint
         working-directory: apps/backend
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mms
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @mms/shared build && pnpm --filter mms-backend build
+
+      - name: Start backend
+        env:
+          JWT_SECRET: ci-test-secret
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mms
+          NODE_ENV: test
+        run: |
+          cd apps/backend
+          node dist/index.js &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/health >/dev/null; then
+              echo "Backend ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Backend failed to start"
+          exit 1
+
+      - run: pnpm exec playwright test --project=api

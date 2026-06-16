@@ -4,10 +4,19 @@ import {
   loginUser,
   onboardUser,
   isOnboardingAvailable,
+  completeTwoFactorLogin,
   type User,
 } from '../services/authService.js';
 import { exchangeAuthHandoff } from '../services/authHandoffService.js';
+import { resendTwoFactorChallenge } from '../services/twoFactorService.js';
 import { resolveSubdomainFromRequest } from '../utils/tenantContext.js';
+import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from '../services/authCookieService.js';
+import { authenticateTenant } from '../middleware/authenticate.js';
+import { deleteAuthArtifact } from '../services/authArtifactService.js';
+import { getJwtExpiresIn } from '../services/globalSettingsService.js';
+import { getPublicUserById } from '../services/userService.js';
+import { runWithTenant } from '../utils/tenantContext.js';
+import { rotateRefreshToken, validateRefreshToken } from '../services/twoFactorService.js';
 
 interface LoginBody {
   email?: string;
@@ -30,7 +39,6 @@ interface OnboardBody {
   footerText?: string;
 }
 
-// Request validation schema for Login
 const loginSchema: FastifySchema = {
   body: {
     type: 'object',
@@ -42,7 +50,6 @@ const loginSchema: FastifySchema = {
   }
 };
 
-// Request validation schema for Onboarding
 const onboardSchema: FastifySchema = {
   body: {
     type: 'object',
@@ -65,13 +72,6 @@ const onboardSchema: FastifySchema = {
   }
 };
 
-/**
- * Register auth routes on the Fastify instance.
- *
- * @param {FastifyInstance} fastify - The fastify instance.
- * @param {FastifyPluginOptions} _options - Plugin options.
- * @returns {Promise<void>}
- */
 const AUTH_RATE_LIMIT = {
   max: 10,
   timeWindow: '1 minute' as const,
@@ -85,103 +85,166 @@ export default async function authRoutes(
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
     inner.post<{ Body: LoginBody }>('/login', { schema: loginSchema }, async (request, reply) => {
-    const { email, password } = request.body;
-    const subdomain = resolveSubdomainFromRequest(
-      request.hostname,
-      request.headers['x-forwarded-host']
-    );
+      const { email, password } = request.body;
+      const subdomain = resolveSubdomainFromRequest(
+        request.hostname,
+        request.headers['x-forwarded-host']
+      );
 
-    if (!subdomain) {
-      return reply.status(400).send({
+      if (!subdomain) {
+        return reply.status(400).send({
+          type: 'invalid_credentials',
+          message: 'Sign in on your madrasa subdomain (e.g. your-madrasa.localhost).',
+        });
+      }
+
+      const result = await loginUser(email!, password!, subdomain, fastify.jwt, reply);
+
+      if (result) {
+        if (result.requires2FA) {
+          return reply.send({
+            user: result.user,
+            requires2FA: true,
+            challengeId: result.challengeId,
+          });
+        }
+        return reply.send({ user: result.user, requires2FA: false });
+      }
+
+      return reply.status(401).send({
         type: 'invalid_credentials',
-        message: 'Sign in on your madrasa subdomain (e.g. your-madrasa.localhost).',
+        message: 'Invalid email or password'
       });
-    }
-
-    const result = await loginUser(email!, password!, subdomain, fastify.jwt);
-
-    if (result) {
-      return reply.send(result);
-    }
-
-    return reply.status(401).send({
-      type: 'invalid_credentials',
-      message: 'Invalid email or password'
-    });
     });
 
     inner.post<{ Body: OnboardBody }>('/onboard', { schema: onboardSchema }, async (request, reply) => {
-    const body = request.body;
+      const body = request.body;
 
-    try {
-      const result = await onboardUser(
-        {
-          email: body.email!,
-          adminName: body.adminName!,
-          password: body.password!,
-          subdomain: body.subdomain!,
-          madrasaName: body.madrasaName!,
-          tagline: body.tagline,
-          country: body.country,
-          primaryColor: body.primaryColor,
-          secondaryColor: body.secondaryColor,
-          logoUrl: body.logoUrl,
-          adminPhone: body.adminPhone,
-          website: body.website,
-          footerText: body.footerText,
-        },
-        fastify.jwt
-      );
-      return reply.send(result);
-    } catch (error: unknown) {
-      const err = error as Error & { statusCode?: number };
-      const statusCode = err.statusCode ?? 500;
-      return reply.status(statusCode).send({
-        type: statusCode === 409 ? 'conflict' : 'server_error',
-        message: err.message || 'Onboarding failed'
-      });
-    }
+      try {
+        const result = await onboardUser(
+          {
+            email: body.email!,
+            adminName: body.adminName!,
+            password: body.password!,
+            subdomain: body.subdomain!,
+            madrasaName: body.madrasaName!,
+            tagline: body.tagline,
+            country: body.country,
+            primaryColor: body.primaryColor,
+            secondaryColor: body.secondaryColor,
+            logoUrl: body.logoUrl,
+            adminPhone: body.adminPhone,
+            website: body.website,
+            footerText: body.footerText,
+          },
+          fastify.jwt,
+          reply
+        );
+        return reply.send(result);
+      } catch (error: unknown) {
+        const err = error as Error & { statusCode?: number };
+        const statusCode = err.statusCode ?? 500;
+        return reply.status(statusCode).send({
+          type: statusCode === 409 ? 'conflict' : 'server_error',
+          message: err.message || 'Onboarding failed'
+        });
+      }
+    });
+
+    inner.post<{ Body: { challengeId?: string; code?: string } }>('/2fa/verify', async (request, reply) => {
+      const { challengeId, code } = request.body ?? {};
+      if (!challengeId || !code) {
+        return reply.status(400).send({ message: 'challengeId and code are required' });
+      }
+      const result = await completeTwoFactorLogin(challengeId, code, fastify.jwt, reply);
+      if (!result) {
+        return reply.status(401).send({ message: 'Invalid or expired verification code' });
+      }
+      return reply.send({ user: result.user, requires2FA: false });
+    });
+
+    inner.post<{ Body: { challengeId?: string } }>('/2fa/resend', async (request, reply) => {
+      const challengeId = request.body?.challengeId;
+      if (!challengeId) {
+        return reply.status(400).send({ message: 'challengeId is required' });
+      }
+      const ok = await resendTwoFactorChallenge(challengeId);
+      if (!ok) {
+        return reply.status(404).send({ message: 'Challenge not found or expired' });
+      }
+      return reply.send({ success: true });
     });
   });
 
-  // Logout route (stateless JWT — client discards token)
   fastify.post('/logout', async (_request, reply) => {
+    clearAuthCookies(reply);
     return reply.send({ success: true });
   });
 
-  // Get current user (protected)
-  fastify.get('/me', async (request, reply) => {
-    try {
-      await request.jwtVerify();
-      return reply.send({
-        user: request.user as User,
-        isAuthenticated: true
-      });
-    } catch (error) {
-      return reply.status(401).send({
-        type: 'auth_required',
-        message: 'Session expired or invalid token'
-      });
-    }
+  fastify.get('/me', { preHandler: authenticateTenant }, async (request, reply) => {
+    return reply.send({
+      user: request.user as User,
+      isAuthenticated: true
+    });
   });
 
-  // Whether first-time onboarding is still available (no admin yet)
+  fastify.post('/refresh', async (request, reply) => {
+    const refreshToken = request.cookies?.[REFRESH_COOKIE];
+    if (!refreshToken) {
+      return reply.status(401).send({ type: 'auth_required', message: 'Refresh token missing' });
+    }
+
+    const subdomain = resolveSubdomainFromRequest(
+      request.hostname,
+      request.headers['x-forwarded-host'],
+    );
+    if (!subdomain) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Invalid refresh context' });
+    }
+
+    const validated = await validateRefreshToken(refreshToken, subdomain);
+    if (!validated) {
+      clearAuthCookies(reply);
+      return reply.status(401).send({ type: 'auth_required', message: 'Invalid refresh token' });
+    }
+
+    await deleteAuthArtifact(validated.artifactId);
+
+    const user = await runWithTenant(subdomain, () =>
+      getPublicUserById(validated.payload.userId),
+    );
+    if (!user || user.workspaceSubdomain.toLowerCase() !== subdomain.toLowerCase()) {
+      clearAuthCookies(reply);
+      return reply.status(401).send({ type: 'auth_required', message: 'Invalid refresh token' });
+    }
+
+    const accessExpiresIn = await getJwtExpiresIn();
+    const rotated = await rotateRefreshToken(refreshToken, user, fastify.jwt, accessExpiresIn);
+    if (!rotated) {
+      clearAuthCookies(reply);
+      return reply.status(401).send({ type: 'auth_required', message: 'Invalid refresh token' });
+    }
+
+    setAuthCookies(reply, rotated.accessToken, rotated.refreshToken);
+    return reply.send({ user });
+  });
+
   fastify.get('/onboarding-status', async (_request, reply) => {
     const available = await isOnboardingAvailable();
     return reply.send({ available });
   });
 
-  // Exchange one-time handoff code after cross-subdomain onboarding redirect
   fastify.post<{ Body: { code?: string } }>('/handoff', async (request, reply) => {
     const code = request.body?.code;
     if (!code) {
       return reply.status(400).send({ message: 'Handoff code is required' });
     }
-    const result = exchangeAuthHandoff(code);
+    const result = await exchangeAuthHandoff(code);
     if (!result) {
       return reply.status(401).send({ message: 'Invalid or expired handoff code' });
     }
-    return reply.send(result);
+    const { establishSession } = await import('../services/authService.js');
+    await establishSession(result.user, fastify.jwt, reply, true);
+    return reply.send({ user: result.user });
   });
-
 }

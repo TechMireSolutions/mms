@@ -18,8 +18,9 @@ import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { SAMPLE_ENROLLMENTS, Enrollment } from "../lib/enrollmentData";
 import { STUDENTS } from "../lib/studentsData";
-import { getCollection, saveCollection } from "../lib/db";
+import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
+import { useStudentsCollection } from "../hooks/useStudents";
 import { useEnrollmentViewerRole } from "@/hooks/useViewerRole";
 
 /**
@@ -45,7 +46,8 @@ export default function Enrollments() {
   const role = useEnrollmentViewerRole();
   const { can } = usePermissions();
   const canWriteEnrollments = can("enrollments.write");
-  const enrollments = useLiveCollection("enrollments", SAMPLE_ENROLLMENTS);
+  const enrollments = useLiveCollection("enrollments");
+  const students = useStudentsCollection();
   const [viewing, setViewing]         = useState<Enrollment | null>(null);
   const [subTab, setSubTab]           = useState("fields");
 
@@ -65,8 +67,7 @@ export default function Enrollments() {
     saveEnrollments((prev) => [enrollment, ...prev]);
     
     // Update student's enrolledSessions in localStorage
-    const currentStudents = getCollection("students", STUDENTS);
-    const updatedStudents = currentStudents.map((s) => {
+    const updatedStudents = students.map((s) => {
       if (s.id === enrollment.studentId) {
         const enrolled = s.enrolledSessions || [];
         if (!enrolled.includes(enrollment.sessionId)) {

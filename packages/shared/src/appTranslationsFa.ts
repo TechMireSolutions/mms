@@ -44,6 +44,7 @@ export const APP_TRANSLATIONS_FA = {
   "common.search": "جستجو",
   "common.export": "خروجی",
   "common.retry": "تلاش مجدد",
+  "common.loading": "در حال بارگذاری…",
 
   "auth.signIn": "ورود",
   "auth.email": "ایمیل",

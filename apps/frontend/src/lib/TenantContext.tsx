@@ -7,6 +7,7 @@ import {
   type PublicBranding,
 } from "@mms/shared";
 import { cachePublicBranding } from "./db";
+import { apiJson } from "./apiClient";
 import { getAppDomain, getTenantUrlOptions } from "./tenantConfig";
 
 interface PublicWorkspace {
@@ -53,13 +54,11 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     let cancelled = false;
     setWorkspaceLoading(true);
 
-    void fetch(`/api/workspace/by-subdomain/${encodeURIComponent(subdomain)}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Workspace not found");
-        const data = (await res.json()) as {
-          workspace: PublicWorkspace;
-          branding?: PublicBranding;
-        };
+    void apiJson<{
+      workspace: PublicWorkspace;
+      branding?: PublicBranding;
+    }>(`/api/workspace/by-subdomain/${encodeURIComponent(subdomain)}`)
+      .then((data) => {
         if (!cancelled) {
           if (data.branding) {
             cachePublicBranding(data.branding);

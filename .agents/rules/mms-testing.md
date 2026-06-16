@@ -6,55 +6,69 @@ trigger: model_decision
 
 ## Current state
 
-`pnpm test` runs Vitest in `@mms/shared` and `mms-backend` (rbac + `/health`/`/ready`). No e2e or broad route coverage yet — adopt incrementally per table below.
+`pnpm test` runs Vitest across the monorepo:
+
+| Package | Coverage |
+|---------|----------|
+| `@mms/shared` | permissions, utils |
+| `mms-backend` | rbac, health/ready, security, auth integration, twoFactor (~25+ tests) |
+| `mms-frontend` | `apiClient` credentials, hooks (~5 tests) |
+| `e2e/` | Playwright smoke + interactive specs (`pnpm exec playwright test`) |
+
+Expand Playwright for login/onboard/save flows when touching auth or critical paths.
+
+## Frontend test env
+
+`apps/frontend/vitest.config.ts` uses **`happy-dom`** (not `node`) so `localStorage` and DOM APIs work in hook/client tests.
+
+```ts
+// Mock fetch at boundary — do not hit real API
+globalThis.fetch = async (_input, init) => { ... };
+const { apiFetch } = await import('../lib/apiClient');
+```
 
 ## What to test (priority)
 
-| Layer | Tool (target) | Scope |
-|-------|---------------|-------|
-| `@mms/shared` pure helpers | Vitest | `formatDate`, `parsePhoneNumber`, `mergeGlobalSettings`, `mergeBrandingSettings`, validators |
-| Backend services | Vitest + test DB or mocks | `userService`, `rbacService`, `authService`, merge/normalize on persist |
-| API routes | Fastify `inject()` | Auth, RBAC denial, validation errors, tenant key scoping |
-| Frontend hooks | Vitest + RTL | `useTranslation`, `useSortedFields` (pure wrappers) |
+| Layer | Tool | Scope |
+|-------|------|-------|
+| `@mms/shared` pure helpers | Vitest | merge, format, validators, permissions |
+| Backend services | Vitest + mocks | `rbacService`, `twoFactorService.validateRefreshToken`, auth artifacts |
+| API routes | Fastify `inject()` | Auth, refresh, RBAC denial, tenant binding, validation errors |
+| Frontend hooks | Vitest + happy-dom | `apiClient`, Query hook queryFn (mock fetch) |
 | Critical flows | Playwright (target) | Login, onboard, save settings, contact create |
 
 ## Conventions
 
-- Colocate: `foo.test.ts` next to `foo.ts`, or `__tests__/foo.test.ts`
+- Colocate: `foo.test.ts` next to `foo.ts`
 - **No `any`** in tests — same strict TS as production
-- Prefer testing **pure functions** in `@mms/shared` first (highest ROI, no UI)
-- Mock `localStorage` / `fetch` at boundaries — do not hit production APIs in unit tests
-- Seeds: use minimal fixtures aligned with `StoredUser` shape (`mms-auth.md`)
+- Mock `localStorage` / `fetch` at boundaries
+- Seeds: minimal fixtures aligned with `StoredUser` shape (`mms-auth.md`)
 
 ## When agents must add tests
 
 | Trigger | Requirement |
 |---------|-------------|
 | User explicitly asks | Add tests per request |
-| New non-trivial pure export in `@mms/shared` | Unit test in same PR |
+| New non-trivial pure export in `@mms/shared` | Unit test |
 | Bug fix in shared merge/validation logic | Regression test |
 | New RBAC or auth rule | Route test proving deny/allow |
+| New `apiClient` consumer or auth flow change | Integration or unit test at boundary |
 
-Otherwise: `antigravity-global.md` — tests not required for UI-only changes.
+Otherwise: UI-only changes do not require tests unless user asks.
 
-## CI (target)
+## CI
 
-When `pnpm test` exists at root:
-
-```yaml
-- run: pnpm test
-```
-
-Until then, `mms-ci.md` runs typecheck + frontend lint only.
+`.github/workflows/ci.yml` runs `pnpm typecheck`, `pnpm test`, and lint on frontend + backend.
 
 ## Banned
 
 - Tests that depend on real WhatsApp / Puppeteer in CI
 - Committing `.env` or live credentials in fixtures
-- Snapshot tests of entire pages (brittle) — prefer interaction tests on critical paths
+- Full-page snapshot tests — prefer interaction tests on critical paths
 
 ## Checklist (when adding tests)
 
 - [ ] `pnpm test` passes locally
-- [ ] New shared pure helpers have at least one happy + one edge case
+- [ ] Frontend tests use `happy-dom` env (default in vitest.config)
+- [ ] New shared pure helpers: happy + edge case
 - [ ] Auth/RBAC tests cover `403`/`401` response `type`

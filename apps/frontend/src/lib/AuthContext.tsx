@@ -1,9 +1,10 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { syncDatabase } from './db';
-import { clear2FAState, mark2FAVerified } from './twoFactor';
+import { clear2FAState, mark2FAVerified, setPendingChallengeId } from './twoFactor';
 import { type User, type Workspace } from '@mms/shared';
 import { appNavigate } from './appNavigate';
 import { ROUTES } from './routes';
+import { apiFetch, apiJson } from './apiClient';
 
 export interface AuthError {
   type: 'invalid_credentials' | 'auth_required' | 'connection_error' | 'user_not_registered';
@@ -18,7 +19,7 @@ export interface AuthContextType {
   authError: AuthError | null;
   appPublicSettings: unknown | null;
   authChecked: boolean;
-  login: (email: string, password: string) => Promise<{ requires2FA: boolean }>;
+  login: (email: string, password: string) => Promise<{ requires2FA: boolean; challengeId?: string }>;
   logout: (shouldRedirect?: boolean) => void;
   navigateToLogin: () => void;
   checkUserAuth: () => Promise<void>;
@@ -42,7 +43,6 @@ export interface AuthContextType {
 }
 
 export interface OnboardResult {
-  token: string;
   user: User;
   workspace: Workspace;
   handoffCode: string;
@@ -50,14 +50,6 @@ export interface OnboardResult {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/**
- * AuthProvider component that wraps the application and provides real authentication state.
- * Syncs with the standalone backend API endpoints and handles JWT tokens.
- *
- * @param props - React component props.
- * @param props.children - The children components to render inside the provider.
- * @returns The rendered provider element.
- */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -65,16 +57,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState<boolean>(false);
   const [authError, setAuthError] = useState<AuthError | null>(null);
   const [authChecked, setAuthChecked] = useState<boolean>(false);
-  const [appPublicSettings, setAppPublicSettings] = useState<unknown | null>({
-    id: 'mock-app-id',
-    public_settings: {}
-  });
+  const [appPublicSettings, setAppPublicSettings] = useState<unknown | null>(null);
 
-  const checkAppState = async (): Promise<void> => {
-    // Basic health check to ensure API is online
+  const checkAppState = useCallback(async (): Promise<void> => {
     try {
       setIsLoadingPublicSettings(true);
-      const response = await fetch('/health');
+      const response = await apiFetch('/health');
       if (response.ok) {
         setAppPublicSettings({ id: 'app-online', public_settings: {} });
       }
@@ -83,85 +71,87 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoadingPublicSettings(false);
     }
-  };
+  }, []);
 
-  const checkUserAuth = async (): Promise<void> => {
+  const applyAuthSession = useCallback(async (authUser: User): Promise<void> => {
+    setUser(authUser);
+    setIsAuthenticated(true);
+    setAuthChecked(true);
+    localStorage.setItem('mms_user', JSON.stringify(authUser));
+    localStorage.removeItem('mms_token');
+    // Background sync — must not block the UI from becoming interactive
+    void syncDatabase();
+  }, []);
+
+  const checkUserAuth = useCallback(async (): Promise<void> => {
     setIsLoadingAuth(true);
     setAuthError(null);
-    const token = localStorage.getItem('mms_token');
-    
-    if (!token) {
-      setUser(null);
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-      setIsLoadingAuth(false);
-      return;
-    }
 
     try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await apiFetch('/api/auth/me');
 
       if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        setIsAuthenticated(true);
-        localStorage.setItem('mms_user', JSON.stringify(data.user));
-        
-        // Seeding / updates local database from server in the background
-        await syncDatabase(token);
-      } else {
-        // Token is invalid/expired
-        localStorage.removeItem('mms_token');
+        const data = await response.json() as { user: User };
+        await applyAuthSession(data.user);
+      } else if (response.status === 401) {
+        setUser(null);
+        setIsAuthenticated(false);
         localStorage.removeItem('mms_user');
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.warn('Network error checking auth, trying local cache:', error);
-      const cachedUser = localStorage.getItem('mms_user');
-      if (cachedUser) {
-        setUser(JSON.parse(cachedUser));
-        setIsAuthenticated(true);
       } else {
         setUser(null);
         setIsAuthenticated(false);
       }
+    } catch {
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setAuthChecked(true);
       setIsLoadingAuth(false);
     }
-  };
+  }, [applyAuthSession]);
 
-  const login = async (email: string, password: string): Promise<{ requires2FA: boolean }> => {
+  const login = async (email: string, password: string): Promise<{ requires2FA: boolean; challengeId?: string }> => {
     setIsLoadingAuth(true);
     setAuthError(null);
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await apiFetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       if (response.ok) {
-        const data = await response.json() as { token: string; user: User; requires2FA?: boolean };
-        await applyAuthSession(data.token, data.user);
-        return { requires2FA: data.requires2FA === true };
-      } else {
-        const errorData = await response.json();
-        const errObj: AuthError = { type: 'invalid_credentials', message: (errorData as { message?: string }).message || 'Login failed' };
-        setAuthError(errObj);
-        throw new Error(errObj.message);
+        const data = await response.json() as {
+          user: User;
+          requires2FA?: boolean;
+          challengeId?: string;
+        };
+
+        if (data.requires2FA && data.challengeId) {
+          clear2FAState();
+          setPendingChallengeId(data.challengeId);
+          setUser(data.user);
+          setIsAuthenticated(false);
+          setAuthChecked(true);
+          return { requires2FA: true, challengeId: data.challengeId };
+        }
+
+        await applyAuthSession(data.user);
+        mark2FAVerified();
+        return { requires2FA: false };
       }
+
+      const errorData = await response.json() as { message?: string };
+      const errObj: AuthError = {
+        type: 'invalid_credentials',
+        message: errorData.message || 'Login failed',
+      };
+      setAuthError(errObj);
+      throw new Error(errObj.message);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to connect to authentication server';
-      const errObj: AuthError = { type: 'connection_error', message };
-      setAuthError(errObj);
+      if (!authError) {
+        setAuthError({ type: 'connection_error', message });
+      }
       throw error;
     } finally {
       setIsLoadingAuth(false);
@@ -175,22 +165,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setIsAuthenticated(false);
     setAuthChecked(true);
-    
-    // Fire-and-forget server side logout
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+
+    void apiFetch('/api/auth/logout', { method: 'POST' });
 
     if (shouldRedirect) {
       appNavigate(ROUTES.login, { replace: true });
     }
-  };
-
-  const applyAuthSession = async (token: string, authUser: User): Promise<void> => {
-    localStorage.setItem('mms_token', token);
-    localStorage.setItem('mms_user', JSON.stringify(authUser));
-    setUser(authUser);
-    setIsAuthenticated(true);
-    setAuthChecked(true);
-    await syncDatabase(token);
   };
 
   const onboard = async (data: {
@@ -209,35 +189,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     footerText?: string;
   }): Promise<OnboardResult> => {
     setAuthError(null);
-    const response = await fetch('/api/auth/onboard', {
+    return apiJson<OnboardResult>('/api/auth/onboard', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Onboarding failed');
-    }
-
-    return (await response.json()) as OnboardResult;
   };
 
   const exchangeHandoff = async (code: string): Promise<void> => {
     setAuthError(null);
-    const response = await fetch('/api/auth/handoff', {
+    const data = await apiJson<{ user: User }>('/api/auth/handoff', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code }),
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Sign-in handoff failed');
-    }
-
-    const data = (await response.json()) as { token: string; user: User };
-    await applyAuthSession(data.token, data.user);
+    await applyAuthSession(data.user);
     mark2FAVerified();
   };
 
@@ -245,11 +209,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     appNavigate(ROUTES.login, { replace: true });
   };
 
-  // Run initial check once on mount
   useEffect(() => {
     void checkAppState();
     void checkUserAuth();
-  }, []);
+  }, [checkAppState, checkUserAuth]);
 
   return (
     <AuthContext.Provider value={{
@@ -273,12 +236,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-/**
- * Custom hook to consume the authentication context.
- * Throws an error if used outside an AuthProvider.
- *
- * @returns The active AuthContext values.
- */
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {

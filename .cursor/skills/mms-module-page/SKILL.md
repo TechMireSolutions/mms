@@ -12,22 +12,37 @@ Operations  |  Analytics  |  Configuration
                                     └─ Fields | Preferences
 ```
 
-Reference implementations: `apps/frontend/src/pages/Contacts.tsx`, `Students.tsx`, `Finance.tsx`.
+Reference implementations:
+
+| Module | Data layer |
+|--------|------------|
+| `Contacts.tsx` | `useLiveCollection` (localStorage) |
+| `Students.tsx` | `useStudents` + `useStudentMutations` (REST + Query) |
+| `Finance.tsx` | `useLiveCollection` |
 
 ## Checklist
 
 ```
-- [ ] Page in apps/frontend/src/pages/ — lazy route in App.tsx
-- [ ] Nav entry in `lib/navConfig.tsx` (standalone or Academics `subItems`; set `moduleId`)
-- [ ] Registry: `SYSTEM_MODULES` + `SYSTEM_MODULE_NAV` + `enabledModules` default in `@mms/shared`
+- [ ] Page in apps/frontend/src/pages/ — lazy route in HostRoutes.tsx
+- [ ] Nav entry in lib/navConfig.tsx (standalone or Academics subItems; set moduleId)
+- [ ] Registry: SYSTEM_MODULES + SYSTEM_MODULE_NAV + enabledModules default in @mms/shared
 - [ ] PageHeader with unconditional actions in .actions
 - [ ] Operations: CRUD/list views
-- [ ] Analytics: ModuleReports / KPI components from components/reports/
+- [ ] Analytics: KPISummary(category) + ModuleReports from components/reports/
 - [ ] Configuration: *Settings panel (Fields + Preferences sub-tabs)
-- [ ] Data via getCollection / useLiveCollection — not one-shot useState
+- [ ] Data: useLiveCollection OR TanStack Query — not one-shot useState
+- [ ] Internal API via apiClient (mms-frontend.mdc)
 - [ ] Module settings object: {module}_settings via saveObject
 - [ ] Types/settings defaults in packages/shared/src/settingsTypes.ts
 ```
+
+## Data layer choice
+
+| Scenario | Pattern |
+|----------|---------|
+| Module has `/api/{resource}` routes | Query hooks in `hooks/use{Resource}.ts` — see `useStudents.ts` |
+| Module uses generic `/api/db/collections` | `useLiveCollection` + `saveCollection` |
+| Migrating to REST | Replace live collection in page only after hooks ship; sync localStorage if KPI views still read it |
 
 ## New module settings
 
@@ -47,22 +62,20 @@ Each tier is **module-scoped only** (`mms-module-isolation.mdc`):
 | Configuration | `{module}_settings`, fields, preferences |
 
 - `KPISummary` **inside Analytics tab only** — never above the tier tabs.
-- Use the module's own `category` (not `academic`). See isolation rule for the mapping table.
-- No cross-module Operations imports (e.g. Hasanat payouts on Finance).
+- Use the module's own `category` (not `academic`).
 
 ## Responsive tabs
 
-Wrap tier navigation in `ResponsiveAccordionTabs` — mobile accordion under each heading, desktop horizontal tabs. See `mms-ui-tabs.mdc`.
+Wrap tier navigation in `ResponsiveAccordionTabs` — `mms-ui-tabs.mdc`.
 
 ## Do not
 
 - Add a fourth top-level tab
 - Gate PageHeader CTAs on `activeTab`
-- Mount `*Settings` under `/settings` — Configuration tab only (see `mms-settings-navigation.mdc`)
-- Hardcode column/field lists — use registry
-- Hand-roll `flex border-b` tab bars — use `ResponsiveAccordionTabs`
-- Put reports/KPIs/widgets from other modules in any tier
+- Mount `*Settings` under `/settings` — Configuration tab only
+- Use raw `fetch('/api/...')` — use `apiClient`
+- Duplicate data paths (Query + `useLiveCollection` for same entity)
 
 ## Rules
 
-`mms-module-isolation.mdc`, `mms-ui-tabs.mdc`, `mms-settings-navigation.mdc`, `mms-config.mdc`, `mms-fields.mdc`
+`mms-module-isolation.mdc`, `mms-ui-tabs.mdc`, `mms-settings-navigation.mdc`, `mms-config.mdc`, `mms-query.mdc`

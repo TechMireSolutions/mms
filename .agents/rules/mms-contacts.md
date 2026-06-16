@@ -11,7 +11,7 @@ trigger: model_decision
 | Area | Path |
 |------|------|
 | Page | `pages/Contacts.tsx` |
-| Config | `lib/ContactConfigContext.tsx` (provider in `App.tsx` only) |
+| Config | `lib/ContactConfigContext.tsx` + `lib/contactConfig/*` (provider in `App.tsx` only) |
 | Field store | `lib/contactFieldsStore.ts` |
 | Types | `@mms/shared/contactTypes.ts` |
 | Forms | `components/contacts/form/*Tab.tsx`, `FormPrimitives.tsx` |

@@ -4,7 +4,25 @@ trigger: model_decision
 
 # MMS Frontend
 
-App shell, bundles, and cross-cutting FE concerns. Specialized rules (`mms-ui-*`, `mms-contacts`, `mms-i18n`, etc.) own module/UI detail — this file complements them on shell and performance.
+App shell, bundles, and cross-cutting FE concerns. Module/UI detail lives in scoped rules (`mms-ui-*`, `mms-contacts`, `mms-query`, etc.).
+
+## API client (required)
+
+All **internal** MMS API calls use `lib/apiClient.ts`:
+
+```ts
+import { apiFetch, apiJson } from '@/lib/apiClient';
+
+const data = await apiJson<{ students: Student[] }>('/api/students');
+await apiFetch('/api/students/1', { method: 'DELETE' });
+```
+
+| Do | Don't |
+|----|-------|
+| `apiFetch` / `apiJson` with `credentials: 'include'` | Raw `fetch('/api/...')` in hooks, contexts, or lib helpers |
+| External OAuth (Google, etc.) | — may use raw `fetch` to third-party URLs only |
+
+Legacy `mms_token` in localStorage is sent as Bearer fallback — do not add new localStorage token writes.
 
 ## Bundle size
 
@@ -14,27 +32,56 @@ Dynamic `import()` for heavy libs — never static entry imports:
 
 ## Images
 
-Every image upload **must** be optimized client-side before persisting/uploading — single source of truth in `@mms/shared`:
+Every image upload **must** be optimized client-side before persisting — `@mms/shared`:
 
-- File inputs → `optimizeImage(file)` (resizes + encodes **AVIF**, falls back to WebP → original).
-- Canvas exports (croppers, generated images) → `canvasToOptimizedDataUrl(canvas, quality)` (AVIF → WebP).
-- Never call `canvas.toDataURL("image/webp"|"image/png")` or `canvas.toBlob` directly, and never persist a raw `File`/data URL straight from `FileReader`. Route through the shared helpers so format is consistent everywhere.
+- File inputs → `optimizeImage(file)` (AVIF → WebP → original)
+- Canvas exports → `canvasToOptimizedDataUrl(canvas, quality)`
+- Never persist raw `File`/`FileReader` data URLs or call `canvas.toDataURL` directly
 
-## Routing (`App.tsx`)
+## Routing
 
-- Lazy-load pages with `React.lazy` + `Suspense`.
-- No orphan pages without routes (`Enrollment.tsx` vs `Enrollments.tsx`).
-- Keep a **single** route-guard tree via `components/routing/HostRoutes` — remove dead imports (`PlaceholderPage`, duplicate `ProtectedRoute` wrappers) when editing `App.tsx`; do not delete `ProtectedRoute.tsx` itself (`mms-auth.md`).
+| Piece | Path |
+|-------|------|
+| Entry | `src/main.tsx` → `App.tsx` |
+| Route tree | `components/routing/HostRoutes.tsx` (apex vs tenant — single tree) |
+| Guards | `ProtectedRoute`, `GuestRoute`, tenant gates |
+| Path constants | `lib/routes.ts` |
+| Nav | `lib/navConfig.tsx` |
+
+- Lazy-load pages with `React.lazy` + `Suspense`
+- No orphan pages without routes
+- Do not add duplicate auth wrappers in `App.tsx` — guards live in `components/routing/` (`mms-auth.md`)
+
+## Provider tree (`App.tsx`)
+
+```
+AuthProvider → QueryClientProvider → Router → BrandingPaletteProvider → TenantProvider → ContactConfigProvider
+```
+
+`ContactConfigProvider` mounts **once** at root — never on child pages (`mms-contacts.md`).
 
 ## Data fetching
 
-| Data source | Pattern |
-|-------------|---------|
-| New REST endpoints | TanStack Query — **`mms-query.md`** |
-| Local collections | `getCollection` / `useLiveCollection` — **`mms-data-layer.md`** |
-| Cross-view refresh | `local-database-update` event |
+| Data | Pattern | Owner |
+|------|---------|-------|
+| Dedicated REST resource (students, workspace) | TanStack Query + `apiJson` | `mms-query.md` |
+| Local collections (most modules) | `useLiveCollection` + `saveCollection` | `mms-data-layer.md` |
+| Cross-view refresh (local) | `local-database-update` event | `mms-data-layer.md` |
+
+**Hybrid (students):** Query is source of truth; `useStudents` syncs to localStorage on fetch so KPI/reports stay consistent until those views migrate.
 
 Avoid bare `fetch` in `useEffect` for server state.
+
+## Large module files
+
+Split by concern — keep page files thin:
+
+| Module | Subfolder |
+|--------|-----------|
+| Contact config | `lib/contactConfig/` (profileMetrics, prefsStorage, validationSchema) |
+| Pinned widgets | `components/reports/pinnedWidgets/` (types, widgetDataUtils, widgetDefaults) |
+
+Re-export from the original entry file so imports stay stable.
 
 ## Real-time
 
@@ -51,14 +98,22 @@ Avoid bare `fetch` in `useEffect` for server state.
 
 ## Resilience & a11y
 
-- Wrap lazy route `Suspense` fallbacks with accessible loading text (`t('common.loading')`)
+- Lazy route `Suspense` fallbacks: accessible loading text (`t('common.loading')`)
 - Module pages: `ErrorBoundary` on Operations/Analytics content (`mms-observability.md`)
 - New UI: keyboard + `aria-label` baseline — `mms-a11y.md`
 
-## Bundle budget (target)
+## Testing
 
-Track main chunk size on `pnpm build`; heavy libs stay dynamic (`jspdf`, `xlsx`, `html2canvas`). Investigate regressions > 10% without new features.
+- Vitest env: `happy-dom` (`vitest.config.ts`) — provides `localStorage` for hook/client tests
+- Colocate `*.test.ts` next to source
+- Mock `fetch` at boundaries; test `apiClient` sends `credentials: 'include'`
 
 ## Quality gate
 
-After substantive edits: `pnpm lint` and `pnpm typecheck` in `apps/frontend`.
+After substantive edits:
+
+```bash
+cd apps/frontend && pnpm typecheck && pnpm lint && pnpm test
+```
+
+Track main chunk size on `pnpm build`; investigate regressions > 10% without new features.

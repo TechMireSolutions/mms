@@ -31,9 +31,9 @@ export default function QuestionBankPage(): React.JSX.Element {
   const PAGE_TABS = useModuleTierTabs();
   const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
-  const questions = useLiveCollection('questions', QUESTIONS);
-  const tests = useLiveCollection('tests', TESTS);
-  const results = useLiveCollection('assessment_results', RESULTS);
+  const questions = useLiveCollection('questions');
+  const tests = useLiveCollection('tests');
+  const results = useLiveCollection('assessment_results');
   const { categories } = useQuestionBankConfig(questions);
   const OPS_SUB_TABS = useMemo(
     () => [

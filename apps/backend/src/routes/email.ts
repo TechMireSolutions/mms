@@ -16,6 +16,7 @@ import {
   verifyEmailTransport,
 } from '../services/emailService.js';
 import { loadGlobalSettings } from '../services/globalSettingsService.js';
+import { authenticateTenant } from '../middleware/authenticate.js';
 
 const integrationBodySchema: FastifySchema = {
   body: {
@@ -59,13 +60,7 @@ export default async function emailRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  fastify.addHook('onRequest', async (request, reply) => {
-    try {
-      await request.jwtVerify();
-    } catch {
-      return reply.status(401).send({ type: 'auth_required', message: 'Authentication required' });
-    }
-  });
+  fastify.addHook('preHandler', authenticateTenant);
 
   fastify.get('/integration', async (request, reply) => {
     const user = request.user as User;

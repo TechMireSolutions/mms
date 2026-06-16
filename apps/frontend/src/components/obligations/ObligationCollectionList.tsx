@@ -1,12 +1,11 @@
 import React, { useState, useMemo, lazy, Suspense } from "react";
 import { Plus, Eye, Search, Receipt, Printer } from "lucide-react";
 import {
-  MOCK_CONTACTS, MOCK_CURRENCIES,
+  MOCK_CURRENCIES,
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
 } from "../../lib/obligationsData";
-import { CONTACTS } from "../../lib/contactsData";
-import { getCollection } from "../../lib/db";
 import useDebounce from "../../hooks/useDebounce";
+import { useMergedObligationContacts } from "../../hooks/useObligationLookups";
 
 const PrintInvoiceModal = lazy(() => import("./invoice/PrintInvoiceModal"));
 
@@ -42,16 +41,7 @@ export default function ObligationCollectionList({ collections, obligationTypes,
 
   const debouncedSearch = useDebounce(search, 300);
 
-  const contacts = useMemo(() => {
-    const live = getCollection("contacts", CONTACTS);
-    const merged = [...live];
-    MOCK_CONTACTS.forEach((mc) => {
-      if (!merged.some((c) => String(c.id) === String(mc.id))) {
-        merged.push(mc as unknown as (typeof live)[number]);
-      }
-    });
-    return merged;
-  }, []);
+  const contacts = useMergedObligationContacts();
 
   const getContact = (id?: string | number | null) => contacts.find((c) => String(c.id) === String(id));
   const getRep = (id: string) => reps.find((r) => r.id === id);

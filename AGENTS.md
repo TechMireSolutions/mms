@@ -16,7 +16,7 @@ bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
 .agent/              → symlink to .agents/ (Antigravity standard path)
 .agents/
   rules/             # behavioural rules (always_on + model_decision)
-  skills/            # 12 capability modules (SKILL.md per folder)
+  skills/            # 13 capability modules (SKILL.md per folder)
   workflows/         # multi-step procedures
   skills-manifest.json
 ```
@@ -39,12 +39,13 @@ Start here in Antigravity: **skill `antigravity-workspace`**
 | `rules/mms-core.md` | `rules/mms-core.mdc` |
 | `rules/mms-migration-status.md` | `rules/mms-migration-status.mdc` |
 
-## Skills (12)
+## Skills (13)
 
 | Skill | Purpose |
 |-------|---------|
 | `antigravity-workspace` | Where rules/skills live; sync policy |
 | `mms-dev-setup` | Install, run, env verify |
+| `mms-frontend` | React app shell, apiClient, Query vs localStorage, FE tests |
 | `mms-module-page` | Three-tier module pages |
 | `mms-contacts` | Contact CRM module |
 | `mms-fields-registry` | Fields & tabs |

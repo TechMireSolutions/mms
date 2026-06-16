@@ -63,12 +63,12 @@ export default function Users(): React.JSX.Element {
   );
   const viewerRole = useViewerRole();
   const isAdmin = useIsAdminViewer();
-  const rawUsers = useLiveCollection('users', DEFAULT_WORKSPACE_USERS);
+  const rawUsers = useLiveCollection('users');
   const users = useMemo(
     () => rawUsers.map((u) => normalizeWorkspaceUser(u as Partial<SystemUser> & { roles?: string[]; role?: string })),
     [rawUsers],
   );
-  const logs = useLiveCollection('user_activity_logs', DEFAULT_USER_ACTIVITY_LOGS);
+  const logs = useLiveCollection('user_activity_logs');
 
   const saveUsers = useCallback(
     (updater: SystemUser[] | ((prev: SystemUser[]) => SystemUser[])) => {

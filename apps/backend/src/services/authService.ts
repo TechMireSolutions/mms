@@ -1,21 +1,27 @@
-import { JWT } from '@fastify/jwt';
+import type { FastifyReply } from 'fastify';
+import type { JWT } from '@fastify/jwt';
+import { requiresTwoFactor } from '@mms/shared';
 import { validateCredentials, createUser, type PublicUser } from './userService.js';
 import { createWorkspace, getWorkspaceBySubdomain } from './workspaceService.js';
 import { createAuthHandoff } from './authHandoffService.js';
 import { saveObject } from '../db/database.js';
 import type { Workspace } from '@mms/shared';
-import { buildBrandingFromOnboarding, requiresTwoFactor } from '@mms/shared';
+import { buildBrandingFromOnboarding } from '@mms/shared';
 import { assertPasswordMeetsPolicy, getJwtExpiresIn, loadGlobalSettings } from './globalSettingsService.js';
 import { runWithTenant } from '../utils/tenantContext.js';
 import { seedTenantDefaults } from './tenantSeedService.js';
+import { createTwoFactorChallenge, issueRefreshToken } from './twoFactorService.js';
+import { setAuthCookies } from './authCookieService.js';
 
 /** Public user shape re-exported for route usage. */
 export type { PublicUser as User };
 
 export interface AuthResult {
-  token: string;
   user: PublicUser;
   requires2FA?: boolean;
+  challengeId?: string;
+  /** Legacy field — cookies are authoritative; omitted in new clients. */
+  token?: string;
 }
 
 export interface OnboardInput {
@@ -39,23 +45,51 @@ export interface OnboardResult extends AuthResult {
   handoffCode: string;
 }
 
+export async function establishSession(
+  user: PublicUser,
+  jwtSigner: JWT,
+  reply: FastifyReply,
+  twoFactorVerified = true,
+): Promise<AuthResult> {
+  const accessExpiresIn = await getJwtExpiresIn();
+  const accessToken = jwtSigner.sign(
+    { ...user, twoFactorVerified, tokenType: 'access' },
+    { expiresIn: accessExpiresIn },
+  );
+  const refreshToken = await issueRefreshToken(user);
+  setAuthCookies(reply, accessToken, refreshToken);
+  return { user };
+}
+
 export async function loginUser(
   email: string,
   password: string,
   workspaceSubdomain: string,
-  jwtSigner: JWT
+  jwtSigner: JWT,
+  reply: FastifyReply,
 ): Promise<AuthResult | null> {
   const user = await validateCredentials(email, password, workspaceSubdomain);
   if (!user) return null;
 
   const settings = await loadGlobalSettings();
-  const expiresIn = await getJwtExpiresIn();
-  const token = jwtSigner.sign(user, { expiresIn });
-  return {
-    token,
-    user,
-    requires2FA: requiresTwoFactor(settings, user),
-  };
+  if (requiresTwoFactor(settings, user)) {
+    const challengeId = await createTwoFactorChallenge(user);
+    return { user, requires2FA: true, challengeId };
+  }
+
+  return establishSession(user, jwtSigner, reply, true);
+}
+
+export async function completeTwoFactorLogin(
+  challengeId: string,
+  code: string,
+  jwtSigner: JWT,
+  reply: FastifyReply,
+): Promise<AuthResult | null> {
+  const { verifyTwoFactorChallenge } = await import('./twoFactorService.js');
+  const user = await verifyTwoFactorChallenge(challengeId, code);
+  if (!user) return null;
+  return establishSession(user, jwtSigner, reply, true);
 }
 
 /** Onboarding is always available for new, unused subdomains. */
@@ -65,7 +99,8 @@ export async function isOnboardingAvailable(): Promise<boolean> {
 
 export async function onboardUser(
   input: OnboardInput,
-  jwtSigner: JWT
+  jwtSigner: JWT,
+  reply: FastifyReply,
 ): Promise<OnboardResult> {
   const workspace = await createWorkspace({
     subdomain: input.subdomain,
@@ -103,10 +138,8 @@ export async function onboardUser(
     throw new Error('Failed to create workspace administrator.');
   }
 
-  const expiresIn = await getJwtExpiresIn();
-  const token = jwtSigner.sign(user, { expiresIn });
-  const authResult: AuthResult = { token, user };
-  const handoffCode = createAuthHandoff(authResult);
+  const authResult = await establishSession(user, jwtSigner, reply, true);
+  const handoffCode = await createAuthHandoff(authResult);
 
   return { ...authResult, workspace, handoffCode };
 }

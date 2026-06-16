@@ -2,7 +2,7 @@ import React from "react";
 import { Users, MapPin, Radio } from "lucide-react";
 import { upcomingSessions as defaultSessions, UpcomingSessionItem } from "../../lib/dashboardData";
 import { motion } from "framer-motion";
-import { getCollection } from "../../lib/db";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 /**
  * SessionsTable Component
@@ -12,13 +12,7 @@ import { getCollection } from "../../lib/db";
  * @returns {React.ReactElement} The sessions table widget.
  */
 export default function SessionsTable({ title }: { title?: string }) {
-  let sessions: UpcomingSessionItem[] = [];
-  try {
-    sessions = getCollection("upcoming_sessions", defaultSessions);
-  } catch (error) {
-    console.error("Failed to load upcoming sessions:", error);
-    sessions = defaultSessions;
-  }
+  const sessions = useLiveCollection<UpcomingSessionItem>("upcoming_sessions", defaultSessions);
 
   return (
     <section aria-labelledby="sessions-table-heading" className="bg-card rounded-xl border border-border">

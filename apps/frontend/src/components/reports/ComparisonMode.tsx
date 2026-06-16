@@ -7,10 +7,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
-import { getCollection } from "../../lib/db";
-import { Contact } from "../../lib/contactFields";
 import { CONTACTS } from "../../lib/contactsData";
+import { Contact } from "../../lib/contactFields";
 import { SESSIONS_DATA, Session } from "../../lib/sessionsData";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useContactConfig, calculateProfileHealth } from "../../lib/ContactConfigContext";
 
 interface ComparisonDataItem {
@@ -125,8 +125,8 @@ interface ComparisonModeProps {
 export default function ComparisonMode({ category, onClose }: ComparisonModeProps): React.JSX.Element {
   const { primary, secondary } = useBrandPalette();
   const { fieldConfig } = useContactConfig();
-  const contacts = useMemo<Contact[]>(() => getCollection("contacts", CONTACTS), []);
-  const sessions = useMemo<Session[]>(() => getCollection("sessions", SESSIONS_DATA), []);
+  const contacts = useLiveCollection<Contact>("contacts", CONTACTS);
+  const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
   const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(() => sessions.filter((s) => s.id !== "all").map(s => ({ id: s.id, name: s.name })), [sessions]);
 
   const LIFECYCLE_OPTIONS = useMemo(() => {

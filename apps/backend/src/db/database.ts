@@ -5,7 +5,7 @@ import { sql, eq } from 'drizzle-orm';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import * as schema from './schema.js';
-import { getDefaultCollectionsForSeed, getDefaultObjects } from './seeds.js';
+import { getMinimalCollectionsForSeed, getMinimalObjects } from './minimalSeeds.js';
 import {
   WORKSPACES_COLLECTION,
   tenantCollectionKey,
@@ -17,6 +17,8 @@ import { getRequestTenant } from '../utils/tenantContext.js';
 import { runMigration001 } from './migrations/001_migrate_notification_settings.js';
 import { runMigration002 } from './migrations/002_migrate_global_settings_fields.js';
 import { runMigration003 } from './migrations/003_migrate_multi_tenant.js';
+import { purgeExpiredAuthArtifacts } from '../services/authArtifactService.js';
+import { setDb } from './dbClient.js';
 
 function resolveCollectionStorageName(name: string): string {
   const tenant = getRequestTenant();
@@ -50,6 +52,7 @@ export async function initDb(): Promise<void> {
     });
     
     db = drizzle(pool, { schema });
+    setDb(db);
 
     // Run Drizzle migrations dynamically on start
     const __filename = fileURLToPath(import.meta.url);
@@ -61,6 +64,7 @@ export async function initDb(): Promise<void> {
     await runMigration001();
     await runMigration002();
     await runMigration003();
+    await purgeExpiredAuthArtifacts();
 
     // Check if seeding is necessary (if no collections exist)
     const results = await db.select({ count: sql<number>`count(*)` }).from(schema.collections);
@@ -86,12 +90,12 @@ export async function seedDatabase(): Promise<void> {
     // Seed using a transaction block for performance
     await runInTransaction(async () => {
       // Seed collections
-      for (const [name, data] of Object.entries(await getDefaultCollectionsForSeed())) {
+      for (const [name, data] of Object.entries(await getMinimalCollectionsForSeed())) {
         await saveCollection(name, data as unknown[]);
       }
 
       // Seed objects
-      for (const [key, data] of Object.entries(getDefaultObjects())) {
+      for (const [key, data] of Object.entries(getMinimalObjects())) {
         await saveObject(key, data);
       }
     });
@@ -228,6 +232,42 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
   } catch (error) {
     console.error('Error retrieving all database data:', error);
     throw error;
+  }
+}
+
+/**
+ * Resets only the current tenant's data and reseeds minimal defaults.
+ * Requires tenant context from the request host.
+ */
+export async function resetTenantData(): Promise<void> {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    throw new Error('Tenant context is required to reset workspace data');
+  }
+
+  const colRows = await listCollectionStorageNames();
+  for (const name of colRows) {
+    const parsed = parseTenantScopedStorageKey(name);
+    if (parsed?.subdomain === tenant) {
+      await deleteCollectionByStorageName(name);
+    }
+  }
+
+  const objKeys = await listObjectStorageKeys();
+  for (const key of objKeys) {
+    const parsed = parseTenantScopedStorageKey(key);
+    if (parsed?.subdomain === tenant) {
+      await deleteObjectByStorageKey(key);
+    }
+  }
+
+  const collections = await getMinimalCollectionsForSeed();
+  for (const [name, data] of Object.entries(collections)) {
+    if (name === WORKSPACES_COLLECTION) continue;
+    await saveCollection(name, data as unknown[]);
+  }
+  for (const [key, data] of Object.entries(getMinimalObjects())) {
+    await saveObject(key, data);
   }
 }
 

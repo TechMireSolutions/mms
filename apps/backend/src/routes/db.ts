@@ -10,7 +10,8 @@ import {
   SyncPayload
 } from '../services/dbSyncService.js';
 import type { User } from '../services/authService.js';
-import { canBulkSync, canWriteCollection, canWriteObject } from '../services/rbacService.js';
+import { canBulkSync, canDownloadBulkSync, canWriteCollection, canWriteObject } from '../services/rbacService.js';
+import { authenticateTenant } from '../middleware/authenticate.js';
 import {
   applyTitleCaseToContact,
   isServerOnlyObjectKey,
@@ -107,20 +108,18 @@ export default async function dbRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions
 ): Promise<void> {
-  // Add a hook to verify JWT for all db routes
-  fastify.addHook('preHandler', async (request, reply) => {
-    try {
-      await request.jwtVerify();
-    } catch (error) {
-      return reply.status(401).send({
-        type: 'auth_required',
-        message: 'Authentication is required to access database endpoints'
+  // JWT + tenant binding for all db routes
+  fastify.addHook('preHandler', authenticateTenant);
+
+  // Bulk sync download: admin only
+  fastify.get('/sync', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDownloadBulkSync(user)) {
+      return reply.status(403).send({
+        type: 'forbidden',
+        message: 'Only administrators can download a database snapshot',
       });
     }
-  });
-
-  // Bulk sync download: Get all data
-  fastify.get('/sync', async (_request, reply) => {
     try {
       const data = await fetchDatabaseSnapshot();
       return reply.send(data);
@@ -169,7 +168,7 @@ export default async function dbRoutes(
     }
     try {
       await resetToDefaults();
-      return reply.send({ success: true, message: 'Database reset to default seeds' });
+      return reply.send({ success: true, message: 'Workspace reset to minimal defaults' });
     } catch (error) {
       return reply.status(500).send({
         type: 'database_error',

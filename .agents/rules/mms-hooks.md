@@ -4,64 +4,78 @@ trigger: model_decision
 
 # MMS Hooks
 
-## `useLiveCollection(key, seed)`
+Colocate in `apps/frontend/src/hooks/`. Pure logic used in 2+ modules → extract to `@mms/shared`, keep hook as thin wrapper.
+
+## Server state (TanStack Query)
+
+| Hook | Purpose |
+|------|---------|
+| `useWorkspaceRegistry()` | Apex workspace list |
+| `useStudents()` | Student list from `/api/students` |
+| `useStudentMutations()` | create / update / delete students |
+| `useStudentCount()` | Count from `/api/students/count` |
+| `useContacts()` | Contact list from `/api/contacts` |
+| `useContactMutations()` | upsert / update / delete contacts |
+| `useContactsCollection()` | Query-first with localStorage fallback |
+
+Pattern: `enabled: isAuthenticated`, export `QUERY_KEY` constant, use `apiJson` in `queryFn` (`mms-query.md`).
+
+## `useLiveCollection(key, seed?)`
 
 Reactive read of a localStorage collection. Subscribes to `local-database-update`.
 
 ```ts
-// ✅ Reactive
-const students = useLiveCollection('students', STUDENTS);
+// ✅ Reactive (contacts, finance, etc.)
+const contacts = useLiveCollection('contacts');
 
 // ❌ Stale after external saves
-const [students] = useState(() => getCollection('students', STUDENTS));
+const [items] = useState(() => getCollection('contacts', CONTACTS));
 ```
 
-Use when a component must refresh when another view saves the same collection.
+**Note:** `Students.tsx` uses `useStudents` (Query) — not `useLiveCollection('students')`.
 
 ## `useSortedFields(registry, tabKey?)`
 
-Returns fields filtered by `enabled`, sorted by `order`, optionally scoped to a tab. Use in forms with `FormPrimitives` — not hardcoded field lists.
+Fields filtered by `enabled`, sorted by `order`. Use with `FormPrimitives` — not hardcoded field lists.
 
 ## `useGlobalSettings()`
 
-Reactive read of `global_settings` (incl. `enabledModules`, theme). Subscribes to `local-database-update`. Use in Sidebar, QuickActions, and any UI that filters by enabled modules.
-
-```ts
-const { enabledModules, theme } = useGlobalSettings();
-```
-
-Prefer `getGlobalSettings()` for one-shot reads outside React (merges with defaults).
+Reactive `global_settings` (incl. `enabledModules`, theme). One-shot reads outside React: `getGlobalSettings()`.
 
 ## `useBranding()`
 
-Reads branding CSS variables from `branding` object + `useBranding` injection. Do not hardcode primary colours in components.
+Branding CSS variables from `branding` object. Do not hardcode primary colours.
 
-## `useContactConfig()` / `useContactColumns()`
+## Contact config
 
-From `ContactConfigContext.tsx`. Requires provider at `App.tsx` root — never nest another provider on child pages.
+| Hook / export | Source |
+|---------------|--------|
+| `useContactConfig()` | `ContactConfigContext.tsx` |
+| `useContactColumns()` | same |
+| `useContactValidation()` | same |
+| `calculateProfileHealth`, schema builders | `lib/contactConfig/*` (re-exported from context) |
+
+Provider at `App.tsx` root only — never nest on child pages.
 
 ## `useBodyScrollLock(active?)`
 
-Locks background page scroll while a modal/overlay is mounted (reference-counted, scrollbar-width compensated). Call in every overlay; pass the open state for animated dialogs (`useBodyScrollLock(open)`). Pair with `overscroll-contain` on the scroll body. Never set `document.body.style.overflow` manually.
+Reference-counted scroll lock for modals. Pair with `overscroll-contain` on scroll body. Never set `document.body.style.overflow` manually.
 
 ## `useTranslation()`
 
-Returns `t`, `lang`, `dir`. **All new user-facing copy** uses `t('key')` — see `mms-i18n.md`. Entry paths force English regardless of stored language.
+Returns `t`, `lang`, `dir`. All new user-facing copy uses `t('key')` — `mms-i18n.md`.
 
 ## `usePermissions()` / `can()`
 
-Central permission hook — see `mms-rbac.md`. Delegates to `@mms/shared` `roleHasPermission`. Prefer `can('module.action')` over new inline `user.role ===` checks. Module-specific viewer tiers may still use `useViewerRole()` until registry-driven matrix covers all cases.
+Delegates to `@mms/shared` `roleHasPermission` — `mms-rbac.md`.
 
-## `useSettingsDraft` / preview hooks
+## Settings preview
 
-Settings panels: `useSettingsDraft` + `onPreview` — see `mms-config.md`. Listens to `settings-preview-update` via `useGlobalSettings` / `useBranding`.
+`useSettingsDraft`, `useBrandingDraft`, `useThemeSettingsDraft` — `mms-config.md`.
 
-## `useWorkspaceRegistry()`
+## New hooks checklist
 
-TanStack Query for apex workspace list — reference implementation (`mms-query.md`). New server-backed hooks follow this pattern.
-
-## New hooks
-
-- Colocate in `apps/frontend/src/hooks/`
-- If used in 2+ modules → move logic to `@mms/shared` (pure functions) and keep hook as thin wrapper
-- No polling inside hooks — use events or TanStack Query
+- [ ] No polling — events or TanStack Query
+- [ ] Internal API via `apiClient`
+- [ ] Export query keys when using Query
+- [ ] Test pure wrappers where ROI is high (`mms-testing.md`)

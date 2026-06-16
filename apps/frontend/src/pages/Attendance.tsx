@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import useConfigSubTabs from "@/hooks/useConfigSubTabs";
 import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
@@ -18,6 +18,7 @@ import AttendanceSettings from "../components/attendance/AttendanceSettings";
 import AuditLog from "../components/attendance/AuditLog";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
+import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { saveCollection, getObject, saveObject } from "../lib/db";
 import { ATTENDANCE_RECORDS, DEFAULT_ATT_SETTINGS, type AttendanceRecord } from "../lib/attendanceData";
 import { useLiveCollection } from "../hooks/useLiveCollection";
@@ -52,7 +53,7 @@ export default function Attendance() {
   const [activeOpsTab, setActiveOpsTab] = useState("mark");
   const [activeAnalyticsTab, setActiveAnalyticsTab] = useState("charts");
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const records = useLiveCollection("attendance_records", ATTENDANCE_RECORDS);
+  const records = useLiveCollection("attendance_records");
   const [settings, setSettings] = useState(() => getObject("attendance_settings", DEFAULT_ATT_SETTINGS));
   const [subTab, setSubTab]   = useState("fields");
 
@@ -71,16 +72,22 @@ export default function Attendance() {
     return true;
   });
 
-  const visibleOperationsTabs = [
-    { id: "mark",      label: "Mark Attendance", icon: ClipboardEdit, roles: ["admin", "teacher"] },
-    { id: "records",   label: "Records",         icon: BookOpen,      roles: ["admin", "teacher", "accountant"] },
-    { id: "audit",     label: "Audit Log",       icon: ClipboardList, roles: ["admin"] },
-  ].filter((t) => t.roles.includes(role));
+  const visibleOperationsTabs = useMemo(
+    () => [
+      { id: "mark",    label: t("attendance.tabs.mark"),    icon: ClipboardEdit, roles: ["admin", "teacher"] as ViewerRole[] },
+      { id: "records", label: t("attendance.tabs.records"), icon: BookOpen,      roles: ["admin", "teacher", "accountant"] as ViewerRole[] },
+      { id: "audit",   label: t("attendance.tabs.audit"),   icon: ClipboardList, roles: ["admin"] as ViewerRole[] },
+    ].filter((tab) => tab.roles.includes(role)),
+    [t, role]
+  );
 
-  const visibleAnalyticsTabs = [
-    { id: "charts",    label: "Analytics Charts", icon: BarChart2, roles: ["admin", "teacher"] },
-    { id: "reports",   label: "Reports",          icon: ClipboardList, roles: ["admin", "teacher"] },
-  ].filter((t) => t.roles.includes(role));
+  const visibleAnalyticsTabs = useMemo(
+    () => [
+      { id: "charts",  label: t("attendance.tabs.analyticsCharts"), icon: BarChart2,     roles: ["admin", "teacher"] as ViewerRole[] },
+      { id: "reports", label: t("attendance.tabs.reports"),         icon: ClipboardList, roles: ["admin", "teacher"] as ViewerRole[] },
+    ].filter((tab) => tab.roles.includes(role)),
+    [t, role]
+  );
 
   const effectiveTab = visibleTopTabs.find((t) => t.id === activeTab) ? activeTab : "operations";
   const effectiveOpsTab = visibleOperationsTabs.find((t) => t.id === activeOpsTab) ? activeOpsTab : (visibleOperationsTabs[0]?.id || "records");
@@ -181,7 +188,9 @@ export default function Attendance() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
-          {renderContent()}
+          <ErrorBoundary>
+            {renderContent()}
+          </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>

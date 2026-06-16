@@ -1,63 +1,88 @@
 ---
-description: Role-based access — backend enforcement, registry permissions, can() hook target
-globs: apps/backend/src/services/rbacService.ts,apps/backend/src/routes/db.ts,apps/backend/src/routes/auth.ts,apps/frontend/src/hooks/usePermissions.ts,apps/frontend/src/hooks/useViewerRole.ts,packages/shared/src/userTypes.ts,apps/frontend/src/components/**/settings/**
+description: Role-based access — backend enforcement, registry permissions, can() hook
+globs: apps/backend/src/services/rbacService.ts,apps/backend/src/routes/db.ts,apps/backend/src/routes/students.ts,apps/backend/src/routes/contacts.ts,apps/backend/src/routes/email.ts,apps/frontend/src/hooks/usePermissions.ts,apps/frontend/src/hooks/useViewerRole.ts,packages/shared/src/permissions.ts,packages/shared/src/userTypes.ts,apps/frontend/src/components/**/settings/**
 alwaysApply: false
 ---
 
 # MMS RBAC
 
-Canonical for permissions. UI visibility details → `mms-ui-visual.mdc`; auth JWT shape → `mms-auth.mdc`.
+Canonical for permissions. UI visibility → `mms-ui-visual.mdc`; auth JWT shape → `mms-auth.mdc`.
 
-## Backend (current)
+## Backend — `rbacService.ts`
 
-`apps/backend/src/services/rbacService.ts`:
+| Function | Rule |
+|----------|------|
+| `canWriteCollection` | `users` → **admin only**; others → admin, accountant, teacher, assistant_teacher |
+| `canWriteObject` | `global_settings`, `branding`, `email_integration` → **admin only** |
+| `canBulkSync` | **admin only** — `POST /api/db/sync` |
+| `canDownloadBulkSync` | **admin only** — `GET /api/db/sync` |
+| `/api/db/reset` | **admin only** (inline check in route) |
+| `/api/students` POST/PUT/DELETE | `canWriteCollection(user, 'students')` |
+| `/api/contacts` POST/PUT/DELETE | `canWriteCollection(user, 'contacts')` |
+| `/api/email/*` | **admin only** (inline `requireAdmin`) |
 
-| Check | Rule |
-|-------|------|
-| `canWriteCollection` | `users` → admin only; others → admin, accountant, teacher, assistant_teacher |
-| `canWriteObject` | `global_settings`, `branding`, `email_integration` → admin only |
-| `canBulkSync` | admin only |
-| `/api/db/reset` | admin only |
+### Gaps (open)
 
-Apply on every new destructive or collection write route — do not add open writes.
+| Route | Gap |
+|-------|-----|
+| `GET /api/db/collections/*` | No read RBAC — any authenticated tenant user can read |
+| `GET /api/students`, `GET /api/contacts` | No read RBAC — any authenticated tenant user can list |
+| Dedicated REST routes (future) | Add per-resource checks mirroring collection rules |
 
-## Frontend (target)
+Apply `rbacService` on every **new** write or destructive route.
+
+## Backend enforcement pattern
+
+```ts
+fastify.addHook('preHandler', authenticateTenant);
+
+fastify.post('/…', async (request, reply) => {
+  const user = request.user as User;
+  if (!canWriteCollection(user, 'students')) {
+    return reply.status(403).send({ type: 'forbidden', message: '…' });
+  }
+  // …
+});
+```
+
+Denied → `403` + `type: 'forbidden'` — never empty `200`.
+
+## Frontend — `usePermissions()` (shipped)
 
 ```tsx
 // ❌ Scattered role checks
 {user.role === 'admin' && <Button>Delete</Button>}
 
-// ✅ Central hook (implement usePermissions / can())
-{can('contacts.delete') && <Button>Delete</Button>}
+// ✅ Central hook
+{can('students.write') && <Button>Delete</Button>}
 ```
 
-- Registry entries may include `permissions: string[]` on fields/tabs (see `mms-fields.mdc`).
-- Forbidden UI **must not render** — not disabled placeholders (`mms-ui-visual.mdc`).
+- Matrix: `packages/shared/src/permissions.ts` + `roleHasPermission`
+- Hook: `apps/frontend/src/hooks/usePermissions.ts`
+- Legacy `useViewerRole()` — migrate when touching a module
+- Forbidden UI: **omit control** — not disabled placeholders (`mms-ui-visual.mdc`)
+- Backend is authoritative; UI gates are additive only
 
-## Frontend (current)
+## Permission strings
 
-- **`usePermissions()`** → `can(permission)` — shipped in `apps/frontend/src/hooks/usePermissions.ts`
-- New UI gates use `can()`; legacy pages may still use **`useViewerRole()`** — migrate when touching a module
-- Forbidden actions: **omit the control** (`mms-ui-visual.mdc`) — do not render disabled placeholders that leak capability hints
-- Backend **`rbacService`** is authoritative; UI gates are additive only — never rely on UI-only hiding for security
+Dot-notation: `contacts.delete`, `students.write`, `users.manage`, `settings.branding.write`, etc.
 
-## Permission strings (target)
-
-Dot-notation keys aligned with module + action, e.g. `contacts.delete`, `settings.branding.write`, `users.manage`. Registry `permissions: string[]` on fields/tabs uses the same vocabulary (`mms-fields.mdc`).
+Registry `permissions: string[]` on fields/tabs uses same vocabulary (`mms-fields.mdc`).
 
 ## Workspace roles
 
-System roles: `DEFAULT_WORKSPACE_ROLES` in `@mms/shared/userTypes.ts` — singular `role` on JWT `User`, not `roles[]`.
+`DEFAULT_WORKSPACE_ROLES` in `@mms/shared/userTypes.ts` — JWT `User.role` is **singular** string, not `roles[]`.
 
-Users module RBAC matrix is **Configuration → Permissions** only (`RolesPermissions.tsx`).
+Users module RBAC matrix: **Configuration → Permissions** (`RolesPermissions.tsx`).
 
-## Audit (target)
+## Audit
 
-RBAC and settings writes should log to `audit_log` — who changed roles, `global_settings`, `branding` (`mms-security.mdc`). Until table exists, document gap in PR if touching those paths.
+`auditService` logs `users`, `global_settings`, `branding` writes (`mms-security.mdc`).
 
 ## Checklist
 
-- [ ] New `/api/db/*` write path calls `rbacService`
-- [ ] New admin-only settings object keys listed in `canWriteObject`
-- [ ] UI gates use `can()` or shared viewer hook — not raw role strings
-- [ ] Denied action returns `403` + `type: forbidden` — not empty `200`
+- [ ] New `/api/db/*` write calls `canWriteCollection` / `canWriteObject`
+- [ ] New REST write calls appropriate `canWriteCollection` or resource-specific check
+- [ ] New admin-only object keys added to `canWriteObject`
+- [ ] UI gates use `can()` — not raw role strings
+- [ ] Denied action returns `403` + stable `type`
