@@ -20,6 +20,8 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
 
       - run: pnpm typecheck
 
@@ -58,6 +60,8 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
 
       - run: pnpm --filter @mms/shared build && pnpm --filter mms-backend build
 

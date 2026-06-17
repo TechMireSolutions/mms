@@ -14,20 +14,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Verify install and build
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm run build
-
       # Platform secrets (Settings → Secrets → Actions):
       #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM + PLATFORM_APP_URL
       #   OR PLATFORM_SMTP_* + PLATFORM_EMAIL_FROM
@@ -79,6 +65,7 @@ jobs:
             fi
 
             echo "== Install dependencies =="
+            export PUPPETEER_SKIP_DOWNLOAD=true
             pnpm install --frozen-lockfile
 
             echo "== Build monorepo =="
