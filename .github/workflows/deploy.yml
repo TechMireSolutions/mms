@@ -35,12 +35,13 @@ jobs:
           PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
           PLATFORM_ADMIN_NAME: ${{ secrets.PLATFORM_ADMIN_NAME }}
           MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+          MMS_API_URL: ${{ secrets.MMS_API_URL }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN
+          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,MMS_API_URL
           script: |
             set -e
             cd /var/www/mmsv2
@@ -60,30 +61,33 @@ jobs:
             pnpm install --frozen-lockfile
             pnpm run build
 
-            pm2 restart mmsv2-frontend --update-env || pm2 restart mmsv2-frontend
-            pm2 restart mmsv2-backend --update-env || pm2 restart mmsv2-backend
+            set +e
+            pm2 restart mmsv2-frontend --update-env
+            FRONTEND_RC=$?
+            if [ "$FRONTEND_RC" -ne 0 ]; then
+              pm2 restart mmsv2-frontend
+              FRONTEND_RC=$?
+            fi
+            set -e
+            if [ "$FRONTEND_RC" -ne 0 ]; then
+              echo "WARNING: pm2 restart mmsv2-frontend failed (rc=${FRONTEND_RC})"
+            fi
 
-            echo "Waiting for backend..."
-            for i in $(seq 1 45); do
-              if curl -fsS http://127.0.0.1:3000/health >/dev/null; then
-                echo "Backend health OK"
-                if curl -fsS http://127.0.0.1:3000/ready >/dev/null; then
-                  echo "Backend ready (database connected)"
-                else
-                  echo "WARNING: /ready failed — check DATABASE_URL and PostgreSQL on the server"
-                fi
-                SETUP_STATUS="$(curl -fsS http://127.0.0.1:3000/api/platform/auth/setup/status 2>/dev/null || echo '{}')"
-                echo "Platform setup status: ${SETUP_STATUS}"
-                if echo "${SETUP_STATUS}" | grep -q '"smtpConfigured":false'; then
-                  echo "WARNING: Platform email not configured — add GitHub Actions secrets and redeploy"
-                fi
-                if echo "${SETUP_STATUS}" | grep -q '"needsSetup":true' && echo "${SETUP_STATUS}" | grep -q '"smtpConfigured":false'; then
-                  echo "TIP: set PLATFORM_ALLOW_ENV_BOOTSTRAP + PLATFORM_ADMIN_* secrets to create the first super-user without email"
-                fi
-                exit 0
+            if [ -f ecosystem.config.cjs ]; then
+              pm2 startOrReload ecosystem.config.cjs --only mmsv2-backend --update-env
+            else
+              set +e
+              pm2 restart mmsv2-backend --update-env
+              BACKEND_RC=$?
+              if [ "$BACKEND_RC" -ne 0 ]; then
+                pm2 restart mmsv2-backend
+                BACKEND_RC=$?
               fi
-              sleep 2
-            done
-            echo "Backend health check failed — is mmsv2-backend running on port 3000?"
-            pm2 logs mmsv2-backend --lines 30 --nostream || true
-            exit 1
+              set -e
+              if [ "$BACKEND_RC" -ne 0 ]; then
+                echo "ERROR: pm2 restart mmsv2-backend failed (rc=${BACKEND_RC})"
+                exit 1
+              fi
+            fi
+
+            bash scripts/deploy-verify.sh apps/backend/.env
