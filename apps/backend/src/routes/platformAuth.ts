@@ -26,7 +26,6 @@ import {
 import {
   getPlatformUserProfile,
   PlatformProfileError,
-  toPlatformUserProfile,
   updatePlatformUserPassword,
   updatePlatformUserProfile,
 } from '../services/platform/platformProfileService.js';
