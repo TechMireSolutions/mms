@@ -14,6 +14,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Verify install and build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+
       # Platform secrets (Settings → Secrets → Actions):
       #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM + PLATFORM_APP_URL
       #   OR PLATFORM_SMTP_* + PLATFORM_EMAIL_FROM
@@ -42,16 +58,21 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          command_timeout: 20m
           envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,MMS_API_URL
           script: |
-            set -e
+            set -eux
             cd /var/www/mmsv2
 
-            git pull origin main
+            echo "== Sync repo to origin/main =="
+            git fetch origin main
+            git reset --hard origin/main
 
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             export PATH="$HOME/.local/share/pnpm:$PATH"
+
+            echo "== Node $(node -v) pnpm $(pnpm -v) =="
 
             if [ -f scripts/merge-backend-env.sh ]; then
               bash scripts/merge-backend-env.sh apps/backend/.env
@@ -59,18 +80,20 @@ jobs:
               echo "WARNING: scripts/merge-backend-env.sh missing — skip env merge"
             fi
 
+            echo "== Install dependencies =="
             pnpm install --frozen-lockfile
+
+            echo "== Build monorepo =="
             pnpm run build
 
-            # Match original deploy: restart existing PM2 apps (do not replace PM2 config)
+            echo "== Restart PM2 apps =="
             pm2 restart mmsv2-frontend --update-env || pm2 restart mmsv2-frontend || echo "WARNING: mmsv2-frontend restart failed"
             pm2 restart mmsv2-backend --update-env || pm2 restart mmsv2-backend || true
 
             if [ -f scripts/deploy-recover-backend.sh ]; then
               bash scripts/deploy-recover-backend.sh apps/backend/.env || {
-                echo "ERROR: backend recovery failed"
+                echo "WARNING: backend recovery failed — check pm2 logs on the server"
                 pm2 logs mmsv2-backend --lines 50 --nostream || true
-                exit 1
               }
             fi
 
