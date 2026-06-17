@@ -28,14 +28,11 @@ import {
   FieldConfig,
   ContactPreferences,
   FieldDefinition,
-  Contact,
   WhatsAppTemplate,
   DEFAULT_LIFECYCLE_COLORS,
   DEFAULT_WHATSAPP_TEMPLATES,
-  DEFAULT_UI_STRINGS,
   getContactUiStrings,
   ColumnRegistryEntry,
-  COLOR_PALETTES,
 } from "@mms/shared";
 import { getCollection, saveCollection, getObject, saveObject } from "../db";
 import useGlobalSettings from "@/hooks/useGlobalSettings";

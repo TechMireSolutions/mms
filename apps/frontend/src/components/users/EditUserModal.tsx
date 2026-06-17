@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
-import { Save, User } from 'lucide-react';
-import {
-  USER_STATUS_VALUES,
-  type SystemUser,
-} from '@mms/shared';
+import React from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { User } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { USER_STATUS_VALUES, type SystemUser } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
-import Modal from '@/components/ui/Modal';
+import FormModal from '@/components/ui/FormModal';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { FORM_SELECT } from '@/components/ui/formStyles';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '@/components/ui/form';
+import { editUserSchema, type EditUserFormValues } from '@/lib/forms/userSchemas';
+import { firstZodFieldError } from '@/lib/forms/translateZodError';
+import { TranslatedFormMessage } from '@/lib/forms/TranslatedFormMessage';
 
 export interface EditUserModalProps {
   user: SystemUser;
@@ -18,49 +26,27 @@ export interface EditUserModalProps {
   onSave: (user: SystemUser) => void;
 }
 
-interface EditUserFormState {
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  status: SystemUser['status'];
-  twoFactorEnabled: boolean;
-}
-
 export default function EditUserModal({ user, onClose, onSave }: EditUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const workspaceRoles = useWorkspaceRoles();
-  const [form, setForm] = useState<EditUserFormState>({
-    name: user.name,
-    email: user.email,
-    phone: user.phone || '',
-    role: user.role,
-    status: user.status,
-    twoFactorEnabled: user.twoFactorEnabled,
+
+  const form = useForm<EditUserFormValues>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: {
+      name: user.name,
+      email: user.email,
+      phone: user.phone || '',
+      role: user.role,
+      status: user.status,
+      twoFactorEnabled: user.twoFactorEnabled,
+    },
   });
-  const [error, setError] = useState('');
 
-  const set = <K extends keyof EditUserFormState>(k: K, v: EditUserFormState[K]): void => {
-    setForm((f) => ({ ...f, [k]: v }));
-  };
-
-  const handleSave = (): void => {
-    if (!form.name.trim()) {
-      setError(t('users.errorNameRequired'));
-      return;
-    }
-    if (!form.email.trim()) {
-      setError(t('users.errorEmailRequired'));
-      return;
-    }
-    if (!form.role) {
-      setError(t('users.errorRoleRequired'));
-      return;
-    }
+  const handleSave = form.handleSubmit((values) => {
     onSave({
       ...user,
-      ...form,
-      avatarInitials: form.name
+      ...values,
+      avatarInitials: values.name
         .split(' ')
         .map((w) => w[0])
         .join('')
@@ -68,98 +54,128 @@ export default function EditUserModal({ user, onClose, onSave }: EditUserModalPr
         .toUpperCase(),
     });
     onClose();
-  };
+  });
 
   return (
-    <Modal
+    <FormModal
       open
       onClose={onClose}
       title={t('users.editTitle')}
       subtitle={user.email}
       icon={User}
       size="sm"
-      footer={
-        <div className="flex w-full gap-2">
-          <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
-            {t('users.cancel')}
-          </Button>
-          <Button type="button" className="flex-1" onClick={handleSave}>
-            <Save className="h-3.5 w-3.5" />
-            {t('users.saveChanges')}
-          </Button>
-        </div>
-      }
+      error={firstZodFieldError(form.formState.errors, t) || undefined}
+      cancelLabel={t('users.cancel')}
+      saveLabel={t('users.saveChanges')}
+      onSave={handleSave}
     >
-      {error ? <p className="text-xs font-semibold text-destructive">{error}</p> : null}
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="edit-user-name">{t('users.fieldName')}</Label>
-            <Input
-              id="edit-user-name"
-              value={form.name}
-              onChange={(e) => set('name', e.target.value)}
+      <Form {...form}>
+        <form className="space-y-4" onSubmit={handleSave}>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('users.fieldName')}</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <TranslatedFormMessage messageKey={form.formState.errors.name?.message} />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('users.fieldPhone')}</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
             />
           </div>
-          <div>
-            <Label htmlFor="edit-user-phone">{t('users.fieldPhone')}</Label>
-            <Input
-              id="edit-user-phone"
-              value={form.phone}
-              onChange={(e) => set('phone', e.target.value)}
-            />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="edit-user-email">{t('users.fieldEmail')}</Label>
-          <Input
-            id="edit-user-email"
-            type="email"
-            value={form.email}
-            onChange={(e) => set('email', e.target.value)}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('users.fieldEmail')}</FormLabel>
+                <FormControl>
+                  <Input type="email" {...field} />
+                </FormControl>
+                <TranslatedFormMessage messageKey={form.formState.errors.email?.message} />
+              </FormItem>
+            )}
           />
-        </div>
-        <div>
-          <Label>{t('users.fieldRole')}</Label>
-          <div className="mt-1.5 flex flex-wrap gap-2">
-            {workspaceRoles.map((r) => (
-              <Button
-                key={r.id}
-                type="button"
-                size="sm"
-                variant={form.role === r.id ? 'default' : 'outline'}
-                onClick={() => set('role', r.id)}
-              >
-                {r.customLabel?.trim() || t(r.labelKey)}
-              </Button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="edit-user-status">{t('users.fieldStatus')}</Label>
-          <select
-            id="edit-user-status"
-            value={form.status}
-            onChange={(e) => set('status', e.target.value as SystemUser['status'])}
-            className={FORM_SELECT}
-          >
-            {USER_STATUS_VALUES.map((s) => (
-              <option key={s} value={s}>
-                {t(`users.status.${s}`)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            checked={form.twoFactorEnabled}
-            onChange={(e) => set('twoFactorEnabled', e.target.checked)}
-            className="rounded"
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('users.fieldRole')}</FormLabel>
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {workspaceRoles.map((r) => (
+                    <Button
+                      key={r.id}
+                      type="button"
+                      size="sm"
+                      variant={field.value === r.id ? 'default' : 'outline'}
+                      onClick={() => field.onChange(r.id)}
+                    >
+                      {r.customLabel?.trim() || t(r.labelKey)}
+                    </Button>
+                  ))}
+                </div>
+                <TranslatedFormMessage messageKey={form.formState.errors.role?.message} />
+              </FormItem>
+            )}
           />
-          <span className="text-xs font-medium text-foreground">{t('users.field2fa')}</span>
-        </label>
-      </div>
-    </Modal>
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="edit-user-status">{t('users.fieldStatus')}</FormLabel>
+                <FormControl>
+                  <select
+                    id="edit-user-status"
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value as SystemUser['status'])}
+                    className={FORM_SELECT}
+                  >
+                    {USER_STATUS_VALUES.map((s) => (
+                      <option key={s} value={s}>
+                        {t(`users.status.${s}`)}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="twoFactorEnabled"
+            render={({ field }) => (
+              <FormItem>
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={field.value}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-xs font-medium text-foreground">{t('users.field2fa')}</span>
+                </label>
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
+    </FormModal>
   );
 }

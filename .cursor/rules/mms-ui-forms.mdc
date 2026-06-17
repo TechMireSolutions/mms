@@ -62,6 +62,25 @@ Use shared tokens from `components/ui/formStyles.ts`:
 
 Contact collection fields keep `FormPrimitives` (`INPUT`, `LABEL`, `COLLECTION_CARD`, …) — same sizing rules.
 
+## Validation (react-hook-form + Zod)
+
+Simple entity modals use **react-hook-form** + **Zod** + shadcn `Form` primitives:
+
+```tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import { editUserSchema } from '@/lib/forms/userSchemas';
+import { TranslatedFormMessage } from '@/lib/forms/TranslatedFormMessage';
+
+const form = useForm({ resolver: zodResolver(editUserSchema), defaultValues: { … } });
+const onSave = form.handleSubmit((values) => { … });
+```
+
+- Schemas in `lib/forms/*Schemas.ts` — store `AppTranslationKey` strings as Zod messages.
+- `TranslatedFormMessage` + `firstZodFieldError()` for i18n error display.
+- Reference: `EditUserModal`, `InviteUserModal`.
+
 ## Errors & footer
 
 - Validation messages → `error` prop on `FormModal` (destructive banner at top of body).

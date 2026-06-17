@@ -8,6 +8,7 @@ import { openDeviceSmsComposer } from '@/lib/deviceSms';
 import { notify } from '@/lib/notify';
 import { FormSelect } from './form/FormPrimitives';
 import { FORM_LABEL, FORM_TEXTAREA } from '@/components/ui/formStyles';
+import { useContactCopy } from '@/hooks/useContactCopy';
 
 interface SmsPanelProps {
   contacts: Contact[];
@@ -18,11 +19,12 @@ interface SmsPanelProps {
  * Opens the device SMS app with a chosen message — user sends manually.
  */
 export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JSX.Element {
-  const { whatsappTemplates, uiStrings } = useContactConfig();
+  const c = useContactCopy();
+  const { whatsappTemplates } = useContactConfig();
   useBodyScrollLock();
 
   const isBulk = contacts.length > 1;
-  const smsContacts = contacts.filter((c) => Boolean(getPrimaryPhone(c)));
+  const smsContacts = contacts.filter((contact) => Boolean(getPrimaryPhone(contact)));
   const [template, setTemplate] = useState<string>(() => whatsappTemplates[0]?.id || 'custom');
   const [message, setMessage] = useState<string>(() => whatsappTemplates[0]?.body || '');
 
@@ -35,16 +37,16 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
   const openForContact = (contact: Contact): void => {
     const phone = getPrimaryPhone(contact);
     if (!phone) {
-      notify.error(uiStrings.smsNoPhone || 'No phone number');
+      notify.error(c('smsNoPhone'));
       return;
     }
     if (!message.trim()) {
-      notify.error(uiStrings.smsMessageRequired || 'Enter a message first');
+      notify.error(c('smsMessageRequired'));
       return;
     }
     const opened = openDeviceSmsComposer(phone, message);
     if (!opened) {
-      notify.error(uiStrings.smsOpenFailed || 'Could not open SMS app');
+      notify.error(c('smsOpenFailed'));
       return;
     }
     if (!isBulk) onClose();
@@ -65,12 +67,12 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
             <div>
               <h2 className="text-sm font-bold">
                 {isBulk
-                  ? uiStrings.bulkSmsMessage || 'Bulk SMS'
-                  : `${uiStrings.sms || 'SMS'} – ${contacts[0]?.name}`}
+                  ? c('bulkSmsMessage')
+                  : `${c('sms')} – ${contacts[0]?.name}`}
               </h2>
               <p className="text-[11px] text-muted-foreground">
                 {isBulk
-                  ? `${smsContacts.length} ${uiStrings.of || 'of'} ${contacts.length} ${uiStrings.contactsHavePhone || 'contacts have a phone'}`
+                  ? `${smsContacts.length} ${c('of')} ${contacts.length} ${c('contactsHavePhone')}`
                   : getPrimaryPhone(contacts[0]) || ''}
               </p>
             </div>
@@ -79,7 +81,7 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
             type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label={uiStrings.cancel}
+            aria-label={c('cancel')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -87,8 +89,7 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
 
         <div className="space-y-4 px-6 py-5">
           <p className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-            {uiStrings.smsManualSendNote ||
-              'Your device Messages app will open with this text. You choose when to tap Send — MMS never sends SMS automatically.'}
+            {c('smsManualSendNote')}
           </p>
 
           {whatsappTemplates.length > 0 && (
@@ -97,27 +98,25 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
                 className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
                 htmlFor="smsTemplate"
               >
-                {uiStrings.messageTemplate || 'Message template'}
+                {c('messageTemplate')}
               </label>
               <FormSelect
                 id="smsTemplate"
                 value={template}
                 onChange={handleTemplateChange}
-                options={whatsappTemplates.map((t) => ({ value: t.id, label: t.label }))}
+                options={whatsappTemplates.map((tpl) => ({ value: tpl.id, label: tpl.label }))}
               />
             </div>
           )}
 
           <div className="space-y-1.5">
-            <label className={FORM_LABEL}>
-              {uiStrings.messageBody || 'Message'}
-            </label>
+            <label className={FORM_LABEL}>{c('messageBody')}</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
               className={FORM_TEXTAREA}
-              placeholder={uiStrings.smsMessagePlaceholder || 'Type your SMS…'}
+              placeholder={c('smsMessagePlaceholder')}
             />
           </div>
 
@@ -137,7 +136,7 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
                     onClick={() => openForContact(contact)}
                     className="shrink-0 rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90"
                   >
-                    {uiStrings.openSmsApp || 'Open SMS'}
+                    {c('openSmsApp')}
                   </button>
                 </li>
               ))}
@@ -150,7 +149,7 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Send className="h-4 w-4" aria-hidden />
-              {uiStrings.openSmsApp || 'Open Messages'}
+              {c('openSmsApp')}
             </button>
           )}
         </div>
@@ -158,7 +157,7 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
         {isBulk && smsContacts.length === 0 && (
           <p className="px-6 pb-5 text-center text-xs text-muted-foreground">
             <User className="mx-auto mb-1 h-4 w-4 opacity-50" aria-hidden />
-            {uiStrings.smsNoEligibleContacts || 'No selected contacts have a phone number.'}
+            {c('smsNoEligibleContacts')}
           </p>
         )}
       </motion.div>

@@ -1,4 +1,4 @@
-import { apiFetch, apiJson } from './apiClient';
+import { apiJson } from './apiClient';
 
 const CHALLENGE_KEY = 'mms_2fa_challenge';
 const VERIFIED_KEY = 'mms_2fa_verified';

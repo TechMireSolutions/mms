@@ -1,5 +1,5 @@
 import type { EmailIntegrationConfig } from '@mms/shared';
-import { apiFetch, apiJson } from './apiClient';
+import { apiJson } from './apiClient';
 
 export async function fetchEmailIntegration(): Promise<EmailIntegrationConfig | null> {
   try {
