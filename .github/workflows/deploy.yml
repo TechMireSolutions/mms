@@ -16,8 +16,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 11
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -61,7 +59,7 @@ jobs:
           command_timeout: 20m
           envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,MMS_API_URL
           script: |
-            set -eux
+            set -ex
             cd /var/www/mmsv2
 
             echo "== Sync repo to origin/main =="
@@ -72,7 +70,7 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             export PATH="$HOME/.local/share/pnpm:$PATH"
 
-            echo "== Node $(node -v) pnpm $(pnpm -v) =="
+            echo "== Node $(node -v 2>/dev/null || echo missing) pnpm $(pnpm -v 2>/dev/null || echo missing) =="
 
             if [ -f scripts/merge-backend-env.sh ]; then
               bash scripts/merge-backend-env.sh apps/backend/.env
