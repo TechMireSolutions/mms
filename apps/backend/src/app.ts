@@ -3,6 +3,7 @@ import fastify, { FastifyInstance } from 'fastify';
 import { loadBackendEnv } from './config/loadEnv.js';
 import { loadServerConfig } from './config/serverConfig.js';
 import { initDb } from './db/database.js';
+import { registerFrontendSpa } from './plugins/frontendSpa.js';
 import { registerPlugins } from './plugins/index.js';
 import { registerRoutes } from './routes/index.js';
 
@@ -29,6 +30,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await initDb();
   await registerPlugins(app, config);
   await registerRoutes(app);
+  await registerFrontendSpa(app, config);
 
   return app;
 }

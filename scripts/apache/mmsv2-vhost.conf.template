@@ -1,0 +1,30 @@
+# MMS production vhost — Apache proxies all traffic to Fastify on :3000 (API + SPA).
+# Replace @@MMS_APP_DOMAIN@@ and @@BACKEND_PORT@@ before enabling.
+# SSL paths: adjust for your certbot / hosting layout.
+
+<VirtualHost *:80>
+    ServerName @@MMS_APP_DOMAIN@@
+    ServerAlias *.@@MMS_APP_DOMAIN@@
+    Redirect permanent / https://@@MMS_APP_DOMAIN@@/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName @@MMS_APP_DOMAIN@@
+    ServerAlias *.@@MMS_APP_DOMAIN@@
+
+    SSLEngine on
+    # Example certbot paths — update if your host uses different files:
+    # SSLCertificateFile /etc/letsencrypt/live/@@MMS_APP_DOMAIN@@/fullchain.pem
+    # SSLCertificateKeyFile /etc/letsencrypt/live/@@MMS_APP_DOMAIN@@/privkey.pem
+    Include /etc/letsencrypt/options-ssl-apache.conf
+
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Host expr=%{HTTP_HOST}
+    RequestHeader set X-Forwarded-Proto "https"
+
+    ProxyPass / http://127.0.0.1:@@BACKEND_PORT@@/
+    ProxyPassReverse / http://127.0.0.1:@@BACKEND_PORT@@/
+
+    ErrorLog ${APACHE_LOG_DIR}/mmsv2-error.log
+    CustomLog ${APACHE_LOG_DIR}/mmsv2-access.log combined
+</VirtualHost>

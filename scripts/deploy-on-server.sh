@@ -66,9 +66,14 @@ fi
 
 if [ -f scripts/deploy-recover-frontend.sh ]; then
   bash scripts/deploy-recover-frontend.sh "$ENV_FILE" || {
-    echo "ERROR: frontend recovery failed"
-    DEPLOY_OK=false
-    pm2 logs mmsv2-frontend --lines 50 --nostream || true
+    echo "WARNING: separate frontend PM2 recovery failed — backend should serve SPA on port ${BACKEND_PORT:-3000}"
+    pm2 logs mmsv2-frontend --lines 30 --nostream || true
+  }
+fi
+
+if [ -f scripts/fix-apache-upstream.sh ]; then
+  bash scripts/fix-apache-upstream.sh "$ENV_FILE" || {
+    echo "WARNING: Apache upstream patch failed — site may stay 503 until ProxyPass points to :3000"
   }
 fi
 
