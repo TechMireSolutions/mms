@@ -71,19 +71,24 @@ jobs:
           command_timeout: 20m
           envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,MMS_API_URL
           script: |
-            set -e
+            set -euo pipefail
             cd /var/www/mmsv2
 
             git reset --hard HEAD
             git pull origin main
 
             export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install 26 --no-progress 2>/dev/null || true
-            nvm use 26 2>/dev/null || nvm use node 2>/dev/null || true
-            node -v
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              # shellcheck disable=SC1090
+              . "$NVM_DIR/nvm.sh"
+              nvm install 26 --no-progress || nvm install 22 --no-progress || true
+              nvm use 26 2>/dev/null || nvm use 22 2>/dev/null || nvm use node 2>/dev/null || true
+            fi
+            echo "Deploy Node: $(node -v 2>/dev/null || echo unknown)"
             export PATH="$HOME/.local/share/pnpm:$PATH"
             export PUPPETEER_SKIP_DOWNLOAD=true
+            corepack enable 2>/dev/null || true
+            corepack prepare pnpm@11.7.0 --activate 2>/dev/null || true
 
             if [ -f scripts/merge-backend-env.sh ]; then
               bash scripts/merge-backend-env.sh apps/backend/.env
@@ -91,7 +96,7 @@ jobs:
               echo "WARNING: scripts/merge-backend-env.sh missing — skip env merge"
             fi
 
-            pnpm install --frozen-lockfile
+            pnpm install --frozen-lockfile --ignore-engines
 
             tar xzf /tmp/mms-dist.tar.gz -C /var/www/mmsv2
             rm -f /tmp/mms-dist.tar.gz
