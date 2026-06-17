@@ -78,7 +78,7 @@ jobs:
             git pull origin main
 
             export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             export PATH="$HOME/.local/share/pnpm:$PATH"
             export PUPPETEER_SKIP_DOWNLOAD=true
 
@@ -88,7 +88,9 @@ jobs:
               echo "WARNING: scripts/merge-backend-env.sh missing — skip env merge"
             fi
 
-            pnpm install --frozen-lockfile --ignore-engines
+            pnpm install --frozen-lockfile || {
+              echo "WARNING: pnpm install failed — continuing with existing node_modules"
+            }
 
             tar xzf /tmp/mms-dist.tar.gz -C /var/www/mmsv2
             rm -f /tmp/mms-dist.tar.gz
@@ -97,7 +99,10 @@ jobs:
             pm2 restart mmsv2-backend --update-env || pm2 restart mmsv2-backend || true
 
             if [ -f scripts/deploy-recover-backend.sh ]; then
-              bash scripts/deploy-recover-backend.sh apps/backend/.env || true
+              bash scripts/deploy-recover-backend.sh apps/backend/.env || {
+                echo "WARNING: backend recovery failed — check pm2 logs on the server"
+                pm2 logs mmsv2-backend --lines 50 --nostream || true
+              }
             fi
 
             if [ -f scripts/deploy-verify.sh ]; then
