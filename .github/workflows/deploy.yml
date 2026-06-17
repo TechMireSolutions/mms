@@ -79,6 +79,9 @@ jobs:
 
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install 26 --no-progress 2>/dev/null || true
+            nvm use 26 2>/dev/null || nvm use node 2>/dev/null || true
+            node -v
             export PATH="$HOME/.local/share/pnpm:$PATH"
             export PUPPETEER_SKIP_DOWNLOAD=true
 
