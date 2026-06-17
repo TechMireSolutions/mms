@@ -2,9 +2,9 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
 import { sql, eq } from 'drizzle-orm';
-import { fileURLToPath } from 'url';
-import path from 'path';
+import { join } from 'path';
 import * as schema from './schema.js';
+import { resolveBackendRoot } from '../config/loadEnv.js';
 import { getMinimalCollectionsForSeed, getMinimalObjects } from './minimalSeeds.js';
 import {
   WORKSPACES_COLLECTION,
@@ -60,9 +60,7 @@ export async function initDb(): Promise<void> {
     setDb(db);
 
     // Run Drizzle migrations dynamically on start
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-    const migrationsFolder = path.resolve(__dirname, '../../src/db/migrations_drizzle');
+    const migrationsFolder = join(resolveBackendRoot(), 'src/db/migrations_drizzle');
     await migrate(db, { migrationsFolder });
 
     // Run pending data migrations — failures are fatal and halt startup

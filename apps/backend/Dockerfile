@@ -29,6 +29,7 @@ COPY apps/backend/package.json ./apps/backend/
 COPY packages/shared/package.json ./packages/shared/
 COPY --from=build /app/packages/shared/dist ./packages/shared/dist
 COPY --from=build /app/apps/backend/dist ./apps/backend/dist
+COPY --from=build /app/apps/backend/src/db/migrations_drizzle ./apps/backend/src/db/migrations_drizzle
 
 RUN pnpm install --frozen-lockfile --prod --filter mms-backend
 

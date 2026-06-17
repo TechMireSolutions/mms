@@ -34,7 +34,7 @@ apps/backend/src/
     email/                    # SMTP + integration config
     whatsapp/                 # Puppeteer provider + queue (dev)
     *.ts                      # domain services (contact, student, rbac, dbSync, …)
-  lib/                        # shared infra (tenantContext, httpErrors, syncLimits)
+  lib/                        # shared infra (tenantContext, httpErrors, syncLimits, zodRequest)
   db/
     schema.ts                 # Drizzle tables
     database.ts               # collection/object CRUD, initDb, pool
@@ -57,6 +57,7 @@ apps/backend/src/
 | `NODE_ENV` | No | `production` tightens CORS |
 | `SEED_DEV_PASSWORD` | Dev only | Hashed users in legacy full-seed path |
 | `MMS_SYNC_MAX_BODY_BYTES` | No | Bulk sync upload cap (default 10 MiB) |
+| `MMS_SYNC_REQUEST_TIMEOUT_MS` | No | Bulk sync processing cap (default 2 min) |
 
 ## App bootstrap (`apps/backend/src/app.ts`)
 
@@ -83,7 +84,7 @@ apps/backend/src/
 | Resource | Methods | Validation | Data access |
 |----------|---------|------------|-------------|
 | `/api/students` | `GET /`, `GET /count`, `POST /`, `PUT /:id`, `DELETE /:id` | `validation/studentSchemas.ts` | `dbSyncService.fetchCollection` / `persistCollection` |
-| `/api/contacts` | `GET /`, `GET /count`, `POST /`, `PUT /:id`, `DELETE /:id`, `GET /:id/whatsapp-status` | `validation/contactSchemas.ts` + JSON Schema on POST body | same + `whatsAppService` side effects |
+| `/api/contacts` | `GET /`, `GET /count`, `POST /`, `PUT /:id`, `DELETE /:id`, `GET /:id/whatsapp-status` | `validation/contactSchemas.ts` | same + `whatsAppService` side effects |
 
 ### Workspace routes (public)
 
@@ -140,7 +141,7 @@ routes/*.ts → services/*.ts → db/database.ts
 
 Types: `auth_required`, `invalid_credentials`, `forbidden`, `two_factor_required`, `not_found`, `validation_error`, `database_error`, `server_error`, `conflict`.
 
-- Validate bodies: Fastify JSON Schema (document routes, optional fast-path) or **Zod** `safeParse` (REST resource routes)
+- Validate bodies: **Zod** `safeParse` via `lib/zodRequest.ts` (`parseRequest` + `replyValidationError`) on all write endpoints
 - Prefer `unknown` + narrowing — not `any`
 - No stack traces to clients in production
 
@@ -163,7 +164,7 @@ Still authoritative for most modules. See `mms-data-layer.mdc` for sync contract
 | Endpoint | RBAC |
 |----------|------|
 | `GET /sync` | **Admin only** (`canDownloadBulkSync`) |
-| `POST /sync` | Admin only (`canBulkSync`) — **body limit** `MMS_SYNC_MAX_BODY_BYTES` |
+| `POST /sync` | Admin only (`canBulkSync`) — **body limit** `MMS_SYNC_MAX_BODY_BYTES`; **timeout** `MMS_SYNC_REQUEST_TIMEOUT_MS` via `withSyncTimeout` |
 | `GET /collections/:name` | `canReadCollection` |
 | `GET /objects/:key` | `canReadObject` (+ server-only filter) |
 | `POST /collections/:name` | `canWriteCollection` |
@@ -206,11 +207,11 @@ cd apps/backend && pnpm typecheck && pnpm test && pnpm lint
 
 | File | Covers |
 |------|--------|
-| `app.health.test.ts` | `/health`, `/ready` |
-| `app.security.test.ts` | RBAC download sync, unauthenticated deny |
-| `auth.integration.test.ts` | Login subdomain, refresh rotation, 2FA gate, tenant JWT binding |
-| `services/rbacService.test.ts` | Permission matrix |
-| `services/twoFactorService.test.ts` | OTP / refresh helpers |
+| `__tests__/app.health.test.ts` | `/health`, `/ready` |
+| `__tests__/app.security.test.ts` | RBAC download sync, unauthenticated deny |
+| `__tests__/auth.integration.test.ts` | Login subdomain, refresh rotation, 2FA gate, tenant JWT binding |
+| `__tests__/services/rbacService.test.ts` | Permission matrix |
+| `__tests__/services/twoFactorService.test.ts` | OTP / refresh helpers |
 
 Use Fastify `inject()` with `headers: { host: '{subdomain}.localhost', cookie: 'mms_access=…' }`. Mock `initDb` and `authArtifactService` in integration tests.
 

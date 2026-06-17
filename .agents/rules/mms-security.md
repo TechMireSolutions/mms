@@ -14,7 +14,7 @@ Canonical for security beyond RBAC matrices (`mms-rbac.md`) and auth session sha
 | API auth | JWT in cookie or `Authorization` header | Stolen token until expiry | Short access TTL (15m) + opaque refresh rotation |
 | Multi-tenant isolation | `t:{subdomain}:{key}` + `authenticateTenant` | Misconfigured proxy host header | Always trust `x-forwarded-host` from Vite/nginx only |
 | Bulk sync download | `GET /api/db/sync` **admin-only** | Large payload exfiltration by admin | Payload size limits (target) |
-| Bulk sync upload | `POST /api/db/sync` admin-only + **10 MiB body limit** (`MMS_SYNC_MAX_BODY_BYTES`) | Payload abuse | Request timeout (target) |
+| Bulk sync upload | `POST /api/db/sync` admin-only + **10 MiB body limit** (`MMS_SYNC_MAX_BODY_BYTES`) + **2 min timeout** (`MMS_SYNC_REQUEST_TIMEOUT_MS`) | Payload abuse | — |
 | 2FA | Server-side challenge in `auth_artifacts`; OTP hashed | SMS channel not fully wired | Email/SMS via tenant settings |
 | CSRF | Cookie session with `SameSite=Lax` | Cross-site POST from malicious origin | `SameSite=Strict` + CSRF token for cookie-only mutations (evaluate) |
 | REST mutations | `canWriteCollection` on students + contacts REST | Read endpoints use `canReadCollection` | Extend `*.read` for new REST resources |
@@ -24,7 +24,7 @@ Canonical for security beyond RBAC matrices (`mms-rbac.md`) and auth session sha
 - [ ] **`authenticateTenant`** on tenant-scoped protected routes (`mms-backend.md`)
 - [ ] **`rbacService`** on new `/api/db/*` writes and REST mutations (`mms-rbac.md`)
 - [ ] **Rate limit** `POST /api/auth/login` and `POST /api/auth/onboard` — `@fastify/rate-limit`; return `429` with stable `type`
-- [ ] **Validate bodies** — Fastify JSON Schema or Zod before service layer
+- [ ] **Validate bodies** — Zod `safeParse` via `lib/zodRequest.ts` before service layer
 - [ ] **No secrets in logs** — passwords, JWTs, refresh tokens, OTP codes, `passwordHash`, bulk PII
 - [ ] **CORS** — `ALLOWED_ORIGIN` in production; `credentials: true` requires explicit origin (no `*`)
 
@@ -86,7 +86,6 @@ Stable `type` codes — frontend maps to `t('errors.*')` (`mms-i18n.md`). Never 
 | Gap | Status |
 |-----|--------|
 | Refresh token replay | Rotation deletes old artifact — covered in `auth.integration.test.ts` |
-| Bulk sync request timeout | Open — timeout guard (target) |
 
 ## Checklist (PR)
 

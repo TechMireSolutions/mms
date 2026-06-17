@@ -68,7 +68,7 @@ Ensure route uses `authenticateTenant` + `canWriteCollection` / `canWriteObject`
 
 - [ ] `FastifyPluginAsync` in `routes/`
 - [ ] `preHandler: authenticateTenant` for tenant protected routes (not raw `jwtVerify`)
-- [ ] JSON Schema (document routes) or Zod `safeParse` (REST routes)
+- [ ] Zod validation via `parseRequest` + `replyValidationError` (`lib/zodRequest.ts`) on all write endpoints
 - [ ] RBAC on writes — `rbacService` or inline admin check
 - [ ] Collection access via `dbSyncService` when persisting JSON documents
 - [ ] Errors: `{ type, message }` + correct HTTP status

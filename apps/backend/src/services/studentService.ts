@@ -1,7 +1,6 @@
 import { fetchCollection, persistCollection } from './dbSyncService.js';
 import {
   studentListSchema,
-  studentRecordSchema,
   type StudentRecord,
 } from '../validation/studentSchemas.js';
 
@@ -37,8 +36,4 @@ export async function deleteStudentById(id: string): Promise<boolean> {
   if (next.length === students.length) return false;
   await persistCollection('students', next);
   return true;
-}
-
-export function parseStudentRecord(body: unknown) {
-  return studentRecordSchema.safeParse(body);
 }

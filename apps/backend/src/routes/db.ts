@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions, FastifySchema } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import {
   fetchDatabaseSnapshot,
   synchronizeData,
@@ -27,78 +27,14 @@ import {
   AUDITED_COLLECTIONS,
   AUDITED_OBJECTS,
 } from '../services/auditService.js';
-import { SYNC_MAX_BODY_BYTES } from '../lib/syncLimits.js';
-
-// Input validation schema for Bulk Sync Upload
-const syncSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    properties: {
-      collections: {
-        type: 'object',
-        additionalProperties: {
-          type: 'array',
-          items: { type: 'object' }
-        }
-      },
-      objects: {
-        type: 'object',
-        additionalProperties: { type: 'object' }
-      }
-    }
-  }
-};
-
-// Route parameters validation for collections
-const collectionParamsSchema: FastifySchema = {
-  params: {
-    type: 'object',
-    required: ['name'],
-    properties: {
-      name: { type: 'string', minLength: 1 }
-    }
-  }
-};
-
-// Validation schema for saving a collection (allows raw array or {data: array})
-const collectionSaveSchema: FastifySchema = {
-  params: {
-    type: 'object',
-    required: ['name'],
-    properties: {
-      name: { type: 'string', minLength: 1 }
-    }
-  },
-  body: {
-    anyOf: [
-      {
-        type: 'array',
-        items: { type: 'object' }
-      },
-      {
-        type: 'object',
-        required: ['data'],
-        properties: {
-          data: {
-            type: 'array',
-            items: { type: 'object' }
-          }
-        }
-      }
-    ]
-  }
-};
-
-// Route parameters validation for KV objects
-const objectParamsSchema: FastifySchema = {
-  params: {
-    type: 'object',
-    required: ['key'],
-    properties: {
-      key: { type: 'string', minLength: 1 }
-    }
-  }
-};
+import { SYNC_MAX_BODY_BYTES, withSyncTimeout } from '../lib/syncLimits.js';
+import {
+  collectionSaveBodySchema,
+  normalizeCollectionSaveBody,
+  syncPayloadSchema,
+} from '../validation/dbSchemas.js';
+import { resourceKeyParamsSchema, resourceNameParamsSchema } from '../validation/commonSchemas.js';
+import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
 
 /**
  * Register database sync and CRUD routes on the Fastify instance.
@@ -135,9 +71,9 @@ export default async function dbRoutes(
   });
 
   // Bulk sync upload: Save all data
-  fastify.post<{ Body: SyncPayload }>(
+  fastify.post(
     '/sync',
-    { schema: syncSchema, bodyLimit: SYNC_MAX_BODY_BYTES },
+    { bodyLimit: SYNC_MAX_BODY_BYTES },
     async (request, reply) => {
       const user = request.user as User;
       if (!canBulkSync(user)) {
@@ -146,16 +82,26 @@ export default async function dbRoutes(
           message: 'Only administrators can perform bulk database sync',
         });
       }
+      const parsed = parseRequest(syncPayloadSchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
       try {
-        const payload = request.body;
+        const payload = parsed.data as SyncPayload;
         if (payload.collections?.contacts) {
           payload.collections.contacts = payload.collections.contacts.map((item) =>
             applyTitleCaseToContact(item as Record<string, unknown>),
           );
         }
-        await synchronizeData(payload);
+        await withSyncTimeout(synchronizeData(payload));
         return reply.send({ success: true });
-      } catch {
+      } catch (error: unknown) {
+        const err = error as Error & { statusCode?: number };
+        if (err.statusCode === 408) {
+          return reply.status(408).send({
+            type: 'server_error',
+            message: err.message,
+          });
+        }
         return reply.status(500).send({
           type: 'database_error',
           message: 'Failed to synchronize database snapshot',
@@ -185,9 +131,11 @@ export default async function dbRoutes(
   });
 
   // Get a specific collection
-  fastify.get<{ Params: { name: string } }>('/collections/:name', { schema: collectionParamsSchema }, async (request, reply) => {
+  fastify.get('/collections/:name', async (request, reply) => {
+    const params = parseRequest(resourceNameParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    const { name } = params.data;
     const user = request.user as User;
-    const { name } = request.params;
     if (!canReadCollection(user, name)) {
       return reply.status(403).send({
         type: 'forbidden',
@@ -203,18 +151,17 @@ export default async function dbRoutes(
     } catch (error) {
       return reply.status(500).send({
         type: 'database_error',
-        message: `Failed to retrieve collection "${request.params.name}"`
+        message: `Failed to retrieve collection "${name}"`
       });
     }
   });
 
   // Save/Overwrite a specific collection
-  fastify.post<{ Params: { name: string }; Body: unknown }>(
-    '/collections/:name',
-    { schema: collectionSaveSchema },
-    async (request, reply) => {
+  fastify.post('/collections/:name', async (request, reply) => {
+      const params = parseRequest(resourceNameParamsSchema, request.params);
+      if (!params.ok) return replyValidationError(reply, params.message);
+      const { name } = params.data;
       const user = request.user as User;
-      const { name } = request.params;
       if (!canWriteCollection(user, name)) {
         return reply.status(403).send({
           type: 'forbidden',
@@ -222,18 +169,9 @@ export default async function dbRoutes(
         });
       }
       try {
-        const body = request.body;
-
-        // Parse collection array type-safely without utilizing 'any'
-        let data: unknown[] | null = null;
-        if (Array.isArray(body)) {
-          data = body;
-        } else if (body && typeof body === 'object' && 'data' in body) {
-          const bodyWithData = body as { data: unknown };
-          if (Array.isArray(bodyWithData.data)) {
-            data = bodyWithData.data;
-          }
-        }
+        const bodyParsed = parseRequest(collectionSaveBodySchema, request.body);
+        if (!bodyParsed.ok) return replyValidationError(reply, bodyParsed.message);
+        let data = normalizeCollectionSaveBody(bodyParsed.data);
 
         if (!data) {
           return reply.status(400).send({
@@ -261,16 +199,18 @@ export default async function dbRoutes(
       } catch (error) {
         return reply.status(500).send({
           type: 'database_error',
-          message: `Failed to save collection "${request.params.name}"`
+          message: `Failed to save collection "${name}"`
         });
       }
     }
   );
 
   // Get a specific object (KV)
-  fastify.get<{ Params: { key: string } }>('/objects/:key', { schema: objectParamsSchema }, async (request, reply) => {
+  fastify.get('/objects/:key', async (request, reply) => {
+    const params = parseRequest(resourceKeyParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    const { key } = params.data;
     const user = request.user as User;
-    const { key } = request.params;
     try {
       if (isServerOnlyObjectKey(key)) {
         return reply.status(404).send({
@@ -295,15 +235,17 @@ export default async function dbRoutes(
     } catch (error) {
       return reply.status(500).send({
         type: 'database_error',
-        message: `Failed to retrieve object "${request.params.key}"`
+        message: `Failed to retrieve object "${key}"`
       });
     }
   });
 
   // Save/Overwrite a specific object (KV)
-  fastify.post<{ Params: { key: string }; Body: unknown }>('/objects/:key', { schema: objectParamsSchema }, async (request, reply) => {
+  fastify.post('/objects/:key', async (request, reply) => {
+    const params = parseRequest(resourceKeyParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    const { key } = params.data;
     const user = request.user as User;
-    const { key } = request.params;
     if (isServerOnlyObjectKey(key)) {
       return reply.status(403).send({
         type: 'forbidden',
@@ -348,7 +290,7 @@ export default async function dbRoutes(
     } catch (error) {
       return reply.status(500).send({
         type: 'database_error',
-        message: `Failed to save object "${request.params.key}"`
+        message: `Failed to save object "${key}"`
       });
     }
   });

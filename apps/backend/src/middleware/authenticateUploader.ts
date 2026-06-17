@@ -13,7 +13,10 @@ export async function authenticateUploader(
   const tenant = getRequestTenant();
   if (tenant) {
     await authenticateTenant(request, reply);
+  } else {
+    await authenticatePlatform(request, reply);
+  }
+  if (reply.sent) {
     return;
   }
-  await authenticatePlatform(request, reply);
 }

@@ -12,7 +12,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Contact `uiStrings` map | Contacts module toasts/labels | New copy → `appTranslations` + `t()`; no new `uiStrings` keys |
 | TanStack Query | Students + contacts + workspace registry + auth; most modules still localStorage | New REST resources Query-first — `mms-query.md` |
 | `can()` permissions hook | Shipped; Enrollments + Attendance wired; registry partial | Full registry-driven matrix — `mms-rbac.md` |
-| Inline `role ===` checks | Dashboard widget role filter remains (data personalization) | `can()` / `useViewerRole` — `mms-rbac.md` |
+| Inline `role ===` checks | Dashboard widget personalization uses `useViewerRole()` | `can()` for permissions — `mms-rbac.md` |
 | Custom tab provisioning | JSON document store only | Table + migration + CRUD per custom tab — `mms-fields.md` |
 | WebSockets | Not implemented | Replace polling for server push — `mms-core.md` |
 | Operations/Analytics sub-tabs | Residual inline bars in deep components | `SubTabBar` per `mms-ui-tabs.md` |
@@ -93,6 +93,13 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Dashboard widget defaults | Permission-based via `can()` not inline `role ===` |
 | Collection read RBAC | `canReadCollection` / `canReadObject` on db + REST list endpoints |
 | Bulk sync body limit | `MMS_SYNC_MAX_BODY_BYTES` (default 10 MiB) on `POST /api/db/sync` |
+| Bulk sync request timeout | `withSyncTimeout` + `MMS_SYNC_REQUEST_TIMEOUT_MS` (default 2 min) on `POST /api/db/sync` |
+| Backend Zod validation | All write endpoints use `parseRequest` + `validation/*Schemas.ts` (no Fastify JSON Schema) |
 | Backend failure logging | Structured `onResponse` warn for 4xx/5xx with tenant + userId |
+| shadcn `ui/` strict TypeScript | All Radix primitives typed; `src/components/ui` in `tsc` |
+| ESLint + TypeScript | `typescript-eslint` on app `.ts/.tsx` (components, pages, hooks, lib, providers) |
+| User modals RHF + Zod | `EditUserModal`, `InviteUserModal` on `FormModal` + `lib/forms/` |
+| Contacts i18n bridge | `useContactCopy()` — `t()` with `uiStrings` fallback; SMS panel migrated |
+| Vite `@` alias | `path.resolve('./src')` aligned with Vitest + tsconfig |
 
 Do not reintroduce resolved violations.

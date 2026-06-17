@@ -1,18 +1,17 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { z } from 'zod';
 import { authenticateTenant } from '../middleware/authenticate.js';
 import { canReadCollection, canWriteCollection } from '../services/rbacService.js';
 import {
   createStudent,
   deleteStudentById,
   loadStudents,
-  parseStudentRecord,
   updateStudentById,
 } from '../services/studentService.js';
 import type { User } from '@mms/shared';
 import { sendForbidden } from '../lib/httpErrors.js';
-
-const studentIdParams = z.object({ id: z.string().min(1) });
+import { resourceIdParamsSchema } from '../validation/commonSchemas.js';
+import { studentRecordSchema } from '../validation/studentSchemas.js';
+import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
 
 /**
  * Server-first student resource routes (TanStack Query on FE).
@@ -47,10 +46,8 @@ export default async function studentsRoutes(
   fastify.post('/', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
-    const parsed = parseStudentRecord(request.body);
-    if (!parsed.success) {
-      return reply.status(400).send({ type: 'validation_error', message: parsed.error.message });
-    }
+    const parsed = parseRequest(studentRecordSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const student = await createStudent(parsed.data);
       return reply.status(201).send({ student });
@@ -62,11 +59,10 @@ export default async function studentsRoutes(
   fastify.put<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
-    const params = studentIdParams.safeParse(request.params);
-    const body = parseStudentRecord(request.body);
-    if (!params.success || !body.success) {
-      return reply.status(400).send({ type: 'validation_error', message: 'Invalid student payload' });
-    }
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    const body = parseRequest(studentRecordSchema, request.body);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    if (!body.ok) return replyValidationError(reply, body.message);
     try {
       const updated = await updateStudentById(params.data.id, {
         ...body.data,
@@ -84,10 +80,8 @@ export default async function studentsRoutes(
   fastify.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
-    const params = studentIdParams.safeParse(request.params);
-    if (!params.success) {
-      return reply.status(400).send({ type: 'validation_error', message: 'Invalid student id' });
-    }
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
     try {
       const deleted = await deleteStudentById(params.data.id);
       if (!deleted) {

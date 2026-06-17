@@ -1,9 +1,6 @@
-import type { FastifyInstance, FastifyPluginOptions, FastifySchema } from 'fastify';
+import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import type { User } from '@mms/shared';
-import {
-  mergeEmailIntegrationConfig,
-  type EmailIntegrationConfig,
-} from '@mms/shared';
+import { mergeEmailIntegrationConfig } from '@mms/shared';
 import {
   loadEmailIntegrationConfig,
   markEmailIntegrationTestResult,
@@ -18,33 +15,11 @@ import {
 import { loadGlobalSettings } from '../services/globalSettingsService.js';
 import { authenticateTenant } from '../middleware/authenticate.js';
 import { canWriteObject } from '../services/rbacService.js';
-
-const integrationBodySchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['providerId', 'fromAddress', 'smtpUsername'],
-    properties: {
-      providerId: { type: 'string', minLength: 1 },
-      fromAddress: { type: 'string', minLength: 3 },
-      fromName: { type: 'string' },
-      smtpUsername: { type: 'string', minLength: 1 },
-      smtpPassword: { type: 'string' },
-      smtpHost: { type: 'string' },
-      smtpPort: { type: 'number' },
-      smtpSecure: { type: 'boolean' },
-    },
-  },
-};
-
-const verificationCodeSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['code'],
-    properties: {
-      code: { type: 'string', minLength: 4, maxLength: 12 },
-    },
-  },
-};
+import {
+  emailIntegrationBodySchema,
+  verificationCodeBodySchema,
+} from '../validation/emailSchemas.js';
+import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
 
 function requireEmailAdmin(
   user: User,
@@ -73,46 +48,45 @@ export default async function emailRoutes(
     return reply.send(config);
   });
 
-  fastify.put<{ Body: EmailIntegrationConfig & { smtpPassword?: string } }>(
-    '/integration',
-    { schema: integrationBodySchema },
-    async (request, reply) => {
-      const user = request.user as User;
-      if (!requireEmailAdmin(user, reply)) return;
+  fastify.put('/integration', async (request, reply) => {
+    const user = request.user as User;
+    if (!requireEmailAdmin(user, reply)) return;
 
-      const body = request.body;
-      if (!isEmailProviderId(body.providerId)) {
-        return reply.status(400).send({
-          type: 'validation_error',
-          message: 'Unsupported email provider',
-        });
-      }
+    const parsed = parseRequest(emailIntegrationBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    const body = parsed.data;
 
-      const current = await loadEmailIntegrationConfig();
-      const next = mergeEmailIntegrationConfig({
-        providerId: body.providerId,
-        fromAddress: body.fromAddress,
-        fromName: body.fromName,
-        smtpUsername: body.smtpUsername,
-        smtpHost: body.smtpHost,
-        smtpPort: body.smtpPort,
-        smtpSecure: body.smtpSecure,
-        connected: current.connected,
-        hasCredentials: current.hasCredentials || Boolean(body.smtpPassword?.trim()),
-        lastTestAt: current.lastTestAt,
-        lastTestOk: current.lastTestOk,
-        lastError: current.lastError,
+    if (!isEmailProviderId(body.providerId)) {
+      return reply.status(400).send({
+        type: 'validation_error',
+        message: 'Unsupported email provider',
       });
+    }
 
-      if (body.smtpPassword?.trim()) {
-        await saveEmailIntegrationSecrets({ smtpPassword: body.smtpPassword.trim() });
-        next.hasCredentials = true;
-      }
+    const current = await loadEmailIntegrationConfig();
+    const next = mergeEmailIntegrationConfig({
+      providerId: body.providerId,
+      fromAddress: body.fromAddress,
+      fromName: body.fromName,
+      smtpUsername: body.smtpUsername,
+      smtpHost: body.smtpHost,
+      smtpPort: body.smtpPort,
+      smtpSecure: body.smtpSecure,
+      connected: current.connected,
+      hasCredentials: current.hasCredentials || Boolean(body.smtpPassword?.trim()),
+      lastTestAt: current.lastTestAt,
+      lastTestOk: current.lastTestOk,
+      lastError: current.lastError,
+    });
 
-      const saved = await saveEmailIntegrationConfig(next);
-      return reply.send(saved);
-    },
-  );
+    if (body.smtpPassword?.trim()) {
+      await saveEmailIntegrationSecrets({ smtpPassword: body.smtpPassword.trim() });
+      next.hasCredentials = true;
+    }
+
+    const saved = await saveEmailIntegrationConfig(next);
+    return reply.send(saved);
+  });
 
   fastify.post('/integration/test', async (request, reply) => {
     const user = request.user as User;
@@ -151,31 +125,31 @@ export default async function emailRoutes(
     return reply.send({ success: true, config: saved });
   });
 
-  fastify.post<{ Body: { code: string } }>(
-    '/verification-code',
-    { schema: verificationCodeSchema },
-    async (request, reply) => {
-      const user = request.user as User;
-      const settings = await loadGlobalSettings();
-      const result = await sendTenantEmail(
-        {
-          to: user.email,
-          subject: 'MMS verification code',
-          text: `Your verification code is ${request.body.code}. It expires in 10 minutes.`,
-        },
-        settings,
-      );
+  fastify.post('/verification-code', async (request, reply) => {
+    const user = request.user as User;
+    const parsed = parseRequest(verificationCodeBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    const { code } = parsed.data;
 
-      if (!result.sent) {
-        return reply.status(400).send({
-          type: 'validation_error',
-          message: result.message ?? 'Verification email could not be sent',
-          reason: result.reason,
-          delivered: false,
-        });
-      }
+    const settings = await loadGlobalSettings();
+    const result = await sendTenantEmail(
+      {
+        to: user.email,
+        subject: 'MMS verification code',
+        text: `Your verification code is ${code}. It expires in 10 minutes.`,
+      },
+      settings,
+    );
 
-      return reply.send({ delivered: true, channel: 'email' });
-    },
-  );
+    if (!result.sent) {
+      return reply.status(400).send({
+        type: 'validation_error',
+        message: result.message ?? 'Verification email could not be sent',
+        reason: result.reason,
+        delivered: false,
+      });
+    }
+
+    return reply.send({ delivered: true, channel: 'email' });
+  });
 }

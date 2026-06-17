@@ -1,9 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { z } from 'zod';
 import type { Contact, User, WhatsAppStatus } from '@mms/shared';
 import { authenticateTenant } from '../middleware/authenticate.js';
 import { canReadCollection, canWriteCollection } from '../services/rbacService.js';
 import { contactRecordSchema } from '../validation/contactSchemas.js';
+import { resourceIdParamsSchema } from '../validation/commonSchemas.js';
+import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
 import {
   deleteContactById,
   loadContacts,
@@ -13,8 +14,6 @@ import {
 import { getWhatsAppPreferences } from '../services/whatsapp/whatsAppService.js';
 
 import { sendForbidden } from '../lib/httpErrors.js';
-
-const contactIdParams = z.object({ id: z.string().min(1) });
 
 /**
  * Server-first contact resource routes (TanStack Query on FE).
@@ -50,10 +49,8 @@ export default async function contactRoutes(
     const user = request.user as User;
     if (!canWriteCollection(user, 'contacts')) return sendForbidden(reply);
 
-    const parsed = contactRecordSchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply.status(400).send({ type: 'validation_error', message: parsed.error.message });
-    }
+    const parsed = parseRequest(contactRecordSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
     try {
       const { contact, created } = await upsertContact(parsed.data as Contact);
@@ -70,11 +67,10 @@ export default async function contactRoutes(
     const user = request.user as User;
     if (!canWriteCollection(user, 'contacts')) return sendForbidden(reply);
 
-    const params = contactIdParams.safeParse(request.params);
-    const body = contactRecordSchema.safeParse(request.body);
-    if (!params.success || !body.success) {
-      return reply.status(400).send({ type: 'validation_error', message: 'Invalid contact payload' });
-    }
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    const body = parseRequest(contactRecordSchema, request.body);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    if (!body.ok) return replyValidationError(reply, body.message);
 
     try {
       const updated = await updateContactById(params.data.id, {
@@ -95,10 +91,8 @@ export default async function contactRoutes(
     const user = request.user as User;
     if (!canWriteCollection(user, 'contacts')) return sendForbidden(reply);
 
-    const params = contactIdParams.safeParse(request.params);
-    if (!params.success) {
-      return reply.status(400).send({ type: 'validation_error', message: 'Invalid contact id' });
-    }
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
 
     try {
       const deleted = await deleteContactById(params.data.id);
@@ -115,10 +109,8 @@ export default async function contactRoutes(
     const user = request.user as User;
     if (!canReadCollection(user, 'contacts')) return sendForbidden(reply);
 
-    const params = contactIdParams.safeParse(request.params);
-    if (!params.success) {
-      return reply.status(400).send({ type: 'validation_error', message: 'Invalid contact id' });
-    }
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
 
     try {
       const contacts = await loadContacts();

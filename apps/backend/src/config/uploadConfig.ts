@@ -30,6 +30,13 @@ export function resolveUploadsRoot(): string {
   return join(resolveBackendRoot(), 'uploads');
 }
 
+/** Creates the uploads root (and parents) before static file serving. */
+export async function ensureUploadsRoot(): Promise<string> {
+  const root = resolveUploadsRoot();
+  await mkdir(root, { recursive: true });
+  return root;
+}
+
 export function resolveUploadCategoryDir(category: ImageUploadCategory): string {
   return join(resolveUploadsRoot(), category);
 }

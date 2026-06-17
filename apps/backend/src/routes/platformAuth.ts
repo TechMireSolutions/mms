@@ -1,7 +1,6 @@
-import { FastifyInstance, FastifyPluginOptions, FastifySchema } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import type { PlatformUser } from '@mms/shared';
-import { PLATFORM_MIN_PASSWORD_LENGTH } from '@mms/shared';
 import { authenticatePlatform } from '../middleware/authenticatePlatform.js';
 import {
   issuePlatformSession,
@@ -31,146 +30,18 @@ import {
 } from '../services/platform/platformProfileService.js';
 import { resolveSubdomainFromRequest } from '../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../lib/rateLimitConfig.js';
-
-interface LoginBody {
-  email?: string;
-  password?: string;
-}
-
-interface SetupRegisterBody {
-  name?: string;
-  email?: string;
-  password?: string;
-}
-
-interface SetupVerifyBody {
-  setupId?: string;
-  code?: string;
-}
-
-interface SetupResendBody {
-  setupId?: string;
-}
-
-interface PasswordForgotBody {
-  email?: string;
-}
-
-interface PasswordResetBody {
-  resetId?: string;
-  code?: string;
-  password?: string;
-}
-
-interface PasswordResendBody {
-  resetId?: string;
-}
-
-interface ProfilePatchBody {
-  name?: string;
-}
-
-interface ChangePasswordBody {
-  currentPassword?: string;
-  newPassword?: string;
-}
-
-const loginSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['email', 'password'],
-    properties: {
-      email: { type: 'string', minLength: 3 },
-      password: { type: 'string', minLength: 6 },
-    },
-  },
-};
-
-const setupRegisterSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['name', 'email', 'password'],
-    properties: {
-      name: { type: 'string', minLength: 2 },
-      email: { type: 'string', minLength: 3 },
-      password: { type: 'string', minLength: PLATFORM_MIN_PASSWORD_LENGTH },
-    },
-  },
-};
-
-const setupVerifySchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['setupId', 'code'],
-    properties: {
-      setupId: { type: 'string', minLength: 8 },
-      code: { type: 'string', minLength: 4, maxLength: 12 },
-    },
-  },
-};
-
-const setupResendSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['setupId'],
-    properties: {
-      setupId: { type: 'string', minLength: 8 },
-    },
-  },
-};
-
-const passwordForgotSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['email'],
-    properties: {
-      email: { type: 'string', minLength: 3 },
-    },
-  },
-};
-
-const passwordResetSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['resetId', 'code', 'password'],
-    properties: {
-      resetId: { type: 'string', minLength: 8 },
-      code: { type: 'string', minLength: 4, maxLength: 12 },
-      password: { type: 'string', minLength: PLATFORM_MIN_PASSWORD_LENGTH },
-    },
-  },
-};
-
-const passwordResendSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['resetId'],
-    properties: {
-      resetId: { type: 'string', minLength: 8 },
-    },
-  },
-};
-
-const profilePatchSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['name'],
-    properties: {
-      name: { type: 'string', minLength: 2 },
-    },
-  },
-};
-
-const changePasswordSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['currentPassword', 'newPassword'],
-    properties: {
-      currentPassword: { type: 'string', minLength: 1 },
-      newPassword: { type: 'string', minLength: PLATFORM_MIN_PASSWORD_LENGTH },
-    },
-  },
-};
+import {
+  platformChangePasswordBodySchema,
+  platformLoginBodySchema,
+  platformPasswordForgotBodySchema,
+  platformPasswordResendBodySchema,
+  platformPasswordResetBodySchema,
+  platformProfilePatchBodySchema,
+  platformSetupRegisterBodySchema,
+  platformSetupResendBodySchema,
+  platformSetupVerifyBodySchema,
+} from '../validation/platformSchemas.js';
+import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
 
 function assertApexHost(hostname: string, forwardedHost: string | string[] | undefined): boolean {
   return !resolveSubdomainFromRequest(hostname, forwardedHost);
@@ -244,10 +115,7 @@ export default async function platformAuthRoutes(
   await fastify.register(async function platformSetupRateLimited(inner) {
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
-    inner.post<{ Body: SetupRegisterBody }>(
-      '/setup/register',
-      { schema: setupRegisterSchema },
-      async (request, reply) => {
+    inner.post('/setup/register', async (request, reply) => {
         if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
           return reply.status(403).send({
             type: 'forbidden',
@@ -255,12 +123,11 @@ export default async function platformAuthRoutes(
           });
         }
 
+        const parsed = parseRequest(platformSetupRegisterBodySchema, request.body);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
         try {
-          const result = await startPlatformSetup({
-            name: request.body.name!,
-            email: request.body.email!,
-            password: request.body.password!,
-          });
+          const result = await startPlatformSetup(parsed.data);
           return reply.send(result);
         } catch (error) {
           if (error instanceof PlatformSetupError) {
@@ -272,10 +139,7 @@ export default async function platformAuthRoutes(
       },
     );
 
-    inner.post<{ Body: SetupVerifyBody }>(
-      '/setup/verify',
-      { schema: setupVerifySchema },
-      async (request, reply) => {
+    inner.post('/setup/verify', async (request, reply) => {
         if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
           return reply.status(403).send({
             type: 'forbidden',
@@ -283,8 +147,12 @@ export default async function platformAuthRoutes(
           });
         }
 
+        const parsed = parseRequest(platformSetupVerifyBodySchema, request.body);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+        const { setupId, code } = parsed.data;
+
         try {
-          const stored = await verifyPlatformSetup(request.body.setupId!, request.body.code!);
+          const stored = await verifyPlatformSetup(setupId, code);
           const user = issuePlatformSession(
             toPublicPlatformUser(stored),
             fastify.jwt,
@@ -301,10 +169,7 @@ export default async function platformAuthRoutes(
       },
     );
 
-    inner.post<{ Body: SetupResendBody }>(
-      '/setup/resend',
-      { schema: setupResendSchema },
-      async (request, reply) => {
+    inner.post('/setup/resend', async (request, reply) => {
         if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
           return reply.status(403).send({
             type: 'forbidden',
@@ -312,8 +177,11 @@ export default async function platformAuthRoutes(
           });
         }
 
+        const parsed = parseRequest(platformSetupResendBodySchema, request.body);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
         try {
-          const result = await resendPlatformSetupCode(request.body.setupId!);
+          const result = await resendPlatformSetupCode(parsed.data.setupId);
           return reply.send(result);
         } catch (error) {
           if (error instanceof PlatformSetupError) {
@@ -329,10 +197,7 @@ export default async function platformAuthRoutes(
   await fastify.register(async function platformPasswordResetRateLimited(inner) {
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
-    inner.post<{ Body: PasswordForgotBody }>(
-      '/password/forgot',
-      { schema: passwordForgotSchema },
-      async (request, reply) => {
+    inner.post('/password/forgot', async (request, reply) => {
         if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
           return reply.status(403).send({
             type: 'forbidden',
@@ -340,8 +205,11 @@ export default async function platformAuthRoutes(
           });
         }
 
+        const parsed = parseRequest(platformPasswordForgotBodySchema, request.body);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
         try {
-          const result = await requestPlatformPasswordReset(request.body.email!);
+          const result = await requestPlatformPasswordReset(parsed.data.email);
           return reply.send(result);
         } catch (error) {
           if (error instanceof PlatformPasswordResetError) {
@@ -353,10 +221,7 @@ export default async function platformAuthRoutes(
       },
     );
 
-    inner.post<{ Body: PasswordResetBody }>(
-      '/password/reset',
-      { schema: passwordResetSchema },
-      async (request, reply) => {
+    inner.post('/password/reset', async (request, reply) => {
         if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
           return reply.status(403).send({
             type: 'forbidden',
@@ -364,12 +229,12 @@ export default async function platformAuthRoutes(
           });
         }
 
+        const parsed = parseRequest(platformPasswordResetBodySchema, request.body);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+        const { resetId, code, password } = parsed.data;
+
         try {
-          const stored = await completePlatformPasswordReset(
-            request.body.resetId!,
-            request.body.code!,
-            request.body.password!,
-          );
+          const stored = await completePlatformPasswordReset(resetId, code, password);
           const user = issuePlatformSession(
             toPublicPlatformUserFromStored(stored),
             fastify.jwt,
@@ -386,10 +251,7 @@ export default async function platformAuthRoutes(
       },
     );
 
-    inner.post<{ Body: PasswordResendBody }>(
-      '/password/resend',
-      { schema: passwordResendSchema },
-      async (request, reply) => {
+    inner.post('/password/resend', async (request, reply) => {
         if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
           return reply.status(403).send({
             type: 'forbidden',
@@ -397,8 +259,11 @@ export default async function platformAuthRoutes(
           });
         }
 
+        const parsed = parseRequest(platformPasswordResendBodySchema, request.body);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
         try {
-          const result = await resendPlatformPasswordReset(request.body.resetId!);
+          const result = await resendPlatformPasswordReset(parsed.data.resetId);
           return reply.send(result);
         } catch (error) {
           if (error instanceof PlatformPasswordResetError) {
@@ -414,7 +279,7 @@ export default async function platformAuthRoutes(
   await fastify.register(async function platformAuthRateLimited(inner) {
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
-    inner.post<{ Body: LoginBody }>('/login', { schema: loginSchema }, async (request, reply) => {
+    inner.post('/login', async (request, reply) => {
       const subdomain = resolveSubdomainFromRequest(
         request.hostname,
         request.headers['x-forwarded-host'],
@@ -426,8 +291,10 @@ export default async function platformAuthRoutes(
         });
       }
 
-      const { email, password } = request.body;
-      const user = await loginPlatformUser(email!, password!, fastify.jwt, reply);
+      const parsed = parseRequest(platformLoginBodySchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      const { email, password } = parsed.data;
+      const user = await loginPlatformUser(email, password, fastify.jwt, reply);
       if (!user) {
         return reply.status(401).send({
           type: 'invalid_credentials',
@@ -452,13 +319,15 @@ export default async function platformAuthRoutes(
     return reply.send({ user: profile, isAuthenticated: true });
   });
 
-  fastify.patch<{ Body: ProfilePatchBody }>(
+  fastify.patch(
     '/me',
-    { preHandler: authenticatePlatform, schema: profilePatchSchema },
+    { preHandler: authenticatePlatform },
     async (request, reply) => {
+      const parsed = parseRequest(platformProfilePatchBodySchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
       const payload = request.user as PlatformUser;
       try {
-        const profile = await updatePlatformUserProfile(payload.id, request.body.name!);
+        const profile = await updatePlatformUserProfile(payload.id, parsed.data.name);
         issuePlatformSession(
           { id: profile.id, email: profile.email, name: profile.name },
           fastify.jwt,
@@ -478,16 +347,18 @@ export default async function platformAuthRoutes(
   await fastify.register(async function platformChangePasswordRateLimited(inner) {
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
-    inner.post<{ Body: ChangePasswordBody }>(
+    inner.post(
       '/change-password',
-      { preHandler: authenticatePlatform, schema: changePasswordSchema },
+      { preHandler: authenticatePlatform },
       async (request, reply) => {
+        const parsed = parseRequest(platformChangePasswordBodySchema, request.body);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
         const payload = request.user as PlatformUser;
         try {
           await updatePlatformUserPassword(
             payload.id,
-            request.body.currentPassword!,
-            request.body.newPassword!,
+            parsed.data.currentPassword,
+            parsed.data.newPassword,
           );
           return reply.send({ success: true });
         } catch (error) {

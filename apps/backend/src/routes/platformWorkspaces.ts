@@ -1,20 +1,9 @@
-import { FastifyInstance, FastifyPluginOptions, FastifySchema } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticatePlatform } from '../middleware/authenticatePlatform.js';
 import { listPlatformWorkspaces, setWorkspaceEnabled } from '../services/workspaceService.js';
-
-interface PatchBody {
-  enabled?: boolean;
-}
-
-const patchSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['enabled'],
-    properties: {
-      enabled: { type: 'boolean' },
-    },
-  },
-};
+import { subdomainParamsSchema } from '../validation/commonSchemas.js';
+import { workspaceEnabledPatchBodySchema } from '../validation/platformSchemas.js';
+import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
 
 export default async function platformWorkspaceRoutes(
   fastify: FastifyInstance,
@@ -27,17 +16,18 @@ export default async function platformWorkspaceRoutes(
     return reply.send({ workspaces });
   });
 
-  fastify.patch<{ Params: { subdomain: string }; Body: PatchBody }>(
-    '/:subdomain',
-    { schema: patchSchema },
-    async (request, reply) => {
-      const updated = await setWorkspaceEnabled(request.params.subdomain, request.body.enabled!);
-      if (!updated) {
-        return reply.status(404).send({ type: 'not_found', message: 'Workspace not found' });
-      }
-      const workspaces = await listPlatformWorkspaces();
-      const row = workspaces.find((ws) => ws.subdomain === updated.subdomain);
-      return reply.send({ workspace: row });
-    },
-  );
+  fastify.patch('/:subdomain', async (request, reply) => {
+    const params = parseRequest(subdomainParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    const body = parseRequest(workspaceEnabledPatchBodySchema, request.body);
+    if (!body.ok) return replyValidationError(reply, body.message);
+
+    const updated = await setWorkspaceEnabled(params.data.subdomain, body.data.enabled);
+    if (!updated) {
+      return reply.status(404).send({ type: 'not_found', message: 'Workspace not found' });
+    }
+    const workspaces = await listPlatformWorkspaces();
+    const row = workspaces.find((ws) => ws.subdomain === updated.subdomain);
+    return reply.send({ workspace: row });
+  });
 }

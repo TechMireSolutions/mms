@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions, FastifySchema } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import {
   loginUser,
@@ -19,60 +19,13 @@ import { getJwtExpiresIn } from '../services/globalSettingsService.js';
 import { getPublicUserById } from '../services/auth/userService.js';
 import { runWithTenant } from '../lib/tenantContext.js';
 import { rotateRefreshToken, validateRefreshToken } from '../services/auth/twoFactorService.js';
-
-interface LoginBody {
-  email?: string;
-  password?: string;
-}
-
-interface OnboardBody {
-  madrasaName?: string;
-  tagline?: string;
-  adminName?: string;
-  email?: string;
-  password?: string;
-  subdomain?: string;
-  country?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
-  logoUrl?: string;
-  adminPhone?: string;
-  website?: string;
-  footerText?: string;
-}
-
-const loginSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['email', 'password'],
-    properties: {
-      email: { type: 'string', minLength: 3 },
-      password: { type: 'string', minLength: 6 }
-    }
-  }
-};
-
-const onboardSchema: FastifySchema = {
-  body: {
-    type: 'object',
-    required: ['madrasaName', 'adminName', 'email', 'password', 'subdomain'],
-    properties: {
-      madrasaName: { type: 'string', minLength: 1 },
-      tagline: { type: 'string' },
-      adminName: { type: 'string', minLength: 1 },
-      email: { type: 'string', minLength: 3 },
-      password: { type: 'string', minLength: 6 },
-      subdomain: { type: 'string', minLength: 2 },
-      country: { type: 'string' },
-      primaryColor: { type: 'string' },
-      secondaryColor: { type: 'string' },
-      logoUrl: { type: 'string' },
-      adminPhone: { type: 'string' },
-      website: { type: 'string' },
-      footerText: { type: 'string' },
-    }
-  }
-};
+import { loginBodySchema, onboardBodySchema } from '../validation/authSchemas.js';
+import {
+  challengeCodeBodySchema,
+  challengeIdBodySchema,
+  handoffBodySchema,
+} from '../validation/commonSchemas.js';
+import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
 
 export default async function authRoutes(
   fastify: FastifyInstance,
@@ -81,8 +34,10 @@ export default async function authRoutes(
   await fastify.register(async function authRateLimited(inner) {
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
-    inner.post<{ Body: LoginBody }>('/login', { schema: loginSchema }, async (request, reply) => {
-      const { email, password } = request.body;
+    inner.post('/login', async (request, reply) => {
+      const body = parseRequest(loginBodySchema, request.body);
+      if (!body.ok) return replyValidationError(reply, body.message);
+      const { email, password } = body.data;
       const subdomain = resolveSubdomainFromRequest(
         request.hostname,
         request.headers['x-forwarded-host']
@@ -96,7 +51,7 @@ export default async function authRoutes(
       }
 
       try {
-        const result = await loginUser(email!, password!, subdomain, fastify.jwt, reply);
+        const result = await loginUser(email, password, subdomain, fastify.jwt, reply);
 
         if (result) {
           if (result.requires2FA) {
@@ -125,19 +80,21 @@ export default async function authRoutes(
       });
     });
 
-    inner.post<{ Body: OnboardBody }>(
+    inner.post(
       '/onboard',
-      { schema: onboardSchema, preHandler: authenticatePlatform },
+      { preHandler: authenticatePlatform },
       async (request, reply) => {
-      const body = request.body;
+      const parsed = parseRequest(onboardBodySchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      const body = parsed.data;
 
       try {
         const result = await onboardUser({
-          email: body.email!,
-          adminName: body.adminName!,
-          password: body.password!,
-          subdomain: body.subdomain!,
-          madrasaName: body.madrasaName!,
+          email: body.email,
+          adminName: body.adminName,
+          password: body.password,
+          subdomain: body.subdomain,
+          madrasaName: body.madrasaName,
           tagline: body.tagline,
           country: body.country,
           primaryColor: body.primaryColor,
@@ -158,14 +115,10 @@ export default async function authRoutes(
       }
     });
 
-    inner.post<{ Body: { challengeId?: string; code?: string } }>('/2fa/verify', async (request, reply) => {
-      const { challengeId, code } = request.body ?? {};
-      if (!challengeId || !code) {
-        return reply.status(400).send({
-          type: 'validation_error',
-          message: 'challengeId and code are required',
-        });
-      }
+    inner.post('/2fa/verify', async (request, reply) => {
+      const parsed = parseRequest(challengeCodeBodySchema, request.body ?? {});
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      const { challengeId, code } = parsed.data;
       const result = await completeTwoFactorLogin(challengeId, code, fastify.jwt, reply);
       if (!result) {
         return reply.status(401).send({
@@ -176,14 +129,10 @@ export default async function authRoutes(
       return reply.send({ user: result.user, requires2FA: false });
     });
 
-    inner.post<{ Body: { challengeId?: string } }>('/2fa/resend', async (request, reply) => {
-      const challengeId = request.body?.challengeId;
-      if (!challengeId) {
-        return reply.status(400).send({
-          type: 'validation_error',
-          message: 'challengeId is required',
-        });
-      }
+    inner.post('/2fa/resend', async (request, reply) => {
+      const parsed = parseRequest(challengeIdBodySchema, request.body ?? {});
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      const { challengeId } = parsed.data;
       const ok = await resendTwoFactorChallenge(challengeId);
       if (!ok) {
         return reply.status(404).send({
@@ -253,14 +202,10 @@ export default async function authRoutes(
     return reply.send({ available });
   });
 
-  fastify.post<{ Body: { code?: string } }>('/handoff', async (request, reply) => {
-    const code = request.body?.code;
-    if (!code) {
-      return reply.status(400).send({
-        type: 'validation_error',
-        message: 'Handoff code is required',
-      });
-    }
+  fastify.post('/handoff', async (request, reply) => {
+    const parsed = parseRequest(handoffBodySchema, request.body ?? {});
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    const { code } = parsed.data;
 
     const subdomain = resolveSubdomainFromRequest(
       request.hostname,
