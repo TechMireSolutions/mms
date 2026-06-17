@@ -13,10 +13,5 @@
   "devDependencies": {
     "@playwright/test": "^1.61.0",
     "turbo": "^2.9.18"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "puppeteer"
-    ]
   }
 }
