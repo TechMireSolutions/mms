@@ -15,7 +15,7 @@ Workflow: `.github/workflows/ci.yml` on `push` / `pull_request` to `main`.
 | Lint | `pnpm lint` | `apps/frontend` + `apps/backend` |
 | Test | `pnpm test` | all packages via turbo |
 
-Node **22**, pnpm **11** — match local dev (`mms-ops.md`).
+Node **26**, pnpm **11** — match local dev (`mms-ops.md`).
 
 ## Agent discipline
 

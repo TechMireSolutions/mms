@@ -70,7 +70,7 @@ Create `apps/backend/.env` locally — never commit real secrets. See root and p
 - pnpm workspace build (shared → backend)
 - `DATABASE_URL` pointing at PostgreSQL service
 - Remove stale `DATABASE_PATH` / SQLite references
-- Match Node 22 + pnpm 11 from CI (`mms-ci.md`)
+- Match Node 26 + pnpm 11 from CI (`mms-ci.md`)
 
 ## API health
 

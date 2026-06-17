@@ -6,3 +6,10 @@ allowBuilds:
   core-js: true
   esbuild: true
   puppeteer: true
+
+minimumReleaseAgeExclude:
+  - nodemailer@9.0.1
+
+peerDependencyRules:
+  allowAny:
+    - eslint
