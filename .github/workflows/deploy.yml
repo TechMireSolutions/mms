@@ -71,24 +71,16 @@ jobs:
           command_timeout: 20m
           envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,MMS_API_URL
           script: |
-            set -euo pipefail
+            set -e
             cd /var/www/mmsv2
 
             git reset --hard HEAD
             git pull origin main
 
             export NVM_DIR="$HOME/.nvm"
-            if [ -s "$NVM_DIR/nvm.sh" ]; then
-              # shellcheck disable=SC1090
-              . "$NVM_DIR/nvm.sh"
-              nvm install 26 --no-progress || nvm install 22 --no-progress || true
-              nvm use 26 2>/dev/null || nvm use 22 2>/dev/null || nvm use node 2>/dev/null || true
-            fi
-            echo "Deploy Node: $(node -v 2>/dev/null || echo unknown)"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             export PATH="$HOME/.local/share/pnpm:$PATH"
             export PUPPETEER_SKIP_DOWNLOAD=true
-            corepack enable 2>/dev/null || true
-            corepack prepare pnpm@11.7.0 --activate 2>/dev/null || true
 
             if [ -f scripts/merge-backend-env.sh ]; then
               bash scripts/merge-backend-env.sh apps/backend/.env
@@ -105,10 +97,7 @@ jobs:
             pm2 restart mmsv2-backend --update-env || pm2 restart mmsv2-backend || true
 
             if [ -f scripts/deploy-recover-backend.sh ]; then
-              bash scripts/deploy-recover-backend.sh apps/backend/.env || {
-                echo "WARNING: backend recovery failed — check pm2 logs on the server"
-                pm2 logs mmsv2-backend --lines 50 --nostream || true
-              }
+              bash scripts/deploy-recover-backend.sh apps/backend/.env || true
             fi
 
             if [ -f scripts/deploy-verify.sh ]; then
