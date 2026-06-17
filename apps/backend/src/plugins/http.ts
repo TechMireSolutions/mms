@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import jwt from '@fastify/jwt';
-import { DEFAULT_APP_DOMAIN, isOriginAllowedForAppDomain } from '@mms/shared';
+import { isOriginAllowedForAppDomain } from '@mms/shared';
 import type { ServerConfig } from '../config/serverConfig.js';
 
 export async function registerHttpPlugins(
