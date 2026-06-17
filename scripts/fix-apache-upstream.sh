@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# Point Apache ProxyPass for MMS_APP_DOMAIN at the Fastify backend (default :3000).
+# Point Apache ProxyPass at the Fastify backend (default :3000). Requires root/sudo.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 ENV_FILE="${1:-apps/backend/.env}"
-BACKEND_PORT=3000
 
 read_env_var() {
   local key="$1"
@@ -44,36 +43,52 @@ run_priv() {
   elif command -v sudo >/dev/null 2>&1; then
     sudo "$@"
   else
-    echo "WARNING: need root/sudo to patch Apache — run manually on the server"
-    exit 0
+    echo "ERROR: need root/sudo to patch Apache"
+    exit 1
   fi
 }
 
 UPSTREAM="http://127.0.0.1:${BACKEND_PORT}/"
 PATCHED=false
 
+patch_proxy_in_file() {
+  local conf="$1"
+  if ! grep -q "ProxyPass" "$conf" 2>/dev/null; then
+    return 1
+  fi
+  echo "Patching ProxyPass in ${conf} → ${UPSTREAM}"
+  run_priv sed -i -E \
+    "s|(ProxyPass(Reverse)?[[:space:]]+/[[:space:]]+)http://(127\\.0\\.0\\.1|localhost):[0-9]+/?|\1${UPSTREAM}|g" \
+    "$conf"
+  return 0
+}
+
+should_patch_file() {
+  local conf="$1"
+  if [[ -n "$APP_DOMAIN" ]] && grep -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
+    return 0
+  fi
+  if grep -qE "ProxyPass.*/ http://(127\\.0\\.0\\.1|localhost):(5173|4173|8080|3001)/?" "$conf" 2>/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
 for conf in /etc/apache2/sites-enabled/*; do
   [[ -f "$conf" ]] || continue
-  if [[ -n "$APP_DOMAIN" ]] && ! grep -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
-    continue
-  fi
-  if grep -q "ProxyPass" "$conf" 2>/dev/null; then
-    echo "Patching ProxyPass in ${conf} → ${UPSTREAM}"
-    run_priv sed -i \
-      -E "s|ProxyPass / http://127\\.0\\.0\\.1:[0-9]+/|ProxyPass / ${UPSTREAM}|g" \
-      "$conf"
-    run_priv sed -i \
-      -E "s|ProxyPassReverse / http://127\\.0\\.0\\.1:[0-9]+/|ProxyPassReverse / ${UPSTREAM}|g" \
-      "$conf"
+  if should_patch_file "$conf" && patch_proxy_in_file "$conf"; then
     PATCHED=true
   fi
 done
 
 if [[ "$PATCHED" != true ]]; then
-  echo "No Apache ProxyPass vhost found for ${APP_DOMAIN:-MMS} — see scripts/apache/mmsv2-vhost.conf.template"
-  exit 0
+  echo "ERROR: no Apache ProxyPass vhost patched for ${APP_DOMAIN:-MMS}"
+  echo "Check: grep -r ProxyPass /etc/apache2/sites-enabled/"
+  echo "Template: scripts/apache/mmsv2-vhost.conf.template"
+  exit 1
 fi
 
+run_priv a2enmod proxy proxy_http headers ssl 2>/dev/null || true
 run_priv apache2ctl configtest
 run_priv systemctl reload apache2
 echo "Apache reloaded — upstream is ${UPSTREAM}"

@@ -73,7 +73,8 @@ fi
 
 if [ -f scripts/fix-apache-upstream.sh ]; then
   bash scripts/fix-apache-upstream.sh "$ENV_FILE" || {
-    echo "WARNING: Apache upstream patch failed — site may stay 503 until ProxyPass points to :3000"
+    echo "ERROR: Apache upstream patch failed — ProxyPass must point to :3000"
+    DEPLOY_OK=false
   }
 fi
 

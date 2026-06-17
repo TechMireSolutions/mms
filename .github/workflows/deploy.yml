@@ -80,3 +80,23 @@ jobs:
             git reset --hard HEAD
             git pull origin main
             bash scripts/deploy-on-server.sh
+
+      - name: Verify public site (after deploy)
+        env:
+          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+        run: |
+          if [ -z "${MMS_APP_DOMAIN}" ]; then
+            echo "MMS_APP_DOMAIN not set — skip public verify"
+            exit 0
+          fi
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -fsS --connect-timeout 5 --max-time 15 "https://${MMS_APP_DOMAIN}/health" >/dev/null \
+              && curl -fsS --connect-timeout 5 --max-time 15 "https://${MMS_APP_DOMAIN}/" >/dev/null; then
+              echo "Production OK: https://${MMS_APP_DOMAIN}/"
+              exit 0
+            fi
+            echo "Waiting for public site (attempt ${i}/10)..."
+            sleep 10
+          done
+          echo "ERROR: https://${MMS_APP_DOMAIN}/ still unreachable — check Deploy SSH logs and Apache ProxyPass"
+          exit 1
