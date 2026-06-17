@@ -20,6 +20,8 @@ import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { getObject, saveObject } from '@/lib/db';
 import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
+import Modal from '@/components/ui/Modal';
+import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { UserRoleBadge } from './UserBadges';
 import { SettingsMetaBadge } from '@/components/settings/SettingsShared';
 
@@ -100,25 +102,25 @@ function RoleForm({ role, visibleModules, onSave, onCancel }: RoleFormProps): Re
       {error ? <p className="text-xs font-semibold text-destructive">{error}</p> : null}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-foreground">
+          <label className={FORM_LABEL}>
             {t('users.permissions.fieldName')}
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('users.permissions.fieldNamePlaceholder')}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={FORM_INPUT}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-foreground">
+          <label className={FORM_LABEL}>
             {t('users.permissions.fieldDescription')}
           </label>
           <input
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
             placeholder={t('users.permissions.fieldDescriptionPlaceholder')}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={FORM_INPUT}
           />
         </div>
       </div>
@@ -389,34 +391,11 @@ export default function RolesPermissions(): React.JSX.Element {
     commitRole({ ...displayRole, permissions: structuredClone(permDraft) }, 'permissions');
   };
 
-  if (editing) {
-    const editTitle =
-      editing === 'new'
-        ? t('users.permissions.createTitle')
-        : t('users.permissions.editTitle', { name: workspaceRoleLabel(editing, t) });
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setEdit(null)}
-            className="text-xs font-semibold text-primary hover:underline"
-          >
-            {t('users.permissions.backToRoles')}
-          </button>
-          <span className="text-xs text-muted-foreground">/</span>
-          <span className="text-xs font-semibold text-foreground">{editTitle}</span>
-        </div>
-        <h3 className="text-base font-bold text-foreground">{editTitle}</h3>
-        <RoleForm
-          role={editing === 'new' ? null : editing}
-          visibleModules={visibleModules}
-          onSave={handleSave}
-          onCancel={() => setEdit(null)}
-        />
-      </div>
-    );
-  }
+  const editTitle = editing
+    ? editing === 'new'
+      ? t('users.permissions.createTitle')
+      : t('users.permissions.editTitle', { name: workspaceRoleLabel(editing, t) })
+    : '';
 
   return (
     <div className="space-y-5">
@@ -534,6 +513,23 @@ export default function RolesPermissions(): React.JSX.Element {
           ) : null}
         </div>
       </div>
+
+      <Modal
+        open={!!editing}
+        onClose={() => setEdit(null)}
+        title={editTitle}
+        size="xl"
+        panelClassName="h-[88vh] max-h-[700px]"
+      >
+        {editing ? (
+          <RoleForm
+            role={editing === 'new' ? null : editing}
+            visibleModules={visibleModules}
+            onSave={handleSave}
+            onCancel={() => setEdit(null)}
+          />
+        ) : null}
+      </Modal>
     </div>
   );
 }

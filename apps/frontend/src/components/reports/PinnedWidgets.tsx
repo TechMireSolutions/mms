@@ -1,26 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { 
-  LayoutDashboard, Pin, X, PinOff, TrendingUp, DollarSign, 
-  UserCheck, Star, LucideIcon, Trash2, Plus, BarChart2, Activity,
-  SlidersHorizontal, Info, RefreshCw, Pencil, CheckCircle2,
-  AlertTriangle, Settings, Eye, ToggleLeft, ToggleRight, ArrowUpRight,
-  Check, ShieldAlert, ArrowRight, Search, EyeOff,
-  GraduationCap, CalendarCheck, BookOpen, AlertCircle, Receipt, Users, Target, ShieldCheck, Award, Clock, Heart, Briefcase, PieChart, Zap
+  LayoutDashboard, Pin, X, PinOff, Trash2,
+  SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users, PieChart
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, 
-  ResponsiveContainer, PieChart as RePieChart, Pie, Cell, RadarChart, PolarGrid, 
-  PolarAngleAxis, PolarRadiusAxis, Radar, CartesianGrid 
+import { BarChart, Bar, XAxis, YAxis, 
+  ResponsiveContainer, Pie, Cell 
 } from "recharts";
 import { getCollection, saveCollection } from "../../lib/db";
-import { CONTACTS } from '@/lib/data/contactsData';
-import { STUDENTS } from '@/lib/data/studentsData';
-import { INVOICES } from '@/lib/data/financeData';
-import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
-import { DISTRIBUTIONS } from '@/lib/data/hasanatData';
-import { SESSIONS_DATA, Session, Class } from '@/lib/data/sessionsData';
-import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
+import { Session, Class } from '@/lib/data/sessionsData';
 import { METADATA_FIELDS, COLLECTION_OPTIONS, computeCustomCard, CustomCard } from "./reportMetadata";
 import SessionsTable from "../dashboard/SessionsTable";
 import OutstandingFeesTable from "../dashboard/OutstandingFeesTable";
@@ -45,7 +33,6 @@ import {
   computeWidgetChartData,
 } from "./pinnedWidgets/widgetDataUtils";
 import {
-  getDefaultCustomWidgets,
   getOrInitializeCustomWidgets,
 } from "./pinnedWidgets/widgetDefaults";
 
@@ -239,10 +226,10 @@ function WidgetDrilldownModal({
                         <td className="py-3.5">
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
                             ["active", "paid", "present", "customer"].includes(status.toLowerCase())
-                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                              ? "bg-success/10 text-success border-success/20"
                               : ["inactive", "unpaid", "absent", "lead", "cancelled"].includes(status.toLowerCase())
                               ? "bg-destructive/10 text-destructive border-destructive/20"
-                              : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                              : "bg-warning/10 text-warning border-warning/20"
                           }`}>
                             {status}
                           </span>
@@ -349,6 +336,40 @@ function CustomWidgetRenderer({
   
   const wType = widget.widgetType || (["bar", "line", "area", "pie", "radar"].includes(widget.chartType || "") ? "chart" : "kpi");
 
+  const { value, formattedValue, isAlert } = useMemo(() => {
+    if (wType === "card") {
+      return { value: 0, formattedValue: "", isAlert: false };
+    }
+    return computeWidgetSingleValue(widget, collections);
+  }, [wType, widget, collections]);
+
+  const isSwitchOn = useMemo(() => {
+    if (wType === "card") return false;
+    if (widget.switchActionType === "app_setting") {
+      const key = widget.switchStateKey || "";
+      if (key.startsWith("section_")) {
+        const sectionKey = key.replace("section_", "");
+        try {
+          const saved = localStorage.getItem("dashboard_section_settings");
+          const settings = saved ? JSON.parse(saved) : {};
+          return !!settings[sectionKey];
+        } catch {
+          return false;
+        }
+      }
+      return localStorage.getItem(key) === "true";
+    }
+    const coll = widget.switchCollection;
+    const recId = widget.switchRecordId;
+    const field = widget.switchField || "status";
+    if (!coll || !recId) return false;
+    const list = collections[coll] || [];
+    const item = list.find((i: { id?: unknown }) => String(i.id) === String(recId));
+    if (!item) return false;
+    const val = (item as Record<string, unknown>)[field];
+    return String(val) === "active" || String(val) === "paid" || !!val;
+  }, [wType, widget, collections]);
+
   if (wType === "card") {
     const computed = computeCustomCard(widget as unknown as CustomCard, collections);
     const Icon = ICONS_LIST[computed.icon || ""] || Users;
@@ -383,7 +404,7 @@ function CustomWidgetRenderer({
           </div>
           {computed.trend !== 0 && (
             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-              isPositive ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-destructive/10 text-destructive border border-destructive/20"
+              isPositive ? "bg-success/10 text-success border border-success/20" : "bg-destructive/10 text-destructive border border-destructive/20"
             }`}>
               {isPositive ? "+" : ""}{computed.trend}%
             </span>
@@ -404,45 +425,11 @@ function CustomWidgetRenderer({
     );
   }
 
-  // Determine threshold violation color
-  const { value, formattedValue, isAlert } = useMemo(() => {
-    return computeWidgetSingleValue(widget, collections);
-  }, [widget, collections]);
-
   const colorHex = isAlert 
     ? (widget.thresholdColor === "red" ? "#ef4444" : widget.thresholdColor === "amber" ? "#f59e0b" : "#eab308")
     : (WIDGET_COLOR_MAP[widget.color] || "hsl(var(--primary))");
 
   const alertScheme = isAlert ? ALERT_COLOR_MAP[widget.thresholdColor || "red"] : null;
-
-  // Toggle Switch state check
-  const isSwitchOn = useMemo(() => {
-    if (widget.switchActionType === "app_setting") {
-      const key = widget.switchStateKey || "";
-      if (key.startsWith("section_")) {
-        const sectionKey = key.replace("section_", "");
-        try {
-          const saved = localStorage.getItem("dashboard_section_settings");
-          const settings = saved ? JSON.parse(saved) : {};
-          return !!settings[sectionKey];
-        } catch {
-          return false;
-        }
-      }
-      return localStorage.getItem(key) === "true";
-    } else {
-      // DB Record Toggle Switch check
-      const coll = widget.switchCollection;
-      const recId = widget.switchRecordId;
-      const field = widget.switchField || "status";
-      if (!coll || !recId) return false;
-      const list = collections[coll] || [];
-      const item = list.find((i: { id?: unknown }) => String(i.id) === String(recId));
-      if (!item) return false;
-      const val = (item as Record<string, unknown>)[field];
-      return String(val) === "active" || String(val) === "paid" || !!val;
-    }
-  }, [widget, collections]);
 
   // Handle Switch inline toggle
   const handleSwitchClick = (e: React.MouseEvent) => {
@@ -1150,7 +1137,9 @@ export default function PinnedWidgets({ category }: { category: string }): React
           const settings = saved ? JSON.parse(saved) : {};
           settings[sec] = !settings[sec];
           localStorage.setItem("dashboard_section_settings", JSON.stringify(settings));
-        } catch {}
+        } catch {
+          void 0;
+        }
       } else {
         const current = localStorage.getItem(key) === "true";
         localStorage.setItem(key, String(!current));
@@ -1961,7 +1950,7 @@ export function WidgetBuilder({
                           <div className="flex justify-between items-center select-none">
                             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Manual Trend Percentage</label>
                             <span className={`text-[11px] font-black px-1.5 py-0.5 rounded-full ${
-                              trend > 0 ? "bg-emerald-500/20 text-emerald-400" : trend < 0 ? "bg-red-500/20 text-red-400" : "bg-muted text-muted-foreground"
+                              trend > 0 ? "bg-success/20 text-success" : trend < 0 ? "bg-destructive/20 text-destructive" : "bg-muted text-muted-foreground"
                             }`}>
                               {trend > 0 ? "+" : ""}{trend}%
                             </span>
@@ -2130,8 +2119,8 @@ export function WidgetBuilder({
                       className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
                     >
                       <option value="red" className="text-destructive bg-background">Critical Red</option>
-                      <option value="amber" className="text-amber-500 bg-background">Warning Amber</option>
-                      <option value="yellow" className="text-yellow-500 bg-background">Notice Yellow</option>
+                      <option value="amber" className="text-warning bg-background">Warning Amber</option>
+                      <option value="yellow" className="text-warning bg-background">Notice Yellow</option>
                     </select>
                   </div>
                 </div>

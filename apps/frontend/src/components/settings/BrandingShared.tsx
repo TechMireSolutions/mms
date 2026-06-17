@@ -5,7 +5,6 @@ import {
   BRANDING_NAME_MAX,
   BRANDING_SOCIAL_PLATFORM_DEFS,
   BRANDING_SOCIAL_PLACEHOLDERS,
-  DEFAULT_BRANDING_SETTINGS,
   formatBrandingFooterDefault,
   IMAGE_UPLOAD_MAX_INPUT_BYTES,
   IMAGE_UPLOAD_PRESETS,
@@ -16,7 +15,7 @@ import {
   type ImageUploadPurpose,
   type LogoBrandColors,
 } from '@mms/shared';
-import { getBrandingSettings, saveBrandingSettings } from '@/lib/db';
+import { saveBrandingSettings } from '@/lib/db';
 import { getScopedBrandingSettings } from '@/lib/settingsPreviewStore';
 import useTranslation from '@/hooks/useTranslation';
 import { extractLogoBrandColors } from '@/lib/extractLogoBrandColors';

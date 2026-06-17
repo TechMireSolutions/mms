@@ -1,9 +1,8 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { UserCheck, Users, AlertTriangle, Award, Pencil } from "lucide-react";
+import React, { useMemo } from "react";
+import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ATTENDANCE_RECORDS, AttendanceRecord } from '@/lib/data/attendanceData';
 import { Session } from '@/lib/data/sessionsData';
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
@@ -11,8 +10,7 @@ import EmptyState from "../ui/EmptyState";
 
 import { AttendanceChart } from "../dashboard/charts/AttendanceChart";
 import TodayAttendanceWidget from "../attendance/TodayAttendanceWidget";
-import { getReportVisual, VisualizerConfig } from "./reportMetadata";
-import DynamicChartRenderer from "./DynamicChartRenderer";
+import { VisualizerConfig } from "./reportMetadata";
 
 interface AttendanceReportProps {
   filters: {
@@ -138,13 +136,13 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
   const belowThreshold = summary.reduce((a, s) => a + s.belowThreshold, 0);
 
   const rateColor = (rate: number): string => {
-    if (rate >= 90) return "text-emerald-600";
-    if (rate >= 75) return "text-amber-600";
+    if (rate >= 90) return "text-success";
+    if (rate >= 75) return "text-warning";
     return "text-destructive";
   };
 
   const rateBar = (rate: number): React.JSX.Element => {
-    const color = rate >= 90 ? "bg-emerald-500" : rate >= 75 ? "bg-amber-500" : "bg-red-500";
+    const color = rate >= 90 ? "bg-success" : rate >= 75 ? "bg-warning" : "bg-destructive";
     return (
       <div className="flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full bg-muted">
@@ -205,7 +203,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
                   <td className="px-3 py-3 text-muted-foreground">{s.total}</td>
                   <td className="px-3 py-3 w-44">{rateBar(s.avgRate)}</td>
                   <td className="px-3 py-3">
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold">{s.perfectAttendance}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[11px] font-semibold">{s.perfectAttendance}</span>
                   </td>
                   <td className="px-3 py-3">
                     <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[11px] font-semibold">{s.belowThreshold}</span>
@@ -243,9 +241,9 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
                 <tr key={s.studentName} className="hover:bg-muted/30">
                   <td className="px-3 py-2.5 font-medium text-foreground">{s.studentName}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{s.class}</td>
-                  <td className="px-3 py-2.5 text-emerald-600 font-medium">{s.present}</td>
+                  <td className="px-3 py-2.5 text-success font-medium">{s.present}</td>
                   <td className="px-3 py-2.5 text-destructive font-medium">{s.absent}</td>
-                  <td className="px-3 py-2.5 text-amber-600 font-medium">{s.late}</td>
+                  <td className="px-3 py-2.5 text-warning font-medium">{s.late}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{s.total}</td>
                   <td className="px-3 py-2.5 w-32">{rateBar(s.rate)}</td>
                 </tr>

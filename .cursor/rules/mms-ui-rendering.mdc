@@ -62,7 +62,7 @@ All user feedback goes through **`notify`** from `lib/notify.ts` — never call 
 - Titles/descriptions from **`t()`** (`mms-i18n.mdc`) — **no hardcoded user-facing strings**.
 - Contacts legacy may pass existing `uiStrings.*` until migrated; **do not add new `uiStrings` keys** outside Contacts.
 - Toasts **auto-dismiss** (timer in `use-toast`) and the close button works; don't add per-call timers — pass `duration` (or `Infinity` for sticky) only when overriding.
-- Toast colours are **theme tokens** (`--success`/`--warning`/`--info`/`--destructive`), added in `index.css` + `tailwind.config.js`. Never hardcode `green-*`/`red-*` in toast styling. `sonner` is not used — there is one toast system (`use-toast` + `Toaster`).
+- Toast colours are **theme tokens** (`--success`/`--warning`/`--info`/`--destructive`), defined in `index.css` `@theme inline`. Never hardcode `green-*`/`red-*` in toast styling. `sonner` is not used — there is one toast system (`use-toast` + `Toaster`).
 
 ```tsx
 import { notify } from "@/lib/notify";

@@ -10,9 +10,8 @@ import {
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 
 interface ToggleProps {
   label: string;
@@ -141,10 +140,10 @@ export default function FinanceSettings({ mode }: FinanceSettingsProps): React.R
         <>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="finance-currency" className={LABEL}>Currency</label>
+              <label htmlFor="finance-currency" className={FORM_LABEL}>Currency</label>
               <select
                 id="finance-currency"
-                className={`${INPUT} cursor-pointer`}
+                className={`${FORM_INPUT} cursor-pointer`}
                 value={data.currency}
                 onChange={(e) => upd("currency", e.target.value)}
               >
@@ -157,51 +156,51 @@ export default function FinanceSettings({ mode }: FinanceSettingsProps): React.R
               </select>
             </div>
             <div>
-              <label htmlFor="inv-prefix" className={LABEL}>Invoice Prefix</label>
+              <label htmlFor="inv-prefix" className={FORM_LABEL}>Invoice Prefix</label>
               <input
                 id="inv-prefix"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.invoicePrefix}
                 onChange={(e) => upd("invoicePrefix", e.target.value)}
                 placeholder="INV"
               />
             </div>
             <div>
-              <label htmlFor="due-days" className={LABEL}>Default Due Days</label>
+              <label htmlFor="due-days" className={FORM_LABEL}>Default Due Days</label>
               <input
                 id="due-days"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.dueDays}
                 onChange={(e) => upd("dueDays", e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="late-fee" className={LABEL}>Late Fee (%)</label>
+              <label htmlFor="late-fee" className={FORM_LABEL}>Late Fee (%)</label>
               <input
                 id="late-fee"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.lateFeePercent}
                 onChange={(e) => upd("lateFeePercent", e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="tax-rate" className={LABEL}>Tax Rate (%)</label>
+              <label htmlFor="tax-rate" className={FORM_LABEL}>Tax Rate (%)</label>
               <input
                 id="tax-rate"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.taxRate}
                 onChange={(e) => upd("taxRate", e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="reminder-days" className={LABEL}>Reminder Days Before Due</label>
+              <label htmlFor="reminder-days" className={FORM_LABEL}>Reminder Days Before Due</label>
               <input
                 id="reminder-days"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.reminderDaysBefore}
                 onChange={(e) => upd("reminderDaysBefore", e.target.value)}
               />
@@ -209,7 +208,7 @@ export default function FinanceSettings({ mode }: FinanceSettingsProps): React.R
           </div>
 
           <div>
-            <span className={LABEL}>Accepted Payment Methods</span>
+            <span className={FORM_LABEL}>Accepted Payment Methods</span>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Select payment methods">
               {ALL_METHODS.map((m) => {
                 const active = data.paymentMethods.includes(m);

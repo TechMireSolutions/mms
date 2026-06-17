@@ -1,76 +1,71 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Gift, X, Save, Edit2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus, Trash2, Gift, Edit2 } from "lucide-react";
 import { Session, TabarrukItem } from '@/lib/data/sessionsData';
 import { DatePicker } from "../../ui/DatePicker";
+import FormModal from "@/components/ui/FormModal";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 const EMPTY: Partial<TabarrukItem> = { item: "", quantity: "", occasion: "", date: "", note: "" };
 
 interface TabarrukModalProps {
+  open: boolean;
   entry: TabarrukItem | null;
   onClose: () => void;
   onSave: (entry: TabarrukItem) => void;
 }
 
-function TabarrukModal({ entry, onClose, onSave }: TabarrukModalProps) {
+function TabarrukModal({ open, entry, onClose, onSave }: TabarrukModalProps) {
   const [data, setData] = useState<Partial<TabarrukItem>>(entry ? { ...entry } : { ...EMPTY });
   const upd = (f: keyof TabarrukItem, v: string) => setData((d) => ({ ...d, [f]: v }));
 
+  React.useEffect(() => {
+    if (open) {
+      setData(entry ? { ...entry } : { ...EMPTY });
+    }
+  }, [open, entry]);
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="tabarruk-modal-title">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.form
-        onSubmit={(e) => { e.preventDefault(); onSave({ ...data, id: entry?.id || `tb${Date.now()}` } as TabarrukItem); }}
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-sm z-10"
-      >
-        <header className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h3 id="tabarruk-modal-title" className="text-sm font-bold text-foreground m-0">{entry ? "Edit Tabarruk" : "Add Tabarruk"}</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" aria-hidden="true" /></button>
-        </header>
-        <fieldset className="px-5 py-4 space-y-4 border-none m-0">
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={entry ? "Edit Tabarruk" : "Add Tabarruk"}
+      icon={Gift}
+      size="md"
+      cancelLabel="Cancel"
+      saveLabel="Save"
+      onSave={() => onSave({ ...data, id: entry?.id || `tb${Date.now()}` } as TabarrukItem)}
+      saveDisabled={!data.item}
+    >
+      <div className="space-y-4">
+        <div>
+          <label className={FORM_LABEL} htmlFor="tabarruk-item">Item *</label>
+          <input id="tabarruk-item" className={FORM_INPUT} value={data.item || ""} onChange={(e) => upd("item", e.target.value)} placeholder="e.g. Dates (Ajwa)" required />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={LABEL} htmlFor="tabarruk-item">Item *</label>
-            <input id="tabarruk-item" className={INPUT} value={data.item || ""} onChange={(e) => upd("item", e.target.value)} placeholder="e.g. Dates (Ajwa)" required />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={LABEL} htmlFor="tabarruk-quantity">Quantity</label>
-              <input id="tabarruk-quantity" className={INPUT} value={data.quantity || ""} onChange={(e) => upd("quantity", e.target.value)} placeholder="e.g. 5 kg" />
-            </div>
-            <div>
-              <label className={LABEL} htmlFor="tabarruk-date">Date</label>
-              <DatePicker
-                id="tabarruk-date"
-                value={data.date || ""}
-                onChange={(val) => upd("date", val)}
-              />
-            </div>
+            <label className={FORM_LABEL} htmlFor="tabarruk-quantity">Quantity</label>
+            <input id="tabarruk-quantity" className={FORM_INPUT} value={data.quantity || ""} onChange={(e) => upd("quantity", e.target.value)} placeholder="e.g. 5 kg" />
           </div>
           <div>
-            <label className={LABEL} htmlFor="tabarruk-occasion">Occasion</label>
-            <input id="tabarruk-occasion" className={INPUT} value={data.occasion || ""} onChange={(e) => upd("occasion", e.target.value)} placeholder="e.g. Opening Ceremony" />
+            <label className={FORM_LABEL} htmlFor="tabarruk-date">Date</label>
+            <DatePicker
+              id="tabarruk-date"
+              value={data.date || ""}
+              onChange={(val) => upd("date", val)}
+            />
           </div>
-          <div>
-            <label className={LABEL} htmlFor="tabarruk-note">Note</label>
-            <textarea id="tabarruk-note" className={INPUT + " min-h-[60px] resize-none"} value={data.note || ""} onChange={(e) => upd("note", e.target.value)} placeholder="Any additional notes…" />
-          </div>
-        </fieldset>
-        <footer className="px-5 py-4 border-t border-border flex justify-end gap-2.5">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">Cancel</button>
-          <button
-            type="submit"
-            disabled={!data.item}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
-          >
-            <Save className="w-3.5 h-3.5" aria-hidden="true" /> Save
-          </button>
-        </footer>
-      </motion.form>
-    </div>
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="tabarruk-occasion">Occasion</label>
+          <input id="tabarruk-occasion" className={FORM_INPUT} value={data.occasion || ""} onChange={(e) => upd("occasion", e.target.value)} placeholder="e.g. Opening Ceremony" />
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="tabarruk-note">Note</label>
+          <textarea id="tabarruk-note" className={`${FORM_INPUT} min-h-[60px] resize-none`} value={data.note || ""} onChange={(e) => upd("note", e.target.value)} placeholder="Any additional notes…" />
+        </div>
+      </div>
+    </FormModal>
   );
 }
 
@@ -105,9 +100,9 @@ export default function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
   return (
     <section aria-label="Session Tabarruk" className="space-y-4">
       {/* Info banner */}
-      <article className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-100">
-        <Gift className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-        <p className="text-[12px] text-amber-800 leading-relaxed m-0">
+      <article className="flex items-start gap-3 px-4 py-3 rounded-xl bg-warning/10 border border-warning/20">
+        <Gift className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <p className="text-[12px] text-warning leading-relaxed m-0">
           <strong>Tabarruk</strong> refers to blessed items distributed to students and attendees during events — such as dates, Zam Zam water, or sweets — as a means of seeking blessings.
         </p>
       </article>
@@ -179,9 +174,12 @@ export default function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
         </div>
       )}
 
-      <AnimatePresence>
-        {showModal && <TabarrukModal entry={editEntry} onClose={() => { setShowModal(false); setEditEntry(null); }} onSave={handleSave} />}
-      </AnimatePresence>
+      <TabarrukModal
+        open={showModal}
+        entry={editEntry}
+        onClose={() => { setShowModal(false); setEditEntry(null); }}
+        onSave={handleSave}
+      />
     </section>
   );
 }

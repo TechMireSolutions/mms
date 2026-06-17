@@ -4,6 +4,7 @@ import { ACCOUNT_TYPE_META, JOURNAL_TAGS, generateJERef, Account, JournalEntry, 
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import { Button } from "../ui/button";
+import { FORM_INPUT, FORM_LABEL, FORM_INPUT_COMPACT } from "../ui/formStyles";
 
 interface DraftLine extends Omit<JournalLine, "debit" | "credit"> {
   debit: string | number;
@@ -107,7 +108,6 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
     } as JournalEntry);
   };
 
-  const inp = "mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20";
   const sortedAccounts = [...accounts].filter(a => a.isActive !== false).sort((a, b) => a.code.localeCompare(b.code));
 
   // Group accounts for optgroup
@@ -146,7 +146,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
           {/* Header fields */}
           <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
             <div>
-              <label htmlFor="je-date" className="text-xs font-semibold text-muted-foreground uppercase">Date *</label>
+              <label htmlFor="je-date" className={FORM_LABEL}>Date *</label>
               <DatePicker
                 id="je-date"
                 value={form.date}
@@ -156,16 +156,16 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
               {errors.date && <p className="text-xs text-destructive mt-1" role="alert">{errors.date}</p>}
             </div>
             <div>
-              <label htmlFor="je-fy" className="text-xs font-semibold text-muted-foreground uppercase">Financial Year</label>
-              <select id="je-fy" value={form.fiscal_year} onChange={(e) => setForm({ ...form, fiscal_year: e.target.value })} className={inp}>
+              <label htmlFor="je-fy" className={FORM_LABEL}>Financial Year</label>
+              <select id="je-fy" value={form.fiscal_year} onChange={(e) => setForm({ ...form, fiscal_year: e.target.value })} className={FORM_INPUT}>
                 <option value="">— None —</option>
                 {(fiscalYears || []).map((fy) => <option key={fy.id} value={fy.label}>{fy.label}</option>)}
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label htmlFor="je-desc" className="text-xs font-semibold text-muted-foreground uppercase">Narration / Description *</label>
+              <label htmlFor="je-desc" className={FORM_LABEL}>Narration / Description *</label>
               <input id="je-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="e.g. Student fee collection for Spring 2026…" className={inp} aria-invalid={!!errors.description} />
+                placeholder="e.g. Student fee collection for Spring 2026…" className={FORM_INPUT} aria-invalid={!!errors.description} />
               {errors.description && <p className="text-xs text-destructive mt-1" role="alert">{errors.description}</p>}
             </div>
           </fieldset>
@@ -189,7 +189,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
           {/* Lines */}
           <fieldset className="border-0 p-0 m-0">
             <div className="flex items-center justify-between mb-2">
-              <legend className="text-xs font-semibold text-muted-foreground uppercase">Journal Lines *</legend>
+              <legend className={FORM_LABEL}>Journal Lines *</legend>
               <button type="button" onClick={addLine}
                 className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
                 <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Line
@@ -241,7 +241,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                             value={line.description || ""} 
                             onChange={(e) => updateLine(idx, "description", e.target.value)}
                             placeholder="Note…" 
-                            className="w-full px-2 py-1.5 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
+                            className={FORM_INPUT_COMPACT} 
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -253,7 +253,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                             value={line.debit} 
                             placeholder="0.00"
                             onChange={(e) => updateLine(idx, "debit", e.target.value)}
-                            className="w-full px-2 py-1.5 text-sm text-right rounded-lg border border-border bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-blue-200 font-mono" 
+                            className="w-full px-2 py-1.5 text-sm text-right rounded-lg border border-border bg-info/10/50 focus:outline-none focus:ring-2 focus:ring-info/30 font-mono" 
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -265,7 +265,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                             value={line.credit} 
                             placeholder="0.00"
                             onChange={(e) => updateLine(idx, "credit", e.target.value)}
-                            className="w-full px-2 py-1.5 text-sm text-right rounded-lg border border-border bg-emerald-50/50 focus:outline-none focus:ring-2 focus:ring-emerald-200 font-mono" 
+                            className="w-full px-2 py-1.5 text-sm text-right rounded-lg border border-border bg-success/10/50 focus:outline-none focus:ring-2 focus:ring-success/30 font-mono" 
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -286,15 +286,15 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                 <tfoot className="border-t-2 border-border bg-muted/30">
                   <tr>
                     <td colSpan={2} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">Totals</td>
-                    <td className="px-3 py-2 text-right font-mono font-bold text-blue-700">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    <td className="px-3 py-2 text-right font-mono font-bold text-emerald-700">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-2 text-right font-mono font-bold text-info">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-2 text-right font-mono font-bold text-success">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     <td></td>
                   </tr>
                 </tfoot>
               </table>
             </div>
 
-            <div className={`mt-2 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold ${isBalanced ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"}`} role="status">
+            <div className={`mt-2 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold ${isBalanced ? "bg-success/10 text-success border border-success/30" : "bg-destructive/10 text-destructive border border-destructive/30"}`} role="status">
               {isBalanced ? <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> : <AlertCircle className="w-4 h-4" aria-hidden="true" />}
               {isBalanced ? "Entry is balanced — Debits equal Credits" : `Out of balance — Difference: ${Math.abs(totalDebit - totalCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
             </div>

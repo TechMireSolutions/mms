@@ -27,6 +27,7 @@ import SettingsFormActions from '../ui/SettingsFormActions';
 import { Switch } from '../ui/switch';
 import { SettingsCallout, SettingsPanel } from '@/components/settings/SettingsShared';
 import CategoryManager from './CategoryManager';
+import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 
 interface QuestionBankSettingsProps {
   mode?: 'fields' | 'preferences';
@@ -227,14 +228,14 @@ export default function QuestionBankSettings({ mode }: QuestionBankSettingsProps
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-semibold text-foreground" htmlFor="qb-default-duration">
+            <label className={FORM_LABEL} htmlFor="qb-default-duration">
               {t('questionBank.defaultDuration')}
             </label>
             <input
               id="qb-default-duration"
               type="number"
               min={5}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+              className={FORM_INPUT}
               value={data.defaultTestDuration}
               onChange={(e) => upd('defaultTestDuration', Number(e.target.value) || 30)}
             />

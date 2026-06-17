@@ -1,4 +1,4 @@
-import React, { useState, useMemo, lazy, Suspense } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { Receipt, Printer } from "lucide-react";
 import { MOCK_CURRENCIES, ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
@@ -127,7 +127,7 @@ export default function ObligationCollectionDetail({ collection, obligationTypes
                     <tr key={d.id} className="hover:bg-muted/20">
                       <td className="px-4 py-2.5 font-medium text-foreground">{d.name}</td>
                       <td className="px-4 py-2.5">
-                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${d.type === "Income" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
+                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${d.type === "Income" ? "bg-success/15 text-success" : "bg-info/15 text-info"}`}>
                           {d.type}
                         </span>
                       </td>
@@ -144,7 +144,7 @@ export default function ObligationCollectionDetail({ collection, obligationTypes
         )}
 
         {dists.length === 0 && wakalaType && (
-          <div className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700" role="alert">
+          <div className="px-4 py-3 rounded-xl bg-warning/10 border border-warning/30 text-xs text-warning" role="alert">
             No distribution entries configured for this Wakala Type yet.
           </div>
         )}

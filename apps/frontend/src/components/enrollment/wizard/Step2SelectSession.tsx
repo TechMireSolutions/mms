@@ -69,8 +69,8 @@ export default function Step2SelectSession({ value, onChange, sessions = [] }: S
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-bold text-foreground">{session.name}</p>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{session.type}</span>
-                    {isFull && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">Full</span>}
-                    {!isFull && spotsLeft <= 5 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Almost Full</span>}
+                    {isFull && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">Full</span>}
+                    {!isFull && spotsLeft <= 5 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-warning/15 text-warning">Almost Full</span>}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">

@@ -55,7 +55,7 @@ export default function Step4ClassAssignment({ session, student, suggestedClass,
       )}
 
       {!suggestedClass && (
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm" role="status">
+        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-warning/10 border border-warning/30 text-warning text-sm" role="status">
           <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
           No auto-match found. Manually select a class below.
         </div>
@@ -63,7 +63,7 @@ export default function Step4ClassAssignment({ session, student, suggestedClass,
 
       {/* Override warning */}
       {override && (
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold" role="alert">
+        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-warning/10 border border-warning/30 text-warning text-sm font-semibold" role="alert">
           <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
           Manual override — selected class differs from auto-suggestion. Confirm this is intentional.
         </div>
@@ -104,7 +104,7 @@ export default function Step4ClassAssignment({ session, student, suggestedClass,
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="text-sm font-bold text-foreground">{cls.name}</p>
                       {isSuggested && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Recommended</span>}
-                      {full && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">Full</span>}
+                      {full && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">Full</span>}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
                       <span>Age {cls.ageMin}–{cls.ageMax}</span>
@@ -121,7 +121,7 @@ export default function Step4ClassAssignment({ session, student, suggestedClass,
                   </div>
                   <div className="h-1.5 w-20 rounded-full bg-muted mt-1 overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${spotsLeft <= 3 ? "bg-red-500" : spotsLeft <= 7 ? "bg-amber-500" : "bg-emerald-500"}`}
+                      className={`h-full rounded-full ${spotsLeft <= 3 ? "bg-destructive" : spotsLeft <= 7 ? "bg-warning" : "bg-success"}`}
                       style={{ width: `${(cls.enrolled / cls.capacity) * 100}%` }}
                     />
                   </div>

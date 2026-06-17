@@ -582,7 +582,7 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
                   <Copy className="w-3 h-3" aria-hidden="true" /> Duplicate
                 </button>
                 <button type="button" onClick={() => deleteEl(selectedEl.id)}
-                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-destructive/10 transition-colors">
+                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-semibold rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors">
                   <Trash2 className="w-3 h-3" aria-hidden="true" /> Delete
                 </button>
               </div>

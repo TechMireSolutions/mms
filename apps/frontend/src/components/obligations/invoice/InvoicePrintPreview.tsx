@@ -24,10 +24,14 @@ function getBranding(): Branding {
       localStorage.setItem("mms_branding", raw);
       try {
         localStorage.removeItem("madrasa_branding");
-      } catch (err) {}
+      } catch {
+        void 0;
+      }
       return parsed;
     }
-  } catch {}
+  } catch {
+    void 0;
+  }
   return { madrasaName: "MMS", logoUrl: "", primaryColor: "#047857" };
 }
 

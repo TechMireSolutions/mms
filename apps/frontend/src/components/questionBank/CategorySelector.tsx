@@ -3,9 +3,7 @@ import { Plus } from 'lucide-react';
 import useTranslation from '@/hooks/useTranslation';
 import { createQuestionCategory, type AppTranslationKey, type QuestionCategory } from '@mms/shared';
 import { persistQuestionCategory } from '@/lib/data/questionBankCategories';
-
-const INPUT =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20';
+import { FORM_INPUT } from '@/components/ui/formStyles';
 
 interface CategorySelectorProps {
   categories: QuestionCategory[];
@@ -98,7 +96,7 @@ export default function CategorySelector({
       )}
       <input
         type="search"
-        className={INPUT}
+        className={FORM_INPUT}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder={t('questionBank.categorySearch')}
@@ -149,7 +147,7 @@ export default function CategorySelector({
         <div className="flex flex-col gap-2 rounded-lg border border-dashed border-border p-3 sm:flex-row">
           <input
             type="text"
-            className={INPUT}
+            className={FORM_INPUT}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder={t('questionBank.newCategoryName')}

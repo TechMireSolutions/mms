@@ -12,11 +12,10 @@ import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilde
 import DraggableFieldList from "../ui/ContactDraggableFieldList";
 import ColumnCustomizer from "./ColumnCustomizer";
 import { FormSelect } from "./form/FormPrimitives";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 const toTitleCase = (str: string): string => sharedToTitleCase(str) as string;
 
-const INPUT = "w-full px-3 py-2 min-h-[44px] rounded-lg border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 
 interface ToggleProps {
   label: string;
@@ -676,7 +675,7 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="w-full sm:w-1/3 text-left">
-                  <label className={LABEL} htmlFor="list-selector">{localUiStrings.selectListToConfigure}</label>
+                  <label className={FORM_LABEL} htmlFor="list-selector">{localUiStrings.selectListToConfigure}</label>
                   <FormSelect
                     id="list-selector"
                     value={listKey}
@@ -696,20 +695,20 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
                   {listKey === "countryCodes" ? (
                     <div className="flex gap-2 items-end">
                       <div className="flex-1 text-left">
-                        <label className={LABEL} htmlFor="new-country-name">{localUiStrings.countryNameLabel}</label>
+                        <label className={FORM_LABEL} htmlFor="new-country-name">{localUiStrings.countryNameLabel}</label>
                         <input
                           id="new-country-name"
-                          className={INPUT}
+                          className={FORM_INPUT}
                           value={newCountryName}
                           onChange={(e) => setNewCountryName(e.target.value)}
                           placeholder={localUiStrings.countryNamePlaceholder}
                         />
                       </div>
                       <div className="w-24 text-left">
-                        <label className={LABEL} htmlFor="new-country-code">{localUiStrings.dialCodeLabel}</label>
+                        <label className={FORM_LABEL} htmlFor="new-country-code">{localUiStrings.dialCodeLabel}</label>
                         <input
                           id="new-country-code"
-                          className={INPUT}
+                          className={FORM_INPUT}
                           value={newCountryCode}
                           onChange={(e) => setNewCountryCode(e.target.value)}
                           placeholder={localUiStrings.dialCodePlaceholder}
@@ -728,10 +727,10 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
                     <div className="flex flex-col gap-2 w-full text-left">
                       <div className="flex gap-2 items-end">
                         <div className="flex-1 text-left">
-                          <label className={LABEL} htmlFor="new-template-label">{localUiStrings.templateLabelLabel}</label>
+                          <label className={FORM_LABEL} htmlFor="new-template-label">{localUiStrings.templateLabelLabel}</label>
                           <input
                             id="new-template-label"
-                            className={INPUT}
+                            className={FORM_INPUT}
                             value={newTemplateLabel}
                             onChange={(e) => setNewTemplateLabel(e.target.value)}
                             placeholder={localUiStrings.templateLabelPlaceholder}
@@ -740,10 +739,10 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
                       </div>
                       <div className="flex gap-2 items-end">
                         <div className="flex-1 text-left">
-                          <label className={LABEL} htmlFor="new-template-body">{localUiStrings.templateBodyLabel}</label>
+                          <label className={FORM_LABEL} htmlFor="new-template-body">{localUiStrings.templateBodyLabel}</label>
                           <textarea
                             id="new-template-body"
-                            className={INPUT + " min-h-[60px] resize-none"}
+                            className={FORM_INPUT + " min-h-[60px] resize-none"}
                             value={newTemplateBody}
                             onChange={(e) => setNewTemplateBody(e.target.value)}
                             placeholder={localUiStrings.templateBodyPlaceholder}
@@ -762,17 +761,17 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
                   ) : listKey === "lifecycleStages" ? (
                     <div className="flex gap-2 items-end">
                       <div className="flex-1 text-left">
-                        <label className={LABEL} htmlFor="new-item-text">{localUiStrings.addNewStageLabel}</label>
+                        <label className={FORM_LABEL} htmlFor="new-item-text">{localUiStrings.addNewStageLabel}</label>
                         <input
                           id="new-item-text"
-                          className={INPUT}
+                          className={FORM_INPUT}
                           value={newItemText}
                           onChange={(e) => setNewItemText(e.target.value)}
                           placeholder={localUiStrings.newStagePlaceholder}
                         />
                       </div>
                       <div className="w-32 text-left">
-                        <label className={LABEL} htmlFor="new-stage-color">{localUiStrings.stageColorLabel}</label>
+                        <label className={FORM_LABEL} htmlFor="new-stage-color">{localUiStrings.stageColorLabel}</label>
                         <FormSelect
                           id="new-stage-color"
                           value={newStageColor}
@@ -795,10 +794,10 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
                   ) : (
                     <div className="flex gap-2 items-end">
                       <div className="flex-1 text-left">
-                        <label className={LABEL} htmlFor="new-item-text">{localUiStrings.addNewOptionLabel}</label>
+                        <label className={FORM_LABEL} htmlFor="new-item-text">{localUiStrings.addNewOptionLabel}</label>
                         <input
                           id="new-item-text"
-                          className={INPUT}
+                          className={FORM_INPUT}
                           value={newItemText}
                           onChange={(e) => setNewItemText(e.target.value)}
                           placeholder={localUiStrings.newOptionPlaceholder}
@@ -928,30 +927,30 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
             <div className="p-4 space-y-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className={LABEL} htmlFor="defaultCountry">{localUiStrings.defaultCountryLabel}</label>
+                  <label className={FORM_LABEL} htmlFor="defaultCountry">{localUiStrings.defaultCountryLabel}</label>
                   <input
                     id="defaultCountry"
-                    className={INPUT}
+                    className={FORM_INPUT}
                     value={prefs.defaultCountry || ""}
                     onChange={(e) => updPref("defaultCountry", e.target.value)}
                     placeholder={localUiStrings.defaultCountryPlaceholder}
                   />
                 </div>
                 <div>
-                  <label className={LABEL} htmlFor="defaultProvince">{localUiStrings.defaultProvinceLabel}</label>
+                  <label className={FORM_LABEL} htmlFor="defaultProvince">{localUiStrings.defaultProvinceLabel}</label>
                   <input
                     id="defaultProvince"
-                    className={INPUT}
+                    className={FORM_INPUT}
                     value={prefs.defaultProvince || ""}
                     onChange={(e) => updPref("defaultProvince", e.target.value)}
                     placeholder={localUiStrings.defaultProvincePlaceholder}
                   />
                 </div>
                 <div>
-                  <label className={LABEL} htmlFor="defaultCity">{localUiStrings.defaultCityLabel}</label>
+                  <label className={FORM_LABEL} htmlFor="defaultCity">{localUiStrings.defaultCityLabel}</label>
                   <input
                     id="defaultCity"
-                    className={INPUT}
+                    className={FORM_INPUT}
                     value={prefs.defaultCity || ""}
                     onChange={(e) => updPref("defaultCity", e.target.value)}
                     placeholder={localUiStrings.defaultCityPlaceholder}
@@ -1082,7 +1081,7 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
                         setLocalUiStrings((prev) => ({ ...prev, [key]: e.target.value }));
                         setSaved(false);
                       }}
-                      className={INPUT}
+                      className={FORM_INPUT}
                       placeholder={DEFAULT_UI_STRINGS[key]}
                     />
                     <p className="text-[10px] text-muted-foreground italic">

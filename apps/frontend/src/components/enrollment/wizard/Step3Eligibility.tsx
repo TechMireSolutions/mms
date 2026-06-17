@@ -5,21 +5,21 @@ import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 
 const ICONS: Record<string, React.ReactElement> = {
-  pass: <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" aria-hidden="true" />,
+  pass: <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />,
   fail: <XCircle className="w-4 h-4 text-destructive flex-shrink-0" aria-hidden="true" />,
-  warn: <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" aria-hidden="true" />,
+  warn: <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0" aria-hidden="true" />,
 };
 
 const ROW_COLORS: Record<string, string> = {
-  pass: "bg-emerald-50 border-emerald-200",
-  fail: "bg-red-50 border-red-200",
-  warn: "bg-amber-50 border-amber-200",
+  pass: "bg-success/10 border-success/30",
+  fail: "bg-destructive/10 border-destructive/30",
+  warn: "bg-warning/10 border-warning/30",
 };
 
 const LABEL_COLORS: Record<string, string> = {
-  pass: "text-emerald-700",
-  fail: "text-red-600",
-  warn: "text-amber-700",
+  pass: "text-success",
+  fail: "text-destructive",
+  warn: "text-warning",
 };
 
 interface Step3EligibilityProps {
@@ -61,20 +61,20 @@ export default function Step3Eligibility({ student, session, suggestedClass, stu
 
       {/* Summary bar */}
       <div className="flex items-center gap-3 flex-wrap" role="status" aria-label="Eligibility summary">
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
-          <span className="text-xs font-bold text-emerald-700">{passCount} Passed</span>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success/10 border border-success/30">
+          <CheckCircle2 className="w-3.5 h-3.5 text-success" aria-hidden="true" />
+          <span className="text-xs font-bold text-success">{passCount} Passed</span>
         </div>
         {failCount > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 border border-red-200">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-destructive/10 border border-destructive/30">
             <XCircle className="w-3.5 h-3.5 text-destructive" aria-hidden="true" />
-            <span className="text-xs font-bold text-red-600">{failCount} Failed</span>
+            <span className="text-xs font-bold text-destructive">{failCount} Failed</span>
           </div>
         )}
         {warnCount > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
-            <span className="text-xs font-bold text-amber-700">{warnCount} Warning{warnCount > 1 ? "s" : ""}</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning/10 border border-warning/30">
+            <AlertTriangle className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
+            <span className="text-xs font-bold text-warning">{warnCount} Warning{warnCount > 1 ? "s" : ""}</span>
           </div>
         )}
       </div>
@@ -94,12 +94,12 @@ export default function Step3Eligibility({ student, session, suggestedClass, stu
 
       {/* Result banner */}
       {canProceed ? (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold" role="status">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-success/10 border border-success/30 text-success text-sm font-semibold" role="status">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
           Student is eligible — you may proceed to class assignment.
         </div>
       ) : (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-semibold" role="alert">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm font-semibold" role="alert">
           <XCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
           {failCount} eligibility check{failCount > 1 ? "s" : ""} failed. Review issues above before proceeding.
         </div>

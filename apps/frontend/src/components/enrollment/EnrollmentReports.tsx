@@ -90,9 +90,9 @@ export default function EnrollmentReports({ enrollments }: EnrollmentReportsProp
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KPI icon={Users}      label="Total Enrollments" value={total}    sub={`${confirmed} confirmed`} />
-        <KPI icon={TrendingUp} label="Confirmed"          value={confirmed} sub={`${pending} pending`}   color="bg-emerald-50 text-emerald-700" />
-        <KPI icon={BookOpen}   label="Cancelled"          value={cancelled} sub="This period"            color="bg-red-50 text-destructive" />
-        <KPI icon={DollarSign} label="Revenue Due"        value={`PKR ${totalFees.toLocaleString()}`} sub={`Paid: PKR ${paidFees.toLocaleString()}`} color="bg-amber-50 text-amber-700" />
+        <KPI icon={TrendingUp} label="Confirmed"          value={confirmed} sub={`${pending} pending`}   color="bg-success/10 text-success" />
+        <KPI icon={BookOpen}   label="Cancelled"          value={cancelled} sub="This period"            color="bg-destructive/10 text-destructive" />
+        <KPI icon={DollarSign} label="Revenue Due"        value={`PKR ${totalFees.toLocaleString()}`} sub={`Paid: PKR ${paidFees.toLocaleString()}`} color="bg-warning/10 text-warning" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -2,7 +2,7 @@ import React from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { motion } from "framer-motion";
 import { TrendingUp, AlertCircle, CheckCircle2, Clock } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer, Tooltip, TooltipProps } from "recharts";
+import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
 import { INVOICES, MONTHLY_REVENUE } from '@/lib/data/financeData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 
@@ -33,9 +33,9 @@ export default function FinanceSummary() {
       value: fmt(totalCollected),
       sub: `${paidCount} invoices paid`,
       icon: CheckCircle2,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-      border: "border-emerald-100",
+      color: "text-success",
+      bg: "bg-success/10",
+      border: "border-success/20",
       chart: MONTHLY_REVENUE.map((m) => ({ v: m.collected })),
       chartColor: primary,
     },
@@ -44,9 +44,9 @@ export default function FinanceSummary() {
       value: fmt(totalOutstanding),
       sub: `${invoices.filter((i) => ["pending", "partial"].includes(i.status)).length} pending`,
       icon: Clock,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
-      border: "border-amber-100",
+      color: "text-warning",
+      bg: "bg-warning/10",
+      border: "border-warning/20",
       chart: MONTHLY_REVENUE.map((m) => ({ v: m.outstanding })),
       chartColor: secondary,
     },
@@ -55,9 +55,9 @@ export default function FinanceSummary() {
       value: fmt(totalOverdue),
       sub: `${invoices.filter((i) => i.status === "overdue").length} invoices overdue`,
       icon: AlertCircle,
-      color: "text-red-600",
-      bg: "bg-red-50",
-      border: "border-red-100",
+      color: "text-destructive",
+      bg: "bg-destructive/10",
+      border: "border-destructive/20",
       chart: MONTHLY_REVENUE.map((m) => ({ v: Math.round(m.outstanding * 0.6) })),
       chartColor: "#ef4444",
     },

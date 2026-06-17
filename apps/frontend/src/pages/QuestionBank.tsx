@@ -20,7 +20,6 @@ import QuestionBankSettings from '../components/questionBank/QuestionBankSetting
 import ModuleReports from '../components/reports/ModuleReports';
 import KPISummary from '../components/reports/KPISummary';
 import type { QuestionBankQuestion, QuestionBankTest } from '@mms/shared';
-import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
 import { saveCollection } from '../lib/db';
 import { useLiveCollection } from '../hooks/useLiveCollection';
 

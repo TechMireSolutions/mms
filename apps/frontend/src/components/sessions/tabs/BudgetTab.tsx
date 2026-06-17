@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, TrendingUp, TrendingDown, DollarSign, X, Save } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, Session, BudgetIncome, BudgetExpense } from '@/lib/data/sessionsData';
 import { DatePicker } from "../../ui/DatePicker";
-
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
+import FormModal from "@/components/ui/FormModal";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 /** A single income or expense transaction entry. */
 interface TransactionEntry {
@@ -17,70 +15,64 @@ interface TransactionEntry {
 }
 
 interface TransactionModalProps {
+  open: boolean;
   type: "income" | "expense";
   onClose: () => void;
   onSave: (tx: TransactionEntry) => void;
 }
 
-function TransactionModal({ type, onClose, onSave }: TransactionModalProps) {
+function TransactionModal({ open, type, onClose, onSave }: TransactionModalProps) {
   const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
   const [data, setData] = useState({ category: categories[0], amount: "", date: new Date().toISOString().split("T")[0], note: "" });
   const upd = (f: keyof typeof data, v: string) => setData((d) => ({ ...d, [f]: v }));
 
+  React.useEffect(() => {
+    if (open) {
+      const cats = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+      setData({ category: cats[0], amount: "", date: new Date().toISOString().split("T")[0], note: "" });
+    }
+  }, [open, type]);
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="tx-modal-title">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.form 
-        onSubmit={(e) => { e.preventDefault(); onSave({ ...data, amount: +data.amount, id: `tx${Date.now()}` }); }}
-        initial={{ opacity: 0, scale: 0.96 }} 
-        animate={{ opacity: 1, scale: 1 }} 
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-sm z-10"
-      >
-        <header className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h3 id="tx-modal-title" className="text-sm font-bold text-foreground m-0">Add {type === "income" ? "Income" : "Expense"}</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground">
-            <X className="w-4 h-4" aria-hidden="true" />
-          </button>
-        </header>
-        <fieldset className="px-5 py-4 space-y-4 border-none m-0">
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={type === "income" ? "Add Income" : "Add Expense"}
+      icon={type === "income" ? TrendingUp : TrendingDown}
+      size="md"
+      cancelLabel="Cancel"
+      saveLabel="Add"
+      onSave={() => onSave({ ...data, amount: +data.amount, id: `tx${Date.now()}` })}
+      saveDisabled={!data.amount}
+    >
+      <div className="space-y-4">
+        <div>
+          <label className={FORM_LABEL} htmlFor="tx-category">Category</label>
+          <select id="tx-category" className={`${FORM_INPUT} cursor-pointer`} value={data.category} onChange={(e) => upd("category", e.target.value)}>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={LABEL} htmlFor="tx-category">Category</label>
-            <select id="tx-category" className={INPUT + " cursor-pointer"} value={data.category} onChange={(e) => upd("category", e.target.value)}>
-              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={LABEL} htmlFor="tx-amount">Amount (PKR) *</label>
-              <input id="tx-amount" type="number" className={INPUT} value={data.amount} onChange={(e) => upd("amount", e.target.value)} placeholder="0" min={0} required />
-            </div>
-            <div>
-              <label className={LABEL} htmlFor="tx-date">Date</label>
-              <DatePicker
-                id="tx-date"
-                value={data.date}
-                onChange={(val) => upd("date", val)}
-                required
-              />
-            </div>
+            <label className={FORM_LABEL} htmlFor="tx-amount">Amount (PKR) *</label>
+            <input id="tx-amount" type="number" className={FORM_INPUT} value={data.amount} onChange={(e) => upd("amount", e.target.value)} placeholder="0" min={0} required />
           </div>
           <div>
-            <label className={LABEL} htmlFor="tx-note">Note</label>
-            <input id="tx-note" className={INPUT} value={data.note} onChange={(e) => upd("note", e.target.value)} placeholder="Optional note…" />
+            <label className={FORM_LABEL} htmlFor="tx-date">Date</label>
+            <DatePicker
+              id="tx-date"
+              value={data.date}
+              onChange={(val) => upd("date", val)}
+              required
+            />
           </div>
-        </fieldset>
-        <footer className="px-5 py-4 border-t border-border flex justify-end gap-2.5">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">Cancel</button>
-          <button
-            type="submit"
-            disabled={!data.amount}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
-          >
-            <Save className="w-3.5 h-3.5" aria-hidden="true" /> Add
-          </button>
-        </footer>
-      </motion.form>
-    </div>
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="tx-note">Note</label>
+          <input id="tx-note" className={FORM_INPUT} value={data.note} onChange={(e) => upd("note", e.target.value)} placeholder="Optional note…" />
+        </div>
+      </div>
+    </FormModal>
   );
 }
 
@@ -124,9 +116,9 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
       {/* Summary cards */}
       <section aria-label="Budget Summary" className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total Income", value: totalIncome, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
-          { label: "Total Expenses", value: totalExpenses, icon: TrendingDown, color: "text-red-600", bg: "bg-red-50" },
-          { label: "Net Balance", value: balance, icon: DollarSign, color: balance >= 0 ? "text-emerald-600" : "text-red-600", bg: balance >= 0 ? "bg-emerald-50" : "bg-red-50" },
+          { label: "Total Income", value: totalIncome, icon: TrendingUp, color: "text-success", bg: "bg-success/10" },
+          { label: "Total Expenses", value: totalExpenses, icon: TrendingDown, color: "text-destructive", bg: "bg-destructive/10" },
+          { label: "Net Balance", value: balance, icon: DollarSign, color: balance >= 0 ? "text-success" : "text-destructive", bg: balance >= 0 ? "bg-success/10" : "bg-destructive/10" },
         ].map((stat) => (
           <article key={stat.label} className="rounded-xl border border-border bg-card p-4">
             <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center mb-2`} aria-hidden="true">
@@ -142,12 +134,12 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
       <section aria-labelledby="income-heading">
         <header className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+            <TrendingUp className="w-4 h-4 text-success" aria-hidden="true" />
             <h3 id="income-heading" className="text-sm font-bold text-foreground m-0">Income</h3>
           </div>
           <button
             onClick={() => setAddType("income")}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 border border-emerald-100 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-success/10 text-success text-xs font-semibold hover:bg-success/15 border border-success/20 transition-colors"
           >
             <Plus className="w-3 h-3" aria-hidden="true" /> Add Income
           </button>
@@ -163,7 +155,7 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
                   {inc.note && <p className="text-[11px] text-muted-foreground truncate m-0">{inc.note}</p>}
                 </div>
                 <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{inc.date}</p>
-                <p className="text-[13px] font-bold text-emerald-600 flex-shrink-0 m-0">{fmt(inc.amount)}</p>
+                <p className="text-[13px] font-bold text-success flex-shrink-0 m-0">{fmt(inc.amount)}</p>
                 <button aria-label={`Delete income ${inc.category}`} onClick={() => handleDelete("income", inc.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
@@ -177,12 +169,12 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
       <section aria-labelledby="expense-heading">
         <header className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <TrendingDown className="w-4 h-4 text-red-600" aria-hidden="true" />
+            <TrendingDown className="w-4 h-4 text-destructive" aria-hidden="true" />
             <h3 id="expense-heading" className="text-sm font-bold text-foreground m-0">Expenses</h3>
           </div>
           <button
             onClick={() => setAddType("expense")}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-700 text-xs font-semibold hover:bg-red-100 border border-red-100 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/15 border border-destructive/20 transition-colors"
           >
             <Plus className="w-3 h-3" aria-hidden="true" /> Add Expense
           </button>
@@ -198,7 +190,7 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
                   {exp.note && <p className="text-[11px] text-muted-foreground truncate m-0">{exp.note}</p>}
                 </div>
                 <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{exp.date}</p>
-                <p className="text-[13px] font-bold text-red-600 flex-shrink-0 m-0">{fmt(exp.amount)}</p>
+                <p className="text-[13px] font-bold text-destructive flex-shrink-0 m-0">{fmt(exp.amount)}</p>
                 <button aria-label={`Delete expense ${exp.category}`} onClick={() => handleDelete("expense", exp.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
@@ -208,9 +200,12 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
         </div>
       </section>
 
-      <AnimatePresence>
-        {addType && <TransactionModal type={addType} onClose={() => setAddType(null)} onSave={(tx) => handleAdd(addType, tx)} />}
-      </AnimatePresence>
+      <TransactionModal
+        open={addType !== null}
+        type={addType ?? "income"}
+        onClose={() => setAddType(null)}
+        onSave={(tx) => handleAdd(addType!, tx)}
+      />
     </div>
   );
 }

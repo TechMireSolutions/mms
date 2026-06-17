@@ -21,7 +21,7 @@ function FeeRow({ label, amount, currency, isSub = false, isTotal = false, isDis
   return (
     <div className={`flex items-center justify-between py-2 ${isTotal ? "border-t border-border mt-1 pt-3" : ""}`}>
       <span className={`text-sm ${isTotal ? "font-bold text-foreground" : isSub ? "text-muted-foreground text-xs pl-3" : "text-foreground"}`}>{label}</span>
-      <span className={`text-sm font-semibold ${isTotal ? "text-lg font-bold text-foreground" : isDiscount ? "text-emerald-600" : "text-foreground"}`}>
+      <span className={`text-sm font-semibold ${isTotal ? "text-lg font-bold text-foreground" : isDiscount ? "text-success" : "text-foreground"}`}>
         {isDiscount && amount > 0 ? "−" : ""}{currency} {Math.abs(amount).toLocaleString()}
       </span>
     </div>
@@ -90,9 +90,9 @@ export default function EnrollmentConfirmation({ student, session, onConfirm, on
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center"
+          className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center"
         >
-          <CheckCircle2 className="w-9 h-9 text-emerald-600" aria-hidden="true" />
+          <CheckCircle2 className="w-9 h-9 text-success" aria-hidden="true" />
         </motion.div>
         <div>
           <h3 className="text-lg font-bold text-foreground">Enrollment Confirmed!</h3>
@@ -175,8 +175,8 @@ export default function EnrollmentConfirmation({ student, session, onConfirm, on
         <FeeRow label="Total First Payment" amount={total} currency={session.currency} isTotal />
 
         {discount.pct === 100 && (
-          <div className="mt-3 p-2.5 rounded-lg bg-emerald-50 border border-emerald-100" role="status">
-            <p className="text-xs font-medium text-emerald-800">🎉 Full scholarship — monthly tuition is waived. Registration fee still applies.</p>
+          <div className="mt-3 p-2.5 rounded-lg bg-success/10 border border-success/20" role="status">
+            <p className="text-xs font-medium text-success">🎉 Full scholarship — monthly tuition is waived. Registration fee still applies.</p>
           </div>
         )}
       </section>

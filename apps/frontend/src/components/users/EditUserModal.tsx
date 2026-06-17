@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, User } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Save, User } from 'lucide-react';
 import {
   USER_STATUS_VALUES,
   type SystemUser,
@@ -11,6 +10,7 @@ import Modal from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { FORM_SELECT } from '@/components/ui/formStyles';
 
 export interface EditUserModalProps {
   user: SystemUser;
@@ -141,7 +141,7 @@ export default function EditUserModal({ user, onClose, onSave }: EditUserModalPr
             id="edit-user-status"
             value={form.status}
             onChange={(e) => set('status', e.target.value as SystemUser['status'])}
-            className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className={FORM_SELECT}
           >
             {USER_STATUS_VALUES.map((s) => (
               <option key={s} value={s}>

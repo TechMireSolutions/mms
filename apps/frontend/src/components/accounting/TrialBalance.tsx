@@ -79,7 +79,7 @@ export default function TrialBalance({ accounts, entries, fiscalYears, fmt }: Tr
       </section>
 
       {/* Balance status banner */}
-      <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border ${isBalanced ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}`} role="status">
+      <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border ${isBalanced ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
         {isBalanced ? <CheckCircle2 className="w-5 h-5" aria-hidden="true" /> : <AlertCircle className="w-5 h-5" aria-hidden="true" />}
         {isBalanced
           ? `Trial Balance is balanced — Total: ${grandDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
@@ -121,16 +121,16 @@ export default function TrialBalance({ accounts, entries, fiscalYears, fmt }: Tr
                         <td className="px-4 py-2.5 font-mono text-xs font-bold text-muted-foreground">{r.code}</td>
                         <td className="px-4 py-2.5 font-medium text-foreground">{r.name}</td>
                         <td className="px-4 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{r.subtype || "—"}</td>
-                        <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold text-blue-700">{fmtN(r.totalDebit)}</td>
-                        <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold text-emerald-700">{fmtN(r.totalCredit)}</td>
+                        <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold text-info">{fmtN(r.totalDebit)}</td>
+                        <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold text-success">{fmtN(r.totalCredit)}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot className="border-t border-border bg-muted/20">
                     <tr>
                       <td colSpan={3} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">Sub-total</td>
-                      <td className="px-4 py-2 text-right font-mono font-bold text-blue-700">{fmtN(groupDebit)}</td>
-                      <td className="px-4 py-2 text-right font-mono font-bold text-emerald-700">{fmtN(groupCredit)}</td>
+                      <td className="px-4 py-2 text-right font-mono font-bold text-info">{fmtN(groupDebit)}</td>
+                      <td className="px-4 py-2 text-right font-mono font-bold text-success">{fmtN(groupCredit)}</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -145,10 +145,10 @@ export default function TrialBalance({ accounts, entries, fiscalYears, fmt }: Tr
               <tfoot>
                 <tr>
                   <td colSpan={3} className="px-4 py-3 text-sm font-bold text-foreground uppercase tracking-wide">Grand Total</td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-blue-700 text-base">
+                  <td className="px-4 py-3 text-right font-mono font-bold text-info text-base">
                     {grandDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700 text-base">
+                  <td className="px-4 py-3 text-right font-mono font-bold text-success text-base">
                     {grandCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                 </tr>

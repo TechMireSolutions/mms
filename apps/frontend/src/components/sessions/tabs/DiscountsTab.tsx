@@ -1,74 +1,69 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Edit2, Tag, X, Save, ToggleLeft, ToggleRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus, Trash2, Edit2, Tag, ToggleLeft, ToggleRight } from "lucide-react";
 import { Session, Discount } from '@/lib/data/sessionsData';
+import FormModal from "@/components/ui/FormModal";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 const EMPTY: Partial<Discount> = { name: "", type: "percentage", value: 0, conditions: "", active: true };
 
 interface DiscountModalProps {
+  open: boolean;
   discount: Discount | null;
   onClose: () => void;
   onSave: (discount: Discount) => void;
 }
 
-function DiscountModal({ discount, onClose, onSave }: DiscountModalProps) {
+function DiscountModal({ open, discount, onClose, onSave }: DiscountModalProps) {
   const [data, setData] = useState<Partial<Discount>>(discount ? { ...discount } : { ...EMPTY });
   const upd = <K extends keyof Discount>(f: K, v: Discount[K]) => setData((d) => ({ ...d, [f]: v }));
 
+  React.useEffect(() => {
+    if (open) {
+      setData(discount ? { ...discount } : { ...EMPTY });
+    }
+  }, [open, discount]);
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="discount-modal-title">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.form
-        onSubmit={(e) => { e.preventDefault(); onSave({ ...data, id: discount?.id || `d${Date.now()}` } as Discount); }}
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-sm z-10"
-      >
-        <header className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h3 id="discount-modal-title" className="text-sm font-bold text-foreground m-0">{discount ? "Edit Discount" : "Add Discount"}</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" aria-hidden="true" /></button>
-        </header>
-        <fieldset className="px-5 py-4 space-y-4 border-none m-0">
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={discount ? "Edit Discount" : "Add Discount"}
+      icon={Tag}
+      size="md"
+      cancelLabel="Cancel"
+      saveLabel="Save"
+      onSave={() => onSave({ ...data, id: discount?.id || `d${Date.now()}` } as Discount)}
+      saveDisabled={!data.name}
+    >
+      <div className="space-y-4">
+        <div>
+          <label className={FORM_LABEL} htmlFor="discount-name">Name *</label>
+          <input id="discount-name" className={FORM_INPUT} value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Sibling Discount" required />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={LABEL} htmlFor="discount-name">Name *</label>
-            <input id="discount-name" className={INPUT} value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Sibling Discount" required />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={LABEL} htmlFor="discount-type">Type</label>
-              <select id="discount-type" className={INPUT + " cursor-pointer"} value={data.type || "percentage"} onChange={(e) => upd("type", e.target.value as Discount["type"])}>
-                <option value="percentage">Percentage (%)</option>
-                <option value="fixed">Fixed Amount</option>
-              </select>
-            </div>
-            <div>
-              <label className={LABEL} htmlFor="discount-value">Value</label>
-              <input id="discount-value" type="number" className={INPUT} value={data.value || ""} onChange={(e) => upd("value", +e.target.value)} min={0} max={data.type === "percentage" ? 100 : undefined} required />
-            </div>
+            <label className={FORM_LABEL} htmlFor="discount-type">Type</label>
+            <select id="discount-type" className={`${FORM_INPUT} cursor-pointer`} value={data.type || "percentage"} onChange={(e) => upd("type", e.target.value as Discount["type"])}>
+              <option value="percentage">Percentage (%)</option>
+              <option value="fixed">Fixed Amount</option>
+            </select>
           </div>
           <div>
-            <label className={LABEL} htmlFor="discount-conditions">Conditions</label>
-            <textarea id="discount-conditions" className={INPUT + " min-h-[64px] resize-none"} value={data.conditions || ""} onChange={(e) => upd("conditions", e.target.value)} placeholder="Who qualifies for this discount?" />
+            <label className={FORM_LABEL} htmlFor="discount-value">Value</label>
+            <input id="discount-value" type="number" className={FORM_INPUT} value={data.value || ""} onChange={(e) => upd("value", +e.target.value)} min={0} max={data.type === "percentage" ? 100 : undefined} required />
           </div>
-          <label className="flex items-center gap-2.5 cursor-pointer">
-            <input type="checkbox" checked={data.active || false} onChange={(e) => upd("active", e.target.checked)} className="w-4 h-4 accent-primary" />
-            <span className="text-sm text-foreground font-medium">Active</span>
-          </label>
-        </fieldset>
-        <footer className="px-5 py-4 border-t border-border flex justify-end gap-2.5">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">Cancel</button>
-          <button
-            type="submit"
-            disabled={!data.name}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
-          >
-            <Save className="w-3.5 h-3.5" aria-hidden="true" /> Save
-          </button>
-        </footer>
-      </motion.form>
-    </div>
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="discount-conditions">Conditions</label>
+          <textarea id="discount-conditions" className={`${FORM_INPUT} min-h-[64px] resize-none`} value={data.conditions || ""} onChange={(e) => upd("conditions", e.target.value)} placeholder="Who qualifies for this discount?" />
+        </div>
+        <label className="flex items-center gap-2.5 cursor-pointer">
+          <input type="checkbox" checked={data.active || false} onChange={(e) => upd("active", e.target.checked)} className="w-4 h-4 accent-primary" />
+          <span className="text-sm text-foreground font-medium">Active</span>
+        </label>
+      </div>
+    </FormModal>
   );
 }
 
@@ -136,7 +131,7 @@ export default function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h4 className="text-[13px] font-bold text-foreground m-0">{d.name}</h4>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${d.active ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-muted text-muted-foreground border-border"}`}>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${d.active ? "bg-success/10 text-success border-success/20" : "bg-muted text-muted-foreground border-border"}`}>
                     {d.active ? "Active" : "Inactive"}
                   </span>
                 </div>
@@ -161,9 +156,12 @@ export default function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
         </div>
       )}
 
-      <AnimatePresence>
-        {showModal && <DiscountModal discount={editDiscount} onClose={() => { setShowModal(false); setEditDiscount(null); }} onSave={handleSave} />}
-      </AnimatePresence>
+      <DiscountModal
+        open={showModal}
+        discount={editDiscount}
+        onClose={() => { setShowModal(false); setEditDiscount(null); }}
+        onSave={handleSave}
+      />
     </section>
   );
 }

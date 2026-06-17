@@ -1,6 +1,5 @@
 import React from 'react';
-import {
-  Upload, Mail, Phone, Globe, MapPin, Share2, Building2, Type,
+import { Mail, Phone, Globe, MapPin, Share2, Building2, Type,
 } from 'lucide-react';
 import { BRANDING_IDENTITY_FIELD_KEYS, resetBrandingIdentity } from '@mms/shared';
 import { saveBrandingSettings } from '@/lib/db';

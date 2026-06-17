@@ -105,6 +105,7 @@ const DERIVED_SWATCHES: { labelKey: AppTranslationKey; token: keyof ReturnType<t
   { labelKey: 'theme.tokenAccent', token: '--secondary' },
   { labelKey: 'theme.tokenMuted', token: '--muted' },
   { labelKey: 'theme.tokenBorder', token: '--border' },
+  { labelKey: 'theme.tokenSuccess', token: '--success' },
   { labelKey: 'theme.tokenChart1', token: '--chart-1' },
   { labelKey: 'theme.tokenChart2', token: '--chart-2' },
   { labelKey: 'theme.tokenSidebar', token: '--sidebar-background' },
@@ -194,7 +195,7 @@ export default function BrandColorPanel({
                   ) : null}
                   {lowContrast ? (
                     <AlertTriangle
-                      className="absolute -left-1 -top-1 h-3 w-3 text-amber-700 drop-shadow-sm dark:text-amber-300"
+                      className="absolute -left-1 -top-1 h-3 w-3 text-warning drop-shadow-sm dark:text-warning"
                       aria-label={t('theme.presetContrastLow')}
                     />
                   ) : null}

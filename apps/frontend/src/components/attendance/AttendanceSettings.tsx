@@ -277,13 +277,13 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
                 </div>
               </SettingRow>
               <SettingRow label="Facial Recognition" sub="AI-powered face scan for attendance (coming soon)">
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Coming Soon</span>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-warning/15 text-warning">Coming Soon</span>
               </SettingRow>
               <SettingRow label="Daily Auto-Lock" sub="Automatically lock attendance after end-of-day submission">
                 <Toggle checked={settings.lockAfterSubmit} onChange={(v) => set("lockAfterSubmit", v)} />
               </SettingRow>
               <SettingRow label="Audit Logging" sub="Record all edits and submissions in an audit trail (always on)">
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Active</span>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-success/15 text-success">Active</span>
               </SettingRow>
             </div>
           </article>

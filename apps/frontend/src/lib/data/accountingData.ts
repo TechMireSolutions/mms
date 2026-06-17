@@ -10,11 +10,11 @@ export const ACCOUNT_SUBTYPES: Record<AccountType, string[]> = {
 };
 
 export const ACCOUNT_TYPE_META = {
-  Asset:     { normalBalance: "debit",  color: "bg-blue-100 text-blue-700 border-blue-200",       group: "Balance Sheet",    icon: "🏦" },
-  Liability: { normalBalance: "credit", color: "bg-red-100 text-red-700 border-red-200",           group: "Balance Sheet",    icon: "💳" },
-  Equity:    { normalBalance: "credit", color: "bg-purple-100 text-purple-700 border-purple-200", group: "Balance Sheet",    icon: "📊" },
-  Revenue:   { normalBalance: "credit", color: "bg-emerald-100 text-emerald-700 border-emerald-200", group: "Income Statement", icon: "💰" },
-  Expense:   { normalBalance: "debit",  color: "bg-amber-100 text-amber-700 border-amber-200",     group: "Income Statement", icon: "📉" },
+  Asset:     { normalBalance: "debit",  color: "bg-info/15 text-info border-info/30",       group: "Balance Sheet",    icon: "🏦" },
+  Liability: { normalBalance: "credit", color: "bg-destructive/15 text-destructive border-destructive/30",           group: "Balance Sheet",    icon: "💳" },
+  Equity:    { normalBalance: "credit", color: "bg-primary/15 text-primary border-primary/30", group: "Balance Sheet",    icon: "📊" },
+  Revenue:   { normalBalance: "credit", color: "bg-success/15 text-success border-success/30", group: "Income Statement", icon: "💰" },
+  Expense:   { normalBalance: "debit",  color: "bg-warning/15 text-warning border-warning/30",     group: "Income Statement", icon: "📉" },
 };
 
 export interface Account {

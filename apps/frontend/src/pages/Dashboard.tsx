@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import StatsGrid from "../components/dashboard/StatsGrid";
@@ -8,8 +8,7 @@ import { useViewerRole } from "@/hooks/useViewerRole";
 import usePermissions from "@/hooks/usePermissions";
 import type { Permission } from "@mms/shared";
 import { DashboardWidgets, CustomWidget, WidgetBuilder, getOrInitializeCustomWidgets } from "../components/reports/PinnedWidgets";
-import DynamicCardBuilder from "../components/reports/DynamicCardBuilder";
-import { METADATA_FIELDS, computeCustomCard as computeCustomCardShared, CustomCard, COLLECTION_OPTIONS, type ReportCollection } from "../components/reports/reportMetadata";
+import { computeCustomCard as computeCustomCardShared, CustomCard, type ReportCollection } from "../components/reports/reportMetadata";
 
 import { getCollection, saveCollection } from "../lib/db";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
@@ -575,7 +574,7 @@ export default function Dashboard() {
                             <div className="space-y-0.5">
                               <p className="text-xs font-semibold text-foreground leading-tight">{card.title}</p>
                               <p className="text-[10px] text-muted-foreground flex items-center">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-success mr-1.5" />
                                 {t("dashboard.activeData")}
                               </p>
                             </div>
@@ -628,7 +627,7 @@ export default function Dashboard() {
                                 <div className="space-y-0.5">
                                   <p className="text-xs font-semibold text-foreground leading-tight">{widget.title}</p>
                                   <p className="text-[10px] text-muted-foreground capitalize flex items-center">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-info mr-1.5" />
                                     {widget.collection.replace("_", " ")}
                                   </p>
                                 </div>

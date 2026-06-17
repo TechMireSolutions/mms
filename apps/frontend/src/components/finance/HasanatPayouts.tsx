@@ -3,9 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Star, Gift, Plus, X, Save } from "lucide-react";
 import { HASANAT_PAYOUTS, HasanatPayout } from '@/lib/data/financeData';
 import { DatePicker } from "../ui/DatePicker";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 
 interface PayoutModalProps {
   onClose: () => void;
@@ -40,25 +39,25 @@ function PayoutModal({ onClose, onSave }: PayoutModalProps) {
         <fieldset className="px-5 py-4 space-y-4 border-none m-0">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={LABEL} htmlFor="payout-studentName">Student Name *</label>
-              <input id="payout-studentName" className={INPUT} value={data.studentName || ""} onChange={(e) => upd("studentName", e.target.value)} placeholder="Full name" required />
+              <label className={FORM_LABEL} htmlFor="payout-studentName">Student Name *</label>
+              <input id="payout-studentName" className={FORM_INPUT} value={data.studentName || ""} onChange={(e) => upd("studentName", e.target.value)} placeholder="Full name" required />
             </div>
             <div>
-              <label className={LABEL} htmlFor="payout-class">Class</label>
-              <input id="payout-class" className={INPUT} value={data.class || ""} onChange={(e) => upd("class", e.target.value)} placeholder="e.g. Hifz A" />
+              <label className={FORM_LABEL} htmlFor="payout-class">Class</label>
+              <input id="payout-class" className={FORM_INPUT} value={data.class || ""} onChange={(e) => upd("class", e.target.value)} placeholder="e.g. Hifz A" />
             </div>
           </div>
           <div>
-            <label className={LABEL} htmlFor="payout-points">Points Redeemed *</label>
-            <input id="payout-points" type="number" className={INPUT} value={data.pointsRedeemed || ""} onChange={(e) => upd("pointsRedeemed", e.target.value)} placeholder="0" min={0} required />
+            <label className={FORM_LABEL} htmlFor="payout-points">Points Redeemed *</label>
+            <input id="payout-points" type="number" className={FORM_INPUT} value={data.pointsRedeemed || ""} onChange={(e) => upd("pointsRedeemed", e.target.value)} placeholder="0" min={0} required />
           </div>
           <div>
-            <label className={LABEL} htmlFor="payout-reward">Reward Given *</label>
-            <input id="payout-reward" className={INPUT} value={data.rewardGiven || ""} onChange={(e) => upd("rewardGiven", e.target.value)} placeholder="e.g. Prize Voucher PKR 500" required />
+            <label className={FORM_LABEL} htmlFor="payout-reward">Reward Given *</label>
+            <input id="payout-reward" className={FORM_INPUT} value={data.rewardGiven || ""} onChange={(e) => upd("rewardGiven", e.target.value)} placeholder="e.g. Prize Voucher PKR 500" required />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={LABEL} htmlFor="payout-date">Date</label>
+              <label className={FORM_LABEL} htmlFor="payout-date">Date</label>
               <DatePicker
                 id="payout-date"
                 value={data.date || ""}
@@ -66,8 +65,8 @@ function PayoutModal({ onClose, onSave }: PayoutModalProps) {
               />
             </div>
             <div>
-              <label className={LABEL} htmlFor="payout-approvedBy">Approved By</label>
-              <input id="payout-approvedBy" className={INPUT} value={data.approvedBy || ""} onChange={(e) => upd("approvedBy", e.target.value)} placeholder="Name" />
+              <label className={FORM_LABEL} htmlFor="payout-approvedBy">Approved By</label>
+              <input id="payout-approvedBy" className={FORM_INPUT} value={data.approvedBy || ""} onChange={(e) => upd("approvedBy", e.target.value)} placeholder="Name" />
             </div>
           </div>
         </fieldset>
@@ -110,7 +109,7 @@ export default function HasanatPayouts() {
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-3" aria-label="Hasanat Summary">
         {[
-          { label: "Total Earned", value: totalEarned, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+          { label: "Total Earned", value: totalEarned, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
           { label: "Total Redeemed", value: totalRedeemed, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10" },
           { label: "Unredeemed", value: totalEarned - totalRedeemed, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
         ].map((s) => (
@@ -159,8 +158,8 @@ export default function HasanatPayouts() {
                   <td className="px-4 py-3 text-[12px] text-muted-foreground">{p.class}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1" aria-label={`Earned ${p.pointsEarned} points`}>
-                      <Star className="w-3 h-3 text-amber-500" aria-hidden="true" />
-                      <span className="text-[13px] font-bold text-amber-600">{p.pointsEarned}</span>
+                      <Star className="w-3 h-3 text-warning" aria-hidden="true" />
+                      <span className="text-[13px] font-bold text-warning">{p.pointsEarned}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">

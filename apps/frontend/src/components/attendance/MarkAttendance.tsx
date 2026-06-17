@@ -167,25 +167,25 @@ function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: Of
     <AnimatePresence>
       {offline && (
         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-          className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800">
+          className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-warning/10 border border-warning/30 text-warning">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <WifiOff className="w-4 h-4" aria-hidden="true" />
             Offline Mode — changes will sync when reconnected
-            {queue.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-amber-200 text-[10px] font-bold">{queue.length} pending</span>}
+            {queue.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-warning/30 text-[10px] font-bold">{queue.length} pending</span>}
           </div>
-          <button onClick={onSync} className="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-200 hover:bg-amber-300 transition-colors flex items-center gap-1">
+          <button onClick={onSync} className="text-xs font-bold px-2.5 py-1 rounded-lg bg-warning/30 hover:bg-warning/40 transition-colors flex items-center gap-1">
             <UploadCloud className="w-3 h-3" aria-hidden="true" /> Sync Now
           </button>
         </motion.div>
       )}
       {!offline && queue.length > 0 && (
         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-          className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800">
+          className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-success/10 border border-success/30 text-success">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <Wifi className="w-4 h-4" aria-hidden="true" />
             Back online — {queue.length} record{queue.length > 1 ? "s" : ""} ready to sync
           </div>
-          <button onClick={onSync} className="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-200 hover:bg-emerald-300 transition-colors flex items-center gap-1">
+          <button onClick={onSync} className="text-xs font-bold px-2.5 py-1 rounded-lg bg-success/30 hover:bg-success/40 transition-colors flex items-center gap-1">
             <UploadCloud className="w-3 h-3" aria-hidden="true" /> Sync Now
           </button>
         </motion.div>
@@ -202,7 +202,7 @@ function GeoTag({ geo, onRequest }: { geo: GeoData | "loading" | null; onRequest
     </span>
   );
   if (geo) return (
-    <span className="flex items-center gap-1 text-[11px] text-emerald-700 font-medium px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200">
+    <span className="flex items-center gap-1 text-[11px] text-success font-medium px-2 py-1 rounded-lg bg-success/10 border border-success/30">
       <MapPin className="w-3 h-3" aria-hidden="true" /> {geo.lat.toFixed(4)}, {geo.lng.toFixed(4)}
     </span>
   );
@@ -225,7 +225,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
       <div>
         <h3 className="text-sm font-bold text-foreground m-0">Facial Recognition</h3>
         <p className="text-xs text-muted-foreground mt-1">AI-powered face scan for auto-attendance marking.</p>
-        <span className="inline-block mt-2 px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-[11px] font-bold">Coming Soon</span>
+        <span className="inline-block mt-2 px-2.5 py-1 rounded-full bg-warning/15 text-warning text-[11px] font-bold">Coming Soon</span>
       </div>
       <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 flex items-center justify-center" style={{ height: 160 }}>
         <div className="text-center space-y-2">
@@ -517,8 +517,8 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
     return (
       <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
-          <CheckCircle2 className="w-8 h-8 text-emerald-600" aria-hidden="true" />
+        <div className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center mb-4">
+          <CheckCircle2 className="w-8 h-8 text-success" aria-hidden="true" />
         </div>
         <h2 className="text-lg font-bold text-foreground m-0">Attendance Submitted & Locked</h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -551,7 +551,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
     <section className="space-y-4">
       {/* Offline Banner */}
       <OfflineBanner offline={isOffline} queue={offlineQueue} onSync={handleSync} />
-      {syncedMsg && <div className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold">✓ Offline records synced successfully.</div>}
+      {syncedMsg && <div className="px-4 py-2 rounded-xl bg-success/10 border border-success/30 text-success text-sm font-semibold">✓ Offline records synced successfully.</div>}
 
       {/* Facial Recognition Placeholder */}
       <AnimatePresence>
@@ -564,12 +564,12 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-foreground m-0">{classInfo?.name}</h2>
             {locked && (
-              <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-bold">
+              <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-destructive/15 text-destructive font-bold">
                 <Lock className="w-2.5 h-2.5" aria-hidden="true" /> Locked
               </span>
             )}
             {isOffline && (
-              <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold">
+              <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-warning/15 text-warning font-bold">
                 <WifiOff className="w-2.5 h-2.5" aria-hidden="true" /> Offline
               </span>
             )}
@@ -582,17 +582,17 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {isDraft && <span className="px-2 py-1 rounded-lg bg-amber-100 text-amber-700 text-[11px] font-bold">Draft Saved</span>}
+          {isDraft && <span className="px-2 py-1 rounded-lg bg-warning/15 text-warning text-[11px] font-bold">Draft Saved</span>}
           <button onClick={() => setShowFaceAI((o) => !o)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <Scan className="w-3 h-3" aria-hidden="true" /> Face AI
           </button>
           {!locked && (
             <div className="flex rounded-lg border border-border overflow-hidden text-xs font-semibold" role="group" aria-label="Bulk actions">
-              <button onClick={() => markAll("present")} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors flex items-center gap-1">
+              <button onClick={() => markAll("present")} className="px-3 py-1.5 bg-success/10 text-success hover:bg-success/15 transition-colors flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> All Present
               </button>
-              <button onClick={() => markAll("absent")} className="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 transition-colors flex items-center gap-1">
+              <button onClick={() => markAll("absent")} className="px-3 py-1.5 bg-destructive/10 text-destructive hover:bg-destructive/15 transition-colors flex items-center gap-1">
                 <XCircle className="w-3 h-3" aria-hidden="true" /> All Absent
               </button>
             </div>
@@ -602,7 +602,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
 
       {/* Locked notice */}
       {locked && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm font-semibold">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm font-semibold">
           <Lock className="w-4 h-4" aria-hidden="true" />
           This attendance session is locked. Contact an admin to unlock.
         </div>

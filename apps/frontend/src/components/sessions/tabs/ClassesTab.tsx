@@ -1,14 +1,13 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Edit2, Users, GraduationCap, X, Save } from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus, Trash2, Edit2, Users, GraduationCap } from "lucide-react";
 import { TEACHERS, Session, Class } from '@/lib/data/sessionsData';
-
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
+import FormModal from "@/components/ui/FormModal";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 const GENDER_COLORS: Record<string, string> = {
-  male:   "bg-blue-50 text-blue-700 border-blue-100",
-  female: "bg-rose-50 text-rose-700 border-rose-100",
+  male:   "bg-info/10 text-info border-info/20",
+  female: "bg-secondary/10 text-secondary border-secondary/20",
   any:    "bg-muted text-muted-foreground border-border",
 };
 
@@ -22,7 +21,7 @@ interface ClassCardProps {
 
 function ClassCard({ cls, onEdit, onDelete }: ClassCardProps) {
   const pct = Math.round((cls.enrolled / cls.capacity) * 100);
-  const barColor = pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-amber-500" : "bg-emerald-500";
+  const barColor = pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-warning" : "bg-success";
 
   return (
     <motion.article
@@ -83,12 +82,13 @@ function ClassCard({ cls, onEdit, onDelete }: ClassCardProps) {
 }
 
 interface ClassModalProps {
+  open: boolean;
   cls: Class | null;
   onClose: () => void;
   onSave: (cls: Class) => void;
 }
 
-function ClassModal({ cls, onClose, onSave }: ClassModalProps) {
+function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
   const [data, setData] = useState<Partial<Class>>(cls ? { ...cls } : { ...EMPTY_CLASS });
   const upd = <K extends keyof Class>(f: K, v: Class[K]) => setData((d) => ({ ...d, [f]: v }));
 
@@ -97,72 +97,66 @@ function ClassModal({ cls, onClose, onSave }: ClassModalProps) {
     setData((d) => ({ ...d, teacherId: id, teacherName: t?.name || "" }));
   };
 
+  React.useEffect(() => {
+    if (open) {
+      setData(cls ? { ...cls } : { ...EMPTY_CLASS });
+    }
+  }, [open, cls]);
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="class-modal-title">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.form
-        onSubmit={(e) => { e.preventDefault(); onSave({ ...data, id: cls?.id || `c${Date.now()}` } as Class); }}
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-md flex flex-col z-10"
-      >
-        <header className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h3 id="class-modal-title" className="text-sm font-bold text-foreground m-0">{cls ? "Edit Class" : "Add Class"}</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" aria-hidden="true" /></button>
-        </header>
-        <fieldset className="px-5 py-4 space-y-4 border-none m-0">
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={cls ? "Edit Class" : "Add Class"}
+      icon={GraduationCap}
+      size="md"
+      cancelLabel="Cancel"
+      saveLabel="Save Class"
+      onSave={() => onSave({ ...data, id: cls?.id || `c${Date.now()}` } as Class)}
+      saveDisabled={!data.name}
+    >
+      <div className="space-y-4">
+        <div>
+          <label className={FORM_LABEL} htmlFor="class-name">Class Name *</label>
+          <input id="class-name" className={FORM_INPUT} value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Hifz A" required />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={LABEL} htmlFor="class-name">Class Name *</label>
-            <input id="class-name" className={INPUT} value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Hifz A" required />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={LABEL} htmlFor="class-min-age">Min Age</label>
-              <input id="class-min-age" type="number" className={INPUT} value={data.ageMin || ""} onChange={(e) => upd("ageMin", +e.target.value)} min={1} max={100} />
-            </div>
-            <div>
-              <label className={LABEL} htmlFor="class-max-age">Max Age</label>
-              <input id="class-max-age" type="number" className={INPUT} value={data.ageMax || ""} onChange={(e) => upd("ageMax", +e.target.value)} min={1} max={100} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={LABEL} htmlFor="class-gender">Gender</label>
-              <select id="class-gender" className={INPUT + " cursor-pointer"} value={data.gender || "any"} onChange={(e) => upd("gender", e.target.value as Class["gender"])}>
-                <option value="any">Any</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-            </div>
-            <div>
-              <label className={LABEL} htmlFor="class-capacity">Capacity</label>
-              <input id="class-capacity" type="number" className={INPUT} value={data.capacity || ""} onChange={(e) => upd("capacity", +e.target.value)} min={1} />
-            </div>
+            <label className={FORM_LABEL} htmlFor="class-min-age">Min Age</label>
+            <input id="class-min-age" type="number" className={FORM_INPUT} value={data.ageMin || ""} onChange={(e) => upd("ageMin", +e.target.value)} min={1} max={100} />
           </div>
           <div>
-            <label className={LABEL} htmlFor="class-teacher">Teacher</label>
-            <select id="class-teacher" className={INPUT + " cursor-pointer"} value={data.teacherId || ""} onChange={(e) => handleTeacher(e.target.value)}>
-              <option value="">Unassigned</option>
-              {TEACHERS.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            <label className={FORM_LABEL} htmlFor="class-max-age">Max Age</label>
+            <input id="class-max-age" type="number" className={FORM_INPUT} value={data.ageMax || ""} onChange={(e) => upd("ageMax", +e.target.value)} min={1} max={100} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={FORM_LABEL} htmlFor="class-gender">Gender</label>
+            <select id="class-gender" className={`${FORM_INPUT} cursor-pointer`} value={data.gender || "any"} onChange={(e) => upd("gender", e.target.value as Class["gender"])}>
+              <option value="any">Any</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
             </select>
           </div>
           <div>
-            <label className={LABEL} htmlFor="class-room">Room</label>
-            <input id="class-room" className={INPUT} value={data.room || ""} onChange={(e) => upd("room", e.target.value)} placeholder="e.g. Room A" />
+            <label className={FORM_LABEL} htmlFor="class-capacity">Capacity</label>
+            <input id="class-capacity" type="number" className={FORM_INPUT} value={data.capacity || ""} onChange={(e) => upd("capacity", +e.target.value)} min={1} />
           </div>
-        </fieldset>
-        <footer className="px-5 py-4 border-t border-border flex justify-end gap-2.5">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">Cancel</button>
-          <button
-            type="submit"
-            disabled={!data.name}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all"
-          >
-            <Save className="w-3.5 h-3.5" aria-hidden="true" /> Save Class
-          </button>
-        </footer>
-      </motion.form>
-    </div>
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="class-teacher">Teacher</label>
+          <select id="class-teacher" className={`${FORM_INPUT} cursor-pointer`} value={data.teacherId || ""} onChange={(e) => handleTeacher(e.target.value)}>
+            <option value="">Unassigned</option>
+            {TEACHERS.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="class-room">Room</label>
+          <input id="class-room" className={FORM_INPUT} value={data.room || ""} onChange={(e) => upd("room", e.target.value)} placeholder="e.g. Room A" />
+        </div>
+      </div>
+    </FormModal>
   );
 }
 
@@ -222,11 +216,12 @@ export default function ClassesTab({ session, onUpdate }: ClassesTabProps) {
         </div>
       )}
 
-      <AnimatePresence>
-        {showModal && (
-          <ClassModal cls={editCls} onClose={() => { setShowModal(false); setEditCls(null); }} onSave={handleSave} />
-        )}
-      </AnimatePresence>
+      <ClassModal
+        open={showModal}
+        cls={editCls}
+        onClose={() => { setShowModal(false); setEditCls(null); }}
+        onSave={handleSave}
+      />
     </section>
   );
 }

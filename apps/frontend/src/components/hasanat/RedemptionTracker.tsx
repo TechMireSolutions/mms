@@ -1,97 +1,95 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Gift, Plus, Star, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { Gift, Plus, Star } from "lucide-react";
 import { REDEMPTIONS, Redemption, Distribution } from '@/lib/data/hasanatData';
 import { DatePicker } from "../ui/DatePicker";
-
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
+import FormModal from "@/components/ui/FormModal";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 interface RedeemModalProps {
+  open: boolean;
   distributions: Distribution[];
   onClose: () => void;
   onSave: (red: Redemption) => void;
 }
 
-function RedeemModal({ distributions, onClose, onSave }: RedeemModalProps) {
+function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps) {
   const activeDistr = distributions.filter((d) => d.status === "active");
-  const [data, setData] = useState<Partial<Redemption>>({ 
-    distributionId: activeDistr[0]?.id || "", 
-    reward: "", 
-    pointsUsed: 0, 
-    date: new Date().toISOString().split("T")[0], 
-    approvedBy: "" 
+  const [data, setData] = useState<Partial<Redemption>>({
+    distributionId: activeDistr[0]?.id || "",
+    reward: "",
+    pointsUsed: 0,
+    date: new Date().toISOString().split("T")[0],
+    approvedBy: "",
   });
-  
+
   const upd = <K extends keyof Redemption>(f: K, v: Redemption[K]) => setData((d: Partial<Redemption>) => ({ ...d, [f]: v }));
   const selected = activeDistr.find((d) => d.id === data.distributionId);
 
+  React.useEffect(() => {
+    if (open) {
+      const active = distributions.filter((d) => d.status === "active");
+      setData({
+        distributionId: active[0]?.id || "",
+        reward: "",
+        pointsUsed: 0,
+        date: new Date().toISOString().split("T")[0],
+        approvedBy: "",
+      });
+    }
+  }, [open, distributions]);
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.div 
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="redeem-modal-title"
-        initial={{ opacity: 0, scale: 0.96 }} 
-        animate={{ opacity: 1, scale: 1 }} 
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-sm z-10"
-      >
-        <header className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h3 id="redeem-modal-title" className="text-sm font-bold text-foreground m-0">Record Redemption</h3>
-          <button type="button" aria-label="Close modal" onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" aria-hidden="true" /></button>
-        </header>
-        <div className="px-5 py-4 space-y-4">
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title="Record Redemption"
+      icon={Gift}
+      size="md"
+      cancelLabel="Cancel"
+      saveLabel="Record"
+      onSave={() => {
+        const dist = activeDistr.find((d) => d.id === data.distributionId);
+        onSave({ ...data, id: `red${Date.now()}`, studentName: dist?.recipientName || "", pointsUsed: Number(data.pointsUsed) } as Redemption);
+      }}
+      saveDisabled={!data.distributionId || !data.reward || !data.pointsUsed}
+    >
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="dist-sel" className={FORM_LABEL}>Distribution / Student *</label>
+          <select id="dist-sel" className={`${FORM_INPUT} cursor-pointer`} value={data.distributionId} onChange={(e) => upd("distributionId", e.target.value)}>
+            {activeDistr.map((d) => (
+              <option key={d.id} value={d.id}>{d.recipientName} — {d.denominationName} × {d.quantity}</option>
+            ))}
+          </select>
+          {selected && (
+            <p className="text-[11px] text-muted-foreground mt-1 m-0">Reason: {selected.reason}</p>
+          )}
+        </div>
+        <div>
+          <label htmlFor="reward-given" className={FORM_LABEL}>Reward Given *</label>
+          <input id="reward-given" className={FORM_INPUT} value={data.reward} onChange={(e) => upd("reward", e.target.value)} placeholder="e.g. Stationery Kit, Book Voucher" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="dist-sel" className={LABEL}>Distribution / Student *</label>
-            <select id="dist-sel" className={INPUT + " cursor-pointer"} value={data.distributionId} onChange={(e) => upd("distributionId", e.target.value)}>
-              {activeDistr.map((d) => (
-                <option key={d.id} value={d.id}>{d.recipientName} — {d.denominationName} × {d.quantity}</option>
-              ))}
-            </select>
-            {selected && (
-              <p className="text-[11px] text-muted-foreground mt-1 m-0">Reason: {selected.reason}</p>
-            )}
+            <label htmlFor="pts-used" className={FORM_LABEL}>Points Used *</label>
+            <input id="pts-used" type="number" className={FORM_INPUT} value={data.pointsUsed || ""} onChange={(e) => upd("pointsUsed", Number(e.target.value))} placeholder="0" min={1} />
           </div>
           <div>
-            <label htmlFor="reward-given" className={LABEL}>Reward Given *</label>
-            <input id="reward-given" className={INPUT} value={data.reward} onChange={(e) => upd("reward", e.target.value)} placeholder="e.g. Stationery Kit, Book Voucher" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="pts-used" className={LABEL}>Points Used *</label>
-              <input id="pts-used" type="number" className={INPUT} value={data.pointsUsed || ""} onChange={(e) => upd("pointsUsed", Number(e.target.value))} placeholder="0" min={1} />
-            </div>
-            <div>
-              <label htmlFor="red-date" className={LABEL}>Date</label>
-              <DatePicker
-                id="red-date"
-                value={data.date || ""}
-                onChange={(val) => upd("date", val)}
-              />
-            </div>
-          </div>
-          <div>
-            <label htmlFor="approved-by" className={LABEL}>Approved By</label>
-            <input id="approved-by" className={INPUT} value={data.approvedBy} onChange={(e) => upd("approvedBy", e.target.value)} placeholder="Admin / Teacher" />
+            <label htmlFor="red-date" className={FORM_LABEL}>Date</label>
+            <DatePicker
+              id="red-date"
+              value={data.date || ""}
+              onChange={(val) => upd("date", val)}
+            />
           </div>
         </div>
-        <footer className="px-5 py-4 border-t border-border flex justify-end gap-2.5">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted">Cancel</button>
-          <button
-            type="button"
-            onClick={() => {
-              const dist = activeDistr.find((d) => d.id === data.distributionId);
-              onSave({ ...data, id: `red${Date.now()}`, studentName: dist?.recipientName || "", pointsUsed: Number(data.pointsUsed) } as Redemption);
-            }}
-            disabled={!data.distributionId || !data.reward || !data.pointsUsed}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
-          >
-            <Gift className="w-3.5 h-3.5" aria-hidden="true" /> Record
-          </button>
-        </footer>
-      </motion.div>
-    </div>
+        <div>
+          <label htmlFor="approved-by" className={FORM_LABEL}>Approved By</label>
+          <input id="approved-by" className={FORM_INPUT} value={data.approvedBy} onChange={(e) => upd("approvedBy", e.target.value)} placeholder="Admin / Teacher" />
+        </div>
+      </div>
+    </FormModal>
   );
 }
 
@@ -127,7 +125,7 @@ export default function RedemptionTracker({ distributions, onUpdateDistributions
     <section aria-label="Redemption Tracker" className="space-y-4">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Star className="w-4 h-4 text-amber-500" aria-hidden="true" />
+          <Star className="w-4 h-4 text-warning" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-foreground m-0">{redemptions.length} redemption{redemptions.length !== 1 ? "s" : ""} · {totalPts.toLocaleString()} pts total</h2>
         </div>
         <button
@@ -163,8 +161,8 @@ export default function RedemptionTracker({ distributions, onUpdateDistributions
                     <td className="px-4 py-3 text-[13px] text-foreground">{r.reward}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-amber-500" aria-hidden="true" />
-                        <span className="text-[13px] font-bold text-amber-600">{r.pointsUsed}</span>
+                        <Star className="w-3 h-3 text-warning" aria-hidden="true" />
+                        <span className="text-[13px] font-bold text-warning">{r.pointsUsed}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{r.date}</td>
@@ -177,9 +175,7 @@ export default function RedemptionTracker({ distributions, onUpdateDistributions
         </div>
       )}
 
-      <AnimatePresence>
-        {showModal && <RedeemModal distributions={distributions} onClose={() => setShowModal(false)} onSave={handleSave} />}
-      </AnimatePresence>
+      <RedeemModal open={showModal} distributions={distributions} onClose={() => setShowModal(false)} onSave={handleSave} />
     </section>
   );
 }

@@ -45,7 +45,7 @@ export default function SessionsTable({ title }: { title?: string }) {
             {/* Live indicator or dot */}
             <div className="flex-shrink-0">
               {s.status === "live" ? (
-                <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full" aria-label="Session is live">
+                <span className="flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full" aria-label="Session is live">
                   <Radio className="w-2.5 h-2.5 animate-pulse" aria-hidden="true" /> LIVE
                 </span>
               ) : (

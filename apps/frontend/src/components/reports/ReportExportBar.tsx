@@ -125,7 +125,7 @@ export default function ReportExportBar({ title, onPrint, data, headers }: Repor
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50" 
           type="button"
         >
-          <FileSpreadsheet className="w-3.5 h-3.5 text-green-600" />
+          <FileSpreadsheet className="w-3.5 h-3.5 text-success" />
           Excel
         </button>
         

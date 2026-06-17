@@ -31,9 +31,9 @@ interface UrgencyBadge {
 }
 
 function urgencyBadge(days: number): UrgencyBadge {
-  if (days >= 30) return { label: "Critical", cls: "bg-red-100 text-red-700 border-red-200" };
-  if (days >= 14) return { label: "High",     cls: "bg-orange-100 text-orange-700 border-orange-200" };
-  return              { label: "Moderate",    cls: "bg-yellow-100 text-yellow-700 border-yellow-200" };
+  if (days >= 30) return { label: "Critical", cls: "bg-destructive/15 text-destructive border-destructive/30" };
+  if (days >= 14) return { label: "High",     cls: "bg-warning/15 text-warning border-warning/30" };
+  return              { label: "Moderate",    cls: "bg-warning/15 text-warning border-warning/30" };
 }
 
 /**
@@ -61,18 +61,18 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   };
 
   return (
-    <section aria-labelledby="overdue-obligations-heading" className="rounded-xl border border-red-200 bg-white shadow-sm overflow-hidden">
+    <section aria-labelledby="overdue-obligations-heading" className="rounded-xl border border-destructive/30 bg-white shadow-sm overflow-hidden">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 bg-red-50 border-b border-red-200">
+      <header className="flex items-center justify-between px-4 py-3 bg-destructive/10 border-b border-destructive/30">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center" aria-hidden="true">
-            <AlertTriangle className="w-4 h-4 text-red-600" />
+          <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center" aria-hidden="true">
+            <AlertTriangle className="w-4 h-4 text-destructive" />
           </div>
           <div>
-            <h3 id="overdue-obligations-heading" className="text-sm font-bold text-red-800 m-0">
+            <h3 id="overdue-obligations-heading" className="text-sm font-bold text-destructive m-0">
               {title || "Overdue Obligations"}
             </h3>
-            <p className="text-xs text-red-600 m-0">
+            <p className="text-xs text-destructive m-0">
               {overdueStudents.length} students · PKR {totalOverdue.toLocaleString()} outstanding
             </p>
           </div>
@@ -80,7 +80,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
         <div className="flex items-center gap-2">
           <button
             onClick={handleRemindAll}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
           >
             <Bell className="w-3 h-3" aria-hidden="true" />
             Remind All
@@ -89,7 +89,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
             aria-label="Toggle overdue obligations list"
-            className="p-1.5 rounded-lg hover:bg-red-100 text-red-600 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-destructive/15 text-destructive transition-colors"
           >
             {expanded ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
           </button>
@@ -135,7 +135,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                     <td className="px-3 py-2.5">
                       <div>
                         <p className="text-xs text-foreground m-0">{s.dueDate}</p>
-                        <p className="text-[10px] text-red-600 font-semibold m-0">{s.daysOverdue}d overdue</p>
+                        <p className="text-[10px] text-destructive font-semibold m-0">{s.daysOverdue}d overdue</p>
                       </div>
                     </td>
                     <td className="px-3 py-2.5 text-right">
@@ -155,7 +155,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                         aria-label={reminded ? `Reminder sent to ${s.name}` : `Send reminder to ${s.name}`}
                         className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${
                           reminded
-                            ? "bg-green-50 text-green-600 border border-green-200 cursor-default"
+                            ? "bg-success/10 text-success border border-success/30 cursor-default"
                             : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20"
                         }`}
                       >

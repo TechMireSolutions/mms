@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import { Users, UserCheck, UserX, TrendingUp } from "lucide-react";
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { STUDENTS, Student } from '@/lib/data/studentsData';
 import ReportSummaryCard from "./ReportSummaryCard";
@@ -53,11 +52,11 @@ interface StudentReportProps {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  active:    "bg-emerald-50 text-emerald-700",
+  active:    "bg-success/10 text-success",
   inactive:  "bg-muted text-muted-foreground",
-  suspended: "bg-amber-50 text-amber-700",
-  completed: "bg-blue-50 text-blue-700",
-  dropped:   "bg-red-50 text-red-700",
+  suspended: "bg-warning/10 text-warning",
+  completed: "bg-info/10 text-info",
+  dropped:   "bg-destructive/10 text-destructive",
 };
 
 /**

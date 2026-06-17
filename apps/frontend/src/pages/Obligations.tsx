@@ -3,8 +3,8 @@ import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Scale, ClipboardList, History, Settings, 
-  Shield, BookOpen, LayoutDashboard, BarChart2, Plus
+  Scale, ClipboardList, History, 
+  Shield, BookOpen, BarChart2, Plus
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
@@ -17,9 +17,7 @@ import ObligationCollectionDetail from "../components/obligations/ObligationColl
 import ObligationTypeManager from "../components/obligations/ObligationTypeManager";
 import MujtahidManager from "../components/obligations/MujtahidManager";
 import WakalaTypeManager from "../components/obligations/WakalaTypeManager";
-import { 
-  OBLIGATION_TYPES, MUJTAHIDS, MUJTAHID_REPS, WAKALA_TYPES, OBLIGATION_DISTRIBUTIONS, OBLIGATION_COLLECTIONS,
-  ObligationType, Mujtahid, MujtahidRep, WakalaType, ObligationDistribution, ObligationCollection
+import { ObligationCollection
 } from '@/lib/data/obligationsData';
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";

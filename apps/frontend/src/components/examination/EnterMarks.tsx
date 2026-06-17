@@ -144,7 +144,7 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
 
           <div className="flex justify-end">
             {saved ? (
-              <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold" role="status">
+              <div className="flex items-center gap-2 text-success text-sm font-semibold" role="status">
                 <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> Marks saved!
               </div>
             ) : (

@@ -8,9 +8,8 @@ import {
   type QuestionBankQuestion as Question,
   type QuestionBankTest,
 } from "@mms/shared";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 
 interface AIGeneratingProps {
   onDone: () => void;
@@ -185,10 +184,10 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
       {step === "config" && (
         <div className="rounded-xl border border-border bg-card p-5 space-y-5">
           <div>
-            <label htmlFor="config-name" className={LABEL}>{t("questionBank.testName")}</label>
+            <label htmlFor="config-name" className={FORM_LABEL}>{t("questionBank.testName")}</label>
             <input
               id="config-name"
-              className={INPUT}
+              className={FORM_INPUT}
               value={config.name}
               onChange={(e) => upd("name", e.target.value)}
               placeholder={t("questionBank.testNamePlaceholder")}
@@ -196,7 +195,7 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
           </div>
 
           <div>
-            <span className={LABEL}>{t("questionBank.categoriesHint")}</span>
+            <span className={FORM_LABEL}>{t("questionBank.categoriesHint")}</span>
             <div className="flex flex-wrap gap-2" role="group" aria-label={t("questionBank.selectCategoriesAria")}>
               {qbConfig.categories.map((c) => {
                 const active = config.categoryIds.includes(c.id);
@@ -217,10 +216,10 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label htmlFor="config-difficulty" className={LABEL}>{t("questionBank.difficulty")}</label>
+              <label htmlFor="config-difficulty" className={FORM_LABEL}>{t("questionBank.difficulty")}</label>
               <select
                 id="config-difficulty"
-                className={INPUT + " cursor-pointer"}
+                className={FORM_INPUT + " cursor-pointer"}
                 value={config.difficulty}
                 onChange={(e) => upd("difficulty", e.target.value)}
               >
@@ -231,11 +230,11 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
               </select>
             </div>
             <div>
-              <label htmlFor="config-num" className={LABEL}>{t("questionBank.numQuestions")}</label>
+              <label htmlFor="config-num" className={FORM_LABEL}>{t("questionBank.numQuestions")}</label>
               <input
                 id="config-num"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={config.numQuestions}
                 onChange={(e) => upd("numQuestions", +e.target.value)}
                 min={1}
@@ -243,11 +242,11 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
               />
             </div>
             <div>
-              <label htmlFor="config-duration" className={LABEL}>{t("questionBank.durationMin")}</label>
+              <label htmlFor="config-duration" className={FORM_LABEL}>{t("questionBank.durationMin")}</label>
               <input
                 id="config-duration"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={config.duration}
                 onChange={(e) => upd("duration", +e.target.value)}
                 min={5}

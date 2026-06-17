@@ -6,7 +6,6 @@ import {
   PieChart, Pie, Cell,
 } from "recharts";
 import { DISTRIBUTIONS, Distribution } from '@/lib/data/hasanatData';
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
@@ -239,9 +238,9 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                   <td className="px-3 py-2.5 text-muted-foreground">{h.class}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{h.faculty}</td>
                   <td className="px-3 py-2.5 font-semibold text-primary">{h.distributed}</td>
-                  <td className="px-3 py-2.5 font-semibold text-emerald-600">{h.redeemed}</td>
+                  <td className="px-3 py-2.5 font-semibold text-success">{h.redeemed}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${h.balance > 0 ? "bg-amber-50 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${h.balance > 0 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>
                       {h.balance}
                     </span>
                   </td>

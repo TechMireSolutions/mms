@@ -101,8 +101,8 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
     })) as ClassBreakdown[];
   }, [displayRecords, allClasses]);
 
-  const rateColor = rate >= 90 ? "text-emerald-600" : rate >= 75 ? "text-amber-600" : "text-destructive";
-  const rateBarColor = rate >= 90 ? "bg-emerald-500" : rate >= 75 ? "bg-amber-500" : "bg-red-500";
+  const rateColor = rate >= 90 ? "text-success" : rate >= 75 ? "text-warning" : "text-destructive";
+  const rateBarColor = rate >= 90 ? "bg-success" : rate >= 75 ? "bg-warning" : "bg-destructive";
 
   return (
     <article className="rounded-xl border border-border bg-card overflow-hidden">
@@ -163,7 +163,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
 
             {/* Alert if high absence */}
             {stats.absent > 2 && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-xs font-semibold">
                 <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
                 {stats.absent} student{stats.absent > 1 ? "s" : ""} absent today — review needed
               </div>
@@ -176,10 +176,10 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
                 <div key={c.classId} className="flex items-center gap-3">
                   <span className="text-xs font-semibold text-foreground w-28 truncate">{c.name}</span>
                   <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                    <div className={`h-full rounded-full ${c.rate >= 90 ? "bg-emerald-500" : c.rate >= 75 ? "bg-amber-500" : "bg-red-500"}`}
+                    <div className={`h-full rounded-full ${c.rate >= 90 ? "bg-success" : c.rate >= 75 ? "bg-warning" : "bg-destructive"}`}
                       style={{ width: `${c.rate}%` }} />
                   </div>
-                  <span className={`text-xs font-bold w-10 text-right ${c.rate >= 90 ? "text-emerald-600" : c.rate >= 75 ? "text-amber-600" : "text-destructive"}`}>{c.rate}%</span>
+                  <span className={`text-xs font-bold w-10 text-right ${c.rate >= 90 ? "text-success" : c.rate >= 75 ? "text-warning" : "text-destructive"}`}>{c.rate}%</span>
                 </div>
               ))}
             </div>

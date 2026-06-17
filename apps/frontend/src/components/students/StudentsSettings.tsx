@@ -10,9 +10,8 @@ import {
   DEFAULT_STUDENT_FIELD_DEFS
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 
 interface ToggleProps {
   label: string;
@@ -135,10 +134,10 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
             <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider">General Register (GR) Number Settings</h4>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="gr-template" className={LABEL}>GR Number Template</label>
+                <label htmlFor="gr-template" className={FORM_LABEL}>GR Number Template</label>
                 <input
                   id="gr-template"
-                  className={INPUT}
+                  className={FORM_INPUT}
                   value={data.grNumberTemplate || ""}
                   onChange={(e) => upd("grNumberTemplate", e.target.value)}
                   placeholder="e.g. {seq}-{year}"
@@ -146,13 +145,13 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                 <span className="text-[9px] text-muted-foreground mt-1 block">Use placeholders: <code>{`{seq}`}</code>, <code>{`{year}`}</code></span>
               </div>
               <div>
-                <label htmlFor="gr-digits" className={LABEL}>Sequence Digits</label>
+                <label htmlFor="gr-digits" className={FORM_LABEL}>Sequence Digits</label>
                 <input
                   id="gr-digits"
                   type="number"
                   min="1"
                   max="8"
-                  className={INPUT}
+                  className={FORM_INPUT}
                   value={data.grNumberDigits || 4}
                   onChange={(e) => upd("grNumberDigits", Number(e.target.value))}
                 />
@@ -284,7 +283,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <p className="font-semibold text-foreground">{field.label}</p>
                                   {isCustom && field.type && (
-                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200 dark:bg-violet-950/20 dark:text-violet-400 dark:border-violet-900/50">
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/30">
                                       Custom · {field.type}
                                     </span>
                                   )}
@@ -299,7 +298,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                                   className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border transition-all
                                     ${
                                       isRequired
-                                        ? "bg-red-50 border-red-200 text-red-600 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400"
+                                        ? "bg-destructive/10 border-destructive/30 text-destructive dark:bg-destructive/20 dark:border-destructive/30 dark:text-destructive"
                                         : "bg-muted border-border text-muted-foreground hover:text-foreground"
                                     }`}
                                 >

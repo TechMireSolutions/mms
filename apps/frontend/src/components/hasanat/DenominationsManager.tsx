@@ -1,119 +1,108 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit2, Trash2, X, Save, ToggleLeft, ToggleRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, CreditCard } from "lucide-react";
 import { Denomination } from '@/lib/data/hasanatData';
+import FormModal from "@/components/ui/FormModal";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 const EMPTY: Denomination = { id: "", name: "", points: 100, color: "#10b981", description: "", icon: "⭐", active: true };
 
 const PRESET_COLORS = ["#cd7f32", "#9ca3af", "#d97706", "#7c3aed", "#2563eb", "#10b981", "#ef4444", "#ec4899"];
 const PRESET_ICONS = ["⭐", "🌟", "✨", "💎", "👑", "🏆", "🎖️", "📿"];
 
 interface DenomModalProps {
+  open: boolean;
   denom: Denomination | null;
   onClose: () => void;
   onSave: (denom: Denomination) => void;
 }
 
-function DenomModal({ denom, onClose, onSave }: DenomModalProps) {
+function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
   const [data, setData] = useState<Denomination>(denom || { ...EMPTY });
   const upd = <K extends keyof Denomination>(f: K, v: Denomination[K]) => setData((d: Denomination) => ({ ...d, [f]: v }));
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.div 
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="denom-modal-title"
-        initial={{ opacity: 0, scale: 0.96 }} 
-        animate={{ opacity: 1, scale: 1 }} 
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-md z-10"
-      >
-        <header className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h3 id="denom-modal-title" className="text-sm font-bold m-0">{denom ? "Edit Denomination" : "New Denomination"}</h3>
-          <button type="button" aria-label="Close modal" onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" aria-hidden="true" /></button>
-        </header>
-        <div className="px-5 py-4 space-y-4">
-          {/* Preview */}
-          <div className="flex items-center justify-center" aria-hidden="true">
-            <div className="w-24 h-14 rounded-xl flex items-center justify-center shadow-md text-white text-2xl" style={{ background: `linear-gradient(135deg, ${data.color}, ${data.color}99)` }}>
-              {data.icon}
-            </div>
-          </div>
+  React.useEffect(() => {
+    if (open) {
+      setData(denom || { ...EMPTY });
+    }
+  }, [open, denom]);
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="denom-name" className={LABEL}>Card Name *</label>
-              <input id="denom-name" className={INPUT} value={data.name} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Gold Card" />
-            </div>
-            <div>
-              <label htmlFor="denom-pts" className={LABEL}>Points Value *</label>
-              <input id="denom-pts" type="number" className={INPUT} value={data.points} onChange={(e) => upd("points", +e.target.value)} min={1} />
-            </div>
+  return (
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={denom ? "Edit Denomination" : "New Denomination"}
+      icon={CreditCard}
+      size="md"
+      cancelLabel="Cancel"
+      saveLabel="Save"
+      onSave={() => onSave({ ...data, id: denom?.id || `den${Date.now()}` })}
+      saveDisabled={!data.name || !data.points}
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-center" aria-hidden="true">
+          <div className="w-24 h-14 rounded-xl flex items-center justify-center shadow-md text-white text-2xl" style={{ background: `linear-gradient(135deg, ${data.color}, ${data.color}99)` }}>
+            {data.icon}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="denom-name" className={FORM_LABEL}>Card Name *</label>
+            <input id="denom-name" className={FORM_INPUT} value={data.name} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Gold Card" />
           </div>
           <div>
-            <label htmlFor="denom-desc" className={LABEL}>Description</label>
-            <input id="denom-desc" className={INPUT} value={data.description} onChange={(e) => upd("description", e.target.value)} placeholder="When is this card awarded?" />
+            <label htmlFor="denom-pts" className={FORM_LABEL}>Points Value *</label>
+            <input id="denom-pts" type="number" className={FORM_INPUT} value={data.points} onChange={(e) => upd("points", +e.target.value)} min={1} />
           </div>
-
-          {/* Icon picker */}
-          <fieldset>
-            <legend className={LABEL}>Icon</legend>
-            <div className="flex gap-2 flex-wrap">
-              {PRESET_ICONS.map((ic) => (
-                <button
-                  type="button"
-                  aria-pressed={data.icon === ic}
-                  key={ic}
-                  onClick={() => upd("icon", ic)}
-                  className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${data.icon === ic ? "bg-primary/15 ring-2 ring-primary" : "bg-muted hover:bg-muted/80"}`}
-                >
-                  {ic}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          {/* Color picker */}
-          <fieldset>
-            <legend className={LABEL}>Color</legend>
-            <div className="flex gap-2 flex-wrap items-center">
-              {PRESET_COLORS.map((c) => (
-                <button
-                  type="button"
-                  aria-pressed={data.color === c}
-                  aria-label={`Select color ${c}`}
-                  key={c}
-                  onClick={() => upd("color", c)}
-                  className={`w-7 h-7 rounded-full border-2 transition-all ${data.color === c ? "border-foreground scale-110" : "border-transparent"}`}
-                  style={{ background: c }}
-                />
-              ))}
-              <label className="sr-only" htmlFor="custom-color">Custom Color</label>
-              <input id="custom-color" type="color" value={data.color} onChange={(e) => upd("color", e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 p-0" title="Custom color" />
-            </div>
-          </fieldset>
-
-          <label className="flex items-center gap-2.5 cursor-pointer">
-            <input type="checkbox" checked={data.active} onChange={(e) => upd("active", e.target.checked)} className="w-4 h-4 accent-primary" />
-            <span className="text-sm font-medium text-foreground">Active</span>
-          </label>
         </div>
-        <footer className="px-5 py-4 border-t border-border flex justify-end gap-2.5">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted">Cancel</button>
-          <button
-            type="button"
-            onClick={() => onSave({ ...data, id: denom?.id || `den${Date.now()}` })}
-            disabled={!data.name || !data.points}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
-          >
-            <Save className="w-3.5 h-3.5" aria-hidden="true" /> Save
-          </button>
-        </footer>
-      </motion.div>
-    </div>
+        <div>
+          <label htmlFor="denom-desc" className={FORM_LABEL}>Description</label>
+          <input id="denom-desc" className={FORM_INPUT} value={data.description} onChange={(e) => upd("description", e.target.value)} placeholder="When is this card awarded?" />
+        </div>
+
+        <fieldset>
+          <legend className={FORM_LABEL}>Icon</legend>
+          <div className="flex gap-2 flex-wrap">
+            {PRESET_ICONS.map((ic) => (
+              <button
+                type="button"
+                aria-pressed={data.icon === ic}
+                key={ic}
+                onClick={() => upd("icon", ic)}
+                className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${data.icon === ic ? "bg-primary/15 ring-2 ring-primary" : "bg-muted hover:bg-muted/80"}`}
+              >
+                {ic}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className={FORM_LABEL}>Color</legend>
+          <div className="flex gap-2 flex-wrap items-center">
+            {PRESET_COLORS.map((c) => (
+              <button
+                type="button"
+                aria-pressed={data.color === c}
+                aria-label={`Select color ${c}`}
+                key={c}
+                onClick={() => upd("color", c)}
+                className={`w-7 h-7 rounded-full border-2 transition-all ${data.color === c ? "border-foreground scale-110" : "border-transparent"}`}
+                style={{ background: c }}
+              />
+            ))}
+            <label className="sr-only" htmlFor="custom-color">Custom Color</label>
+            <input id="custom-color" type="color" value={data.color} onChange={(e) => upd("color", e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 p-0" title="Custom color" />
+          </div>
+        </fieldset>
+
+        <label className="flex items-center gap-2.5 cursor-pointer">
+          <input type="checkbox" checked={data.active} onChange={(e) => upd("active", e.target.checked)} className="w-4 h-4 accent-primary" />
+          <span className="text-sm font-medium text-foreground">Active</span>
+        </label>
+      </div>
+    </FormModal>
   );
 }
 
@@ -199,9 +188,12 @@ export default function DenominationsManager({ denoms, onUpdate }: Denominations
         ))}
       </div>
 
-      <AnimatePresence>
-        {showModal && <DenomModal denom={editDenom} onClose={() => { setShowModal(false); setEditDenom(null); }} onSave={handleSave} />}
-      </AnimatePresence>
+      <DenomModal
+        open={showModal}
+        denom={editDenom}
+        onClose={() => { setShowModal(false); setEditDenom(null); }}
+        onSave={handleSave}
+      />
     </section>
   );
 }

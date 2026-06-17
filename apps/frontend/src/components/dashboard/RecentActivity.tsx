@@ -12,9 +12,9 @@ interface ActivityItem {
 
 const activities: ActivityItem[] = [
   { icon: UserPlus, title: "New student registered", desc: "Yusuf Ahmad joined Quran Hifz Program", time: "2 min ago", color: "text-primary" },
-  { icon: CheckCircle, title: "Attendance marked", desc: "Session B - Morning Tajweed Class", time: "15 min ago", color: "text-emerald-500" },
-  { icon: DollarSign, title: "Payment received", desc: "$150 - Monthly fee from Aisha Khan", time: "1 hour ago", color: "text-amber-500" },
-  { icon: BookOpen, title: "Exam completed", desc: "Surah Al-Baqarah memorization test", time: "3 hours ago", color: "text-blue-500" },
+  { icon: CheckCircle, title: "Attendance marked", desc: "Session B - Morning Tajweed Class", time: "15 min ago", color: "text-success" },
+  { icon: DollarSign, title: "Payment received", desc: "$150 - Monthly fee from Aisha Khan", time: "1 hour ago", color: "text-warning" },
+  { icon: BookOpen, title: "Exam completed", desc: "Surah Al-Baqarah memorization test", time: "3 hours ago", color: "text-info" },
 ];
 
 /**

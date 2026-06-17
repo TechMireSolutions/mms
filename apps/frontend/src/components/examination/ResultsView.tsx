@@ -92,8 +92,8 @@ export default function ResultsView({ exams, results }: ResultsViewProps): React
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" role="status" aria-label="Class score statistics">
               {[
                 { label: "Students", value: stats.total, icon: "👥", color: "text-primary" },
-                { label: "Class Avg", value: `${stats.avg}%`, icon: "📊", color: "text-blue-600" },
-                { label: "Passed", value: stats.passed, icon: "✅", color: "text-emerald-600" },
+                { label: "Class Avg", value: `${stats.avg}%`, icon: "📊", color: "text-info" },
+                { label: "Passed", value: stats.passed, icon: "✅", color: "text-success" },
                 { label: "Failed", value: stats.failed, icon: "❌", color: "text-destructive" },
               ].map((s) => (
                 <div key={s.label} className="rounded-xl border border-border bg-card p-3.5 text-center">
@@ -108,7 +108,7 @@ export default function ResultsView({ exams, results }: ResultsViewProps): React
           {/* Ranking table */}
           <section className="rounded-xl border border-border bg-card overflow-hidden" aria-label="Rankings list">
             <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-500" aria-hidden="true" />
+              <Trophy className="w-4 h-4 text-warning" aria-hidden="true" />
               <h3 className="text-[13px] font-bold text-foreground">Rankings — {exam.name}</h3>
             </div>
             {rankedResults.length === 0 ? (
@@ -164,7 +164,7 @@ export default function ResultsView({ exams, results }: ResultsViewProps): React
                     </span>
 
                     {/* Pass/Fail */}
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${r.passed ? "bg-emerald-50 text-emerald-700" : "bg-destructive/10 text-destructive"}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${r.passed ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
                       {r.passed ? "PASS" : "FAIL"}
                     </span>
 
@@ -173,7 +173,7 @@ export default function ResultsView({ exams, results }: ResultsViewProps): React
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setCertStudent(r); }}
-                        className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors flex-shrink-0"
+                        className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-warning/10 text-warning hover:bg-warning/15 transition-colors flex-shrink-0"
                       >
                         <Award className="w-3 h-3" aria-hidden="true" /> Cert
                       </button>

@@ -10,6 +10,7 @@ import {
   DEFAULT_ENROLLMENTS_FIELD_DEFS,
   getSortedFields,
 } from "@mms/shared";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
 
 interface RowProps {
   label: string;
@@ -137,7 +138,7 @@ export default function Step6Confirmation({
           if (field.id === "notes") {
             return (
               <div key="notes">
-                <label htmlFor="enrollment-notes" className="text-xs font-semibold text-foreground block mb-1.5">
+                <label htmlFor="enrollment-notes" className={FORM_LABEL}>
                   Notes {field.required ? "*" : ""}
                 </label>
                 <textarea
@@ -146,7 +147,7 @@ export default function Step6Confirmation({
                   onChange={(e) => onNotesChange(e.target.value)}
                   rows={3}
                   placeholder="Any additional notes about this enrollment…"
-                  className="w-full text-sm rounded-xl border border-border bg-background px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none placeholder:text-muted-foreground"
+                  className={FORM_TEXTAREA}
                   required={field.required}
                 />
               </div>
@@ -157,12 +158,12 @@ export default function Step6Confirmation({
             const val = customFieldValues[field.id] ?? "";
             return (
               <div key={field.id}>
-                <label className="text-xs font-semibold text-foreground block mb-1.5">
+                <label className={FORM_LABEL}>
                   {field.label} {field.required ? "*" : ""}
                 </label>
                 {field.type === "textarea" ? (
                   <textarea
-                    className="w-full text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none placeholder:text-muted-foreground"
+                    className={FORM_TEXTAREA}
                     rows={3}
                     value={val}
                     onChange={(e) => onCustomFieldChange(field.id, e.target.value)}
@@ -171,7 +172,7 @@ export default function Step6Confirmation({
                   />
                 ) : field.type === "select" ? (
                   <select
-                    className="w-full text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    className={FORM_SELECT}
                     value={val}
                     onChange={(e) => onCustomFieldChange(field.id, e.target.value)}
                     required={field.required}
@@ -196,7 +197,7 @@ export default function Step6Confirmation({
                 ) : (
                   <input
                     type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "email" ? "email" : field.type === "url" ? "url" : "text"}
-                    className="w-full text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className={FORM_INPUT}
                     value={val}
                     onChange={(e) => onCustomFieldChange(field.id, e.target.value)}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}

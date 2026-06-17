@@ -21,10 +21,10 @@ export interface AttendanceRecord {
 }
 
 export const ATTENDANCE_STATUSES = [
-  { id: "present", label: "Present", short: "P", color: "emerald", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500" },
-  { id: "absent",  label: "Absent",  short: "A", color: "red",     bg: "bg-red-50",     text: "text-red-700",     border: "border-red-200",     dot: "bg-red-500"     },
-  { id: "late",    label: "Late",    short: "L", color: "amber",   bg: "bg-amber-50",   text: "text-amber-700",   border: "border-amber-200",   dot: "bg-amber-500"   },
-  { id: "excused", label: "Excused", short: "E", color: "blue",    bg: "bg-blue-50",    text: "text-blue-700",    border: "border-blue-200",    dot: "bg-blue-500"    },
+  { id: "present", label: "Present", short: "P", color: "emerald", bg: "bg-success/10", text: "text-success", border: "border-success/30", dot: "bg-success" },
+  { id: "absent",  label: "Absent",  short: "A", color: "red",     bg: "bg-destructive/10",     text: "text-destructive",     border: "border-destructive/30",     dot: "bg-destructive"     },
+  { id: "late",    label: "Late",    short: "L", color: "amber",   bg: "bg-warning/10",   text: "text-warning",   border: "border-warning/30",   dot: "bg-warning"   },
+  { id: "excused", label: "Excused", short: "E", color: "blue",    bg: "bg-info/10",    text: "text-info",    border: "border-info/30",    dot: "bg-info"    },
 ];
 
 const classStudentsMap: Record<string, { id: string; name: string; gender: "male" | "female"; rollNo: string }[]> = {};

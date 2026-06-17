@@ -117,15 +117,15 @@ export default function GeneralLedger({ accounts, entries, fmt }: GeneralLedgerP
             <div className="grid grid-cols-3 gap-4 text-right">
               <div>
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Total Debit</p>
-                <p className="font-mono font-bold text-blue-700 m-0">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="font-mono font-bold text-info m-0">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
               </div>
               <div>
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Total Credit</p>
-                <p className="font-mono font-bold text-emerald-700 m-0">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="font-mono font-bold text-success m-0">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
               </div>
               <div>
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Net Balance</p>
-                <p className={`font-mono font-bold m-0 ${balance >= 0 ? "text-foreground" : "text-red-600"}`}>
+                <p className={`font-mono font-bold m-0 ${balance >= 0 ? "text-foreground" : "text-destructive"}`}>
                   {Math.abs(balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   <span className="text-[10px] font-semibold ml-1">{balance >= 0 ? "Dr" : "Cr"}</span>
                 </p>
@@ -171,14 +171,14 @@ export default function GeneralLedger({ accounts, entries, fmt }: GeneralLedgerP
                         <td className="px-4 py-2.5 font-mono text-xs font-bold text-primary">{line.ref}</td>
                         <td className="px-4 py-2.5 text-foreground max-w-[180px] truncate">{line.description}</td>
                         <td className="px-4 py-2.5 text-xs text-muted-foreground hidden lg:table-cell">{line.lineDesc || "—"}</td>
-                        <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold text-blue-700">
+                        <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold text-info">
                           {line.debit > 0 ? line.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold text-emerald-700">
+                        <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold text-success">
                           {line.credit > 0 ? line.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
                         </td>
                         <td className="px-4 py-2.5 text-right font-mono text-xs font-semibold">
-                          <span className={line.running >= 0 ? "text-foreground" : "text-red-600"}>
+                          <span className={line.running >= 0 ? "text-foreground" : "text-destructive"}>
                             {Math.abs(line.running).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </span>
                           <span className="text-[10px] text-muted-foreground ml-1">{line.running >= 0 ? "Dr" : "Cr"}</span>
@@ -189,8 +189,8 @@ export default function GeneralLedger({ accounts, entries, fmt }: GeneralLedgerP
                   <tfoot className="border-t-2 border-border bg-muted/30">
                     <tr>
                       <td colSpan={4} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">Closing Balance</td>
-                      <td className="px-4 py-2 text-right font-mono font-bold text-blue-700">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                      <td className="px-4 py-2 text-right font-mono font-bold text-emerald-700">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="px-4 py-2 text-right font-mono font-bold text-info">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="px-4 py-2 text-right font-mono font-bold text-success">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       <td className="px-4 py-2 text-right font-mono font-bold">
                         {Math.abs(balance).toLocaleString(undefined, { minimumFractionDigits: 2 })} {balance >= 0 ? "Dr" : "Cr"}
                       </td>

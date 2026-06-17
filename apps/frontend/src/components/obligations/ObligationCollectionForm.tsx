@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Receipt } from "lucide-react";
 import {
   MOCK_CURRENCIES, PAYMENT_MODES, generateReceiptNo,
@@ -7,6 +7,7 @@ import {
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import ObligationModal from "./ObligationModal";
 import { DatePicker } from "../ui/DatePicker";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_ERROR } from "@/components/ui/formStyles";
 
 interface FormState {
   receipt_no: string;
@@ -108,17 +109,15 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
 
   const field = (key: keyof FormState, label: string, required: boolean, children: React.ReactNode) => (
     <div>
-      <label htmlFor={`form-${key}`} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+      <label htmlFor={`form-${key}`} className={FORM_LABEL}>
         {label}{required ? " *" : ""}
       </label>
       {React.cloneElement(children as React.ReactElement<{ id?: string; "aria-invalid"?: boolean }>, { id: `form-${key}`, "aria-invalid": !!errors[key] })}
-      {errors[key] && <p className="text-xs text-destructive mt-1" role="alert">{errors[key]}</p>}
+      {errors[key] && <p className={FORM_ERROR} role="alert">{errors[key]}</p>}
     </div>
   );
 
-  const inputCls = "mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20";
-  const selectCls = inputCls;
-
+  
   const selectedRep = reps.find((r) => r.id === form.mujtahid_representative_id);
   const selectedMujtahid = selectedRep ? getMujtahid(selectedRep.id) : null;
 
@@ -143,7 +142,7 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
             />
           )}
           {field("payment_mode", "Payment Mode", true,
-            <select value={form.payment_mode} onChange={(e) => setForm({ ...form, payment_mode: e.target.value })} className={selectCls}>
+            <select value={form.payment_mode} onChange={(e) => setForm({ ...form, payment_mode: e.target.value })} className={FORM_SELECT}>
               {PAYMENT_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           )}
@@ -151,13 +150,13 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
 
         <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
           {field("sender_id", "Sender (Contact)", true,
-            <select value={form.sender_id} onChange={(e) => setForm({ ...form, sender_id: e.target.value })} className={selectCls}>
+            <select value={form.sender_id} onChange={(e) => setForm({ ...form, sender_id: e.target.value })} className={FORM_SELECT}>
               <option value="">Select sender…</option>
               {contacts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           )}
           {field("reference_id", "Reference Contact", false,
-            <select value={form.reference_id} onChange={(e) => setForm({ ...form, reference_id: e.target.value })} className={selectCls}>
+            <select value={form.reference_id} onChange={(e) => setForm({ ...form, reference_id: e.target.value })} className={FORM_SELECT}>
               <option value="">None (optional)</option>
               {contacts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -167,10 +166,10 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
         <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
           {field("amount", "Amount", true,
             <input type="number" min="0.01" step="0.01" value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" className={inputCls} />
+              onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" className={FORM_INPUT} />
           )}
           {field("currency_id", "Currency", true,
-            <select value={form.currency_id} onChange={(e) => setForm({ ...form, currency_id: e.target.value })} className={selectCls}>
+            <select value={form.currency_id} onChange={(e) => setForm({ ...form, currency_id: e.target.value })} className={FORM_SELECT}>
               {MOCK_CURRENCIES.map((c) => <option key={c.id} value={c.id}>{c.code} – {c.name}</option>)}
             </select>
           )}
@@ -178,7 +177,7 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
 
         <fieldset className="border-0 p-0 m-0 space-y-4">
           {field("obligation_type_id", "Obligation Type", true,
-            <select value={form.obligation_type_id} onChange={(e) => setForm({ ...form, obligation_type_id: e.target.value })} className={selectCls}>
+            <select value={form.obligation_type_id} onChange={(e) => setForm({ ...form, obligation_type_id: e.target.value })} className={FORM_SELECT}>
               <option value="">Select obligation type…</option>
               {obligationTypes.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.designated_for})</option>)}
             </select>
@@ -189,7 +188,7 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
               <select value={form.mujtahid_representative_id}
                 onChange={(e) => setForm({ ...form, mujtahid_representative_id: e.target.value })}
                 disabled={!form.obligation_type_id}
-                className={`${selectCls} ${!form.obligation_type_id ? "opacity-50 cursor-not-allowed" : ""}`}>
+                className={`${FORM_SELECT} ${!form.obligation_type_id ? "opacity-50 cursor-not-allowed" : ""}`}>
                 <option value="">{form.obligation_type_id ? "Select representative…" : "Select obligation type first"}</option>
                 {eligibleReps.map((r) => {
                   const m = getMujtahid(r.id);
@@ -203,7 +202,7 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
           )}
 
           {field("received_by", "Received By (User)", true,
-            <select value={form.received_by} onChange={(e) => setForm({ ...form, received_by: e.target.value })} className={selectCls}>
+            <select value={form.received_by} onChange={(e) => setForm({ ...form, received_by: e.target.value })} className={FORM_SELECT}>
               <option value="">Select user…</option>
               {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>

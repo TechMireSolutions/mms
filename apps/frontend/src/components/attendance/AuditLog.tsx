@@ -7,9 +7,9 @@ import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { AttendanceFilterState } from "./AttendanceFilters";
 
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {
-  edit:        { label: "Field Edit",    color: "bg-blue-50 text-blue-700 border-blue-200" },
-  bulk_mark:   { label: "Bulk Mark",    color: "bg-amber-50 text-amber-700 border-amber-200" },
-  submitted:   { label: "Submitted",    color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  edit:        { label: "Field Edit",    color: "bg-info/10 text-info border-info/30" },
+  bulk_mark:   { label: "Bulk Mark",    color: "bg-warning/10 text-warning border-warning/30" },
+  submitted:   { label: "Submitted",    color: "bg-success/10 text-success border-success/30" },
   draft_saved: { label: "Draft Saved",  color: "bg-muted text-muted-foreground border-border" },
 };
 

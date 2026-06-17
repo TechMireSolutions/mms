@@ -1,4 +1,5 @@
 import React from "react";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 export interface StatusBadgeConfigItem {
   label: string;
@@ -12,35 +13,29 @@ export interface StatusBadgeProps {
 }
 
 const DEFAULT_CONFIG: Record<string, StatusBadgeConfigItem> = {
-  active:    { label: "Active",    cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  inactive:  { label: "Inactive",  cls: "bg-muted text-muted-foreground border-border" },
-  suspended: { label: "Suspended", cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  pending:   { label: "Pending",   cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  paid:      { label: "Paid",      cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  overdue:   { label: "Overdue",   cls: "bg-destructive/10 text-destructive border-destructive/20" },
-  partial:   { label: "Partial",   cls: "bg-blue-50 text-blue-700 border-blue-200" },
-  cancelled: { label: "Cancelled", cls: "bg-muted text-muted-foreground border-border" },
-  completed: { label: "Completed", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  upcoming:  { label: "Upcoming",  cls: "bg-blue-50 text-blue-700 border-blue-200" },
-  ongoing:   { label: "Ongoing",   cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  success:   { label: "Success",   cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  failed:    { label: "Failed",    cls: "bg-destructive/10 text-destructive border-destructive/20" },
-  draft:     { label: "Draft",     cls: "bg-muted text-muted-foreground border-border" },
+  active:    { label: "Active",    cls: SEMANTIC_BADGE.success },
+  inactive:  { label: "Inactive",  cls: SEMANTIC_BADGE.muted },
+  suspended: { label: "Suspended", cls: SEMANTIC_BADGE.warning },
+  pending:   { label: "Pending",   cls: SEMANTIC_BADGE.warning },
+  paid:      { label: "Paid",      cls: SEMANTIC_BADGE.success },
+  overdue:   { label: "Overdue",   cls: SEMANTIC_BADGE.destructive },
+  partial:   { label: "Partial",   cls: SEMANTIC_BADGE.info },
+  cancelled: { label: "Cancelled", cls: SEMANTIC_BADGE.muted },
+  completed: { label: "Completed", cls: SEMANTIC_BADGE.success },
+  upcoming:  { label: "Upcoming",  cls: SEMANTIC_BADGE.info },
+  ongoing:   { label: "Ongoing",   cls: SEMANTIC_BADGE.warning },
+  success:   { label: "Success",   cls: SEMANTIC_BADGE.success },
+  failed:    { label: "Failed",    cls: SEMANTIC_BADGE.destructive },
+  draft:     { label: "Draft",     cls: SEMANTIC_BADGE.muted },
 };
 
-/**
- * StatusBadge — unified pill badge for any status.
- *
- * @param {StatusBadgeProps} props - The component props.
- * @returns {React.ReactElement} The rendered StatusBadge component.
- */
 export default function StatusBadge({
   status,
   config = {},
   size = "md",
 }: StatusBadgeProps): React.ReactElement {
   const map = { ...DEFAULT_CONFIG, ...(config || {}) };
-  const cfg = map[status] || { label: status, cls: "bg-muted text-muted-foreground border-border" };
+  const cfg = map[status] || { label: status, cls: SEMANTIC_BADGE.muted };
   const sizeClass = size === "sm" ? "text-[9px] px-1.5 py-0.5" : "text-[11px] px-2 py-0.5";
 
   return (

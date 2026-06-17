@@ -47,10 +47,10 @@ export function useBrandedDashboardChartColors(): {
     const enrollment: Record<string, EnrollmentColorConfig> = {
       brand: brandedEnroll('brand'),
       emerald: brandedEnroll('emerald'),
-      blue: { stroke: charts[3], stop: charts[3], text: 'text-blue-500', bg: 'bg-blue-50/70', fill: 'url(#enrollGrad-blue)' },
-      violet: { stroke: charts[4], stop: charts[4], text: 'text-violet-500', bg: 'bg-violet-50/70', fill: 'url(#enrollGrad-violet)' },
-      amber: { stroke: secondary, stop: secondary, text: 'text-amber-500', bg: 'bg-amber-50/70', fill: 'url(#enrollGrad-amber)' },
-      red: { stroke: '#dc2626', stop: '#dc2626', text: 'text-destructive', bg: 'bg-red-50/70', fill: 'url(#enrollGrad-red)' },
+      blue: { stroke: charts[3], stop: charts[3], text: 'text-info', bg: 'bg-info/10', fill: 'url(#enrollGrad-blue)' },
+      violet: { stroke: charts[4], stop: charts[4], text: 'text-primary', bg: 'bg-primary/10', fill: 'url(#enrollGrad-violet)' },
+      amber: { stroke: secondary, stop: secondary, text: 'text-warning', bg: 'bg-warning/10', fill: 'url(#enrollGrad-amber)' },
+      red: { stroke: charts[0], stop: charts[0], text: 'text-destructive', bg: 'bg-destructive/10', fill: 'url(#enrollGrad-red)' },
     };
 
     const attendance: Record<string, string> = {

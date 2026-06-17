@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Heart, Plus, Search, X } from "lucide-react";
-import { FieldDefinition } from "@mms/shared";
 import { Field, INPUT, FormEmptyState, RequiredBanner, EditableSelect, CustomFieldInput, COLLECTION_CARD, COLLECTION_BODY, CardRemoveButton } from "./FormPrimitives";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { useSortedFields } from "../../../hooks/useSortedFields";

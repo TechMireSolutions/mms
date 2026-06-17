@@ -10,10 +10,10 @@ import {
 import { INVOICE_STATUSES, Invoice } from '@/lib/data/financeData';
 
 const STATUS_CFG: Record<string, { label: string, cls: string }> = {
-  paid:      { label: "Paid",      cls: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-  pending:   { label: "Pending",   cls: "bg-amber-50 text-amber-700 border-amber-100" },
-  overdue:   { label: "Overdue",   cls: "bg-red-50 text-red-600 border-red-100" },
-  partial:   { label: "Partial",   cls: "bg-blue-50 text-blue-700 border-blue-100" },
+  paid:      { label: "Paid",      cls: "bg-success/10 text-success border-success/20" },
+  pending:   { label: "Pending",   cls: "bg-warning/10 text-warning border-warning/20" },
+  overdue:   { label: "Overdue",   cls: "bg-destructive/10 text-destructive border-destructive/20" },
+  partial:   { label: "Partial",   cls: "bg-info/10 text-info border-info/20" },
   cancelled: { label: "Cancelled", cls: "bg-muted text-muted-foreground border-border" },
 };
 
@@ -133,7 +133,7 @@ export default function InvoiceList({ invoices, onView, onRecord }: InvoiceListP
                       <td className="px-4 py-3">
                         {inv.discountAmt > 0 ? (
                           <div>
-                            <span className="text-[12px] text-amber-600 font-medium">-{fmt(inv.discountAmt)}</span>
+                            <span className="text-[12px] text-warning font-medium">-{fmt(inv.discountAmt)}</span>
                             <p className="text-[10px] text-muted-foreground m-0">{inv.discountType}</p>
                           </div>
                         ) : <span className="text-[12px] text-muted-foreground">—</span>}
@@ -141,14 +141,14 @@ export default function InvoiceList({ invoices, onView, onRecord }: InvoiceListP
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className="text-[13px] font-bold text-foreground">{fmt(inv.finalAmt)}</span>
                         {inv.paidAmt && inv.status === "partial" && (
-                          <p className="text-[10px] text-blue-600 m-0">Paid: {fmt(inv.paidAmt)}</p>
+                          <p className="text-[10px] text-info m-0">Paid: {fmt(inv.paidAmt)}</p>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${sCfg.cls}`}>{sCfg.label}</span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className={`text-[12px] ${inv.status === "overdue" ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>{inv.dueDate}</span>
+                        <span className={`text-[12px] ${inv.status === "overdue" ? "text-destructive font-semibold" : "text-muted-foreground"}`}>{inv.dueDate}</span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -156,7 +156,7 @@ export default function InvoiceList({ invoices, onView, onRecord }: InvoiceListP
                             <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
                           {inv.status !== "paid" && (
-                            <button onClick={() => onRecord(inv)} aria-label={`Record Payment for ${inv.id}`} className="p-1.5 rounded-lg hover:bg-emerald-50 text-muted-foreground hover:text-emerald-700 transition-colors" title="Record Payment">
+                            <button onClick={() => onRecord(inv)} aria-label={`Record Payment for ${inv.id}`} className="p-1.5 rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors" title="Record Payment">
                               <ReceiptText className="w-3.5 h-3.5" aria-hidden="true" />
                             </button>
                           )}

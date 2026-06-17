@@ -134,8 +134,8 @@ export default function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWiz
         role="status"
         aria-live="polite"
       >
-        <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
-          <CheckCircle2 className="w-8 h-8 text-emerald-600" aria-hidden="true" />
+        <div className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center mb-4">
+          <CheckCircle2 className="w-8 h-8 text-success" aria-hidden="true" />
         </div>
         <p className="text-lg font-bold text-foreground">Enrollment Submitted!</p>
         <p className="text-sm text-muted-foreground mt-1">{student?.name} enrolled in {session?.name}</p>

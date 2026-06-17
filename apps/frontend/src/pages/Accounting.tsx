@@ -3,8 +3,8 @@ import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  TrendingUp, List, BookMarked, Scale, BarChart2,
-  BookOpen, Settings, LayoutDashboard,
+  TrendingUp, List, BookMarked, Scale,
+  BookOpen, LayoutDashboard,
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
@@ -20,8 +20,7 @@ import AccountingDashboard from "../components/accounting/AccountingDashboard";
 import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import {
-  CHART_OF_ACCOUNTS, JOURNAL_ENTRIES,
-  DEFAULT_SETTINGS, DEFAULT_FISCAL_YEARS, CURRENCIES,
+  DEFAULT_SETTINGS, CURRENCIES,
 } from '@/lib/data/accountingData';
 import { saveCollection, getObject, saveObject } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
@@ -111,7 +110,7 @@ export default function Accounting() {
         subtitle={`${t("page.accounting.subtitle")}${activeFY ? ` · ${activeFY.label}` : ""} · ${cur.code}`}
         actions={
           activeFY && (
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-success/15 text-success border border-success/30">
               {activeFY.label} — Active
             </span>
           )

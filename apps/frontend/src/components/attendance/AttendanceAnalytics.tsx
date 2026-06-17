@@ -135,10 +135,10 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
     <section className="space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Overall Attendance" value={`${overallRate}%`} sub="All classes" icon={Award} color="bg-emerald-500" />
+        <StatCard label="Overall Attendance" value={`${overallRate}%`} sub="All classes" icon={Award} color="bg-success" />
         <StatCard label="Total Present"   value={totalStats.present} sub="Across all records" icon={Award}         color="bg-primary"       />
-        <StatCard label="Low Attendance"  value={lowAttendance.length} sub="Below 75%"         icon={AlertTriangle} color="bg-amber-500"     />
-        <StatCard label="Most Absent"     value={studentRates[0]?.name || "—"} sub={`${studentRates[0]?.rate || 0}%`} icon={TrendingDown} color="bg-red-500" />
+        <StatCard label="Low Attendance"  value={lowAttendance.length} sub="Below 75%"         icon={AlertTriangle} color="bg-warning"     />
+        <StatCard label="Most Absent"     value={studentRates[0]?.name || "—"} sub={`${studentRates[0]?.rate || 0}%`} icon={TrendingDown} color="bg-destructive" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -219,16 +219,16 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
 
       {/* Low attendance alerts */}
       {lowAttendance.length > 0 && (
-        <article className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+        <article className="rounded-xl border border-warning/30 bg-warning/10 p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600" aria-hidden="true" />
-            <h3 className="text-sm font-bold text-amber-800 m-0">Low Attendance Alert — {lowAttendance.length} student{lowAttendance.length > 1 ? "s" : ""} below 75%</h3>
+            <AlertTriangle className="w-4 h-4 text-warning" aria-hidden="true" />
+            <h3 className="text-sm font-bold text-warning m-0">Low Attendance Alert — {lowAttendance.length} student{lowAttendance.length > 1 ? "s" : ""} below 75%</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {lowAttendance.map((s) => (
-              <div key={s.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-amber-200">
+              <div key={s.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-warning/30">
                 <span className="text-xs font-semibold text-foreground">{s.name}</span>
-                <span className="text-[11px] font-bold text-red-600">{s.rate}%</span>
+                <span className="text-[11px] font-bold text-destructive">{s.rate}%</span>
               </div>
             ))}
           </div>
@@ -241,14 +241,14 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
         <div className="space-y-2">
           {topStudents.map((s, i) => (
             <div key={s.name} className="flex items-center gap-3">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${i === 0 ? "bg-amber-100 text-amber-700" : i === 1 ? "bg-zinc-100 text-zinc-600" : "bg-orange-50 text-orange-600"}`}>{i + 1}</span>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${i === 0 ? "bg-warning/15 text-warning" : i === 1 ? "bg-muted text-muted-foreground" : "bg-warning/10 text-warning"}`}>{i + 1}</span>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-0.5">
                   <span className="text-sm font-semibold text-foreground">{s.name}</span>
-                  <span className="text-xs font-bold text-emerald-600">{s.rate}%</span>
+                  <span className="text-xs font-bold text-success">{s.rate}%</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full bg-emerald-500" style={{ width: `${s.rate}%` }} />
+                  <div className="h-full rounded-full bg-success" style={{ width: `${s.rate}%` }} />
                 </div>
               </div>
             </div>

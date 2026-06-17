@@ -7,7 +7,6 @@ import {
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, 
   Legend, Tooltip, XAxis, YAxis, CartesianGrid
 } from "recharts";
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { METADATA_FIELDS, type ReportCollection } from "./reportMetadata";
 
@@ -108,7 +107,7 @@ export default function DynamicChartRenderer({ config, height = 200 }: DynamicCh
         finalValue = count;
       } else {
         const field = config.targetField || "";
-        let values: number[] = [];
+        const values: number[] = [];
 
         groupItems.forEach((item) => {
           if (config.collection === "hasanat_distributions" && field === "points") {

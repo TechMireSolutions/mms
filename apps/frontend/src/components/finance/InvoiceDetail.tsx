@@ -4,10 +4,10 @@ import { X, CheckCircle2, Clock, AlertCircle, ReceiptText, User, Calendar, Credi
 import { Invoice } from '@/lib/data/financeData';
 
 const STATUS_CFG: Record<string, { label: string, cls: string, icon: React.ElementType }> = {
-  paid:      { label: "Paid",      cls: "bg-emerald-50 text-emerald-700 border-emerald-100", icon: CheckCircle2 },
-  pending:   { label: "Pending",   cls: "bg-amber-50 text-amber-700 border-amber-100",       icon: Clock },
-  overdue:   { label: "Overdue",   cls: "bg-red-50 text-red-600 border-red-100",             icon: AlertCircle },
-  partial:   { label: "Partial",   cls: "bg-blue-50 text-blue-700 border-blue-100",          icon: Clock },
+  paid:      { label: "Paid",      cls: "bg-success/10 text-success border-success/20", icon: CheckCircle2 },
+  pending:   { label: "Pending",   cls: "bg-warning/10 text-warning border-warning/20",       icon: Clock },
+  overdue:   { label: "Overdue",   cls: "bg-destructive/10 text-destructive border-destructive/20",             icon: AlertCircle },
+  partial:   { label: "Partial",   cls: "bg-info/10 text-info border-info/20",          icon: Clock },
   cancelled: { label: "Cancelled", cls: "bg-muted text-muted-foreground border-border",      icon: X },
 };
 
@@ -88,7 +88,7 @@ export default function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDet
               {rows.map((row) => (
                 <div key={row.label} className={`flex items-center justify-between px-4 py-2.5 ${row.highlight ? "bg-primary/5" : ""}`}>
                   <span className={`text-[12px] ${row.highlight ? "font-bold text-foreground" : "text-muted-foreground"}`}>{row.label}</span>
-                  <span className={`text-[13px] font-bold ${row.highlight ? "text-primary" : row.neg ? "text-red-600" : "text-foreground"}`}>{row.value}</span>
+                  <span className={`text-[13px] font-bold ${row.highlight ? "text-primary" : row.neg ? "text-destructive" : "text-foreground"}`}>{row.value}</span>
                 </div>
               ))}
             </div>

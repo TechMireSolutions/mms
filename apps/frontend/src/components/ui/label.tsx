@@ -3,10 +3,9 @@ import * as LabelPrimitive from "@radix-ui/react-label"
 import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils"
+import { FORM_LABEL } from "@/components/ui/formStyles"
 
-const labelVariants = cva(
-  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-)
+const labelVariants = cva(FORM_LABEL)
 
 const Label = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,

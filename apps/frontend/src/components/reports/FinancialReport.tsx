@@ -6,7 +6,6 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import { INVOICES, Invoice } from '@/lib/data/financeData';
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
@@ -40,10 +39,10 @@ interface FinancialReportProps {
 const PKR = (n: number): string => `PKR ${Number(n).toLocaleString()}`;
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
-  paid:      "bg-emerald-50 text-emerald-700",
-  pending:   "bg-amber-50 text-amber-700",
-  overdue:   "bg-red-50 text-red-600",
-  partial:   "bg-blue-50 text-blue-700",
+  paid:      "bg-success/10 text-success",
+  pending:   "bg-warning/10 text-warning",
+  overdue:   "bg-destructive/10 text-destructive",
+  partial:   "bg-info/10 text-info",
   cancelled: "bg-muted text-muted-foreground",
 };
 
@@ -231,7 +230,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                   <td className="px-3 py-2.5 font-medium">{inv.studentName}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{inv.class}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{PKR(inv.baseFee)}</td>
-                  <td className="px-3 py-2.5 text-amber-600">{inv.discountAmt > 0 ? `-${PKR(inv.discountAmt)}` : "—"}</td>
+                  <td className="px-3 py-2.5 text-warning">{inv.discountAmt > 0 ? `-${PKR(inv.discountAmt)}` : "—"}</td>
                   <td className="px-3 py-2.5 font-semibold text-foreground">{PKR(inv.finalAmt)}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{inv.dueDate}</td>
                   <td className="px-3 py-2.5">

@@ -37,11 +37,11 @@ export default function JournalEntryDetail({ entry, accounts, fmt, onClose, onEd
           <div className="flex items-center gap-3">
             <h2 id="modal-title" className="text-base font-bold text-foreground font-mono m-0">{entry.ref}</h2>
             {entry.status === "posted"
-              ? <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200"><CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" />Posted</span>
-              : <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200"><Clock className="w-2.5 h-2.5" aria-hidden="true" />Draft</span>
+              ? <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/15 text-success border border-success/30"><CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" />Posted</span>
+              : <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning/15 text-warning border border-warning/30"><Clock className="w-2.5 h-2.5" aria-hidden="true" />Draft</span>
             }
             {entry.reversed_ref && (
-              <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+              <span className="text-[10px] font-semibold text-warning bg-warning/10 px-2 py-0.5 rounded-full border border-warning/30">
                 ↩ Reversal of {entry.reversed_ref}
               </span>
             )}
@@ -53,7 +53,7 @@ export default function JournalEntryDetail({ entry, accounts, fmt, onClose, onEd
               </button>
             )}
             {entry.status === "posted" && onReverse && (
-              <button type="button" onClick={onReverse} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-200 text-amber-700 hover:bg-amber-50 transition-colors">
+              <button type="button" onClick={onReverse} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-warning/30 text-warning hover:bg-warning/10 transition-colors">
                 <RotateCcw className="w-3 h-3" aria-hidden="true" /> Reverse
               </button>
             )}
@@ -119,10 +119,10 @@ export default function JournalEntryDetail({ entry, accounts, fmt, onClose, onEd
                         </div>
                       </td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground hidden sm:table-cell">{line.description || "—"}</td>
-                      <td className="px-4 py-2.5 text-right font-mono font-semibold text-blue-700">
+                      <td className="px-4 py-2.5 text-right font-mono font-semibold text-info">
                         {line.debit > 0 ? line.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-mono font-semibold text-emerald-700">
+                      <td className="px-4 py-2.5 text-right font-mono font-semibold text-success">
                         {line.credit > 0 ? line.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
                       </td>
                     </tr>
@@ -132,15 +132,15 @@ export default function JournalEntryDetail({ entry, accounts, fmt, onClose, onEd
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={2} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">Totals</td>
-                  <td className="px-4 py-2 text-right font-mono font-bold text-blue-700">{fmt ? fmt(totalD) : totalD.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                  <td className="px-4 py-2 text-right font-mono font-bold text-emerald-700">{fmt ? fmt(totalC) : totalC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-2 text-right font-mono font-bold text-info">{fmt ? fmt(totalD) : totalD.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-2 text-right font-mono font-bold text-success">{fmt ? fmt(totalC) : totalC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                 </tr>
               </tfoot>
             </table>
           </section>
 
           {/* Balance check */}
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border ${Math.abs(totalD - totalC) < 0.01 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}`} role="status">
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border ${Math.abs(totalD - totalC) < 0.01 ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
             {Math.abs(totalD - totalC) < 0.01
               ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Balanced entry — Debits equal Credits</>
               : <>Unbalanced — Difference: {Math.abs(totalD - totalC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</>

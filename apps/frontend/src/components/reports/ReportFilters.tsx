@@ -2,7 +2,6 @@ import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Filter, ChevronDown, ChevronUp, X, Calendar } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
 

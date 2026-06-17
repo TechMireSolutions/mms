@@ -2,9 +2,7 @@ import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import useTranslation from '@/hooks/useTranslation';
 import { createQuestionCategory, type QuestionCategory } from '@mms/shared';
-
-const INPUT =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20';
+import { FORM_INPUT } from '@/components/ui/formStyles';
 
 interface CategoryManagerProps {
   categories: QuestionCategory[];
@@ -59,7 +57,7 @@ export default function CategoryManager({
             />
             <input
               type="text"
-              className={INPUT}
+              className={FORM_INPUT}
               value={cat.name}
               onChange={(e) => update(cat.id, { name: e.target.value })}
               aria-label={t('questionBank.categoryName')}

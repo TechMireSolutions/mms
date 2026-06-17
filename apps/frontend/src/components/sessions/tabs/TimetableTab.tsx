@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Save, Clock, MapPin, Trash2 } from "lucide-react";
+import { Plus, Clock, MapPin, Trash2 } from "lucide-react";
 import { DAYS, ACTIVITY_TYPES, Session, TimetableItem } from '@/lib/data/sessionsData';
-
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
+import FormModal from "@/components/ui/FormModal";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 const TYPE_CONFIG: Record<string, { color: string, dot: string }> = {
-  class:      { color: "bg-emerald-100 text-emerald-800 border-emerald-200", dot: "bg-emerald-500" },
-  lecture:    { color: "bg-blue-100 text-blue-800 border-blue-200",          dot: "bg-blue-500" },
-  assessment: { color: "bg-red-100 text-red-800 border-red-200",             dot: "bg-red-500" },
-  activity:   { color: "bg-violet-100 text-violet-800 border-violet-200",    dot: "bg-violet-500" },
-  spiritual:  { color: "bg-amber-100 text-amber-800 border-amber-200",       dot: "bg-amber-500" },
+  class:      { color: "bg-success/15 text-success border-success/30", dot: "bg-success" },
+  lecture:    { color: "bg-info/15 text-info border-info/30",          dot: "bg-info" },
+  assessment: { color: "bg-destructive/15 text-destructive border-destructive/30",             dot: "bg-destructive" },
+  activity:   { color: "bg-primary/15 text-primary border-primary/30",    dot: "bg-primary" },
+  spiritual:  { color: "bg-warning/15 text-warning border-warning/30",       dot: "bg-warning" },
   break:      { color: "bg-muted text-muted-foreground border-border",       dot: "bg-border" },
 };
 
@@ -43,7 +42,7 @@ function ActivityChip({ entry, onDelete }: ActivityChipProps) {
       <button
         aria-label={`Delete ${entry.activity}`}
         onClick={() => onDelete(entry.id)}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-current hover:text-red-700 ml-1 flex-shrink-0"
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-current hover:text-destructive ml-1 flex-shrink-0"
       >
         <Trash2 className="w-3 h-3" aria-hidden="true" />
       </button>
@@ -52,73 +51,68 @@ function ActivityChip({ entry, onDelete }: ActivityChipProps) {
 }
 
 interface AddActivityModalProps {
+  open: boolean;
   onClose: () => void;
   onSave: (entry: TimetableItem) => void;
 }
 
-function AddActivityModal({ onClose, onSave }: AddActivityModalProps) {
+function AddActivityModal({ open, onClose, onSave }: AddActivityModalProps) {
   const [data, setData] = useState<Partial<TimetableItem>>({ ...EMPTY });
   const upd = <K extends keyof TimetableItem>(f: K, v: TimetableItem[K]) => setData((d) => ({ ...d, [f]: v }));
 
+  React.useEffect(() => {
+    if (open) {
+      setData({ ...EMPTY });
+    }
+  }, [open]);
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.form
-        onSubmit={(e) => { e.preventDefault(); onSave({ ...data, id: `tt${Date.now()}` } as TimetableItem); }}
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-sm flex flex-col z-10"
-      >
-        <header className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h3 id="activity-modal-title" className="text-sm font-bold text-foreground m-0">Add Activity</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" aria-hidden="true" /></button>
-        </header>
-        <fieldset className="px-5 py-4 space-y-4 border-none m-0">
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title="Add Activity"
+      icon={Clock}
+      size="md"
+      cancelLabel="Cancel"
+      saveLabel="Add"
+      onSave={() => onSave({ ...data, id: `tt${Date.now()}` } as TimetableItem)}
+      saveDisabled={!data.activity}
+    >
+      <div className="space-y-4">
+        <div>
+          <label className={FORM_LABEL} htmlFor="activity-name">Activity Name *</label>
+          <input id="activity-name" className={FORM_INPUT} value={data.activity || ""} onChange={(e) => upd("activity", e.target.value)} placeholder="e.g. Hifz Revision" required />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={LABEL} htmlFor="activity-name">Activity Name *</label>
-            <input id="activity-name" className={INPUT} value={data.activity || ""} onChange={(e) => upd("activity", e.target.value)} placeholder="e.g. Hifz Revision" required />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={LABEL} htmlFor="activity-day">Day</label>
-              <select id="activity-day" className={INPUT + " cursor-pointer"} value={data.day || "Mon"} onChange={(e) => upd("day", e.target.value as TimetableItem["day"])}>
-                {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={LABEL} htmlFor="activity-type">Type</label>
-              <select id="activity-type" className={INPUT + " cursor-pointer"} value={data.type || "class"} onChange={(e) => upd("type", e.target.value as TimetableItem["type"])}>
-                {ACTIVITY_TYPES.map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={LABEL} htmlFor="activity-start">Start Time</label>
-              <input id="activity-start" type="time" className={INPUT} value={data.startTime || ""} onChange={(e) => upd("startTime", e.target.value)} required />
-            </div>
-            <div>
-              <label className={LABEL} htmlFor="activity-end">End Time</label>
-              <input id="activity-end" type="time" className={INPUT} value={data.endTime || ""} onChange={(e) => upd("endTime", e.target.value)} required />
-            </div>
+            <label className={FORM_LABEL} htmlFor="activity-day">Day</label>
+            <select id="activity-day" className={`${FORM_INPUT} cursor-pointer`} value={data.day || "Mon"} onChange={(e) => upd("day", e.target.value as TimetableItem["day"])}>
+              {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
           </div>
           <div>
-            <label className={LABEL} htmlFor="activity-location">Location</label>
-            <input id="activity-location" className={INPUT} value={data.location || ""} onChange={(e) => upd("location", e.target.value)} placeholder="e.g. Room A" />
+            <label className={FORM_LABEL} htmlFor="activity-type">Type</label>
+            <select id="activity-type" className={`${FORM_INPUT} cursor-pointer`} value={data.type || "class"} onChange={(e) => upd("type", e.target.value as TimetableItem["type"])}>
+              {ACTIVITY_TYPES.map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
+            </select>
           </div>
-        </fieldset>
-        <footer className="px-5 py-4 border-t border-border flex justify-end gap-2.5">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">Cancel</button>
-          <button
-            type="submit"
-            disabled={!data.activity}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
-          >
-            <Save className="w-3.5 h-3.5" aria-hidden="true" /> Add
-          </button>
-        </footer>
-      </motion.form>
-    </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={FORM_LABEL} htmlFor="activity-start">Start Time</label>
+            <input id="activity-start" type="time" className={FORM_INPUT} value={data.startTime || ""} onChange={(e) => upd("startTime", e.target.value)} required />
+          </div>
+          <div>
+            <label className={FORM_LABEL} htmlFor="activity-end">End Time</label>
+            <input id="activity-end" type="time" className={FORM_INPUT} value={data.endTime || ""} onChange={(e) => upd("endTime", e.target.value)} required />
+          </div>
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="activity-location">Location</label>
+          <input id="activity-location" className={FORM_INPUT} value={data.location || ""} onChange={(e) => upd("location", e.target.value)} placeholder="e.g. Room A" />
+        </div>
+      </div>
+    </FormModal>
   );
 }
 
@@ -212,9 +206,7 @@ export default function TimetableTab({ session, onUpdate }: TimetableTabProps) {
         </p>
       )}
 
-      <AnimatePresence>
-        {showModal && <AddActivityModal onClose={() => setShowModal(false)} onSave={handleAdd} />}
-      </AnimatePresence>
+      <AddActivityModal open={showModal} onClose={() => setShowModal(false)} onSave={handleAdd} />
     </section>
   );
 }

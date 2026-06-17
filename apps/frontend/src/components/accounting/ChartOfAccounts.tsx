@@ -154,7 +154,7 @@ export default function ChartOfAccounts({ accounts, onChange }: ChartOfAccountsP
                       <td className="px-4 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{a.subtype || "—"}</td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground hidden lg:table-cell max-w-[200px] truncate">{a.description || "—"}</td>
                       <td className="px-4 py-2.5">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ACCOUNT_TYPE_META[a.type]?.normalBalance === "debit" ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"}`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ACCOUNT_TYPE_META[a.type]?.normalBalance === "debit" ? "bg-info/15 text-info" : "bg-success/15 text-success"}`}>
                           {ACCOUNT_TYPE_META[a.type]?.normalBalance?.toUpperCase()}
                         </span>
                       </td>
@@ -164,7 +164,7 @@ export default function ChartOfAccounts({ accounts, onChange }: ChartOfAccountsP
                             <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
                           {a.isActive === false
-                            ? <button type="button" aria-label={`Reactivate ${a.name}`} onClick={() => handleReactivate(a.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-emerald-600 transition-colors"><Eye className="w-3.5 h-3.5" aria-hidden="true" /></button>
+                            ? <button type="button" aria-label={`Reactivate ${a.name}`} onClick={() => handleReactivate(a.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-success transition-colors"><Eye className="w-3.5 h-3.5" aria-hidden="true" /></button>
                             : <button type="button" aria-label={`Deactivate ${a.name}`} onClick={() => handleDelete(a.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"><EyeOff className="w-3.5 h-3.5" aria-hidden="true" /></button>
                           }
                         </div>

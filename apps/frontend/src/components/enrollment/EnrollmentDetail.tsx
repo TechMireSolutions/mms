@@ -48,10 +48,10 @@ function Row({ label, value }: RowProps): React.ReactElement {
 }
 
 const paymentColors: Record<string, string> = {
-  paid:    "bg-emerald-100 text-emerald-700",
-  pending: "bg-amber-100 text-amber-700",
-  overdue: "bg-red-100 text-red-700",
-  partial: "bg-blue-100 text-blue-700",
+  paid:    "bg-success/15 text-success",
+  pending: "bg-warning/15 text-warning",
+  overdue: "bg-destructive/15 text-destructive",
+  partial: "bg-info/15 text-info",
 };
 
 interface EnrollmentDetailProps {
@@ -72,6 +72,12 @@ interface EnrollmentDetailProps {
  * @returns The EnrollmentDetail component.
  */
 export default function EnrollmentDetail({ enrollment, onClose, onStatusChange, role }: EnrollmentDetailProps): React.ReactElement | null {
+  const students = React.useMemo(() => getCollection<Student>("students", STUDENTS), []);
+  const student = React.useMemo(() => {
+    if (!enrollment) return undefined;
+    return students.find((st) => String(st.id) === String(enrollment.studentId));
+  }, [enrollment, students]);
+
   if (!enrollment) return null;
   const s = STATUS_MAP[enrollment.status] || { label: enrollment.status, color: "bg-muted text-muted-foreground border-border" };
 
@@ -82,11 +88,6 @@ export default function EnrollmentDetail({ enrollment, onClose, onStatusChange, 
     completed: [],
   };
   const nextStatuses = TRANSITIONS[enrollment.status] || [];
-
-  const students = React.useMemo(() => getCollection<Student>("students", STUDENTS), []);
-  const student = React.useMemo(() => {
-    return students.find((st) => String(st.id) === String(enrollment.studentId));
-  }, [enrollment, students]);
 
   return (
     <motion.div
@@ -198,7 +199,7 @@ export default function EnrollmentDetail({ enrollment, onClose, onStatusChange, 
                   onClick={() => onStatusChange(enrollment.id, ns)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
                     isCancel
-                      ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                      ? "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/15"
                       : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
                   }`}
                 >

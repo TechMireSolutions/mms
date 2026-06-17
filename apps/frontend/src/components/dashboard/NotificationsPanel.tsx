@@ -19,10 +19,10 @@ interface NotificationsPanelProps {
 }
 
 const ICONS: Record<string, { icon: React.ElementType; bg: string; text: string }> = {
-  fee: { icon: DollarSign, bg: "bg-red-50", text: "text-destructive" },
-  event: { icon: Calendar, bg: "bg-blue-50", text: "text-blue-500" },
-  student: { icon: User, bg: "bg-emerald-50", text: "text-emerald-600" },
-  attendance: { icon: AlertTriangle, bg: "bg-amber-50", text: "text-amber-600" },
+  fee: { icon: DollarSign, bg: "bg-destructive/10", text: "text-destructive" },
+  event: { icon: Calendar, bg: "bg-info/10", text: "text-info" },
+  student: { icon: User, bg: "bg-success/10", text: "text-success" },
+  attendance: { icon: AlertTriangle, bg: "bg-warning/10", text: "text-warning" },
 };
 
 /**

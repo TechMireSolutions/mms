@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  X, ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ChevronUp,
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ChevronUp,
   DollarSign, TrendingDown, RefreshCw, BookOpen,
-  Building2, Zap, Package, Home, UserCheck, Heart, Plus, Upload, Calendar
+  Building2, Zap, Package, Home, UserCheck, Heart, Plus, Upload
 } from "lucide-react";
 import { generateJERef, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
+import Modal from "../ui/Modal";
+import { FORM_INPUT, FORM_LABEL } from "../ui/formStyles";
 
 // ── Transaction Type Definitions ──────────────────────────────────────────────
 
@@ -93,33 +94,31 @@ const CASH_ACCOUNTS = [
 
 const GROUP_COLORS: Record<string, Record<string, string>> = {
   emerald: {
-    card: "border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50",
-    header: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    badge: "bg-emerald-100 text-emerald-700",
-    item: "border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50",
-    selected: "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200",
-    icon: "text-emerald-600 bg-emerald-100",
+    card: "border-success/30 bg-success/10/60 hover:bg-success/10",
+    header: "bg-success/15 text-success border-success/30",
+    badge: "bg-success/15 text-success",
+    item: "border-success/30 hover:border-success hover:bg-success/10",
+    selected: "border-success bg-success/10 ring-2 ring-success/30",
+    icon: "text-success bg-success/15",
   },
   red: {
-    card: "border-red-200 bg-red-50/60 hover:bg-destructive/10",
-    header: "bg-red-100 text-red-700 border-red-200",
-    badge: "bg-red-100 text-red-700",
-    item: "border-red-200 hover:border-red-400 hover:bg-destructive/10",
-    selected: "border-destructive bg-red-50 ring-2 ring-red-200",
-    icon: "text-red-600 bg-red-100",
+    card: "border-destructive/30 bg-destructive/10/60 hover:bg-destructive/10",
+    header: "bg-destructive/15 text-destructive border-destructive/30",
+    badge: "bg-destructive/15 text-destructive",
+    item: "border-destructive/30 hover:border-destructive hover:bg-destructive/10",
+    selected: "border-destructive bg-destructive/10 ring-2 ring-destructive/20",
+    icon: "text-destructive bg-destructive/15",
   },
   blue: {
-    card: "border-blue-200 bg-blue-50/60 hover:bg-blue-50",
-    header: "bg-blue-100 text-blue-700 border-blue-200",
-    badge: "bg-blue-100 text-blue-700",
-    item: "border-blue-200 hover:border-blue-400 hover:bg-blue-50",
-    selected: "border-blue-500 bg-blue-50 ring-2 ring-blue-200",
-    icon: "text-blue-600 bg-blue-100",
+    card: "border-info/30 bg-info/10/60 hover:bg-info/10",
+    header: "bg-info/15 text-info border-info/30",
+    badge: "bg-info/15 text-info",
+    item: "border-info/30 hover:border-info hover:bg-info/10",
+    selected: "border-info bg-info/10 ring-2 ring-info/30",
+    icon: "text-info bg-info/15",
   },
 };
 
-const INP = "w-full px-3 py-2.5 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
-const LBL = "block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5";
 
 interface WizardFormState {
   date: string;
@@ -193,7 +192,7 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
       <div className="grid grid-cols-2 gap-3">
         {/* Date */}
         <div className="col-span-2 sm:col-span-1">
-          <label htmlFor="wizard-date" className={LBL}>Date</label>
+          <label htmlFor="wizard-date" className={FORM_LABEL}>Date</label>
           <DatePicker
             id="wizard-date"
             value={form.date}
@@ -203,43 +202,43 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
 
         {/* Amount */}
         <div className="col-span-2 sm:col-span-1">
-          <label htmlFor="wizard-amt" className={LBL}>Amount *</label>
+          <label htmlFor="wizard-amt" className={FORM_LABEL}>Amount *</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground" aria-hidden="true">₨</span>
             <input id="wizard-amt" type="number" min="0" step="0.01" value={form.amount} placeholder="0.00"
               onChange={(e) => setForm({ ...form, amount: e.target.value })}
-              className={INP + " pl-8 text-lg font-bold"} aria-invalid={!form.amount} />
+              className={FORM_INPUT + " pl-8 text-lg font-bold"} aria-invalid={!form.amount} />
           </div>
-          {!form.amount && <p className="text-[11px] text-amber-600 mt-1" role="alert">Please enter an amount</p>}
+          {!form.amount && <p className="text-[11px] text-warning mt-1" role="alert">Please enter an amount</p>}
         </div>
 
         {/* Source / Destination account */}
         {isMoneyIn ? (
           <div className="col-span-2">
-            <label htmlFor="wizard-acc-in" className={LBL}>Received Into *</label>
-            <select id="wizard-acc-in" value={form.debitAcc} onChange={(e) => setForm({ ...form, debitAcc: e.target.value })} className={INP}>
+            <label htmlFor="wizard-acc-in" className={FORM_LABEL}>Received Into *</label>
+            <select id="wizard-acc-in" value={form.debitAcc} onChange={(e) => setForm({ ...form, debitAcc: e.target.value })} className={FORM_INPUT}>
               {cashAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </div>
         ) : isTransfer ? (
           <>
             <div className="col-span-2 sm:col-span-1">
-              <label htmlFor="wizard-acc-to" className={LBL}>Transfer To *</label>
-              <select id="wizard-acc-to" value={form.debitAcc} onChange={(e) => setForm({ ...form, debitAcc: e.target.value })} className={INP}>
+              <label htmlFor="wizard-acc-to" className={FORM_LABEL}>Transfer To *</label>
+              <select id="wizard-acc-to" value={form.debitAcc} onChange={(e) => setForm({ ...form, debitAcc: e.target.value })} className={FORM_INPUT}>
                 {cashAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label htmlFor="wizard-acc-from" className={LBL}>Transfer From *</label>
-              <select id="wizard-acc-from" value={form.creditAcc} onChange={(e) => setForm({ ...form, creditAcc: e.target.value })} className={INP}>
+              <label htmlFor="wizard-acc-from" className={FORM_LABEL}>Transfer From *</label>
+              <select id="wizard-acc-from" value={form.creditAcc} onChange={(e) => setForm({ ...form, creditAcc: e.target.value })} className={FORM_INPUT}>
                 {cashAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
           </>
         ) : (
           <div className="col-span-2">
-            <label htmlFor="wizard-acc-out" className={LBL}>Paid From *</label>
-            <select id="wizard-acc-out" value={form.creditAcc} onChange={(e) => setForm({ ...form, creditAcc: e.target.value })} className={INP}>
+            <label htmlFor="wizard-acc-out" className={FORM_LABEL}>Paid From *</label>
+            <select id="wizard-acc-out" value={form.creditAcc} onChange={(e) => setForm({ ...form, creditAcc: e.target.value })} className={FORM_INPUT}>
               {cashAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </div>
@@ -247,22 +246,22 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
 
         {/* Description */}
         <div className="col-span-2">
-          <label htmlFor="wizard-desc" className={LBL}>Description</label>
+          <label htmlFor="wizard-desc" className={FORM_LABEL}>Description</label>
           <input id="wizard-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder={type.description} className={INP} />
+            placeholder={type.description} className={FORM_INPUT} />
         </div>
 
         {/* Reference */}
         <div className="col-span-2 sm:col-span-1">
-          <label htmlFor="wizard-ref" className={LBL}>Reference No. <span className="normal-case font-normal text-muted-foreground">(optional)</span></label>
+          <label htmlFor="wizard-ref" className={FORM_LABEL}>Reference No. <span className="normal-case font-normal text-muted-foreground">(optional)</span></label>
           <input id="wizard-ref" value={form.ref} onChange={(e) => setForm({ ...form, ref: e.target.value })}
-            placeholder="e.g. RCP-001" className={INP} />
+            placeholder="e.g. RCP-001" className={FORM_INPUT} />
         </div>
 
         {/* Receipt upload */}
         <div className="col-span-2 sm:col-span-1">
-          <label className={LBL}>Receipt <span className="normal-case font-normal text-muted-foreground">(optional)</span></label>
-          <label className={`${INP} flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground`}>
+          <label className={FORM_LABEL}>Receipt <span className="normal-case font-normal text-muted-foreground">(optional)</span></label>
+          <label className={`${FORM_INPUT} flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground`}>
             <Upload className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
             <span className="text-xs">{form.receipt ? form.receipt : "Upload receipt…"}</span>
             <input type="file" accept="image/*,application/pdf" className="hidden"
@@ -307,9 +306,9 @@ function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { t
             <span className="text-sm font-semibold text-foreground">{row.value}</span>
           </div>
         ))}
-        <div className="px-4 py-3 bg-emerald-50 border-t border-emerald-100 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" aria-hidden="true" />
-          <span className="text-sm font-semibold text-emerald-700">Will be posted automatically to your records</span>
+        <div className="px-4 py-3 bg-success/10 border-t border-success/20 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />
+          <span className="text-sm font-semibold text-success">Will be posted automatically to your records</span>
         </div>
       </div>
 
@@ -329,15 +328,15 @@ function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { t
                 <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-right">Debit</div>
                 <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-right">Credit</div>
               </div>
-              <div className="grid grid-cols-3 bg-blue-50/50 border-b border-border">
+              <div className="grid grid-cols-3 bg-info/10/50 border-b border-border">
                 <div className="px-3 py-2 font-semibold text-foreground">{debitAcc?.name || "—"}</div>
-                <div className="px-3 py-2 text-right font-mono text-blue-700 font-bold">{amt.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+                <div className="px-3 py-2 text-right font-mono text-info font-bold">{amt.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
                 <div className="px-3 py-2 text-right text-muted-foreground">—</div>
               </div>
-              <div className="grid grid-cols-3 bg-emerald-50/50">
+              <div className="grid grid-cols-3 bg-success/10/50">
                 <div className="px-3 py-2 font-semibold text-foreground">{creditAcc?.name || "—"}</div>
                 <div className="px-3 py-2 text-right text-muted-foreground">—</div>
-                <div className="px-3 py-2 text-right font-mono text-emerald-700 font-bold">{amt.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+                <div className="px-3 py-2 text-right font-mono text-success font-bold">{amt.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground m-0">These journal lines are auto-generated. No manual entry needed.</p>
@@ -349,6 +348,7 @@ function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { t
 }
 
 interface SimpleTransactionWizardProps {
+  open: boolean;
   accounts: Account[];
   entries: JournalEntry[];
   fiscalYears: FiscalYear[];
@@ -368,7 +368,7 @@ interface SimpleTransactionWizardProps {
  * @param props - The properties for the component.
  * @returns React element representing the transaction wizard modal.
  */
-export default function SimpleTransactionWizard({ accounts, entries, fiscalYears, onSave, onClose, prefillType }: SimpleTransactionWizardProps) {
+export default function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, onSave, onClose, prefillType }: SimpleTransactionWizardProps) {
   const [step, setStep] = useState(prefillType ? 2 : 1);
   const [selectedType, setSelectedType] = useState<QuickActionType | null>(prefillType || null);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -440,83 +440,67 @@ export default function SimpleTransactionWizard({ accounts, entries, fiscalYears
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.2 }}
-        role="dialog" aria-modal="true" aria-labelledby="wizard-title"
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col z-10">
-
-        {/* Header */}
-        <header className="px-6 py-4 border-b border-border flex-shrink-0">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 id="wizard-title" className="text-base font-bold text-foreground m-0">Record Transaction</h2>
-              <p className="text-xs text-muted-foreground m-0">Money In / Money Out</p>
-            </div>
-            <button type="button" aria-label="Close transaction wizard" onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
-              <X className="w-4 h-4" aria-hidden="true" />
-            </button>
-          </div>
-          {/* Step indicators */}
-          <nav aria-label="Wizard Steps" className="flex items-center gap-2">
-            {steps.map((s, i) => (
-              <React.Fragment key={s.n}>
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${
-                    step > s.n ? "bg-emerald-500 text-white" : step === s.n ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  }`} aria-current={step === s.n ? "step" : undefined}>
-                    {step > s.n ? <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> : s.n}
-                  </div>
-                  <span className={`text-[11px] font-semibold hidden sm:block ${step === s.n ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Record Transaction"
+      subtitle="Money In / Money Out"
+      size="md"
+      panelClassName="max-h-[92vh]"
+      headerExtra={
+        <nav aria-label="Wizard Steps" className="flex items-center gap-2">
+          {steps.map((s, i) => (
+            <React.Fragment key={s.n}>
+              <div className="flex items-center gap-1.5">
+                <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold transition-all ${
+                  step > s.n ? "bg-success text-white" : step === s.n ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                }`} aria-current={step === s.n ? "step" : undefined}>
+                  {step > s.n ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> : s.n}
                 </div>
-                {i < steps.length - 1 && <div className={`flex-1 h-0.5 rounded-full transition-all ${step > s.n ? "bg-emerald-400" : "bg-border"}`} aria-hidden="true" />}
-              </React.Fragment>
-            ))}
-          </nav>
-        </header>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
-          <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.15 }}>
-              {step === 1 && <StepTypeSelection selected={selectedType} onSelect={handleTypeSelect} />}
-              {step === 2 && selectedType && <StepTransactionForm type={selectedType} form={form} setForm={setForm} accounts={accounts} />}
-              {step === 3 && selectedType && <StepReview type={selectedType} form={form} accounts={accounts} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} />}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Footer */}
-        <footer className="px-6 py-4 border-t border-border flex-shrink-0 flex items-center justify-between gap-3">
+                <span className={`hidden text-[11px] font-semibold sm:block ${step === s.n ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+              </div>
+              {i < steps.length - 1 && <div className={`h-0.5 flex-1 rounded-full transition-all ${step > s.n ? "bg-success" : "bg-border"}`} aria-hidden="true" />}
+            </React.Fragment>
+          ))}
+        </nav>
+      }
+      footer={
+        <div className="flex w-full items-center justify-between gap-3">
           <button type="button" onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">
-            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+            className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             {step === 1 ? "Cancel" : "Back"}
           </button>
-
           <div className="flex items-center gap-2">
             {step < 3 && (
               <button type="button" onClick={() => setStep(step + 1)} disabled={!canProceed() || !selectedType}
-                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                Next <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                className="flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">
+                Next <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             )}
             {step === 3 && (
               <>
                 <button type="button" onClick={() => handleSave("draft")}
-                  className="px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">
+                  className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted">
                   Save Draft
                 </button>
                 <button type="button" onClick={() => handleSave("posted")}
-                  className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-                  <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> Post Transaction
+                  className="flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Post Transaction
                 </button>
               </>
             )}
           </div>
-        </footer>
-      </motion.div>
-    </div>
+        </div>
+      }
+    >
+      <AnimatePresence mode="wait">
+        <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.15 }}>
+          {step === 1 && <StepTypeSelection selected={selectedType} onSelect={handleTypeSelect} />}
+          {step === 2 && selectedType && <StepTransactionForm type={selectedType} form={form} setForm={setForm} accounts={accounts} />}
+          {step === 3 && selectedType && <StepReview type={selectedType} form={form} accounts={accounts} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} />}
+        </motion.div>
+      </AnimatePresence>
+    </Modal>
   );
 }

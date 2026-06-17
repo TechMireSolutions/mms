@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, Plus, User, Mail, Phone, Calendar, Sparkles, Users, Lock, Camera, Upload } from "lucide-react";
+import { X, Search, Plus, User, Mail, Phone, Sparkles, Lock, Camera, Upload } from "lucide-react";
 import { CONTACTS } from '@/lib/data/contactsData';
 import { toTitleCase, cn } from "../../lib/utils";
 import { uploadUserImage } from "@/lib/imageUpload";
@@ -11,13 +11,13 @@ import type { Student } from '@/lib/data/studentsData';
 import {
   type StudentsSettings,
   DEFAULT_STUDENTS_SETTINGS,
-  type StudentCustomField,
   getSortedStudentFields
 } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import useTranslation from "@/hooks/useTranslation";
+import { genderAvatarGradient, genderBadgeClass, genderSelectClass } from "@/lib/semanticTone";
 
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
 const LABEL = "text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5 block";
@@ -95,20 +95,10 @@ function ContactPicker({
   };
 
   if (selected) {
-    const isMale = selected.gender?.toLowerCase() === "male";
-    const isFemale = selected.gender?.toLowerCase() === "female";
-    const genderBadgeColor = isMale 
-      ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20" 
-      : isFemale 
-        ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
-        : "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20";
+    const genderBadgeColor = genderBadgeClass(selected.gender ?? "");
     
     const initials = selected.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-    const avatarGradient = isMale
-      ? "from-blue-500 to-indigo-600"
-      : isFemale
-        ? "from-rose-400 to-pink-600"
-        : "from-purple-500 to-violet-600";
+    const avatarGradient = genderAvatarGradient(selected.gender ?? "");
     
     const selectedPhone = (selected.phone as string | undefined) || selected.phones?.[0]?.number;
     const selectedEmail = (selected.email as string | undefined) || selected.emails?.[0]?.address;
@@ -219,14 +209,8 @@ function ContactPicker({
                 </div>
               )}
               {matches.map((c) => {
-                const isMale = c.gender?.toLowerCase() === "male";
-                const isFemale = c.gender?.toLowerCase() === "female";
                 const cInitials = c.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-                const cGradient = isMale
-                  ? "from-blue-500 to-indigo-600"
-                  : isFemale
-                    ? "from-rose-400 to-pink-600"
-                    : "from-purple-500 to-violet-600";
+                const cGradient = genderAvatarGradient(c.gender ?? "");
                 
                 const cPhone = (c.phone as string | undefined) || c.phones?.[0]?.number;
                 const cCity = c.city as string | undefined;
@@ -944,18 +928,7 @@ export default function StudentForm({ student, students, onClose, onSave }: Stud
                       <div className="flex flex-wrap gap-2">
                         {genders.map((g) => {
                           const isSelected = newContact.gender === g;
-                          const colorClass =
-                            g === "male"
-                              ? isSelected
-                                ? "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-500/10 ring-2 ring-blue-500/10"
-                                : "border-border bg-card text-muted-foreground hover:bg-muted"
-                              : g === "female"
-                              ? isSelected
-                                ? "border-rose-500 text-rose-600 dark:text-rose-400 bg-rose-500/10 ring-2 ring-rose-500/10"
-                                : "border-border bg-card text-muted-foreground hover:bg-muted"
-                              : isSelected
-                              ? "border-purple-500 text-purple-600 dark:text-purple-400 bg-purple-500/10 ring-2 ring-purple-500/10"
-                              : "border-border bg-card text-muted-foreground hover:bg-muted";
+                          const colorClass = genderSelectClass(g, isSelected);
                           return (
                             <button
                               key={g}
@@ -974,12 +947,12 @@ export default function StudentForm({ student, students, onClose, onSave }: Stud
                         <span className="capitalize flex items-center gap-1.5">
                           {createType === "father" ? (
                             <>
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-info" />
                               Male (Locked for Father)
                             </>
                           ) : (
                             <>
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
                               Female (Locked for Mother)
                             </>
                           )}

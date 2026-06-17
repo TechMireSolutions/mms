@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Star, Package, Send, Gift, Settings, BarChart2, Layers, RotateCcw, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Star, Package, Send, Gift, Layers, RotateCcw, TrendingUp } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
 import SubTabBar from "@/components/ui/SubTabBar";
@@ -16,7 +16,6 @@ import HasanatSettings from "../components/hasanat/HasanatSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
-import { DENOMINATIONS, STOCK_BATCHES, DISTRIBUTIONS, Denomination, StockBatch, Distribution } from '@/lib/data/hasanatData';
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 
@@ -60,10 +59,10 @@ export default function HasanatCards() {
 
   const stats = [
     { label: "Total Stock", value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10" },
-    { label: "Available", value: totalRemaining, icon: Package, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
-    { label: "Distributed", value: totalDistributed, icon: Star, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
-    { label: "Redeemed", value: totalRedeemed, icon: Gift, color: "text-violet-600", bg: "bg-violet-50", border: "border-violet-100" },
-    { label: "Active", value: totalActive, icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
+    { label: "Available", value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20" },
+    { label: "Distributed", value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
+    { label: "Redeemed", value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20" },
+    { label: "Active", value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20" },
     { label: "Returned", value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
   ];
 

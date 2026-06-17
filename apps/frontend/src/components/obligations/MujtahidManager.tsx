@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import ObligationModal from "./ObligationModal";
+import { FORM_LABEL, FORM_ERROR } from "@/components/ui/formStyles";
 
 export interface Mujtahid {
   id: string;
@@ -168,11 +169,11 @@ function NameForm({ initial, onSave, onCancel, label }: NameFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="name-form-input" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label} *</label>
+        <label htmlFor="name-form-input" className={FORM_LABEL}>{label} *</label>
         <input id="name-form-input" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="FORM_INPUT"
           aria-invalid={!!error} />
-        {error && <p className="text-xs text-destructive mt-1" role="alert">{error}</p>}
+        {error && <p className={FORM_ERROR} role="alert">{error}</p>}
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <button type="button" onClick={onCancel}

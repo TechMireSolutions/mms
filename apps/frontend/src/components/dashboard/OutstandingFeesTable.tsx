@@ -96,7 +96,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                   <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                     fee.months >= 3
                       ? "bg-destructive/10 text-destructive"
-                      : "bg-amber-50 text-amber-700"
+                      : "bg-warning/10 text-warning"
                   }`}>
                     {fee.months} {fee.months === 1 ? "month" : "months"}
                   </span>

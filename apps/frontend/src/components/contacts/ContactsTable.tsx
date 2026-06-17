@@ -312,7 +312,7 @@ export default function ContactsTable({
               {Array.from({ length: 5 }).map((_, i) => (
                 <span
                   key={i}
-                  className={`text-xs ${i < r ? (uiStrings.ratingActiveText || "text-amber-500 font-bold") : (uiStrings.ratingInactiveText || "text-muted-foreground/30 font-light")}`}
+                  className={`text-xs ${i < r ? (uiStrings.ratingActiveText || "text-warning font-bold") : (uiStrings.ratingInactiveText || "text-muted-foreground/30 font-light")}`}
                 >
                   ★
                 </span>
@@ -401,7 +401,7 @@ export default function ContactsTable({
                             <MessageCircle className={`w-3.5 h-3.5 mr-2 ${hasWhatsApp(c) ? "text-success" : "text-muted-foreground"}`} /> {uiStrings.whatsapp}
                           </DropdownMenuItem>
                           <DropdownMenuItem disabled={!getPrimaryPhone(c)} onClick={() => onSms([c])}>
-                            <MessageSquare className="w-3.5 h-3.5 mr-2 text-violet-600" /> {uiStrings.sms}
+                            <MessageSquare className="w-3.5 h-3.5 mr-2 text-primary" /> {uiStrings.sms}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => onDelete(c.id)} className="text-destructive focus:text-destructive">

@@ -39,7 +39,7 @@ export default function StatsCard({ title, value, icon: Icon, change, changeLabe
       </div>
       {change !== undefined && (
         <div className="flex items-center gap-1.5 mt-3">
-          <span className={`text-xs font-semibold ${isPositive ? "text-emerald-600" : "text-destructive"}`} aria-label={`Trend ${isPositive ? 'up' : 'down'} ${Math.abs(change)} percent`}>
+          <span className={`text-xs font-semibold ${isPositive ? "text-success" : "text-destructive"}`} aria-label={`Trend ${isPositive ? 'up' : 'down'} ${Math.abs(change)} percent`}>
             {isPositive ? "+" : ""}{change}%
           </span>
           {changeLabel && <span className="text-xs text-muted-foreground">{changeLabel}</span>}

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import useConfigSubTabs from "@/hooks/useConfigSubTabs";
 import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
@@ -8,6 +8,7 @@ import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
 import SubTabBar from "@/components/ui/SubTabBar";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import Modal from "@/components/ui/Modal";
 import ExamsList from "../components/examination/ExamsList";
 import ExamForm from "../components/examination/ExamForm";
 import EnterMarks from "../components/examination/EnterMarks";
@@ -15,7 +16,7 @@ import ResultsView from "../components/examination/ResultsView";
 import ExaminationsSettings from "../components/examination/ExaminationsSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
-import { EXAMS, EXAM_RESULTS, Exam, ExamResult } from '@/lib/data/examinationData';
+import { Exam, ExamResult } from '@/lib/data/examinationData';
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 
@@ -29,7 +30,6 @@ export default function Examinations(): React.JSX.Element {
   const OPS_SUB_TABS = useMemo(
     () => [
       { id: "exams", label: t("examinations.exams"), icon: BookOpen },
-      { id: "marks", label: t("examinations.marks"), icon: PenTool },
       { id: "results", label: t("examinations.results"), icon: FileText },
     ],
     [t],
@@ -41,6 +41,7 @@ export default function Examinations(): React.JSX.Element {
   const exams = useLiveCollection("exams");
   const examResults = useLiveCollection("exam_results");
   const [showExamForm, setShowExamForm] = useState(false);
+  const [showMarksModal, setShowMarksModal] = useState(false);
   const [editExam, setEditExam] = useState<Exam | null>(null);
 
   const handleSaveExam = (exam: Exam): void => {
@@ -71,6 +72,16 @@ export default function Examinations(): React.JSX.Element {
         icon={Layers}
         title={t("nav.examinations")}
         subtitle={t("page.examinations.subtitle")}
+        actions={
+          <button
+            type="button"
+            onClick={() => setShowMarksModal(true)}
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+          >
+            <PenTool className="h-3.5 w-3.5" />
+            {t("examinations.marks")}
+          </button>
+        }
       />
 
       <ResponsiveAccordionTabs
@@ -128,9 +139,6 @@ export default function Examinations(): React.JSX.Element {
                   }}
                 />
               )}
-              {effectiveTab === "operations" && effectiveSubTab === "marks" && (
-                <EnterMarks exams={exams} results={examResults} onSaveResults={handleSaveResults} />
-              )}
               {effectiveTab === "operations" && effectiveSubTab === "results" && (
                 <ResultsView exams={exams} results={examResults} />
               )}
@@ -150,6 +158,16 @@ export default function Examinations(): React.JSX.Element {
           onSave={handleSaveExam}
         />
       </AnimatePresence>
+
+      <Modal
+        open={showMarksModal}
+        onClose={() => setShowMarksModal(false)}
+        title={t("examinations.marks")}
+        size="xl"
+        panelClassName="h-[88vh] max-h-[700px]"
+      >
+        <EnterMarks exams={exams} results={examResults} onSaveResults={handleSaveResults} />
+      </Modal>
     </div>
   );
 }

@@ -10,9 +10,8 @@ import {
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 
 interface ToggleProps {
   label: string;
@@ -157,21 +156,21 @@ export default function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps):
         <>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={LABEL} htmlFor="maxStudentsPerClass">Max Students Per Class</label>
+              <label className={FORM_LABEL} htmlFor="maxStudentsPerClass">Max Students Per Class</label>
               <input
                 id="maxStudentsPerClass"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.maxStudentsPerClass}
                 onChange={(e) => upd("maxStudentsPerClass", e.target.value)}
               />
             </div>
             <div>
-              <label className={LABEL} htmlFor="dropDeadlineDays">Drop Deadline (days after enroll)</label>
+              <label className={FORM_LABEL} htmlFor="dropDeadlineDays">Drop Deadline (days after enroll)</label>
               <input
                 id="dropDeadlineDays"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.dropDeadlineDays}
                 onChange={(e) => upd("dropDeadlineDays", e.target.value)}
               />

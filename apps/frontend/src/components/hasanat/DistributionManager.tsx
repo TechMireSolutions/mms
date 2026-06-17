@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Plus, Search, X, Star, User, Users2, Filter, ChevronDown, Eye } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
@@ -13,36 +13,51 @@ import {
   getSortedFields,
 } from "@mms/shared";
 import { DatePicker } from "../ui/DatePicker";
+import FormModal from "@/components/ui/FormModal";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 const STATUS_CFG: Record<string, { label: string, cls: string }> = {
-  active:   { label: "Active",   cls: "bg-blue-50 text-blue-700 border-blue-100" },
-  redeemed: { label: "Redeemed", cls: "bg-violet-50 text-violet-700 border-violet-100" },
+  active:   { label: "Active",   cls: "bg-info/10 text-info border-info/20" },
+  redeemed: { label: "Redeemed", cls: "bg-primary/10 text-primary border-primary/20" },
   returned: { label: "Returned", cls: "bg-muted text-muted-foreground border-border" },
 };
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
+const EMPTY_DIST: Partial<Distribution> = {
+  denominationId: "",
+  recipientType: "student",
+  recipientName: "",
+  recipientClass: "",
+  quantity: 1,
+  reason: "",
+  issuedDate: new Date().toISOString().split("T")[0],
+  issuedBy: "",
+};
 
 interface DistributeModalProps {
+  open: boolean;
   denoms: Denomination[];
   batches: StockBatch[];
   onClose: () => void;
   onSave: (dist: Distribution) => void;
 }
 
-function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalProps) {
-  const [data, setData] = useState<Partial<Distribution>>({ 
-    denominationId: denoms[0]?.id || "", 
-    recipientType: "student", 
-    recipientName: "", 
-    recipientClass: "", 
-    quantity: 1, 
-    reason: "", 
-    issuedDate: new Date().toISOString().split("T")[0], 
-    issuedBy: "" 
+function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeModalProps) {
+  const [data, setData] = useState<Partial<Distribution>>({
+    ...EMPTY_DIST,
+    denominationId: denoms[0]?.id || "",
   });
 
   const upd = <K extends keyof Distribution>(f: K, v: Distribution[K]) => setData((d: Partial<Distribution>) => ({ ...d, [f]: v }));
+
+  React.useEffect(() => {
+    if (open) {
+      setData({
+        ...EMPTY_DIST,
+        denominationId: denoms[0]?.id || "",
+        issuedDate: new Date().toISOString().split("T")[0],
+      });
+    }
+  }, [open, denoms]);
 
   const selectedDen = denoms.find((d) => d.id === data.denominationId);
   const availableBatches = batches.filter((b) => b.denominationId === data.denominationId && b.remaining > 0);
@@ -74,22 +89,22 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
   }, [orderedFields, fields, data, totalAvailable]);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.div 
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="distribute-modal-title"
-        initial={{ opacity: 0, scale: 0.96 }} 
-        animate={{ opacity: 1, scale: 1 }} 
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-md z-10 max-h-[90vh] flex flex-col"
-      >
-        <header className="flex items-center justify-between px-5 py-4 border-b border-border flex-shrink-0">
-          <h3 id="distribute-modal-title" className="text-sm font-bold text-foreground m-0">Distribute Cards</h3>
-          <button type="button" aria-label="Close modal" onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" aria-hidden="true" /></button>
-        </header>
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title="Distribute Cards"
+      icon={Star}
+      size="md"
+      cancelLabel="Cancel"
+      saveLabel="Distribute"
+      onSave={() => {
+        const den = denoms.find((d) => d.id === data.denominationId);
+        const batch = batches.find((b) => b.denominationId === data.denominationId && b.remaining > 0);
+        onSave({ ...data, id: `dist${Date.now()}`, denominationName: den?.name || "", batchId: batch?.id || "", status: "active" } as Distribution);
+      }}
+      saveDisabled={!isValid}
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {orderedFields.map((field) => {
               const isEnabled = fields[field.id]?.enabled !== false;
               if (!isEnabled) return null;
@@ -97,8 +112,8 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
               if (field.id === "denominationId") {
                 return (
                   <div key="denominationId" className="sm:col-span-2">
-                    <label htmlFor="denom" className={LABEL}>Denomination *</label>
-                    <select id="denom" className={INPUT + " cursor-pointer"} value={data.denominationId} onChange={(e) => upd("denominationId", e.target.value)}>
+                    <label htmlFor="denom" className={FORM_LABEL}>Denomination *</label>
+                    <select id="denom" className={FORM_INPUT + " cursor-pointer"} value={data.denominationId} onChange={(e) => upd("denominationId", e.target.value)}>
                       {denoms.filter((d) => d.active).map((d) => <option key={d.id} value={d.id}>{d.icon} {d.name} ({d.points} pts)</option>)}
                     </select>
                     {selectedDen && (
@@ -106,7 +121,7 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
                         <div className="h-8 flex-1 rounded-lg flex items-center gap-2 px-3 text-white text-xs font-semibold" style={{ background: selectedDen.color }}>
                           <span>{selectedDen.icon}</span><span>{selectedDen.name}</span>
                         </div>
-                        <span className={`text-[11px] font-semibold ${totalAvailable === 0 ? "text-red-600" : "text-emerald-600"}`}>
+                        <span className={`text-[11px] font-semibold ${totalAvailable === 0 ? "text-destructive" : "text-success"}`}>
                           {totalAvailable} available
                         </span>
                       </div>
@@ -118,7 +133,7 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
               if (field.id === "recipientType") {
                 return (
                   <div key="recipientType" className="sm:col-span-2">
-                    <label className={LABEL}>Recipient Type *</label>
+                    <label className={FORM_LABEL}>Recipient Type *</label>
                     <div className="flex gap-2">
                       {([
                         { id: "student" as const, label: "Student", icon: User },
@@ -145,8 +160,8 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
               if (field.id === "recipientName") {
                 return (
                   <div key="recipientName">
-                    <label htmlFor="recp-name" className={LABEL}>Recipient Name *</label>
-                    <input id="recp-name" className={INPUT} value={data.recipientName || ""} onChange={(e) => upd("recipientName", e.target.value)} placeholder="Full name" required />
+                    <label htmlFor="recp-name" className={FORM_LABEL}>Recipient Name *</label>
+                    <input id="recp-name" className={FORM_INPUT} value={data.recipientName || ""} onChange={(e) => upd("recipientName", e.target.value)} placeholder="Full name" required />
                   </div>
                 );
               }
@@ -155,8 +170,8 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
                 const isRequired = !!fields[field.id]?.required;
                 return (
                   <div key="recipientClass">
-                    <label htmlFor="recp-class" className={LABEL}>{data.recipientType === "student" ? "Class" : "Department"} {isRequired ? "*" : ""}</label>
-                    <input id="recp-class" className={INPUT} value={data.recipientClass || ""} onChange={(e) => upd("recipientClass", e.target.value)} placeholder="e.g. Hifz A" required={isRequired} />
+                    <label htmlFor="recp-class" className={FORM_LABEL}>{data.recipientType === "student" ? "Class" : "Department"} {isRequired ? "*" : ""}</label>
+                    <input id="recp-class" className={FORM_INPUT} value={data.recipientClass || ""} onChange={(e) => upd("recipientClass", e.target.value)} placeholder="e.g. Hifz A" required={isRequired} />
                   </div>
                 );
               }
@@ -164,8 +179,8 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
               if (field.id === "quantity") {
                 return (
                   <div key="quantity">
-                    <label htmlFor="qty" className={LABEL}>Quantity *</label>
-                    <input id="qty" type="number" className={INPUT} value={data.quantity || 1} onChange={(e) => upd("quantity", Math.min(+e.target.value, totalAvailable))} min={1} max={totalAvailable} required />
+                    <label htmlFor="qty" className={FORM_LABEL}>Quantity *</label>
+                    <input id="qty" type="number" className={FORM_INPUT} value={data.quantity || 1} onChange={(e) => upd("quantity", Math.min(+e.target.value, totalAvailable))} min={1} max={totalAvailable} required />
                   </div>
                 );
               }
@@ -173,7 +188,7 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
               if (field.id === "issuedDate") {
                 return (
                   <div key="issuedDate">
-                    <label htmlFor="issue-date" className={LABEL}>Issued Date *</label>
+                    <label htmlFor="issue-date" className={FORM_LABEL}>Issued Date *</label>
                     <DatePicker
                       id="issue-date"
                       value={data.issuedDate || ""}
@@ -187,8 +202,8 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
               if (field.id === "reason") {
                 return (
                   <div key="reason" className="sm:col-span-2">
-                    <label htmlFor="reason" className={LABEL}>Reason / Achievement *</label>
-                    <input id="reason" className={INPUT} value={data.reason || ""} onChange={(e) => upd("reason", e.target.value)} placeholder="e.g. Completed Juz 5" required />
+                    <label htmlFor="reason" className={FORM_LABEL}>Reason / Achievement *</label>
+                    <input id="reason" className={FORM_INPUT} value={data.reason || ""} onChange={(e) => upd("reason", e.target.value)} placeholder="e.g. Completed Juz 5" required />
                   </div>
                 );
               }
@@ -197,8 +212,8 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
                 const isRequired = !!fields[field.id]?.required;
                 return (
                   <div key="issuedBy" className="sm:col-span-2">
-                    <label htmlFor="issued-by" className={LABEL}>Issued By {isRequired ? "*" : ""}</label>
-                    <input id="issued-by" className={INPUT} value={data.issuedBy || ""} onChange={(e) => upd("issuedBy", e.target.value)} placeholder="Teacher / Admin name" required={isRequired} />
+                    <label htmlFor="issued-by" className={FORM_LABEL}>Issued By {isRequired ? "*" : ""}</label>
+                    <input id="issued-by" className={FORM_INPUT} value={data.issuedBy || ""} onChange={(e) => upd("issuedBy", e.target.value)} placeholder="Teacher / Admin name" required={isRequired} />
                   </div>
                 );
               }
@@ -209,12 +224,12 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
                 const value = (data as any)[field.id] ?? "";
                 return (
                   <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
-                    <label className={LABEL}>
+                    <label className={FORM_LABEL}>
                       {field.label} {field.required ? "*" : ""}
                     </label>
                     {field.type === "textarea" ? (
                       <textarea
-                        className={INPUT + " min-h-[80px] py-2"}
+                        className={FORM_INPUT + " min-h-[80px] py-2"}
                         value={value as string}
                         onChange={(e) => upd(field.id as any, e.target.value as any)}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
@@ -222,7 +237,7 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
                       />
                     ) : field.type === "select" ? (
                       <select
-                        className={INPUT + " cursor-pointer"}
+                        className={FORM_INPUT + " cursor-pointer"}
                         value={value as string}
                         onChange={(e) => upd(field.id as any, e.target.value as any)}
                         required={field.required}
@@ -247,7 +262,7 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
                     ) : field.type === "number" ? (
                       <input
                         type="number"
-                        className={INPUT}
+                        className={FORM_INPUT}
                         value={value as number}
                         onChange={(e) => upd(field.id as any, e.target.value as any)}
                         placeholder={field.placeholder || `Enter number…`}
@@ -262,7 +277,7 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
                     ) : (
                       <input
                         type="text"
-                        className={INPUT}
+                        className={FORM_INPUT}
                         value={value as string}
                         onChange={(e) => upd(field.id as any, e.target.value as any)}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
@@ -275,25 +290,8 @@ function DistributeModal({ denoms, batches, onClose, onSave }: DistributeModalPr
 
               return null;
             })}
-          </div>
-        </div>
-        <footer className="px-5 py-4 border-t border-border flex justify-end gap-2.5 flex-shrink-0">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted">Cancel</button>
-          <button
-            type="button"
-            onClick={() => {
-              const den = denoms.find((d) => d.id === data.denominationId);
-              const batch = batches.find((b) => b.denominationId === data.denominationId && b.remaining > 0);
-              onSave({ ...data, id: `dist${Date.now()}`, denominationName: den?.name || "", batchId: batch?.id || "", status: "active" } as Distribution);
-            }}
-            disabled={!isValid}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
-          >
-            <Star className="w-3.5 h-3.5" aria-hidden="true" /> Distribute
-          </button>
-        </footer>
-      </motion.div>
-    </div>
+      </div>
+    </FormModal>
   );
 }
 
@@ -443,9 +441,13 @@ export default function DistributionManager({ distributions, denoms, batches, on
         </div>
       </div>
 
-      <AnimatePresence>
-        {showModal && <DistributeModal denoms={denoms} batches={batches} onClose={() => setShowModal(false)} onSave={handleDistribute} />}
-      </AnimatePresence>
+      <DistributeModal
+        open={showModal}
+        denoms={denoms}
+        batches={batches}
+        onClose={() => setShowModal(false)}
+        onSave={handleDistribute}
+      />
     </section>
   );
 }

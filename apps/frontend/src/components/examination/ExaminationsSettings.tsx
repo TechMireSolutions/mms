@@ -10,9 +10,8 @@ import {
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 
 interface ToggleProps {
   label: string;
@@ -134,30 +133,30 @@ export default function ExaminationsSettings({ mode }: ExaminationsSettingsProps
         <>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="pass-mark" className={LABEL}>Pass Mark</label>
+              <label htmlFor="pass-mark" className={FORM_LABEL}>Pass Mark</label>
               <input
                 id="pass-mark"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.passMark}
                 onChange={(e) => upd("passMark", e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="max-mark" className={LABEL}>Max Mark</label>
+              <label htmlFor="max-mark" className={FORM_LABEL}>Max Mark</label>
               <input
                 id="max-mark"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.maxMark}
                 onChange={(e) => upd("maxMark", e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="grading-sys" className={LABEL}>Grading System</label>
+              <label htmlFor="grading-sys" className={FORM_LABEL}>Grading System</label>
               <select
                 id="grading-sys"
-                className={INPUT + " cursor-pointer"}
+                className={FORM_INPUT + " cursor-pointer"}
                 value={data.gradingSystem}
                 onChange={(e) => upd("gradingSystem", e.target.value)}
               >
@@ -168,10 +167,10 @@ export default function ExaminationsSettings({ mode }: ExaminationsSettingsProps
               </select>
             </div>
             <div>
-              <label htmlFor="cert-template" className={LABEL}>Certificate Template</label>
+              <label htmlFor="cert-template" className={FORM_LABEL}>Certificate Template</label>
               <select
                 id="cert-template"
-                className={INPUT + " cursor-pointer"}
+                className={FORM_INPUT + " cursor-pointer"}
                 value={data.certificateTemplate}
                 onChange={(e) => upd("certificateTemplate", e.target.value)}
               >

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { DISTRIBUTION_TYPES, WakalaType, ObligationDistribution, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
 import ObligationModal from "./ObligationModal";
+import { FORM_LABEL, FORM_ERROR } from "@/components/ui/formStyles";
 
 export type DistributionType = "Income" | "Liability";
 
@@ -110,7 +111,7 @@ export default function WakalaTypeManager({ wakalaTypes, distributions, obligati
                   <p className="text-xs text-muted-foreground mt-0.5 m-0">Mujtahid: {mujtahid?.name || "—"}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isComplete ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`} aria-label={`Total distribution is ${total.toFixed(0)} percent`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isComplete ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`} aria-label={`Total distribution is ${total.toFixed(0)} percent`}>
                     {total.toFixed(0)}%
                   </span>
                   <button type="button" aria-label={`Edit Wakala Type for ${obType?.name}`} onClick={() => setModal({ mode: "edit", data: { ...w } })}
@@ -127,7 +128,7 @@ export default function WakalaTypeManager({ wakalaTypes, distributions, obligati
               {/* Distributions */}
               <div className="bg-muted/20">
                 {!isComplete && total > 0 && (
-                  <div className="flex items-center gap-1.5 px-4 py-2 bg-amber-50 border-b border-amber-100 text-xs text-amber-700" role="alert">
+                  <div className="flex items-center gap-1.5 px-4 py-2 bg-warning/10 border-b border-warning/20 text-xs text-warning" role="alert">
                     <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> Distributions total {total.toFixed(1)}% — must equal 100%
                   </div>
                 )}
@@ -149,7 +150,7 @@ export default function WakalaTypeManager({ wakalaTypes, distributions, obligati
                         <tr key={d.id} className="hover:bg-muted/20">
                           <td className="px-4 py-2 font-medium text-foreground">{d.name}</td>
                           <td className="px-4 py-2">
-                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${d.type === "Income" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
+                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${d.type === "Income" ? "bg-success/15 text-success" : "bg-info/15 text-info"}`}>
                               {d.type}
                             </span>
                           </td>
@@ -240,9 +241,9 @@ function WakalaForm({ initial, reps, mujtahids, obligationTypes, onSave, onCance
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="wakala-rep" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mujtahid Representative *</label>
+        <label htmlFor="wakala-rep" className={FORM_LABEL}>Mujtahid Representative *</label>
         <select id="wakala-rep" value={form.mujtahid_representative_id} onChange={(e) => setForm({ ...form, mujtahid_representative_id: e.target.value })}
-          className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="FORM_INPUT"
           aria-invalid={!!errors.rep}>
           <option value="">Select representative…</option>
           {reps.map((r) => {
@@ -250,17 +251,17 @@ function WakalaForm({ initial, reps, mujtahids, obligationTypes, onSave, onCance
             return <option key={r.id} value={r.id}>{r.name} ({m?.name || "?"})</option>;
           })}
         </select>
-        {errors.rep && <p className="text-xs text-destructive mt-1" role="alert">{errors.rep}</p>}
+        {errors.rep && <p className={FORM_ERROR} role="alert">{errors.rep}</p>}
       </div>
       <div>
-        <label htmlFor="wakala-type" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Obligation Type *</label>
+        <label htmlFor="wakala-type" className={FORM_LABEL}>Obligation Type *</label>
         <select id="wakala-type" value={form.obligation_type_id} onChange={(e) => setForm({ ...form, obligation_type_id: e.target.value })}
-          className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="FORM_INPUT"
           aria-invalid={!!errors.obType}>
           <option value="">Select type…</option>
           {obligationTypes.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
-        {errors.obType && <p className="text-xs text-destructive mt-1" role="alert">{errors.obType}</p>}
+        {errors.obType && <p className={FORM_ERROR} role="alert">{errors.obType}</p>}
       </div>
       <footer className="flex justify-end gap-2 pt-2 border-t border-border mt-4">
         <button type="button" onClick={onCancel}
@@ -304,26 +305,26 @@ function DistributionForm({ initial, onSave, onCancel }: DistributionFormProps) 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="dist-name" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Name *</label>
+        <label htmlFor="dist-name" className={FORM_LABEL}>Name *</label>
         <input id="dist-name" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
+          className="FORM_INPUT" 
           aria-invalid={!!errors.name} />
-        {errors.name && <p className="text-xs text-destructive mt-1" role="alert">{errors.name}</p>}
+        {errors.name && <p className={FORM_ERROR} role="alert">{errors.name}</p>}
       </div>
       <div>
-        <label htmlFor="dist-type" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Type *</label>
+        <label htmlFor="dist-type" className={FORM_LABEL}>Type *</label>
         <select id="dist-type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as DistributionType })}
-          className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20">
+          className="FORM_INPUT">
           {DISTRIBUTION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
       <div>
-        <label htmlFor="dist-pct" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Percentage (%) *</label>
+        <label htmlFor="dist-pct" className={FORM_LABEL}>Percentage (%) *</label>
         <input id="dist-pct" type="number" min="0.01" max="100" step="0.01" value={form.percentage || ""}
           onChange={(e) => setForm({ ...form, percentage: parseFloat(e.target.value) })}
-          className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
+          className="FORM_INPUT" 
           aria-invalid={!!errors.pct} />
-        {errors.pct && <p className="text-xs text-destructive mt-1" role="alert">{errors.pct}</p>}
+        {errors.pct && <p className={FORM_ERROR} role="alert">{errors.pct}</p>}
       </div>
       <footer className="flex justify-end gap-2 pt-2 border-t border-border mt-4">
         <button type="button" onClick={onCancel}

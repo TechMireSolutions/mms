@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Palette, Monitor, Wand2, ImageIcon, AlertTriangle } from 'lucide-react';
 import { normalizeThemeMode } from '@mms/shared';
 import { extractLogoBrandColors } from '@/lib/extractLogoBrandColors';
-import { ROUTES } from '@/lib/config/routes';
 import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';
 import { useThemeSettingsDraft } from '@/hooks/useThemeSettingsDraft';
+import { useSettingsTab } from '@/lib/contexts/SettingsTabContext';
 import SectionCard from '@/components/ui/SectionCard';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,6 +27,7 @@ import {
  */
 export default function ThemeSettings(): React.JSX.Element {
   const { t } = useTranslation();
+  const { setActiveTab } = useSettingsTab();
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
 
@@ -126,8 +126,8 @@ export default function ThemeSettings(): React.JSX.Element {
               <ImageIcon className="h-3.5 w-3.5" />
               {t('theme.applyLogoColors')}
             </Button>
-            <Button type="button" variant="ghost" size="sm" asChild>
-              <Link to={ROUTES.settingsSection('branding')}>{t('theme.goToInstitution')}</Link>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setActiveTab('branding')}>
+              {t('theme.goToInstitution')}
             </Button>
           </div>
         }

@@ -70,16 +70,16 @@ function StudentPaymentHistory() {
                   <td className="px-4 py-3 text-[13px] font-semibold text-foreground">{s.name}</td>
                   <td className="px-4 py-3 text-[12px] text-muted-foreground">{s.class}</td>
                   <td className="px-4 py-3 text-[12px] text-foreground">{fmt(s.total)}</td>
-                  <td className="px-4 py-3 text-[12px] font-semibold text-emerald-600">{fmt(s.paid)}</td>
+                  <td className="px-4 py-3 text-[12px] font-semibold text-success">{fmt(s.paid)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2" aria-label={`Collection Rate ${pct}%`}>
                       <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden max-w-[80px]" aria-hidden="true">
                         <div
-                          className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : pct >= 60 ? "bg-amber-500" : "bg-red-500"}`}
+                          className={`h-full rounded-full ${pct === 100 ? "bg-success" : pct >= 60 ? "bg-warning" : "bg-destructive"}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className={`text-[11px] font-bold ${pct === 100 ? "text-emerald-600" : pct >= 60 ? "text-amber-600" : "text-red-600"}`}>{pct}%</span>
+                      <span className={`text-[11px] font-bold ${pct === 100 ? "text-success" : pct >= 60 ? "text-warning" : "text-destructive"}`}>{pct}%</span>
                     </div>
                   </td>
                 </motion.tr>
@@ -179,7 +179,7 @@ export default function ReportsPanel() {
 
         {/* Outstanding payments */}
         <section aria-label="Outstanding Payments" className="rounded-xl border border-border bg-card overflow-hidden">
-          <header className="px-4 py-3 border-b border-border bg-red-50/50 flex items-center gap-2">
+          <header className="px-4 py-3 border-b border-border bg-destructive/10/50 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-destructive" aria-hidden="true" />
             <h3 className="text-sm font-bold text-foreground m-0">Outstanding Payments</h3>
           </header>
@@ -193,8 +193,8 @@ export default function ReportsPanel() {
                     <p className="text-[11px] text-muted-foreground m-0">{inv.class}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-[13px] font-bold text-red-600 m-0">{fmt(balance)}</p>
-                    <p className={`text-[10px] font-semibold m-0 ${inv.status === "overdue" ? "text-destructive" : "text-amber-500"}`}>{inv.status}</p>
+                    <p className="text-[13px] font-bold text-destructive m-0">{fmt(balance)}</p>
+                    <p className={`text-[10px] font-semibold m-0 ${inv.status === "overdue" ? "text-destructive" : "text-warning"}`}>{inv.status}</p>
                   </div>
                 </article>
               );

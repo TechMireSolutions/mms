@@ -100,20 +100,20 @@ export default function CashbookView({ entries, accounts, fmt }: CashbookViewPro
     <div className="space-y-4">
       {/* Summary cards */}
       <section aria-label="Cashbook Summary" className="grid grid-cols-3 gap-3">
-        <article className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-          <TrendingUp className="w-5 h-5 text-emerald-600 mx-auto mb-1" aria-hidden="true" />
-          <h4 className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide m-0">Money In</h4>
-          <p className="text-lg font-bold text-emerald-700 mt-1 m-0">{fmt(totalIn)}</p>
+        <article className="rounded-xl border border-success/30 bg-success/10 p-4 text-center">
+          <TrendingUp className="w-5 h-5 text-success mx-auto mb-1" aria-hidden="true" />
+          <h4 className="text-[10px] font-bold text-success uppercase tracking-wide m-0">Money In</h4>
+          <p className="text-lg font-bold text-success mt-1 m-0">{fmt(totalIn)}</p>
         </article>
-        <article className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
+        <article className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-center">
           <TrendingDown className="w-5 h-5 text-destructive mx-auto mb-1" aria-hidden="true" />
-          <h4 className="text-[10px] font-bold text-red-600 uppercase tracking-wide m-0">Money Out</h4>
-          <p className="text-lg font-bold text-red-600 mt-1 m-0">{fmt(totalOut)}</p>
+          <h4 className="text-[10px] font-bold text-destructive uppercase tracking-wide m-0">Money Out</h4>
+          <p className="text-lg font-bold text-destructive mt-1 m-0">{fmt(totalOut)}</p>
         </article>
-        <article className={`rounded-xl border p-4 text-center ${balance >= 0 ? "border-primary/30 bg-primary/5" : "border-red-200 bg-red-50"}`}>
+        <article className={`rounded-xl border p-4 text-center ${balance >= 0 ? "border-primary/30 bg-primary/5" : "border-destructive/30 bg-destructive/10"}`}>
           <ArrowUpDown className={`w-5 h-5 mx-auto mb-1 ${balance >= 0 ? "text-primary" : "text-destructive"}`} aria-hidden="true" />
           <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide m-0">Net Balance</h4>
-          <p className={`text-lg font-bold mt-1 m-0 ${balance >= 0 ? "text-primary" : "text-red-600"}`}>{fmt(Math.abs(balance))}</p>
+          <p className={`text-lg font-bold mt-1 m-0 ${balance >= 0 ? "text-primary" : "text-destructive"}`}>{fmt(Math.abs(balance))}</p>
         </article>
       </section>
 
@@ -157,8 +157,8 @@ export default function CashbookView({ entries, accounts, fmt }: CashbookViewPro
                   <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Date</th>
                   <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Type</th>
                   <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Description</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-emerald-700 uppercase">Money In</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-red-600 uppercase">Money Out</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-success uppercase">Money In</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-destructive uppercase">Money Out</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -169,9 +169,9 @@ export default function CashbookView({ entries, accounts, fmt }: CashbookViewPro
                     </td>
                     <td className="px-3 py-3">
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                        row._type === "in"       ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                        : row._type === "out"   ? "bg-red-100 text-red-700 border-red-200"
-                        : "bg-blue-100 text-blue-700 border-blue-200"
+                        row._type === "in"       ? "bg-success/15 text-success border-success/30"
+                        : row._type === "out"   ? "bg-destructive/15 text-destructive border-destructive/30"
+                        : "bg-info/15 text-info border-info/30"
                       }`}>
                         {row._type === "in" ? <TrendingUp className="w-2.5 h-2.5" aria-hidden="true" /> : row._type === "out" ? <TrendingDown className="w-2.5 h-2.5" aria-hidden="true" /> : <ArrowUpDown className="w-2.5 h-2.5" aria-hidden="true" />}
                         {row._typeLabel}
@@ -183,12 +183,12 @@ export default function CashbookView({ entries, accounts, fmt }: CashbookViewPro
                     </td>
                     <td className="px-3 py-3 text-right">
                       {row._type === "in" ? (
-                        <span className="font-mono font-bold text-emerald-700">{fmt(row._amount)}</span>
+                        <span className="font-mono font-bold text-success">{fmt(row._amount)}</span>
                       ) : <span className="text-muted-foreground/30">—</span>}
                     </td>
                     <td className="px-3 py-3 text-right">
                       {row._type === "out" ? (
-                        <span className="font-mono font-bold text-red-600">{fmt(row._amount)}</span>
+                        <span className="font-mono font-bold text-destructive">{fmt(row._amount)}</span>
                       ) : <span className="text-muted-foreground/30">—</span>}
                     </td>
                   </tr>
@@ -197,8 +197,8 @@ export default function CashbookView({ entries, accounts, fmt }: CashbookViewPro
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={3} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{rows.length} transaction{rows.length !== 1 ? "s" : ""}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-emerald-700 text-xs">{fmt(totalIn)}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-red-600 text-xs">{fmt(totalOut)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{fmt(totalIn)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{fmt(totalOut)}</td>
                 </tr>
               </tfoot>
             </table>

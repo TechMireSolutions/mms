@@ -21,7 +21,7 @@ import SessionReport from "./SessionReport";
 import FacultyReport from "./FacultyReport";
 import QuestionBankReport from "./QuestionBankReport";
 import SavedReports from "./SavedReports";
-import { getReportVisual, VisualizerConfig } from "./reportMetadata";
+import { VisualizerConfig } from "./reportMetadata";
 
 interface ModuleReportsProps {
   category: "students" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";

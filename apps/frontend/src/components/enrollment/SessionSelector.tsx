@@ -6,10 +6,10 @@ import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
 import { getCollection } from "../../lib/db";
 
 const TYPE_COLORS: Record<string, string> = {
-  "Hifz":            "bg-emerald-50 text-emerald-700 border-emerald-100",
-  "Qaidah":          "bg-blue-50 text-blue-700 border-blue-100",
-  "Tajweed":         "bg-violet-50 text-violet-700 border-violet-100",
-  "Islamic Studies": "bg-amber-50 text-amber-700 border-amber-100",
+  "Hifz":            "bg-success/10 text-success border-success/20",
+  "Qaidah":          "bg-info/10 text-info border-info/20",
+  "Tajweed":         "bg-primary/10 text-primary border-primary/20",
+  "Islamic Studies": "bg-warning/10 text-warning border-warning/20",
 };
 
 interface CapacityBarProps {
@@ -27,7 +27,7 @@ interface CapacityBarProps {
  */
 function CapacityBar({ enrolled, capacity }: CapacityBarProps): React.ReactElement {
   const pct = capacity > 0 ? Math.round((enrolled / capacity) * 100) : 0;
-  const color = pct >= 100 ? "bg-destructive" : pct >= 85 ? "bg-amber-500" : "bg-emerald-500";
+  const color = pct >= 100 ? "bg-destructive" : pct >= 85 ? "bg-warning" : "bg-success";
   return (
     <div className="mt-1" aria-hidden="true">
       <div className="h-1.5 rounded-full bg-border overflow-hidden">
@@ -180,7 +180,7 @@ export default function SessionSelector({ student, selected, onSelect }: Session
                   : disabled
                   ? "border-border bg-muted/30 opacity-60 cursor-not-allowed"
                   : status !== "ok"
-                  ? "border-amber-200 bg-amber-50/40 hover:border-amber-300"
+                  ? "border-warning/30 bg-warning/10/40 hover:border-warning/40"
                   : "border-border bg-card hover:border-primary/30 hover:shadow-sm"
               }`}
             >
@@ -191,15 +191,15 @@ export default function SessionSelector({ student, selected, onSelect }: Session
                       {s.type}
                     </span>
                     {status === "full" && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">FULL</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20">FULL</span>
                     )}
                     {status === "age" && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 flex items-center gap-1">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/20 flex items-center gap-1">
                         <AlertTriangle className="w-2.5 h-2.5" /> Age
                       </span>
                     )}
                     {status === "gender" && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 flex items-center gap-1">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/20 flex items-center gap-1">
                         <AlertTriangle className="w-2.5 h-2.5" /> Gender
                       </span>
                     )}

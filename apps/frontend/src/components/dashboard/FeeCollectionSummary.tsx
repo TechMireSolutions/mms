@@ -35,8 +35,8 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
   const outstandingPct = totalTarget > 0 ? (100 - collectedPct) : 0;
 
   const breakdown = [
-    { label: "Collected",   value: totalCollected, total: totalTarget, color: "bg-emerald-500", pct: collectedPct },
-    { label: "Outstanding", value: totalOutstanding,  total: totalTarget, color: "bg-red-400",     pct: outstandingPct },
+    { label: "Collected",   value: totalCollected, total: totalTarget, color: "bg-success", pct: collectedPct },
+    { label: "Outstanding", value: totalOutstanding,  total: totalTarget, color: "bg-destructive",     pct: outstandingPct },
   ];
 
   // Group by Class
@@ -68,7 +68,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
         </div>
         <div className="text-right">
           <p className="text-lg font-bold text-foreground m-0">₨ {totalCollected.toLocaleString()}</p>
-          <div className="flex items-center gap-1 text-emerald-600 justify-end">
+          <div className="flex items-center gap-1 text-success justify-end">
             <TrendingUp className="w-3 h-3" aria-hidden="true" />
             <span className="text-[11px] font-semibold">+11% vs Mar</span>
           </div>
@@ -77,8 +77,8 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
 
       {/* Stacked progress bar */}
       <div className="h-3 rounded-full overflow-hidden bg-muted flex mb-3" aria-hidden="true">
-        <div className="bg-emerald-500 h-full transition-all duration-700" style={{ width: `${collectedPct}%` }} />
-        <div className="bg-red-400 h-full transition-all duration-700" style={{ width: `${outstandingPct}%` }} />
+        <div className="bg-success h-full transition-all duration-700" style={{ width: `${collectedPct}%` }} />
+        <div className="bg-destructive h-full transition-all duration-700" style={{ width: `${outstandingPct}%` }} />
       </div>
       <div className="flex items-center gap-4 mb-5" aria-label={`Collected: ${collectedPct}%, Outstanding: ${outstandingPct}%`}>
         {breakdown.map((b) => (
@@ -105,7 +105,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
               <div className="h-1.5 rounded-full bg-muted overflow-hidden" aria-label={`${cls.name} collection is at ${pct}%`}>
                 <div
                   className={`h-full rounded-full transition-all duration-700 ${
-                    pct >= 90 ? "bg-emerald-500" : pct >= 70 ? "bg-amber-400" : "bg-red-400"
+                    pct >= 90 ? "bg-success" : pct >= 70 ? "bg-warning" : "bg-destructive"
                   }`}
                   style={{ width: `${pct}%` }}
                 />

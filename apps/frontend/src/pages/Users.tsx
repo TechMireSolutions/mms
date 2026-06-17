@@ -5,8 +5,6 @@ import useConfigSubTabs from '@/hooks/useConfigSubTabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Users as UsersIcon, Activity, UserPlus } from 'lucide-react';
 import {
-  DEFAULT_USER_ACTIVITY_LOGS,
-  DEFAULT_WORKSPACE_USERS,
   normalizeWorkspaceUser,
   type ActivityLog,
   type SystemUser,

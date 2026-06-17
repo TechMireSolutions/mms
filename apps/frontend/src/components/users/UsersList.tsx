@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import {
   type SystemUser,
-  type UserStatus,
   workspaceRoleLabel,
 } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';

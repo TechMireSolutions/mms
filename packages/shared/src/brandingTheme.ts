@@ -243,7 +243,48 @@ const BRAND_PRESET_LOOKUP = new Map(
 );
 
 function foregroundForSurface(surface: HslColor): string {
-  return surface.l > 52 ? `${surface.h} 30% 12%` : '0 0% 100%';
+  const surfaceHex = hslColorToHex(surface);
+  const whiteRatio = getContrastRatio('#ffffff', surfaceHex) ?? 0;
+  const darkText = hslColorToHex(tone(surface, { s: -15, l: -42 }));
+  const darkRatio = getContrastRatio(darkText, surfaceHex) ?? 0;
+
+  if (whiteRatio >= darkRatio) {
+    return meetsWcagAaTextContrast(whiteRatio) || whiteRatio >= darkRatio
+      ? '0 0% 100%'
+      : `${surface.h} 30% 12%`;
+  }
+  return meetsWcagAaTextContrast(darkRatio) ? `${surface.h} 30% 12%` : '0 0% 100%';
+}
+
+function buildSemanticStatusTokens(mode: BrandingThemeMode): Record<string, string> {
+  if (mode === 'light') {
+    return {
+      '--destructive': '0 72% 51%',
+      '--destructive-foreground': '0 0% 98%',
+      '--success': '142 71% 36%',
+      '--success-foreground': '0 0% 100%',
+      '--warning': '32 95% 44%',
+      '--warning-foreground': '0 0% 100%',
+      '--info': '217 91% 52%',
+      '--info-foreground': '0 0% 100%',
+    };
+  }
+  return {
+    '--destructive': '0 62.8% 30.6%',
+    '--destructive-foreground': '0 0% 98%',
+    '--success': '142 60% 38%',
+    '--success-foreground': '0 0% 100%',
+    '--warning': '32 80% 46%',
+    '--warning-foreground': '0 0% 100%',
+    '--info': '217 80% 54%',
+    '--info-foreground': '0 0% 100%',
+  };
+}
+
+/** Hex suitable for `<meta name="theme-color">` from institution primary. */
+export function brandingPrimaryToThemeColor(primaryHex: string): string {
+  const primary = hexToHslColor(primaryHex) ?? DEFAULT_PRIMARY;
+  return hslColorToHex(tone(primary, { l: -4 }));
 }
 
 export function tone(color: HslColor, deltas: { h?: number; s?: number; l?: number }): HslColor {
@@ -283,9 +324,11 @@ export function buildBrandingCssVariables(
 
   const surfaceHue = primary.h;
   const accentHue = secondary.h;
+  const semantic = buildSemanticStatusTokens(mode);
 
   if (mode === 'light') {
     return {
+      ...semantic,
       '--primary': primaryToken,
       '--primary-foreground': foregroundForSurface(primaryUi),
       '--secondary': secondaryToken,
@@ -321,6 +364,7 @@ export function buildBrandingCssVariables(
   }
 
   return {
+    ...semantic,
     '--primary': primaryToken,
     '--primary-foreground': foregroundForSurface(primaryUi),
     '--secondary': secondaryToken,
@@ -377,6 +421,14 @@ export const BRANDING_THEME_VARIABLES = [
   '--popover-foreground',
   '--muted',
   '--muted-foreground',
+  '--destructive',
+  '--destructive-foreground',
+  '--success',
+  '--success-foreground',
+  '--warning',
+  '--warning-foreground',
+  '--info',
+  '--info-foreground',
   '--border',
   '--input',
   '--sidebar-background',

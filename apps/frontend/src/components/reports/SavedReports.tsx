@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Bookmark, Trash2, Play, Plus, Clock, User } from "lucide-react";
-import { getCollection, saveCollection } from "../../lib/db";
+import { saveCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import EmptyState from "../ui/EmptyState";
 
@@ -20,14 +20,14 @@ const SAVED_REPORTS: SavedReportItem[] = [
 ];
 
 const CATEGORY_COLOR: Record<string, string> = {
-  financial:  "bg-emerald-50 text-emerald-700",
-  students:   "bg-blue-50 text-blue-700",
+  financial:  "bg-success/10 text-success",
+  students:   "bg-info/10 text-info",
   contacts:   "bg-primary/10 text-primary",
-  attendance: "bg-amber-50 text-amber-700",
-  academic:   "bg-violet-50 text-violet-700",
-  hasanat:    "bg-indigo-50 text-indigo-700",
-  sessions:   "bg-sky-50 text-sky-700",
-  faculty:    "bg-pink-50 text-pink-700",
+  attendance: "bg-warning/10 text-warning",
+  academic:   "bg-primary/10 text-primary",
+  hasanat:    "bg-primary/10 text-primary",
+  sessions:   "bg-info/10 text-info",
+  faculty:    "bg-secondary/10 text-secondary",
 };
 
 interface SavedReportsProps {

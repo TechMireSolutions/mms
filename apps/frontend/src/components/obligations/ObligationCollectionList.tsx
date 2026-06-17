@@ -96,8 +96,8 @@ export default function ObligationCollectionList({ collections, obligationTypes,
           <p className="text-xl font-bold text-foreground m-0">{filtered.length}</p>
           <h2 className="text-xs text-muted-foreground m-0">Receipts</h2>
         </div>
-        <div className="rounded-xl border border-border bg-emerald-50 px-4 py-3">
-          <p className="text-xl font-bold text-emerald-700 m-0">PKR {totalAmount.toLocaleString()}</p>
+        <div className="rounded-xl border border-border bg-success/10 px-4 py-3">
+          <p className="text-xl font-bold text-success m-0">PKR {totalAmount.toLocaleString()}</p>
           <h2 className="text-xs text-muted-foreground m-0">Total (PKR)</h2>
         </div>
         <div className="rounded-xl border border-border bg-muted/40 px-4 py-3">
@@ -165,7 +165,7 @@ export default function ObligationCollectionList({ collections, obligationTypes,
                         </td>
                         <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{fmtAmount(c.amount, c.currency_id)}</td>
                         <td className="px-3 py-2.5">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${c.payment_mode === "Cash" ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-blue-100 text-blue-700 border-blue-200"}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${c.payment_mode === "Cash" ? "bg-warning/15 text-warning border-warning/30" : "bg-info/15 text-info border-info/30"}`}>
                             {c.payment_mode}
                           </span>
                         </td>

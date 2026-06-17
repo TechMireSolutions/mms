@@ -1,11 +1,9 @@
 import React, { useMemo } from "react";
 import { Users, ShieldCheck, Target, TrendingUp } from "lucide-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
-import EmptyState from "../ui/EmptyState";
 
 const COLORS = ["#047857", "#0ea5e9", "#f59e0b", "#6366f1", "#ec4899", "#94a3b8"];
 

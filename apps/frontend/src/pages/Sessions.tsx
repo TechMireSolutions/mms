@@ -5,7 +5,7 @@ import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Calendar, Users, BookOpen,
-  DollarSign, ChevronRight, Filter, ChevronDown, Settings, LayoutDashboard, BarChart2,
+  DollarSign, ChevronRight, Filter, ChevronDown,
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
@@ -24,7 +24,7 @@ import SessionsSettings from "../components/sessions/SessionsSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import KPISummary from "../components/reports/KPISummary";
-import { SESSIONS_DATA, SESSION_TYPES, Session } from '@/lib/data/sessionsData';
+import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
 import { saveCollection, formatDate, getObject } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 import { SessionsSettings as SessionsSettingsData, DEFAULT_SESSIONS_SETTINGS } from "@mms/shared";
@@ -33,18 +33,18 @@ type SessionStatus = "active" | "upcoming" | "completed" | "cancelled";
 type SessionType = typeof SESSION_TYPES[number];
 
 const STATUS_CONFIG: Record<SessionStatus, { label: string; cls: string }> = {
-  active:    { label: "Active",    cls: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-  upcoming:  { label: "Upcoming",  cls: "bg-blue-50 text-blue-700 border-blue-100" },
+  active:    { label: "Active",    cls: "bg-success/10 text-success border-success/20" },
+  upcoming:  { label: "Upcoming",  cls: "bg-info/10 text-info border-info/20" },
   completed: { label: "Completed", cls: "bg-muted text-muted-foreground border-border" },
-  cancelled: { label: "Cancelled", cls: "bg-red-50 text-red-600 border-red-100" },
+  cancelled: { label: "Cancelled", cls: "bg-destructive/10 text-destructive border-destructive/20" },
 };
 
 const TYPE_COLORS: Partial<Record<SessionType, string>> = {
-  "Hifz":            "bg-emerald-100 text-emerald-800",
-  "Qaidah":          "bg-blue-100 text-blue-800",
-  "Tajweed":         "bg-violet-100 text-violet-800",
-  "Islamic Studies": "bg-amber-100 text-amber-800",
-  "Arabic":          "bg-rose-100 text-rose-800",
+  "Hifz":            "bg-success/15 text-success",
+  "Qaidah":          "bg-info/15 text-info",
+  "Tajweed":         "bg-primary/15 text-primary",
+  "Islamic Studies": "bg-warning/15 text-warning",
+  "Arabic":          "bg-secondary/15 text-secondary",
 };
 
 interface SessionCardProps {
@@ -107,7 +107,7 @@ function SessionCard({ session, onClick }: SessionCardProps) {
         <div>
           <div className="h-1 rounded-full bg-border overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-amber-500" : "bg-emerald-500"}`}
+              className={`h-full rounded-full transition-all ${pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-warning" : "bg-success"}`}
               style={{ width: `${Math.min(pct, 100)}%` }}
             />
           </div>

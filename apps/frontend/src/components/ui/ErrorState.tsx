@@ -24,8 +24,8 @@ export default function ErrorState({
 }: ErrorStateProps): React.ReactElement {
   const configs = {
     generic:    { icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10", defaultTitle: "Something went wrong" },
-    network:    { icon: WifiOff,       color: "text-amber-600",   bg: "bg-amber-50",       defaultTitle: "Connection error" },
-    permission: { icon: AlertTriangle, color: "text-amber-600",   bg: "bg-amber-50",       defaultTitle: "Access denied" },
+    network:    { icon: WifiOff,       color: "text-warning",   bg: "bg-warning/10",       defaultTitle: "Connection error" },
+    permission: { icon: AlertTriangle, color: "text-warning",   bg: "bg-warning/10",       defaultTitle: "Access denied" },
   };
 
   const cfg = configs[type] || configs.generic;

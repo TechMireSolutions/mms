@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { GitCompare, X } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
@@ -194,7 +194,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
           <div className="grid grid-cols-2 gap-3 text-left">
             {[
               { label: "A", val: valA, set: setValA, color: "text-primary" },
-              { label: "B", val: valB, set: setValB, color: "text-amber-600" }
+              { label: "B", val: valB, set: setValB, color: "text-warning" }
             ].map(({ label, val, set, color }) => (
               <div key={label} className="flex flex-col gap-1">
                 <label className={`text-[11px] font-bold uppercase tracking-wide ${color}`}>{isContacts ? "Stage" : "Session"} {label}</label>
@@ -208,7 +208,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
           <div className="grid grid-cols-2 gap-4 text-left">
             {[
               { label: "Range A", range: rangeA, set: setRangeA, color: "text-primary" },
-              { label: "Range B", range: rangeB, set: setRangeB, color: "text-amber-600" }
+              { label: "Range B", range: rangeB, set: setRangeB, color: "text-warning" }
             ].map(({ label, range, set, color }) => (
               <div key={label} className="space-y-2">
                 <p className={`text-[11px] font-bold uppercase tracking-wide ${color}`}>{label}</p>
@@ -232,7 +232,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         {/* Chart */}
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm text-left">
           <p className="text-xs text-muted-foreground mb-3">
-            Comparing: <span className="font-semibold text-primary">{labelA}</span> vs <span className="font-semibold text-amber-600">{labelB}</span>
+            Comparing: <span className="font-semibold text-primary">{labelA}</span> vs <span className="font-semibold text-warning">{labelB}</span>
           </p>
           <div className="h-[220px] w-full">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
@@ -257,7 +257,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
                 <tr>
                   <th className="px-3 py-2 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Metric</th>
                   <th className="px-3 py-2 text-left text-[11px] font-bold text-primary uppercase tracking-widest">{isContacts ? "Target A" : "Session A"}</th>
-                  <th className="px-3 py-2 text-left text-[11px] font-bold text-amber-600 uppercase tracking-widest">{isContacts ? "Target B" : "Session B"}</th>
+                  <th className="px-3 py-2 text-left text-[11px] font-bold text-warning uppercase tracking-widest">{isContacts ? "Target B" : "Session B"}</th>
                   <th className="px-3 py-2 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Δ Diff</th>
                 </tr>
               </thead>
@@ -268,8 +268,8 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
                     <tr key={row.metric} className="hover:bg-muted/30 transition-colors">
                       <td className="px-3 py-3 font-bold text-foreground">{row.metric}</td>
                       <td className="px-3 py-3 text-primary font-bold">{row.a.toLocaleString()}</td>
-                      <td className="px-3 py-3 text-amber-600 font-bold">{row.b.toLocaleString()}</td>
-                      <td className={`px-3 py-3 text-xs font-black ${diff > 0 ? "text-emerald-600" : diff < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                      <td className="px-3 py-3 text-warning font-bold">{row.b.toLocaleString()}</td>
+                      <td className={`px-3 py-3 text-xs font-black ${diff > 0 ? "text-success" : diff < 0 ? "text-destructive" : "text-muted-foreground"}`}>
                         {diff > 0 ? "+" : ""}{diff.toLocaleString()}
                       </td>
                     </tr>

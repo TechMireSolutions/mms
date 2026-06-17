@@ -48,8 +48,8 @@ function parseNaturalLanguage(text: string): QuickActionType | null {
 
 function StatusBadge({ status }: { status: string }) {
   return status === "posted"
-    ? <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-emerald-100 text-emerald-700 border-emerald-200"><CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" />Posted</span>
-    : <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-amber-100 text-amber-700 border-amber-200"><Clock className="w-2.5 h-2.5" aria-hidden="true" />Draft</span>;
+    ? <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-success/15 text-success border-success/30"><CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" />Posted</span>
+    : <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-warning/15 text-warning border-warning/30"><Clock className="w-2.5 h-2.5" aria-hidden="true" />Draft</span>;
 }
 
 interface JournalEntriesProps {
@@ -271,8 +271,8 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                     const isIn = (entry.tags || []).some((t) => ["Fees","Donation","Capital"].includes(t)) || ["fee_collection","donation","rent_income","other_income"].includes(entry.transaction_type || "");
                     return (
                       <article key={entry.id} className="flex items-center gap-4 px-4 py-3 rounded-xl border border-border bg-card hover:bg-muted/20 transition-colors">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isIn ? "bg-emerald-100" : "bg-red-100"}`} aria-hidden="true">
-                          {isIn ? <TrendingUp className="w-4 h-4 text-emerald-600" /> : <TrendingUp className="w-4 h-4 text-destructive rotate-180" />}
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isIn ? "bg-success/15" : "bg-destructive/15"}`} aria-hidden="true">
+                          {isIn ? <TrendingUp className="w-4 h-4 text-success" /> : <TrendingUp className="w-4 h-4 text-destructive rotate-180" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-semibold text-foreground truncate m-0">{entry.description}</h4>
@@ -286,7 +286,7 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
                           <div className="text-right">
-                            <p className={`text-sm font-bold font-mono m-0 ${isIn ? "text-emerald-700" : "text-red-600"}`}>
+                            <p className={`text-sm font-bold font-mono m-0 ${isIn ? "text-success" : "text-destructive"}`}>
                               {isIn ? "+" : "−"}{fmt(amount)}
                             </p>
                           </div>
@@ -301,18 +301,15 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
           </>
         )}
 
-        <AnimatePresence>
-          {simpleModal !== null && (
-            <SimpleTransactionWizard
+        <SimpleTransactionWizard
+              open={simpleModal !== null}
               accounts={accounts}
               entries={entries}
               fiscalYears={fiscalYears}
-              prefillType={simpleModal.prefillType}
+              prefillType={simpleModal?.prefillType}
               onSave={handleSave}
               onClose={() => setSimpleModal(null)}
             />
-          )}
-        </AnimatePresence>
       </section>
     );
   }
@@ -429,7 +426,7 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                     <tr key={entry.id} className="hover:bg-muted/20 transition-colors">
                       <td className="px-3 py-2.5">
                         <span className="font-mono text-xs font-bold text-primary">{entry.ref}</span>
-                        {entry.reversed_ref && <p className="text-[10px] text-amber-600 font-semibold m-0">↩ Rev. of {entry.reversed_ref}</p>}
+                        {entry.reversed_ref && <p className="text-[10px] text-warning font-semibold m-0">↩ Rev. of {entry.reversed_ref}</p>}
                         {entry.simple_mode && <span className="text-[10px] text-primary/60 font-semibold m-0">Simple</span>}
                       </td>
                       <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
@@ -444,10 +441,10 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                           {(entry.tags || []).length > 2 && <span className="text-[10px] text-muted-foreground">+{entry.tags.length - 2}</span>}
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-blue-700">
+                      <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-info">
                         {totalD.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-emerald-700">
+                      <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-success">
                         {totalC.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-3 py-2.5"><StatusBadge status={entry.status} /></td>
@@ -464,7 +461,7 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                                 <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                               </button>
                               <button type="button" aria-label={`Post entry ${entry.ref}`} onClick={() => handlePost(entry)}
-                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-emerald-600 transition-colors">
+                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-success transition-colors">
                                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                               </button>
                               <button type="button" aria-label={`Delete entry ${entry.ref}`} onClick={() => handleDelete(entry.id)}
@@ -475,7 +472,7 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                           )}
                           {entry.status === "posted" && (
                             <button type="button" aria-label={`Reverse entry ${entry.ref}`} onClick={() => handleReverse(entry)}
-                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-amber-600 transition-colors">
+                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-warning transition-colors">
                               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
                             </button>
                           )}
@@ -490,15 +487,15 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                   <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">
                     {filtered.length} {filtered.length !== 1 ? "entries" : "entry"}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-blue-700 text-xs">
+                  <td className="px-3 py-2 text-right font-mono font-bold text-info text-xs">
                     {grandDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-emerald-700 text-xs">
+                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">
                     {grandCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                   <td colSpan={2} className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">
                     {Math.abs(grandDebit - grandCredit) < 0.01
-                      ? <span className="text-emerald-600">✓ Balanced</span>
+                      ? <span className="text-success">✓ Balanced</span>
                       : <span className="text-destructive">Diff: {fmt(Math.abs(grandDebit - grandCredit))}</span>
                     }
                   </td>

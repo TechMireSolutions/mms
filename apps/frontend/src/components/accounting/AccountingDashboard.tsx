@@ -35,7 +35,7 @@ function KpiCard({ label, value, icon: Icon = null, sub = undefined, color = "bg
             </div>
           )}
           {trend !== undefined && (
-            <span className={`flex items-center gap-0.5 text-[11px] font-bold ${trend >= 0 ? "text-emerald-600" : "text-destructive"}`} aria-label={`Trend: ${trend}%`}>
+            <span className={`flex items-center gap-0.5 text-[11px] font-bold ${trend >= 0 ? "text-success" : "text-destructive"}`} aria-label={`Trend: ${trend}%`}>
               {trend >= 0 ? <ArrowUpRight className="w-3 h-3" aria-hidden="true" /> : <ArrowDownRight className="w-3 h-3" aria-hidden="true" />}
               {Math.abs(trend)}%
             </span>
@@ -112,20 +112,20 @@ export default function AccountingDashboard({ accounts, entries, settings, fisca
     <section aria-label="Accounting Dashboard" className="space-y-5">
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard label="Total Revenue"   value={fmt(revenue)}    icon={TrendingUp}   color="bg-emerald-50/60" />
-        <KpiCard label="Total Expenses"  value={fmt(expenses)}   icon={TrendingDown} color="bg-red-50/60" />
+        <KpiCard label="Total Revenue"   value={fmt(revenue)}    icon={TrendingUp}   color="bg-success/10/60" />
+        <KpiCard label="Total Expenses"  value={fmt(expenses)}   icon={TrendingDown} color="bg-destructive/10/60" />
         <KpiCard label="Net Surplus"     value={fmt(Math.abs(netSurplus))}
           sub={netSurplus < 0 ? "Deficit" : "Surplus"} icon={DollarSign}
-          color={netSurplus >= 0 ? "bg-primary/5" : "bg-red-50/60"} />
-        <KpiCard label="Total Assets"    value={fmt(assets)}     icon={Scale}        color="bg-blue-50/60" />
+          color={netSurplus >= 0 ? "bg-primary/5" : "bg-destructive/10/60"} />
+        <KpiCard label="Total Assets"    value={fmt(assets)}     icon={Scale}        color="bg-info/10/60" />
       </div>
 
       {/* Second row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard label="Total Liabilities" value={fmt(liabilities)} icon={null} color="bg-muted/40" />
         <KpiCard label="Net Cash Flow"     value={fmt(Math.abs(netCashFlow))} sub={netCashFlow >= 0 ? "Positive" : "Negative"} icon={null} color="bg-muted/40" />
-        <KpiCard label="Posted Entries"    value={posted.length}   icon={CheckCircle2} color="bg-emerald-50/60" />
-        <KpiCard label="Pending Drafts"    value={drafts.length}   icon={Clock}        color={drafts.length > 0 ? "bg-amber-50/60" : "bg-muted/40"} />
+        <KpiCard label="Posted Entries"    value={posted.length}   icon={CheckCircle2} color="bg-success/10/60" />
+        <KpiCard label="Pending Drafts"    value={drafts.length}   icon={Clock}        color={drafts.length > 0 ? "bg-warning/10/60" : "bg-muted/40"} />
       </div>
 
       {/* Charts row */}
@@ -196,7 +196,7 @@ export default function AccountingDashboard({ accounts, entries, settings, fisca
             {bsData.map((item) => {
               const max = Math.max(...bsData.map(d => d.value), 1);
               const pct = (item.value / max) * 100;
-              const colors: Record<string, string> = { Assets: "bg-blue-500", Liabilities: "bg-red-400", Equity: "bg-purple-500" };
+              const colors: Record<string, string> = { Assets: "bg-info", Liabilities: "bg-destructive", Equity: "bg-primary" };
               return (
                 <div key={item.name} aria-label={`${item.name}: ${fmt(item.value)}`}>
                   <div className="flex justify-between text-xs mb-1">
@@ -210,7 +210,7 @@ export default function AccountingDashboard({ accounts, entries, settings, fisca
               );
             })}
           </div>
-          <div className={`mt-4 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg ${Math.abs(assets - (liabilities + equity)) < 1 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+          <div className={`mt-4 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg ${Math.abs(assets - (liabilities + equity)) < 1 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
             {Math.abs(assets - (liabilities + equity)) < 1
               ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Balance Sheet is balanced</>
               : <><AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> Difference: {fmt(Math.abs(assets - (liabilities + equity)))}</>
@@ -226,10 +226,10 @@ export default function AccountingDashboard({ accounts, entries, settings, fisca
               const totalD = entry.lines.reduce((s, l) => s + l.debit, 0);
               return (
                 <article key={entry.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${entry.status === "posted" ? "bg-emerald-100" : "bg-amber-100"}`} aria-hidden="true">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${entry.status === "posted" ? "bg-success/15" : "bg-warning/15"}`} aria-hidden="true">
                     {entry.status === "posted"
-                      ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      : <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      ? <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                      : <Clock className="w-3.5 h-3.5 text-warning" />
                     }
                   </div>
                   <div className="flex-1 min-w-0">

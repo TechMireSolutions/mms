@@ -8,7 +8,6 @@ import { INVOICES } from '@/lib/data/financeData';
 import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 import { DISTRIBUTIONS } from '@/lib/data/hasanatData';
 import { EXAM_RESULTS } from '@/lib/data/examinationData';
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
 import { Contact } from "../../lib/contactFields";
@@ -503,7 +502,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
             <div className="rounded-2xl border border-border bg-background/30 p-2.5 space-y-1 max-h-52 overflow-y-auto custom-scrollbar">
               {available.length === 0 ? (
                 <div className="text-center py-6 text-muted-foreground italic text-xs flex flex-col items-center gap-1">
-                  <Check className="w-5 h-5 text-emerald-500" />
+                  <Check className="w-5 h-5 text-success" />
                   All fields selected in schema
                 </div>
               ) : (
@@ -647,10 +646,10 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   Live Visualizer Preview ({previewData.length} records)
                 </label>
                 {groupBy && (
-                  <span className="text-[9px] font-bold uppercase bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-md">Grouped</span>
+                  <span className="text-[9px] font-bold uppercase bg-primary/15 text-primary px-1.5 py-0.5 rounded-md">Grouped</span>
                 )}
                 {aggregate !== "None" && (
-                  <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md">{aggregate}</span>
+                  <span className="text-[9px] font-bold uppercase bg-success/15 text-success px-1.5 py-0.5 rounded-md">{aggregate}</span>
                 )}
               </div>
               
@@ -659,7 +658,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 <div className="flex gap-2">
                   <button 
                     onClick={handleExportExcel}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:text-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm cursor-pointer"
+                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-success hover:text-success px-3 py-1.5 rounded-xl border border-success/30 bg-success/10 hover:bg-success/15 transition-all shadow-sm cursor-pointer"
                     type="button"
                     title="Export data to Excel Sheet"
                   >
@@ -667,7 +666,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   </button>
                   <button 
                     onClick={handleExportPdf}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-red-700 hover:text-red-800 px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 transition-all shadow-sm cursor-pointer"
+                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-destructive hover:text-destructive px-3 py-1.5 rounded-xl border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all shadow-sm cursor-pointer"
                     type="button"
                     title="Export layout to PDF document"
                   >

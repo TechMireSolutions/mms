@@ -1,10 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  LayoutDashboard, Info, RefreshCw, BarChart2, 
-  Plus, Trash2, Download, Image, FileText, Pin, 
+import { Info, 
+  Plus, Trash2, Image, FileText, Pin, 
   PinOff, Filter, CheckCircle2, ChevronDown, ChevronUp, 
-  Table, Eye, Sparkles, Printer, FileSpreadsheet, Settings
+  Table, Sparkles, Printer, FileSpreadsheet, Settings
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, LineChart, Line, 
@@ -261,7 +260,7 @@ export default function DynamicChartVisualizer({
         finalValue = count;
       } else {
         const field = targetField || "";
-        let values: number[] = [];
+        const values: number[] = [];
 
         groupItems.forEach((item) => {
           // Special Hasanat points calculation
@@ -375,7 +374,7 @@ export default function DynamicChartVisualizer({
 
   // Toggles pin state in localStorage
   const handleTogglePin = () => {
-    let nextWidgets = [...dashboardWidgets];
+    const nextWidgets = [...dashboardWidgets];
     const matchingIdx = nextWidgets.findIndex(
       (w) =>
         w.collection === collectionKey &&
@@ -817,7 +816,7 @@ export default function DynamicChartVisualizer({
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Color Palette</label>
                   {(activePalette === "accessibleColorblind" || activePalette.startsWith("tol")) && (
-                    <span className="text-[8px] bg-emerald-500/15 text-emerald-500 px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none">Safe Contrast</span>
+                    <span className="text-[8px] bg-success/15 text-success px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none">Safe Contrast</span>
                   )}
                 </div>
                 <select
@@ -999,7 +998,7 @@ export default function DynamicChartVisualizer({
                 onClick={handleTogglePin}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                   isPinned
-                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 shadow-md shadow-emerald-500/5"
+                    ? "border-success/30 bg-success/10 text-success shadow-md shadow-success/5"
                     : "border-border bg-card/50 text-muted-foreground hover:text-foreground"
                 }`}
                 type="button"
@@ -1062,7 +1061,7 @@ export default function DynamicChartVisualizer({
                   title="Export Excel spreadsheet"
                   type="button"
                 >
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-green-600" />
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-success" />
                 </button>
 
                 <div className="flex bg-card/60 border border-border/50 rounded-xl overflow-hidden p-0.5 items-center">

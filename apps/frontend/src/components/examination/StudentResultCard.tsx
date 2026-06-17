@@ -131,7 +131,7 @@ export default function StudentResultCard({ result, exam, allResults, onClose, o
             <button
               type="button"
               onClick={onCertificate}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-700 text-sm font-semibold hover:bg-amber-100"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-warning/40 bg-warning/10 text-warning text-sm font-semibold hover:bg-warning/15"
             >
               <Award className="w-4 h-4" aria-hidden="true" /> Certificate
             </button>

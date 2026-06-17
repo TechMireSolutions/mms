@@ -28,10 +28,10 @@ interface StatCardProps {
 function StatCard({ label, value, sub, icon: Icon, color = "primary", trend }: StatCardProps) {
   const colorMap: Record<string, { bg: string, text: string, iconBg: string }> = {
     primary:  { bg: "bg-primary/8",  text: "text-primary",  iconBg: "bg-primary/10" },
-    emerald:  { bg: "bg-emerald-50",  text: "text-emerald-700", iconBg: "bg-emerald-100" },
-    blue:     { bg: "bg-blue-50",     text: "text-blue-700",    iconBg: "bg-blue-100" },
-    amber:    { bg: "bg-amber-50",    text: "text-amber-700",   iconBg: "bg-amber-100" },
-    purple:   { bg: "bg-purple-50",   text: "text-purple-700",  iconBg: "bg-purple-100" },
+    emerald:  { bg: "bg-success/10",  text: "text-success", iconBg: "bg-success/15" },
+    blue:     { bg: "bg-info/10",     text: "text-info",    iconBg: "bg-info/15" },
+    amber:    { bg: "bg-warning/10",    text: "text-warning",   iconBg: "bg-warning/15" },
+    purple:   { bg: "bg-primary/10",   text: "text-primary",  iconBg: "bg-primary/15" },
   };
   const c = colorMap[color];
   return (
@@ -41,7 +41,7 @@ function StatCard({ label, value, sub, icon: Icon, color = "primary", trend }: S
           <Icon className={`w-4.5 h-4.5 ${c.text}`} style={{ width: 18, height: 18 }} />
         </div>
         {trend !== undefined && (
-          <span className={`text-[11px] font-bold flex items-center gap-0.5 ${trend >= 0 ? "text-emerald-600" : "text-destructive"}`} aria-label={trend >= 0 ? "Positive trend" : "Negative trend"}>
+          <span className={`text-[11px] font-bold flex items-center gap-0.5 ${trend >= 0 ? "text-success" : "text-destructive"}`} aria-label={trend >= 0 ? "Positive trend" : "Negative trend"}>
             <ArrowUpRight className="w-3 h-3" style={{ transform: trend < 0 ? "rotate(180deg)" : undefined }} aria-hidden="true" />
             {Math.abs(trend)}%
           </span>
@@ -411,7 +411,7 @@ export default function ObligationsSummary({
                     <td className="px-3 py-3">
                       <p className="font-semibold text-foreground text-sm m-0">{w.repName}</p>
                       {!w.hasWakala && (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-bold mt-0.5" aria-label="No Wakala Config">
+                        <span className="inline-flex items-center gap-1 text-[10px] text-warning font-bold mt-0.5" aria-label="No Wakala Config">
                           <AlertCircle className="w-3 h-3" aria-hidden="true" /> No Wakala Config
                         </span>
                       )}
@@ -421,12 +421,12 @@ export default function ObligationsSummary({
                       <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">{w.obligationType}</span>
                     </td>
                     <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">{w.count}</td>
-                    <td className="px-3 py-3 text-right font-mono font-bold text-emerald-700 text-sm">{fmt(w.total)}</td>
+                    <td className="px-3 py-3 text-right font-mono font-bold text-success text-sm">{fmt(w.total)}</td>
                     <td className="px-3 py-3">
                       {w.distributions.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {w.distributions.map((d: ObligationDistribution) => (
-                            <span key={d.id} className={`text-[10px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${d.type === "Liability" ? "bg-red-50 border-red-200 text-red-600" : "bg-emerald-50 border-emerald-200 text-emerald-700"}`}>
+                            <span key={d.id} className={`text-[10px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${d.type === "Liability" ? "bg-destructive/10 border-destructive/30 text-destructive" : "bg-success/10 border-success/30 text-success"}`}>
                               {d.name} {d.percentage}%
                             </span>
                           ))}
@@ -439,7 +439,7 @@ export default function ObligationsSummary({
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{wakalaSummary.length} wakala config{wakalaSummary.length !== 1 ? "s" : ""}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-emerald-700 text-xs">{fmt(totalAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{fmt(totalAmount)}</td>
                   <td />
                 </tr>
               </tfoot>
@@ -484,7 +484,7 @@ export default function ObligationsSummary({
                   <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">By Obligation Type</th>
                   <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">Collections</th>
                   <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">Total Collected</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-red-600 uppercase">Due to Rep</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-destructive uppercase">Due to Rep</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -511,7 +511,7 @@ export default function ObligationsSummary({
                     <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">{r.count}</td>
                     <td className="px-3 py-3 text-right font-mono font-bold text-foreground text-sm">{fmt(r.total)}</td>
                     <td className="px-3 py-3 text-right">
-                      <span className="font-mono font-bold text-red-600 text-sm">{fmt(r.due)}</span>
+                      <span className="font-mono font-bold text-destructive text-sm">{fmt(r.due)}</span>
                     </td>
                   </tr>
                 ))}
@@ -520,7 +520,7 @@ export default function ObligationsSummary({
                 <tr>
                   <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{repSummary.length} rep{repSummary.length !== 1 ? "s" : ""}</td>
                   <td className="px-3 py-2 text-right font-mono font-bold text-foreground text-xs">{fmt(totalAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-red-600 text-xs">{fmt(repSummary.reduce((s, r) => s + r.due, 0))}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{fmt(repSummary.reduce((s, r) => s + r.due, 0))}</td>
                 </tr>
               </tfoot>
             </table>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { DESIGNATED_FOR_OPTIONS, ObligationType } from '@/lib/data/obligationsData';
 import ObligationModal from "./ObligationModal";
+import { FORM_LABEL, FORM_ERROR } from "@/components/ui/formStyles";
 
 export type DesignatedFor = "Syed" | "Non-Syed" | "Both" | "None";
 
@@ -15,9 +16,9 @@ interface TypeBadgeProps {
  */
 function TypeBadge({ val }: TypeBadgeProps) {
   const colors: Record<string, string> = {
-    Syed: "bg-purple-100 text-purple-700 border-purple-200",
-    "Non-Syed": "bg-blue-100 text-blue-700 border-blue-200",
-    Both: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    Syed: "bg-primary/15 text-primary border-primary/30",
+    "Non-Syed": "bg-info/15 text-info border-info/30",
+    Both: "bg-success/15 text-success border-success/30",
     None: "bg-muted text-muted-foreground border-border",
   };
   return (
@@ -90,7 +91,7 @@ export default function ObligationTypeManager({ types, onChange }: ObligationTyp
               <tr key={t.id} className="hover:bg-muted/20 transition-colors">
                 <td className="px-4 py-3 font-semibold text-foreground">{t.name}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${t.quantity_based ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-muted text-muted-foreground border-border"}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${t.quantity_based ? "bg-success/15 text-success border-success/30" : "bg-muted text-muted-foreground border-border"}`}>
                     {t.quantity_based ? "Yes" : "No"}
                   </span>
                 </td>
@@ -152,16 +153,16 @@ function ObligationTypeForm({ initial, onSave, onCancel }: ObligationTypeFormPro
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="type-name" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Name *</label>
+        <label htmlFor="type-name" className={FORM_LABEL}>Name *</label>
         <input id="type-name" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
+          className="FORM_INPUT" 
           aria-invalid={!!errors.name} />
-        {errors.name && <p className="text-xs text-destructive mt-1" role="alert">{errors.name}</p>}
+        {errors.name && <p className={FORM_ERROR} role="alert">{errors.name}</p>}
       </div>
       <div>
-        <label htmlFor="type-designated" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Designated For *</label>
+        <label htmlFor="type-designated" className={FORM_LABEL}>Designated For *</label>
         <select id="type-designated" value={form.designated_for} onChange={(e) => setForm({ ...form, designated_for: e.target.value as DesignatedFor })}
-          className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20">
+          className="FORM_INPUT">
           {DESIGNATED_FOR_OPTIONS.map((o) => <option key={o}>{o}</option>)}
         </select>
       </div>

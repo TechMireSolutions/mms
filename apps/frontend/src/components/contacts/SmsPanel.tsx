@@ -7,6 +7,7 @@ import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { openDeviceSmsComposer } from '@/lib/deviceSms';
 import { notify } from '@/lib/notify';
 import { FormSelect } from './form/FormPrimitives';
+import { FORM_LABEL, FORM_TEXTAREA } from '@/components/ui/formStyles';
 
 interface SmsPanelProps {
   contacts: Contact[];
@@ -108,14 +109,14 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">
+            <label className={FORM_LABEL}>
               {uiStrings.messageBody || 'Message'}
             </label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
-              className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+              className={FORM_TEXTAREA}
               placeholder={uiStrings.smsMessagePlaceholder || 'Type your SMS…'}
             />
           </div>

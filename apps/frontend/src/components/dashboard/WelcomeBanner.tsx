@@ -68,7 +68,7 @@ export default function WelcomeBanner({ role = "admin" }: WelcomeBannerProps): R
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-emerald-800 to-emerald-900 p-6 md:p-7 text-primary-foreground"
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/75 p-6 md:p-7 text-primary-foreground"
     >
       <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full border border-white/[0.07]" aria-hidden="true" />
       <div className="absolute -top-12 -right-4  w-48 h-48 rounded-full border border-white/[0.05]" aria-hidden="true" />
@@ -82,7 +82,7 @@ export default function WelcomeBanner({ role = "admin" }: WelcomeBannerProps): R
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" aria-hidden="true" />
+            <Sparkles className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
             <span className="text-[11px] font-semibold text-white/60 uppercase tracking-wider">{t(badgeKey)}</span>
           </div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight m-0">{t(greetingKey)}</h1>

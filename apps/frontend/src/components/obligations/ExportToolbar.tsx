@@ -119,7 +119,7 @@ export default function ExportToolbar({ title, columns, rows, filename }: Export
           type="button"
           aria-pressed={format === "excel"}
           onClick={() => setFormat("excel")}
-          className={`flex items-center gap-1 px-2.5 py-1.5 transition-colors ${format === "excel" ? "bg-emerald-600 text-white" : "bg-card text-muted-foreground hover:bg-muted"}`}
+          className={`flex items-center gap-1 px-2.5 py-1.5 transition-colors ${format === "excel" ? "bg-success text-success-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
         >
           <FileSpreadsheet className="w-3 h-3" aria-hidden="true" /> Excel
         </button>
@@ -127,7 +127,7 @@ export default function ExportToolbar({ title, columns, rows, filename }: Export
           type="button"
           aria-pressed={format === "pdf"}
           onClick={() => setFormat("pdf")}
-          className={`flex items-center gap-1 px-2.5 py-1.5 border-l border-border transition-colors ${format === "pdf" ? "bg-red-600 text-white" : "bg-card text-muted-foreground hover:bg-muted"}`}
+          className={`flex items-center gap-1 px-2.5 py-1.5 border-l border-border transition-colors ${format === "pdf" ? "bg-destructive text-destructive-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
         >
           <FileText className="w-3 h-3" aria-hidden="true" /> PDF
         </button>

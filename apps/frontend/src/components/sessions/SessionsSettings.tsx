@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Save, Calendar, GripVertical } from "lucide-react";
+import { Save, Calendar } from "lucide-react";
 import { getObject, saveObject } from "../../lib/db";
 import {
   type SessionsSettings,
@@ -10,9 +10,8 @@ import {
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 
 interface ToggleProps {
   label: string;
@@ -157,20 +156,20 @@ export default function SessionsSettings({ mode }: SessionsSettingsProps): React
         <>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={LABEL} htmlFor="defaultDuration">Default Duration (months)</label>
+              <label className={FORM_LABEL} htmlFor="defaultDuration">Default Duration (months)</label>
               <input
                 id="defaultDuration"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.defaultDuration}
                 onChange={(e) => upd("defaultDuration", e.target.value)}
               />
             </div>
             <div>
-              <label className={LABEL} htmlFor="defaultSessionType">Default Session Type</label>
+              <label className={FORM_LABEL} htmlFor="defaultSessionType">Default Session Type</label>
               <select
                 id="defaultSessionType"
-                className={`${INPUT} cursor-pointer`}
+                className={`${FORM_INPUT} cursor-pointer`}
                 value={data.defaultSessionType}
                 onChange={(e) => upd("defaultSessionType", e.target.value)}
               >
@@ -181,21 +180,21 @@ export default function SessionsSettings({ mode }: SessionsSettingsProps): React
               </select>
             </div>
             <div>
-              <label className={LABEL} htmlFor="academicYear">Academic Year</label>
+              <label className={FORM_LABEL} htmlFor="academicYear">Academic Year</label>
               <input
                 id="academicYear"
                 type="text"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.academicYear}
                 onChange={(e) => upd("academicYear", e.target.value)}
                 placeholder="2025-2026"
               />
             </div>
             <div>
-              <label className={LABEL} htmlFor="sessionStart">Session Starts (Month)</label>
+              <label className={FORM_LABEL} htmlFor="sessionStart">Session Starts (Month)</label>
               <select
                 id="sessionStart"
-                className={`${INPUT} cursor-pointer`}
+                className={`${FORM_INPUT} cursor-pointer`}
                 value={data.sessionStart}
                 onChange={(e) => upd("sessionStart", e.target.value)}
               >

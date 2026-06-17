@@ -8,11 +8,7 @@ import {
   type ModuleFieldDef,
   type QuestionSourceReference,
 } from '@mms/shared';
-
-const INPUT =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20';
-const LABEL =
-  'mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground';
+import { FORM_INPUT, FORM_LABEL, FORM_TEXTAREA } from '@/components/ui/formStyles';
 
 interface SourceReferencesEditorProps {
   sources: QuestionSourceReference[];
@@ -58,13 +54,13 @@ export default function SourceReferencesEditor({
     if (field.type === 'textarea') {
       return (
         <div key={field.id} className="sm:col-span-2">
-          <label htmlFor={inputId} className={LABEL}>
+          <label htmlFor={inputId} className={FORM_LABEL}>
             {label}
             {requiredMark}
           </label>
           <textarea
             id={inputId}
-            className={`${INPUT} resize-none`}
+            className={`${FORM_TEXTAREA} resize-none`}
             rows={2}
             value={value}
             onChange={(e) => updEntry(index, sourceKey, e.target.value)}
@@ -76,14 +72,14 @@ export default function SourceReferencesEditor({
 
     return (
       <div key={field.id}>
-        <label htmlFor={inputId} className={LABEL}>
+        <label htmlFor={inputId} className={FORM_LABEL}>
           {label}
           {requiredMark}
         </label>
         <input
           id={inputId}
           type={field.type === 'date' ? 'date' : 'text'}
-          className={INPUT}
+          className={FORM_INPUT}
           value={value}
           onChange={(e) => updEntry(index, sourceKey, e.target.value)}
           placeholder={field.placeholder}

@@ -85,7 +85,7 @@ const FieldItem = memo(
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-xs font-semibold text-foreground">{field.label}</p>
             {isUnique && !onToggleUnique && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30 dark:bg-warning/20 dark:text-warning dark:border-warning/30">
                 {uiStrings?.fieldUnique || "Unique"}
               </span>
             )}
@@ -101,7 +101,7 @@ const FieldItem = memo(
             className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border transition-all
               ${
                 isRequired
-                  ? "bg-red-50 border-red-200 text-red-600 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400"
+                  ? "bg-destructive/10 border-destructive/30 text-destructive dark:bg-destructive/20 dark:border-destructive/30 dark:text-destructive"
                   : "bg-muted border-border text-muted-foreground hover:text-foreground"
               }`}
           >
@@ -117,7 +117,7 @@ const FieldItem = memo(
             className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border transition-all
               ${
                 isUnique
-                  ? "bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
+                  ? "bg-warning/10 border-warning/30 text-warning dark:bg-warning/20 dark:border-warning/30 dark:text-warning"
                   : "bg-muted border-border text-muted-foreground hover:text-foreground"
               }`}
           >

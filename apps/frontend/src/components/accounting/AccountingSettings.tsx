@@ -13,6 +13,8 @@ import {
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
 import { DatePicker } from "../ui/DatePicker";
+import FormModal from "../ui/FormModal";
+import { FORM_INPUT, FORM_LABEL } from "../ui/formStyles";
 
 const DATE_FORMATS = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"];
 const DECIMAL_SEPARATORS = [
@@ -63,8 +65,6 @@ function Field({ label, hint = undefined, children }: FieldProps) {
   );
 }
 
-const inp = "w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20";
-
 interface ToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -90,18 +90,23 @@ function Toggle({ checked, onChange, ariaLabel }: ToggleProps) {
 }
 
 interface FYModalProps {
+  open: boolean;
   initial: Partial<FiscalYear> | null;
   onSave: (fy: FiscalYear) => void;
   onClose: () => void;
 }
 
-/**
- * FYModal component.
- */
-function FYModal({ initial, onSave, onClose }: FYModalProps) {
+function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
   const isEdit = !!initial?.id;
   const [form, setForm] = useState<Partial<FiscalYear>>(initial || { label: "", startDate: "", endDate: "", status: "upcoming" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  React.useEffect(() => {
+    if (open) {
+      setForm(initial || { label: "", startDate: "", endDate: "", status: "upcoming" });
+      setErrors({});
+    }
+  }, [open, initial]);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -112,80 +117,84 @@ function FYModal({ initial, onSave, onClose }: FYModalProps) {
     return e;
   };
 
-  const handleSubmit = (ev: React.FormEvent) => {
-    ev.preventDefault();
-    const e = validate(); 
-    if (Object.keys(e).length) { 
-      setErrors(e); 
-      return; 
+  const handleSave = () => {
+    const e = validate();
+    if (Object.keys(e).length) {
+      setErrors(e);
+      return;
     }
-    onSave({ 
-      ...form, 
-      id: isEdit ? form.id : `fy${Date.now()}` 
+    onSave({
+      ...form,
+      id: isEdit ? form.id : `fy${Date.now()}`,
     } as FiscalYear);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="fy-modal-title">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <section className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-md z-10">
-        <header className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h3 id="fy-modal-title" className="font-bold text-foreground m-0">{isEdit ? "Edit Financial Year" : "Add Financial Year"}</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-muted-foreground hover:text-foreground text-lg leading-none">✕</button>
-        </header>
-        <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4 m-0">
-          <fieldset className="border-none m-0 p-0 space-y-4">
-            <div>
-              <label htmlFor="fy-label" className="text-xs font-semibold text-muted-foreground uppercase">Label *</label>
-              <input id="fy-label" value={form.label || ""} onChange={(e) => setForm({ ...form, label: e.target.value })}
-                placeholder="e.g. FY 2026–27" className={`mt-1 ${inp}`} required />
-              {errors.label && <p className="text-xs text-destructive mt-1 m-0" role="alert">{errors.label}</p>}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="fy-start" className="text-xs font-semibold text-muted-foreground uppercase">Start Date *</label>
-                <DatePicker
-                  id="fy-start"
-                  value={form.startDate || ""}
-                  onChange={(val) => setForm({ ...form, startDate: val })}
-                  required
-                />
-                {errors.startDate && <p className="text-xs text-destructive mt-1 m-0" role="alert">{errors.startDate}</p>}
-              </div>
-              <div>
-                <label htmlFor="fy-end" className="text-xs font-semibold text-muted-foreground uppercase">End Date *</label>
-                <DatePicker
-                  id="fy-end"
-                  value={form.endDate || ""}
-                  onChange={(val) => setForm({ ...form, endDate: val })}
-                  required
-                />
-                {errors.endDate && <p className="text-xs text-destructive mt-1 m-0" role="alert">{errors.endDate}</p>}
-              </div>
-            </div>
-            <div>
-              <label htmlFor="fy-status" className="text-xs font-semibold text-muted-foreground uppercase">Status</label>
-              <select id="fy-status" value={form.status || "upcoming"} onChange={(e) => setForm({ ...form, status: e.target.value as FiscalYear["status"] | "upcoming" })} className={`mt-1 ${inp}`}>
-                <option value="upcoming">Upcoming</option>
-                <option value="active">Active</option>
-                <option value="closed">Closed</option>
-              </select>
-            </div>
-          </fieldset>
-          <footer className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
-            <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">Save</button>
-          </footer>
-        </form>
-      </section>
-    </div>
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={isEdit ? "Edit Financial Year" : "Add Financial Year"}
+      icon={Calendar}
+      size="md"
+      error={Object.values(errors)}
+      cancelLabel="Cancel"
+      saveLabel="Save"
+      onSave={handleSave}
+    >
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="fy-label" className={FORM_LABEL}>Label *</label>
+          <input
+            id="fy-label"
+            value={form.label || ""}
+            onChange={(e) => setForm({ ...form, label: e.target.value })}
+            placeholder="e.g. FY 2026–27"
+            className={FORM_INPUT}
+            required
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="fy-start" className={FORM_LABEL}>Start Date *</label>
+            <DatePicker
+              id="fy-start"
+              value={form.startDate || ""}
+              onChange={(val) => setForm({ ...form, startDate: val })}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="fy-end" className={FORM_LABEL}>End Date *</label>
+            <DatePicker
+              id="fy-end"
+              value={form.endDate || ""}
+              onChange={(val) => setForm({ ...form, endDate: val })}
+              required
+            />
+          </div>
+        </div>
+        <div>
+          <label htmlFor="fy-status" className={FORM_LABEL}>Status</label>
+          <select
+            id="fy-status"
+            value={form.status || "upcoming"}
+            onChange={(e) => setForm({ ...form, status: e.target.value as FiscalYear["status"] | "upcoming" })}
+            className={`${FORM_INPUT} cursor-pointer`}
+          >
+            <option value="upcoming">Upcoming</option>
+            <option value="active">Active</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+      </div>
+    </FormModal>
   );
 }
 
 const FY_STATUS: Record<string, { color: string; icon: React.ElementType; label: string }> = {
-  active:   { color: "bg-emerald-100 text-emerald-700 border-emerald-200", icon: CheckCircle2, label: "Active" },
+  active:   { color: "bg-success/15 text-success border-success/30", icon: CheckCircle2, label: "Active" },
   closed:   { color: "bg-muted text-muted-foreground border-border",       icon: Lock,         label: "Closed" },
-  upcoming: { color: "bg-blue-100 text-blue-700 border-blue-200",          icon: Clock,        label: "Upcoming" },
+  upcoming: { color: "bg-info/15 text-info border-info/30",          icon: Clock,        label: "Upcoming" },
 };
 
 interface AccountingSettingsProps {
@@ -305,7 +314,7 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
           {/* Organisation */}
           <SectionCard title="Organisation" icon={null}>
             <Field label="Organisation Name" hint="Displayed on reports and printed documents">
-              <input value={local.organizationName || ""} aria-label="Organisation Name" onChange={(e) => set("organizationName", e.target.value)} className={inp} />
+              <input value={local.organizationName || ""} aria-label="Organisation Name" onChange={(e) => set("organizationName", e.target.value)} className={FORM_INPUT} />
             </Field>
           </SectionCard>
 
@@ -316,7 +325,7 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
                 const cur = CURRENCIES.find(c => c.code === e.target.value);
                 set("currency", e.target.value);
                 if (cur) set("currencySymbol", cur.symbol);
-              }} className={inp}>
+              }} className={FORM_INPUT}>
                 {CURRENCIES.map((c) => (
                   <option key={c.code} value={c.code}>{c.symbol} {c.code} – {c.name}</option>
                 ))}
@@ -328,17 +337,17 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
               )}
             </Field>
             <Field label="Date Format">
-              <select aria-label="Date Format" value={local.dateFormat} onChange={(e) => set("dateFormat", e.target.value)} className={inp}>
+              <select aria-label="Date Format" value={local.dateFormat} onChange={(e) => set("dateFormat", e.target.value)} className={FORM_INPUT}>
                 {DATE_FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
               </select>
             </Field>
             <Field label="Number Format">
-              <select aria-label="Number Format" value={local.decimalSeparator} onChange={(e) => set("decimalSeparator", e.target.value as "period" | "comma")} className={inp}>
+              <select aria-label="Number Format" value={local.decimalSeparator} onChange={(e) => set("decimalSeparator", e.target.value as "period" | "comma")} className={FORM_INPUT}>
                 {DECIMAL_SEPARATORS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
               </select>
             </Field>
             <Field label="Decimal Places">
-              <select aria-label="Decimal Places" value={local.decimalPlaces} onChange={(e) => set("decimalPlaces", parseInt(e.target.value))} className={`${inp} w-32`}>
+              <select aria-label="Decimal Places" value={local.decimalPlaces} onChange={(e) => set("decimalPlaces", parseInt(e.target.value))} className={`${FORM_INPUT} w-32`}>
                 {[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </Field>
@@ -347,7 +356,7 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
           {/* Financial Years */}
           <SectionCard title="Financial Years" icon={Calendar}>
             <Field label="FY Start Month" hint="Month when each financial year begins">
-              <select aria-label="FY Start Month" value={local.fyStartMonth} onChange={(e) => set("fyStartMonth", e.target.value)} className={`${inp} w-48`}>
+              <select aria-label="FY Start Month" value={local.fyStartMonth} onChange={(e) => set("fyStartMonth", e.target.value)} className={`${FORM_INPUT} w-48`}>
                 {FY_MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </Field>
@@ -415,7 +424,7 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
             <Field label="Allow Editing Posted Entries" hint="If off, posted entries are locked (recommended)">
               <Toggle ariaLabel="Allow Editing Posted Entries" checked={local.allowEditPosted} onChange={(v) => set("allowEditPosted", v)} />
               {local.allowEditPosted && (
-                <p className="text-xs text-amber-600 mt-1 font-semibold m-0" role="alert">⚠ Enabling this breaks audit integrity. Use reversals instead.</p>
+                <p className="text-xs text-warning mt-1 font-semibold m-0" role="alert">⚠ Enabling this breaks audit integrity. Use reversals instead.</p>
               )}
             </Field>
             <Field label="Auto-post Draft Entries" hint="Automatically post entries saved as draft">
@@ -426,12 +435,12 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
           {/* Account Numbering */}
           <SectionCard title="Account Numbering" icon={null}>
             <Field label="Default Code Length" hint="Number of digits for new account codes">
-              <select aria-label="Default Code Length" value={local.accountCodeLength} onChange={(e) => set("accountCodeLength", parseInt(e.target.value))} className={`${inp} w-32`}>
+              <select aria-label="Default Code Length" value={local.accountCodeLength} onChange={(e) => set("accountCodeLength", parseInt(e.target.value))} className={`${FORM_INPUT} w-32`}>
                 {[3, 4, 5, 6].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </Field>
             <Field label="Retained Earnings Account" hint="Used for closing net surplus at year-end">
-              <select aria-label="Retained Earnings Account" value={local.retainedEarningsAccount} onChange={(e) => set("retainedEarningsAccount", e.target.value)} className={inp}>
+              <select aria-label="Retained Earnings Account" value={local.retainedEarningsAccount} onChange={(e) => set("retainedEarningsAccount", e.target.value)} className={FORM_INPUT}>
                 <option value="">— None —</option>
                 {accounts
                   .filter((a) => a.type === "Equity" && a.isActive !== false)
@@ -481,13 +490,13 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
         </button>
         <button type="button" onClick={handleSave}
           className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            saved ? "bg-emerald-600 text-white" : "bg-primary text-primary-foreground hover:bg-primary/90"
+            saved ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground hover:bg-primary/90"
           }`}>
           {saved ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Saved!</> : <><Save className="w-3.5 h-3.5" aria-hidden="true" /> Save Settings</>}
         </button>
       </footer>
 
-      {fyModal && <FYModal initial={fyModal} onSave={handleSaveFY} onClose={() => setFyModal(null)} />}
+      <FYModal open={!!fyModal} initial={fyModal} onSave={handleSaveFY} onClose={() => setFyModal(null)} />
     </div>
   );
 }

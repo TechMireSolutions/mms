@@ -25,10 +25,10 @@ const TABS = [
 ];
 
 const STATUS_CONFIG: Record<string, string> = {
-  active:    "bg-emerald-50 text-emerald-700 border-emerald-100",
-  upcoming:  "bg-blue-50 text-blue-700 border-blue-100",
+  active:    "bg-success/10 text-success border-success/20",
+  upcoming:  "bg-info/10 text-info border-info/20",
   completed: "bg-muted text-muted-foreground border-border",
-  cancelled: "bg-red-50 text-red-600 border-red-100",
+  cancelled: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 const TAB_COMPONENTS: Record<string, React.ElementType> = {

@@ -4,10 +4,10 @@ import { CreditCard } from "lucide-react";
 import { Payment } from '@/lib/data/financeData';
 
 const METHOD_COLORS: Record<string, string> = {
-  "Cash":          "bg-emerald-50 text-emerald-700 border-emerald-100",
-  "Bank Transfer": "bg-blue-50 text-blue-700 border-blue-100",
-  "Online":        "bg-violet-50 text-violet-700 border-violet-100",
-  "Cheque":        "bg-amber-50 text-amber-700 border-amber-100",
+  "Cash":          "bg-success/10 text-success border-success/20",
+  "Bank Transfer": "bg-info/10 text-info border-info/20",
+  "Online":        "bg-primary/10 text-primary border-primary/20",
+  "Cheque":        "bg-warning/10 text-warning border-warning/20",
   "Other":         "bg-muted text-muted-foreground border-border",
 };
 
@@ -53,7 +53,7 @@ export default function PaymentTracker({ payments }: PaymentTrackerProps) {
             <CreditCard className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <h3 className="text-sm font-bold text-foreground m-0">Payment Log</h3>
           </div>
-          <span className="text-[11px] font-semibold text-emerald-600">{fmt(total)} total</span>
+          <span className="text-[11px] font-semibold text-success">{fmt(total)} total</span>
         </header>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -80,7 +80,7 @@ export default function PaymentTracker({ payments }: PaymentTrackerProps) {
                     <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{p.date}</td>
                     <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{p.studentName}</td>
                     <td className="px-4 py-3 text-[11px] font-mono text-muted-foreground">{p.invoiceId}</td>
-                    <td className="px-4 py-3 text-[13px] font-bold text-emerald-600 whitespace-nowrap">{fmt(p.amount)}</td>
+                    <td className="px-4 py-3 text-[13px] font-bold text-success whitespace-nowrap">{fmt(p.amount)}</td>
                     <td className="px-4 py-3">
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${METHOD_COLORS[p.method] || METHOD_COLORS.Other}`}>{p.method}</span>
                     </td>

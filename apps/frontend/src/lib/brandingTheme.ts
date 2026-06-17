@@ -1,6 +1,7 @@
 import {
   BRANDING_THEME_VARIABLES,
   applyDocumentLanguage,
+  brandingPrimaryToThemeColor,
   buildBrandingCssVariables,
   type BrandingSettings,
   type BrandingThemeMode,
@@ -30,6 +31,21 @@ function resolveThemeMode(settings: GlobalSettings): BrandingThemeMode {
   return root.classList.contains('dark') ? 'dark' : 'light';
 }
 
+function syncDocumentChrome(mode: BrandingThemeMode, primaryHex: string): void {
+  const root = document.documentElement;
+  root.style.colorScheme = mode;
+  root.dataset.theme = mode;
+
+  const themeColor = brandingPrimaryToThemeColor(primaryHex);
+  let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+  }
+  meta.content = themeColor;
+}
+
 /**
  * Applies branding colours to CSS variables.
  * Apex host: MMS platform defaults only. Tenant host: institution branding.
@@ -56,6 +72,8 @@ export function applyBrandingTheme(
     const value = variables[key];
     if (value) root.style.setProperty(key, value);
   }
+
+  syncDocumentChrome(activeMode, merged.primaryColor);
 }
 
 export type AppThemeOverrides = Partial<Pick<GlobalSettings, 'theme' | 'language'>>;

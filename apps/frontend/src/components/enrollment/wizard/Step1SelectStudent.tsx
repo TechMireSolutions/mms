@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Search, User, Calendar } from "lucide-react";
 import { calcAge, Student } from '@/lib/data/studentsData';
+import { FORM_INPUT_ICON } from "@/components/ui/formStyles";
 import { Session } from '@/lib/data/sessionsData';
 
 interface Step1SelectStudentProps {
@@ -46,7 +47,7 @@ export default function Step1SelectStudent({ value, onChange, students = [], ses
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search students by name…"
           aria-label="Search students by name"
-          className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className={FORM_INPUT_ICON + " pr-4"}
         />
       </div>
 
@@ -81,10 +82,10 @@ export default function Step1SelectStudent({ value, onChange, students = [], ses
                     </span>
                   )}
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    st.gender === "male" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700"
+                    st.gender === "male" ? "bg-info/15 text-info" : "bg-secondary/15 text-secondary"
                   }`}>{st.gender}</span>
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    st.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"
+                    st.status === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
                   }`}>{st.status}</span>
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">

@@ -184,11 +184,11 @@ export default function FinancialReports({ accounts, entries, fiscalYears, setti
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Total Revenue"  value={fmt(revenue)}   icon={TrendingUp}   color="bg-emerald-50" />
-        <StatCard label="Total Expenses" value={fmt(expenses)}  icon={TrendingDown} color="bg-red-50" />
+        <StatCard label="Total Revenue"  value={fmt(revenue)}   icon={TrendingUp}   color="bg-success/10" />
+        <StatCard label="Total Expenses" value={fmt(expenses)}  icon={TrendingDown} color="bg-destructive/10" />
         <StatCard label="Net Surplus"    value={fmt(Math.abs(netSurplus))}
-          icon={DollarSign} color={netSurplus >= 0 ? "bg-primary/5" : "bg-red-50"} />
-        <StatCard label="Total Assets"   value={fmt(assets)}    icon={Scale}        color="bg-blue-50" />
+          icon={DollarSign} color={netSurplus >= 0 ? "bg-primary/5" : "bg-destructive/10"} />
+        <StatCard label="Total Assets"   value={fmt(assets)}    icon={Scale}        color="bg-info/10" />
       </div>
 
       {/* Report tabs */}
@@ -205,9 +205,9 @@ export default function FinancialReports({ accounts, entries, fiscalYears, setti
       {/* Income Statement */}
       {view === "income" && (
         <section aria-label="Income Statement" className="space-y-4">
-          <ReportSection title="Revenue" rows={get("Revenue")} totalLabel="Total Revenue" total={revenue} debitNormal={false} color="bg-emerald-50/60" />
-          <ReportSection title="Expenses" rows={get("Expense")} totalLabel="Total Expenses" total={expenses} debitNormal={true} color="bg-red-50/60" />
-          <div className={`flex items-center justify-between px-5 py-4 rounded-xl border-2 font-bold text-lg ${netSurplus >= 0 ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-red-300 bg-red-50 text-red-800"}`}>
+          <ReportSection title="Revenue" rows={get("Revenue")} totalLabel="Total Revenue" total={revenue} debitNormal={false} color="bg-success/10/60" />
+          <ReportSection title="Expenses" rows={get("Expense")} totalLabel="Total Expenses" total={expenses} debitNormal={true} color="bg-destructive/10/60" />
+          <div className={`flex items-center justify-between px-5 py-4 rounded-xl border-2 font-bold text-lg ${netSurplus >= 0 ? "border-success/40 bg-success/10 text-success" : "border-destructive/40 bg-destructive/10 text-destructive"}`}>
             <span>{netSurplus >= 0 ? "📈 Net Surplus" : "📉 Net Deficit"}</span>
             <span className="font-mono">{fmt(Math.abs(netSurplus))}</span>
           </div>
@@ -217,21 +217,21 @@ export default function FinancialReports({ accounts, entries, fiscalYears, setti
       {/* Balance Sheet */}
       {view === "balance" && (
         <section aria-label="Balance Sheet" className="space-y-4">
-          <ReportSection title="Assets" rows={get("Asset")} totalLabel="Total Assets" total={assets} debitNormal={true} color="bg-blue-50/60" />
-          <ReportSection title="Liabilities" rows={get("Liability")} totalLabel="Total Liabilities" total={liabilities} debitNormal={false} color="bg-red-50/60" />
+          <ReportSection title="Assets" rows={get("Asset")} totalLabel="Total Assets" total={assets} debitNormal={true} color="bg-info/10/60" />
+          <ReportSection title="Liabilities" rows={get("Liability")} totalLabel="Total Liabilities" total={liabilities} debitNormal={false} color="bg-destructive/10/60" />
           <ReportSection title="Equity" rows={get("Equity")} totalLabel="Total Equity (incl. Net Surplus)"
-            total={get("Equity").reduce((s, r) => s + (r.totalCredit - r.totalDebit), 0) + netSurplus} debitNormal={false} color="bg-purple-50/60" />
+            total={get("Equity").reduce((s, r) => s + (r.totalCredit - r.totalDebit), 0) + netSurplus} debitNormal={false} color="bg-primary/10" />
           <div className="grid grid-cols-2 gap-3">
-            <article className="px-5 py-3 rounded-xl border border-border bg-blue-50 text-right">
+            <article className="px-5 py-3 rounded-xl border border-border bg-info/10 text-right">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">Total Assets</h4>
-              <p className="font-mono font-bold text-blue-700 text-lg m-0">{fmt(assets)}</p>
+              <p className="font-mono font-bold text-info text-lg m-0">{fmt(assets)}</p>
             </article>
-            <article className="px-5 py-3 rounded-xl border border-border bg-purple-50 text-right">
+            <article className="px-5 py-3 rounded-xl border border-border bg-primary/10 text-right">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">Liabilities + Equity</h4>
-              <p className="font-mono font-bold text-purple-700 text-lg m-0">{fmt(liabilities + equity)}</p>
+              <p className="font-mono font-bold text-primary text-lg m-0">{fmt(liabilities + equity)}</p>
             </article>
           </div>
-          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-semibold ${Math.abs(assets - (liabilities + equity)) < 1 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}`} role="status">
+          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-semibold ${Math.abs(assets - (liabilities + equity)) < 1 ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
             {Math.abs(assets - (liabilities + equity)) < 1
               ? "✓ Balance Sheet is balanced — Assets = Liabilities + Equity"
               : `✗ Balance Sheet difference: ${fmt(Math.abs(assets - (liabilities + equity)))}`
@@ -244,7 +244,7 @@ export default function FinancialReports({ accounts, entries, fiscalYears, setti
       {view === "cashflow" && (
         <section aria-label="Cash Flow Statement" className="space-y-4">
           <div className="rounded-xl border border-border overflow-hidden">
-            <header className="px-4 py-2.5 bg-blue-50/60 border-b border-border">
+            <header className="px-4 py-2.5 bg-info/10/60 border-b border-border">
               <h3 className="text-xs font-bold uppercase tracking-wide m-0">Operating Cash Flow (Indirect Method)</h3>
             </header>
             <table className="w-full text-sm">
@@ -278,7 +278,7 @@ export default function FinancialReports({ accounts, entries, fiscalYears, setti
                   <td className="px-4 py-2.5 font-bold text-foreground">Net Cash from Operations</td>
                   <td className="px-4 py-2.5 text-right font-mono font-bold text-foreground text-base">
                     {fmt(Math.abs(netCashFlow))}
-                    <span className={`text-xs ml-1 ${netCashFlow >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                    <span className={`text-xs ml-1 ${netCashFlow >= 0 ? "text-success" : "text-destructive"}`}>
                       {netCashFlow >= 0 ? "(Inflow)" : "(Outflow)"}
                     </span>
                   </td>
@@ -288,17 +288,17 @@ export default function FinancialReports({ accounts, entries, fiscalYears, setti
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <article className="rounded-xl border border-border px-4 py-3 bg-emerald-50/60 text-center">
+            <article className="rounded-xl border border-border px-4 py-3 bg-success/10/60 text-center">
               <h4 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Cash Inflow</h4>
-              <p className="font-mono font-bold text-emerald-700 text-lg mt-1 m-0">{fmt(cashInflow)}</p>
+              <p className="font-mono font-bold text-success text-lg mt-1 m-0">{fmt(cashInflow)}</p>
             </article>
-            <article className="rounded-xl border border-border px-4 py-3 bg-red-50/60 text-center">
+            <article className="rounded-xl border border-border px-4 py-3 bg-destructive/10/60 text-center">
               <h4 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Cash Outflow</h4>
-              <p className="font-mono font-bold text-red-700 text-lg mt-1 m-0">{fmt(cashOutflow)}</p>
+              <p className="font-mono font-bold text-destructive text-lg mt-1 m-0">{fmt(cashOutflow)}</p>
             </article>
-            <article className={`rounded-xl border border-border px-4 py-3 text-center ${netCashFlow >= 0 ? "bg-primary/5" : "bg-red-50/60"}`}>
+            <article className={`rounded-xl border border-border px-4 py-3 text-center ${netCashFlow >= 0 ? "bg-primary/5" : "bg-destructive/10/60"}`}>
               <h4 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Net Cash Flow</h4>
-              <p className={`font-mono font-bold text-lg mt-1 m-0 ${netCashFlow >= 0 ? "text-primary" : "text-red-600"}`}>{fmt(Math.abs(netCashFlow))}</p>
+              <p className={`font-mono font-bold text-lg mt-1 m-0 ${netCashFlow >= 0 ? "text-primary" : "text-destructive"}`}>{fmt(Math.abs(netCashFlow))}</p>
             </article>
           </div>
         </section>

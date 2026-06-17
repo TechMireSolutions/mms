@@ -15,8 +15,6 @@ const FIELD_TYPES = [
   { value: "boolean", label: "Yes / No" },
 ];
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1";
 
 // ── ID generation ─────────────────────────────────────────────────────────────
 /**
@@ -53,6 +51,7 @@ function optionsToString(arr: string[]): string {
 }
 
 import { FieldDefinition } from "@mms/shared";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 export type CustomFieldConfig = FieldDefinition;
 
@@ -129,27 +128,27 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {/* Row 1: Label + Type */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={LABEL} htmlFor={`label-${draft.key}`}>Field Name *</label>
+          <label className={FORM_LABEL} htmlFor={`label-${draft.key}`}>Field Name *</label>
           <input
             id={`label-${draft.key}`}
-            className={INPUT}
+            className={FORM_INPUT}
             value={draft.label}
             onChange={(e) => upd("label", e.target.value)}
             placeholder="e.g. Father's Name"
             autoFocus
           />
           {isDuplicateLabel && (
-            <p className="text-[11px] text-red-600 mt-1">A field with this name already exists.</p>
+            <p className="text-[11px] text-destructive mt-1">A field with this name already exists.</p>
           )}
           {trimmedLabel.length > 0 && trimmedLabel.length < 2 && (
-            <p className="text-[11px] text-amber-600 mt-1">Name must be at least 2 characters.</p>
+            <p className="text-[11px] text-warning mt-1">Name must be at least 2 characters.</p>
           )}
         </div>
         <div>
-          <label className={LABEL} htmlFor={`type-${draft.key}`}>Field Type</label>
+          <label className={FORM_LABEL} htmlFor={`type-${draft.key}`}>Field Type</label>
           <select
             id={`type-${draft.key}`}
-            className={INPUT}
+            className={FORM_INPUT}
             value={draft.type}
             onChange={(e) => upd("type", e.target.value as FieldDefinition["type"])}
           >
@@ -165,22 +164,22 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {/* Row 2: Description + Placeholder */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={LABEL} htmlFor={`desc-${draft.key}`}>
+          <label className={FORM_LABEL} htmlFor={`desc-${draft.key}`}>
             Description <span className="normal-case font-normal text-muted-foreground/70">(admin note)</span>
           </label>
           <input
             id={`desc-${draft.key}`}
-            className={INPUT}
+            className={FORM_INPUT}
             value={draft.description || ""}
             onChange={(e) => upd("description", e.target.value)}
             placeholder="What is this field for?"
           />
         </div>
         <div>
-          <label className={LABEL} htmlFor={`placeholder-${draft.key}`}>Placeholder</label>
+          <label className={FORM_LABEL} htmlFor={`placeholder-${draft.key}`}>Placeholder</label>
           <input
             id={`placeholder-${draft.key}`}
-            className={INPUT}
+            className={FORM_INPUT}
             value={draft.placeholder || ""}
             onChange={(e) => upd("placeholder", e.target.value)}
             placeholder="Hint shown inside the input"
@@ -191,12 +190,12 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {/* Row 3: Default Value */}
       {draft.type !== "boolean" && draft.type !== "tags" && (
         <div>
-          <label className={LABEL} htmlFor={`defVal-${draft.key}`}>
+          <label className={FORM_LABEL} htmlFor={`defVal-${draft.key}`}>
             Default Value <span className="normal-case font-normal text-muted-foreground/70">(optional, pre-filled in the form)</span>
           </label>
           <input
             id={`defVal-${draft.key}`}
-            className={INPUT}
+            className={FORM_INPUT}
             value={(draft.defaultValue as string | number | undefined) || ""}
             onChange={(e) => upd("defaultValue", e.target.value)}
             placeholder="Leave blank for no default"
@@ -207,13 +206,13 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {/* Row 4: Type-specific constraints */}
       {hasOptions && (
         <div>
-          <label className={LABEL} htmlFor={`opts-${draft.key}`}>
+          <label className={FORM_LABEL} htmlFor={`opts-${draft.key}`}>
             {draft.type === "tags" ? "Predefined Tags" : "Options"}{" "}
             <span className="normal-case font-normal text-muted-foreground/70">(comma-separated)</span>
           </label>
           <input
             id={`opts-${draft.key}`}
-            className={INPUT}
+            className={FORM_INPUT}
             value={draft._optionsString}
             onChange={(e) => upd("_optionsString", e.target.value)}
             placeholder={draft.type === "tags" ? "e.g. Student, Alumni, Donor" : "Option A, Option B, Option C"}
@@ -227,24 +226,24 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {hasTextLength && (
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={LABEL} htmlFor={`minlen-${draft.key}`}>Min Length</label>
+            <label className={FORM_LABEL} htmlFor={`minlen-${draft.key}`}>Min Length</label>
             <input
               id={`minlen-${draft.key}`}
               type="number"
               min={0}
-              className={INPUT}
+              className={FORM_INPUT}
               value={draft.minLength ?? ""}
               onChange={(e) => upd("minLength", e.target.value ? Number(e.target.value) : undefined)}
               placeholder="e.g. 2"
             />
           </div>
           <div>
-            <label className={LABEL} htmlFor={`maxlen-${draft.key}`}>Max Length</label>
+            <label className={FORM_LABEL} htmlFor={`maxlen-${draft.key}`}>Max Length</label>
             <input
               id={`maxlen-${draft.key}`}
               type="number"
               min={1}
-              className={INPUT}
+              className={FORM_INPUT}
               value={draft.maxLength ?? ""}
               onChange={(e) => upd("maxLength", e.target.value ? Number(e.target.value) : undefined)}
               placeholder="e.g. 100"
@@ -256,34 +255,34 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {hasNumRange && (
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className={LABEL} htmlFor={`min-${draft.key}`}>Min Value</label>
+            <label className={FORM_LABEL} htmlFor={`min-${draft.key}`}>Min Value</label>
             <input
               id={`min-${draft.key}`}
               type="number"
-              className={INPUT}
+              className={FORM_INPUT}
               value={draft.min ?? ""}
               onChange={(e) => upd("min", e.target.value ? Number(e.target.value) : undefined)}
               placeholder="e.g. 0"
             />
           </div>
           <div>
-            <label className={LABEL} htmlFor={`max-${draft.key}`}>Max Value</label>
+            <label className={FORM_LABEL} htmlFor={`max-${draft.key}`}>Max Value</label>
             <input
               id={`max-${draft.key}`}
               type="number"
-              className={INPUT}
+              className={FORM_INPUT}
               value={draft.max ?? ""}
               onChange={(e) => upd("max", e.target.value ? Number(e.target.value) : undefined)}
               placeholder="e.g. 999"
             />
           </div>
           <div>
-            <label className={LABEL} htmlFor={`mask-${draft.key}`}>
+            <label className={FORM_LABEL} htmlFor={`mask-${draft.key}`}>
               Input Mask <span className="normal-case font-normal text-muted-foreground/70">(optional)</span>
             </label>
             <input
               id={`mask-${draft.key}`}
-              className={INPUT}
+              className={FORM_INPUT}
               value={draft.mask || ""}
               onChange={(e) => upd("mask", e.target.value)}
               placeholder="e.g. 99999-9999999-9"
@@ -367,9 +366,9 @@ function FieldRow({
 
   if (confirming) {
     return (
-      <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/50">
+      <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-destructive/30 bg-destructive/10 dark:bg-destructive/20 dark:border-destructive/30">
         <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
-        <p className="flex-1 text-xs text-red-700 dark:text-red-400 font-medium">
+        <p className="flex-1 text-xs text-destructive dark:text-destructive font-medium">
           Delete <strong>{field.label}</strong>? This cannot be undone.
         </p>
         <button
@@ -385,7 +384,7 @@ function FieldRow({
             setConfirming(false);
             onDelete();
           }}
-          className="px-2.5 py-1 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition-colors"
+          className="px-2.5 py-1 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors"
         >
           Delete
         </button>
@@ -413,12 +412,12 @@ function FieldRow({
           <span className="text-sm font-semibold text-foreground">{field.label}</span>
           <span className="text-[11px] text-muted-foreground">{typeLabel}</span>
           {field.required && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/30 dark:bg-destructive/20 dark:text-destructive dark:border-destructive/30">
               Required
             </span>
           )}
           {field.unique && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30 dark:bg-warning/20 dark:text-warning dark:border-warning/30">
               Unique
             </span>
           )}
@@ -446,7 +445,7 @@ function FieldRow({
       <button
         type="button"
         onClick={() => setConfirming(true)}
-        className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-red-600 transition-colors"
+        className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
         aria-label={`Delete ${field.label}`}
       >
         <Trash2 className="w-3.5 h-3.5" />

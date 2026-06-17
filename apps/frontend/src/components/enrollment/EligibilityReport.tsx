@@ -4,9 +4,9 @@ import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { runEligibilityChecks, Student, StudentSession, EligibilityResult } from '@/lib/data/studentsData';
 
 const STATUS_CONFIG = {
-  pass: { Icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-100", bar: "bg-emerald-500", label: "Pass" },
-  fail: { Icon: XCircle,      color: "text-red-600",     bg: "bg-red-50 border-red-100",         bar: "bg-red-500",     label: "Fail" },
-  warn: { Icon: AlertTriangle,color: "text-amber-600",   bg: "bg-amber-50 border-amber-100",     bar: "bg-amber-500",   label: "Warning" },
+  pass: { Icon: CheckCircle2, color: "text-success", bg: "bg-success/10 border-success/20", bar: "bg-success", label: "Pass" },
+  fail: { Icon: XCircle,      color: "text-destructive",     bg: "bg-destructive/10 border-destructive/20",         bar: "bg-destructive",     label: "Fail" },
+  warn: { Icon: AlertTriangle,color: "text-warning",   bg: "bg-warning/10 border-warning/20",     bar: "bg-warning",   label: "Warning" },
 };
 
 interface CheckRowProps {
@@ -68,32 +68,32 @@ function OverallBadge({ checks }: OverallBadgeProps): React.ReactElement {
 
   if (fails > 0) {
     return (
-      <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 border border-red-200" role="alert">
-        <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" aria-hidden="true" />
+      <div className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/30" role="alert">
+        <XCircle className="w-6 h-6 text-destructive flex-shrink-0" aria-hidden="true" />
         <div>
-          <p className="text-sm font-bold text-red-800">Not Eligible</p>
-          <p className="text-xs text-red-700">{fails} check{fails > 1 ? "s" : ""} failed. Enrollment cannot proceed.</p>
+          <p className="text-sm font-bold text-destructive">Not Eligible</p>
+          <p className="text-xs text-destructive">{fails} check{fails > 1 ? "s" : ""} failed. Enrollment cannot proceed.</p>
         </div>
       </div>
     );
   }
   if (warns > 0) {
     return (
-      <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200" role="alert">
-        <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0" aria-hidden="true" />
+      <div className="flex items-center gap-3 p-4 rounded-xl bg-warning/10 border border-warning/30" role="alert">
+        <AlertTriangle className="w-6 h-6 text-warning flex-shrink-0" aria-hidden="true" />
         <div>
-          <p className="text-sm font-bold text-amber-800">Eligible with Warnings</p>
-          <p className="text-xs text-amber-700">{warns} warning{warns > 1 ? "s" : ""} noted. Review before confirming.</p>
+          <p className="text-sm font-bold text-warning">Eligible with Warnings</p>
+          <p className="text-xs text-warning">{warns} warning{warns > 1 ? "s" : ""} noted. Review before confirming.</p>
         </div>
       </div>
     );
   }
   return (
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200" role="status">
-      <CheckCircle2 className="w-6 h-6 text-emerald-600 flex-shrink-0" aria-hidden="true" />
+    <div className="flex items-center gap-3 p-4 rounded-xl bg-success/10 border border-success/30" role="status">
+      <CheckCircle2 className="w-6 h-6 text-success flex-shrink-0" aria-hidden="true" />
       <div>
-        <p className="text-sm font-bold text-emerald-800">Fully Eligible</p>
-        <p className="text-xs text-emerald-700">All {passes} checks passed. Ready to enroll.</p>
+        <p className="text-sm font-bold text-success">Fully Eligible</p>
+        <p className="text-xs text-success">All {passes} checks passed. Ready to enroll.</p>
       </div>
     </div>
   );

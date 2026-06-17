@@ -3,23 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, UserCheck, DollarSign, TrendingUp, Star, 
   AlertCircle, GraduationCap, BarChart2, LucideIcon, 
-  Target, Zap, Activity, SlidersHorizontal, Info, RefreshCw,
+  Target, Zap, Activity, SlidersHorizontal, RefreshCw,
   Plus, Trash2, ShieldCheck, Receipt, CalendarCheck
 } from "lucide-react";
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useStudentsCollection } from "../../hooks/useStudents";
-import { CONTACTS } from '@/lib/data/contactsData';
 import { type Contact } from "../../lib/contactFields";
-import { ATTENDANCE_RECORDS, type AttendanceRecord } from '@/lib/data/attendanceData';
-import { INVOICES, type Invoice } from '@/lib/data/financeData';
-import { STUDENTS, type Student } from '@/lib/data/studentsData';
-import { EXAMS, EXAM_RESULTS } from '@/lib/data/examinationData';
-import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
-import { DISTRIBUTIONS, type Distribution } from '@/lib/data/hasanatData';
-import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
+import { type AttendanceRecord } from '@/lib/data/attendanceData';
+import { type Invoice } from '@/lib/data/financeData';
+import { type Student } from '@/lib/data/studentsData';
+import { type Session } from '@/lib/data/sessionsData';
+import { type Distribution } from '@/lib/data/hasanatData';
 import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from "@mms/shared";
-import { METADATA_FIELDS, computeCustomCard as computeCustomCardShared, CustomCard, COLLECTION_OPTIONS } from "./reportMetadata";
+import { computeCustomCard as computeCustomCardShared, CustomCard } from "./reportMetadata";
 import DynamicCardBuilder from "./DynamicCardBuilder";
 import usePermissions from "@/hooks/usePermissions";
 
@@ -41,12 +37,12 @@ interface ColorScheme {
 
 const COLOR: Record<string, ColorScheme> = {
   primary: { bg: "bg-primary/10",   text: "text-primary"     },
-  green:   { bg: "bg-emerald-50",   text: "text-emerald-600" },
-  emerald: { bg: "bg-emerald-50",   text: "text-emerald-600" },
-  blue:    { bg: "bg-blue-50",      text: "text-blue-600"    },
-  red:     { bg: "bg-red-50",       text: "text-destructive"     },
-  amber:   { bg: "bg-amber-50",     text: "text-amber-600"   },
-  violet:  { bg: "bg-violet-50",    text: "text-violet-600"  },
+  green:   { bg: "bg-success/10",   text: "text-success" },
+  emerald: { bg: "bg-success/10",   text: "text-success" },
+  blue:    { bg: "bg-info/10",      text: "text-info"    },
+  red:     { bg: "bg-destructive/10",       text: "text-destructive"     },
+  amber:   { bg: "bg-warning/10",     text: "text-warning"   },
+  violet:  { bg: "bg-primary/10",    text: "text-primary"  },
 };
 
 interface TrendScheme {
@@ -55,7 +51,7 @@ interface TrendScheme {
 }
 
 const TREND: Record<string, TrendScheme> = {
-  up:   { cls: "text-emerald-500", arrow: "↑" },
+  up:   { cls: "text-success", arrow: "↑" },
   down: { cls: "text-destructive",     arrow: "↓" },
   flat: { cls: "text-muted-foreground", arrow: "→" },
 };
@@ -854,7 +850,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-bold border border-emerald-500/20 flex items-center gap-1">
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-success/10 text-success font-bold border border-success/20 flex items-center gap-1">
                   Selected: {selectedLabels.length} Cards
                 </span>
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold border border-primary/20">
@@ -924,7 +920,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                                 {isCustom ? (
                                   <span className="text-primary">Custom Card</span>
                                 ) : (
-                                  <span className="text-emerald-500">● Active Data</span>
+                                  <span className="text-success">● Active Data</span>
                                 )}
                               </p>
                             </div>

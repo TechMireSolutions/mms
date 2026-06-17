@@ -25,10 +25,10 @@ export default function HasanatDashboard() {
 
   const stats = [
     { label: "Total Stock", value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10" },
-    { label: "Available", value: totalRemaining, icon: Package, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
-    { label: "Distributed", value: totalDistributed, icon: Star, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
-    { label: "Redeemed", value: totalRedeemed, icon: Gift, color: "text-violet-600", bg: "bg-violet-50", border: "border-violet-100" },
-    { label: "Active (In-Hand)", value: totalActive, icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
+    { label: "Available", value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20" },
+    { label: "Distributed", value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
+    { label: "Redeemed", value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20" },
+    { label: "Active (In-Hand)", value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20" },
     { label: "Returned", value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
   ];
 
@@ -140,7 +140,7 @@ export default function HasanatDashboard() {
             initial={{ width: 0 }}
             animate={{ width: `${usedPct}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-400"
+            className="h-full rounded-full bg-gradient-to-r from-primary to-success"
           />
         </div>
         <div className="flex justify-between mt-1.5">

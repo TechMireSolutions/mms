@@ -64,7 +64,7 @@ export default function Step5FeeCalculation({ student, session, feeResult, onFee
                 <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary" aria-label={`Discount percentage: ${displayFee.pct} percent`}>–{displayFee.pct}%</span>
               )}
             </div>
-            <span className={`text-sm font-semibold ${displayFee.discountAmt > 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
+            <span className={`text-sm font-semibold ${displayFee.discountAmt > 0 ? "text-success" : "text-muted-foreground"}`}>
               {displayFee.discountAmt > 0 ? `– PKR ${displayFee.discountAmt.toLocaleString()}` : "PKR 0"}
             </span>
           </div>
@@ -77,11 +77,11 @@ export default function Step5FeeCalculation({ student, session, feeResult, onFee
 
       {/* Discount reason */}
       {displayFee.pct > 0 && (
-        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200" role="status">
-          <Info className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-success/10 border border-success/30" role="status">
+          <Info className="w-4 h-4 text-success flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <p className="text-xs font-bold text-emerald-700">Discount Applied: {displayFee.label} ({displayFee.pct}%)</p>
-            {displayFee.reason && <p className="text-xs text-emerald-600 mt-0.5">{displayFee.reason}</p>}
+            <p className="text-xs font-bold text-success">Discount Applied: {displayFee.label} ({displayFee.pct}%)</p>
+            {displayFee.reason && <p className="text-xs text-success mt-0.5">{displayFee.reason}</p>}
           </div>
         </div>
       )}

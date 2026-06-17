@@ -6,15 +6,8 @@ import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { applyTitleCaseToContact } from "@mms/shared";
 import {
   Contact,
-  PhoneNumber as ContactPhone,
-  EmailAddress as ContactEmail,
-  Address as ContactAddress,
-  SocialLink as ContactSocial,
-  EmergencyContact,
   COLOR_PALETTES,
   ContactPreferences,
-  normalizeEmail,
-  normalizePhoneForComparison,
   getPhoneNumbers,
   getEmails,
   cleanName,

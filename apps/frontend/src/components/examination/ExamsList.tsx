@@ -1,13 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Plus, Edit2, BookOpen, Calendar, Clock, Users, CheckCircle, AlertCircle, Circle } from "lucide-react";
+import { Edit2, BookOpen, Calendar, Clock, Users, CheckCircle, AlertCircle, Circle } from "lucide-react";
 import { CLASSES, Exam } from '@/lib/data/examinationData';
 import { formatDate } from "../../lib/db";
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string; icon: React.ComponentType<{ className?: string }> }> = {
-  upcoming:  { label: "Upcoming",  cls: "bg-blue-50 text-blue-700 border-blue-100",    icon: Circle },
-  ongoing:   { label: "Ongoing",   cls: "bg-amber-50 text-amber-700 border-amber-100", icon: AlertCircle },
-  completed: { label: "Completed", cls: "bg-emerald-50 text-emerald-700 border-emerald-100", icon: CheckCircle },
+  upcoming:  { label: "Upcoming",  cls: "bg-info/10 text-info border-info/20",    icon: Circle },
+  ongoing:   { label: "Ongoing",   cls: "bg-warning/10 text-warning border-warning/20", icon: AlertCircle },
+  completed: { label: "Completed", cls: "bg-success/10 text-success border-success/20", icon: CheckCircle },
 };
 
 interface ExamsListProps {

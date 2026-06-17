@@ -15,6 +15,8 @@ export interface ModalProps {
   /** Applied to the dialog panel (e.g. fixed height for tabbed forms). */
   panelClassName?: string;
   footer?: React.ReactNode;
+  /** Raise above other modals (nested dialogs). */
+  priority?: boolean;
   children: React.ReactNode;
 }
 
@@ -41,13 +43,14 @@ export default function Modal({
   headerExtra,
   panelClassName,
   footer,
+  priority = false,
   children,
 }: ModalProps): React.ReactElement {
   useBodyScrollLock(open);
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className={`fixed inset-0 flex items-center justify-center p-4 ${priority ? "z-[60]" : "z-50"}`}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

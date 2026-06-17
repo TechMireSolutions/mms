@@ -3,7 +3,7 @@ import useConfigSubTabs from "@/hooks/useConfigSubTabs";
 import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
-import { ClipboardList, Plus, UserCheck, BarChart2, Settings, LayoutDashboard } from "lucide-react";
+import { ClipboardList, Plus, UserCheck } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
 import SubTabBar from "@/components/ui/SubTabBar";
@@ -16,8 +16,8 @@ import EnrollmentReports from "../components/enrollment/EnrollmentReports";
 import EnrollmentsSettings from "../components/enrollment/EnrollmentsSettings";
 import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
-import { SAMPLE_ENROLLMENTS, Enrollment } from '@/lib/data/enrollmentData';
-import { STUDENTS } from '@/lib/data/studentsData';
+import Modal from "../components/ui/Modal";
+import { Enrollment } from '@/lib/data/enrollmentData';
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 import { useStudentsCollection } from "../hooks/useStudents";
@@ -35,7 +35,6 @@ export default function Enrollments() {
   const SUB_TABS = useMemo(
     () => [
       { id: "list", label: t("enrollments.list"), icon: ClipboardList },
-      { id: "new", label: t("enrollments.new"), icon: Plus },
       { id: "eligibility", label: t("enrollments.eligibility"), icon: UserCheck },
     ],
     [t]
@@ -50,6 +49,7 @@ export default function Enrollments() {
   const students = useStudentsCollection();
   const [viewing, setViewing]         = useState<Enrollment | null>(null);
   const [subTab, setSubTab]           = useState("fields");
+  const [showWizard, setShowWizard]   = useState(false);
 
   const saveEnrollments = useCallback((updater: Enrollment[] | ((prev: Enrollment[]) => Enrollment[])) => {
     const next = typeof updater === "function" ? updater(enrollments) : updater;
@@ -58,7 +58,7 @@ export default function Enrollments() {
 
   // Reset activeSubTab to list if role changes to accountant (since new and eligibility are restricted)
   useEffect(() => {
-    if (!canWriteEnrollments && (activeSubTab === "new" || activeSubTab === "eligibility")) {
+    if (!canWriteEnrollments && activeSubTab === "eligibility") {
       setActiveSubTab("list");
     }
   }, [canWriteEnrollments, activeSubTab]);
@@ -78,6 +78,7 @@ export default function Enrollments() {
     });
     saveCollection("students", updatedStudents);
 
+    setShowWizard(false);
     setActiveSubTab("list");
   };
 
@@ -115,7 +116,7 @@ export default function Enrollments() {
         actions={
           <div className="flex items-center gap-2">
             {canWriteEnrollments && (
-              <button onClick={() => { setTab("operations"); setActiveSubTab("new"); }}
+              <button onClick={() => { setTab("operations"); setShowWizard(true); }}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
                 <Plus className="w-3.5 h-3.5" /> {t("enrollments.new")}
               </button>
@@ -134,7 +135,7 @@ export default function Enrollments() {
       {tab === "operations" && (
         <SubTabBar
           tabs={SUB_TABS
-            .filter((item) => canWriteEnrollments || (item.id !== "new" && item.id !== "eligibility"))
+            .filter((item) => canWriteEnrollments || item.id !== "eligibility")
             .map((item) => ({ key: item.id, label: item.label }))}
           value={activeSubTab}
           onChange={setActiveSubTab}
@@ -156,17 +157,6 @@ export default function Enrollments() {
               </div>
             </ErrorBoundary>
           )}
-          {tab === "operations" && activeSubTab === "new" && (
-            <div className="max-w-2xl">
-              <ErrorBoundary>
-                <EnrollmentWizard
-                  onComplete={handleComplete}
-                  onCancel={() => setActiveSubTab("list")}
-                />
-              </ErrorBoundary>
-            </div>
-          )}
-
           {tab === "operations" && activeSubTab === "list" && (
             <ErrorBoundary>
               <EnrollmentList
@@ -213,6 +203,21 @@ export default function Enrollments() {
           </ErrorBoundary>
         )}
       </AnimatePresence>
+
+      <Modal
+        open={showWizard}
+        onClose={() => setShowWizard(false)}
+        title={t("enrollments.new")}
+        size="xl"
+        panelClassName="h-[88vh] max-h-[700px]"
+      >
+        <ErrorBoundary>
+          <EnrollmentWizard
+            onComplete={handleComplete}
+            onCancel={() => setShowWizard(false)}
+          />
+        </ErrorBoundary>
+      </Modal>
     </div>
   );
 }

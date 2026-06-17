@@ -6,7 +6,7 @@ import {
   Star, Send, LucideIcon,
   LayoutDashboard, History, Users as UsersIcon, FileText, BrainCircuit, ShieldCheck, Search, Zap
 } from "lucide-react";
-import { Contact, ContactActivity, ContactAttachment } from "@mms/shared";
+import { Contact, ContactActivity } from "@mms/shared";
 import { useContactConfig, calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, calcAge } from "@mms/shared";
 import { formatDate } from "@mms/shared";

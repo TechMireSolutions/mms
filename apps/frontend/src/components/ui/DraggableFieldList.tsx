@@ -85,7 +85,7 @@ const FieldItem = memo(
               className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border transition-all disabled:opacity-75 disabled:cursor-not-allowed
               ${
                 isRequired
-                  ? "bg-red-50 border-red-200 text-red-600 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400"
+                  ? "bg-destructive/10 border-destructive/30 text-destructive dark:bg-destructive/20 dark:border-destructive/30 dark:text-destructive"
                   : "bg-muted border-border text-muted-foreground hover:text-foreground"
               }`}
           >

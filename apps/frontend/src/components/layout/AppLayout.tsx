@@ -37,7 +37,7 @@ export default function AppLayout(): React.JSX.Element {
       </div>
 
       {/* Mobile Top Bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex h-14 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl sm:px-4">
+      <div className="lg:hidden surface-glass fixed top-0 left-0 right-0 z-40 flex h-14 items-center gap-2 px-3 sm:px-4">
         <button
           type="button"
           aria-label="Open navigation menu"

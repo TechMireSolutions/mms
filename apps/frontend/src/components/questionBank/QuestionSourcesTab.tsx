@@ -18,11 +18,9 @@ import {
   persistQuestionSourceBook,
   removeQuestionSourceBook,
 } from '@/lib/data/questionBankSourceBooks';
+import FormModal from '@/components/ui/FormModal';
+import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 
-const INPUT =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20';
-const LABEL =
-  'mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground';
 
 type TranslateFn = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 
@@ -49,10 +47,10 @@ function renderSourceInput(
   if (field.type === 'textarea') {
     return (
       <div key={field.id} className="sm:col-span-2">
-        <label htmlFor={inputId} className={LABEL}>{label}{requiredMark}</label>
+        <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
         <textarea
           id={inputId}
-          className={`${INPUT} resize-none`}
+          className={`${FORM_INPUT} resize-none`}
           rows={2}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -62,11 +60,11 @@ function renderSourceInput(
   }
   return (
     <div key={field.id}>
-      <label htmlFor={inputId} className={LABEL}>{label}{requiredMark}</label>
+      <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
       <input
         id={inputId}
         type={field.type === 'date' ? 'date' : 'text'}
-        className={INPUT}
+        className={FORM_INPUT}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
@@ -237,74 +235,64 @@ export default function QuestionSourcesTab({
         )}
 
         {showBookForm && draftBook && (
-          <div className="space-y-4 rounded-xl border border-dashed border-primary/30 bg-card p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-foreground">
-              {editingBookId ? t('questionBank.editSourceBook') : t('questionBank.addSourceBook')}
-            </p>
+          <FormModal
+            open
+            onClose={() => {
+              setShowBookForm(false);
+              setDraftBook(null);
+              setEditingBookId(null);
+            }}
+            title={editingBookId ? t('questionBank.editSourceBook') : t('questionBank.addSourceBook')}
+            icon={BookOpen}
+            size="lg"
+            cancelLabel={t('questionBank.cancel')}
+            saveLabel={t('questionBank.saveSourceBook')}
+            onSave={saveBook}
+            saveDisabled={!draftBook.metadata.bookName?.trim() && !draftBook.name.trim()}
+          >
+            <div className="space-y-4">
+              <div>
+                <span className={FORM_LABEL}>{t('questionBank.selectBookFields')}</span>
+                <div className="flex flex-wrap gap-2">
+                  {availableFieldIds.map((fieldId) => {
+                    const selected = draftBook.fieldIds.includes(fieldId);
+                    return (
+                      <button
+                        key={fieldId}
+                        type="button"
+                        onClick={() => fieldId !== 'sourceBookName' && toggleBookField(fieldId)}
+                        disabled={fieldId === 'sourceBookName'}
+                        className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                          selected
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border text-muted-foreground hover:bg-muted'
+                        }`}
+                      >
+                        {fieldLabel(fieldId)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-            <div>
-              <span className={LABEL}>{t('questionBank.selectBookFields')}</span>
-              <div className="flex flex-wrap gap-2">
-                {availableFieldIds.map((fieldId) => {
-                  const selected = draftBook.fieldIds.includes(fieldId);
-                  return (
-                    <button
-                      key={fieldId}
-                      type="button"
-                      onClick={() => fieldId !== 'sourceBookName' && toggleBookField(fieldId)}
-                      disabled={fieldId === 'sourceBookName'}
-                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
-                        selected
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border text-muted-foreground hover:bg-muted'
-                      }`}
-                    >
-                      {fieldLabel(fieldId)}
-                    </button>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {getBookDefinitionFieldIds(draftBook).map((fieldId) => {
+                  const field = fieldById.get(fieldId);
+                  if (!field) return null;
+                  const key = QUESTION_SOURCE_FIELD_TO_KEY[fieldId];
+                  const value = String(draftBook.metadata[key] ?? '');
+                  return renderSourceInput(
+                    field,
+                    value,
+                    (next) => updBookMeta(fieldId, next),
+                    fieldLabel(fieldId, field.label),
+                    `qb-book-${fieldId}`,
+                    fieldId === 'sourceBookName',
                   );
                 })}
               </div>
             </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {getBookDefinitionFieldIds(draftBook).map((fieldId) => {
-                const field = fieldById.get(fieldId);
-                if (!field) return null;
-                const key = QUESTION_SOURCE_FIELD_TO_KEY[fieldId];
-                const value = String(draftBook.metadata[key] ?? '');
-                return renderSourceInput(
-                  field,
-                  value,
-                  (next) => updBookMeta(fieldId, next),
-                  fieldLabel(fieldId, field.label),
-                  `qb-book-${fieldId}`,
-                  fieldId === 'sourceBookName',
-                );
-              })}
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={saveBook}
-                disabled={!draftBook.metadata.bookName?.trim() && !draftBook.name.trim()}
-                className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-              >
-                {t('questionBank.saveSourceBook')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowBookForm(false);
-                  setDraftBook(null);
-                  setEditingBookId(null);
-                }}
-                className="rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
-              >
-                {t('questionBank.cancel')}
-              </button>
-            </div>
-          </div>
+          </FormModal>
         )}
       </section>
 
@@ -339,12 +327,12 @@ export default function QuestionSourcesTab({
                 </div>
 
                 <div>
-                  <label htmlFor={`qb-citation-book-${index}`} className={LABEL}>
+                  <label htmlFor={`qb-citation-book-${index}`} className={FORM_LABEL}>
                     {t('questionBank.selectSourceBook')}
                   </label>
                   <select
                     id={`qb-citation-book-${index}`}
-                    className={`${INPUT} cursor-pointer`}
+                    className={`${FORM_INPUT} cursor-pointer`}
                     value={entry.bookId}
                     onChange={(e) => updCitation(index, { bookId: e.target.value, citation: {} })}
                   >

@@ -6,7 +6,6 @@ import {
 } from "recharts";
 import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
 import { STUDENTS, Student } from '@/lib/data/studentsData';
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
@@ -56,9 +55,9 @@ interface CapacityBarDatum {
  * @returns A Tailwind background colour class.
  */
 function utilisationColour(rate: number): string {
-  if (rate >= 80) return "bg-emerald-500";
-  if (rate >= 50) return "bg-amber-500";
-  return "bg-red-500";
+  if (rate >= 80) return "bg-success";
+  if (rate >= 50) return "bg-warning";
+  return "bg-destructive";
 }
 
 /**
@@ -220,7 +219,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
                     </div>
                   </td>
                   <td className="px-3 py-2.5">
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold capitalize">
+                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[11px] font-semibold capitalize">
                       {s.status}
                     </span>
                   </td>

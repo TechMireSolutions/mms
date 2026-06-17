@@ -4,7 +4,6 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { EXAM_RESULTS, EXAMS, STUDENTS, ExamResult, Exam, ExamStudent } from '@/lib/data/examinationData';
-import { getCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { getGrade } from "../examination/gradeUtils";
 import ReportSummaryCard from "./ReportSummaryCard";
@@ -13,12 +12,12 @@ import EmptyState from "../ui/EmptyState";
 
 /** Grade badge colour mapping. */
 const GRADE_COLOR: Record<string, string> = {
-  "A+": "bg-emerald-100 text-emerald-700",
-  "A":  "bg-green-50 text-green-700",
-  "B+": "bg-blue-50 text-blue-700",
-  "B":  "bg-sky-50 text-sky-700",
-  "C":  "bg-amber-50 text-amber-700",
-  "F":  "bg-red-50 text-red-600",
+  "A+": "bg-success/15 text-success",
+  "A":  "bg-success/10 text-success",
+  "B+": "bg-info/10 text-info",
+  "B":  "bg-info/10 text-info",
+  "C":  "bg-warning/10 text-warning",
+  "F":  "bg-destructive/10 text-destructive",
 };
 
 /** Active filter state passed down from the parent report view. */
@@ -215,7 +214,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                 Class Avg: <span className="font-semibold">{c.avgMarks}%</span>
               </p>
               <p className="text-xs text-muted-foreground">
-                Pass Rate: <span className="font-semibold text-emerald-600">{c.passRate}%</span>
+                Pass Rate: <span className="font-semibold text-success">{c.passRate}%</span>
               </p>
             </div>
           ))}
@@ -245,7 +244,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                 <tr key={`${r.studentName}-${r.class}`} className="hover:bg-muted/30">
                   <td className="px-3 py-2.5">
                     {r.rank === 1
-                      ? <Trophy className="w-4 h-4 text-amber-500" />
+                      ? <Trophy className="w-4 h-4 text-warning" />
                       : <span className="text-muted-foreground">{r.rank}</span>
                     }
                   </td>

@@ -7,11 +7,7 @@ import {
   type AppTranslationKey,
   type QuestionBankQuestion as Question,
 } from '@mms/shared';
-
-const INPUT =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all';
-const LABEL =
-  'mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground';
+import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 
 type TranslateFn = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 
@@ -47,7 +43,7 @@ export default function QuestionTypeAnswerFields({
     return (
       <div className="space-y-3 sm:col-span-2">
         <p className="text-[11px] text-muted-foreground">{t('questionBank.fillBlankHint')}</p>
-        <span className={LABEL}>{t('questionBank.blankAnswers')}</span>
+        <span className={FORM_LABEL}>{t('questionBank.blankAnswers')}</span>
         <div className="space-y-2">
           {blanks.map((blank, index) => (
             <div key={index}>
@@ -56,7 +52,7 @@ export default function QuestionTypeAnswerFields({
               </label>
               <input
                 id={`qb-blank-${index}`}
-                className={INPUT}
+                className={FORM_INPUT}
                 value={blank}
                 onChange={(e) => {
                   const next = [...blanks];
@@ -83,13 +79,13 @@ export default function QuestionTypeAnswerFields({
 
     return (
       <div className="space-y-3 sm:col-span-2">
-        <span className={LABEL}>{t('questionBank.matchingPairs')}</span>
+        <span className={FORM_LABEL}>{t('questionBank.matchingPairs')}</span>
         {pairs.map((pair, index) => (
           <div key={index} className="grid grid-cols-1 gap-2 rounded-lg border border-border/70 bg-muted/10 p-3 sm:grid-cols-[1fr_1fr_auto]">
             <div>
               <label className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingLeft')}</label>
               <input
-                className={INPUT}
+                className={FORM_INPUT}
                 value={pair.left}
                 onChange={(e) => {
                   const next = pairs.map((p, i) => (i === index ? { ...p, left: e.target.value } : p));
@@ -100,7 +96,7 @@ export default function QuestionTypeAnswerFields({
             <div>
               <label className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingRight')}</label>
               <input
-                className={INPUT}
+                className={FORM_INPUT}
                 value={pair.right}
                 onChange={(e) => {
                   const next = pairs.map((p, i) => (i === index ? { ...p, right: e.target.value } : p));
@@ -150,12 +146,12 @@ export default function QuestionTypeAnswerFields({
 
     return (
       <div className="space-y-3 sm:col-span-2">
-        <span className={LABEL}>{t('questionBank.orderingItems')}</span>
+        <span className={FORM_LABEL}>{t('questionBank.orderingItems')}</span>
         {items.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
             <span className="w-6 flex-shrink-0 text-center text-[11px] font-bold text-muted-foreground">{index + 1}</span>
             <input
-              className={INPUT}
+              className={FORM_INPUT}
               value={item}
               placeholder={t('questionBank.orderingItemN', { n: index + 1 })}
               onChange={(e) => {
@@ -214,23 +210,23 @@ export default function QuestionTypeAnswerFields({
     return (
       <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-2">
         <div>
-          <label htmlFor="qb-numeric-answer" className={LABEL}>{t('questionBank.numericAnswer')} *</label>
+          <label htmlFor="qb-numeric-answer" className={FORM_LABEL}>{t('questionBank.numericAnswer')} *</label>
           <input
             id="qb-numeric-answer"
             type="number"
-            className={INPUT}
+            className={FORM_INPUT}
             value={answer}
             onChange={(e) => onAnswerChange(e.target.value)}
           />
         </div>
         <div>
-          <label htmlFor="qb-numeric-tolerance" className={LABEL}>{t('questionBank.numericTolerance')}</label>
+          <label htmlFor="qb-numeric-tolerance" className={FORM_LABEL}>{t('questionBank.numericTolerance')}</label>
           <input
             id="qb-numeric-tolerance"
             type="number"
             min={0}
             step="any"
-            className={INPUT}
+            className={FORM_INPUT}
             value={tolerance}
             onChange={(e) => onOptionsChange(e.target.value ? [e.target.value] : [])}
           />

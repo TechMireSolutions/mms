@@ -63,8 +63,8 @@ function ContactCard({ contact, onEdit, onDelete, onWhatsApp, onSms, onStageChan
               </span>
               {rating > 0 && (
                 <div className="flex items-center gap-0.5">
-                  <Star className={`w-2.5 h-2.5 ${uiStrings?.starActiveClass?.replace(/[wh]-\d+(\.\d+)?/g, "") || "text-amber-500 fill-amber-500"}`} />
-                  <span className={`text-[9px] font-bold ${uiStrings?.starActiveClass?.includes("text-") ? uiStrings.starActiveClass.match(/text-[a-z0-9-]+/)?.[0] : "text-amber-600"}`}>{rating}</span>
+                  <Star className={`w-2.5 h-2.5 ${uiStrings?.starActiveClass?.replace(/[wh]-\d+(\.\d+)?/g, "") || "text-warning fill-warning"}`} />
+                  <span className={`text-[9px] font-bold ${uiStrings?.starActiveClass?.includes("text-") ? uiStrings.starActiveClass.match(/text-[a-z0-9-]+/)?.[0] : "text-warning"}`}>{rating}</span>
                 </div>
               )}
             </div>
@@ -135,7 +135,7 @@ function ContactCard({ contact, onEdit, onDelete, onWhatsApp, onSms, onStageChan
           </button>
           <button
             onClick={() => onSms([contact])}
-            className="flex min-h-[44px] items-center justify-center gap-1 rounded-lg border border-violet-200 bg-violet-50 text-[11px] font-semibold text-violet-700 transition-all hover:bg-violet-100 dark:border-violet-900/50 dark:bg-violet-950/20 dark:text-violet-400"
+            className="flex min-h-[44px] items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/10 text-[11px] font-semibold text-primary transition-all hover:bg-primary/15 dark:border-primary/30 dark:bg-primary/20 dark:text-primary"
             type="button"
           >
             <MessageSquare className="w-3 h-3" /> {uiStrings.sms}

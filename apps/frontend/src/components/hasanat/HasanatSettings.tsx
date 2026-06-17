@@ -10,9 +10,8 @@ import {
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-const INPUT = "w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
-const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
 
 interface ToggleProps {
   label: string;
@@ -124,11 +123,11 @@ export default function HasanatSettings({ mode }: HasanatSettingsProps): React.R
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="points-per-unit" className={LABEL}>Points Per Card/Unit</label>
+              <label htmlFor="points-per-unit" className={FORM_LABEL}>Points Per Card/Unit</label>
               <input
                 id="points-per-unit"
                 type="number"
-                className={INPUT}
+                className={FORM_INPUT}
                 value={data.pointsPerUnit || 10}
                 onChange={(e) => upd("pointsPerUnit", Number(e.target.value))}
               />

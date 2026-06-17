@@ -24,11 +24,11 @@ export default function ReportSummaryCard({
 }: ReportSummaryCardProps): React.JSX.Element {
   const colors: Record<string, string> = {
     primary: "bg-primary/10 text-primary shadow-sm shadow-primary/5",
-    green:   "bg-emerald-500/10 text-emerald-600 shadow-sm shadow-emerald-500/5",
-    amber:   "bg-amber-500/10 text-amber-600 shadow-sm shadow-amber-500/5",
-    red:     "bg-rose-500/10 text-rose-600 shadow-sm shadow-rose-500/5",
-    blue:    "bg-sky-500/10 text-sky-600 shadow-sm shadow-sky-500/5",
-    violet:  "bg-indigo-500/10 text-indigo-600 shadow-sm shadow-indigo-500/5",
+    green:   "bg-success/10 text-success shadow-sm shadow-success/5",
+    amber:   "bg-warning/10 text-warning shadow-sm shadow-warning/5",
+    red:     "bg-destructive/10 text-destructive shadow-sm shadow-destructive/5",
+    blue:    "bg-info/10 text-info shadow-sm shadow-info/5",
+    violet:  "bg-primary/10 text-primary shadow-sm shadow-primary/5",
   };
   
   return (

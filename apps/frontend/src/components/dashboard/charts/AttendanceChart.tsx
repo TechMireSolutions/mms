@@ -5,7 +5,7 @@ import {
   ComposedChart, Area, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from "recharts";
-import { attendanceData as defaultAttendanceData, hasanatData as defaultHasanatData, AttendancePoint, HasanatPoint } from '@/lib/data/dashboardData';
+import { attendanceData as defaultAttendanceData, AttendancePoint, HasanatPoint } from '@/lib/data/dashboardData';
 import { getCollection } from "../../../lib/db";
 import { ATTENDANCE_RECORDS, AttendanceRecord } from '@/lib/data/attendanceData';
 import { DISTRIBUTIONS, Distribution } from '@/lib/data/hasanatData';

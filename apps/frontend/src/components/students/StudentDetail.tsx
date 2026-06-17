@@ -1,15 +1,14 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Edit2, MessageCircle, Phone, Mail,
-  Calendar, User, Clock, BookOpen, GraduationCap, Users, Sparkles
+  X, Edit2, MessageCircle, Phone,
+  Calendar, User, Clock, BookOpen, GraduationCap, Sparkles
 } from "lucide-react";
 import { formatDate, getObject } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import {
   type StudentsSettings,
   DEFAULT_STUDENTS_SETTINGS,
-  type StudentCustomField,
   getSortedStudentFields
 } from "@mms/shared";
 import { SESSIONS_DATA } from '@/lib/data/sessionsData';
@@ -17,6 +16,7 @@ import { CONTACTS } from '@/lib/data/contactsData';
 import { calcAge, type Student } from '@/lib/data/studentsData';
 import type { Contact } from "../../lib/contactFields";
 import StatusBadge from "../ui/StatusBadge";
+import { AVATAR_GRADIENT_ROTATION } from "@/lib/semanticTone";
 
 interface StudentDetailProps {
   student: Student;
@@ -54,14 +54,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
   // Determine avatar initials and color
   const initials = student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "?";
-  const AVATAR_COLORS = [
-    "from-blue-500 to-indigo-600",
-    "from-rose-400 to-pink-600",
-    "from-purple-500 to-violet-600",
-    "from-emerald-400 to-teal-600",
-  ];
-  const colorIdx = student.id.charCodeAt(student.id.length - 1) % AVATAR_COLORS.length;
-  const avatarGradient = AVATAR_COLORS[colorIdx];
+  const colorIdx = student.id.charCodeAt(student.id.length - 1) % AVATAR_GRADIENT_ROTATION.length;
+  const avatarGradient = AVATAR_GRADIENT_ROTATION[colorIdx];
 
   const primaryPhone = studentContact?.phone || studentContact?.phones?.[0]?.number || student.phone;
   const primaryEmail = studentContact?.email || studentContact?.emails?.[0]?.address || student.email;
@@ -173,7 +167,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                     {primaryPhone && (
                       <a
                         href={`tel:${primaryPhone.replace(/[^\d+]/g, "")}`}
-                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card hover:bg-blue-50/50 hover:border-blue-200 transition-all text-blue-600 text-center"
+                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card hover:bg-info/10 hover:border-info/30 transition-all text-info text-center"
                       >
                         <Phone className="w-4 h-4 mx-auto" />
                         <span className="text-[10px] font-bold">Call Student</span>
@@ -184,7 +178,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                         href={`https://wa.me/${primaryPhone.replace(/[^\d]/g, "")}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card hover:bg-emerald-50/50 hover:border-emerald-200 transition-all text-[#075E54] text-center"
+                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card hover:bg-success/10 hover:border-success/30 transition-all text-[#075E54] text-center"
                       >
                         <MessageCircle className="w-4 h-4 mx-auto" />
                         <span className="text-[10px] font-bold">WhatsApp</span>
@@ -252,11 +246,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             return (
                               <div key="fatherLink" className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-card shadow-sm">
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                                  <div className="w-8 h-8 rounded-lg bg-info/10 text-info flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                                     FA
                                   </div>
                                   <div className="min-w-0">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 mb-0.5 block">Father</span>
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-info mb-0.5 block">Father</span>
                                     <h5 className="text-xs font-bold text-foreground truncate">{student.fatherName || fatherContact?.name}</h5>
                                     {fatherPhone && <p className="text-[10px] text-muted-foreground mt-0.5">{fatherPhone}</p>}
                                   </div>
@@ -278,11 +272,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             return (
                               <div key="motherLink" className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-card shadow-sm">
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <div className="w-8 h-8 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                                  <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                                     MO
                                   </div>
                                   <div className="min-w-0">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-pink-600 mb-0.5 block">Mother</span>
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-secondary mb-0.5 block">Mother</span>
                                     <h5 className="text-xs font-bold text-foreground truncate">{student.motherName || motherContact?.name}</h5>
                                     {motherPhone && <p className="text-[10px] text-muted-foreground mt-0.5">{motherPhone}</p>}
                                   </div>
@@ -383,7 +377,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3.5 rounded-2xl border border-border bg-card shadow-sm text-center">
                         <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Attendance Rate</span>
-                        <p className="text-lg font-black text-emerald-600">94.8%</p>
+                        <p className="text-lg font-black text-success">94.8%</p>
                         <span className="text-[9px] text-muted-foreground">Last 30 days</span>
                       </div>
                       <div className="p-3.5 rounded-2xl border border-border bg-card shadow-sm text-center">
@@ -406,8 +400,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
             <span>Last Active 2026-05-30</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[9px] font-bold text-emerald-600 uppercase">Synced</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-success" />
+            <span className="text-[9px] font-bold text-success uppercase">Synced</span>
           </div>
         </div>
       </motion.aside>

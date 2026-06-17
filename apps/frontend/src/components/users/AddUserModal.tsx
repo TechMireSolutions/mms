@@ -36,6 +36,7 @@ import {
   getSortedFields,
 } from "@mms/shared";
 import { DatePicker } from "../ui/DatePicker";
+import { FORM_INPUT, FORM_LABEL, FORM_INPUT_ICON, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
 
 const STEP_DEFS = [
   { id: 1, labelKey: "users.addStepContact" as const, icon: User },
@@ -113,7 +114,7 @@ interface LabelProps {
  */
 function Label({ children, required = false }: LabelProps): JSX.Element {
   return (
-    <label className="text-xs font-semibold text-foreground block mb-1">
+    <label className={FORM_LABEL}>
       {children}{required && <span className="text-destructive ml-0.5">*</span>}
     </label>
   );
@@ -135,9 +136,7 @@ function Input({ icon: Icon, className = "", ...props }: InputProps): JSX.Elemen
       {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />}
       <input
         {...props}
-        className={`w-full text-sm rounded-xl border border-border bg-background py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
-          Icon ? "pl-9 pr-3" : "px-3"
-        } ${className}`}
+        className={`${Icon ? FORM_INPUT_ICON : FORM_INPUT} ${className}`}
       />
     </div>
   );
@@ -286,7 +285,7 @@ function Step1({ form, setForm, errors, existingEmails }: Step1Props): JSX.Eleme
             onChange={(e) => { setSearch(e.target.value); setOpen(true); if (selected) clear(); }}
             onFocus={() => setOpen(true)}
             placeholder={t("users.addSearchPlaceholder")}
-            className="w-full text-sm rounded-xl border border-border bg-background py-2.5 pl-9 pr-3 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            className={FORM_INPUT_ICON}
           />
           {selected && (
             <button type="button" onClick={clear}
@@ -363,7 +362,7 @@ function Step1({ form, setForm, errors, existingEmails }: Step1Props): JSX.Eleme
         <select
           value={form.status}
           onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as UserStatus }))}
-          className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+          className={FORM_SELECT}
         >
           {USER_STATUS_VALUES.map((s) => (
             <option key={s} value={s}>
@@ -431,7 +430,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
               <DatePicker value={form.roleExpiry || ""}
                 min={new Date().toISOString().split("T")[0]}
                 onChange={(val) => setForm((f) => ({ ...f, roleExpiry: val }))}
-                className="w-full text-sm rounded-xl border border-border bg-background px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                className={FORM_INPUT} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -450,7 +449,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                   <Label required={field.required}>{field.label}</Label>
                   {field.type === "textarea" ? (
                     <textarea
-                      className="w-full text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 min-h-[60px]"
+                      className={FORM_TEXTAREA + " min-h-[60px]"}
                       value={value as string}
                       onChange={(e) => upd(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterField", { label: field.label.toLowerCase() })}
@@ -458,7 +457,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                     />
                   ) : field.type === "select" ? (
                     <select
-                      className="w-full text-sm rounded-xl border border-border bg-background px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                      className={FORM_SELECT}
                       value={value as string}
                       onChange={(e) => upd(e.target.value)}
                       required={field.required}
@@ -483,7 +482,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                   ) : field.type === "number" ? (
                     <input
                       type="number"
-                      className="w-full text-sm rounded-xl border border-border bg-background px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className={FORM_INPUT}
                       value={value}
                       onChange={(e) => upd(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterNumber")}
@@ -498,7 +497,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                   ) : (
                     <input
                       type="text"
-                      className="w-full text-sm rounded-xl border border-border bg-background px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className={FORM_INPUT}
                       value={value as string}
                       onChange={(e) => upd(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterField", { label: field.label.toLowerCase() })}
@@ -586,7 +585,7 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
                   placeholder={passwordHint}
                   value={form.password || ""}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  className="w-full text-sm rounded-xl border border-border bg-background py-2.5 pl-9 pr-9 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className={`${FORM_INPUT_ICON} pr-9`}
                 />
                 <button type="button" onClick={() => setShowPwd((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">

@@ -50,8 +50,8 @@ export default function EnrollmentList({ enrollments, role, onView, onCancel }: 
   const statusInfo = (s: string): EnrollmentStatus => STATUS_MAP[s] || { id: s as EnrollmentStatus["id"], label: s, color: "bg-muted text-muted-foreground border-border" };
 
   const paymentColor = (s: string): string => {
-    if (s === "paid")    return "text-emerald-600";
-    if (s === "pending") return "text-amber-600";
+    if (s === "paid")    return "text-success";
+    if (s === "pending") return "text-warning";
     if (s === "overdue") return "text-destructive";
     return "text-muted-foreground";
   };
@@ -151,7 +151,7 @@ export default function EnrollmentList({ enrollments, role, onView, onCancel }: 
                       <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">
                         PKR {enr.finalFee?.toLocaleString()}
                         {enr.discountPct > 0 && (
-                          <span className="ml-1 text-[10px] text-emerald-600 font-normal" aria-label={`Discount percentage: ${enr.discountPct} percent`}>–{enr.discountPct}%</span>
+                          <span className="ml-1 text-[10px] text-success font-normal" aria-label={`Discount percentage: ${enr.discountPct} percent`}>–{enr.discountPct}%</span>
                         )}
                       </td>
                       <td className="px-3 py-2.5">

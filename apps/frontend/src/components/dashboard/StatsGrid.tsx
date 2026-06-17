@@ -21,10 +21,10 @@ interface ColorTheme {
 }
 
 const COLOR_MAP: Record<string, ColorTheme> = {
-  emerald: { bg: "bg-emerald-500/10", text: "text-emerald-500", ring: "ring-emerald-500/20" },
-  blue:    { bg: "bg-blue-500/10",    text: "text-blue-500",    ring: "ring-blue-500/20"    },
-  violet:  { bg: "bg-violet-500/10",  text: "text-violet-500",  ring: "ring-violet-500/20"  },
-  amber:   { bg: "bg-amber-500/10",   text: "text-amber-500",   ring: "ring-amber-500/20"   },
+  emerald: { bg: "bg-success/10", text: "text-success", ring: "ring-success/20" },
+  blue:    { bg: "bg-info/10",    text: "text-info",    ring: "ring-info/20"    },
+  violet:  { bg: "bg-primary/10",  text: "text-primary",  ring: "ring-primary/20"  },
+  amber:   { bg: "bg-warning/10",   text: "text-warning",   ring: "ring-warning/20"   },
   red:     { bg: "bg-destructive/10",     text: "text-destructive",     ring: "ring-destructive/20"     },
 };
 
@@ -94,7 +94,7 @@ export default function StatsGrid({
               <div className="flex items-center gap-1">
                 {stat.trend !== 0 && !isEditMode && (
                   <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
-                    isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
+                    isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
                   }`} aria-label={`Trend ${isPositive ? 'up' : 'down'} ${Math.abs(stat.trend)} percent`}>
                     {isPositive ? "+" : ""}{stat.trend}%
                   </span>

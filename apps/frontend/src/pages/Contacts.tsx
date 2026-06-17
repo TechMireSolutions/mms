@@ -29,7 +29,6 @@ function LazyFallback() {
     </div>
   );
 }
-import { CONTACTS } from '@/lib/data/contactsData';
 import { saveCollection } from "../lib/db";
 import { useContactsCollection, useContactMutations } from "../hooks/useContacts";
 import { notify } from "@/lib/notify";
@@ -197,7 +196,7 @@ function ContactsInner() {
   // ── Filtered + sorted contacts ────────────────────────────────────────────
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    let list = contacts.filter((c) => {
+    const list = contacts.filter((c) => {
       const stage = c.lifecycleStage || "Lead";
       if (filterStage && stage !== filterStage) return false;
 
@@ -412,7 +411,7 @@ function ContactsInner() {
                           <button
                             disabled={!smsClickable}
                             onClick={() => setSmsTargets(smsReady)}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-violet-300 bg-violet-50 text-sm font-semibold text-violet-800 transition-all dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-300 ${
+                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-primary/40 bg-primary/10 text-sm font-semibold text-primary transition-all dark:border-primary/40 dark:bg-primary/20 dark:text-primary ${
                               smsClickable ? "hover:scale-[1.02] active:scale-[0.98]" : "opacity-40 cursor-not-allowed"
                             }`}
                           >

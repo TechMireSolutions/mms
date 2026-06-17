@@ -10,6 +10,7 @@ import {
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import useTranslation from "@/hooks/useTranslation";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "../ui/formStyles";
 
 interface AccountModalProps {
   initial: Account | null;
@@ -67,8 +68,6 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
     [errors],
   );
 
-  const inp = "mt-1 w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20";
-
   return (
     <FormModal
       open
@@ -89,8 +88,8 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
           if (field.id === "code") {
             return (
               <div key="code">
-                <label htmlFor="account-code" className="text-xs font-semibold text-muted-foreground uppercase">Account Code *</label>
-                <input id="account-code" value={form.code || ""} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="e.g. 1000" className={inp} required />
+                <label htmlFor="account-code" className={FORM_LABEL}>Account Code *</label>
+                <input id="account-code" value={form.code || ""} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="e.g. 1000" className={FORM_INPUT} required />
               </div>
             );
           }
@@ -98,8 +97,8 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
           if (field.id === "type") {
             return (
               <div key="type">
-                <label htmlFor="account-type" className="text-xs font-semibold text-muted-foreground uppercase">Type *</label>
-                <select id="account-type" value={form.type || "Asset"} onChange={(e) => setForm({ ...form, type: e.target.value as AccountType, subtype: "" })} className={inp} required>
+                <label htmlFor="account-type" className={FORM_LABEL}>Type *</label>
+                <select id="account-type" value={form.type || "Asset"} onChange={(e) => setForm({ ...form, type: e.target.value as AccountType, subtype: "" })} className={FORM_INPUT} required>
                   {ACCOUNT_TYPES.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
@@ -109,8 +108,8 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
           if (field.id === "name") {
             return (
               <div key="name" className="sm:col-span-2">
-                <label htmlFor="account-name" className="text-xs font-semibold text-muted-foreground uppercase">Account Name *</label>
-                <input id="account-name" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Cash in Hand" className={inp} required />
+                <label htmlFor="account-name" className={FORM_LABEL}>Account Name *</label>
+                <input id="account-name" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Cash in Hand" className={FORM_INPUT} required />
               </div>
             );
           }
@@ -119,8 +118,8 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
             const isRequired = !!fields[field.id]?.required;
             return (
               <div key="subtype" className="sm:col-span-2">
-                <label htmlFor="account-subtype" className="text-xs font-semibold text-muted-foreground uppercase">Sub-type {isRequired ? "*" : ""}</label>
-                <select id="account-subtype" value={form.subtype || ""} onChange={(e) => setForm({ ...form, subtype: e.target.value })} className={inp} required={isRequired}>
+                <label htmlFor="account-subtype" className={FORM_LABEL}>Sub-type {isRequired ? "*" : ""}</label>
+                <select id="account-subtype" value={form.subtype || ""} onChange={(e) => setForm({ ...form, subtype: e.target.value })} className={FORM_INPUT} required={isRequired}>
                   <option value="">— None —</option>
                   {subtypes.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -132,8 +131,8 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
             const isRequired = !!fields[field.id]?.required;
             return (
               <div key="description" className="sm:col-span-2">
-                <label htmlFor="account-description" className="text-xs font-semibold text-muted-foreground uppercase">Description {isRequired ? "*" : ""}</label>
-                <input id="account-description" value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Optional description…" className={inp} required={isRequired} />
+                <label htmlFor="account-description" className={FORM_LABEL}>Description {isRequired ? "*" : ""}</label>
+                <input id="account-description" value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Optional description…" className={FORM_INPUT} required={isRequired} />
               </div>
             );
           }
@@ -142,12 +141,12 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
             const value = (form as Record<string, unknown>)[field.id] ?? "";
             return (
               <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">
+                <label className={FORM_LABEL}>
                   {field.label} {field.required ? "*" : ""}
                 </label>
                 {field.type === "textarea" ? (
                   <textarea
-                    className={inp + " min-h-[80px] py-2"}
+                    className={FORM_TEXTAREA}
                     value={value as string}
                     onChange={(e) => setForm((d) => ({ ...d, [field.id]: e.target.value }))}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
@@ -155,7 +154,7 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
                   />
                 ) : field.type === "select" ? (
                   <select
-                    className={inp + " cursor-pointer"}
+                    className={FORM_SELECT}
                     value={value as string}
                     onChange={(e) => setForm((d) => ({ ...d, [field.id]: e.target.value }))}
                     required={field.required}
@@ -178,7 +177,7 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
                 ) : field.type === "number" ? (
                   <input
                     type="number"
-                    className={inp}
+                    className={FORM_INPUT}
                     value={value as number}
                     onChange={(e) => setForm((d) => ({ ...d, [field.id]: e.target.value }))}
                     placeholder={field.placeholder || "Enter number…"}
@@ -193,7 +192,7 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
                 ) : (
                   <input
                     type="text"
-                    className={inp}
+                    className={FORM_INPUT}
                     value={value as string}
                     onChange={(e) => setForm((d) => ({ ...d, [field.id]: e.target.value }))}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}

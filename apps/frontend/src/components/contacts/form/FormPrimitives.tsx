@@ -9,7 +9,7 @@ import { cn } from "../../../lib/utils";
 import AvatarCropper from "../AvatarCropper";
 import FormSelect from "../../ui/FormSelect";
 import useTranslation from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "../../ui/formStyles";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "../../ui/formStyles";
 
 // ── Shared style constants (re-export for contact form tabs) ─────────────────
 export const INPUT = FORM_INPUT;
