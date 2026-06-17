@@ -20,7 +20,7 @@ jobs:
       #   Optional bootstrap: PLATFORM_ALLOW_ENV_BOOTSTRAP=true, PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD
       #   Optional verify fallback: MMS_API_URL=https://your-api-host (public /health)
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.0.3
         env:
           PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
           PLATFORM_SMTP_HOST: ${{ secrets.PLATFORM_SMTP_HOST }}
@@ -43,45 +43,37 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           command_timeout: 20m
-          debug: true
           envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,MMS_API_URL
           script: |
-            set -x
-            cd /var/www/mmsv2 || { echo "ERROR: /var/www/mmsv2 not found"; exit 1; }
+            set -e
+            cd /var/www/mmsv2
 
-            echo "== Git sync =="
-            git remote -v
-            git status -sb || true
-            if ! git pull origin main; then
-              echo "WARN: git pull failed — hard reset to origin/main"
+            git pull --ff-only origin main || {
+              echo "WARN: fast-forward pull failed — reset to origin/main"
               git fetch origin main
               git reset --hard origin/main
-            fi
+            }
 
             export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             export PATH="$HOME/.local/share/pnpm:$PATH"
             export PUPPETEER_SKIP_DOWNLOAD=true
 
-            echo "== Node $(node -v 2>/dev/null || echo missing) pnpm $(pnpm -v 2>/dev/null || echo missing) =="
-
             if [ -f scripts/merge-backend-env.sh ]; then
               bash scripts/merge-backend-env.sh apps/backend/.env
+            else
+              echo "WARNING: scripts/merge-backend-env.sh missing — skip env merge"
             fi
 
-            echo "== Install =="
-            pnpm install --frozen-lockfile || { echo "ERROR: pnpm install failed"; exit 1; }
+            pnpm install --frozen-lockfile
+            pnpm run build
 
-            echo "== Build =="
-            pnpm run build || { echo "ERROR: pnpm build failed"; exit 1; }
-
-            echo "== PM2 restart =="
-            pm2 restart mmsv2-frontend --update-env || pm2 restart mmsv2-frontend || echo "WARNING: frontend restart failed"
+            pm2 restart mmsv2-frontend --update-env || pm2 restart mmsv2-frontend || echo "WARNING: mmsv2-frontend restart failed"
             pm2 restart mmsv2-backend --update-env || pm2 restart mmsv2-backend || true
 
             if [ -f scripts/deploy-recover-backend.sh ]; then
               bash scripts/deploy-recover-backend.sh apps/backend/.env || {
-                echo "WARNING: backend recovery failed"
+                echo "WARNING: backend recovery failed — check pm2 logs on the server"
                 pm2 logs mmsv2-backend --lines 50 --nostream || true
               }
             fi
