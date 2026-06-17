@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import fastify, { FastifyInstance } from 'fastify';
-import dotenv from 'dotenv';
+import { loadBackendEnv } from './config/loadEnv.js';
 import { loadServerConfig } from './config/serverConfig.js';
 import { initDb } from './db/database.js';
 import { registerPlugins } from './plugins/index.js';
 import { registerRoutes } from './routes/index.js';
 
-dotenv.config();
+loadBackendEnv();
 
 /**
  * Builds the Fastify application instance.

@@ -55,13 +55,18 @@ jobs:
             pnpm install --frozen-lockfile
             pnpm run build
 
-            pm2 restart mmsv2-frontend
-            pm2 restart mmsv2-backend
+            pm2 restart mmsv2-frontend --update-env
+            pm2 restart mmsv2-backend --update-env
 
             echo "Waiting for backend readiness..."
             for i in $(seq 1 30); do
               if curl -fsS http://127.0.0.1:3000/ready >/dev/null; then
                 echo "Backend ready"
+                SETUP_STATUS="$(curl -fsS http://127.0.0.1:3000/api/platform/auth/setup/status || true)"
+                echo "Platform setup status: ${SETUP_STATUS}"
+                if echo "${SETUP_STATUS}" | grep -q '"smtpConfigured":false'; then
+                  echo "WARNING: Platform email still not configured — set GitHub repository secrets and redeploy"
+                fi
                 exit 0
               fi
               sleep 2
