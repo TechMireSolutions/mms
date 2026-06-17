@@ -1,11 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Globe } from "lucide-react";
+import { ArrowLeft, Globe, Shield } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import WorkspaceRegistryList from "@/components/routing/WorkspaceRegistryList";
 import ApexEntryNav from "@/components/routing/ApexEntryNav";
 import { ROUTES } from "@/lib/config/routes";
 import useTranslation from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
 
 export type ApexGateVariant = "default" | "login" | "forgotPassword" | "twoFactor" | "tenantOnly";
 
@@ -63,6 +64,20 @@ export default function ApexWorkspaceGate({
           showForgotPasswordLink={variant === "login"}
           showSignInPickerLink={variant === "forgotPassword"}
         />
+
+        {variant === "login" || variant === "forgotPassword" || variant === "default" ? (
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-left space-y-3">
+            <p className="text-sm text-muted-foreground">{t("apex.platformAdminHint")}</p>
+            <Button asChild variant="default" className="w-full">
+              <Link to={variant === "forgotPassword" ? ROUTES.platformForgotPassword : ROUTES.home}>
+                <Shield className="w-4 h-4" aria-hidden />
+                {variant === "forgotPassword"
+                  ? t("apex.platformAdminForgot")
+                  : t("apex.platformAdminSignIn")}
+              </Link>
+            </Button>
+          </div>
+        ) : null}
 
         <Link
           to={ROUTES.home}

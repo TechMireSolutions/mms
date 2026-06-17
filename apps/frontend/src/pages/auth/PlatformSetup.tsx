@@ -17,7 +17,7 @@ import {
   validatePlatformSetupName,
   validatePlatformSetupPassword,
 } from "@mms/shared";
-import AuthLayout from "@/components/auth/AuthLayout";
+import PlatformAuthLayout from "@/components/platform/PlatformAuthLayout";
 import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/components/platform/PlatformOtpInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -143,7 +143,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
 
   if (step === "verify" && setupSession) {
     return (
-      <AuthLayout
+      <PlatformAuthLayout
         title={t("platform.setupVerifyTitle")}
         subtitle={t("platform.setupVerifySubtitle", { email: maskEmail(setupSession.email) })}
       >
@@ -188,12 +188,12 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
               : t("platform.setupResendCode")}
           </Button>
         </form>
-      </AuthLayout>
+      </PlatformAuthLayout>
     );
   }
 
   return (
-    <AuthLayout title={t("platform.setupTitle")} subtitle={t("platform.setupSubtitle")}>
+    <PlatformAuthLayout title={t("platform.setupTitle")} subtitle={t("platform.setupSubtitle")}>
       <form onSubmit={(e) => void handleRegister(e)} className="space-y-4">
         {!smtpConfigured && import.meta.env.PROD ? (
           <PlatformDevHint message={t("platform.setupSmtpRequired")} />
@@ -262,7 +262,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
           )}
         </Button>
       </form>
-    </AuthLayout>
+    </PlatformAuthLayout>
   );
 }
 

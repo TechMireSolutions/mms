@@ -25,10 +25,11 @@ export default function PlatformPageShell({
 
 export function PlatformLogoMark(): React.JSX.Element {
   return (
-    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-      <span className="text-primary font-display text-2xl font-bold" aria-hidden="true">
-        م
-      </span>
+    <div
+      className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 shadow-sm"
+      aria-hidden
+    >
+      <span className="font-display text-2xl font-bold text-primary">م</span>
     </div>
   );
 }

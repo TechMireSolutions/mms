@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, ArrowRight, Loader2, Lock, Mail } from "lucide-react";
-import AuthLayout from "@/components/auth/AuthLayout";
+import PlatformAuthLayout from "@/components/platform/PlatformAuthLayout";
 import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
 import useTranslation from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ export default function PlatformSignIn(): React.JSX.Element {
   };
 
   return (
-    <AuthLayout
+    <PlatformAuthLayout
       title={t("platform.signInTitle")}
       subtitle={t("platform.signInSubtitle")}
     >
@@ -100,6 +100,6 @@ export default function PlatformSignIn(): React.JSX.Element {
           )}
         </Button>
       </form>
-    </AuthLayout>
+    </PlatformAuthLayout>
   );
 }

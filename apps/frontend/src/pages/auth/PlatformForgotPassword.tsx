@@ -17,7 +17,7 @@ import {
   validatePlatformSetupEmail,
   validatePlatformSetupPassword,
 } from "@mms/shared";
-import AuthLayout from "@/components/auth/AuthLayout";
+import PlatformAuthLayout from "@/components/platform/PlatformAuthLayout";
 import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/components/platform/PlatformOtpInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,7 +148,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
 
   if (isResetStep) {
     return (
-      <AuthLayout title={t("platform.forgotResetTitle")} subtitle={t("platform.forgotResetSubtitle")}>
+      <PlatformAuthLayout title={t("platform.forgotResetTitle")} subtitle={t("platform.forgotResetSubtitle")}>
         <form onSubmit={(e) => void handleReset(e)} className="space-y-4">
           {error ? <Alert message={error} /> : null}
           {devHint ? <DevHint message={devHint} /> : null}
@@ -228,13 +228,13 @@ export default function PlatformForgotPassword(): React.JSX.Element {
             </Link>
           </p>
         </form>
-      </AuthLayout>
+      </PlatformAuthLayout>
     );
   }
 
   if (sent) {
     return (
-      <AuthLayout
+      <PlatformAuthLayout
         title={t("auth.forgotCheckEmail")}
         subtitle={t("platform.forgotSentGeneric", { email: email.trim() })}
       >
@@ -274,12 +274,12 @@ export default function PlatformForgotPassword(): React.JSX.Element {
             </Link>
           </p>
         </div>
-      </AuthLayout>
+      </PlatformAuthLayout>
     );
   }
 
   return (
-    <AuthLayout title={t("platform.forgotTitle")} subtitle={t("platform.forgotSubtitle")}>
+    <PlatformAuthLayout title={t("platform.forgotTitle")} subtitle={t("platform.forgotSubtitle")}>
       <form onSubmit={(e) => void handleRequest(e)} className="space-y-4">
         {error ? <Alert message={error} /> : null}
 
@@ -320,7 +320,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
           </Link>
         </p>
       </form>
-    </AuthLayout>
+    </PlatformAuthLayout>
   );
 }
 
