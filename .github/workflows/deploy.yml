@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -13,11 +14,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Platform email: add GitHub repo secrets (Settings → Secrets → Actions):
-      #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM + PLATFORM_APP_URL (recommended)
-      #   OR PLATFORM_SMTP_HOST, PLATFORM_SMTP_USER, PLATFORM_SMTP_PASS, PLATFORM_EMAIL_FROM
-      # Optional first super-user without OTP: PLATFORM_ALLOW_ENV_BOOTSTRAP=true,
-      #   PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD
+      # Platform secrets (Settings → Secrets → Actions):
+      #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM + PLATFORM_APP_URL
+      #   OR PLATFORM_SMTP_* + PLATFORM_EMAIL_FROM
+      #   Optional bootstrap: PLATFORM_ALLOW_ENV_BOOTSTRAP=true, PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -42,6 +42,7 @@ jobs:
           port: 22
           envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN
           script: |
+            set -e
             cd /var/www/mmsv2
 
             git pull origin main
@@ -50,26 +51,39 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             export PATH="$HOME/.local/share/pnpm:$PATH"
 
-            bash scripts/merge-backend-env.sh apps/backend/.env
+            if [ -f scripts/merge-backend-env.sh ]; then
+              bash scripts/merge-backend-env.sh apps/backend/.env
+            else
+              echo "WARNING: scripts/merge-backend-env.sh missing — skip env merge"
+            fi
 
             pnpm install --frozen-lockfile
             pnpm run build
 
-            pm2 restart mmsv2-frontend --update-env
-            pm2 restart mmsv2-backend --update-env
+            pm2 restart mmsv2-frontend --update-env || pm2 restart mmsv2-frontend
+            pm2 restart mmsv2-backend --update-env || pm2 restart mmsv2-backend
 
-            echo "Waiting for backend readiness..."
-            for i in $(seq 1 30); do
-              if curl -fsS http://127.0.0.1:3000/ready >/dev/null; then
-                echo "Backend ready"
-                SETUP_STATUS="$(curl -fsS http://127.0.0.1:3000/api/platform/auth/setup/status || true)"
+            echo "Waiting for backend..."
+            for i in $(seq 1 45); do
+              if curl -fsS http://127.0.0.1:3000/health >/dev/null; then
+                echo "Backend health OK"
+                if curl -fsS http://127.0.0.1:3000/ready >/dev/null; then
+                  echo "Backend ready (database connected)"
+                else
+                  echo "WARNING: /ready failed — check DATABASE_URL and PostgreSQL on the server"
+                fi
+                SETUP_STATUS="$(curl -fsS http://127.0.0.1:3000/api/platform/auth/setup/status 2>/dev/null || echo '{}')"
                 echo "Platform setup status: ${SETUP_STATUS}"
                 if echo "${SETUP_STATUS}" | grep -q '"smtpConfigured":false'; then
-                  echo "WARNING: Platform email still not configured — set GitHub repository secrets and redeploy"
+                  echo "WARNING: Platform email not configured — add GitHub Actions secrets and redeploy"
+                fi
+                if echo "${SETUP_STATUS}" | grep -q '"needsSetup":true' && echo "${SETUP_STATUS}" | grep -q '"smtpConfigured":false'; then
+                  echo "TIP: set PLATFORM_ALLOW_ENV_BOOTSTRAP + PLATFORM_ADMIN_* secrets to create the first super-user without email"
                 fi
                 exit 0
               fi
               sleep 2
             done
-            echo "Backend readiness check failed"
+            echo "Backend health check failed — is mmsv2-backend running on port 3000?"
+            pm2 logs mmsv2-backend --lines 30 --nostream || true
             exit 1

@@ -52,7 +52,11 @@ for key in "${DEPLOY_KEYS[@]}"; do
 done
 
 echo "Merged deploy env keys into ${ENV_FILE}"
-if grep -qE '^PLATFORM_(RESEND_API_KEY|SMTP_HOST)=' "$ENV_FILE" 2>/dev/null && grep -q '^PLATFORM_EMAIL_FROM=' "$ENV_FILE" 2>/dev/null; then
+set +e
+HAS_PROVIDER=$(grep -E '^PLATFORM_(RESEND_API_KEY|SMTP_HOST)=' "$ENV_FILE" 2>/dev/null | head -1)
+HAS_FROM=$(grep '^PLATFORM_EMAIL_FROM=' "$ENV_FILE" 2>/dev/null | head -1)
+set -e
+if [ -n "$HAS_PROVIDER" ] && [ -n "$HAS_FROM" ]; then
   echo "Platform email: configured in ${ENV_FILE}"
 else
   echo "WARNING: Platform email not in ${ENV_FILE} — add PLATFORM_RESEND_API_KEY (or SMTP_*) and PLATFORM_EMAIL_FROM as GitHub Actions secrets"
