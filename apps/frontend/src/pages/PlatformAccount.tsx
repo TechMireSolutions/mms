@@ -1,0 +1,297 @@
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Loader2,
+  Lock,
+  Mail,
+  User,
+} from "lucide-react";
+import type { PlatformUserProfile } from "@mms/shared";
+import {
+  PLATFORM_MIN_PASSWORD_LENGTH,
+  validatePlatformSetupName,
+  validatePlatformSetupPassword,
+} from "@mms/shared";
+import PlatformPageShell, { PlatformLogoMark } from "@/components/platform/PlatformPageShell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import useTranslation from "@/hooks/useTranslation";
+import { apiJson, ApiError } from "@/lib/apiClient";
+import { mapPlatformAuthError } from "@/lib/platformAuthErrors";
+import { ROUTES } from "@/lib/config/routes";
+import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
+import { notify } from "@/lib/notify";
+
+/**
+ * Platform super-user profile — view name/email and update display name or password.
+ */
+export default function PlatformAccount(): React.JSX.Element {
+  const { t } = useTranslation();
+  const { platformUser, checkPlatformAuth } = usePlatformAuth();
+
+  const [profile, setProfile] = useState<PlatformUserProfile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [name, setName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setLoadingProfile(true);
+      try {
+        const data = await apiJson<{ user: PlatformUserProfile }>("/api/platform/auth/me");
+        if (!cancelled) {
+          setProfile(data.user);
+          setName(data.user.name);
+        }
+      } catch {
+        if (!cancelled) setProfile(null);
+      } finally {
+        if (!cancelled) setLoadingProfile(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSaveName = async (event: React.FormEvent): Promise<void> => {
+    event.preventDefault();
+    setNameError(null);
+
+    const nameKey = validatePlatformSetupName(name);
+    if (nameKey) {
+      setNameError(t(nameKey));
+      return;
+    }
+
+    setSavingName(true);
+    try {
+      const data = await apiJson<{ user: PlatformUserProfile }>("/api/platform/auth/me", {
+        method: "PATCH",
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      setProfile(data.user);
+      await checkPlatformAuth();
+      notify.success(t("platform.profileSaved"));
+    } catch (err) {
+      setNameError(
+        err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"),
+      );
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const handleChangePassword = async (event: React.FormEvent): Promise<void> => {
+    event.preventDefault();
+    setPasswordError(null);
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError(t("platform.forgotPasswordMismatch"));
+      return;
+    }
+
+    const passwordKey = validatePlatformSetupPassword(newPassword);
+    if (passwordKey) {
+      setPasswordError(
+        passwordKey === "platform.setupPasswordTooShort"
+          ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
+          : t(passwordKey),
+      );
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      await apiJson("/api/platform/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      notify.success(t("platform.profilePasswordUpdated"));
+    } catch (err) {
+      setPasswordError(
+        err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"),
+      );
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const memberSince = profile?.createdAt
+    ? new Date(profile.createdAt).toLocaleDateString()
+    : null;
+
+  return (
+    <PlatformPageShell width="md">
+      <div className="space-y-6">
+        <div className="text-center space-y-3">
+          <PlatformLogoMark />
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">{t("platform.profileTitle")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t("platform.profileSubtitle")}</p>
+          </div>
+        </div>
+
+        <Link
+          to={ROUTES.home}
+          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" aria-hidden />
+          {t("platform.backToConsole")}
+        </Link>
+
+        {loadingProfile ? (
+          <div className="flex justify-center py-8" role="status">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden />
+            <span className="sr-only">{t("common.loading")}</span>
+          </div>
+        ) : profile ? (
+          <>
+            <section className="rounded-xl border border-border bg-card p-4 space-y-3 text-left">
+              <div className="flex items-center gap-2 text-sm">
+                <Mail className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
+                <span className="text-muted-foreground">{t("platform.profileEmail")}</span>
+                <span className="font-medium text-foreground ml-auto truncate">{profile.email}</span>
+              </div>
+              {memberSince ? (
+                <div className="flex items-center gap-2 text-sm">
+                  <User className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
+                  <span className="text-muted-foreground">{t("platform.profileMemberSince")}</span>
+                  <span className="font-medium text-foreground ml-auto">{memberSince}</span>
+                </div>
+              ) : null}
+              {profile.emailVerifiedAt ? (
+                <div className="flex items-center gap-2 text-sm text-primary">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden />
+                  <span>{t("platform.profileEmailVerified")}</span>
+                </div>
+              ) : null}
+            </section>
+
+            <form onSubmit={(e) => void handleSaveName(e)} className="rounded-xl border border-border bg-card p-4 space-y-4 text-left">
+              <h2 className="text-sm font-semibold text-foreground">{t("platform.profileName")}</h2>
+              {nameError ? (
+                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive" role="alert">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
+                  <span>{nameError}</span>
+                </div>
+              ) : null}
+              <div className="space-y-2">
+                <Label htmlFor="platform-profile-name">{t("platform.profileName")}</Label>
+                <Input
+                  id="platform-profile-name"
+                  autoComplete="name"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="h-11"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={savingName || name === platformUser?.name}>
+                {savingName ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                    {t("common.save")}
+                  </>
+                ) : (
+                  t("platform.profileSave")
+                )}
+              </Button>
+            </form>
+
+            <form onSubmit={(e) => void handleChangePassword(e)} className="rounded-xl border border-border bg-card p-4 space-y-4 text-left">
+              <h2 className="text-sm font-semibold text-foreground">{t("platform.profileChangePassword")}</h2>
+              {passwordError ? (
+                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive" role="alert">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
+                  <span>{passwordError}</span>
+                </div>
+              ) : null}
+              <div className="space-y-2">
+                <Label htmlFor="platform-current-password">{t("platform.profileCurrentPassword")}</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+                  <Input
+                    id="platform-current-password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="pl-10 h-11"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="platform-new-password">{t("platform.profileNewPassword")}</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+                  <Input
+                    id="platform-new-password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    minLength={PLATFORM_MIN_PASSWORD_LENGTH}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pl-10 h-11"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="platform-confirm-new-password">{t("platform.profileConfirmPassword")}</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+                  <Input
+                    id="platform-confirm-new-password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    minLength={PLATFORM_MIN_PASSWORD_LENGTH}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 h-11"
+                  />
+                </div>
+              </div>
+              <Button type="submit" className="w-full" disabled={savingPassword}>
+                {savingPassword ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                    {t("common.save")}
+                  </>
+                ) : (
+                  t("platform.profileChangePassword")
+                )}
+              </Button>
+              <p className="text-center text-xs text-muted-foreground">
+                <Link to={ROUTES.platformForgotPassword} className="text-primary font-medium hover:underline">
+                  {t("platform.profileForgotLink")}
+                </Link>
+              </p>
+            </form>
+          </>
+        ) : (
+          <p className="text-sm text-destructive text-center" role="alert">
+            {t("errors.boundary.description")}
+          </p>
+        )}
+      </div>
+    </PlatformPageShell>
+  );
+}

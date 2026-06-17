@@ -1,0 +1,27 @@
+import React, { createContext, useContext } from "react";
+import type { SettingsSection } from "@/lib/config/routes";
+
+export interface SettingsTabContextValue {
+  activeTab: SettingsSection;
+  setActiveTab: (tab: SettingsSection) => void;
+}
+
+const SettingsTabContext = createContext<SettingsTabContextValue | null>(null);
+
+export function SettingsTabProvider({
+  value,
+  children,
+}: {
+  value: SettingsTabContextValue;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return <SettingsTabContext.Provider value={value}>{children}</SettingsTabContext.Provider>;
+}
+
+export function useSettingsTab(): SettingsTabContextValue {
+  const ctx = useContext(SettingsTabContext);
+  if (!ctx) {
+    throw new Error("useSettingsTab must be used within Settings");
+  }
+  return ctx;
+}

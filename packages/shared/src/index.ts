@@ -19,6 +19,7 @@ export * from './smsUtils.js';
 export * from './appTranslations.js';
 export * from './contactTranslations.js';
 export * from './backupTypes.js';
+export * from './backupCrypto.js';
 export * from './brandingTypes.js';
 export * from './brandingTheme.js';
 export * from './logoBrandColors.js';
@@ -32,4 +33,5 @@ export * from './utils.js';
 export * from './permissions.js';
 export * from './auditTypes.js';
 export * from './platformTypes.js';
+export * from './platformSetupValidation.js';
 

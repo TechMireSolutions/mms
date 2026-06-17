@@ -5,6 +5,7 @@ import { type User, type Workspace } from '@mms/shared';
 import { appNavigate } from '../routing/appNavigate';
 import { ROUTES } from '../config/routes';
 import { apiFetch, apiJson } from '../apiClient';
+import { isCurrentHostApex } from '../config/tenantConfig';
 
 export interface AuthError {
   type: 'invalid_credentials' | 'auth_required' | 'connection_error' | 'user_not_registered';
@@ -84,6 +85,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const checkUserAuth = useCallback(async (): Promise<void> => {
+    if (isCurrentHostApex()) {
+      setUser(null);
+      setIsAuthenticated(false);
+      setAuthChecked(true);
+      setIsLoadingAuth(false);
+      return;
+    }
+
     setIsLoadingAuth(true);
     setAuthError(null);
 

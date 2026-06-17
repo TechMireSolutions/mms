@@ -236,7 +236,7 @@ export default function SystemModulesSettings(): React.JSX.Element {
 
   return (
     <SettingsPanel
-      width="narrow"
+      width="wide"
       introKey="settings.introModules"
       isDirty={dirty}
       saved={savedFlash}

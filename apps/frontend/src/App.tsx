@@ -2,6 +2,8 @@ import React, { useEffect, Suspense } from "react";
 import { applyAppTheme } from "./lib/brandingTheme";
 import { SETTINGS_PREVIEW_EVENT } from "./lib/settingsPreview";
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { usePlatformAuth } from '@/lib/contexts/PlatformAuthContext';
+import { useTenant } from '@/lib/contexts/TenantContext';
 import UserNotRegisteredError from '@/components/routing/UserNotRegisteredError';
 import RouterBridge from '@/components/routing/RouterBridge';
 import HostRoutes from '@/components/routing/HostRoutes';
@@ -9,9 +11,15 @@ import RouteLoadingFallback from '@/components/routing/RouteLoadingFallback';
 import { AppProviders } from '@/providers/AppProviders';
 
 const AuthenticatedApp = (): React.JSX.Element | null => {
+  const { isApex } = useTenant();
+  const { isLoadingPlatformAuth, platformAuthChecked } = usePlatformAuth();
   const { isLoadingAuth, authError, authChecked } = useAuth();
 
-  if (isLoadingAuth && !authChecked) {
+  const bootLoading = isApex
+    ? !platformAuthChecked || isLoadingPlatformAuth
+    : isLoadingAuth && !authChecked;
+
+  if (bootLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background" role="status" aria-live="polite">
         <div className="flex flex-col items-center gap-3">

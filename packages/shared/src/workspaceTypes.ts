@@ -6,6 +6,13 @@ export interface Workspace {
   tagline?: string;
   country?: string;
   createdAt: string;
+  /** When false, tenant sign-in and app routes are blocked until re-enabled by platform admin. */
+  enabled?: boolean;
+}
+
+/** Returns true when the workspace accepts tenant traffic (missing `enabled` = active). */
+export function isWorkspaceEnabled(workspace: Pick<Workspace, 'enabled'>): boolean {
+  return workspace.enabled !== false;
 }
 
 /** Public workspace row for apex registry / workspace picker UI. */
@@ -16,7 +23,18 @@ export interface PublicWorkspaceSummary {
   logoUrl?: string;
 }
 
+/** Platform console row — includes activation state for super-user management. */
+export interface PlatformWorkspaceRow extends PublicWorkspaceSummary {
+  enabled: boolean;
+  createdAt: string;
+}
+
 /** Response body for `GET /api/workspace/registry` (apex only). */
 export interface WorkspaceRegistryResponse {
   workspaces: PublicWorkspaceSummary[];
+}
+
+/** Response body for `GET /api/platform/workspaces`. */
+export interface PlatformWorkspaceListResponse {
+  workspaces: PlatformWorkspaceRow[];
 }

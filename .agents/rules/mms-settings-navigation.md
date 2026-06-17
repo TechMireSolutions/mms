@@ -25,17 +25,19 @@ Settings      (always available — not in SYSTEM_MODULE_NAV)
 - **Academics** is a group (`subItems`) — not a single module.
 - Every routable feature exposes a `moduleId` used by `enabledModules` filtering in `Sidebar` / `MobileSidebar` / `Dashboard`.
 
-## `/settings` — app-wide only
+## `/settings` — app-wide only (single URL)
 
-| Section | Route | Component | Scope |
-|---------|-------|-----------|-------|
-| Global Settings | `/settings/global` | `GlobalSettings` | Language, timezone, date format, notifications, security |
-| System Modules | `/settings/modules` | `SystemModulesSettings` | Enable/disable modules (`enabledModules`) |
-| Institution | `/settings/branding` | `BrandingSettings` | Name, logo, contact, address, social |
-| Theme | `/settings/theme` | `ThemeSettings` | Display mode (light/dark/system), brand colours, footer |
-| Backup & Restore | `/settings/backup` | `BackupRestore` | Data backup |
+All sections live at **`/settings`** only. Tab state is in-page (`usePersistedTabState` + `SettingsTabContext`) — **no per-section routes**.
 
-`SETTINGS_SECTIONS` in `routes.ts` lists **only** these five ids. Invalid `/settings/*` redirects to `/settings/global`.
+| Section id | Component | Scope |
+|------------|-----------|-------|
+| `global` | `GlobalSettings` | Language, timezone, date format, notifications, security |
+| `modules` | `SystemModulesSettings` | Enable/disable modules (`enabledModules`) |
+| `branding` | `BrandingSettings` | Name, logo, contact, address, social |
+| `theme` | `ThemeSettings` | Display mode (light/dark/system), brand colours, footer |
+| `backup` | `BackupRestore` | Data backup |
+
+`SETTINGS_SECTIONS` in `routes.ts` lists **only** these five ids. Legacy `/settings/:section` redirects to `/settings`. Use `setActiveTab()` from `SettingsTabContext` for cross-panel jumps (e.g. Theme → Institution).
 
 ### Banned on `/settings`
 

@@ -144,7 +144,9 @@ export default function ResponsiveAccordionTabs({
               }}
               className={cn(
                 "overflow-hidden rounded-xl border transition-colors",
-                active ? "border-primary/25 bg-card shadow-sm" : "border-border bg-card/60",
+                active
+                  ? "border-primary/30 bg-card shadow-md ring-1 ring-primary/10"
+                  : "border-border/70 bg-card/60 hover:border-border hover:bg-card/80",
               )}
             >
               <TabTrigger tab={tab} active={active} panelId={panelId} onTabChange={onTabChange} />
@@ -205,27 +207,45 @@ export default function ResponsiveAccordionTabs({
           {children}
         </div>
       ) : (
-        <div className="hidden gap-6 lg:flex">
-          <div className="w-64 shrink-0 space-y-0.5">
+        <div className="hidden gap-5 lg:flex lg:items-start">
+          <nav
+            aria-label="Section navigation"
+            className="sticky top-[4.75rem] w-[17.5rem] shrink-0 space-y-0.5 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm backdrop-blur-sm"
+          >
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
               const linkClass = cn(
-                "block w-full rounded-xl border px-3 py-2.5 text-left transition-all",
+                "block w-full rounded-lg border px-3 py-2.5 text-left transition-all",
                 active
-                  ? "border-primary/20 bg-primary/5 text-primary"
-                  : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "border-primary/25 border-l-[3px] border-l-primary bg-primary/5 text-primary shadow-sm"
+                  : "border-transparent text-muted-foreground hover:border-border/50 hover:bg-muted/50 hover:text-foreground",
               );
 
               if (tab.href) {
                 return (
                   <Link key={tab.id} to={tab.href} className={linkClass}>
                     <div className="mb-0.5 flex items-center gap-2">
-                      {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" /> : null}
+                      {Icon ? (
+                        <span
+                          className={cn(
+                            "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                            active ? "bg-primary/15 text-primary" : "bg-muted/80 text-muted-foreground",
+                          )}
+                        >
+                          <Icon className="h-3.5 w-3.5" aria-hidden />
+                        </span>
+                      ) : null}
                       <span className="text-[12.5px] font-semibold">{tab.label}</span>
                     </div>
                     {tab.description ? (
-                      <p className="text-[10.5px] leading-snug" style={{ paddingLeft: Icon ? "22px" : undefined }}>
+                      <p
+                        className={cn(
+                          "text-[10.5px] leading-snug text-muted-foreground",
+                          Icon && "pl-9",
+                          active && "text-primary/80",
+                        )}
+                      >
                         {tab.description}
                       </p>
                     ) : null}
@@ -236,19 +256,36 @@ export default function ResponsiveAccordionTabs({
               return (
                 <button key={tab.id} type="button" onClick={() => onTabChange(tab.id)} className={linkClass}>
                   <div className="mb-0.5 flex items-center gap-2">
-                    {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" /> : null}
+                    {Icon ? (
+                      <span
+                        className={cn(
+                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                          active ? "bg-primary/15 text-primary" : "bg-muted/80 text-muted-foreground",
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5" aria-hidden />
+                      </span>
+                    ) : null}
                     <span className="text-[12.5px] font-semibold">{tab.label}</span>
                   </div>
                   {tab.description ? (
-                    <p className="text-[10.5px] leading-snug" style={{ paddingLeft: Icon ? "22px" : undefined }}>
+                    <p
+                      className={cn(
+                        "text-[10.5px] leading-snug text-muted-foreground",
+                        Icon && "pl-9",
+                        active && "text-primary/80",
+                      )}
+                    >
                       {tab.description}
                     </p>
                   ) : null}
                 </button>
               );
             })}
+          </nav>
+          <div className="min-w-0 flex-1 rounded-xl border border-border/70 bg-card/80 p-5 shadow-sm backdrop-blur-sm lg:p-6">
+            {children}
           </div>
-          <div className="min-w-0 flex-1">{children}</div>
         </div>
       )}
     </div>

@@ -7,6 +7,7 @@ export interface PublicWorkspace {
   subdomain: string;
   madrasaName: string;
   tagline?: string;
+  enabled?: boolean;
 }
 
 export const WORKSPACE_BY_SUBDOMAIN_KEY = ['workspace', 'by-subdomain'] as const;

@@ -2,6 +2,18 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import type { PlatformUser } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useTenant } from '@/lib/contexts/TenantContext';
+import usePlatformSessionTimeout from '@/hooks/usePlatformSessionTimeout';
+
+function PlatformSessionTimeoutWatcher({
+  enabled,
+  onTimeout,
+}: {
+  enabled: boolean;
+  onTimeout: () => void;
+}): null {
+  usePlatformSessionTimeout({ enabled, onTimeout });
+  return null;
+}
 
 export interface PlatformAuthContextType {
   platformUser: PlatformUser | null;
@@ -51,6 +63,8 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
+      localStorage.removeItem('mms_user');
+      localStorage.removeItem('mms_token');
       setPlatformUser(data.user);
       setIsPlatformAuthenticated(true);
       setPlatformAuthChecked(true);
@@ -61,6 +75,8 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const platformLogout = useCallback((): void => {
     void apiFetch('/api/platform/auth/logout', { method: 'POST' });
+    localStorage.removeItem('mms_user');
+    localStorage.removeItem('mms_token');
     setPlatformUser(null);
     setIsPlatformAuthenticated(false);
     setPlatformAuthChecked(true);
@@ -91,7 +107,15 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     ],
   );
 
-  return <PlatformAuthContext.Provider value={value}>{children}</PlatformAuthContext.Provider>;
+  return (
+    <PlatformAuthContext.Provider value={value}>
+      <PlatformSessionTimeoutWatcher
+        enabled={isApex && isPlatformAuthenticated}
+        onTimeout={platformLogout}
+      />
+      {children}
+    </PlatformAuthContext.Provider>
+  );
 };
 
 export function usePlatformAuth(): PlatformAuthContextType {

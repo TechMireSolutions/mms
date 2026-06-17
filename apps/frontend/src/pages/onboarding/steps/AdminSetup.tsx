@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHint } from "@mms/shared";
 import { OnboardingData } from "../OnboardingWizard";
+import useTranslation from "@/hooks/useTranslation";
 
 /** The subset of onboarding data used by this step. */
 export interface AdminSetupData {
@@ -12,9 +13,7 @@ export interface AdminSetupData {
   phone?: string;
   password?: string;
   confirmPassword?: string;
-  enable2FA?: boolean;
   agreedTerms?: boolean;
-  [key: string]: unknown;
 }
 
 interface FieldRowProps {
@@ -35,7 +34,7 @@ const FieldRow = ({ label, required = false, children, hint }: FieldRowProps) =>
 );
 
 const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
-const strengthColors = ["", "bg-destructive", "bg-amber-400", "bg-yellow-400", "bg-primary"];
+const strengthColors = ["", "bg-destructive", "bg-warning", "bg-warning", "bg-primary"];
 
 function getStrength(pw: string): number {
   let score = 0;
@@ -55,6 +54,7 @@ interface AdminSetupProps {
  * AdminSetup step component for onboarding.
  */
 export default function AdminSetup({ data, onChange }: AdminSetupProps) {
+  const { t } = useTranslation();
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -142,7 +142,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
               ))}
             </div>
             <p className={`text-xs font-medium ${
-              strength <= 1 ? "text-destructive" : strength === 2 ? "text-amber-500" : strength === 3 ? "text-yellow-600" : "text-primary"
+              strength <= 1 ? "text-destructive" : strength === 2 ? "text-warning" : strength === 3 ? "text-warning" : "text-primary"
             }`}>
               {strengthLabels[strength]} password
             </p>
@@ -177,30 +177,6 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
         )}
       </FieldRow>
 
-      {/* 2FA option */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/[0.04] border border-primary/15">
-        <ShieldCheck className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Enable Two-Factor Authentication</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Recommended — adds an extra layer of security</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => update("enable2FA", !data.enable2FA)}
-              className={`relative w-10 h-5 rounded-full transition-all flex-shrink-0 ${
-                data.enable2FA ? "bg-primary" : "bg-muted"
-              }`}
-            >
-              <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                data.enable2FA ? "translate-x-5" : ""
-              }`} />
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Terms */}
       <div className="flex items-start gap-2.5">
         <input
@@ -211,9 +187,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           className="mt-0.5 w-4 h-4 rounded border-border accent-primary"
         />
         <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed">
-          I agree to the{" "}
-          <a href="#" className="text-primary font-medium hover:underline">Terms of Service</a> and{" "}
-          <a href="#" className="text-primary font-medium hover:underline">Privacy Policy</a>
+          {t("onboarding.agreeTerms")}
         </label>
       </div>
     </div>

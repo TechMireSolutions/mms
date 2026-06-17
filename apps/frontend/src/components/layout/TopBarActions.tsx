@@ -152,7 +152,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to={ROUTES.settingsSection("global")}>
+            <Link to={ROUTES.settings}>
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Link>

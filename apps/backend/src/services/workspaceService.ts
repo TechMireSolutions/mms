@@ -2,10 +2,12 @@ import { randomBytes } from 'node:crypto';
 import {
   type Workspace,
   type PublicWorkspaceSummary,
+  type PlatformWorkspaceRow,
   type BrandingSettings,
   mergeBrandingSettings,
   slugifySubdomain,
   isValidSubdomain,
+  isWorkspaceEnabled,
   toPublicBranding,
   WORKSPACES_COLLECTION,
 } from '@mms/shared';
@@ -30,11 +32,12 @@ export function normalizeSubdomainInput(value: string): string {
   return slugifySubdomain(value);
 }
 
-/** All registered workspaces for apex picker (public name, tagline, logo from branding). */
+/** All registered workspaces for apex picker (active only; public name from branding). */
 export async function listPublicWorkspaces(): Promise<PublicWorkspaceSummary[]> {
   const workspaces = await listWorkspaces();
+  const active = workspaces.filter(isWorkspaceEnabled);
   const summaries = await Promise.all(
-    workspaces.map(async (ws) => {
+    active.map(async (ws) => {
       const branding = await fetchPublicBrandingForSubdomain(ws.subdomain);
       const logoUrl = branding.logoUrl?.trim();
       return {
@@ -46,6 +49,54 @@ export async function listPublicWorkspaces(): Promise<PublicWorkspaceSummary[]> 
     })
   );
   return summaries.sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
+}
+
+/** All workspaces for platform super-user console (includes disabled). */
+export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> {
+  const workspaces = await listWorkspaces();
+  const summaries = await Promise.all(
+    workspaces.map(async (ws) => {
+      const branding = await fetchPublicBrandingForSubdomain(ws.subdomain);
+      const logoUrl = branding.logoUrl?.trim();
+      return {
+        subdomain: ws.subdomain,
+        madrasaName: branding.madrasaName || ws.madrasaName,
+        tagline: branding.tagline || ws.tagline,
+        logoUrl: logoUrl || undefined,
+        enabled: isWorkspaceEnabled(ws),
+        createdAt: ws.createdAt,
+      };
+    }),
+  );
+  return summaries.sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
+}
+
+export async function setWorkspaceEnabled(
+  subdomain: string,
+  enabled: boolean,
+): Promise<Workspace | null> {
+  const normalized = normalizeSubdomainInput(subdomain);
+  const workspaces = await listWorkspaces();
+  const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
+  if (index === -1) return null;
+
+  workspaces[index] = { ...workspaces[index], enabled };
+  await saveCollection(WORKSPACES_COLLECTION, workspaces);
+  return workspaces[index];
+}
+
+export async function assertWorkspaceActive(subdomain: string): Promise<Workspace> {
+  const workspace = await getWorkspaceBySubdomain(subdomain);
+  if (!workspace) {
+    throw Object.assign(new Error('Workspace not found'), { statusCode: 404 });
+  }
+  if (!isWorkspaceEnabled(workspace)) {
+    throw Object.assign(new Error('This madrasa workspace has been disabled by the platform administrator.'), {
+      statusCode: 403,
+      type: 'workspace_disabled',
+    });
+  }
+  return workspace;
 }
 
 export async function getWorkspaceBySubdomain(subdomain: string): Promise<Workspace | null> {
@@ -116,6 +167,7 @@ export async function createWorkspace(data: {
     tagline: data.tagline,
     country: data.country,
     createdAt: new Date().toISOString(),
+    enabled: true,
   };
 
   const workspaces = await listWorkspaces();

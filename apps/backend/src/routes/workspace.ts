@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { isWorkspaceEnabled } from '@mms/shared';
 import {
   getWorkspace,
   getWorkspaceBySubdomain,
@@ -53,6 +54,7 @@ export default async function workspaceRoutes(
           subdomain: workspace.subdomain,
           madrasaName: branding.madrasaName || workspace.madrasaName,
           tagline: branding.tagline || workspace.tagline,
+          enabled: isWorkspaceEnabled(workspace),
         },
         branding,
       });

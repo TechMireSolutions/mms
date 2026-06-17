@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import React from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
 import usePermissions from "@/hooks/usePermissions";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { ROUTES } from "@/lib/config/routes";
@@ -12,22 +13,16 @@ import useTranslation from "@/hooks/useTranslation";
 export default function PageNotFound(): React.JSX.Element {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
+  const { isPlatformAuthenticated } = usePlatformAuth();
   const { can } = usePermissions();
   const { isApex } = useTenant();
   const { t } = useTranslation();
   const pageName = location.pathname;
 
-  const primaryLink = isAuthenticated
-    ? ROUTES.home
-    : isApex
-      ? ROUTES.login
-      : ROUTES.login;
+  const signedIn = isApex ? isPlatformAuthenticated : isAuthenticated;
 
-  const primaryLabel = isAuthenticated
-    ? t("page.notFound.goDashboard")
-    : isApex
-      ? t("page.notFound.goSignIn")
-      : t("page.notFound.goSignIn");
+  const primaryLink = signedIn ? ROUTES.home : ROUTES.login;
+  const primaryLabel = signedIn ? t("page.notFound.goDashboard") : t("page.notFound.goSignIn");
 
   return (
     <div dir={isApex ? "ltr" : undefined} className="min-h-screen flex items-center justify-center p-6 bg-background">
@@ -45,7 +40,7 @@ export default function PageNotFound(): React.JSX.Element {
             </p>
           </div>
 
-          {isAuthenticated && can("users.manage") && (
+          {signedIn && !isApex && can("users.manage") && (
             <div className="mt-8 p-4 bg-muted/50 rounded-lg border border-border text-left">
               <p className="text-sm font-medium text-foreground">{t("page.notFound.adminNote")}</p>
               <p className="text-sm text-muted-foreground leading-relaxed mt-1">
@@ -69,15 +64,15 @@ export default function PageNotFound(): React.JSX.Element {
             >
               {primaryLabel}
             </Link>
-            {isAuthenticated && (
+            {signedIn && !isApex && (
               <Link
-                to={ROUTES.settingsSection("global")}
+                to={ROUTES.settings}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-primary hover:underline"
               >
                 {t("page.notFound.openSettings")}
               </Link>
             )}
-            {!isAuthenticated && isApex ? (
+            {isApex && isPlatformAuthenticated ? (
               <Link
                 to={ROUTES.onboarding}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-primary hover:underline"

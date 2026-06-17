@@ -95,17 +95,28 @@ export default async function authRoutes(
         });
       }
 
-      const result = await loginUser(email!, password!, subdomain, fastify.jwt, reply);
+      try {
+        const result = await loginUser(email!, password!, subdomain, fastify.jwt, reply);
 
-      if (result) {
-        if (result.requires2FA) {
-          return reply.send({
-            user: result.user,
-            requires2FA: true,
-            challengeId: result.challengeId,
+        if (result) {
+          if (result.requires2FA) {
+            return reply.send({
+              user: result.user,
+              requires2FA: true,
+              challengeId: result.challengeId,
+            });
+          }
+          return reply.send({ user: result.user, requires2FA: false });
+        }
+      } catch (error: unknown) {
+        const err = error as Error & { statusCode?: number; type?: string };
+        if (err.statusCode === 403 && err.type === 'workspace_disabled') {
+          return reply.status(403).send({
+            type: 'workspace_disabled',
+            message: err.message,
           });
         }
-        return reply.send({ user: result.user, requires2FA: false });
+        throw error;
       }
 
       return reply.status(401).send({
@@ -121,25 +132,21 @@ export default async function authRoutes(
       const body = request.body;
 
       try {
-        const result = await onboardUser(
-          {
-            email: body.email!,
-            adminName: body.adminName!,
-            password: body.password!,
-            subdomain: body.subdomain!,
-            madrasaName: body.madrasaName!,
-            tagline: body.tagline,
-            country: body.country,
-            primaryColor: body.primaryColor,
-            secondaryColor: body.secondaryColor,
-            logoUrl: body.logoUrl,
-            adminPhone: body.adminPhone,
-            website: body.website,
-            footerText: body.footerText,
-          },
-          fastify.jwt,
-          reply
-        );
+        const result = await onboardUser({
+          email: body.email!,
+          adminName: body.adminName!,
+          password: body.password!,
+          subdomain: body.subdomain!,
+          madrasaName: body.madrasaName!,
+          tagline: body.tagline,
+          country: body.country,
+          primaryColor: body.primaryColor,
+          secondaryColor: body.secondaryColor,
+          logoUrl: body.logoUrl,
+          adminPhone: body.adminPhone,
+          website: body.website,
+          footerText: body.footerText,
+        });
         return reply.send(result);
       } catch (error: unknown) {
         const err = error as Error & { statusCode?: number };
@@ -254,6 +261,18 @@ export default async function authRoutes(
         message: 'Handoff code is required',
       });
     }
+
+    const subdomain = resolveSubdomainFromRequest(
+      request.hostname,
+      request.headers['x-forwarded-host'],
+    );
+    if (!subdomain) {
+      return reply.status(403).send({
+        type: 'forbidden',
+        message: 'Handoff is only available on a tenant subdomain',
+      });
+    }
+
     const result = await exchangeAuthHandoff(code);
     if (!result) {
       return reply.status(401).send({
@@ -261,6 +280,14 @@ export default async function authRoutes(
         message: 'Invalid or expired handoff code',
       });
     }
+
+    if (result.user.workspaceSubdomain?.toLowerCase() !== subdomain.toLowerCase()) {
+      return reply.status(403).send({
+        type: 'forbidden',
+        message: 'Handoff code is not valid for this workspace',
+      });
+    }
+
     const { establishSession } = await import('../services/auth/authService.js');
     await establishSession(result.user, fastify.jwt, reply, true);
     return reply.send({ user: result.user });

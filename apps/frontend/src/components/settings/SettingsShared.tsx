@@ -37,8 +37,8 @@ export function SettingsPanel({
 
   return (
     <div className={cn(SETTINGS_WIDTH[width], 'space-y-5 pb-2')}>
-      {/* Title lives in sidebar / accordion — avoid repeating it here */}
-      <SettingsPanelIntro description={t(introDescKey)} className="hidden lg:block" />
+      {/* Desktop section header lives in Settings.tsx — intro callout for mobile accordion only */}
+      <SettingsPanelIntro description={t(introDescKey)} className="lg:hidden" />
       <SettingsStatusBadges isDirty={isDirty} saved={saved} />
       <div className="space-y-5">{children}</div>
       {footer}
@@ -75,17 +75,27 @@ export function SettingsStatusBadges({
   if (!isDirty && !saved) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2" aria-live="polite">
-      {isDirty && (
-        <span className="inline-flex items-center rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+    <div
+      className={cn(
+        'flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2',
+        isDirty
+          ? 'border-warning/30 bg-warning/5'
+          : 'border-border/60 bg-muted/20',
+      )}
+      aria-live="polite"
+    >
+      {isDirty ? (
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-warning">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" aria-hidden />
           {t('settings.unsavedChanges')}
         </span>
-      )}
-      {saved && !isDirty && (
-        <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+      ) : null}
+      {saved && !isDirty ? (
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" aria-hidden />
           {t('settings.savedBadge')}
         </span>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -108,7 +118,14 @@ export function SettingsToggleRow({
   disabled = false,
 }: SettingsToggleRowProps): React.JSX.Element {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border border-border/60 bg-muted/10 px-3 py-3">
+    <div
+      className={cn(
+        'flex items-center justify-between gap-4 rounded-xl border px-3.5 py-3.5 transition-colors',
+        checked
+          ? 'border-primary/20 bg-primary/5'
+          : 'border-border/60 bg-muted/10 hover:border-border hover:bg-muted/20',
+      )}
+    >
       <div className="min-w-0 flex-1">
         <Label htmlFor={id} className="text-sm font-semibold text-foreground cursor-pointer">
           {label}
@@ -152,7 +169,7 @@ export function SettingsCallout({
       className={cn(
         'rounded-lg border px-3 py-2.5 text-xs leading-relaxed',
         variant === 'warning'
-          ? 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-300'
+          ? 'border-warning/30 bg-warning/10 text-warning dark:border-warning/30 dark:bg-warning/20 dark:text-warning'
           : 'border-border bg-muted/30 text-muted-foreground',
       )}
     >
@@ -165,11 +182,11 @@ const META_BADGE_STYLES = {
   primary: 'border-primary/30 bg-primary/10 text-primary',
   muted: 'border-border bg-muted text-muted-foreground',
   warning:
-    'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300',
+    'border-warning/40 bg-warning/10 text-warning dark:border-warning/40 dark:bg-warning/20 dark:text-warning',
   success:
-    'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300',
+    'border-success/40 bg-success/10 text-success dark:border-success/40 dark:bg-success/20 dark:text-success',
   destructive:
-    'border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300',
+    'border-destructive/40 bg-destructive/10 text-destructive dark:border-destructive/40 dark:bg-destructive/20 dark:text-destructive',
 } as const;
 
 /** Compact status chip for settings section summaries. */

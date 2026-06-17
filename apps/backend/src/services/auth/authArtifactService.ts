@@ -3,7 +3,12 @@ import { eq, lt, sql } from 'drizzle-orm';
 import { authArtifacts } from '../../db/schema.js';
 import { getDb } from '../../db/dbClient.js';
 
-export type AuthArtifactKind = 'handoff' | 'two_factor_challenge' | 'refresh_token';
+export type AuthArtifactKind =
+  | 'handoff'
+  | 'two_factor_challenge'
+  | 'refresh_token'
+  | 'platform_setup'
+  | 'platform_password_reset';
 
 export interface AuthArtifactRecord<T> {
   id: string;

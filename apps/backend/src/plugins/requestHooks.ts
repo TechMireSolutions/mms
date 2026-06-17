@@ -11,8 +11,11 @@ export function registerRequestHooks(app: FastifyInstance): void {
       request.headers['x-forwarded-host'],
     );
     tenantStorage.run(subdomain, () => {
-      attachAccessTokenFromCookie(request);
-      attachPlatformTokenFromCookie(request);
+      if (subdomain) {
+        attachAccessTokenFromCookie(request);
+      } else {
+        attachPlatformTokenFromCookie(request);
+      }
       done();
     });
   });

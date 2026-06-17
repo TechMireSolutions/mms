@@ -7,15 +7,11 @@ import { clearPlatformAccessCookie, setPlatformAccessCookie } from './platformCo
 
 const PLATFORM_ACCESS_TTL = '8h';
 
-export async function loginPlatformUser(
-  email: string,
-  password: string,
+export function issuePlatformSession(
+  user: PlatformUser,
   jwtSigner: JWT,
   reply: FastifyReply,
-): Promise<PlatformUser | null> {
-  const user = await validatePlatformCredentials(email, password);
-  if (!user) return null;
-
+): PlatformUser {
   clearAuthCookies(reply);
 
   const accessToken = jwtSigner.sign(
@@ -30,6 +26,18 @@ export async function loginPlatformUser(
   return user;
 }
 
+export async function loginPlatformUser(
+  email: string,
+  password: string,
+  jwtSigner: JWT,
+  reply: FastifyReply,
+): Promise<PlatformUser | null> {
+  const user = await validatePlatformCredentials(email, password);
+  if (!user) return null;
+  return issuePlatformSession(user, jwtSigner, reply);
+}
+
 export function logoutPlatformUser(reply: FastifyReply): void {
   clearPlatformAccessCookie(reply);
+  clearAuthCookies(reply);
 }

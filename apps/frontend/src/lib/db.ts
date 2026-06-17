@@ -12,6 +12,9 @@ import {
   parseTenantFromHost,
   tenantLocalStoragePrefix,
   validateWorkspaceBackupJson,
+  buildWorkspaceBackupEnvelope,
+  buildStorageKeysFromSnapshot,
+  type TenantDatabaseSnapshot,
 } from "@mms/shared";
 import { getAppDomain } from "./config/tenantConfig";
 
@@ -199,49 +202,77 @@ async function syncToServer(url: string, body: unknown): Promise<ServerSyncResul
 }
 
 /**
+ * Downloads the authoritative tenant snapshot from PostgreSQL (admin-only).
+ */
+export async function fetchTenantSnapshot(): Promise<TenantDatabaseSnapshot> {
+  const response = await apiFetch("/api/db/sync", {
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    if (response.status === 403) {
+      throw new Error("backup.serverForbidden");
+    }
+    throw new Error("backup.serverFetchFailed");
+  }
+
+  return (await response.json()) as TenantDatabaseSnapshot;
+}
+
+/**
+ * Writes a server snapshot into the scoped localStorage cache.
+ */
+export function applySnapshotToLocalCache(snapshot: TenantDatabaseSnapshot): void {
+  if (snapshot.collections) {
+    for (const [name, list] of Object.entries(snapshot.collections)) {
+      if (!Array.isArray(list)) continue;
+      localStorage.setItem(scopedStorageKey(name), JSON.stringify(list));
+    }
+  }
+
+  if (snapshot.objects) {
+    for (const [key, obj] of Object.entries(snapshot.objects)) {
+      localStorage.setItem(scopedStorageKey(key), JSON.stringify(obj));
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("local-database-update"));
+  }
+}
+
+/**
  * Performs a complete synchronization pull from the backend.
  * Downloads all collections and objects, updates the local cache, and notifies observers.
  *
- * @param {string} [token] - The authentication token.
  * @returns {Promise<void>}
  */
 export async function syncDatabase(): Promise<void> {
   try {
-    const response = await apiFetch("/api/db/sync", {
-      headers: getHeaders()
-    });
-
-    if (response.ok) {
-      const data = await response.json() as {
-        collections?: Record<string, unknown[]>;
-        objects?: Record<string, unknown>;
-      };
-      
-      // Update collections
-      if (data.collections) {
-        for (const [name, list] of Object.entries(data.collections)) {
-          localStorage.setItem(scopedStorageKey(name), JSON.stringify(list));
-        }
-      }
-
-      // Update objects
-      if (data.objects) {
-        for (const [key, obj] of Object.entries(data.objects)) {
-          localStorage.setItem(scopedStorageKey(key), JSON.stringify(obj));
-        }
-      }
-
-      // Notify the frontend components to update their states
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event("local-database-update"));
-      }
-      console.log("Database sync from backend completed successfully.");
-    } else {
-      console.warn(`Failed to pull data from backend (status: ${response.status})`);
-    }
+    const data = await fetchTenantSnapshot();
+    applySnapshotToLocalCache(data);
+    console.log("Database sync from backend completed successfully.");
   } catch (error) {
     console.error("Failed to sync database with backend:", error);
   }
+}
+
+/**
+ * Exports a full tenant backup from the server (PostgreSQL), not browser cache alone.
+ * Refreshes localStorage from the server snapshot before building the file.
+ */
+export async function exportTenantBackup(): Promise<string> {
+  const snapshot = await fetchTenantSnapshot();
+  applySnapshotToLocalCache(snapshot);
+
+  const prefix = getStoragePrefix();
+  const keys = buildStorageKeysFromSnapshot(snapshot, prefix);
+  const subdomain =
+    typeof window !== "undefined"
+      ? parseTenantFromHost(window.location.hostname, getAppDomain())
+      : null;
+
+  return buildWorkspaceBackupEnvelope(keys, { subdomain, dataSource: "server" });
 }
 
 /**
@@ -474,12 +505,9 @@ export function saveObject<T>(key: string, data: T): void {
 }
 
 /**
- * Scans all keys in localStorage starting with "mms_",
- * and returns a JSON string representation of all matching key-value pairs.
- *
- * @returns {string} The serialized database JSON string.
+ * Exports scoped localStorage only (cache — may be incomplete vs PostgreSQL).
  */
-export function exportDatabase(): string {
+export function exportLocalDatabaseCache(): string {
   try {
     const prefix = getStoragePrefix();
     const data: Record<string, string> = {};
@@ -492,7 +520,11 @@ export function exportDatabase(): string {
         }
       }
     }
-    return JSON.stringify(data);
+    const subdomain =
+      typeof window !== "undefined"
+        ? parseTenantFromHost(window.location.hostname, getAppDomain())
+        : null;
+    return buildWorkspaceBackupEnvelope(data, { subdomain, dataSource: "local" });
   } catch (error) {
     console.error("Error exporting database:", error);
     throw error;
@@ -504,9 +536,9 @@ export function exportDatabase(): string {
  * the provided JSON string, imports the stored key-value pairs and pushes to backend.
  *
  * @param {string} jsonString - The serialized database JSON string.
- * @returns {void}
+ * @returns {Promise<void>}
  */
-export function importDatabase(jsonString: string): void {
+export async function importDatabase(jsonString: string): Promise<void> {
   try {
     const prefix = getStoragePrefix();
     const validated = validateWorkspaceBackupJson(jsonString, prefix);
@@ -543,7 +575,10 @@ export function importDatabase(jsonString: string): void {
     }
 
     // Pushes backup bulk sync to backend
-    void syncToServer("/api/db/sync", { collections, objects });
+    const result = await syncToServer("/api/db/sync", { collections, objects });
+    if (!result.ok) {
+      throw new Error("backup.serverRestoreFailed");
+    }
   } catch (error) {
     console.error("Error importing database:", error);
     throw error;

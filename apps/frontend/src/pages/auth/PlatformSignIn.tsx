@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { AlertCircle, ArrowRight, Loader2, Lock, Mail } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
@@ -6,6 +7,7 @@ import useTranslation from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/lib/config/routes";
 
 /**
  * Apex-only sign-in for platform super-users who can provision new madrasas.
@@ -73,6 +75,15 @@ export default function PlatformSignIn(): React.JSX.Element {
               className="pl-10 h-11"
             />
           </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Link
+            to={ROUTES.platformForgotPassword}
+            className="text-sm text-primary font-medium hover:underline"
+          >
+            {t("auth.forgotPassword")}
+          </Link>
         </div>
 
         <Button type="submit" className="w-full h-11" disabled={isLoadingPlatformAuth}>

@@ -11,6 +11,23 @@ vi.mock('../services/auth/authArtifactService.js', () => ({
   takeAuthArtifact: vi.fn(),
 }));
 
+vi.mock('../services/workspaceService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/workspaceService.js')>();
+  const demoWorkspace = {
+    id: 'ws-demo',
+    subdomain: 'demo',
+    madrasaName: 'Demo Madrasa',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    enabled: true,
+  };
+  return {
+    ...actual,
+    getWorkspaceBySubdomain: vi.fn().mockImplementation(async (subdomain: string) =>
+      subdomain === 'demo' ? demoWorkspace : null,
+    ),
+  };
+});
+
 import { buildApp } from '../app.js';
 import { canDownloadBulkSync } from '../services/rbacService.js';
 

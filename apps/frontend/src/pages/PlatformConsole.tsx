@@ -1,10 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, LogOut, Plus } from "lucide-react";
-import WorkspaceRegistryList from "@/components/routing/WorkspaceRegistryList";
+import { ArrowRight, LogOut, Plus, UserCircle } from "lucide-react";
+import PlatformWorkspaceList from "@/components/platform/PlatformWorkspaceList";
+import PlatformPageShell, { PlatformLogoMark } from "@/components/platform/PlatformPageShell";
 import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
 import useTranslation from "@/hooks/useTranslation";
 import { ROUTES } from "@/lib/config/routes";
+import { Button } from "@/components/ui/button";
 
 /**
  * Authenticated apex console — super-user provisions new madrasa workspaces.
@@ -14,14 +16,9 @@ export default function PlatformConsole(): React.JSX.Element {
   const { platformUser, platformLogout } = usePlatformAuth();
 
   return (
-    <div
-      dir="ltr"
-      className="min-h-screen w-full overflow-x-hidden bg-background flex flex-col items-center justify-center p-4 sm:p-6"
-    >
-      <div className="w-full max-w-lg mx-auto text-center space-y-6">
-        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-          <span className="text-primary font-display text-2xl font-bold">م</span>
-        </div>
+    <PlatformPageShell>
+      <div className="text-center space-y-6">
+        <PlatformLogoMark />
 
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
@@ -32,16 +29,22 @@ export default function PlatformConsole(): React.JSX.Element {
           </p>
         </div>
 
-        <Link
-          to={ROUTES.onboarding}
-          className="inline-flex items-center justify-center gap-2 w-full py-3 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all"
-        >
-          <Plus className="w-4 h-4" aria-hidden />
-          {t("auth.createMadrasa")}
-          <ArrowRight className="w-4 h-4" aria-hidden />
-        </Link>
+        <Button asChild className="w-full h-11 rounded-xl font-semibold">
+          <Link to={ROUTES.onboarding}>
+            <Plus className="w-4 h-4" aria-hidden />
+            {t("auth.createMadrasa")}
+            <ArrowRight className="w-4 h-4" aria-hidden />
+          </Link>
+        </Button>
 
-        <WorkspaceRegistryList headingKey="apex.registeredMadrasas" />
+        <PlatformWorkspaceList />
+
+        <Button asChild variant="outline" className="w-full h-11 rounded-xl">
+          <Link to={ROUTES.platformAccount}>
+            <UserCircle className="w-4 h-4" aria-hidden />
+            {t("platform.myAccount")}
+          </Link>
+        </Button>
 
         <div className="flex justify-center text-sm">
           <button
@@ -54,6 +57,6 @@ export default function PlatformConsole(): React.JSX.Element {
           </button>
         </div>
       </div>
-    </div>
+    </PlatformPageShell>
   );
 }

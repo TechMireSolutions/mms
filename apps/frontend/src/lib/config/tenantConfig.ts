@@ -2,6 +2,7 @@ import {
   DEFAULT_APP_DOMAIN,
   buildApexUrl,
   buildTenantUrl,
+  isApexHost,
   type TenantUrlOptions,
 } from "@mms/shared";
 import { env } from "@/lib/config/env";
@@ -37,4 +38,12 @@ export function tenantUrl(subdomain: string, path = "/"): string {
 
 export function apexUrl(path = "/"): string {
   return buildApexUrl(path, getTenantUrlOptions());
+}
+
+/** True when the current browser host is the apex domain (no tenant subdomain). */
+export function isCurrentHostApex(): boolean {
+  if (typeof window === "undefined") {
+    return true;
+  }
+  return isApexHost(window.location.hostname.toLowerCase(), getAppDomain());
 }

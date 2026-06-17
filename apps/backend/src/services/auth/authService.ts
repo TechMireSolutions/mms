@@ -2,7 +2,7 @@ import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
 import { requiresTwoFactor } from '@mms/shared';
 import { validateCredentials, createUser, type PublicUser } from './userService.js';
-import { createWorkspace, getWorkspaceBySubdomain } from '../workspaceService.js';
+import { createWorkspace, assertWorkspaceActive, getWorkspaceBySubdomain } from '../workspaceService.js';
 import { createAuthHandoff } from './authHandoffService.js';
 import { saveObject } from '../../db/database.js';
 import type { Workspace } from '@mms/shared';
@@ -70,6 +70,16 @@ export async function loginUser(
   jwtSigner: JWT,
   reply: FastifyReply,
 ): Promise<AuthResult | null> {
+  try {
+    await assertWorkspaceActive(workspaceSubdomain);
+  } catch (error: unknown) {
+    const err = error as Error & { statusCode?: number; type?: string };
+    if (err.statusCode === 403 && err.type === 'workspace_disabled') {
+      throw err;
+    }
+    return null;
+  }
+
   const user = await validateCredentials(email, password, workspaceSubdomain);
   if (!user) return null;
 
@@ -99,11 +109,7 @@ export async function isOnboardingAvailable(): Promise<boolean> {
   return true;
 }
 
-export async function onboardUser(
-  input: OnboardInput,
-  jwtSigner: JWT,
-  reply: FastifyReply,
-): Promise<OnboardResult> {
+export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
   const workspace = await createWorkspace({
     subdomain: input.subdomain,
     madrasaName: input.madrasaName,
@@ -140,10 +146,9 @@ export async function onboardUser(
     throw new Error('Failed to create workspace administrator.');
   }
 
-  const authResult = await establishSession(user, jwtSigner, reply, true);
-  const handoffCode = await createAuthHandoff(authResult);
+  const handoffCode = await createAuthHandoff({ user });
 
-  return { ...authResult, workspace, handoffCode };
+  return { user, workspace, handoffCode };
 }
 
 export async function resolvePublicWorkspace(subdomain: string): Promise<Workspace | null> {

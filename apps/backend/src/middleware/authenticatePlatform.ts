@@ -23,6 +23,7 @@ export async function authenticatePlatform(
     return;
   }
 
+  delete request.headers.authorization;
   attachPlatformTokenFromCookie(request);
 
   try {

@@ -37,13 +37,41 @@ vi.mock('../services/globalSettingsService.js', async (importOriginal) => {
 });
 
 const mockValidatePlatformCredentials = vi.fn();
+const mockHasPlatformUsers = vi.fn();
+const mockFindPlatformUserByEmail = vi.fn();
+const mockUpdatePlatformUserPassword = vi.fn();
+const mockGetStoredPlatformUserById = vi.fn();
 
 vi.mock('../services/platform/platformUserService.js', () => ({
   validatePlatformCredentials: (...args: unknown[]) => mockValidatePlatformCredentials(...args),
   ensurePlatformSuperUserFromEnv: vi.fn().mockResolvedValue(undefined),
-  findPlatformUserByEmail: vi.fn(),
+  findPlatformUserByEmail: (...args: unknown[]) => mockFindPlatformUserByEmail(...args),
   getPublicPlatformUserById: vi.fn(),
+  getStoredPlatformUserById: (...args: unknown[]) => mockGetStoredPlatformUserById(...args),
+  hasPlatformUsers: (...args: unknown[]) => mockHasPlatformUsers(...args),
+  countPlatformUsers: vi.fn(),
+  createVerifiedPlatformUser: vi.fn(),
+  updatePlatformUserPassword: (...args: unknown[]) => mockUpdatePlatformUserPassword(...args),
+  updatePlatformUserName: vi.fn(),
+  changePlatformUserPassword: vi.fn(),
 }));
+
+vi.mock('../services/workspaceService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/workspaceService.js')>();
+  const demoWorkspace = {
+    id: 'ws-demo',
+    subdomain: 'demo',
+    madrasaName: 'Demo Madrasa',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    enabled: true,
+  };
+  return {
+    ...actual,
+    getWorkspaceBySubdomain: vi.fn().mockImplementation(async (subdomain: string) =>
+      subdomain === 'demo' ? demoWorkspace : null,
+    ),
+  };
+});
 
 import { buildApp } from '../app.js';
 import { PLATFORM_ACCESS_COOKIE } from '../services/platform/platformCookieService.js';
@@ -57,6 +85,16 @@ describe('auth routes', () => {
     mockGetPublicUserById.mockReset();
     mockGetJwtExpiresIn.mockReset().mockResolvedValue('15m');
     mockValidatePlatformCredentials.mockReset();
+    mockHasPlatformUsers.mockReset().mockResolvedValue(true);
+    mockFindPlatformUserByEmail.mockReset().mockResolvedValue(null);
+    mockGetStoredPlatformUserById.mockReset().mockResolvedValue({
+      id: 'p1',
+      email: 'platform@test.com',
+      name: 'Platform Admin',
+      passwordHash: 'hash',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    mockUpdatePlatformUserPassword.mockReset();
   });
 
   afterEach(() => {
@@ -307,7 +345,87 @@ describe('platform auth routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockValidatePlatformCredentials.mockReset();
+    mockHasPlatformUsers.mockReset().mockResolvedValue(true);
+    mockFindPlatformUserByEmail.mockReset().mockResolvedValue(null);
+    mockGetStoredPlatformUserById.mockReset().mockResolvedValue({
+      id: 'p1',
+      email: 'platform@test.com',
+      name: 'Platform Admin',
+      passwordHash: 'hash',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
     mockGetJwtExpiresIn.mockReset().mockResolvedValue('15m');
+  });
+
+  it('POST /api/platform/auth/password/forgot accepts unknown email without leaking', async () => {
+    mockFindPlatformUserByEmail.mockResolvedValueOnce(null);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/platform/auth/password/forgot',
+      headers: { host: 'localhost' },
+      payload: { email: 'unknown@example.com' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ accepted: true });
+    expect(mockPutAuthArtifact).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/platform/auth/password/forgot sends reset for existing platform user', async () => {
+    mockFindPlatformUserByEmail.mockResolvedValue({
+      id: 'p1',
+      email: 'admin@example.com',
+      name: 'Admin',
+      passwordHash: 'hash',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/platform/auth/password/forgot',
+      headers: { host: 'localhost' },
+      payload: { email: 'admin@example.com' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ accepted: true });
+    expect(mockPutAuthArtifact).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/platform/auth/setup/status reports first-run when empty', async () => {
+    mockHasPlatformUsers.mockResolvedValueOnce(false);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/auth/setup/status',
+      headers: { host: 'localhost' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ needsSetup: true });
+    await app.close();
+  });
+
+  it('POST /api/platform/auth/setup/register starts verification when no users exist', async () => {
+    mockHasPlatformUsers.mockResolvedValue(false);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/platform/auth/setup/register',
+      headers: { host: 'localhost' },
+      payload: {
+        name: 'Platform Admin',
+        email: 'admin@example.com',
+        password: 'SecurePass1',
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { setupId: string; email: string; devCode?: string };
+    expect(body.email).toBe('admin@example.com');
+    expect(body.setupId).toBeTruthy();
+    expect(body.devCode).toMatch(/^\d{6}$/);
+    expect(mockPutAuthArtifact).toHaveBeenCalled();
+    await app.close();
   });
 
   it('POST /api/platform/auth/login rejects tenant subdomain host', async () => {
@@ -381,6 +499,67 @@ describe('platform auth routes', () => {
         password: 'password123',
         subdomain: 'testmadrasa',
       },
+    });
+    expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('GET /api/platform/auth/me rejects tenant access token on apex', async () => {
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'u1',
+      email: 'admin@test.com',
+      name: 'Admin',
+      role: 'admin',
+      workspaceSubdomain: 'demo',
+      twoFactorVerified: true,
+      tokenType: 'access',
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/auth/me',
+      headers: { host: 'localhost' },
+      cookies: { mms_access: token },
+    });
+    expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('GET /api/auth/me rejects platform access token on tenant host', async () => {
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p1',
+      email: 'platform@test.com',
+      name: 'Platform Admin',
+      role: 'platform_super',
+      tokenType: 'platform_access',
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      headers: { host: 'demo.localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+    });
+    expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('GET /api/auth/me rejects tenant session on apex host', async () => {
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'u1',
+      email: 'admin@test.com',
+      name: 'Admin',
+      role: 'admin',
+      workspaceSubdomain: 'demo',
+      twoFactorVerified: true,
+      tokenType: 'access',
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      headers: { host: 'localhost' },
+      cookies: { mms_access: token },
     });
     expect(res.statusCode).toBe(401);
     await app.close();

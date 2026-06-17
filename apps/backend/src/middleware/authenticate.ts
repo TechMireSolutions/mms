@@ -1,6 +1,8 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { User } from '@mms/shared';
+import { isWorkspaceEnabled } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
 
 export interface AuthenticatedRequest extends FastifyRequest {
   user: User & { twoFactorVerified?: boolean; tokenType?: string };
@@ -30,6 +32,15 @@ export async function authenticateTenant(
     reply.status(403).send({
       type: 'forbidden',
       message: 'This endpoint requires a tenant subdomain',
+    });
+    return;
+  }
+
+  const workspace = await getWorkspaceBySubdomain(tenant);
+  if (!workspace || !isWorkspaceEnabled(workspace)) {
+    reply.status(403).send({
+      type: 'workspace_disabled',
+      message: 'This madrasa workspace has been disabled by the platform administrator.',
     });
     return;
   }

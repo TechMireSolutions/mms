@@ -17,9 +17,10 @@ export const ROUTES = {
   obligations: "/obligations",
   users: "/users",
   settings: "/settings",
-  settingsSection: (section: string) => `/settings/${section}` as const,
   login: "/login",
   forgotPassword: "/forgot-password",
+  platformForgotPassword: "/platform/forgot-password",
+  platformAccount: "/platform/account",
   twoFactor: "/2fa",
   onboarding: "/onboarding",
 } as const;
@@ -28,6 +29,7 @@ export const ROUTES = {
 export const PUBLIC_PATHS: readonly string[] = [
   ROUTES.login,
   ROUTES.forgotPassword,
+  ROUTES.platformForgotPassword,
   ROUTES.twoFactor,
   ROUTES.onboarding,
 ];
@@ -39,6 +41,7 @@ export const PUBLIC_PATHS: readonly string[] = [
 export const ENTRY_PATHS: readonly string[] = [
   ROUTES.login,
   ROUTES.forgotPassword,
+  ROUTES.platformForgotPassword,
   ROUTES.twoFactor,
   ROUTES.onboarding,
 ];
@@ -81,7 +84,7 @@ export function isPublicPath(pathname: string): boolean {
   );
 }
 
-/** Active state for sidebar / nav links (handles nested paths like /settings/branding). */
+/** Active state for sidebar / nav links. */
 export function isNavPathActive(pathname: string, itemPath: string): boolean {
   if (itemPath === ROUTES.home) {
     return pathname === ROUTES.home;

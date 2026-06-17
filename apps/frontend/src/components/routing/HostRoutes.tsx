@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import PlatformProtectedRoute from "@/components/routing/PlatformProtectedRoute";
 import GuestRoute from "@/components/routing/GuestRoute";
 import TenantNotFoundScreen from "@/components/routing/TenantNotFoundScreen";
+import WorkspaceDisabledScreen from "@/components/routing/WorkspaceDisabledScreen";
 import AppLayout from "@/components/layout/AppLayout";
 import PageNotFound from "@/components/routing/PageNotFound";
 
@@ -31,6 +32,8 @@ const TwoFactorAuth = React.lazy(() => import("@/pages/auth/TwoFactorAuth"));
 const OnboardingWizard = React.lazy(() => import("@/pages/onboarding/OnboardingWizard"));
 const ApexHome = React.lazy(() => import("@/pages/ApexHome"));
 const ApexWorkspaceGate = React.lazy(() => import("@/pages/ApexWorkspaceGate"));
+const PlatformForgotPassword = React.lazy(() => import("@/pages/auth/PlatformForgotPassword"));
+const PlatformAccount = React.lazy(() => import("@/pages/PlatformAccount"));
 
 function RedirectToApex({ path }: { path: string }): React.JSX.Element {
   useEffect(() => {
@@ -58,6 +61,15 @@ function TenantBootGate({ children }: { children: React.ReactNode }): React.JSX.
     return <TenantNotFoundScreen subdomain={subdomain} />;
   }
 
+  if (workspace && workspace.enabled === false) {
+    return (
+      <WorkspaceDisabledScreen
+        madrasaName={workspace.madrasaName}
+        subdomain={workspace.subdomain}
+      />
+    );
+  }
+
   return <>{children}</>;
 }
 
@@ -77,12 +89,14 @@ export default function HostRoutes(): React.JSX.Element {
         <Route path={ROUTES.home} element={<ApexHome />} />
         <Route element={<PlatformProtectedRoute />}>
           <Route path={ROUTES.onboarding} element={<OnboardingWizard />} />
+          <Route path={ROUTES.platformAccount} element={<PlatformAccount />} />
         </Route>
         <Route path={ROUTES.login} element={<ApexWorkspaceGate variant="login" showWorkspaceList />} />
         <Route
           path={ROUTES.forgotPassword}
           element={<ApexWorkspaceGate variant="forgotPassword" showWorkspaceList />}
         />
+        <Route path={ROUTES.platformForgotPassword} element={<PlatformForgotPassword />} />
         <Route path={ROUTES.twoFactor} element={<ApexWorkspaceGate variant="twoFactor" showWorkspaceList={false} />} />
         <Route path={`${ROUTES.settings}/*`} element={apexTenantGate} />
         {TENANT_APP_PATHS.map((path) => (
@@ -119,8 +133,8 @@ export default function HostRoutes(): React.JSX.Element {
             <Route path={ROUTES.accounting} element={<Accounting />} />
             <Route path={ROUTES.obligations} element={<Obligations />} />
             <Route path={ROUTES.users} element={<Users />} />
-            <Route path={ROUTES.settings} element={<Navigate to={ROUTES.settingsSection("global")} replace />} />
-            <Route path={`${ROUTES.settings}/:section`} element={<SettingsPage />} />
+            <Route path={ROUTES.settings} element={<SettingsPage />} />
+            <Route path={`${ROUTES.settings}/:section`} element={<Navigate to={ROUTES.settings} replace />} />
           </Route>
         </Route>
 
