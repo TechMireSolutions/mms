@@ -9,16 +9,42 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install and build on runner
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+          tar czf mms-dist.tar.gz apps/backend/dist apps/frontend/dist packages/shared/dist
 
       # Platform secrets (Settings → Secrets → Actions):
       #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM + PLATFORM_APP_URL
       #   OR PLATFORM_SMTP_* + PLATFORM_EMAIL_FROM
       #   Optional bootstrap: PLATFORM_ALLOW_ENV_BOOTSTRAP=true, PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD
       #   Optional verify fallback: MMS_API_URL=https://your-api-host (public /health)
+      - name: Copy build tarball to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: mms-dist.tar.gz
+          target: /tmp
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -48,11 +74,8 @@ jobs:
             set -e
             cd /var/www/mmsv2
 
-            git pull --ff-only origin main || {
-              echo "WARN: fast-forward pull failed — reset to origin/main"
-              git fetch origin main
-              git reset --hard origin/main
-            }
+            git reset --hard HEAD
+            git pull origin main
 
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
@@ -66,7 +89,9 @@ jobs:
             fi
 
             pnpm install --frozen-lockfile
-            pnpm run build
+
+            tar xzf /tmp/mms-dist.tar.gz -C /var/www/mmsv2
+            rm -f /tmp/mms-dist.tar.gz
 
             pm2 restart mmsv2-frontend --update-env || pm2 restart mmsv2-frontend || echo "WARNING: mmsv2-frontend restart failed"
             pm2 restart mmsv2-backend --update-env || pm2 restart mmsv2-backend || true
