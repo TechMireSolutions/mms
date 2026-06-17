@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import jwt from '@fastify/jwt';
-import { isOriginAllowedForAppDomain } from '@mms/shared';
+import { isOriginAllowedForAppDomain, isTrustedWorkspaceOrigin } from '@mms/shared';
 import type { ServerConfig } from '../config/serverConfig.js';
 
 export async function registerHttpPlugins(
@@ -17,10 +17,16 @@ export async function registerHttpPlugins(
             cb(null, true);
             return;
           }
-          if (
-            isOriginAllowedForAppDomain(origin, config.appDomain)
-            || origin === config.allowedOrigin
-          ) {
+          const appDomain = process.env.MMS_APP_DOMAIN?.trim();
+          if (appDomain && isOriginAllowedForAppDomain(origin, appDomain)) {
+            cb(null, true);
+            return;
+          }
+          if (!appDomain && isTrustedWorkspaceOrigin(origin)) {
+            cb(null, true);
+            return;
+          }
+          if (origin === config.allowedOrigin) {
             cb(null, true);
             return;
           }

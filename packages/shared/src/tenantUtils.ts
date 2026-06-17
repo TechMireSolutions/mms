@@ -1,5 +1,5 @@
-/** Production apex domain — onboarding & platform console. */
-export const DEFAULT_APP_DOMAIN = "mmsv2.aabtaab.com";
+/** Local dev apex when no env or hostname inference is available. */
+export const LOCAL_DEV_APP_DOMAIN = "localhost";
 
 export const RESERVED_SUBDOMAINS = new Set([
   "www",
@@ -80,7 +80,7 @@ export function isApexHost(hostname: string, appDomain: string): boolean {
 
 /**
  * Derive the apex app domain from a browser/API host when env is unset.
- * e.g. `dar-ul-quran.mmsv2.aabtaab.com` → `mmsv2.aabtaab.com`
+ * e.g. `{slug}.platform.example.com` → `platform.example.com`
  */
 export function inferAppDomainFromHostname(hostname: string): string | null {
   const host = hostname.toLowerCase().split(":")[0];
@@ -112,7 +112,7 @@ export function inferAppDomainFromHostname(hostname: string): string | null {
   return null;
 }
 
-/** Configured domain wins; else infer from host; else production default. */
+/** Configured domain wins; else infer from host; else localhost (dev only). */
 export function resolveAppDomain(
   hostname: string,
   configuredDomain?: string | null,
@@ -125,7 +125,20 @@ export function resolveAppDomain(
   if (inferred) {
     return inferred;
   }
-  return DEFAULT_APP_DOMAIN;
+  return LOCAL_DEV_APP_DOMAIN;
+}
+
+/**
+ * True for local dev origins only. Production CORS should use `isOriginAllowedForAppDomain`
+ * with `MMS_APP_DOMAIN` from the environment.
+ */
+export function isTrustedWorkspaceOrigin(origin: string): boolean {
+  try {
+    const host = new URL(origin).hostname.toLowerCase();
+    return host === LOCAL_DEV_APP_DOMAIN || host.endsWith(".localhost");
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -150,14 +163,24 @@ function normalizePort(port?: string | number | null): string {
   return `:${p}`;
 }
 
+function appDomainForUrlOptions(options: TenantUrlOptions): string {
+  if (options.appDomain) {
+    return options.appDomain;
+  }
+  if (typeof window !== "undefined") {
+    return resolveAppDomain(window.location.hostname);
+  }
+  return LOCAL_DEV_APP_DOMAIN;
+}
+
 /**
- * Full origin for a tenant workspace, e.g. https://al-noor.mmsv2.aabtaab.com
+ * Full origin for a tenant workspace, e.g. https://al-noor.{platform-domain}
  */
 export function buildTenantOrigin(
   subdomain: string,
   options: TenantUrlOptions = {}
 ): string {
-  const appDomain = options.appDomain ?? DEFAULT_APP_DOMAIN;
+  const appDomain = appDomainForUrlOptions(options);
   const protocol =
     options.protocol ??
     (typeof window !== "undefined" ? window.location.protocol : "https:");
@@ -193,7 +216,7 @@ export function buildApexUrl(
   path = "/",
   options: TenantUrlOptions = {}
 ): string {
-  const appDomain = options.appDomain ?? DEFAULT_APP_DOMAIN;
+  const appDomain = appDomainForUrlOptions(options);
   const protocol =
     options.protocol ??
     (typeof window !== "undefined" ? window.location.protocol : "https:");
