@@ -91,4 +91,5 @@ else
 fi
 
 pm2 logs mmsv2-backend --lines 30 --nostream 2>/dev/null || true
-exit 0
+pm2 logs mmsv2-frontend --lines 20 --nostream 2>/dev/null || true
+exit 1

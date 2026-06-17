@@ -23,6 +23,11 @@ fi
 export PATH="$HOME/.local/share/pnpm:$PATH"
 export PUPPETEER_SKIP_DOWNLOAD=true
 
+NODE_MAJOR="$(node -p "process.versions.node.split('.')[0]" 2>/dev/null || echo 0)"
+if [ "${NODE_MAJOR}" -lt 26 ] 2>/dev/null; then
+  echo "WARNING: Node $(node -v 2>/dev/null || echo unknown) — MMS requires Node >= 26"
+fi
+
 if [ -f scripts/merge-backend-env.sh ]; then
   bash scripts/merge-backend-env.sh "$ENV_FILE"
 else
@@ -46,20 +51,40 @@ if [ $? -ne 0 ]; then
 fi
 rm -f "$TARBALL"
 
-pm2 restart mmsv2-frontend --update-env || pm2 restart mmsv2-frontend || echo "WARNING: mmsv2-frontend restart failed"
-pm2 restart mmsv2-backend --update-env || pm2 restart mmsv2-backend || echo "WARNING: mmsv2-backend restart failed"
+pm2 restart mmsv2-frontend --update-env 2>/dev/null || pm2 restart mmsv2-frontend 2>/dev/null || true
+pm2 restart mmsv2-backend --update-env 2>/dev/null || pm2 restart mmsv2-backend 2>/dev/null || true
+
+DEPLOY_OK=true
 
 if [ -f scripts/deploy-recover-backend.sh ]; then
   bash scripts/deploy-recover-backend.sh "$ENV_FILE" || {
-    echo "WARNING: backend recovery failed — check pm2 logs on the server"
+    echo "ERROR: backend recovery failed"
+    DEPLOY_OK=false
     pm2 logs mmsv2-backend --lines 50 --nostream || true
   }
 fi
 
+if [ -f scripts/deploy-recover-frontend.sh ]; then
+  bash scripts/deploy-recover-frontend.sh "$ENV_FILE" || {
+    echo "ERROR: frontend recovery failed"
+    DEPLOY_OK=false
+    pm2 logs mmsv2-frontend --lines 50 --nostream || true
+  }
+fi
+
 if [ -f scripts/deploy-verify.sh ]; then
-  bash scripts/deploy-verify.sh "$ENV_FILE" || true
+  bash scripts/deploy-verify.sh "$ENV_FILE" || DEPLOY_OK=false
 fi
 
 pm2 save 2>/dev/null || true
-echo "MMSv2 deploy finished"
+
+if [ "$DEPLOY_OK" != true ]; then
+  echo "FATAL: MMS deploy finished but services are not healthy"
+  if [ -f scripts/server-diagnose.sh ]; then
+    bash scripts/server-diagnose.sh "$ENV_FILE" || true
+  fi
+  exit 1
+fi
+
+echo "MMSv2 deploy finished — services healthy"
 exit 0
