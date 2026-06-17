@@ -2,7 +2,8 @@ import React, { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Plus, User, Mail, Phone, Calendar, Sparkles, Users, Lock, Camera, Upload } from "lucide-react";
 import { CONTACTS } from '@/lib/data/contactsData';
-import { toTitleCase, optimizeImage, cn } from "../../lib/utils";
+import { toTitleCase, cn } from "../../lib/utils";
+import { uploadUserImage } from "@/lib/imageUpload";
 import { saveCollection, getObject } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import type { Contact } from "../../lib/contactFields";
@@ -84,14 +85,13 @@ function ContactPicker({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const optimized = await optimizeImage(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      if (typeof ev.target?.result === "string") {
-        onAvatarChange?.(ev.target.result);
-      }
-    };
-    reader.readAsDataURL(optimized);
+    try {
+      const url = await uploadUserImage(file, "avatar");
+      onAvatarChange?.(url);
+    } catch {
+      // ignore
+    }
+    e.target.value = "";
   };
 
   if (selected) {
@@ -403,15 +403,13 @@ export default function StudentForm({ student, students, onClose, onSave }: Stud
   const handleNewContactAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const optimized = await optimizeImage(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const res = ev.target?.result;
-      if (typeof res === "string") {
-        setNewContact((c) => ({ ...c, avatar: res }));
-      }
-    };
-    reader.readAsDataURL(optimized);
+    try {
+      const url = await uploadUserImage(file, "avatar");
+      setNewContact((c) => ({ ...c, avatar: url }));
+    } catch {
+      // ignore
+    }
+    e.target.value = "";
   };
 
   const handleRegisteredDateChange = (newDate: string) => {

@@ -36,7 +36,8 @@ export function resolveApiUrl(path: string): string {
 /** Cookie-first API client (`credentials: 'include'`). */
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers ?? {});
-  if (!headers.has('Content-Type') && init.body) {
+  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
+  if (!headers.has('Content-Type') && init.body && !isFormData) {
     headers.set('Content-Type', JSON_CONTENT_TYPE);
   }
 

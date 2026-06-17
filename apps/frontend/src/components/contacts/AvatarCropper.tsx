@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, Check, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
-import { canvasToOptimizedDataUrl } from "@mms/shared";
+import { uploadCanvasImage } from "@/lib/imageUpload";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 
 interface AvatarCropperProps {
@@ -30,6 +30,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
   const [dragging, setDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<DragCoordinate | null>(null);
   const [imgEl, setImgEl] = useState<HTMLImageElement | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const SIZE = 280; // canvas display size (px)
   const RADIUS = SIZE / 2;
@@ -121,8 +122,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
   );
 
   const handleCrop = (): void => {
-    if (!imgEl) return;
-    // Render at 300×300 output (circle cropped, WebP)
+    if (!imgEl || saving) return;
     const OUT = 300;
     const out = document.createElement("canvas");
     out.width = OUT;
@@ -142,9 +142,12 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
     ctx.drawImage(imgEl, -imgEl.naturalWidth / 2, -imgEl.naturalHeight / 2);
     ctx.restore();
 
-    // Export AVIF (fallback WebP) at 0.78 quality — best size vs quality
-    const dataUrl = canvasToOptimizedDataUrl(out, 0.78);
-    onCrop(dataUrl);
+    setSaving(true);
+    void uploadCanvasImage(out, "avatar")
+      .then((url) => onCrop(url))
+      .catch(() => {
+        setSaving(false);
+      });
   };
 
   return (

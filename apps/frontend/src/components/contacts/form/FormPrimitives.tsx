@@ -2,17 +2,19 @@ import React, { useState, useRef } from "react";
 import { AlertCircle, X, LucideIcon, Upload, MapPin, BrainCircuit, FileText, Camera, Star, ChevronDown, Check, Trash2 } from "lucide-react";
 import { DatePicker } from "../../ui/DatePicker";
 import { Popover, PopoverTrigger, PopoverContent } from "../../ui/popover";
-import { optimizeImage, FieldDefinition } from "@mms/shared";
+import { FieldDefinition } from "@mms/shared";
+import { uploadUserImage } from "@/lib/imageUpload";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { cn } from "../../../lib/utils";
 import AvatarCropper from "../AvatarCropper";
 import FormSelect from "../../ui/FormSelect";
 import useTranslation from "@/hooks/useTranslation";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "../../ui/formStyles";
 
-// ── Shared style constants ─────────────────────────────────────────────────────
-export const INPUT = "w-full px-3.5 py-2.5 min-h-[44px] rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all";
-export const SELECT = INPUT + " cursor-pointer";
-export const LABEL = "text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block";
+// ── Shared style constants (re-export for contact form tabs) ─────────────────
+export const INPUT = FORM_INPUT;
+export const SELECT = FORM_SELECT;
+export const LABEL = FORM_LABEL;
 
 // Collection (repeatable) card chrome — one source of truth so every tab matches.
 export const COLLECTION_CARD = "rounded-xl border border-border bg-muted/20 p-3 space-y-3";
@@ -469,27 +471,48 @@ export function CustomFieldInput({ field, value, onChange }: CustomFieldInputPro
     const file = typeof value === "string" ? { name: "avatar.webp", url: value } : (value as { name: string; url: string; size?: number } | null);
 
     const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      let f = e.target.files?.[0];
+      const f = e.target.files?.[0];
       if (!f) return;
 
+      if (isAvatar && f.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (typeof ev.target?.result === "string") {
+            setCropSrc(ev.target.result);
+          }
+        };
+        reader.readAsDataURL(f);
+        e.target.value = "";
+        return;
+      }
+
       if (f.type.startsWith("image/")) {
-        f = await optimizeImage(f);
+        try {
+          const url = await uploadUserImage(f, "general");
+          onChange({
+            name: f.name.replace(/\.[^/.]+$/, "") + ".avif",
+            url,
+            size: f.size,
+            type: "image/avif",
+          });
+        } catch {
+          // ignore failed upload
+        }
+        e.target.value = "";
+        return;
       }
 
       const reader = new FileReader();
       reader.onload = (ev) => {
-        if (typeof ev.target?.result === "string" && isAvatar) {
-          setCropSrc(ev.target.result);
-        } else {
-          onChange({
-            name: f.name,
-            url: ev.target?.result,
-            size: f.size,
-            type: f.type
-          });
-        }
+        onChange({
+          name: f.name,
+          url: ev.target?.result,
+          size: f.size,
+          type: f.type,
+        });
       };
       reader.readAsDataURL(f);
+      e.target.value = "";
     };
 
     if (isAvatar) {

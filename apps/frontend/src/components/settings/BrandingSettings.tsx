@@ -19,8 +19,6 @@ import {
   NAME_MAX,
   SocialLinksEditor,
   TAGLINE_MAX,
-  LOGO_OPTIMIZE_OPTIONS,
-  FAVICON_OPTIMIZE_OPTIONS,
 } from '@/components/settings/BrandingShared';
 
 /**
@@ -121,7 +119,7 @@ export default function BrandingSettings(): React.JSX.Element {
               label={t('branding.logo')}
               hint={t('branding.logoHint')}
               value={data.logoUrl}
-              optimizeOptions={LOGO_OPTIMIZE_OPTIONS}
+              purpose="logo"
               onChange={(url) => upd('logoUrl', url)}
               onClear={() => upd('logoUrl', '')}
             />
@@ -132,7 +130,7 @@ export default function BrandingSettings(): React.JSX.Element {
               value={data.faviconUrl}
               onChange={(url) => upd('faviconUrl', url)}
               onClear={() => upd('faviconUrl', '')}
-              optimizeOptions={FAVICON_OPTIMIZE_OPTIONS}
+              purpose="favicon"
               previewSize="favicon"
             />
           </div>

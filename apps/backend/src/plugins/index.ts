@@ -4,6 +4,7 @@ import { registerErrorHandlers } from '../lib/errorHandler.js';
 import { registerHttpPlugins } from './http.js';
 import { registerRequestHooks } from './requestHooks.js';
 import { registerSecurityPlugins } from './security.js';
+import { registerStaticAssets } from './staticAssets.js';
 
 export async function registerPlugins(
   app: FastifyInstance,
@@ -12,5 +13,6 @@ export async function registerPlugins(
   registerErrorHandlers(app, config.isProd);
   await registerSecurityPlugins(app);
   await registerHttpPlugins(app, config);
+  await registerStaticAssets(app);
   registerRequestHooks(app);
 }

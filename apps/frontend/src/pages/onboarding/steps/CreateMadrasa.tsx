@@ -24,7 +24,6 @@ import {
   NAME_MAX,
   TAGLINE_MAX,
   defaultFooterForMadrasa,
-  LOGO_OPTIMIZE_OPTIONS,
 } from "@/components/settings/BrandingShared";
 
 interface CreateMadrasaProps {
@@ -99,7 +98,7 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
             label={t("branding.logo")}
             hint={t("branding.logoHint")}
             value={data.logoUrl || ""}
-            optimizeOptions={LOGO_OPTIMIZE_OPTIONS}
+            purpose="logo"
             onChange={(url) => updateField("logoUrl", url)}
             onClear={() => updateField("logoUrl", "")}
             onBrandColorsExtracted={(colors) => {

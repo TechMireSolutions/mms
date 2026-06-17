@@ -7,30 +7,35 @@ import {
   BRANDING_SOCIAL_PLACEHOLDERS,
   DEFAULT_BRANDING_SETTINGS,
   formatBrandingFooterDefault,
+  IMAGE_UPLOAD_MAX_INPUT_BYTES,
+  IMAGE_UPLOAD_PRESETS,
   mergeBrandingSettings,
   type AppTranslationKey,
   type BrandingSettings,
   type BrandingSocialLink,
+  type ImageUploadPurpose,
   type LogoBrandColors,
 } from '@mms/shared';
 import { getBrandingSettings, saveBrandingSettings } from '@/lib/db';
 import { getScopedBrandingSettings } from '@/lib/settingsPreviewStore';
 import useTranslation from '@/hooks/useTranslation';
 import { extractLogoBrandColors } from '@/lib/extractLogoBrandColors';
-import { optimizeImage, cn } from '@/lib/utils';
+import { uploadUserImage } from '@/lib/imageUpload';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import FormSelect from '@/components/ui/FormSelect';
 
-export const MAX_FILE_BYTES = 2 * 1024 * 1024;
+export const MAX_FILE_BYTES = IMAGE_UPLOAD_MAX_INPUT_BYTES;
 export const NAME_MAX = BRANDING_NAME_MAX;
 export const TAGLINE_MAX = 80;
 export const FOOTER_MAX = BRANDING_FOOTER_MAX;
 
-/** Logo uploads — resized then encoded AVIF → WebP via `optimizeImage`. */
-export const LOGO_OPTIMIZE_OPTIONS = { maxWidth: 200, maxHeight: 200 } as const;
-export const FAVICON_OPTIMIZE_OPTIONS = { maxWidth: 64, maxHeight: 64 } as const;
+/** @deprecated Use IMAGE_UPLOAD_PRESETS.logo */
+export const LOGO_OPTIMIZE_OPTIONS = IMAGE_UPLOAD_PRESETS.logo;
+/** @deprecated Use IMAGE_UPLOAD_PRESETS.favicon */
+export const FAVICON_OPTIMIZE_OPTIONS = IMAGE_UPLOAD_PRESETS.favicon;
 
 export function loadBranding(): BrandingSettings {
   try {
@@ -83,7 +88,7 @@ interface ImageUploadFieldProps {
   onClear: () => void;
   /** When set, dominant logo colours are extracted after a successful upload. */
   onBrandColorsExtracted?: (colors: LogoBrandColors) => void;
-  optimizeOptions?: { maxWidth?: number; maxHeight?: number };
+  purpose?: ImageUploadPurpose;
   previewSize?: 'logo' | 'favicon';
 }
 
@@ -95,7 +100,7 @@ export function ImageUploadField({
   onChange,
   onClear,
   onBrandColorsExtracted,
-  optimizeOptions,
+  purpose,
   previewSize = 'logo',
 }: ImageUploadFieldProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -105,6 +110,9 @@ export function ImageUploadField({
   const [error, setError] = useState<string | null>(null);
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
+
+  const resolvedPurpose: ImageUploadPurpose =
+    purpose ?? (previewSize === 'favicon' ? 'favicon' : 'logo');
 
   const processFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -119,27 +127,21 @@ export function ImageUploadField({
     setError(null);
     setUploading(true);
     try {
-      const resolvedOptimize =
-        optimizeOptions ??
-        (previewSize === 'favicon' ? FAVICON_OPTIMIZE_OPTIONS : LOGO_OPTIMIZE_OPTIONS);
-
-      // Sample colours from the source file before AVIF encode (reliable canvas decode).
       if (onBrandColorsExtracted) {
         const sourceDataUrl = await readBlobAsDataUrl(file);
         const colors = await extractLogoBrandColors(sourceDataUrl);
         if (colors) onBrandColorsExtracted(colors);
       }
 
-      const optimized = await optimizeImage(file, resolvedOptimize);
-      const dataUrl = await readBlobAsDataUrl(optimized);
-      onChange(dataUrl);
+      const url = await uploadUserImage(file, resolvedPurpose);
+      onChange(url);
     } catch {
-      setError(t('branding.imageErrorProcess'));
+      setError(t('branding.imageErrorUpload'));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
     }
-  }, [onBrandColorsExtracted, onChange, optimizeOptions, previewSize, t]);
+  }, [onBrandColorsExtracted, onChange, resolvedPurpose, t]);
 
   const previewClass =
     previewSize === 'favicon' ? 'h-14 w-14 rounded-lg' : 'h-20 w-20 rounded-xl';

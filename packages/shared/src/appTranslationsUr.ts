@@ -492,6 +492,7 @@ export const APP_TRANSLATIONS_UR = {
   "branding.imageErrorType": "PNG، JPG، SVG یا WebP تصویر منتخب کریں۔",
   "branding.imageErrorSize": "تصویر 2 MB سے چھوٹی ہونی چاہیے۔",
   "branding.imageErrorProcess": "تصویر پراسیس نہیں ہو سکی۔ دوسری فائل آزمائیں۔",
+  "branding.imageErrorUpload": "لوگو اپ لوڈ نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
   "branding.imageRemoveAria": "{label} ہٹائیں",
   "branding.socialEmpty": "ابھی کوئی سوشل پروفائل نہیں۔",
   "branding.socialPlatform": "پلیٹ فارم",
