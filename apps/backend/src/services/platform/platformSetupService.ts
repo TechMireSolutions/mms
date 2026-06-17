@@ -83,7 +83,7 @@ async function dispatchSetupCode(email: string, code: string): Promise<{ sent: b
     if (error instanceof Error && error.message.includes('not configured')) {
       throw new PlatformSetupError(
         'smtp_required',
-        'Platform email is not configured. Set PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM in the backend environment.',
+        'Platform email is not configured. Set PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM (GitHub Actions secrets are merged on deploy).',
       );
     }
     throw new PlatformSetupError(

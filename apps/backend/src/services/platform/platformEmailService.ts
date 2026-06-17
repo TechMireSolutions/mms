@@ -18,8 +18,7 @@ function readEnv(name: string): string {
   return process.env[name]?.trim() ?? '';
 }
 
-/** True when platform-level SMTP env vars are set for apex emails. */
-export function isPlatformSmtpConfigured(): boolean {
+function isPlatformSmtpTransportConfigured(): boolean {
   const host = readEnv('PLATFORM_SMTP_HOST');
   const user = readEnv('PLATFORM_SMTP_USER');
   const pass = readEnv('PLATFORM_SMTP_PASS');
@@ -27,8 +26,61 @@ export function isPlatformSmtpConfigured(): boolean {
   return Boolean(host && user && pass && from);
 }
 
+function isPlatformResendConfigured(): boolean {
+  return Boolean(readEnv('PLATFORM_RESEND_API_KEY') && readEnv('PLATFORM_EMAIL_FROM'));
+}
+
+/** True when platform email can be sent (Resend API or SMTP + from address). */
+export function isPlatformSmtpConfigured(): boolean {
+  return isPlatformResendConfigured() || isPlatformSmtpTransportConfigured();
+}
+
+function platformFromHeader(): string {
+  const fromAddress = readEnv('PLATFORM_EMAIL_FROM');
+  const fromName = readEnv('PLATFORM_EMAIL_FROM_NAME') || 'MMS Platform';
+  return `"${fromName}" <${fromAddress}>`;
+}
+
+async function sendViaResend(input: PlatformEmailInput): Promise<PlatformEmailResult> {
+  const apiKey = readEnv('PLATFORM_RESEND_API_KEY');
+  if (!apiKey || !readEnv('PLATFORM_EMAIL_FROM')) {
+    return { sent: false, reason: 'not_configured' };
+  }
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: platformFromHeader(),
+        to: [input.to],
+        subject: input.subject,
+        text: input.text,
+        html: input.html ?? `<p>${input.text.replace(/\n/g, '<br/>')}</p>`,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      return {
+        sent: false,
+        reason: 'transport_error',
+        message: body || `Resend API failed (${response.status})`,
+      };
+    }
+
+    return { sent: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Resend request failed';
+    return { sent: false, reason: 'transport_error', message };
+  }
+}
+
 function createPlatformTransporter(): Transporter | null {
-  if (!isPlatformSmtpConfigured()) return null;
+  if (!isPlatformSmtpTransportConfigured()) return null;
 
   const port = Number(readEnv('PLATFORM_SMTP_PORT') || '587');
   const secure = readEnv('PLATFORM_SMTP_SECURE') === 'true';
@@ -44,19 +96,15 @@ function createPlatformTransporter(): Transporter | null {
   });
 }
 
-/** Sends email via platform SMTP (apex bootstrap / verification — not tenant-scoped). */
-export async function sendPlatformEmail(input: PlatformEmailInput): Promise<PlatformEmailResult> {
+async function sendViaSmtp(input: PlatformEmailInput): Promise<PlatformEmailResult> {
   const transporter = createPlatformTransporter();
   if (!transporter) {
     return { sent: false, reason: 'not_configured' };
   }
 
-  const fromAddress = readEnv('PLATFORM_EMAIL_FROM');
-  const fromName = readEnv('PLATFORM_EMAIL_FROM_NAME') || 'MMS Platform';
-
   try {
     await transporter.sendMail({
-      from: `"${fromName}" <${fromAddress}>`,
+      from: platformFromHeader(),
       to: input.to,
       subject: input.subject,
       text: input.text,
@@ -67,6 +115,14 @@ export async function sendPlatformEmail(input: PlatformEmailInput): Promise<Plat
     const message = error instanceof Error ? error.message : 'Failed to send platform email';
     return { sent: false, reason: 'transport_error', message };
   }
+}
+
+/** Sends apex platform email via Resend (preferred) or SMTP. */
+export async function sendPlatformEmail(input: PlatformEmailInput): Promise<PlatformEmailResult> {
+  if (isPlatformResendConfigured()) {
+    return sendViaResend(input);
+  }
+  return sendViaSmtp(input);
 }
 
 /** Public apex URL for links in platform emails (reset password, etc.). */
@@ -84,7 +140,7 @@ export interface PlatformVerificationEmailInput {
   logLabel: string;
 }
 
-/** Sends a platform OTP email or returns a dev-only code when SMTP is not configured. */
+/** Sends a platform OTP email or returns a dev-only code when email is not configured. */
 export async function dispatchPlatformVerificationEmail(
   input: PlatformVerificationEmailInput,
 ): Promise<{ sent: boolean; devCode?: string }> {

@@ -76,7 +76,7 @@ async function dispatchResetCode(email: string, code: string, resetId: string): 
     if (error instanceof Error && error.message.includes('not configured')) {
       throw new PlatformPasswordResetError(
         'smtp_required',
-        'Platform email is not configured. Set PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM in the backend environment.',
+        'Platform email is not configured. Set PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM (GitHub Actions secrets are merged on deploy).',
       );
     }
     throw new PlatformPasswordResetError(

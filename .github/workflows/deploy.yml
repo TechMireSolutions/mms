@@ -13,13 +13,34 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Platform email: add GitHub repo secrets (Settings → Secrets → Actions):
+      #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM + PLATFORM_APP_URL (recommended)
+      #   OR PLATFORM_SMTP_HOST, PLATFORM_SMTP_USER, PLATFORM_SMTP_PASS, PLATFORM_EMAIL_FROM
+      # Optional first super-user without OTP: PLATFORM_ALLOW_ENV_BOOTSTRAP=true,
+      #   PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
+          PLATFORM_SMTP_HOST: ${{ secrets.PLATFORM_SMTP_HOST }}
+          PLATFORM_SMTP_PORT: ${{ secrets.PLATFORM_SMTP_PORT }}
+          PLATFORM_SMTP_SECURE: ${{ secrets.PLATFORM_SMTP_SECURE }}
+          PLATFORM_SMTP_USER: ${{ secrets.PLATFORM_SMTP_USER }}
+          PLATFORM_SMTP_PASS: ${{ secrets.PLATFORM_SMTP_PASS }}
+          PLATFORM_EMAIL_FROM: ${{ secrets.PLATFORM_EMAIL_FROM }}
+          PLATFORM_EMAIL_FROM_NAME: ${{ secrets.PLATFORM_EMAIL_FROM_NAME }}
+          PLATFORM_APP_URL: ${{ secrets.PLATFORM_APP_URL }}
+          PLATFORM_ALLOW_ENV_BOOTSTRAP: ${{ secrets.PLATFORM_ALLOW_ENV_BOOTSTRAP }}
+          PLATFORM_ADMIN_EMAIL: ${{ secrets.PLATFORM_ADMIN_EMAIL }}
+          PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
+          PLATFORM_ADMIN_NAME: ${{ secrets.PLATFORM_ADMIN_NAME }}
+          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN
           script: |
             cd /var/www/mmsv2
 
@@ -28,6 +49,8 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             export PATH="$HOME/.local/share/pnpm:$PATH"
+
+            bash scripts/merge-backend-env.sh apps/backend/.env
 
             pnpm install --frozen-lockfile
             pnpm run build

@@ -270,7 +270,7 @@ export const APP_TRANSLATIONS_UR = {
   "platform.setupInvalidName": "نام کم از کم 2 حروف کا ہونا چاہیے",
   "platform.setupPasswordTooShort": "پاس ورڈ کم از کم {min} حروف کا ہونا چاہیے",
   "platform.setupPasswordWeak": "پاس ورڈ میں حروف اور اعداد ہونا چاہیے",
-  "platform.setupSmtpRequired": "اس سرور پر ای میل ترتیب نہیں۔ آپریٹر سے PLATFORM_SMTP_* متغیرات سیٹ کروائیں۔",
+  "platform.setupSmtpRequired": "پلیٹ فارم ای میل ترتیب نہیں۔ GitHub repository secrets میں PLATFORM_RESEND_API_KEY (بہتر) یا PLATFORM_SMTP_* اور PLATFORM_EMAIL_FROM شامل کریں — ڈپلائے خود سرور پر لکھ دیتا ہے۔",
   "platform.setupEmailFailed": "تصدیقی ای میل نہیں بھیجی جا سکی۔ بعد میں کوشش کریں۔",
   "platform.setupInvalidCode": "غلط یا میعاد ختم کوڈ",
   "platform.setupDevCodeHint": "ڈیولپمنٹ موڈ: آپ کا تصدیقی کوڈ {code} ہے",
