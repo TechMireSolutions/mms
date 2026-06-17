@@ -1,5 +1,5 @@
-/** Production apex domain — onboarding & marketing only. */
-export const DEFAULT_APP_DOMAIN = "madrasa.app";
+/** Production apex domain — onboarding & platform console. */
+export const DEFAULT_APP_DOMAIN = "mmsv2.aabtaab.com";
 
 export const RESERVED_SUBDOMAINS = new Set([
   "www",
@@ -78,6 +78,71 @@ export function isApexHost(hostname: string, appDomain: string): boolean {
   return parseTenantFromHost(hostname, appDomain) === null;
 }
 
+/**
+ * Derive the apex app domain from a browser/API host when env is unset.
+ * e.g. `dar-ul-quran.mmsv2.aabtaab.com` → `mmsv2.aabtaab.com`
+ */
+export function inferAppDomainFromHostname(hostname: string): string | null {
+  const host = hostname.toLowerCase().split(":")[0];
+  if (!host || host === "localhost" || host.endsWith(".localhost")) {
+    return "localhost";
+  }
+
+  if (host.startsWith("www.")) {
+    const withoutWww = host.slice(4);
+    const fromTenant = inferAppDomainFromHostname(withoutWww);
+    return fromTenant ?? withoutWww;
+  }
+
+  const parts = host.split(".");
+  if (parts.length < 3) {
+    return null;
+  }
+
+  if (parts.length === 3) {
+    return host;
+  }
+
+  const candidateApex = parts.slice(1).join(".");
+  const sub = parts[0];
+  if (sub && isValidSubdomain(sub) && parseTenantFromHost(host, candidateApex) === sub) {
+    return candidateApex;
+  }
+
+  return null;
+}
+
+/** Configured domain wins; else infer from host; else production default. */
+export function resolveAppDomain(
+  hostname: string,
+  configuredDomain?: string | null,
+): string {
+  const trimmed = configuredDomain?.trim();
+  if (trimmed) {
+    return trimmed;
+  }
+  const inferred = inferAppDomainFromHostname(hostname);
+  if (inferred) {
+    return inferred;
+  }
+  return DEFAULT_APP_DOMAIN;
+}
+
+/**
+ * True when `origin` is the apex or a tenant workspace for `appDomain`.
+ */
+export function isOriginAllowedForAppDomain(origin: string, appDomain: string): boolean {
+  try {
+    const host = new URL(origin).hostname.toLowerCase();
+    if (host === appDomain || host === `www.${appDomain}`) {
+      return true;
+    }
+    return parseTenantFromHost(host, appDomain) !== null;
+  } catch {
+    return false;
+  }
+}
+
 function normalizePort(port?: string | number | null): string {
   if (port === null || port === undefined || port === "") return "";
   const p = String(port);
@@ -86,7 +151,7 @@ function normalizePort(port?: string | number | null): string {
 }
 
 /**
- * Full origin for a tenant workspace, e.g. https://al-noor.madrasa.app
+ * Full origin for a tenant workspace, e.g. https://al-noor.mmsv2.aabtaab.com
  */
 export function buildTenantOrigin(
   subdomain: string,

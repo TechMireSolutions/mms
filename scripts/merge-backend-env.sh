@@ -52,6 +52,10 @@ for key in "${DEPLOY_KEYS[@]}"; do
   write_env_var "$key" "${!key-}"
 done
 
+if [ -z "${PLATFORM_APP_URL:-}" ] && [ -n "${MMS_APP_DOMAIN:-}" ]; then
+  write_env_var "PLATFORM_APP_URL" "https://${MMS_APP_DOMAIN}"
+fi
+
 echo "Merged deploy env keys into ${ENV_FILE}"
 set +e
 HAS_PROVIDER=$(grep -E '^PLATFORM_(RESEND_API_KEY|SMTP_HOST)=' "$ENV_FILE" 2>/dev/null | head -1)

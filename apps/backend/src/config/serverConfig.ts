@@ -1,9 +1,12 @@
+import { DEFAULT_APP_DOMAIN } from '@mms/shared';
+
 export interface ServerConfig {
   isProd: boolean;
   jwtSecret: string;
   trustProxy: boolean;
   logLevel: string;
   allowedOrigin: string;
+  appDomain: string;
   bodyLimit: number;
   requestTimeoutMs: number;
   pgPoolMax: number;
@@ -28,6 +31,7 @@ export function loadServerConfig(): ServerConfig {
     trustProxy: process.env.TRUST_PROXY === 'true' || isProd,
     logLevel: process.env.LOG_LEVEL || 'info',
     allowedOrigin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
+    appDomain: process.env.MMS_APP_DOMAIN?.trim() || DEFAULT_APP_DOMAIN,
     bodyLimit: Number(process.env.REQUEST_BODY_LIMIT_BYTES) || 1024 * 1024,
     requestTimeoutMs: Number(process.env.REQUEST_TIMEOUT_MS) || 120_000,
     pgPoolMax: Number(process.env.PG_POOL_MAX) || 20,

@@ -1,24 +1,16 @@
 import {
-  DEFAULT_APP_DOMAIN,
   buildApexUrl,
   buildTenantUrl,
   isApexHost,
+  resolveAppDomain,
   type TenantUrlOptions,
 } from "@mms/shared";
 import { env } from "@/lib/config/env";
 
-/** Apex domain for this deployment (localhost in dev, madrasa.app in prod). */
+/** Apex domain for this deployment (localhost in dev, platform domain in prod). */
 export function getAppDomain(): string {
-  if (env.appDomain) {
-    return env.appDomain;
-  }
-  if (typeof window !== "undefined") {
-    const host = window.location.hostname.toLowerCase();
-    if (host === "localhost" || host.endsWith(".localhost")) {
-      return "localhost";
-    }
-  }
-  return DEFAULT_APP_DOMAIN;
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  return resolveAppDomain(hostname, env.appDomain);
 }
 
 export function getTenantUrlOptions(): TenantUrlOptions {

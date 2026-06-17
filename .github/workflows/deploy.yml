@@ -25,12 +25,16 @@ jobs:
           node-version: 26
 
       - name: Install and build on runner
+        env:
+          VITE_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
         run: |
           pnpm install --frozen-lockfile
           pnpm run build
           tar czf mms-dist.tar.gz apps/backend/dist apps/frontend/dist packages/shared/dist
 
       # Platform secrets (Settings → Secrets → Actions):
+      #   MMS_APP_DOMAIN=mmsv2.aabtaab.com  (apex; tenants are {slug}.mmsv2.aabtaab.com)
+      #   PLATFORM_APP_URL=https://mmsv2.aabtaab.com
       #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM + PLATFORM_APP_URL
       #   OR PLATFORM_SMTP_* + PLATFORM_EMAIL_FROM
       #   Optional bootstrap: PLATFORM_ALLOW_ENV_BOOTSTRAP=true, PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD
