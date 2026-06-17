@@ -9,19 +9,24 @@ export function resolveBackendRoot(): string {
 }
 
 /**
- * Loads `apps/backend/.env` regardless of PM2 cwd (repo root vs package dir).
+ * Loads env files for the backend package. Merges repo-root `.env` then
+ * `apps/backend/.env` so PM2 can use either cwd without losing JWT_SECRET.
  */
 export function loadBackendEnv(): void {
   const backendRoot = resolveBackendRoot();
+  const repoRoot = resolve(backendRoot, '..', '..');
   const candidates = [
+    join(repoRoot, '.env'),
     join(backendRoot, '.env'),
-    resolve(process.cwd(), 'apps/backend/.env'),
     resolve(process.cwd(), '.env'),
+    resolve(process.cwd(), 'apps/backend/.env'),
   ];
 
+  const loaded = new Set<string>();
   for (const path of candidates) {
-    if (!existsSync(path)) continue;
-    const result = dotenv.config({ path });
-    if (!result.error) return;
+    const normalized = resolve(path);
+    if (loaded.has(normalized) || !existsSync(normalized)) continue;
+    loaded.add(normalized);
+    dotenv.config({ path: normalized });
   }
 }

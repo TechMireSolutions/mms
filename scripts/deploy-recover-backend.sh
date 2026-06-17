@@ -61,7 +61,7 @@ set -e
 
 pm2 start "$DIST_ENTRY" \
   --name mmsv2-backend \
-  --cwd "$ROOT_DIR/apps/backend" \
+  --cwd "$ROOT_DIR" \
   --update-env \
   --time
 
