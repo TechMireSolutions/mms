@@ -1,0 +1,92 @@
+name: Production — isolate MMS host
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: mms-production-apache-isolate
+  cancel-in-progress: false
+
+jobs:
+  isolate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate secrets
+        env:
+          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -z "${{ secrets.SERVER_IP }}" ] && missing="${missing} SERVER_IP"
+          [ -z "${{ secrets.SERVER_USER }}" ] && missing="${missing} SERVER_USER"
+          [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ] && missing="${missing} SSH_PRIVATE_KEY"
+          if [ -n "${missing}" ]; then
+            echo "ERROR: Missing secrets:${missing}"
+            exit 1
+          fi
+          if [ -z "${MMS_APP_DOMAIN}" ]; then
+            echo "ERROR: Set MMS_APP_DOMAIN secret to mmsv2.aabtaab.com"
+            exit 1
+          fi
+          echo "Target: https://${MMS_APP_DOMAIN}/"
+
+      - name: Apply Apache isolation on server
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+          PLATFORM_APP_URL: ${{ secrets.PLATFORM_APP_URL }}
+          PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
+          PLATFORM_SMTP_HOST: ${{ secrets.PLATFORM_SMTP_HOST }}
+          PLATFORM_SMTP_PORT: ${{ secrets.PLATFORM_SMTP_PORT }}
+          PLATFORM_SMTP_SECURE: ${{ secrets.PLATFORM_SMTP_SECURE }}
+          PLATFORM_SMTP_USER: ${{ secrets.PLATFORM_SMTP_USER }}
+          PLATFORM_SMTP_PASS: ${{ secrets.PLATFORM_SMTP_PASS }}
+          PLATFORM_EMAIL_FROM: ${{ secrets.PLATFORM_EMAIL_FROM }}
+          PLATFORM_EMAIL_FROM_NAME: ${{ secrets.PLATFORM_EMAIL_FROM_NAME }}
+          PLATFORM_ALLOW_ENV_BOOTSTRAP: ${{ secrets.PLATFORM_ALLOW_ENV_BOOTSTRAP }}
+          PLATFORM_ADMIN_EMAIL: ${{ secrets.PLATFORM_ADMIN_EMAIL }}
+          PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
+          PLATFORM_ADMIN_NAME: ${{ secrets.PLATFORM_ADMIN_NAME }}
+          MMS_API_URL: ${{ secrets.MMS_API_URL }}
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          command_timeout: 15m
+          envs: MMS_APP_DOMAIN,PLATFORM_APP_URL,PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_API_URL
+          script: |
+            set -e
+            cd /var/www/mmsv2
+            git fetch origin main
+            git reset --hard origin/main
+            bash scripts/apply-production-host-isolation.sh apps/backend/.env
+
+      - name: Verify MMS apex and foreign domains
+        env:
+          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+        run: |
+          set -euo pipefail
+          BASE="https://${MMS_APP_DOMAIN}"
+
+          curl -fsS --connect-timeout 10 --max-time 20 "${BASE}/health" >/dev/null
+          curl -fsS --connect-timeout 10 --max-time 20 "${BASE}/" >/dev/null
+          echo "OK: ${BASE}/"
+
+          SETUP_CODE="$(curl -s -o /dev/null -w '%{http_code}' "${BASE}/api/platform/auth/setup/status")"
+          if [ "${SETUP_CODE}" = "403" ]; then
+            echo "ERROR: platform setup 403 — MMS_APP_DOMAIN misconfigured"
+            exit 1
+          fi
+          echo "Platform setup/status → HTTP ${SETUP_CODE}"
+
+          for foreign in aabtaab.com darulquran.pk; do
+            title="$(curl -sS --connect-timeout 10 --max-time 15 "https://${foreign}/" 2>/dev/null | grep -o '<title>[^<]*</title>' | head -1 || true)"
+            if echo "${title}" | grep -qi 'Madrasa Management System'; then
+              echo "ERROR: https://${foreign}/ still serves MMS — check Apache vhosts on server"
+              exit 1
+            fi
+            echo "OK: https://${foreign}/ does not serve MMS SPA (title: ${title:-none})"
+          done
+
+          echo "Host isolation verified."
