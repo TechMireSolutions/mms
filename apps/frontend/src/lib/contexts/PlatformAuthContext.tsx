@@ -3,6 +3,10 @@ import type { PlatformUser } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import usePlatformSessionTimeout from '@/hooks/usePlatformSessionTimeout';
+import {
+  clearPlatformBrowserSession,
+  markPlatformBrowserSession,
+} from '@/lib/platformBrowserSession';
 
 function PlatformSessionTimeoutWatcher({
   enabled,
@@ -45,9 +49,11 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setIsLoadingPlatformAuth(true);
     try {
       const data = await apiJson<{ user: PlatformUser }>('/api/platform/auth/me');
+      markPlatformBrowserSession();
       setPlatformUser(data.user);
       setIsPlatformAuthenticated(true);
     } catch {
+      clearPlatformBrowserSession();
       setPlatformUser(null);
       setIsPlatformAuthenticated(false);
     } finally {
@@ -65,6 +71,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
       localStorage.removeItem('mms_user');
       localStorage.removeItem('mms_token');
+      markPlatformBrowserSession();
       setPlatformUser(data.user);
       setIsPlatformAuthenticated(true);
       setPlatformAuthChecked(true);
@@ -77,6 +84,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     void apiFetch('/api/platform/auth/logout', { method: 'POST' });
     localStorage.removeItem('mms_user');
     localStorage.removeItem('mms_token');
+    clearPlatformBrowserSession();
     setPlatformUser(null);
     setIsPlatformAuthenticated(false);
     setPlatformAuthChecked(true);

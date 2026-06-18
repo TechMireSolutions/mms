@@ -54,6 +54,28 @@ if [ $? -ne 0 ]; then
 fi
 rm -f "$TARBALL"
 
+read_env_var() {
+  local key="$1"
+  local default="${2:-}"
+  if [[ ! -f "$ENV_FILE" ]]; then
+    echo "$default"
+    return 0
+  fi
+  local line
+  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
+  if [[ -z "$line" ]]; then
+    echo "$default"
+    return 0
+  fi
+  local value="${line#*=}"
+  value="${value%\"}"
+  value="${value#\"}"
+  echo "$value"
+}
+
+export PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
+export NODE_ENV=production
+
 pm2 restart mmsv2-frontend --update-env 2>/dev/null || pm2 restart mmsv2-frontend 2>/dev/null || true
 pm2 restart mmsv2-backend --update-env 2>/dev/null || pm2 restart mmsv2-backend 2>/dev/null || true
 

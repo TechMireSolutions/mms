@@ -66,7 +66,9 @@ pm2 start "$DIST_ENTRY" \
   --name mmsv2-backend \
   --cwd "$ROOT_DIR" \
   --update-env \
-  --time
+  --time \
+  -e "PORT=${BACKEND_PORT}" \
+  -e "NODE_ENV=production"
 
 for _ in $(seq 1 30); do
   if curl_health; then

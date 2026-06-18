@@ -2,7 +2,6 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { secureCookieBase } from '../../lib/cookieOptions.js';
 
 export const PLATFORM_ACCESS_COOKIE = 'mms_platform_access';
-const PLATFORM_ACCESS_TTL_SEC = 8 * 60 * 60;
 
 export function attachPlatformTokenFromCookie(request: FastifyRequest): void {
   const cookies = request.cookies as Record<string, string | undefined> | undefined;
@@ -12,11 +11,9 @@ export function attachPlatformTokenFromCookie(request: FastifyRequest): void {
   }
 }
 
+/** Session cookie (no maxAge) — cleared when the browser closes. */
 export function setPlatformAccessCookie(reply: FastifyReply, accessToken: string): void {
-  reply.setCookie(PLATFORM_ACCESS_COOKIE, accessToken, {
-    ...secureCookieBase(),
-    maxAge: PLATFORM_ACCESS_TTL_SEC,
-  });
+  reply.setCookie(PLATFORM_ACCESS_COOKIE, accessToken, secureCookieBase());
 }
 
 export function clearPlatformAccessCookie(reply: FastifyReply): void {

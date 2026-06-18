@@ -2,7 +2,7 @@
 #   docker build -f apps/backend/Dockerfile -t mms-backend .
 #
 # Run (PostgreSQL required):
-#   docker run -p 3000:3000 -e JWT_SECRET=... -e DATABASE_URL=postgresql://... mms-backend
+#   docker run -p 5002:5002 -e JWT_SECRET=... -e DATABASE_URL=postgresql://... mms-backend
 
 FROM node:26-alpine AS base
 ENV PUPPETEER_SKIP_DOWNLOAD=true
@@ -38,6 +38,8 @@ WORKDIR /app/apps/backend
 # Override at runtime — must point to a reachable PostgreSQL instance
 ENV DATABASE_URL=postgresql://postgres:postgres@postgres:5432/mms
 
-EXPOSE 3000
+ENV PORT=5002
+
+EXPOSE 5002
 
 CMD ["node", "dist/index.js"]

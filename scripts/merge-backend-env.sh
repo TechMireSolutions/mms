@@ -75,11 +75,10 @@ ensure_jwt_secret() {
 }
 ensure_jwt_secret
 
-if ! grep -q '^PORT=' "$ENV_FILE" 2>/dev/null; then
-  # shellcheck source=lib/deploy-ports.sh
-  source "$(dirname "${BASH_SOURCE[0]}")/lib/deploy-ports.sh"
-  write_env_var "PORT" "$MMS_PROD_BACKEND_PORT"
-fi
+# Production always listens on :5002 (Apache upstream).
+# shellcheck source=lib/deploy-ports.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/deploy-ports.sh"
+write_env_var "PORT" "$MMS_PROD_BACKEND_PORT"
 
 if [ -z "${PLATFORM_APP_URL:-}" ] && [ -n "${MMS_APP_DOMAIN:-}" ]; then
   write_env_var "PLATFORM_APP_URL" "https://${MMS_APP_DOMAIN}"

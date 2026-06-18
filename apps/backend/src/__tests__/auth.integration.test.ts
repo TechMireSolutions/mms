@@ -440,7 +440,7 @@ describe('platform auth routes', () => {
     await app.close();
   });
 
-  it('POST /api/platform/auth/login sets platform cookie on apex', async () => {
+  it('POST /api/platform/auth/login sets platform session cookie on apex', async () => {
     mockValidatePlatformCredentials.mockResolvedValue({
       id: 'p1',
       email: 'platform@test.com',
@@ -455,7 +455,9 @@ describe('platform auth routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({ user: { email: 'platform@test.com' } });
-    expect(res.cookies.some((c) => c.name === PLATFORM_ACCESS_COOKIE)).toBe(true);
+    const platformCookie = res.cookies.find((c) => c.name === PLATFORM_ACCESS_COOKIE);
+    expect(platformCookie).toBeTruthy();
+    expect(platformCookie?.maxAge).toBeUndefined();
     await app.close();
   });
 
