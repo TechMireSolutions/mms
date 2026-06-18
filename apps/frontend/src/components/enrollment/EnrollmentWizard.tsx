@@ -99,7 +99,6 @@ export default function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWiz
     const enrollment: Enrollment = {
       id: `enr${Date.now()}`,
       studentId: student.id,
-      studentName: student.name,
       sessionId: session.id,
       sessionName: session.name,
       classId: classInfo?.id || "",

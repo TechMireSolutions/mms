@@ -65,33 +65,6 @@ const TRANSACTION_TYPES: TransactionGroup[] = [
   },
 ];
 
-const ALL_TYPES = TRANSACTION_TYPES.flatMap((g) => g.items);
-
-// Account display names (friendly)
-const ACCOUNT_LABELS: Record<string, string> = {
-  "a1000": "Cash in Hand",
-  "a1010": "Bank (HBL)",
-  "a1020": "Bank (Meezan)",
-  "a1100": "Accounts Receivable",
-  "a4000": "Fee Income",
-  "a4100": "Donation Income",
-  "a4200": "Obligation Income",
-  "a4300": "Grant Income",
-  "a4400": "Other Income",
-  "a5000": "Staff Salaries",
-  "a5100": "Rent Expense",
-  "a5200": "Utilities",
-  "a5300": "Printing & Supplies",
-  "a5400": "Maintenance",
-  "a5700": "Miscellaneous Expense",
-};
-
-const CASH_ACCOUNTS = [
-  { id: "a1000", label: "Cash in Hand" },
-  { id: "a1010", label: "Bank (HBL)" },
-  { id: "a1020", label: "Bank (Meezan)" },
-];
-
 const GROUP_COLORS: Record<string, Record<string, string>> = {
   emerald: {
     card: "border-success/30 bg-success/10/60 hover:bg-success/10",
@@ -445,7 +418,7 @@ export default function SimpleTransactionWizard({ open, accounts, entries, fisca
       onClose={onClose}
       title="Record Transaction"
       subtitle="Money In / Money Out"
-      size="md"
+      size="lg"
       panelClassName="max-h-[92vh]"
       headerExtra={
         <nav aria-label="Wizard Steps" className="flex items-center gap-2">

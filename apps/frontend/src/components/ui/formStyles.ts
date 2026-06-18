@@ -19,3 +19,10 @@ export const FORM_INPUT_ICON = `${FORM_INPUT} pl-9 pr-3`;
 /** Compact input for dense tables (e.g. journal lines). */
 export const FORM_INPUT_COMPACT =
   'w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all';
+
+/** Compact builder panels (widget builder, analytics config). */
+export const FORM_INPUT_BUILDER = `${FORM_INPUT_COMPACT} bg-card/40 backdrop-blur-md font-semibold`;
+
+/** OTP digit cell (2FA, platform verify). */
+export const FORM_OTP_DIGIT =
+  'w-11 min-h-[52px] text-center text-xl font-bold rounded-xl border-2 bg-card text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all';

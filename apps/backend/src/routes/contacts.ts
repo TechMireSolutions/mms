@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import type { Contact, User, WhatsAppStatus } from '@mms/shared';
 import { authenticateTenant } from '../middleware/authenticate.js';
 import { canReadCollection, canWriteCollection } from '../services/rbacService.js';
+import { getLinkedContactId } from '../services/auth/userService.js';
 import { contactRecordSchema } from '../validation/contactSchemas.js';
 import { resourceIdParamsSchema } from '../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
@@ -45,7 +46,7 @@ export default async function contactRoutes(
     }
   });
 
-  fastify.post<{ Body: Contact }>('/', async (request, reply) => {
+  fastify.post('/', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, 'contacts')) return sendForbidden(reply);
 
@@ -63,13 +64,18 @@ export default async function contactRoutes(
     }
   });
 
-  fastify.put<{ Params: { id: string }; Body: Contact }>('/:id', async (request, reply) => {
+  fastify.put('/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'contacts')) return sendForbidden(reply);
-
     const params = parseRequest(resourceIdParamsSchema, request.params);
-    const body = parseRequest(contactRecordSchema, request.body);
     if (!params.ok) return replyValidationError(reply, params.message);
+
+    const linkedContactId = await getLinkedContactId(user.id);
+    const isOwnContact =
+      linkedContactId != null && String(linkedContactId) === params.data.id;
+    if (!isOwnContact && !canWriteCollection(user, 'contacts')) {
+      return sendForbidden(reply);
+    }
+    const body = parseRequest(contactRecordSchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
 
     try {
@@ -87,7 +93,7 @@ export default async function contactRoutes(
     }
   });
 
-  fastify.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
+  fastify.delete('/:id', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, 'contacts')) return sendForbidden(reply);
 
@@ -105,7 +111,7 @@ export default async function contactRoutes(
     }
   });
 
-  fastify.get<{ Params: { id: string } }>('/:id/whatsapp-status', async (request, reply) => {
+  fastify.get('/:id/whatsapp-status', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, 'contacts')) return sendForbidden(reply);
 

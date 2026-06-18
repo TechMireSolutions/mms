@@ -19,19 +19,6 @@ interface AttendanceRecordsProps {
   setRecords: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
 }
 
-interface ClassInfo {
-  id: string;
-  name: string;
-  sessionId?: string;
-  sessionName?: string;
-}
-
-interface Session {
-  id: string;
-  name: string;
-  classes?: ClassInfo[];
-}
-
 /**
  * AttendanceRecords
  * 

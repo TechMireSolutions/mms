@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { Calendar } from "lucide-react";
 import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
+import { calculateModuleFieldsCompleteness } from "@/lib/formCompleteness";
 import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
 import { toTitleCase } from "@mms/shared";
 import { getObject } from "../../lib/db";
@@ -12,9 +13,6 @@ import {
   getSortedFields,
 } from "@mms/shared";
 import { DatePicker } from "../ui/DatePicker";
-
-const INPUT = FORM_INPUT;
-const LABEL = FORM_LABEL;
 
 const EMPTY: Partial<Session> = { name: "", type: "Hifz", status: "active", startDate: "", endDate: "", baseFee: 0, currency: "PKR", description: "" };
 
@@ -43,6 +41,11 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
   const orderedFields = useMemo(() => {
     return getSortedFields(DEFAULT_SESSIONS_FIELD_DEFS, fieldOrder, fields, customFields);
   }, [fieldOrder, fields, customFields]);
+
+  const completeness = useMemo(
+    () => calculateModuleFieldsCompleteness(data as Record<string, unknown>, orderedFields, fields),
+    [data, orderedFields, fields],
+  );
 
   const upd = <K extends keyof Session>(f: K, v: Session[K]) => setData((d) => ({ ...d, [f]: v }));
 
@@ -106,7 +109,8 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
       title={session ? "Edit Session" : "New Session"}
       subtitle="Fill in the session details below"
       icon={Calendar}
-      size="md"
+      progress={completeness}
+      progressLabel="Progress"
       error={error}
       cancelLabel="Cancel"
       saveLabel={session ? "Update" : "Create Session"}
@@ -122,8 +126,8 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
               if (field.id === "name") {
                 return (
                   <div key="name" className="sm:col-span-2">
-                    <label className={LABEL} htmlFor="sessionName">Session Name *</label>
-                    <input id="sessionName" className={INPUT} value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Summer Hifz Programme 2025" required />
+                    <label className={FORM_LABEL} htmlFor="sessionName">Session Name *</label>
+                    <input id="sessionName" className={FORM_INPUT} value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Summer Hifz Programme 2025" required />
                   </div>
                 );
               }
@@ -131,8 +135,8 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
               if (field.id === "type") {
                 return (
                   <div key="type">
-                    <label className={LABEL} htmlFor="sessionType">Type {field.required ? "*" : ""}</label>
-                    <select id="sessionType" className={INPUT + " cursor-pointer"} value={data.type || "Hifz"} onChange={(e) => upd("type", e.target.value as Session["type"])} required={field.required}>
+                    <label className={FORM_LABEL} htmlFor="sessionType">Type {field.required ? "*" : ""}</label>
+                    <select id="sessionType" className={FORM_SELECT} value={data.type || "Hifz"} onChange={(e) => upd("type", e.target.value as Session["type"])} required={field.required}>
                       {SESSION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
@@ -142,8 +146,8 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
               if (field.id === "status") {
                 return (
                   <div key="status">
-                    <label className={LABEL} htmlFor="sessionStatus">Status {field.required ? "*" : ""}</label>
-                    <select id="sessionStatus" className={INPUT + " cursor-pointer"} value={data.status || "active"} onChange={(e) => upd("status", e.target.value as Session["status"])} required={field.required}>
+                    <label className={FORM_LABEL} htmlFor="sessionStatus">Status {field.required ? "*" : ""}</label>
+                    <select id="sessionStatus" className={FORM_SELECT} value={data.status || "active"} onChange={(e) => upd("status", e.target.value as Session["status"])} required={field.required}>
                       <option value="active">Active</option>
                       <option value="upcoming">Upcoming</option>
                       <option value="completed">Completed</option>
@@ -156,7 +160,7 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
               if (field.id === "startDate") {
                 return (
                   <div key="startDate">
-                    <label className={LABEL} htmlFor="sessionStartDate">Start Date *</label>
+                    <label className={FORM_LABEL} htmlFor="sessionStartDate">Start Date *</label>
                     <DatePicker
                       id="sessionStartDate"
                       value={data.startDate || ""}
@@ -170,7 +174,7 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
               if (field.id === "endDate") {
                 return (
                   <div key="endDate">
-                    <label className={LABEL} htmlFor="sessionEndDate">End Date *</label>
+                    <label className={FORM_LABEL} htmlFor="sessionEndDate">End Date *</label>
                     <DatePicker
                       id="sessionEndDate"
                       value={data.endDate || ""}
@@ -184,8 +188,8 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
               if (field.id === "baseFee") {
                 return (
                   <div key="baseFee">
-                    <label className={LABEL} htmlFor="sessionBaseFee">Base Fee {field.required ? "*" : ""}</label>
-                    <input id="sessionBaseFee" type="number" min="0" className={INPUT} value={data.baseFee || ""} onChange={(e) => upd("baseFee", Number(e.target.value))} placeholder="0" required={field.required} />
+                    <label className={FORM_LABEL} htmlFor="sessionBaseFee">Base Fee {field.required ? "*" : ""}</label>
+                    <input id="sessionBaseFee" type="number" min="0" className={FORM_INPUT} value={data.baseFee || ""} onChange={(e) => upd("baseFee", Number(e.target.value))} placeholder="0" required={field.required} />
                   </div>
                 );
               }
@@ -193,8 +197,8 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
               if (field.id === "currency") {
                 return (
                   <div key="currency">
-                    <label className={LABEL} htmlFor="sessionCurrency">Currency {field.required ? "*" : ""}</label>
-                    <select id="sessionCurrency" className={INPUT + " cursor-pointer"} value={data.currency || "PKR"} onChange={(e) => upd("currency", e.target.value)} required={field.required}>
+                    <label className={FORM_LABEL} htmlFor="sessionCurrency">Currency {field.required ? "*" : ""}</label>
+                    <select id="sessionCurrency" className={FORM_SELECT} value={data.currency || "PKR"} onChange={(e) => upd("currency", e.target.value)} required={field.required}>
                       {["PKR", "USD", "GBP", "AED", "SAR"].map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
@@ -204,8 +208,8 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
               if (field.id === "description") {
                 return (
                   <div key="description" className="sm:col-span-2">
-                    <label className={LABEL} htmlFor="sessionDescription">Description {field.required ? "*" : ""}</label>
-                    <textarea id="sessionDescription" className={INPUT + " min-h-[80px] resize-none"} value={data.description || ""} onChange={(e) => upd("description", e.target.value)} placeholder="Brief description of this session…" required={field.required} />
+                    <label className={FORM_LABEL} htmlFor="sessionDescription">Description {field.required ? "*" : ""}</label>
+                    <textarea id="sessionDescription" className={FORM_INPUT + " min-h-[80px] resize-none"} value={data.description || ""} onChange={(e) => upd("description", e.target.value)} placeholder="Brief description of this session…" required={field.required} />
                   </div>
                 );
               }
@@ -215,12 +219,12 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
                 const val = (data as Record<string, unknown>)[field.id] ?? "";
                 return (
                   <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
-                    <label className={LABEL}>
+                    <label className={FORM_LABEL}>
                       {field.label} {field.required ? "*" : ""}
                     </label>
                     {field.type === "textarea" ? (
                       <textarea
-                        className={INPUT + " min-h-[80px] py-2 resize-none"}
+                        className={FORM_INPUT + " min-h-[80px] py-2 resize-none"}
                         value={val as string}
                         onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
@@ -228,7 +232,7 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
                       />
                     ) : field.type === "select" ? (
                       <select
-                        className={INPUT + " cursor-pointer"}
+                        className={FORM_SELECT}
                         value={val as string}
                         onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
                         required={field.required}
@@ -253,7 +257,7 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
                     ) : field.type === "number" ? (
                       <input
                         type="number"
-                        className={INPUT}
+                        className={FORM_INPUT}
                         value={val as number}
                         onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
                         placeholder={field.placeholder || `Enter number…`}
@@ -268,7 +272,7 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
                     ) : (
                       <input
                         type={field.type === "email" ? "email" : field.type === "url" ? "url" : "text"}
-                        className={INPUT}
+                        className={FORM_INPUT}
                         value={val as string}
                         onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}

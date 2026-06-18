@@ -53,20 +53,6 @@ interface MarkAttendanceProps {
   setRecords: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
 }
 
-interface ClassInfo {
-  id: string;
-  name: string;
-  sessionId?: string;
-  sessionName?: string;
-  teacherName?: string;
-}
-
-interface Session {
-  id: string;
-  name: string;
-  classes?: ClassInfo[];
-}
-
 interface AuditEntry {
   action: string;
   ts?: string;
@@ -362,7 +348,6 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
       addAuditEntry(filters.classId, filters.date, {
         action: "edit",
         studentId,
-        studentName: before.name,
         field: key,
         from: String(before[key] ?? ""),
         to: String(value),
@@ -401,7 +386,6 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
         classId: filters.classId,
         date: filters.date,
         studentId: row.studentId,
-        studentName: row.name,
         rollNo: row.rollNo,
         status: row.status,
         timeIn: row.status !== "absent" ? row.timeIn : "",
@@ -432,7 +416,6 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
         classId: filters.classId,
         date: filters.date,
         studentId: row.studentId,
-        studentName: row.name,
         rollNo: row.rollNo,
         status: row.status,
         timeIn: row.status !== "absent" ? row.timeIn : "",
@@ -480,7 +463,6 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
           classId: payload.classId,
           date: payload.date,
           studentId: row.studentId,
-          studentName: row.name,
           rollNo: row.rollNo,
           status: row.status,
           timeIn: row.status !== "absent" ? row.timeIn : "",

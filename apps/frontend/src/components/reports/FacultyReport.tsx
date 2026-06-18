@@ -5,6 +5,8 @@ import {
 } from "recharts";
 import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useTeachersCollection } from '@/hooks/useTeachers';
+import { teacherNameById } from '@/lib/teachers/teacherAssignment';
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
 
@@ -38,12 +40,18 @@ interface FacultyReportProps {
  */
 export default function FacultyReport({ filters: _filters }: FacultyReportProps): React.JSX.Element {
   const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
+  const teachers = useTeachersCollection();
+
+  const resolveClassTeacher = (teacherId: string, teacherName: string): string => {
+    const fromRegistry = teacherNameById(teachers, teacherId);
+    return fromRegistry || teacherName || "Unassigned";
+  };
 
   const facultyWorkload = useMemo<FacultyWorkloadItem[]>(() => {
     const map: Record<string, { classes: Set<string>, sessions: Set<string>, students: number, hours: number }> = {};
     sessions.forEach(s => {
        (s.classes || []).forEach(c => {
-         const tName = c.teacherName || "Unassigned";
+         const tName = resolveClassTeacher(c.teacherId, c.teacherName ?? '');
          if (!map[tName]) map[tName] = { classes: new Set(), sessions: new Set(), students: 0, hours: 0 };
          
          map[tName].classes.add(c.id);
@@ -60,7 +68,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
       totalStudents: data.students,
       hoursPerWeek: data.hours
     })).sort((a, b) => b.totalStudents - a.totalStudents);
-  }, [sessions]);
+  }, [sessions, teachers]);
 
   const totalFaculty = facultyWorkload.length;
   const totalStudents = facultyWorkload.reduce((a, f) => a + f.totalStudents, 0);

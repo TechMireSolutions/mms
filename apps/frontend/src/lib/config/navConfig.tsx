@@ -14,6 +14,7 @@ import {
   Scale,
   TrendingUp,
   BookOpen,
+  School,
   type LucideIcon,
 } from "lucide-react";
 import { type AppTranslationKey } from "@mms/shared";
@@ -43,6 +44,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: BookOpen,
     subItems: [
       { labelKey: "nav.students", icon: GraduationCap, path: ROUTES.students, moduleId: "students" },
+      { labelKey: "nav.teachers", icon: School, path: ROUTES.teachers, moduleId: "teachers" },
       { labelKey: "nav.sessions", icon: Calendar, path: ROUTES.sessions, moduleId: "sessions" },
       { labelKey: "nav.attendance", icon: UserCheck, path: ROUTES.attendance, moduleId: "attendance" },
       { labelKey: "nav.enrollments", icon: ClipboardList, path: ROUTES.enrollments, moduleId: "enrollment" },

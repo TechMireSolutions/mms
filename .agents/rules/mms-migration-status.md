@@ -31,6 +31,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 
 | Area | Resolution |
 |------|------------|
+| Contact-first person policy | `mms-contact-link.md`; `LINK_MANAGED_COLLECTIONS` + pickers (`ContactPicker`, `RegistryPersonSelect`, `UserActorSelect`); migrations 006–007 |
 | Auth seeds | `getDefaultCollectionsForSeed()` normalizes `roles[]` → `role` + `passwordHash` on DB seed |
 | RBAC | `rbacService` on `/api/db/*` writes, bulk sync, reset |
 | `ContactConfigProvider` | Single mount in `App.tsx` only |

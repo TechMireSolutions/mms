@@ -92,14 +92,62 @@ export const BRANDING_SOCIAL_PLACEHOLDERS: Record<string, string> = {
 
 /** Curated brand colour palettes (primary + accent) for theme settings and onboarding. */
 export const BRANDING_THEME_PRESETS = [
-  { id: 'emerald', labelKey: 'theme.presetEmerald', primaryColor: '#047857', secondaryColor: '#d97706' },
-  { id: 'teal', labelKey: 'theme.presetTeal', primaryColor: '#0f766e', secondaryColor: '#d97706' },
-  { id: 'blue', labelKey: 'theme.presetBlue', primaryColor: '#1d4ed8', secondaryColor: '#b45309' },
-  { id: 'indigo', labelKey: 'theme.presetIndigo', primaryColor: '#4338ca', secondaryColor: '#d97706' },
-  { id: 'purple', labelKey: 'theme.presetPurple', primaryColor: '#7e22ce', secondaryColor: '#b45309' },
-  { id: 'rose', labelKey: 'theme.presetRose', primaryColor: '#be123c', secondaryColor: '#334155' },
-  { id: 'amber', labelKey: 'theme.presetAmber', primaryColor: '#b45309', secondaryColor: '#047857' },
-  { id: 'slate', labelKey: 'theme.presetSlate', primaryColor: '#334155', secondaryColor: '#d97706' },
+  {
+    id: 'emerald',
+    labelKey: 'theme.presetEmerald',
+    primaryColor: '#047857',
+    secondaryColor: '#c2410c',
+    category: 'green',
+  },
+  {
+    id: 'teal',
+    labelKey: 'theme.presetTeal',
+    primaryColor: '#0f766e',
+    secondaryColor: '#b45309',
+    category: 'green',
+  },
+  {
+    id: 'blue',
+    labelKey: 'theme.presetBlue',
+    primaryColor: '#1d4ed8',
+    secondaryColor: '#b45309',
+    category: 'blue',
+  },
+  {
+    id: 'indigo',
+    labelKey: 'theme.presetIndigo',
+    primaryColor: '#4338ca',
+    secondaryColor: '#c2410c',
+    category: 'blue',
+  },
+  {
+    id: 'purple',
+    labelKey: 'theme.presetPurple',
+    primaryColor: '#7e22ce',
+    secondaryColor: '#b45309',
+    category: 'blue',
+  },
+  {
+    id: 'rose',
+    labelKey: 'theme.presetRose',
+    primaryColor: '#be123c',
+    secondaryColor: '#334155',
+    category: 'warm',
+  },
+  {
+    id: 'amber',
+    labelKey: 'theme.presetAmber',
+    primaryColor: '#b45309',
+    secondaryColor: '#047857',
+    category: 'warm',
+  },
+  {
+    id: 'slate',
+    labelKey: 'theme.presetSlate',
+    primaryColor: '#334155',
+    secondaryColor: '#c2410c',
+    category: 'neutral',
+  },
 ] as const;
 
 export const BRANDING_TAGLINE_MAX = 80;
@@ -154,7 +202,7 @@ export const DEFAULT_BRANDING_SETTINGS: BrandingSettings = {
   madrasaName: 'MMS',
   tagline: 'Nurturing Knowledge & Character',
   primaryColor: '#047857',
-  secondaryColor: '#d97706',
+  secondaryColor: '#c2410c',
   logoUrl: '',
   faviconUrl: '',
   footerText: '© 2026 MMS. All rights reserved.',

@@ -5,6 +5,8 @@ export type Permission =
   | "contacts.delete"
   | "students.read"
   | "students.write"
+  | "teachers.read"
+  | "teachers.write"
   | "users.manage"
   | "settings.global.write"
   | "settings.branding.write"
@@ -22,6 +24,8 @@ const ADMIN: Permission[] = [
   "contacts.delete",
   "students.read",
   "students.write",
+  "teachers.read",
+  "teachers.write",
   "users.manage",
   "settings.global.write",
   "settings.branding.write",
@@ -39,6 +43,8 @@ const TEACHER: Permission[] = [
   "contacts.write",
   "students.read",
   "students.write",
+  "teachers.read",
+  "teachers.write",
   "analytics.view",
   "enrollments.read",
   "enrollments.write",
@@ -48,6 +54,7 @@ const TEACHER: Permission[] = [
 const ACCOUNTANT: Permission[] = [
   "contacts.read",
   "students.read",
+  "teachers.read",
   "analytics.view",
   "finance.write",
   "obligations.write",
@@ -57,6 +64,7 @@ const ACCOUNTANT: Permission[] = [
 const ASSISTANT_TEACHER: Permission[] = [
   "contacts.read",
   "students.read",
+  "teachers.read",
   "analytics.view",
   "enrollments.read",
 ];

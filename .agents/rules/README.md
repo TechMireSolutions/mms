@@ -35,6 +35,7 @@ Project rules for the Madrasa Management System. Antigravity loads `.md` files f
 | PostgreSQL / Drizzle | `mms-database.md` | `mms-data-layer` |
 | Dev / env / Docker | `mms-ops.md` | `mms-ci` (pipeline pointer) |
 | Copy layers (`t` / `labelKey` / legacy `uiStrings`) | `mms-i18n.md` | `mms-ui-rendering` (notify), `mms-contacts` (legacy) |
+| Contact-first person links (ids only on save) | `mms-contact-link.md` | `mms-core`, `mms-data-layer`, `mms-contacts` |
 | Open migration gaps | `mms-migration-status.md` | — (always-on register) |
 | Security, rate limits, audit, tenant isolation | `mms-security.md` | `mms-auth`, `mms-backend` (pointers only) |
 | Testing strategy & CI tests | `mms-testing.md` | `mms-shared-dry`, `mms-ci` |
@@ -43,10 +44,11 @@ Project rules for the Madrasa Management System. Antigravity loads `.md` files f
 
 ## Model decision (`trigger: model_decision`)
 
-Agent loads when task matches — **27 scoped rules**:
+Agent loads when task matches — **28 scoped rules**:
 
 | Rule | Focus |
 |------|-------|
+| `mms-contact-link.md` | Contact-first persons — link ids, hydrate/strip, pickers |
 | `mms-shared-dry.md` | `@mms/shared` package |
 | `mms-data-layer.md` | `db.ts`, seeds, sync |
 | `mms-hooks.md` | `useLiveCollection`, `useSortedFields`, branding |
@@ -85,7 +87,7 @@ Agent loads when task matches — **27 scoped rules**:
 
 ## Cursor mirror
 
-`.cursor/rules/` — same body content as these files (`.mdc` + `globs` / `alwaysApply` frontmatter). **30 rule files** total (3 always-on + 27 scoped). **Rename policy:** use `mms-*` everywhere (no standalone `reports.md`).
+`.cursor/rules/` — same body content as these files (`.mdc` + `globs` / `alwaysApply` frontmatter). **31 rule files** total (3 always-on + 28 scoped). **Rename policy:** use `mms-*` everywhere (no standalone `reports.md`).
 
 **Sync policy:** rule bodies must stay identical; only frontmatter differs (Cursor: `globs` + `alwaysApply`; Antigravity: `trigger`). Cross-references use `.mdc` in Cursor, `.md` here.
 

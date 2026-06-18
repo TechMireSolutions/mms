@@ -21,7 +21,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
   onClose={onClose}
   title={…}
   icon={ModuleIcon}          // optional Lucide icon
-  size="md" | "lg"           // md = single panel; lg = tabbed
+  size="md" | "lg"           // omit = lg (standard entity forms); xl = wide grids only
   tall                       // fixed height for multi-tab forms
   tabs={…}                   // optional — pill SubTabBar
   activeTab={…}
@@ -47,9 +47,20 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 | Tab control | `SubTabBar` pill style only — **no** custom underline / icon tab bars |
 | Tab ids | Registry- or config-driven; same pattern as module Configuration fields |
 | Height | `tall` on `FormModal` — `h-[88vh] max-h-[700px]`; body scrolls, chrome fixed |
+| Progress | Optional `progress` (0–100) + `progressLabel` — config-driven completeness via `FormProgressBar` |
 | Animation | Tab content fade/slide inside body — never animate dialog height |
 
 Examples: `ContactForm`, `QuestionForm`.
+
+## Width
+
+| `size` | When |
+|--------|------|
+| **(omit)** / `lg` | Default for all entity add/edit forms — `max-w-2xl` |
+| `xl` | Wide table/grid only (journal entry lines, RBAC matrix) |
+| `md` | Compact utility dialogs (SMS, backup confirm) — **not** entity forms |
+
+Do not use `sm` on entity forms. `tall` and tabbed forms are clamped to at least `lg` in `FormModal`.
 
 ## Field styling
 

@@ -33,7 +33,6 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
       onClose={onClose}
       title={denom ? "Edit Denomination" : "New Denomination"}
       icon={CreditCard}
-      size="md"
       cancelLabel="Cancel"
       saveLabel="Save"
       onSave={() => onSave({ ...data, id: denom?.id || `den${Date.now()}` })}

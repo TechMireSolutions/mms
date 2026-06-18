@@ -53,8 +53,8 @@ const DEFAULT_PREFS: ContactPreferences = {
   defaultViewLayout: "list",
   duplicateDetectionThresholdHigh: 90,
   duplicateDetectionThresholdMedium: 75,
-  duplicateDetectionColorHigh: COLOR_PALETTES.red.bg,
-  duplicateDetectionColorMedium: COLOR_PALETTES.amber.bg,
+  duplicateDetectionColorHigh: COLOR_PALETTES.destructive.bg,
+  duplicateDetectionColorMedium: COLOR_PALETTES.warning.bg,
   duplicateDetectionColorLow: COLOR_PALETTES.slate.bg,
   duplicateDetectionScorePhoneEmail: 99,
   duplicateDetectionScoreNamePhone: 95,
@@ -64,11 +64,11 @@ const DEFAULT_PREFS: ContactPreferences = {
   duplicateDetectionScoreName: 75,
   duplicateDetectionScoreDefault: 70,
   duplicateDetectionFields: ["name", "phone", "email"],
-  duplicateDetectionColorWarning: COLOR_PALETTES.amber.bg,
-  duplicateDetectionColorWarningText: COLOR_PALETTES.amber.text,
-  duplicateDetectionColorSuccess: COLOR_PALETTES.emerald.bg,
-  duplicateDetectionColorSuccessText: COLOR_PALETTES.emerald.text,
-  duplicateDetectionColorHighlight: COLOR_PALETTES.blue.bg,
+  duplicateDetectionColorWarning: COLOR_PALETTES.warning.bg,
+  duplicateDetectionColorWarningText: COLOR_PALETTES.warning.text,
+  duplicateDetectionColorSuccess: COLOR_PALETTES.success.bg,
+  duplicateDetectionColorSuccessText: COLOR_PALETTES.success.text,
+  duplicateDetectionColorHighlight: COLOR_PALETTES.info.bg,
 };
 
 export {

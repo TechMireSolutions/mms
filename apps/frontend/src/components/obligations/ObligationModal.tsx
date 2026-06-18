@@ -5,7 +5,6 @@ export interface ObligationModalProps {
   title: string;
   children: React.ReactNode;
   onClose: () => void;
-  wide?: boolean;
 }
 
 /**
@@ -15,10 +14,9 @@ export default function ObligationModal({
   title,
   children,
   onClose,
-  wide = false,
 }: ObligationModalProps): React.JSX.Element {
   return (
-    <Modal open onClose={onClose} title={title} size={wide ? "lg" : "md"}>
+    <Modal open onClose={onClose} title={title} size="lg">
       {children}
     </Modal>
   );

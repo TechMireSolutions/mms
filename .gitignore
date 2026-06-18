@@ -31,11 +31,18 @@ apps/backend/uploads
 *.sln
 *.sw?
 
-.env
 .vite
 
 # Turbo build cache
 .turbo
+
+# Test / Playwright artifacts
+test-results/
+playwright-report/
+blob-report/
+
+# Local pnpm store (should never be committed)
+.pnpm-store/
 
 # WhatsApp Web session data
 .wwebjs_auth

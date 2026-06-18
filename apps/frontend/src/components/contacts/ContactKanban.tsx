@@ -39,12 +39,6 @@ function ContactCard({ contact, onEdit, onDelete, onWhatsApp, onSms, onStageChan
     onEdit(contact);
   };
 
-  const handleStageSelect = (e: React.ChangeEvent<HTMLSelectElement>): void => {
-    if (e.target.value) {
-      onStageChange(contact.id, e.target.value);
-    }
-  };
-
   return (
     <motion.div
       layout

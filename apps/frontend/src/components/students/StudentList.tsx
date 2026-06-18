@@ -74,7 +74,7 @@ export default function StudentList({
 
   const colSpanCount = 5 + 
     (fields.dob?.enabled !== false ? 1 : 0) + 
-    (fields.fatherLink?.enabled !== false || fields.motherLink?.enabled !== false ? 1 : 0) + 
+    (fields.fatherLink?.enabled !== false || fields.motherLink?.enabled !== false || fields.guardianLink?.enabled !== false ? 1 : 0) +
     sortedCustomFields.length;
 
   // Sorting State
@@ -274,6 +274,12 @@ export default function StudentList({
                         <span className="font-semibold text-foreground truncate max-w-[100px]">{st.fatherName}</span>
                       </div>
                     )}
+                    {fields.guardianLink?.enabled !== false && st.guardianName && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Guardian:</span>
+                        <span className="font-semibold text-foreground truncate max-w-[100px]">{st.guardianName}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Status:</span>
                       <StatusBadge status={st.status} />
@@ -384,7 +390,7 @@ export default function StudentList({
                     </div>
                   </th>
                 )}
-                {(fields.fatherLink?.enabled !== false || fields.motherLink?.enabled !== false) && (
+                {(fields.fatherLink?.enabled !== false || fields.motherLink?.enabled !== false || fields.guardianLink?.enabled !== false) && (
                   <th
                     onClick={() => handleSort("fatherName")}
                     className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden md:table-cell"
@@ -482,7 +488,7 @@ export default function StudentList({
                             </p>
                           </td>
                         )}
-                        {(fields.fatherLink?.enabled !== false || fields.motherLink?.enabled !== false) && (
+                        {(fields.fatherLink?.enabled !== false || fields.motherLink?.enabled !== false || fields.guardianLink?.enabled !== false) && (
                           <td className="px-4 py-3 hidden md:table-cell">
                             {fields.fatherLink?.enabled !== false && (
                               <p className="text-[13px] text-foreground">
@@ -492,6 +498,11 @@ export default function StudentList({
                             {fields.motherLink?.enabled !== false && (
                               <p className="text-[11px] text-muted-foreground">
                                 {st.motherName || "—"}
+                              </p>
+                            )}
+                            {fields.guardianLink?.enabled !== false && (
+                              <p className="text-[11px] text-muted-foreground">
+                                {st.guardianName || "—"}
                               </p>
                             )}
                           </td>
@@ -664,6 +675,7 @@ export default function StudentList({
                   "Email",
                   "Father Name",
                   "Mother Name",
+                  "Guardian Name",
                   "Status",
                   "Registered Date",
                 ];
@@ -676,6 +688,7 @@ export default function StudentList({
                   s.email,
                   s.fatherName || "",
                   s.motherName || "",
+                  s.guardianName || "",
                   s.status,
                   s.registeredDate,
                 ]);

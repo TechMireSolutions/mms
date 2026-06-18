@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
-import ObligationModal from "./ObligationModal";
-import { FORM_LABEL, FORM_ERROR } from "@/components/ui/formStyles";
+import FormModal from "@/components/ui/FormModal";
+import useTranslation from "@/hooks/useTranslation";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 export interface Mujtahid {
   id: string;
@@ -135,52 +136,69 @@ export default function MujtahidManager({ mujtahids, reps, onChangeMujtahids, on
         })}
       </section>
 
-      {modal && (modal.mode === "add" || modal.mode === "edit") && (
-        <ObligationModal title={modal.mode === "add" ? "Add Mujtahid" : "Edit Mujtahid"} onClose={() => setModal(null)}>
-          <NameForm initial={modal.data} onSave={handleSaveMujtahid} onCancel={() => setModal(null)} label="Mujtahid Name" />
-        </ObligationModal>
-      )}
-      {modal && (modal.mode === "add-rep" || modal.mode === "edit-rep") && (
-        <ObligationModal title={modal.mode === "add-rep" ? "Add Representative" : "Edit Representative"} onClose={() => setModal(null)}>
-          <NameForm initial={modal.data} onSave={handleSaveRep} onCancel={() => setModal(null)} label="Representative Name" />
-        </ObligationModal>
-      )}
+      {modal && (modal.mode === "add" || modal.mode === "edit") ? (
+        <NameFormModal
+          title={modal.mode === "add" ? "Add Mujtahid" : "Edit Mujtahid"}
+          label="Mujtahid Name"
+          initial={modal.data}
+          onSave={handleSaveMujtahid}
+          onClose={() => setModal(null)}
+        />
+      ) : null}
+      {modal && (modal.mode === "add-rep" || modal.mode === "edit-rep") ? (
+        <NameFormModal
+          title={modal.mode === "add-rep" ? "Add Representative" : "Edit Representative"}
+          label="Representative Name"
+          initial={modal.data}
+          onSave={handleSaveRep}
+          onClose={() => setModal(null)}
+        />
+      ) : null}
     </div>
   );
 }
 
-interface NameFormProps {
+interface NameFormModalProps {
+  title: string;
   initial: Partial<Mujtahid> | Partial<MujtahidRep>;
   onSave: (form: Partial<Mujtahid> | Partial<MujtahidRep>) => void;
-  onCancel: () => void;
+  onClose: () => void;
   label: string;
 }
 
-function NameForm({ initial, onSave, onCancel, label }: NameFormProps) {
+function NameFormModal({ initial, onSave, onClose, label, title }: NameFormModalProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ ...initial });
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name || !form.name.trim()) { setError("Name is required"); return; }
+  const handleSave = (): void => {
+    if (!form.name || !form.name.trim()) {
+      setError("Name is required");
+      return;
+    }
     onSave(form);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <FormModal
+      open
+      onClose={onClose}
+      title={title}
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("common.save")}
+      onSave={handleSave}
+      error={error || undefined}
+    >
       <div>
         <label htmlFor="name-form-input" className={FORM_LABEL}>{label} *</label>
-        <input id="name-form-input" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="FORM_INPUT"
-          aria-invalid={!!error} />
-        {error && <p className={FORM_ERROR} role="alert">{error}</p>}
+        <input
+          id="name-form-input"
+          value={form.name || ""}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className={FORM_INPUT}
+          aria-invalid={!!error}
+        />
       </div>
-      <div className="flex justify-end gap-2 pt-2">
-        <button type="button" onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
-        <button type="submit"
-          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">Save</button>
-      </div>
-    </form>
+    </FormModal>
   );
 }

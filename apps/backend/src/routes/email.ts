@@ -20,20 +20,7 @@ import {
   verificationCodeBodySchema,
 } from '../validation/emailSchemas.js';
 import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
-
-function requireEmailAdmin(
-  user: User,
-  reply: { status: (code: number) => { send: (body: unknown) => unknown } },
-): boolean {
-  if (!canWriteObject(user, 'email_integration')) {
-    reply.status(403).send({
-      type: 'forbidden',
-      message: 'Administrator access is required for email integration settings',
-    });
-    return false;
-  }
-  return true;
-}
+import { sendForbidden } from '../lib/httpErrors.js';
 
 export default async function emailRoutes(
   fastify: FastifyInstance,
@@ -43,14 +30,18 @@ export default async function emailRoutes(
 
   fastify.get('/integration', async (request, reply) => {
     const user = request.user as User;
-    if (!requireEmailAdmin(user, reply)) return;
+    if (!canWriteObject(user, 'email_integration')) {
+      return sendForbidden(reply, 'Administrator access is required for email integration settings');
+    }
     const config = await loadEmailIntegrationConfig();
     return reply.send(config);
   });
 
   fastify.put('/integration', async (request, reply) => {
     const user = request.user as User;
-    if (!requireEmailAdmin(user, reply)) return;
+    if (!canWriteObject(user, 'email_integration')) {
+      return sendForbidden(reply, 'Administrator access is required for email integration settings');
+    }
 
     const parsed = parseRequest(emailIntegrationBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
@@ -90,7 +81,9 @@ export default async function emailRoutes(
 
   fastify.post('/integration/test', async (request, reply) => {
     const user = request.user as User;
-    if (!requireEmailAdmin(user, reply)) return;
+    if (!canWriteObject(user, 'email_integration')) {
+      return sendForbidden(reply, 'Administrator access is required for email integration settings');
+    }
 
     const verify = await verifyEmailTransport();
     if (!verify.sent) {

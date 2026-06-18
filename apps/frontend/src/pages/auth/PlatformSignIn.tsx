@@ -4,9 +4,8 @@ import { AlertCircle, ArrowRight, Loader2, Lock, Mail } from "lucide-react";
 import PlatformAuthLayout from "@/components/platform/PlatformAuthLayout";
 import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
 import useTranslation from "@/hooks/useTranslation";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import { ROUTES } from "@/lib/config/routes";
 
 /**
@@ -45,34 +44,34 @@ export default function PlatformSignIn(): React.JSX.Element {
           </div>
         ) : null}
 
-        <div className="space-y-2">
-          <Label htmlFor="platform-email">{t("auth.email")}</Label>
+        <div className="space-y-1.5">
+          <label htmlFor="platform-email" className={FORM_LABEL}>{t("auth.email")}</label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <Input
+            <input
               id="platform-email"
               type="email"
               autoComplete="username"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-11"
+              className={FORM_INPUT_ICON}
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="platform-password">{t("auth.password")}</Label>
+        <div className="space-y-1.5">
+          <label htmlFor="platform-password" className={FORM_LABEL}>{t("auth.password")}</label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <Input
+            <input
               id="platform-password"
               type="password"
               autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-11"
+              className={FORM_INPUT_ICON}
             />
           </div>
         </div>

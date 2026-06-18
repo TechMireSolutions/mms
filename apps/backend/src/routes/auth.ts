@@ -5,9 +5,11 @@ import {
   onboardUser,
   isOnboardingAvailable,
   completeTwoFactorLogin,
+  establishSession,
   type User,
 } from '../services/auth/authService.js';
 import { exchangeAuthHandoff } from '../services/auth/authHandoffService.js';
+import type { Contact } from '@mms/shared';
 import { resendTwoFactorChallenge } from '../services/auth/twoFactorService.js';
 import { resolveSubdomainFromRequest } from '../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../lib/rateLimitConfig.js';
@@ -16,7 +18,7 @@ import { authenticateTenant } from '../middleware/authenticate.js';
 import { authenticatePlatform } from '../middleware/authenticatePlatform.js';
 import { deleteAuthArtifact } from '../services/auth/authArtifactService.js';
 import { getJwtExpiresIn } from '../services/globalSettingsService.js';
-import { getPublicUserById } from '../services/auth/userService.js';
+import { getPublicUserById, getTenantUserProfile, updateOwnLinkedContact, changeTenantUserPassword } from '../services/auth/userService.js';
 import { runWithTenant } from '../lib/tenantContext.js';
 import { rotateRefreshToken, validateRefreshToken } from '../services/auth/twoFactorService.js';
 import { loginBodySchema, onboardBodySchema } from '../validation/authSchemas.js';
@@ -25,6 +27,17 @@ import {
   challengeIdBodySchema,
   handoffBodySchema,
 } from '../validation/commonSchemas.js';
+import {
+  changePasswordBodySchema,
+  confirmLoginEmailChangeBodySchema,
+  ownContactPatchBodySchema,
+  requestLoginEmailChangeBodySchema,
+} from '../validation/profileSchemas.js';
+import {
+  confirmLoginEmailChange,
+  LoginEmailChangeError,
+  requestLoginEmailChange,
+} from '../services/auth/tenantLoginEmailService.js';
 import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
 
 export default async function authRoutes(
@@ -68,6 +81,12 @@ export default async function authRoutes(
         if (err.statusCode === 403 && err.type === 'workspace_disabled') {
           return reply.status(403).send({
             type: 'workspace_disabled',
+            message: err.message,
+          });
+        }
+        if (err.statusCode === 403 && err.type === 'email_not_verified') {
+          return reply.status(403).send({
+            type: 'email_not_verified',
             message: err.message,
           });
         }
@@ -147,6 +166,121 @@ export default async function authRoutes(
   fastify.post('/logout', async (_request, reply) => {
     clearAuthCookies(reply);
     return reply.send({ success: true });
+  });
+
+  fastify.get('/profile', { preHandler: authenticateTenant }, async (request, reply) => {
+    const user = request.user as User;
+    const profile = await getTenantUserProfile(user.id);
+    if (!profile) {
+      return reply.status(404).send({ type: 'not_found', message: 'Profile not found' });
+    }
+    return reply.send({ profile });
+  });
+
+  fastify.put('/me/contact', { preHandler: authenticateTenant }, async (request, reply) => {
+    const user = request.user as User;
+    const parsed = parseRequest(ownContactPatchBodySchema, request.body ?? {});
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
+    const current = await getTenantUserProfile(user.id);
+    if (!current?.contact) {
+      return reply.status(400).send({
+        type: 'no_contact_link',
+        message: 'No linked contact for this account',
+      });
+    }
+
+    try {
+      const contact = await updateOwnLinkedContact(user.id, {
+        ...current.contact,
+        ...parsed.data,
+        id: current.contact.id,
+      } as Contact);
+      if (!contact) {
+        return reply.status(404).send({ type: 'not_found', message: 'Contact not found' });
+      }
+      return reply.send({ contact });
+    } catch (error: unknown) {
+      const err = error as Error & { statusCode?: number; type?: string };
+      return reply.status(err.statusCode ?? 500).send({
+        type: err.type ?? 'server_error',
+        message: err.message,
+      });
+    }
+  });
+
+  await fastify.register(async function tenantProfileRateLimited(inner) {
+    await inner.register(rateLimit, AUTH_RATE_LIMIT);
+
+    inner.post('/change-password', { preHandler: authenticateTenant }, async (request, reply) => {
+      const user = request.user as User;
+      const parsed = parseRequest(changePasswordBodySchema, request.body ?? {});
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      try {
+        await changeTenantUserPassword(
+          user.id,
+          parsed.data.currentPassword,
+          parsed.data.newPassword,
+        );
+        return reply.send({ success: true });
+      } catch (error: unknown) {
+        const err = error as Error & { statusCode?: number; type?: string };
+        return reply.status(err.statusCode ?? 500).send({
+          type: err.type ?? 'server_error',
+          message: err.message,
+        });
+      }
+    });
+
+    inner.post('/login-email/request', { preHandler: authenticateTenant }, async (request, reply) => {
+      const user = request.user as User;
+      const parsed = parseRequest(requestLoginEmailChangeBodySchema, request.body ?? {});
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      try {
+        const result = await requestLoginEmailChange(
+          user.id,
+          parsed.data.newLoginEmail,
+          parsed.data.currentPassword,
+        );
+        return reply.send({
+          success: true,
+          challengeId: result.challengeId,
+          devCode: result.devCode,
+        });
+      } catch (error: unknown) {
+        if (error instanceof LoginEmailChangeError) {
+          const status =
+            error.code === 'invalid_credentials'
+              ? 401
+              : error.code === 'conflict'
+                ? 409
+                : error.code === 'email_send_failed'
+                  ? 503
+                  : 400;
+          return reply.status(status).send({ type: error.code, message: error.message });
+        }
+        throw error;
+      }
+    });
+
+    inner.post('/login-email/confirm', { preHandler: authenticateTenant }, async (request, reply) => {
+      const parsed = parseRequest(confirmLoginEmailChangeBodySchema, request.body ?? {});
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      try {
+        const updated = await confirmLoginEmailChange(parsed.data.challengeId, parsed.data.code);
+        if (!updated) {
+          return reply.status(404).send({ type: 'not_found', message: 'User not found' });
+        }
+        await establishSession(updated, fastify.jwt, reply, true);
+        return reply.send({ user: updated, success: true });
+      } catch (error: unknown) {
+        if (error instanceof LoginEmailChangeError) {
+          const status = error.code === 'conflict' ? 409 : 401;
+          return reply.status(status).send({ type: error.code, message: error.message });
+        }
+        throw error;
+      }
+    });
   });
 
   fastify.get('/me', { preHandler: authenticateTenant }, async (request, reply) => {
@@ -233,7 +367,6 @@ export default async function authRoutes(
       });
     }
 
-    const { establishSession } = await import('../services/auth/authService.js');
     await establishSession(result.user, fastify.jwt, reply, true);
     return reply.send({ user: result.user });
   });

@@ -20,7 +20,7 @@ import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { getObject, saveObject } from '@/lib/db';
 import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
-import Modal from '@/components/ui/Modal';
+import FormModal from '@/components/ui/FormModal';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { UserRoleBadge } from './UserBadges';
 import { SettingsMetaBadge } from '@/components/settings/SettingsShared';
@@ -48,14 +48,16 @@ function PermCell({ checked, onChange, disabled = false }: PermCellProps): React
   );
 }
 
-interface RoleFormProps {
+interface RoleFormModalProps {
+  open: boolean;
+  title: string;
   role?: WorkspaceRole | null;
   visibleModules: readonly RbacModuleDef[];
   onSave: (role: WorkspaceRole) => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-function RoleForm({ role, visibleModules, onSave, onCancel }: RoleFormProps): React.JSX.Element {
+function RoleFormModal({ open, title, role, visibleModules, onSave, onClose }: RoleFormModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const [name, setName] = useState(role?.customLabel ?? '');
   const [desc, setDesc] = useState(role?.customDescription ?? '');
@@ -63,6 +65,13 @@ function RoleForm({ role, visibleModules, onSave, onCancel }: RoleFormProps): Re
     role?.permissions ? structuredClone(role.permissions) : {},
   );
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setName(role?.customLabel ?? '');
+    setDesc(role?.customDescription ?? '');
+    setPerms(role?.permissions ? structuredClone(role.permissions) : {});
+    setError('');
+  }, [role, open]);
 
   const togglePerm = (moduleId: string, action: PermissionAction): void => {
     setPerms((prev) => {
@@ -98,51 +107,55 @@ function RoleForm({ role, visibleModules, onSave, onCancel }: RoleFormProps): Re
   };
 
   return (
-    <div className="space-y-5">
-      {error ? <p className="text-xs font-semibold text-destructive">{error}</p> : null}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div>
-          <label className={FORM_LABEL}>
-            {t('users.permissions.fieldName')}
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t('users.permissions.fieldNamePlaceholder')}
-            className={FORM_INPUT}
-          />
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={title}
+      size="xl"
+      tall
+      cancelLabel={t('users.cancel')}
+      saveLabel={t('users.permissions.saveRole')}
+      onSave={handleSave}
+      error={error || undefined}
+    >
+      <div className="space-y-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className={FORM_LABEL} htmlFor="role-name">
+              {t('users.permissions.fieldName')}
+            </label>
+            <input
+              id="role-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t('users.permissions.fieldNamePlaceholder')}
+              className={FORM_INPUT}
+            />
+          </div>
+          <div>
+            <label className={FORM_LABEL} htmlFor="role-desc">
+              {t('users.permissions.fieldDescription')}
+            </label>
+            <input
+              id="role-desc"
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              placeholder={t('users.permissions.fieldDescriptionPlaceholder')}
+              className={FORM_INPUT}
+            />
+          </div>
         </div>
-        <div>
-          <label className={FORM_LABEL}>
-            {t('users.permissions.fieldDescription')}
-          </label>
-          <input
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-            placeholder={t('users.permissions.fieldDescriptionPlaceholder')}
-            className={FORM_INPUT}
-          />
-        </div>
-      </div>
 
-      <PermissionMatrix
-        modules={visibleModules}
-        perms={perms}
-        readOnly={false}
-        onToggle={togglePerm}
-        onSelectAll={selectAll}
-        onClearAll={clearAll}
-      />
-
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          {t('users.cancel')}
-        </Button>
-        <Button type="button" onClick={handleSave}>
-          {t('users.permissions.saveRole')}
-        </Button>
+        <PermissionMatrix
+          modules={visibleModules}
+          perms={perms}
+          readOnly={false}
+          onToggle={togglePerm}
+          onSelectAll={selectAll}
+          onClearAll={clearAll}
+        />
       </div>
-    </div>
+    </FormModal>
   );
 }
 
@@ -514,22 +527,14 @@ export default function RolesPermissions(): React.JSX.Element {
         </div>
       </div>
 
-      <Modal
+      <RoleFormModal
         open={!!editing}
         onClose={() => setEdit(null)}
         title={editTitle}
-        size="xl"
-        panelClassName="h-[88vh] max-h-[700px]"
-      >
-        {editing ? (
-          <RoleForm
-            role={editing === 'new' ? null : editing}
-            visibleModules={visibleModules}
-            onSave={handleSave}
-            onCancel={() => setEdit(null)}
-          />
-        ) : null}
-      </Modal>
+        role={editing === 'new' ? null : editing}
+        visibleModules={visibleModules}
+        onSave={handleSave}
+      />
     </div>
   );
 }

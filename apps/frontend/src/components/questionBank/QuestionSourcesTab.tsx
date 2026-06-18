@@ -244,7 +244,6 @@ export default function QuestionSourcesTab({
             }}
             title={editingBookId ? t('questionBank.editSourceBook') : t('questionBank.addSourceBook')}
             icon={BookOpen}
-            size="lg"
             cancelLabel={t('questionBank.cancel')}
             saveLabel={t('questionBank.saveSourceBook')}
             onSave={saveBook}

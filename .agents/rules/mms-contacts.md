@@ -4,7 +4,7 @@ trigger: model_decision
 
 # MMS Contacts Module
 
-**Authoritative rules:** this file. `contact.md` is a blueprint — update it when architecture changes (several paths there are stale).
+**Authoritative rules:** this file for CRM UI/API. **Person identity policy** (link ids, hydrate/strip across all modules): `mms-contact-link.md`. `contact.md` is a blueprint — update it when architecture changes (several paths there are stale).
 
 ## File map
 

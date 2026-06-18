@@ -60,7 +60,7 @@ Keep shapes aligned with `@mms/shared` and `userService` (`users` need `role` + 
 
 ## Student hydration
 
-`db.ts` hydrates students from linked contacts on read and strips duplicate fields on save — preserve this when editing student/contact linking.
+Contact-first person linking (students, teachers, users, actors, downstream `studentId` rows) — full policy in **`mms-contact-link.md`**. `db.ts` + `collectionSync.ts` hydrate on read and strip duplicate fields on save — extend `LINK_MANAGED_COLLECTIONS` when adding person-linked collections.
 
 ## Concurrency
 

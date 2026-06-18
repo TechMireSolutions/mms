@@ -48,6 +48,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
   const studentContact = contacts.find(c => String(c.id) === String(student.contactId));
   const fatherContact = contacts.find(c => String(c.id) === String(student.fatherContactId));
   const motherContact = contacts.find(c => String(c.id) === String(student.motherContactId));
+  const guardianContact = contacts.find(c => String(c.id) === String(student.guardianContactId));
 
   const age = calcAge(student.dob);
   const enrolledSessionDetails = sessions.filter(s => student.enrolledSessions?.includes(s.id));
@@ -62,6 +63,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
   const fatherPhone = fatherContact?.phone || fatherContact?.phones?.[0]?.number;
   const motherPhone = motherContact?.phone || motherContact?.phones?.[0]?.number;
+  const guardianPhone = guardianContact?.phone || guardianContact?.phones?.[0]?.number;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-end">
@@ -187,7 +189,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   </div>
 
                   {/* Ordered Attributes & Connections list */}
-                  {orderedFields.some(f => fields[f.id]?.enabled !== false && (f.id === "fatherLink" ? (fatherContact || student.fatherName) : f.id === "motherLink" ? (motherContact || student.motherName) : true)) && (
+                  {orderedFields.some(f => fields[f.id]?.enabled !== false && (f.id === "fatherLink" ? (fatherContact || student.fatherName) : f.id === "motherLink" ? (motherContact || student.motherName) : f.id === "guardianLink" ? (guardianContact || student.guardianName) : true)) && (
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Student Details</h4>
                       <div className="space-y-2.5">
@@ -293,7 +295,33 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             );
                           }
 
-                          if (!["gender", "dob", "registeredDate", "fatherLink", "motherLink"].includes(field.id)) {
+                          if (field.id === "guardianLink") {
+                            if (!guardianContact && !student.guardianName) return null;
+                            return (
+                              <div key="guardianLink" className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-card shadow-sm">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                                    GU
+                                  </div>
+                                  <div className="min-w-0">
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-primary mb-0.5 block">Guardian</span>
+                                    <h5 className="text-xs font-bold text-foreground truncate">{student.guardianName || guardianContact?.name}</h5>
+                                    {guardianPhone && <p className="text-[10px] text-muted-foreground mt-0.5">{guardianPhone}</p>}
+                                  </div>
+                                </div>
+                                {guardianPhone && (
+                                  <a
+                                    href={`tel:${guardianPhone.replace(/[^\d+]/g, "")}`}
+                                    className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                  >
+                                    <Phone className="w-3.5 h-3.5" />
+                                  </a>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          if (!["gender", "dob", "registeredDate", "fatherLink", "motherLink", "guardianLink"].includes(field.id)) {
                             const val = (student as unknown as Record<string, unknown>)[field.id];
                             if (val === undefined || val === null || val === "" || val === false) return null;
 

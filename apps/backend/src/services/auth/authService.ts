@@ -83,6 +83,18 @@ export async function loginUser(
   const user = await validateCredentials(email, password, workspaceSubdomain);
   if (!user) return null;
 
+  const { getTenantUsersSettings } = await import('../users/usersSettingsService.js');
+  const usersSettings = await getTenantUsersSettings();
+  if (usersSettings.requireEmailVerification && !user.emailVerifiedAt) {
+    const err = new Error('Verify your email before signing in') as Error & {
+      statusCode?: number;
+      type?: string;
+    };
+    err.statusCode = 403;
+    err.type = 'email_not_verified';
+    throw err;
+  }
+
   const settings = await loadGlobalSettings();
   if (requiresTwoFactor(settings, user)) {
     const challengeId = await createTwoFactorChallenge(user);

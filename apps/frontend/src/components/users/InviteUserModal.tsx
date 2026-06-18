@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { USER_STATUS_VALUES, type SystemUser } from '@mms/shared';
+import { USER_STATUS_VALUES, toTitleCase, type SystemUser } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
+import { useContactsCollection } from '@/hooks/useContacts';
 import FormModal from '@/components/ui/FormModal';
+import ContactPicker from '@/components/ui/ContactPicker';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { FORM_SELECT } from '@/components/ui/formStyles';
 import {
   Form,
@@ -23,18 +24,27 @@ import { TranslatedFormMessage } from '@/lib/forms/TranslatedFormMessage';
 export interface InviteUserModalProps {
   onClose: () => void;
   onInvite: (user: SystemUser) => void;
+  existingContactIds?: (string | number)[];
 }
 
-export default function InviteUserModal({ onClose, onInvite }: InviteUserModalProps): React.JSX.Element {
+export default function InviteUserModal({
+  onClose,
+  onInvite,
+  existingContactIds = [],
+}: InviteUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const workspaceRoles = useWorkspaceRoles();
+  const contacts = useContactsCollection();
+
+  const excludeIds = useMemo(
+    () => existingContactIds.map(String),
+    [existingContactIds],
+  );
 
   const form = useForm<InviteUserFormValues>({
     resolver: zodResolver(inviteUserSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
+      contactId: '',
       role: '',
       status: 'inactive',
       sendEmail: true,
@@ -42,19 +52,20 @@ export default function InviteUserModal({ onClose, onInvite }: InviteUserModalPr
   });
 
   const handleSave = form.handleSubmit((values) => {
+    const contact = contacts.find((c) => String(c.id) === String(values.contactId));
+    if (!contact) return;
+    const name = toTitleCase(contact.name.trim()) as string;
+    const email = ((contact.email as string | undefined) || contact.emails?.[0]?.address || '').trim().toLowerCase();
+    const phone = ((contact.phone as string | undefined) || contact.phones?.[0]?.number || '').trim();
     const user: SystemUser = {
       id: `u${Date.now()}`,
-      name: values.name.trim(),
-      email: values.email.trim().toLowerCase(),
-      phone: values.phone.trim(),
+      contactId: contact.id,
+      name,
+      email,
+      phone,
       role: values.role,
       status: values.status,
-      avatarInitials: values.name
-        .split(' ')
-        .map((w) => w[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase(),
+      avatarInitials: name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
       lastLogin: '',
       createdDate: new Date().toISOString().slice(0, 10),
       failedLoginAttempts: 0,
@@ -72,7 +83,6 @@ export default function InviteUserModal({ onClose, onInvite }: InviteUserModalPr
       title={t('users.inviteTitle')}
       subtitle={t('users.inviteSubtitle')}
       icon={UserPlus}
-      size="sm"
       error={firstZodFieldError(form.formState.errors, t) || undefined}
       cancelLabel={t('users.cancel')}
       saveLabel={t('users.inviteSubmit')}
@@ -80,43 +90,22 @@ export default function InviteUserModal({ onClose, onInvite }: InviteUserModalPr
     >
       <Form {...form}>
         <form className="space-y-4" onSubmit={handleSave}>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('users.fieldName')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <TranslatedFormMessage messageKey={form.formState.errors.name?.message} />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('users.fieldPhone')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
           <FormField
             control={form.control}
-            name="email"
+            name="contactId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('users.fieldEmail')}</FormLabel>
-                <FormControl>
-                  <Input type="email" {...field} />
-                </FormControl>
-                <TranslatedFormMessage messageKey={form.formState.errors.email?.message} />
+                <ContactPicker
+                  label={t('users.fieldContact')}
+                  value={field.value || null}
+                  contacts={contacts}
+                  excludeIds={excludeIds}
+                  onChange={(id) => field.onChange(id ?? '')}
+                  searchPlaceholder={t('users.contactSearch')}
+                  emptyTitle={t('users.contactEmptyTitle')}
+                  emptyHint={t('users.contactEmptyHint')}
+                />
+                <TranslatedFormMessage messageKey={form.formState.errors.contactId?.message} />
               </FormItem>
             )}
           />

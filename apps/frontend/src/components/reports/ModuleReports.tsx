@@ -24,7 +24,7 @@ import SavedReports from "./SavedReports";
 import { VisualizerConfig } from "./reportMetadata";
 
 interface ModuleReportsProps {
-  category: "students" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";
+  category: "students" | "teachers" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";
   role?: string;
 }
 
@@ -55,6 +55,7 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
   const getInitialCollection = () => {
     switch (category) {
       case "students": return "students" as const;
+      case "teachers": return "teachers" as const;
       case "sessions": return "sessions" as const;
       case "financial": return "finance_invoices" as const;
       case "attendance": return "attendance_records" as const;
@@ -74,6 +75,8 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
   const renderReport = () => {
     switch (category) {
       case "students":   return <StudentReport   filters={filters} onEditVisual={handleEditVisual} />;
+      case "teachers":
+      case "faculty":    return <FacultyReport onEditVisual={handleEditVisual} />;
       case "contacts":   return <ContactReport onEditVisual={handleEditVisual} />;
       case "attendance": return <AttendanceReport filters={filters} onEditVisual={handleEditVisual} />;
       case "financial":  return <FinancialReport  filters={filters} onEditVisual={handleEditVisual} />;
@@ -84,7 +87,6 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
         return <QuestionBankReport />;
       case "hasanat":    return <HasanatReport     filters={filters} onEditVisual={handleEditVisual} />;
       case "sessions":   return <SessionReport     filters={filters} onEditVisual={handleEditVisual} />;
-      case "faculty":    return <FacultyReport onEditVisual={handleEditVisual} />;
       case "saved":      return <SavedReports category={category} />;
       default:           return null;
     }

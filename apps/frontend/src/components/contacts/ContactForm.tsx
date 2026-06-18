@@ -33,14 +33,15 @@ interface TabRenderProps {
   defaultCity: string;
   defaultProvince: string;
   allContacts: Contact[];
+  readOnlyFieldKeys?: string[];
 }
 
 const SYSTEM_TAB_RENDERS: Record<
   string,
   (props: TabRenderProps) => React.JSX.Element
 > = {
-  basic: ({ data, onChange }) => (
-    <BasicTab tabId="basic" data={data} onChange={onChange} />
+  basic: ({ data, onChange, readOnlyFieldKeys }) => (
+    <BasicTab tabId="basic" data={data} onChange={onChange} readOnlyFieldKeys={readOnlyFieldKeys} />
   ),
   phones: ({ data, onChange, requiredTabIds, defaultCountry }) => (
     <PhoneTab
@@ -93,6 +94,10 @@ interface ContactFormProps {
   defaultCountry?: string;
   defaultCity?: string;
   defaultProvince?: string;
+  /** Prefill for new contacts (e.g. name from ContactPicker search). */
+  initialDraft?: Partial<Contact>;
+  /** When true, gender cannot be changed (e.g. father/mother pickers). */
+  lockGender?: boolean;
 }
 
 // ── Main form ─────────────────────────────────────────────────────────────────
@@ -118,6 +123,8 @@ export default function ContactForm({
   defaultCountry: defaultCountryProp = "",
   defaultCity: defaultCityProp = "",
   defaultProvince: defaultProvinceProp = "",
+  initialDraft,
+  lockGender = false,
 }: ContactFormProps): React.JSX.Element {
   // Always read from context (live updates from settings panel)
   const { fieldConfig, prefs, enabledTabIds, requiredTabIds, fields, countryCodesMap, lifecycleStages, defaultContactRating, defaultValueFor, uiStrings } = useContactConfig();
@@ -153,7 +160,7 @@ export default function ContactForm({
     }
 
     if (!contact) {
-      return initial as Partial<Contact>;
+      return { ...initial, ...initialDraft } as Partial<Contact>;
     }
     const defaultCode = countryCodesMap[defaultCountryProp] || "";
     const phones = (contact.phones || []).map((p) => {
@@ -280,6 +287,11 @@ export default function ContactForm({
     }, 600);
   }, [data, onSave, contact, validate]);
 
+  const readOnlyFieldKeys = useMemo(
+    () => (lockGender ? ["gender"] : []),
+    [lockGender],
+  );
+
   const renderTab = () => {
     const renderFn = SYSTEM_TAB_RENDERS[tab];
     if (renderFn) {
@@ -291,31 +303,18 @@ export default function ContactForm({
         defaultCity,
         defaultProvince,
         allContacts,
+        readOnlyFieldKeys,
       });
     }
-    return <BasicTab tabId={tab} data={data} onChange={handleChange} />;
+    return (
+      <BasicTab
+        tabId={tab}
+        data={data}
+        onChange={handleChange}
+        readOnlyFieldKeys={readOnlyFieldKeys}
+      />
+    );
   };
-
-  const completenessColor = completeness === 100 ? "bg-primary" : "bg-primary/70";
-  const completenessText  = completeness === 100 ? "text-primary" : "text-primary/70";
-
-  const headerExtra = (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-semibold uppercase text-muted-foreground">{uiStrings.progress}</span>
-        <span className={`text-[11px] font-bold ${completenessText}`}>
-          {Math.round(completeness)}
-          {uiStrings.percentSymbol}
-        </span>
-      </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-        <div
-          className={`h-full rounded-full transition-all duration-500 ${completenessColor}`}
-          style={{ width: `${completeness}%` }}
-        />
-      </div>
-    </div>
-  );
 
   const footerStart = data.firstName ? (
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -339,9 +338,9 @@ export default function ContactForm({
       onClose={onClose}
       title={contact ? uiStrings.editContactHeader : uiStrings.addNewContactHeader}
       icon={User}
-      size="lg"
       tall
-      headerExtra={headerExtra}
+      progress={completeness}
+      progressLabel={uiStrings.progress}
       tabs={formTabs}
       activeTab={tab}
       onTabChange={setTab}

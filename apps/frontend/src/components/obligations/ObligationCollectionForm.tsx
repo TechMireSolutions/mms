@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Receipt } from "lucide-react";
 import {
   MOCK_CURRENCIES, PAYMENT_MODES, generateReceiptNo,
   ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
-import ObligationModal from "./ObligationModal";
+import FormModal from "@/components/ui/FormModal";
+import useTranslation from "@/hooks/useTranslation";
 import { DatePicker } from "../ui/DatePicker";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_ERROR } from "@/components/ui/formStyles";
+import { calculateKeyedUnitsCompleteness } from "@/lib/formCompleteness";
 
 interface FormState {
   receipt_no: string;
@@ -54,11 +56,26 @@ export interface ObligationCollectionFormProps {
  * @returns {React.ReactElement}
  */
 export default function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
+  const { t } = useTranslation();
   const contacts = useMergedObligationContacts();
   const users = useMergedObligationUsers();
 
   const [form, setForm] = useState<FormState>({ ...EMPTY, receipt_no: generateReceiptNo(existingCollections) });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const completeness = useMemo(
+    () =>
+      calculateKeyedUnitsCompleteness(form as unknown as Record<string, unknown>, [
+        { key: "received_date" },
+        { key: "sender_id" },
+        { key: "amount" },
+        { key: "payment_mode" },
+        { key: "obligation_type_id" },
+        { key: "mujtahid_representative_id" },
+        { key: "received_by" },
+      ]),
+    [form],
+  );
 
   // Filter reps based on selected obligation type (via wakala types)
   const eligibleRepIds = wakalaTypes
@@ -93,8 +110,7 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
     return e;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = (): void => {
     const e2 = validate();
     if (Object.keys(e2).length) { setErrors(e2); return; }
     onSave({
@@ -122,8 +138,19 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
   const selectedMujtahid = selectedRep ? getMujtahid(selectedRep.id) : null;
 
   return (
-    <ObligationModal title="New Obligation Collection" onClose={onClose} wide>
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+    <FormModal
+      open
+      onClose={onClose}
+      title="New Obligation Collection"
+      icon={Receipt}
+      progress={completeness}
+      progressLabel={t("common.formProgress")}
+      cancelLabel={t("common.cancel")}
+      saveLabel="Save Collection"
+      onSave={handleSave}
+      error={Object.values(errors)}
+    >
+      <div className="space-y-4">
         {/* Receipt No (read-only) */}
         <header className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20">
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
@@ -208,18 +235,7 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
             </select>
           )}
         </fieldset>
-
-        <footer className="flex justify-end gap-2 pt-2 border-t border-border mt-4">
-          <button type="button" onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">
-            Cancel
-          </button>
-          <button type="submit"
-            className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-            Save Collection
-          </button>
-        </footer>
-      </form>
-    </ObligationModal>
+      </div>
+    </FormModal>
   );
 }

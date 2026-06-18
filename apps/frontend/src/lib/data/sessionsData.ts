@@ -7,7 +7,7 @@ export const ClassSchema = z.object({
   ageMax: z.coerce.number().int().min(1).max(120),
   gender: z.enum(["male", "female", "any"]),
   teacherId: z.string(),
-  teacherName: z.string(),
+  teacherName: z.string().optional(),
   capacity: z.coerce.number().int().min(1),
   enrolled: z.coerce.number().int().nonnegative(),
   room: z.string().optional(),
@@ -132,7 +132,7 @@ export const SESSIONS_DATA: Session[] = [
         "ageMin": 7,
         "ageMax": 12,
         "gender": "male",
-        "teacherId": "t1",
+        "teacherId": "tch1",
         "teacherName": "Sheikh Ibrahim",
         "capacity": 20,
         "enrolled": 20,
@@ -144,7 +144,7 @@ export const SESSIONS_DATA: Session[] = [
         "ageMin": 12,
         "ageMax": 18,
         "gender": "male",
-        "teacherId": "t2",
+        "teacherId": "tch3",
         "teacherName": "Qari Yusuf",
         "capacity": 20,
         "enrolled": 18,
@@ -232,7 +232,7 @@ export const SESSIONS_DATA: Session[] = [
         "ageMin": 5,
         "ageMax": 10,
         "gender": "female",
-        "teacherId": "t3",
+        "teacherId": "tch2",
         "teacherName": "Ustadha Fatima",
         "capacity": 25,
         "enrolled": 17,
@@ -244,7 +244,7 @@ export const SESSIONS_DATA: Session[] = [
         "ageMin": 5,
         "ageMax": 10,
         "gender": "male",
-        "teacherId": "t4",
+        "teacherId": "tch4",
         "teacherName": "Ustadha Mariam",
         "capacity": 25,
         "enrolled": 0,
@@ -279,7 +279,7 @@ export const SESSIONS_DATA: Session[] = [
         "ageMin": 12,
         "ageMax": 35,
         "gender": "any",
-        "teacherId": "t2",
+        "teacherId": "tch3",
         "teacherName": "Qari Yusuf",
         "capacity": 30,
         "enrolled": 29,
@@ -314,7 +314,7 @@ export const SESSIONS_DATA: Session[] = [
         "ageMin": 10,
         "ageMax": 15,
         "gender": "any",
-        "teacherId": "t4",
+        "teacherId": "tch4",
         "teacherName": "Ustadha Mariam",
         "capacity": 30,
         "enrolled": 8,
@@ -349,7 +349,7 @@ export const SESSIONS_DATA: Session[] = [
         "ageMin": 8,
         "ageMax": 20,
         "gender": "male",
-        "teacherId": "t5",
+        "teacherId": "tch5",
         "teacherName": "Sheikh Abdullah",
         "capacity": 20,
         "enrolled": 0,
@@ -369,13 +369,6 @@ export const SESSIONS_DATA: Session[] = [
   }
 ];
 
-export const TEACHERS = [
-  { id: "t1", name: "Sheikh Ibrahim" },
-  { id: "t2", name: "Qari Yusuf" },
-  { id: "t3", name: "Ustadha Fatima" },
-  { id: "t4", name: "Ustadha Mariam" },
-  { id: "t5", name: "Sheikh Abdullah" }
-];
 export const EVENT_TYPES = ["ceremony", "assessment", "meeting", "trip", "other"] as const;
 export const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 export const ACTIVITY_TYPES = ["class", "lecture", "assessment", "spiritual", "activity", "break"] as const;

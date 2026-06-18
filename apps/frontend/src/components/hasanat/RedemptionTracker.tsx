@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Gift, Plus, Star } from "lucide-react";
 import { REDEMPTIONS, Redemption, Distribution } from '@/lib/data/hasanatData';
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "@/components/ui/FormModal";
+import UserActorSelect from "@/components/ui/UserActorSelect";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { useLiveCollection } from "@/hooks/useLiveCollection";
+import { saveCollection } from "@/lib/db";
 
 interface RedeemModalProps {
   open: boolean;
@@ -20,7 +23,7 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
     reward: "",
     pointsUsed: 0,
     date: new Date().toISOString().split("T")[0],
-    approvedBy: "",
+    approvedByUserId: "",
   });
 
   const upd = <K extends keyof Redemption>(f: K, v: Redemption[K]) => setData((d: Partial<Redemption>) => ({ ...d, [f]: v }));
@@ -34,7 +37,7 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
         reward: "",
         pointsUsed: 0,
         date: new Date().toISOString().split("T")[0],
-        approvedBy: "",
+        approvedByUserId: "",
       });
     }
   }, [open, distributions]);
@@ -45,12 +48,14 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
       onClose={onClose}
       title="Record Redemption"
       icon={Gift}
-      size="md"
       cancelLabel="Cancel"
       saveLabel="Record"
       onSave={() => {
-        const dist = activeDistr.find((d) => d.id === data.distributionId);
-        onSave({ ...data, id: `red${Date.now()}`, studentName: dist?.recipientName || "", pointsUsed: Number(data.pointsUsed) } as Redemption);
+        onSave({
+          ...data,
+          id: `red${Date.now()}`,
+          pointsUsed: Number(data.pointsUsed),
+        } as Redemption);
       }}
       saveDisabled={!data.distributionId || !data.reward || !data.pointsUsed}
     >
@@ -84,10 +89,13 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
             />
           </div>
         </div>
-        <div>
-          <label htmlFor="approved-by" className={FORM_LABEL}>Approved By</label>
-          <input id="approved-by" className={FORM_INPUT} value={data.approvedBy} onChange={(e) => upd("approvedBy", e.target.value)} placeholder="Admin / Teacher" />
-        </div>
+        <UserActorSelect
+          id="approved-by"
+          label="Approved By"
+          value={data.approvedByUserId || ""}
+          onChange={(id) => upd("approvedByUserId", id)}
+          allowEmpty
+        />
       </div>
     </FormModal>
   );
@@ -98,25 +106,18 @@ export interface RedemptionTrackerProps {
   onUpdateDistributions: (dists: Distribution[]) => void;
 }
 
-/**
- * RedemptionTracker Component
- *
- * Renders the dashboard and ledger interface for tracking student points redemptions.
- * Users can view the history of rewards claimed, total points utilized, and approve
- * new points redemptions for eligible students.
- *
- * @param props - Component properties.
- * @returns React element representing the redemption tracker UI.
- */
 export default function RedemptionTracker({ distributions, onUpdateDistributions }: RedemptionTrackerProps) {
-  const [redemptions, setRedemptions] = useState<Redemption[]>(REDEMPTIONS);
+  const redemptions = useLiveCollection<Redemption>("hasanat_redemptions", REDEMPTIONS);
   const [showModal, setShowModal] = useState(false);
+
+  const saveRedemptions = useCallback((next: Redemption[]) => {
+    saveCollection("hasanat_redemptions", next);
+  }, []);
 
   const totalPts = redemptions.reduce((s: number, r: Redemption) => s + r.pointsUsed, 0);
 
   const handleSave = (r: Redemption) => {
-    setRedemptions((prev: Redemption[]) => [...prev, r]);
-    // mark distribution as redeemed
+    saveRedemptions([...redemptions, r]);
     onUpdateDistributions(distributions.map((d: Distribution) => d.id === r.distributionId ? { ...d, status: "redeemed" as const } : d));
     setShowModal(false);
   };
@@ -157,7 +158,7 @@ export default function RedemptionTracker({ distributions, onUpdateDistributions
               <tbody className="divide-y divide-border/50">
                 {redemptions.map((r, i) => (
                   <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{r.studentName}</td>
+                    <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{r.studentName || "—"}</td>
                     <td className="px-4 py-3 text-[13px] text-foreground">{r.reward}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">

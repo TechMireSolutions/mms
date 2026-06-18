@@ -45,19 +45,6 @@ interface AttendanceAnalyticsProps {
   records: AttendanceRecord[];
 }
 
-interface ClassInfo {
-  id: string;
-  name: string;
-  sessionId?: string;
-  sessionName?: string;
-}
-
-interface Session {
-  id: string;
-  name: string;
-  classes?: ClassInfo[];
-}
-
 /**
  * AttendanceAnalytics
  * 

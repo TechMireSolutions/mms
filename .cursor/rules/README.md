@@ -36,16 +36,18 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | PostgreSQL / Drizzle | `mms-database.mdc` | `mms-data-layer` |
 | Dev / env / Docker | `mms-ops.mdc` | `mms-ci` (pipeline pointer) |
 | Copy layers (`t` / `labelKey` / legacy `uiStrings`) | `mms-i18n.mdc` | `mms-ui-rendering` (notify), `mms-contacts` (legacy) |
+| Contact-first person links (ids only on save) | `mms-contact-link.mdc` | `mms-core`, `mms-data-layer`, `mms-contacts` |
 | Open migration gaps | `mms-migration-status.mdc` | — (always-on register) |
 | Security, rate limits, audit, tenant isolation | `mms-security.mdc` | `mms-auth`, `mms-backend` (pointers only) |
 | Testing strategy & CI tests | `mms-testing.mdc` | `mms-shared-dry`, `mms-ci` |
 | Logging, health, error boundaries | `mms-observability.mdc` | `mms-backend`, `mms-ui-rendering` |
 | Accessibility (WCAG baseline) | `mms-a11y.mdc` | `mms-ui-rendering`, `mms-i18n` |
 
-## File-scoped (auto-attach by glob) — 27 rules
+## File-scoped (auto-attach by glob) — 28 rules
 
 | Rule | Focus |
 |------|-------|
+| `mms-contact-link.mdc` | Contact-first persons — link ids, hydrate/strip, pickers |
 | `mms-shared-dry.mdc` | `@mms/shared` package |
 | `mms-data-layer.mdc` | `db.ts`, seeds, sync |
 | `mms-hooks.mdc` | `useLiveCollection`, `useSortedFields`, branding |

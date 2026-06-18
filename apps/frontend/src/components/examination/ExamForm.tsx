@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { BookOpen } from "lucide-react";
 import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
+import { calculateModuleFieldsCompleteness } from "@/lib/formCompleteness";
 import { CLASSES, Exam } from '@/lib/data/examinationData';
 import { toTitleCase } from "@mms/shared";
 import { getObject } from "../../lib/db";
@@ -12,9 +13,6 @@ import {
   getSortedFields,
 } from "@mms/shared";
 import { DatePicker } from "../ui/DatePicker";
-
-const INPUT = FORM_INPUT;
-const LABEL = FORM_LABEL;
 
 const SUBJECTS = ["Tajweed", "Hifz", "Islamic Studies", "Arabic", "Aqeedah", "Quran Recitation", "Fiqh"];
 
@@ -55,6 +53,11 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
   const orderedFields = useMemo(() => {
     return getSortedFields(DEFAULT_EXAMINATIONS_FIELD_DEFS, fieldOrder, fields, customFields);
   }, [fieldOrder, fields, customFields]);
+
+  const completeness = useMemo(
+    () => calculateModuleFieldsCompleteness(data as Record<string, unknown>, orderedFields, fields),
+    [data, orderedFields, fields],
+  );
 
   const upd = <K extends keyof Exam>(f: K, v: Exam[K]) => setData((d: Partial<Exam>) => ({ ...d, [f]: v }));
   const toggleClass = (id: string) =>
@@ -115,7 +118,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
       onClose={onClose}
       title={exam ? "Edit Exam" : "Create Exam"}
       icon={BookOpen}
-      size="md"
+      progress={completeness}
+      progressLabel="Progress"
       error={error}
       cancelLabel="Cancel"
       saveLabel={exam ? "Save Changes" : "Create Exam"}
@@ -131,10 +135,10 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               if (field.id === "name") {
                 return (
                   <div key="name" className="sm:col-span-2">
-                    <label htmlFor="exam-name" className={LABEL}>Exam Name *</label>
+                    <label htmlFor="exam-name" className={FORM_LABEL}>Exam Name *</label>
                     <input
                       id="exam-name"
-                      className={INPUT}
+                      className={FORM_INPUT}
                       value={data.name || ""}
                       onChange={(e) => upd("name", e.target.value)}
                       placeholder="e.g. Tajweed Mid-Term"
@@ -147,10 +151,10 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               if (field.id === "subject") {
                 return (
                   <div key="subject">
-                    <label htmlFor="exam-subject" className={LABEL}>Subject {field.required ? "*" : ""}</label>
+                    <label htmlFor="exam-subject" className={FORM_LABEL}>Subject {field.required ? "*" : ""}</label>
                     <select
                       id="exam-subject"
-                      className={INPUT + " cursor-pointer"}
+                      className={FORM_SELECT}
                       value={data.subject || ""}
                       onChange={(e) => upd("subject", e.target.value)}
                       required={field.required}
@@ -165,10 +169,10 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               if (field.id === "status") {
                 return (
                   <div key="status">
-                    <label htmlFor="exam-status" className={LABEL}>Status {field.required ? "*" : ""}</label>
+                    <label htmlFor="exam-status" className={FORM_LABEL}>Status {field.required ? "*" : ""}</label>
                     <select
                       id="exam-status"
-                      className={INPUT + " cursor-pointer"}
+                      className={FORM_SELECT}
                       value={data.status || "upcoming"}
                       onChange={(e) => upd("status", e.target.value as Exam["status"])}
                       required={field.required}
@@ -184,11 +188,11 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               if (field.id === "totalMarks") {
                 return (
                   <div key="totalMarks">
-                    <label htmlFor="exam-total" className={LABEL}>Total Marks {field.required ? "*" : ""}</label>
+                    <label htmlFor="exam-total" className={FORM_LABEL}>Total Marks {field.required ? "*" : ""}</label>
                     <input
                       id="exam-total"
                       type="number"
-                      className={INPUT}
+                      className={FORM_INPUT}
                       value={data.totalMarks ?? 100}
                       onChange={(e) => upd("totalMarks", +e.target.value)}
                       min={1}
@@ -201,11 +205,11 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               if (field.id === "passingMarks") {
                 return (
                   <div key="passingMarks">
-                    <label htmlFor="exam-passing" className={LABEL}>Passing Marks {field.required ? "*" : ""}</label>
+                    <label htmlFor="exam-passing" className={FORM_LABEL}>Passing Marks {field.required ? "*" : ""}</label>
                     <input
                       id="exam-passing"
                       type="number"
-                      className={INPUT}
+                      className={FORM_INPUT}
                       value={data.passingMarks ?? 50}
                       onChange={(e) => upd("passingMarks", +e.target.value)}
                       min={1}
@@ -219,11 +223,11 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               if (field.id === "duration") {
                 return (
                   <div key="duration">
-                    <label htmlFor="exam-duration" className={LABEL}>Duration (min) {field.required ? "*" : ""}</label>
+                    <label htmlFor="exam-duration" className={FORM_LABEL}>Duration (min) {field.required ? "*" : ""}</label>
                     <input
                       id="exam-duration"
                       type="number"
-                      className={INPUT}
+                      className={FORM_INPUT}
                       value={data.duration ?? 60}
                       onChange={(e) => upd("duration", +e.target.value)}
                       min={5}
@@ -236,7 +240,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               if (field.id === "date") {
                 return (
                   <div key="date" className="sm:col-span-2">
-                    <label htmlFor="exam-date" className={LABEL}>Exam Date *</label>
+                    <label htmlFor="exam-date" className={FORM_LABEL}>Exam Date *</label>
                     <DatePicker
                       id="exam-date"
                       value={data.date || ""}
@@ -250,7 +254,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               if (field.id === "classIds") {
                 return (
                   <div key="classIds" className="sm:col-span-2">
-                    <span className={LABEL}>Assign to Classes *</span>
+                    <span className={FORM_LABEL}>Assign to Classes *</span>
                     <div className="flex flex-wrap gap-2" role="group" aria-label="Assign to classes list">
                       {CLASSES.map((cls) => {
                         const active = !!(data.classIds && data.classIds.includes(cls.id));
@@ -277,10 +281,10 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               if (field.id === "description") {
                 return (
                   <div key="description" className="sm:col-span-2">
-                    <label htmlFor="exam-desc" className={LABEL}>Description {field.required ? "*" : ""}</label>
+                    <label htmlFor="exam-desc" className={FORM_LABEL}>Description {field.required ? "*" : ""}</label>
                     <textarea
                       id="exam-desc"
-                      className={INPUT + " resize-none"}
+                      className={FORM_TEXTAREA}
                       rows={2}
                       value={data.description || ""}
                       onChange={(e) => upd("description", e.target.value)}
@@ -296,12 +300,12 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                 const val = (data as Record<string, unknown>)[field.id] ?? "";
                 return (
                   <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
-                    <label className={LABEL}>
+                    <label className={FORM_LABEL}>
                       {field.label} {field.required ? "*" : ""}
                     </label>
                     {field.type === "textarea" ? (
                       <textarea
-                        className={INPUT + " min-h-[80px] py-2 resize-none"}
+                        className={FORM_TEXTAREA}
                         value={val as string}
                         onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
@@ -309,7 +313,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                       />
                     ) : field.type === "select" ? (
                       <select
-                        className={INPUT + " cursor-pointer"}
+                        className={FORM_SELECT}
                         value={val as string}
                         onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
                         required={field.required}
@@ -334,7 +338,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                     ) : field.type === "number" ? (
                       <input
                         type="number"
-                        className={INPUT}
+                        className={FORM_INPUT}
                         value={val as number}
                         onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
                         placeholder={field.placeholder || `Enter number…`}
@@ -349,7 +353,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                     ) : (
                       <input
                         type={field.type === "email" ? "email" : field.type === "url" ? "url" : "text"}
-                        className={INPUT}
+                        className={FORM_INPUT}
                         value={val as string}
                         onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}

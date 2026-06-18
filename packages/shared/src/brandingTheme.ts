@@ -176,7 +176,30 @@ export function meetsWcagAaTextContrast(ratio: number | null): boolean {
 }
 
 /**
+ * Darkens or saturates an accent until white label text meets WCAG AA (4.5:1).
+ */
+export function ensureAccentButtonContrast(accentHex: string): string {
+  const normalized = normalizeBrandingHex(accentHex, accentHex);
+  const ratio = getContrastRatio('#ffffff', normalized);
+  if (ratio !== null && meetsWcagAaTextContrast(ratio)) return normalized;
+
+  const base = hexToHslColor(normalized);
+  if (!base) return normalized;
+
+  let adjusted = base;
+  for (let step = 0; step < 12; step += 1) {
+    adjusted = tone(adjusted, { l: -4, s: Math.min(6, Math.max(0, 70 - adjusted.s)) });
+    const candidate = hslColorToHex(adjusted);
+    const candidateRatio = getContrastRatio('#ffffff', candidate);
+    if (candidateRatio !== null && meetsWcagAaTextContrast(candidateRatio)) return candidate;
+  }
+
+  return hslColorToHex(adjusted);
+}
+
+/**
  * Suggests a harmonious accent colour for a given primary brand colour.
+ * Uses split-complementary hue rotation and enforces accessible contrast on solid fills.
  */
 export function suggestSecondaryColor(primaryHex: string): string {
   const normalized = primaryHex.trim().toLowerCase();
@@ -184,10 +207,36 @@ export function suggestSecondaryColor(primaryHex: string): string {
   if (preset) return preset.secondaryColor;
 
   const primary = hexToHslColor(primaryHex) ?? DEFAULT_PRIMARY;
-  const accent = tone(primary, { h: 38, s: 8, l: 18 });
-  accent.s = clamp(accent.s, 45, 85);
-  accent.l = clamp(accent.l, 38, 62);
-  return hslColorToHex(accent);
+  const splitHue = (primary.h + 150) % 360;
+  let accent: HslColor = {
+    h: splitHue,
+    s: clamp(Math.round(primary.s * 0.9), 55, 92),
+    l: clamp(Math.round(primary.l + 22), 40, 52),
+  };
+
+  return ensureAccentButtonContrast(hslColorToHex(accent));
+}
+
+/** Contrast metadata for a curated branding preset (primary + accent vs white). */
+export interface BrandingPresetAccessibility {
+  primaryTextRatio: number | null;
+  accentTextRatio: number | null;
+  primaryPassesAaText: boolean;
+  accentPassesAaText: boolean;
+}
+
+export function getBrandingPresetAccessibility(
+  primaryHex: string,
+  accentHex: string,
+): BrandingPresetAccessibility {
+  const primaryTextRatio = getContrastRatio('#ffffff', primaryHex);
+  const accentTextRatio = getContrastRatio('#ffffff', accentHex);
+  return {
+    primaryTextRatio,
+    accentTextRatio,
+    primaryPassesAaText: meetsWcagAaTextContrast(primaryTextRatio),
+    accentPassesAaText: meetsWcagAaTextContrast(accentTextRatio),
+  };
 }
 
 /** Tailwind HSL token → CSS `hsl()` colour. */

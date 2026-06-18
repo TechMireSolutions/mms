@@ -1,8 +1,9 @@
 import { getDefaultCollectionsForSeed, getDefaultObjects } from '../db/seeds.js';
-import { WORKSPACES_COLLECTION } from '@mms/shared';
+import { DEMO_TEACHERS, DEFAULT_TEACHERS_SETTINGS, WORKSPACES_COLLECTION } from '@mms/shared';
 
 /**
- * Empty collections with default settings objects only — no demo records.
+ * Empty collections with default settings objects only — no demo records,
+ * except `teachers` which ships a small faculty demo set aligned with session seeds.
  */
 export async function getMinimalCollectionsForSeed(): Promise<Record<string, unknown[]>> {
   const full = await getDefaultCollectionsForSeed();
@@ -11,9 +12,12 @@ export async function getMinimalCollectionsForSeed(): Promise<Record<string, unk
     if (name === WORKSPACES_COLLECTION) continue;
     minimal[name] = [];
   }
+  minimal.teachers = [...DEMO_TEACHERS];
   return minimal;
 }
 
 export function getMinimalObjects(): Record<string, unknown> {
-  return getDefaultObjects();
+  const objects = getDefaultObjects();
+  if (objects.teachers_settings) return objects;
+  return { ...objects, teachers_settings: DEFAULT_TEACHERS_SETTINGS };
 }

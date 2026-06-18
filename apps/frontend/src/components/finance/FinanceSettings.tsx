@@ -7,6 +7,7 @@ import {
   DEFAULT_FINANCE_FIELD_DEFS,
   getSortedFields,
   type ModuleCustomField,
+  type ModuleFieldDef,
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
@@ -99,7 +100,7 @@ export default function FinanceSettings({ mode }: FinanceSettingsProps): React.R
     }
   };
 
-  const handleReorder = (reordered: any[]) => {
+  const handleReorder = (reordered: ModuleFieldDef[]) => {
     upd("fieldOrder", reordered.map(f => f.id));
   };
 

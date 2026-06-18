@@ -88,7 +88,7 @@ export default function SessionSelector({ student, selected, onSelect }: Session
             classId: c.id,
             name: `${s.name} – ${c.name}`,
             type: s.type,
-            teacher: c.teacherName,
+            teacher: c.teacherName ?? '',
             room: c.room || "TBD",
             time: s.timetable?.filter(t => t.location === c.room).map(t => `${t.startTime} – ${t.endTime}`).join(", ") || "09:00 – 11:00",
             days: s.timetable?.filter(t => t.location === c.room).map(t => t.day) || ["Mon", "Wed", "Fri"],

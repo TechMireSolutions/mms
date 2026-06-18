@@ -11,6 +11,13 @@ import {
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, 
   Legend, Tooltip, XAxis, YAxis, CartesianGrid
 } from "recharts";
+import {
+  CHART_PALETTE_DEFS,
+  DEFAULT_CHART_PALETTE_ID,
+  getChartPaletteColors,
+  isColorblindSafeChartPalette,
+} from "@mms/shared";
+import useTranslation from "@/hooks/useTranslation";
 import { getCollection } from "../../lib/db";
 import { METADATA_FIELDS, VisualizerConfig, type ReportCollection } from "./reportMetadata";
 
@@ -23,41 +30,6 @@ interface CollectionMeta {
 }
 
 const METADATA_CONFIGS: Record<string, CollectionMeta> = METADATA_FIELDS as unknown as Record<string, CollectionMeta>;
-
-const THEME_PALETTES: Record<string, { label: string; colors: string[] }> = {
-  accessibleColorblind: {
-    label: "Accessible (Okabe-Ito)",
-    colors: ["#0072B2", "#E69F00", "#009E73", "#F0E442", "#D55E00", "#CC79A7", "#56B4E9"]
-  },
-  tolVibrant: {
-    label: "Accessible (Tol Vibrant)",
-    colors: ["#EE7733", "#0077BB", "#33BBEE", "#EE3377", "#CC3311", "#009988", "#BBBBBB"]
-  },
-  tolMuted: {
-    label: "Accessible (Tol Muted)",
-    colors: ["#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#CC6677", "#882255", "#AA4499"]
-  },
-  emeraldForest: {
-    label: "Emerald Forest",
-    colors: ["#10b981", "#34d399", "#059669", "#047857", "#065f46"]
-  },
-  oceanBreeze: {
-    label: "Ocean Breeze",
-    colors: ["#3b82f6", "#60a5fa", "#2563eb", "#1d4ed8", "#1e40af"]
-  },
-  cosmicViolet: {
-    label: "Cosmic Violet",
-    colors: ["#8b5cf6", "#a78bfa", "#7c3aed", "#6d28d9", "#5b21b6"]
-  },
-  sunsetGlow: {
-    label: "Sunset Glow",
-    colors: ["#f59e0b", "#fbbf24", "#d97706", "#b45309", "#92400e"]
-  },
-  cyberpunkNeon: {
-    label: "Cyberpunk Neon",
-    colors: ["#ec4899", "#f43f5e", "#d946ef", "#a855f7", "#e11d48"]
-  }
-};
 
 interface FilterRule {
   id: string;
@@ -104,6 +76,7 @@ export default function DynamicChartVisualizer({
   onSave,
   onClose
 }: DynamicChartVisualizerProps = {}): React.JSX.Element {
+  const { t } = useTranslation();
   const chartRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
 
@@ -114,13 +87,12 @@ export default function DynamicChartVisualizer({
   const [xAxisField, setXAxisField] = useState(initialConfig?.xAxisField || "status");
   const [operation, setOperation] = useState<"count" | "sum" | "avg" | "min" | "max">(initialConfig?.operation || "count");
   const [targetField, setTargetField] = useState(initialConfig?.targetField || "");
-  const [activePalette, setActivePalette] = useState(initialConfig?.activePalette || "accessibleColorblind");
+  const [activePalette, setActivePalette] = useState(initialConfig?.activePalette || DEFAULT_CHART_PALETTE_ID);
   
   // Advanced settings toggles
   const [showGrid, setShowGrid] = useState(true);
   const [showLegend, setShowLegend] = useState(true);
   const [showTooltip, setShowTooltip] = useState(true);
-  const [isStacked, setIsStacked] = useState(false);
   const [showDataTable, setShowDataTable] = useState(false);
   const [pdfOrientation, setPdfOrientation] = useState<"p" | "l">("p");
   const [pdfFormat, setPdfFormat] = useState<string>("a4");
@@ -556,24 +528,7 @@ export default function DynamicChartVisualizer({
     }
   };
 
-  // Download grouped database values to CSV file
-  const handleDownloadCSV = () => {
-    if (processedData.length === 0) return;
-    const headers = ["Grouping Key", "Value", "Count"];
-    const rows = processedData.map((d) => [d.name, d.value, d.count]);
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${title.toLowerCase().replace(/\s+/g, "-")}-data.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Get theme hex colors array
-  const currentColors = THEME_PALETTES[activePalette].colors;
+  const currentColors = [...getChartPaletteColors(activePalette)];
 
   // Recharts custom tooltips and widgets
   const renderChart = () => {
@@ -815,8 +770,8 @@ export default function DynamicChartVisualizer({
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Color Palette</label>
-                  {(activePalette === "accessibleColorblind" || activePalette.startsWith("tol")) && (
-                    <span className="text-[8px] bg-success/15 text-success px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none">Safe Contrast</span>
+                  {(isColorblindSafeChartPalette(activePalette)) && (
+                    <span className="text-[8px] bg-success/15 text-success px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none">{t('charts.accessibleBadge')}</span>
                   )}
                 </div>
                 <select
@@ -824,8 +779,8 @@ export default function DynamicChartVisualizer({
                   onChange={(e) => setActivePalette(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
                 >
-                  {Object.entries(THEME_PALETTES).map(([key, val]) => (
-                    <option key={key} value={key}>{val.label}</option>
+                  {CHART_PALETTE_DEFS.filter((def) => def.id !== 'brand' && def.colors.length > 0).map((def) => (
+                    <option key={def.id} value={def.id}>{t(def.labelKey)}</option>
                   ))}
                 </select>
               </div>

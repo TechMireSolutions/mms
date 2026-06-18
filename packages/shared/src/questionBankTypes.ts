@@ -896,8 +896,8 @@ export interface QuestionBankTest {
 export interface QuestionBankResult {
   id: string;
   testId: string;
-  studentName: string;
   studentId: string;
+  studentName: string;
   submittedAt: string;
   answers: Record<string, string>;
   scores: Record<string, number>;

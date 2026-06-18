@@ -78,7 +78,7 @@ export default function ObligationCollectionDetail({ collection, obligationTypes
   const dists = wakalaType ? distributions.filter((d) => d.wakala_type_id === wakalaType.id) : [];
 
   return (
-    <ObligationModal title="Collection Details" onClose={onClose} wide>
+    <ObligationModal title="Collection Details" onClose={onClose}>
       <div className="space-y-5">
         {/* Receipt header */}
         <header className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20">

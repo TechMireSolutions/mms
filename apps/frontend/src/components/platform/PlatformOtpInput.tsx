@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
-import { Input } from "@/components/ui/input";
+import { FORM_OTP_DIGIT } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 const CODE_LENGTH = 6;
 
@@ -29,8 +30,8 @@ export default function PlatformOtpInput({
     }
   };
 
-  const handleKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (event.key === "Backspace" && !value[index] && index > 0) {
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === "Backspace" && !value[index] && index > 0) {
       inputs.current[index - 1]?.focus();
     }
   };
@@ -38,19 +39,20 @@ export default function PlatformOtpInput({
   return (
     <div className="flex justify-center gap-2" role="group" aria-label={ariaLabel}>
       {value.map((digit, index) => (
-        <Input
+        <input
           key={index}
-          ref={(el) => {
-            inputs.current[index] = el;
-          }}
+          ref={(el) => { inputs.current[index] = el; }}
+          type="text"
           inputMode="numeric"
-          autoComplete="one-time-code"
           maxLength={1}
           value={digit}
           disabled={disabled}
           onChange={(e) => handleChange(index, e.target.value)}
           onKeyDown={(e) => handleKeyDown(index, e)}
-          className="h-12 w-10 text-center text-lg font-semibold p-0"
+          className={cn(
+            FORM_OTP_DIGIT,
+            digit ? "border-primary/60 bg-primary/5" : "border-border",
+          )}
           aria-label={`${ariaLabel} ${index + 1}`}
         />
       ))}

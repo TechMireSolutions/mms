@@ -3,11 +3,11 @@ import {
   applyDocumentLanguage,
   brandingPrimaryToThemeColor,
   buildBrandingCssVariables,
+  isApexHost,
   type BrandingSettings,
   type BrandingThemeMode,
   type GlobalSettings,
 } from '@mms/shared';
-import { isApexHost } from '@mms/shared';
 import {
   getScopedBrandingSettings,
   getScopedGlobalSettings,

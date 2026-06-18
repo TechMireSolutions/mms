@@ -145,7 +145,6 @@ export default function ContactDetailDrawer({
     return String(val);
   };
 
-  const hasWA = enabledTabIds.has("phones") && hasWhatsApp(c);
   const primaryPhone = enabledTabIds.has("phones") ? getPrimaryPhone(c) : null;
   const primaryEmail = enabledTabIds.has("emails") ? getPrimaryEmail(c) : null;
 

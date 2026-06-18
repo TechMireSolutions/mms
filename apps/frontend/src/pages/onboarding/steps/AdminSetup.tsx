@@ -4,6 +4,8 @@ import type { Dispatch, SetStateAction } from "react";
 import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHint } from "@mms/shared";
 import { OnboardingData } from "../OnboardingWizard";
 import useTranslation from "@/hooks/useTranslation";
+import { FORM_INPUT, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 /** The subset of onboarding data used by this step. */
 export interface AdminSetupData {
@@ -25,11 +27,11 @@ interface FieldRowProps {
 
 const FieldRow = ({ label, required = false, children, hint }: FieldRowProps) => (
   <div>
-    <label className="text-sm font-medium text-foreground block mb-1.5">
-      {label} {required && <span className="text-destructive">*</span>}
+    <label className={FORM_LABEL}>
+      {label} {required ? <span className="text-destructive">*</span> : null}
     </label>
     {children}
-    {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
+    {hint ? <p className="text-xs text-muted-foreground mt-1">{hint}</p> : null}
   </div>
 );
 
@@ -73,7 +75,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
             value={data.firstName || ""}
             onChange={(e) => update("firstName", e.target.value)}
             placeholder="Abdullah"
-            className="w-full px-3.5 py-2.5 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+            className={FORM_INPUT}
           />
         </FieldRow>
         <FieldRow label="Last Name" required>
@@ -82,7 +84,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
             value={data.lastName || ""}
             onChange={(e) => update("lastName", e.target.value)}
             placeholder="Khan"
-            className="w-full px-3.5 py-2.5 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+            className={FORM_INPUT}
           />
         </FieldRow>
       </div>
@@ -93,7 +95,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           value={data.email || ""}
           onChange={(e) => update("email", e.target.value)}
           placeholder="admin@madrasa.app"
-          className="w-full px-3.5 py-2.5 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+          className={FORM_INPUT}
         />
       </FieldRow>
 
@@ -103,7 +105,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           value={data.phone || ""}
           onChange={(e) => update("phone", e.target.value)}
           placeholder="+44 7700 900000"
-          className="w-full px-3.5 py-2.5 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+          className={FORM_INPUT}
         />
       </FieldRow>
 
@@ -119,7 +121,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
             value={data.password || ""}
             onChange={(e) => update("password", e.target.value)}
             placeholder="••••••••"
-            className="w-full px-3.5 py-2.5 pr-11 rounded-lg border border-border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+            className={cn(FORM_INPUT_ICON, "pr-11")}
           />
           <button
             type="button"
@@ -158,11 +160,13 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
             value={data.confirmPassword || ""}
             onChange={(e) => update("confirmPassword", e.target.value)}
             placeholder="••••••••"
-            className={`w-full px-3.5 py-2.5 pr-11 rounded-lg border text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
+            className={cn(
+              FORM_INPUT_ICON,
+              "pr-11",
               data.confirmPassword && data.password !== data.confirmPassword
                 ? "border-destructive focus:ring-destructive/20"
-                : "border-border focus:border-primary/40"
-            }`}
+                : "",
+            )}
           />
           <button
             type="button"

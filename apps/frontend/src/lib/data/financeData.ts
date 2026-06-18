@@ -19,24 +19,27 @@ export interface Invoice {
 export interface Payment {
   id: string;
   invoiceId: string;
-  studentName: string;
+  studentId?: string;
+  studentName?: string;
   amount: number;
   date: string;
   method: string;
-  receivedBy: string;
+  receivedByUserId?: string;
+  receivedBy?: string;
   note: string;
 }
 
 export interface HasanatPayout {
   id: string;
   studentId: string;
-  studentName: string;
+  studentName?: string;
   class: string;
   pointsEarned: number;
   pointsRedeemed: number;
   rewardGiven: string | null;
   date: string | null;
-  approvedBy: string | null;
+  approvedByUserId?: string | null;
+  approvedBy?: string | null;
 }
 
 import {

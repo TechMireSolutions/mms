@@ -11,6 +11,7 @@
  *   "sessions_settings"     → SessionsSettings
  *   "enrollments_settings"  → EnrollmentsSettings
  *   "students_settings"     → StudentsSettings
+ *   "teachers_settings"     → TeachersSettings
  *   "contact_prefs"         → ContactPrefs
  *   "accounting_settings"   → AccountingSettings
  */
@@ -171,6 +172,7 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
   { id: "dashboard",   label: "Dashboard",      description: "Central overview and analytics",        icon: "LayoutDashboard", category: "core",     required: true },
   { id: "contacts",    label: "Contacts",       description: "Comprehensive CRM directory",         icon: "Users",           category: "core",     required: true },
   { id: "students",    label: "Students",       description: "Student directory and records",       icon: "GraduationCap",   category: "academic", required: true },
+  { id: "teachers",    label: "Teachers",       description: "Faculty directory and assignments",   icon: "School",          category: "academic" },
   { id: "sessions",    label: "Sessions",       description: "Classes, schedules and timetables",   icon: "Calendar",        category: "academic" },
   { id: "attendance",  label: "Attendance",     description: "Tracking and reporting",              icon: "UserCheck",       category: "academic" },
   { id: "enrollment",  label: "Enrollments",    description: "Student enrollment into sessions",    icon: "ClipboardList",   category: "academic" },
@@ -214,7 +216,7 @@ export const SYSTEM_MODULE_NAV: SystemModuleNavEntry[] = [
     type: "group",
     labelKey: "nav.academics",
     icon: "BookOpen",
-    moduleIds: ["students", "sessions", "attendance", "enrollment", "hasanat", "examination", "questionBank"],
+    moduleIds: ["students", "teachers", "sessions", "attendance", "enrollment", "hasanat", "examination", "questionBank"],
   },
   { type: "module", moduleId: "finance" },
   { type: "module", moduleId: "accounting" },
@@ -235,6 +237,7 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   enabledModules: {
     dashboard: true,
     students: true,
+    teachers: true,
     contacts: true,
     sessions: true,
     enrollment: true,
@@ -849,10 +852,11 @@ export const DEFAULT_STUDENTS_SETTINGS: StudentsSettings = {
     dob: { enabled: true, required: false },
     fatherLink: { enabled: true, required: false },
     motherLink: { enabled: true, required: false },
+    guardianLink: { enabled: true, required: false },
     registeredDate: { enabled: true, required: true },
   },
   customFields: [],
-  fieldOrder: ["gender", "dob", "fatherLink", "motherLink", "registeredDate"],
+  fieldOrder: ["gender", "dob", "fatherLink", "motherLink", "guardianLink", "registeredDate"],
 };
 
 export interface StudentFieldDef {
@@ -866,12 +870,31 @@ export interface StudentFieldDef {
 }
 
 export const DEFAULT_STUDENT_FIELD_DEFS: StudentFieldDef[] = [
-  { id: "gender", label: "Gender" },
-  { id: "dob", label: "Date of Birth (DOB)" },
+  { id: "gender", label: "Gender (contact)" },
+  { id: "dob", label: "Date of birth (contact)" },
   { id: "fatherLink", label: "Father Link / Name" },
   { id: "motherLink", label: "Mother Link / Name" },
+  { id: "guardianLink", label: "Guardian (other)" },
   { id: "registeredDate", label: "Registration Date" },
 ];
+
+/** Contact-owned fields — list/detail display only; never on the registration form. */
+export const STUDENT_CONTACT_PROFILE_FIELD_IDS = ["gender", "dob"] as const;
+
+/**
+ * Student form fields excluding contact profile fields (gender, DOB).
+ */
+export function getStudentRegistrationFields(
+  fieldOrder: string[] | undefined,
+  fieldsConfig: Record<string, StudentFieldConfig> | undefined,
+  customFields: StudentCustomField[] | undefined,
+): StudentFieldDef[] {
+  return getSortedStudentFields(fieldOrder, fieldsConfig, customFields).filter(
+    (field) => !STUDENT_CONTACT_PROFILE_FIELD_IDS.includes(
+      field.id as (typeof STUDENT_CONTACT_PROFILE_FIELD_IDS)[number],
+    ),
+  );
+}
 
 /**
  * Returns a sorted list of all student field definitions (default & custom)
@@ -903,7 +926,108 @@ export function getSortedStudentFields(
   }));
 
   const all = [...defaults, ...customs];
-  const order = fieldOrder || ["gender", "dob", "fatherLink", "motherLink", "registeredDate"];
+  const order = fieldOrder || ["gender", "dob", "fatherLink", "motherLink", "guardianLink", "registeredDate"];
+
+  const orderMap = Object.fromEntries(order.map((id, index) => [id, index]));
+  return all.sort((a, b) => {
+    const ai = orderMap[a.id] ?? 9999;
+    const bi = orderMap[b.id] ?? 9999;
+    return ai - bi;
+  });
+}
+
+// ─── Teachers Module Settings ─────────────────────────────────────────────────
+
+export interface TeacherFieldConfig {
+  enabled?: boolean;
+  required?: boolean;
+}
+
+export interface TeacherCustomField {
+  id: string;
+  label: string;
+  type?: string;
+  required?: boolean;
+  options?: string[];
+}
+
+/**
+ * Configuration for the Teachers module.
+ * Stored under the key "teachers_settings".
+ */
+export interface TeachersSettings {
+  idPrefix: string;
+  autoGenerateId: boolean;
+  requireContactLink: boolean;
+  defaultSpecialization: string;
+  defaultViewLayout?: string;
+  fields?: Record<string, TeacherFieldConfig>;
+  customFields?: TeacherCustomField[];
+  fieldOrder?: string[];
+}
+
+/** Authoritative default values for TeachersSettings. */
+export const DEFAULT_TEACHERS_SETTINGS: TeachersSettings = {
+  idPrefix: "TCH",
+  autoGenerateId: true,
+  requireContactLink: true,
+  defaultSpecialization: "General",
+  defaultViewLayout: "list",
+  fields: {
+    specialization: { enabled: true, required: true },
+    qualification: { enabled: true, required: false },
+    joinDate: { enabled: true, required: true },
+  },
+  customFields: [],
+  fieldOrder: ["specialization", "qualification", "joinDate"],
+};
+
+export interface TeacherFieldDef {
+  id: string;
+  labelKey?: string;
+  label?: string;
+  type?: string;
+  required?: boolean;
+  options?: string[];
+  enabled?: boolean;
+  isCustom?: boolean;
+}
+
+export const DEFAULT_TEACHER_FIELD_DEFS: TeacherFieldDef[] = [
+  { id: "specialization", labelKey: "teachers.field.specialization" },
+  { id: "qualification", labelKey: "teachers.field.qualification" },
+  { id: "joinDate", labelKey: "teachers.field.joinDate" },
+];
+
+/**
+ * Returns sorted teacher field definitions (default & custom) per saved order.
+ */
+export function getSortedTeacherFields(
+  fieldOrder: string[] | undefined,
+  fieldsConfig: Record<string, TeacherFieldConfig> | undefined,
+  customFields: TeacherCustomField[] | undefined,
+): TeacherFieldDef[] {
+  const defaults = DEFAULT_TEACHER_FIELD_DEFS.map((f) => {
+    const cfg = fieldsConfig?.[f.id] || { enabled: true, required: false };
+    return {
+      ...f,
+      enabled: cfg.enabled,
+      required: cfg.required,
+    };
+  });
+
+  const customs: TeacherFieldDef[] = (customFields || []).map((f) => ({
+    id: f.id,
+    label: f.label,
+    type: f.type,
+    required: f.required,
+    options: f.options,
+    enabled: true,
+    isCustom: true,
+  }));
+
+  const all = [...defaults, ...customs];
+  const order = fieldOrder || DEFAULT_TEACHERS_SETTINGS.fieldOrder || [];
 
   const orderMap = Object.fromEntries(order.map((id, index) => [id, index]));
   return all.sort((a, b) => {
@@ -1024,7 +1148,7 @@ export const DEFAULT_HASANAT_SETTINGS: HasanatSettings = {
 export const DEFAULT_HASANAT_FIELD_DEFS: ModuleFieldDef[] = [
   { id: "denominationId", label: "Denomination", required: true },
   { id: "recipientType", label: "Recipient Type", required: true },
-  { id: "recipientName", label: "Recipient Name", required: true },
+  { id: "recipientName", label: "Recipient", required: true },
   { id: "recipientClass", label: "Class / Department" },
   { id: "quantity", label: "Quantity", required: true },
   { id: "issuedDate", label: "Issued Date", required: true },

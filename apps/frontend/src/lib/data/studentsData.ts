@@ -141,6 +141,8 @@ export interface Student {
   motherName: string;
   fatherContactId: number | null;
   motherContactId: number | null;
+  guardianName?: string;
+  guardianContactId?: number | null;
   enrolledSessions: string[];
   status: "active" | "inactive";
   registeredDate: string;

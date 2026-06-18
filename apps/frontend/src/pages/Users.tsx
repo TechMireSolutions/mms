@@ -96,7 +96,6 @@ export default function Users(): React.JSX.Element {
   const [showAddUser, setShowAddUser] = useState(false);
 
   const actorId = authUser?.id ?? 'system';
-  const actorName = authUser?.name ?? t('users.systemActor');
 
   const addLog = useCallback(
     (entry: Partial<ActivityLog> & { action: ActivityLog['action']; module: string; detail: string }) => {
@@ -104,7 +103,6 @@ export default function Users(): React.JSX.Element {
         {
           id: `log${Date.now()}`,
           userId: entry.userId ?? actorId,
-          userName: entry.userName ?? actorName,
           action: entry.action,
           module: entry.module,
           detail: entry.detail,
@@ -114,7 +112,7 @@ export default function Users(): React.JSX.Element {
         ...prev,
       ]);
     },
-    [actorId, actorName, saveLogs],
+    [actorId, saveLogs],
   );
 
   const handleToggleStatus = (id: string, newStatus: UserStatus): void => {
@@ -270,7 +268,11 @@ export default function Users(): React.JSX.Element {
           />
         ) : null}
         {showInvite ? (
-          <InviteUserModal onClose={() => setShowInvite(false)} onInvite={handleInvite} />
+          <InviteUserModal
+            onClose={() => setShowInvite(false)}
+            onInvite={handleInvite}
+            existingContactIds={users.map((u) => u.contactId).filter((id): id is string | number => id != null)}
+          />
         ) : null}
       </AnimatePresence>
     </div>

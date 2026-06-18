@@ -88,30 +88,35 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       const isRedeemed = d.status === "redeemed";
 
       if (d.recipientType === "student") {
-        if (!studentMap[d.recipientName]) {
-          studentMap[d.recipientName] = {
-            studentName: d.recipientName,
-            class: d.recipientClass,
-            faculty: d.issuedBy,
-            distributed: 0,
-            redeemed: 0,
-            balance: 0
-          };
+        const key = d.recipientStudentId || d.recipientName || "";
+        if (key) {
+          const label = d.recipientName || key;
+          if (!studentMap[key]) {
+            studentMap[key] = {
+              studentName: label,
+              class: d.recipientClass,
+              faculty: d.issuedBy || "—",
+              distributed: 0,
+              redeemed: 0,
+              balance: 0
+            };
+          }
+          studentMap[key].distributed += totalPoints;
+          if (isRedeemed) studentMap[key].redeemed += totalPoints;
+          else studentMap[key].balance += totalPoints;
         }
-        studentMap[d.recipientName].distributed += totalPoints;
-        if (isRedeemed) studentMap[d.recipientName].redeemed += totalPoints;
-        else studentMap[d.recipientName].balance += totalPoints;
       }
 
-      if (!facultyMap[d.issuedBy]) {
-        facultyMap[d.issuedBy] = {
-          faculty: d.issuedBy,
+      const facultyKey = d.issuedBy || "—";
+      if (!facultyMap[facultyKey]) {
+        facultyMap[facultyKey] = {
+          faculty: facultyKey,
           totalDistributed: 0,
           totalRedeemed: 0
         };
       }
-      facultyMap[d.issuedBy].totalDistributed += totalPoints;
-      if (isRedeemed) facultyMap[d.issuedBy].totalRedeemed += totalPoints;
+      facultyMap[facultyKey].totalDistributed += totalPoints;
+      if (isRedeemed) facultyMap[facultyKey].totalRedeemed += totalPoints;
     });
 
     return {

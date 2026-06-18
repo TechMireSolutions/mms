@@ -8,6 +8,8 @@ import AuthLayout from "../../components/auth/AuthLayout";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import useGlobalSettings from "../../hooks/useGlobalSettings";
+import { FORM_ERROR, FORM_OTP_DIGIT } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import {
   getPendingChallengeId,
   is2FAVerified,
@@ -106,7 +108,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
     const entered = code.join("");
     const ok = await verify2FACode(challengeId, entered);
     if (ok) {
-      await checkUserAuth();
+      await checkUserAuth({ force: true });
       navigate(redirectTo, { replace: true });
     } else {
       setError("Invalid or expired code. Please try again.");
@@ -163,26 +165,25 @@ export default function TwoFactorAuth(): React.JSX.Element {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className={`w-11 h-13 text-center text-xl font-bold rounded-xl border-2 bg-card text-foreground focus:outline-none transition-all
-                ${digit ? "border-primary/60 bg-primary/5" : "border-border"}
-                ${error ? "border-destructive/60 bg-destructive/5" : ""}
-                focus:border-primary focus:ring-2 focus:ring-primary/20
-              `}
-              style={{ height: "52px" }}
+              className={cn(
+                FORM_OTP_DIGIT,
+                digit ? "border-primary/60 bg-primary/5" : "border-border",
+                error && "border-destructive/60 bg-destructive/5",
+              )}
               autoFocus={i === 0}
             />
           ))}
         </div>
 
-        {error && (
+        {error ? (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center text-destructive text-sm font-medium"
+            className={cn(FORM_ERROR, "text-center text-sm font-medium")}
           >
             {error}
           </motion.p>
-        )}
+        ) : null}
 
         <button
           type="submit"

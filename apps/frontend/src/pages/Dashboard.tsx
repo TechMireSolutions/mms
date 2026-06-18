@@ -13,6 +13,7 @@ import { computeCustomCard as computeCustomCardShared, CustomCard, type ReportCo
 import { getCollection, saveCollection } from "../lib/db";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useStudentsCollection } from "@/hooks/useStudents";
+import { useTeachersCollection } from "@/hooks/useTeachers";
 import { useContactsCollection } from "@/hooks/useContacts";
 import useGlobalSettings from "@/hooks/useGlobalSettings";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
@@ -132,6 +133,7 @@ export default function Dashboard() {
   const globalSettings = useGlobalSettings();
 
   const students = useStudentsCollection();
+  const teachers = useTeachersCollection();
   const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
   const invoices = useLiveCollection<Invoice>("finance_invoices", INVOICES);
   const attendanceRecords = useLiveCollection<AttendanceRecord>("attendance_records", ATTENDANCE_RECORDS);
@@ -429,6 +431,7 @@ export default function Dashboard() {
 
       const result = computeCustomCardShared(customCardConfig, {
         students,
+        teachers,
         sessions,
         finance_invoices: invoices,
         attendance_records: attendanceRecords,

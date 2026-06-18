@@ -12,10 +12,11 @@ export const collectionSaveBodySchema = z.union([
   z.object({ data: z.array(jsonRecord) }),
 ]);
 
-export function normalizeCollectionSaveBody(body: z.infer<typeof collectionSaveBodySchema>): unknown[] | null {
+export function normalizeCollectionSaveBody(
+  body: z.infer<typeof collectionSaveBodySchema>,
+): unknown[] {
   if (Array.isArray(body)) return body;
-  if ('data' in body && Array.isArray(body.data)) return body.data;
-  return null;
+  return body.data;
 }
 
 export type SyncPayloadInput = z.infer<typeof syncPayloadSchema>;

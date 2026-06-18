@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { ReceiptText } from "lucide-react";
 import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
 import { getObject } from "../../lib/db";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   type FinanceSettings,
   DEFAULT_FINANCE_SETTINGS,
@@ -11,6 +12,8 @@ import {
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "../ui/formStyles";
+import { calculateModuleFieldsCompleteness } from "@/lib/formCompleteness";
+import UserActorSelect from "../ui/UserActorSelect";
 
 const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
 
@@ -25,12 +28,13 @@ interface PaymentFormProps {
  * Modal form for recording a payment against a specific invoice.
  */
 export default function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps) {
+  const { user: authUser } = useAuth();
   const balance = invoice ? invoice.finalAmt - (invoice.paidAmt || 0) : 0;
   const [data, setData] = useState<Partial<Payment>>({
     amount: balance,
     method: "Cash",
     date: new Date().toISOString().split("T")[0],
-    receivedBy: "",
+    receivedByUserId: authUser?.id || "",
     note: "",
   });
   const [saving, setSaving] = useState(false);
@@ -44,6 +48,11 @@ export default function PaymentForm({ open, invoice, onClose, onSave }: PaymentF
   const orderedFields = useMemo(() => {
     return getSortedFields(DEFAULT_FINANCE_FIELD_DEFS, fieldOrder, fields, customFields);
   }, [fieldOrder, fields, customFields]);
+
+  const completeness = useMemo(
+    () => calculateModuleFieldsCompleteness(data as Record<string, unknown>, orderedFields, fields),
+    [data, orderedFields, fields],
+  );
 
   const upd = (f: keyof Payment, v: Payment[keyof Payment]) => setData((d) => ({ ...d, [f]: v }));
 
@@ -76,7 +85,8 @@ export default function PaymentForm({ open, invoice, onClose, onSave }: PaymentF
       ...data,
       amount: Number(data.amount),
       invoiceId: invoice.id,
-      studentName: invoice.studentName,
+      studentId: invoice.studentId,
+      receivedByUserId: data.receivedByUserId || authUser?.id || '',
       id: `pay${Date.now()}`,
     } as Payment);
     setSaving(false);
@@ -90,7 +100,8 @@ export default function PaymentForm({ open, invoice, onClose, onSave }: PaymentF
       onClose={onClose}
       title="Record Payment"
       icon={ReceiptText}
-      size="sm"
+      progress={completeness}
+      progressLabel="Progress"
       error={error}
       cancelLabel="Cancel"
       saveLabel="Record Payment"
@@ -160,8 +171,13 @@ export default function PaymentForm({ open, invoice, onClose, onSave }: PaymentF
           if (field.id === "receivedBy") {
             return (
               <div key="receivedBy" className="sm:col-span-2">
-                <label className={FORM_LABEL} htmlFor="payment-receivedBy">Received By {field.required ? "*" : ""}</label>
-                <input id="payment-receivedBy" className={FORM_INPUT} value={data.receivedBy || ""} onChange={(e) => upd("receivedBy", e.target.value)} placeholder="Your name" required={field.required} />
+                <UserActorSelect
+                  id="payment-receivedBy"
+                  label="Received By"
+                  required={!!field.required}
+                  value={data.receivedByUserId || ""}
+                  onChange={(id) => upd("receivedByUserId", id)}
+                />
               </div>
             );
           }

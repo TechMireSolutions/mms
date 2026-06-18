@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import FormModal, { type FormModalTab } from '@/components/ui/FormModal';
-import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from '@/components/ui/formStyles';
 import useTranslation from '@/hooks/useTranslation';
 import { useQuestionFormTranslation } from '@/hooks/useQuestionFormTranslation';
 import { useQuestionBankConfig } from '@/hooks/useQuestionBankConfig';
 import { syncTrueFalseLabelsForFormLanguage } from '@/lib/data/questionFormTrueFalse';
 import { QUESTION_TYPE_ICONS } from '@/lib/data/questionBankData';
+import { calculateQuestionFormCompleteness } from '@/lib/questionBank/questionFormCompleteness';
 import CategorySelector from './CategorySelector';
 import QuestionSourcesTab from './QuestionSourcesTab';
 import QuestionTypeAnswerFields from './QuestionTypeAnswerFields';
@@ -32,9 +33,6 @@ import {
   type ModuleFieldDef,
   type QuestionBankQuestion as Question,
 } from '@mms/shared';
-
-const INPUT = FORM_INPUT;
-const LABEL = FORM_LABEL;
 
 const EMPTY_Q: Omit<Question, 'id'> & Record<string, unknown> = {
   categoryIds: [],
@@ -294,6 +292,11 @@ export default function QuestionForm({
   const falseLabel = tForm('questionBank.false');
   const categoriesRequired = visibleFields.find((f) => f.id === 'categoryId')?.required ?? false;
 
+  const completeness = useMemo(
+    () => calculateQuestionFormCompleteness(data, config.orderedFields, config.isFieldEnabled),
+    [data, config.orderedFields, config.isFieldEnabled],
+  );
+
   const validate = (): boolean => {
     const validationLanguage = resolveQuestionFormLanguage(
       language,
@@ -414,10 +417,10 @@ export default function QuestionForm({
     if (field.id === 'text') {
       return (
         <div key="text" className="sm:col-span-2">
-          <label htmlFor="qb-text" className={LABEL}>{label}{requiredMark}</label>
+          <label htmlFor="qb-text" className={FORM_LABEL}>{label}{requiredMark}</label>
           <textarea
             id="qb-text"
-            className={`${INPUT} resize-none`}
+            className={FORM_TEXTAREA}
             rows={3}
             value={(data.text as string) || ''}
             onChange={(e) => upd('text', e.target.value)}
@@ -430,10 +433,10 @@ export default function QuestionForm({
     if (field.id === 'type') {
       return (
         <div key="type">
-          <label htmlFor="qb-type" className={LABEL}>{label}{requiredMark}</label>
+          <label htmlFor="qb-type" className={FORM_LABEL}>{label}{requiredMark}</label>
           <select
             id="qb-type"
-            className={`${INPUT} cursor-pointer`}
+            className={FORM_SELECT}
             value={questionType}
             onChange={(e) => {
               const nextType = e.target.value as QuestionType;
@@ -462,10 +465,10 @@ export default function QuestionForm({
     if (field.id === 'difficulty') {
       return (
         <div key="difficulty">
-          <label htmlFor="qb-difficulty" className={LABEL}>{label}{requiredMark}</label>
+          <label htmlFor="qb-difficulty" className={FORM_LABEL}>{label}{requiredMark}</label>
           <select
             id="qb-difficulty"
-            className={`${INPUT} cursor-pointer`}
+            className={FORM_SELECT}
             value={(data.difficulty as string) || 'easy'}
             onChange={(e) => upd('difficulty', e.target.value)}
           >
@@ -481,10 +484,10 @@ export default function QuestionForm({
       const currentLanguage = normalizeAppLanguage(data.questionLanguage as string | undefined);
       return (
         <div key="questionLanguage">
-          <label htmlFor="qb-question-language" className={LABEL}>{label}{requiredMark}</label>
+          <label htmlFor="qb-question-language" className={FORM_LABEL}>{label}{requiredMark}</label>
           <select
             id="qb-question-language"
-            className={`${INPUT} cursor-pointer`}
+            className={FORM_SELECT}
             value={currentLanguage}
             onChange={(e) => handleQuestionLanguageChange(e.target.value)}
           >
@@ -502,7 +505,7 @@ export default function QuestionForm({
       const options = Array.isArray(data.options) ? data.options : ['', '', '', ''];
       return (
         <div key="options" className="sm:col-span-2">
-          <span className={LABEL}>{label}{requiredMark}</span>
+          <span className={FORM_LABEL}>{label}{requiredMark}</span>
           <div className="space-y-2" role="radiogroup">
             {options.slice(0, 4).map((opt, i) => (
               <div key={i} className="flex items-center gap-2">
@@ -516,7 +519,7 @@ export default function QuestionForm({
                 />
                 <input
                   type="text"
-                  className={INPUT}
+                  className={FORM_INPUT}
                   value={opt as string}
                   onChange={(e) => updOption(i, e.target.value)}
                   placeholder={tForm('questionBank.optionN', { n: i + 1 })}
@@ -531,7 +534,7 @@ export default function QuestionForm({
     if (field.id === 'answer' && questionType === 'true_false') {
       return (
         <div key="answer" className="sm:col-span-2">
-          <span className={LABEL}>{label}{requiredMark}</span>
+          <span className={FORM_LABEL}>{label}{requiredMark}</span>
           <div className="flex gap-3">
             {[trueLabel, falseLabel].map((v) => (
               <button
@@ -554,10 +557,10 @@ export default function QuestionForm({
     if (field.id === 'answer' && questionType === 'short') {
       return (
         <div key="answer-short" className="sm:col-span-2">
-          <label htmlFor="qb-answer" className={LABEL}>{tForm('questionBank.modelAnswer')}{requiredMark}</label>
+          <label htmlFor="qb-answer" className={FORM_LABEL}>{tForm('questionBank.modelAnswer')}{requiredMark}</label>
           <textarea
             id="qb-answer"
-            className={`${INPUT} resize-none`}
+            className={FORM_TEXTAREA}
             rows={2}
             value={(data.answer as string) || ''}
             onChange={(e) => upd('answer', e.target.value)}
@@ -578,9 +581,9 @@ export default function QuestionForm({
     if (field.type === 'textarea') {
       return (
         <div key={field.id} className="sm:col-span-2">
-          <label className={LABEL}>{label}{requiredMark}</label>
+          <label className={FORM_LABEL}>{label}{requiredMark}</label>
           <textarea
-            className={`${INPUT} resize-none`}
+            className={FORM_TEXTAREA}
             rows={2}
             value={val as string}
             onChange={(e) => upd(field.id, e.target.value)}
@@ -593,9 +596,9 @@ export default function QuestionForm({
     if (field.type === 'select') {
       return (
         <div key={field.id}>
-          <label className={LABEL}>{label}{requiredMark}</label>
+          <label className={FORM_LABEL}>{label}{requiredMark}</label>
           <select
-            className={`${INPUT} cursor-pointer`}
+            className={FORM_SELECT}
             value={val as string}
             onChange={(e) => upd(field.id, e.target.value)}
           >
@@ -625,10 +628,10 @@ export default function QuestionForm({
     if (field.type === 'number') {
       return (
         <div key={field.id}>
-          <label className={LABEL}>{label}{requiredMark}</label>
+          <label className={FORM_LABEL}>{label}{requiredMark}</label>
           <input
             type="number"
-            className={INPUT}
+            className={FORM_INPUT}
             value={val as number}
             onChange={(e) => upd(field.id, e.target.value)}
           />
@@ -639,9 +642,9 @@ export default function QuestionForm({
     if (field.type === 'tags') {
       return (
         <div key={field.id}>
-          <label className={LABEL}>{label}{requiredMark}</label>
+          <label className={FORM_LABEL}>{label}{requiredMark}</label>
           <input
-            className={INPUT}
+            className={FORM_INPUT}
             value={Array.isArray(val) ? val.join(', ') : (val as string)}
             onChange={(e) =>
               upd(
@@ -656,10 +659,10 @@ export default function QuestionForm({
 
     return (
       <div key={field.id}>
-        <label className={LABEL}>{label}{requiredMark}</label>
+        <label className={FORM_LABEL}>{label}{requiredMark}</label>
         <input
           type={field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text'}
-          className={INPUT}
+          className={FORM_INPUT}
           value={val as string}
           onChange={(e) => upd(field.id, e.target.value)}
           placeholder={field.placeholder}
@@ -741,8 +744,9 @@ export default function QuestionForm({
       onClose={onClose}
       title={question ? tForm('questionBank.editQuestion') : tForm('questionBank.addQuestion')}
       icon={BookOpen}
-      size="lg"
       tall
+      progress={completeness}
+      progressLabel={tForm('common.formProgress')}
       tabs={formTabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}

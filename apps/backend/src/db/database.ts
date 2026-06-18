@@ -18,6 +18,11 @@ import { getRequestTenant } from '../lib/tenantContext.js';
 import { runMigration001 } from './migrations/001_migrate_notification_settings.js';
 import { runMigration002 } from './migrations/002_migrate_global_settings_fields.js';
 import { runMigration003 } from './migrations/003_migrate_multi_tenant.js';
+import { runMigration004 } from './migrations/004_seed_demo_teachers.js';
+import { runMigration005 } from './migrations/005_normalize_teacher_contacts.js';
+import { runMigration006 } from './migrations/006_normalize_contact_linked_collections.js';
+import { runMigration007 } from './migrations/007_normalize_actor_user_links.js';
+import { runMigration008 } from './migrations/008_backfill_login_email.js';
 import { purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { setDb } from './dbClient.js';
@@ -67,6 +72,11 @@ export async function initDb(): Promise<void> {
     await runMigration001();
     await runMigration002();
     await runMigration003();
+    await runMigration004();
+    await runMigration005();
+    await runMigration006();
+    await runMigration007();
+    await runMigration008();
     await purgeExpiredAuthArtifacts();
     await ensurePlatformSuperUserFromEnv();
 

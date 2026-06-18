@@ -8,6 +8,7 @@ import {
   DEFAULT_ATTENDANCE_FIELD_DEFS,
   getSortedFields,
   type ModuleCustomField,
+  type ModuleFieldDef,
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
@@ -124,7 +125,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
     }
   };
 
-  const handleReorder = (reordered: any[]) => {
+  const handleReorder = (reordered: ModuleFieldDef[]) => {
     setSettings((s) => ({ ...s, fieldOrder: reordered.map(f => f.id) }));
     setSaved(false);
   };

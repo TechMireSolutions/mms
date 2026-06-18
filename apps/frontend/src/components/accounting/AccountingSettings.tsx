@@ -9,6 +9,7 @@ import {
   DEFAULT_ACCOUNTING_SETTINGS,
   getSortedFields,
   type ModuleCustomField,
+  type ModuleFieldDef,
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
@@ -135,7 +136,6 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
       onClose={onClose}
       title={isEdit ? "Edit Financial Year" : "Add Financial Year"}
       icon={Calendar}
-      size="md"
       error={Object.values(errors)}
       cancelLabel="Cancel"
       saveLabel="Save"
@@ -286,7 +286,7 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
     }
   };
 
-  const handleReorder = (reordered: any[]) => {
+  const handleReorder = (reordered: ModuleFieldDef[]) => {
     set("fieldOrder", reordered.map(f => f.id));
   };
 

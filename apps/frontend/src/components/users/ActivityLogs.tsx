@@ -28,6 +28,9 @@ export default function ActivityLogs({ logs, users }: ActivityLogsProps): React.
   const [dateTo, setTo] = useState('');
   const [page, setPage] = useState(1);
 
+  const userNameFor = (log: ActivityLog): string =>
+    log.userName ?? users.find((u) => u.id === log.userId)?.name ?? log.userId;
+
   const filtered = useMemo(() => {
     return logs.filter((l) => {
       if (userFilter !== 'all' && l.userId !== userFilter) return false;
@@ -36,11 +39,11 @@ export default function ActivityLogs({ logs, users }: ActivityLogsProps): React.
       if (dateTo && l.ts > `${dateTo}T23:59:59`) return false;
       if (search) {
         const q = search.toLowerCase();
-        if (!l.userName.toLowerCase().includes(q) && !l.detail.toLowerCase().includes(q)) return false;
+        if (!userNameFor(l).toLowerCase().includes(q) && !l.detail.toLowerCase().includes(q)) return false;
       }
       return true;
     });
-  }, [logs, search, userFilter, actionFilter, dateFrom, dateTo]);
+  }, [logs, search, userFilter, actionFilter, dateFrom, dateTo, users]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -120,7 +123,7 @@ export default function ActivityLogs({ logs, users }: ActivityLogsProps): React.
               {paginated.map((l) => (
                 <tr key={l.id} className="hover:bg-muted/20">
                   <td className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">{fmtTs(l.ts)}</td>
-                  <td className="px-3 py-2.5 text-xs font-semibold text-foreground">{l.userName}</td>
+                  <td className="px-3 py-2.5 text-xs font-semibold text-foreground">{userNameFor(l)}</td>
                   <td className="px-3 py-2.5">
                     <ActivityActionBadge action={l.action} />
                   </td>

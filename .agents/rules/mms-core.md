@@ -93,6 +93,7 @@ Contacts legacy `uiStrings` is migration debt — new copy uses `appTranslations
 
 ## Domain
 
+- **Contact-first persons:** See **`mms-contact-link.md`** — `contacts` canonical; module rows link by id; hydrate on read, strip on save.
 - **`persona`:** Purged everywhere — residual = migration defect.
 - **Phones:** E.164 on save (`parsePhoneNumber` from `@mms/shared`; backend contacts route too).
 - **WhatsApp:** Only `PuppeteerWhatsAppProvider.getNumberId` — no manual toggles in UI.

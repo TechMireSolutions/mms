@@ -74,7 +74,6 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
       onClose={onClose}
       title={isEdit ? "Edit Account" : "Add Account"}
       icon={BookOpen}
-      size="md"
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
       onSave={saveAccount}

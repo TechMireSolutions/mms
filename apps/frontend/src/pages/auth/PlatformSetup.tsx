@@ -20,8 +20,7 @@ import {
 import PlatformAuthLayout from "@/components/platform/PlatformAuthLayout";
 import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/components/platform/PlatformOtpInput";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import useTranslation from "@/hooks/useTranslation";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
 import { apiJson, ApiError } from "@/lib/apiClient";
@@ -200,42 +199,42 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
         ) : null}
         {error ? <PlatformAlert message={error} /> : null}
 
-        <div className="space-y-2">
-          <Label htmlFor="platform-setup-name">{t("platform.setupFullName")}</Label>
+        <div className="space-y-1.5">
+          <label htmlFor="platform-setup-name" className={FORM_LABEL}>{t("platform.setupFullName")}</label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <Input
+            <input
               id="platform-setup-name"
               autoComplete="name"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 h-11"
+              className={FORM_INPUT_ICON}
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="platform-setup-email">{t("auth.email")}</Label>
+        <div className="space-y-1.5">
+          <label htmlFor="platform-setup-email" className={FORM_LABEL}>{t("auth.email")}</label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <Input
+            <input
               id="platform-setup-email"
               type="email"
               autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-11"
+              className={FORM_INPUT_ICON}
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="platform-setup-password">{t("auth.password")}</Label>
+        <div className="space-y-1.5">
+          <label htmlFor="platform-setup-password" className={FORM_LABEL}>{t("auth.password")}</label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <Input
+            <input
               id="platform-setup-password"
               type="password"
               autoComplete="new-password"
@@ -243,7 +242,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
               minLength={PLATFORM_MIN_PASSWORD_LENGTH}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-11"
+              className={FORM_INPUT_ICON}
             />
           </div>
         </div>

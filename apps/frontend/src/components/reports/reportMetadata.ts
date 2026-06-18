@@ -1,5 +1,6 @@
 import { CONTACTS } from '@/lib/data/contactsData';
 import { STUDENTS, type Student } from '@/lib/data/studentsData';
+import { TEACHERS, type Teacher } from '@/lib/data/teachersData';
 import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
 import { INVOICES, type Invoice } from '@/lib/data/financeData';
 import { ATTENDANCE_RECORDS, type AttendanceRecord } from '@/lib/data/attendanceData';
@@ -9,6 +10,7 @@ import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
 
 export type ReportCollection =
   | "students"
+  | "teachers"
   | "sessions"
   | "finance_invoices"
   | "attendance_records"
@@ -38,6 +40,7 @@ export interface CustomCard {
 
 export const COLLECTION_OPTIONS = [
   { value: "students", label: "Students" },
+  { value: "teachers", label: "Teachers" },
   { value: "sessions", label: "Sessions" },
   { value: "finance_invoices", label: "Invoices (Finance)" },
   { value: "attendance_records", label: "Attendance Records" },
@@ -66,6 +69,19 @@ export const METADATA_FIELDS = {
       { value: "discountPct", label: "Discount Percentage" },
       { value: "age", label: "Age" }
     ]
+  },
+  teachers: {
+    name: "Teachers",
+    dbKey: "teachers",
+    defaultData: TEACHERS,
+    fields: [
+      { value: "status", label: "Status (active/inactive/on_leave)" },
+      { value: "gender", label: "Gender (male/female)" },
+      { value: "specialization", label: "Specialization" },
+      { value: "qualification", label: "Qualification" },
+      { value: "joinDate", label: "Join Date" },
+    ],
+    numericFields: [],
   },
   sessions: {
     name: "Sessions & Classes",
@@ -214,6 +230,7 @@ function calculateDynamicTrend(
 ): number {
   const dateField = {
     students: "registeredDate",
+    teachers: "joinDate",
     sessions: "startDate",
     finance_invoices: "dueDate",
     attendance_records: "date",
@@ -334,6 +351,7 @@ export function computeCustomCard(
   card: CustomCard,
   collections: {
     students: Student[];
+    teachers: Teacher[];
     sessions: Session[];
     finance_invoices: Invoice[];
     attendance_records: AttendanceRecord[];

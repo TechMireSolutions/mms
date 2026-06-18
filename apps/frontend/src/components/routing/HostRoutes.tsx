@@ -15,6 +15,7 @@ import PageNotFound from "@/components/routing/PageNotFound";
 const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
 const Contacts = React.lazy(() => import("@/pages/Contacts"));
 const Students = React.lazy(() => import("@/pages/Students"));
+const Teachers = React.lazy(() => import("@/pages/Teachers"));
 const Enrollments = React.lazy(() => import("@/pages/Enrollments"));
 const Sessions = React.lazy(() => import("@/pages/Sessions"));
 const Finance = React.lazy(() => import("@/pages/Finance"));
@@ -24,6 +25,7 @@ const QuestionBankPage = React.lazy(() => import("@/pages/QuestionBank"));
 const SettingsPage = React.lazy(() => import("@/pages/Settings"));
 const Attendance = React.lazy(() => import("@/pages/Attendance"));
 const Users = React.lazy(() => import("@/pages/Users"));
+const AccountProfile = React.lazy(() => import("@/pages/AccountProfile"));
 const Obligations = React.lazy(() => import("@/pages/Obligations"));
 const Accounting = React.lazy(() => import("@/pages/Accounting"));
 const Login = React.lazy(() => import("@/pages/auth/Login"));
@@ -123,6 +125,7 @@ export default function HostRoutes(): React.JSX.Element {
             <Route path={ROUTES.home} element={<Dashboard />} />
             <Route path={ROUTES.contacts} element={<Contacts />} />
             <Route path={ROUTES.students} element={<Students />} />
+            <Route path={ROUTES.teachers} element={<Teachers />} />
             <Route path={ROUTES.enrollments} element={<Enrollments />} />
             <Route path={ROUTES.sessions} element={<Sessions />} />
             <Route path={ROUTES.attendance} element={<Attendance />} />
@@ -133,6 +136,7 @@ export default function HostRoutes(): React.JSX.Element {
             <Route path={ROUTES.accounting} element={<Accounting />} />
             <Route path={ROUTES.obligations} element={<Obligations />} />
             <Route path={ROUTES.users} element={<Users />} />
+            <Route path={ROUTES.profile} element={<AccountProfile />} />
             <Route path={ROUTES.settings} element={<SettingsPage />} />
             <Route path={`${ROUTES.settings}/:section`} element={<Navigate to={ROUTES.settings} replace />} />
           </Route>

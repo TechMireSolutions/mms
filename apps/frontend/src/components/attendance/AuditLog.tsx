@@ -16,6 +16,7 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 export interface AuditEntry {
   ts?: string | number;
   action: string;
+  studentId?: string;
   field?: string;
   from?: string;
   to?: string;
@@ -30,27 +31,19 @@ interface AuditLogProps {
   filters: Partial<AttendanceFilterState>;
 }
 
-interface ClassInfo {
-  id: string;
-  name: string;
-  sessionId?: string;
-  sessionName?: string;
-}
-
-interface Session {
-  id: string;
-  name: string;
-  classes?: ClassInfo[];
-}
-
 function fmt(ts?: string | number): string {
   if (!ts) return "—";
   const d = new Date(ts);
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " · " + d.toLocaleDateString();
 }
 
-function describeEntry(e: AuditEntry): string {
-  if (e.action === "edit")        return `Changed ${e.field} from "${e.from}" → "${e.to}" for ${e.studentName}`;
+import { useStudentsCollection } from "@/hooks/useStudents";
+
+function describeEntry(e: AuditEntry, studentNameFor: (id?: string) => string): string {
+  if (e.action === "edit") {
+    const who = studentNameFor(e.studentId) || e.studentName || "student";
+    return `Changed ${e.field} from "${e.from}" → "${e.to}" for ${who}`;
+  }
   if (e.action === "bulk_mark")   return `Marked all ${e.count} students as ${e.status}`;
   if (e.action === "submitted")   return `Submitted ${e.count} records${e.geo ? ` · geo-tagged` : ""}`;
   if (e.action === "draft_saved") return `Saved as draft`;
@@ -68,6 +61,12 @@ function describeEntry(e: AuditEntry): string {
  */
 export default function AuditLog({ filters }: AuditLogProps) {
   const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const students = useStudentsCollection();
+
+  const studentNameFor = (id?: string): string => {
+    if (!id) return "";
+    return students.find((s) => String(s.id) === String(id))?.name ?? "";
+  };
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>
@@ -162,7 +161,7 @@ export default function AuditLog({ filters }: AuditLogProps) {
                     <td className="px-3 py-2.5">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${a.color}`}>{a.label}</span>
                     </td>
-                    <td className="px-3 py-2.5 text-xs text-foreground">{describeEntry(e)}</td>
+                    <td className="px-3 py-2.5 text-xs text-foreground">{describeEntry(e, studentNameFor)}</td>
                     <td className="px-3 py-2.5 text-xs font-semibold text-muted-foreground capitalize">{e.by || "—"}</td>
                   </tr>
                 );

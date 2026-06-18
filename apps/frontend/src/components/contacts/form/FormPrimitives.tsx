@@ -395,6 +395,7 @@ interface CustomFieldInputProps {
   field: FieldDefinition;
   value: unknown;
   onChange: (val: unknown) => void;
+  disabled?: boolean;
 }
 
 /**
@@ -402,7 +403,7 @@ interface CustomFieldInputProps {
  * @param props Component properties.
  * @returns React element.
  */
-export function CustomFieldInput({ field, value, onChange }: CustomFieldInputProps): React.JSX.Element {
+export function CustomFieldInput({ field, value, onChange, disabled = false }: CustomFieldInputProps): React.JSX.Element {
   const { uiStrings } = useContactConfig();
   const { t } = useTranslation();
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -429,6 +430,7 @@ export function CustomFieldInput({ field, value, onChange }: CustomFieldInputPro
         value={String(displayValue)}
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder || ""}
+        disabled={disabled}
       />
     );
   }
@@ -440,6 +442,7 @@ export function CustomFieldInput({ field, value, onChange }: CustomFieldInputPro
         onChange={(val) => onChange(val)}
         options={getOptionsArray(field.options)}
         placeholder={t("contacts.form.selectOption")}
+        disabled={disabled}
       />
     );
   }
@@ -450,9 +453,10 @@ export function CustomFieldInput({ field, value, onChange }: CustomFieldInputPro
       <div className="flex items-center gap-2 pt-1">
         <button
           type="button"
-          onClick={() => onChange(!isChecked)}
+          onClick={() => !disabled && onChange(!isChecked)}
+          disabled={disabled}
           aria-label={t("contacts.form.toggleOption", { field: field.key })}
-          className={`w-11 h-11 flex-shrink-0 flex items-center justify-center transition-all bg-transparent`}
+          className={`w-11 h-11 flex-shrink-0 flex items-center justify-center transition-all bg-transparent ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
         >
           <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
             isChecked ? "bg-primary border-primary" : "border-border bg-background"
@@ -659,6 +663,7 @@ export function CustomFieldInput({ field, value, onChange }: CustomFieldInputPro
       <DatePicker
         value={String(displayValue)}
         onChange={(val) => onChange(val)}
+        disabled={disabled}
       />
     );
   }
@@ -672,6 +677,8 @@ export function CustomFieldInput({ field, value, onChange }: CustomFieldInputPro
       value={String(displayValue)}
       onChange={(e) => onChange(e.target.value)}
       placeholder={field.mask || field.placeholder || ""}
+      disabled={disabled}
+      readOnly={disabled}
     />
   );
 }

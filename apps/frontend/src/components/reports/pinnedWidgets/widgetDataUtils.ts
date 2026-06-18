@@ -5,6 +5,7 @@ export function getWidgetCollections() {
   const contacts = getCollection("contacts");
   const invoices = getCollection("finance_invoices");
   const students = getCollection("students");
+  const teachers = getCollection("teachers");
   const attendance = getCollection("attendance_records");
   const distributions = getCollection("hasanat_distributions");
   const sessions = getCollection("sessions");
@@ -14,6 +15,7 @@ export function getWidgetCollections() {
   
   return {
     students,
+    teachers,
     sessions,
     finance_invoices: invoices,
     attendance_records: attendance,

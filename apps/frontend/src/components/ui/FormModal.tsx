@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, CheckCircle2, Loader2, Save } from 'lucide-react';
 import Modal from './Modal';
+import FormProgressBar from './FormProgressBar';
 import SubTabBar, { type SubTab } from './SubTabBar';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
@@ -14,9 +15,12 @@ export interface FormModalProps<K extends string = string> {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   icon?: React.ComponentType<{ className?: string }>;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl'; // default lg — omit on entity forms; xl only for wide grids
   /** Fixed height for multi-tab forms (prevents chrome jump on tab switch). */
   tall?: boolean;
+  /** 0–100 completion; renders a header progress bar when set. */
+  progress?: number;
+  progressLabel?: React.ReactNode;
   headerExtra?: React.ReactNode;
   error?: string | readonly string[];
   tabs?: readonly SubTab<K>[];
@@ -61,6 +65,8 @@ export default function FormModal<K extends string = string>({
   icon,
   size = 'lg',
   tall = false,
+  progress,
+  progressLabel,
   headerExtra,
   error,
   tabs,
@@ -86,6 +92,25 @@ export default function FormModal<K extends string = string>({
 
   const panelClassName = tall ? 'h-[88vh] max-h-[700px]' : undefined;
   const hasTabs = tabs && tabs.length > 1 && activeTab !== undefined && onTabChange;
+
+  const effectiveSize = useMemo((): NonNullable<FormModalProps<K>['size']> => {
+    const requested = size ?? 'lg';
+    if (requested === 'xl') return 'xl';
+    if (tall || hasTabs) return 'lg';
+    return requested;
+  }, [size, tall, hasTabs]);
+
+  const resolvedHeaderExtra = useMemo(() => {
+    if (progress === undefined) return headerExtra;
+    const bar = <FormProgressBar value={progress} label={progressLabel} />;
+    if (!headerExtra) return bar;
+    return (
+      <div className="space-y-3">
+        {bar}
+        {headerExtra}
+      </div>
+    );
+  }, [headerExtra, progress, progressLabel]);
 
   const body = (
     <div lang={lang} dir={dir}>
@@ -124,8 +149,8 @@ export default function FormModal<K extends string = string>({
       title={title}
       subtitle={subtitle}
       icon={icon}
-      size={size}
-      headerExtra={headerExtra}
+      size={effectiveSize}
+      headerExtra={resolvedHeaderExtra}
       panelClassName={panelClassName}
       footer={
         <div

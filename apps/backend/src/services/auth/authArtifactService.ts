@@ -8,7 +8,8 @@ export type AuthArtifactKind =
   | 'two_factor_challenge'
   | 'refresh_token'
   | 'platform_setup'
-  | 'platform_password_reset';
+  | 'platform_password_reset'
+  | 'login_email_change';
 
 export interface AuthArtifactRecord<T> {
   id: string;
@@ -118,4 +119,19 @@ export async function findRefreshTokenByHash<T>(
     }
   }
   return null;
+}
+
+/** Revokes all refresh-token sessions for a workspace user (e.g. after login email change). */
+export async function deleteRefreshTokensForUser(userId: string): Promise<void> {
+  const rows = await db()
+    .select()
+    .from(authArtifacts)
+    .where(eq(authArtifacts.kind, 'refresh_token'));
+
+  for (const row of rows) {
+    const payload = JSON.parse(row.payload) as { userId?: string };
+    if (payload.userId === userId) {
+      await db().delete(authArtifacts).where(eq(authArtifacts.id, row.id));
+    }
+  }
 }

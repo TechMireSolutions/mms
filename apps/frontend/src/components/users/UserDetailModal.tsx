@@ -83,7 +83,14 @@ export default function UserDetailModal({
       <div className="space-y-4">
         <Section icon={Shield} title={t('users.detailBasic')}>
           <Row label={t('users.fieldName')} value={user.name} />
-          <Row label={t('users.fieldEmail')} value={user.email} />
+          <Row label={t('users.fieldContactEmail')} value={user.email} />
+          <Row
+            label={t('users.fieldLoginEmail')}
+            value={user.loginEmail?.trim() || user.email}
+          />
+          {user.loginEmail && user.loginEmail.toLowerCase() !== user.email.toLowerCase() ? (
+            <p className="py-2 text-[11px] text-muted-foreground">{t('users.loginEmailNote')}</p>
+          ) : null}
           <Row label={t('users.fieldPhone')} value={user.phone} />
           <Row label={t('users.detailMemberSince')} value={user.createdDate} />
           <Row label={t('users.colLastLogin')} value={fmtDate(user.lastLogin)} />

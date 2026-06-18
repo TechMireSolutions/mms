@@ -6,6 +6,7 @@ const WRITE_ROLES = new Set(['admin', 'accountant', 'teacher', 'assistant_teache
 const COLLECTION_READ_PERMISSION: Partial<Record<string, Permission>> = {
   contacts: 'contacts.read',
   students: 'students.read',
+  teachers: 'teachers.read',
 };
 
 /**

@@ -22,7 +22,7 @@ export const MMS_PLATFORM_GLOBAL_SETTINGS: GlobalSettings = mergeGlobalSettings(
   DEFAULT_GLOBAL_SETTINGS,
 );
 
-/** True when the hostname is a tenant workspace (`{subdomain}.localhost` / `{subdomain}.mmsv2.aabtaab.com`). */
+/** True when the hostname is a tenant workspace (`{subdomain}.localhost` or `{subdomain}.{platform-domain}`). */
 export function isTenantHost(): boolean {
   if (typeof window === 'undefined') return false;
   return !isApexHost(window.location.hostname, getAppDomain());

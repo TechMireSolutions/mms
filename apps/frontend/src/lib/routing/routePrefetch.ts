@@ -5,6 +5,7 @@ const ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   [ROUTES.home]: () => import('@/pages/Dashboard'),
   [ROUTES.contacts]: () => import('@/pages/Contacts'),
   [ROUTES.students]: () => import('@/pages/Students'),
+  [ROUTES.teachers]: () => import('@/pages/Teachers'),
   [ROUTES.enrollments]: () => import('@/pages/Enrollments'),
   [ROUTES.sessions]: () => import('@/pages/Sessions'),
   [ROUTES.attendance]: () => import('@/pages/Attendance'),

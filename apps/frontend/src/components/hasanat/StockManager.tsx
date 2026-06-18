@@ -4,6 +4,7 @@ import { Plus, Package } from "lucide-react";
 import { Denomination, StockBatch } from '@/lib/data/hasanatData';
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "@/components/ui/FormModal";
+import UserActorSelect from "@/components/ui/UserActorSelect";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 interface AddBatchModalProps {
@@ -18,7 +19,7 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
     denominationId: denoms[0]?.id || "",
     quantity: 0,
     addedDate: new Date().toISOString().split("T")[0],
-    addedBy: "",
+    addedByUserId: "",
     note: "",
   });
 
@@ -43,7 +44,6 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
       onClose={onClose}
       title="Add Stock Batch"
       icon={Package}
-      size="md"
       cancelLabel="Cancel"
       saveLabel="Add Batch"
       onSave={() => {
@@ -80,10 +80,13 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
             />
           </div>
         </div>
-        <div>
-          <label htmlFor="added-by" className={FORM_LABEL}>Added By</label>
-          <input id="added-by" className={FORM_INPUT} value={data.addedBy} onChange={(e) => upd("addedBy", e.target.value)} placeholder="Your name" />
-        </div>
+        <UserActorSelect
+          id="added-by"
+          label="Added By"
+          value={data.addedByUserId || ""}
+          onChange={(id) => upd("addedByUserId", id)}
+          allowEmpty
+        />
         <div>
           <label htmlFor="note" className={FORM_LABEL}>Note</label>
           <input id="note" className={FORM_INPUT} value={data.note} onChange={(e) => upd("note", e.target.value)} placeholder="e.g. January batch" />

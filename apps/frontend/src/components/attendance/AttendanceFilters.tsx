@@ -2,7 +2,10 @@ import React, { useState, useMemo } from "react";
 import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
-import { SESSIONS_DATA, TEACHERS } from '@/lib/data/sessionsData';
+import { SESSIONS_DATA } from '@/lib/data/sessionsData';
+import { useTeachersCollection } from '@/hooks/useTeachers';
+import { activeTeachersForAssignment } from '@/lib/teachers/teacherAssignment';
+import useTranslation from '@/hooks/useTranslation';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 export interface AttendanceFilterState {
@@ -40,8 +43,11 @@ interface Session {
  * @returns {React.ReactElement} The rendered filters component.
  */
 export default function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA as Session[]);
+  const teachers = useTeachersCollection();
+  const assignableTeachers = useMemo(() => activeTeachersForAssignment(teachers), [teachers]);
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>
@@ -148,8 +154,10 @@ export default function AttendanceFilters({ filters, onChange }: AttendanceFilte
                   onChange={(e) => set("teacherId", e.target.value)}
                   className="text-sm rounded-lg border border-border bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
-                  <option value="">All Teachers</option>
-                  {TEACHERS.map((t: { id: string; name: string }) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  <option value="">{t('attendance.filters.allTeachers')}</option>
+                  {assignableTeachers.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>{teacher.name}</option>
+                  ))}
                 </select>
               </div>
 

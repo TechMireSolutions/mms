@@ -31,7 +31,6 @@ function TabarrukModal({ open, entry, onClose, onSave }: TabarrukModalProps) {
       onClose={onClose}
       title={entry ? "Edit Tabarruk" : "Add Tabarruk"}
       icon={Gift}
-      size="md"
       cancelLabel="Cancel"
       saveLabel="Save"
       onSave={() => onSave({ ...data, id: entry?.id || `tb${Date.now()}` } as TabarrukItem)}

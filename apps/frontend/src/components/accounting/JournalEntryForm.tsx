@@ -5,6 +5,7 @@ import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import { Button } from "../ui/button";
 import { FORM_INPUT, FORM_LABEL, FORM_INPUT_COMPACT } from "../ui/formStyles";
+import { hasFieldValue } from "@/lib/formCompleteness";
 
 interface DraftLine extends Omit<JournalLine, "debit" | "credit"> {
   debit: string | number;
@@ -62,6 +63,16 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
   const totalDebit  = form.lines.reduce((s, l) => s + (typeof l.debit === "string" ? parseFloat(l.debit) || 0 : l.debit), 0);
   const totalCredit = form.lines.reduce((s, l) => s + (typeof l.credit === "string" ? parseFloat(l.credit) || 0 : l.credit), 0);
   const isBalanced  = Math.abs(totalDebit - totalCredit) < 0.01 && totalDebit > 0;
+
+  const completeness = useMemo(() => {
+    const total = 4;
+    let filled = 0;
+    if (hasFieldValue(form.date)) filled += 1;
+    if (hasFieldValue(form.description)) filled += 1;
+    if (form.lines.filter((line) => line.account_id).length >= 2) filled += 1;
+    if (isBalanced) filled += 1;
+    return Math.round((filled / total) * 100);
+  }, [form.date, form.description, form.lines, isBalanced]);
 
   const updateLine = (idx: number, field: keyof DraftLine, val: string | number) => {
     const lines = [...form.lines];
@@ -131,6 +142,8 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
       icon={BookOpen}
       size="xl"
       tall
+      progress={completeness}
+      progressLabel="Progress"
       cancelLabel="Cancel"
       saveLabel="Post Entry"
       onSave={() => saveEntry("posted")}

@@ -15,7 +15,8 @@ export interface StockBatch {
   quantity: number;
   remaining: number;
   addedDate: string;
-  addedBy: string;
+  addedByUserId?: string;
+  addedBy?: string;
   note: string;
 }
 
@@ -25,23 +26,27 @@ export interface Distribution {
   denominationId: string;
   denominationName: string;
   recipientType: "student" | "faculty";
-  recipientName: string;
+  recipientStudentId?: string;
+  recipientTeacherId?: string;
+  recipientName?: string;
   recipientClass: string;
   quantity: number;
   reason: string;
   issuedDate: string;
-  issuedBy: string;
+  issuedByUserId?: string;
+  issuedBy?: string;
   status: "active" | "redeemed" | "returned";
 }
 
 export interface Redemption {
   id: string;
   distributionId: string;
-  studentName: string;
+  studentName?: string;
   reward: string;
   pointsUsed: number;
   date: string;
-  approvedBy: string;
+  approvedByUserId?: string;
+  approvedBy?: string;
 }
 
 export const DENOMINATIONS: Denomination[] = [

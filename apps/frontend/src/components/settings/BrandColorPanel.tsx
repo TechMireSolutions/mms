@@ -30,6 +30,17 @@ function primaryForegroundHex(primaryHex: string): string {
   return hsl.l > 52 ? hslColorToHex(tone(hsl, { s: -20, l: -42 })) : '#ffffff';
 }
 
+function secondaryForegroundHex(secondaryHex: string, tokens: ReturnType<typeof buildBrandingCssVariables>): string {
+  const fromToken = tokens['--secondary-foreground'];
+  if (fromToken) return brandingTokenToCss(fromToken);
+  const hsl = hexToHslColor(secondaryHex);
+  if (!hsl) return '#ffffff';
+  const whiteRatio = getContrastRatio('#ffffff', secondaryHex);
+  return meetsWcagAaTextContrast(whiteRatio)
+    ? '#ffffff'
+    : hslColorToHex(tone(hsl, { s: -20, l: -42 }));
+}
+
 interface ColorFieldProps {
   id: string;
   label: string;
@@ -140,8 +151,9 @@ export default function BrandColorPanel({
   );
 
   const onPrimaryFg = primaryForegroundHex(primaryColor);
+  const onSecondaryFg = secondaryForegroundHex(secondaryColor, tokens);
   const primaryContrast = getContrastRatio(onPrimaryFg, primaryColor);
-  const secondaryContrast = getContrastRatio('#ffffff', secondaryColor);
+  const secondaryContrast = getContrastRatio(onSecondaryFg, secondaryColor);
 
   const isPresetActive = (primary: string, secondary: string): boolean =>
     primaryColor === primary && secondaryColor === secondary;
@@ -251,7 +263,7 @@ export default function BrandColorPanel({
         ) : null}
         {secondaryContrast !== null ? (
           <Badge
-            variant={meetsWcagAaUiContrast(secondaryContrast) ? 'secondary' : 'outline'}
+            variant={meetsWcagAaTextContrast(secondaryContrast) ? 'secondary' : 'outline'}
             className="text-[10px]"
           >
             {t('theme.contrastAccent', { ratio: secondaryContrast.toFixed(1) })}
@@ -282,7 +294,7 @@ export default function BrandColorPanel({
             <button
               type="button"
               className="w-full rounded-lg border px-4 py-2.5 text-sm font-semibold"
-              style={{ backgroundColor: secondaryColor, color: onPrimaryFg, borderColor: secondaryColor }}
+              style={{ backgroundColor: secondaryColor, color: onSecondaryFg, borderColor: secondaryColor }}
             >
               {t('theme.previewAccentAction')}
             </button>

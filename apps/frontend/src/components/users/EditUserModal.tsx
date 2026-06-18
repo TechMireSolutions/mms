@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { USER_STATUS_VALUES, type SystemUser } from '@mms/shared';
+import { USER_STATUS_VALUES, toTitleCase, type SystemUser } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
+import { useContactsCollection } from '@/hooks/useContacts';
 import FormModal from '@/components/ui/FormModal';
+import ContactPicker from '@/components/ui/ContactPicker';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { FORM_SELECT } from '@/components/ui/formStyles';
 import {
   Form,
@@ -26,32 +27,51 @@ export interface EditUserModalProps {
   onSave: (user: SystemUser) => void;
 }
 
+function resolveContactId(user: SystemUser, contacts: ReturnType<typeof useContactsCollection>): string | number | null {
+  if (user.contactId) return user.contactId;
+  const match = contacts.find((c) => {
+    const email = (c.email as string | undefined) || c.emails?.[0]?.address || '';
+    return email.toLowerCase() === user.email.toLowerCase();
+  });
+  return match?.id ?? null;
+}
+
 export default function EditUserModal({ user, onClose, onSave }: EditUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const workspaceRoles = useWorkspaceRoles();
+  const contacts = useContactsCollection();
+  const initialContactId = useMemo(() => resolveContactId(user, contacts), [user, contacts]);
 
   const form = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
     defaultValues: {
-      name: user.name,
-      email: user.email,
-      phone: user.phone || '',
+      contactId: initialContactId ?? '',
       role: user.role,
       status: user.status,
       twoFactorEnabled: user.twoFactorEnabled,
     },
   });
 
+  const selectedContact = contacts.find(
+    (c) => String(c.id) === String(form.watch('contactId')),
+  );
+
   const handleSave = form.handleSubmit((values) => {
+    const contact = contacts.find((c) => String(c.id) === String(values.contactId));
+    if (!contact) return;
+    const name = toTitleCase(contact.name.trim()) as string;
+    const email = ((contact.email as string | undefined) || contact.emails?.[0]?.address || '').trim().toLowerCase();
+    const phone = ((contact.phone as string | undefined) || contact.phones?.[0]?.number || '').trim();
     onSave({
       ...user,
-      ...values,
-      avatarInitials: values.name
-        .split(' ')
-        .map((w) => w[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase(),
+      contactId: contact.id,
+      name,
+      email,
+      phone,
+      role: values.role,
+      status: values.status,
+      twoFactorEnabled: values.twoFactorEnabled,
+      avatarInitials: name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
     });
     onClose();
   });
@@ -61,9 +81,8 @@ export default function EditUserModal({ user, onClose, onSave }: EditUserModalPr
       open
       onClose={onClose}
       title={t('users.editTitle')}
-      subtitle={user.email}
+      subtitle={selectedContact?.name || user.name}
       icon={User}
-      size="sm"
       error={firstZodFieldError(form.formState.errors, t) || undefined}
       cancelLabel={t('users.cancel')}
       saveLabel={t('users.saveChanges')}
@@ -71,43 +90,27 @@ export default function EditUserModal({ user, onClose, onSave }: EditUserModalPr
     >
       <Form {...form}>
         <form className="space-y-4" onSubmit={handleSave}>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('users.fieldName')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <TranslatedFormMessage messageKey={form.formState.errors.name?.message} />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('users.fieldPhone')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
           <FormField
             control={form.control}
-            name="email"
+            name="contactId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('users.fieldEmail')}</FormLabel>
-                <FormControl>
-                  <Input type="email" {...field} />
-                </FormControl>
-                <TranslatedFormMessage messageKey={form.formState.errors.email?.message} />
+                <ContactPicker
+                  label={t('users.fieldContact')}
+                  value={field.value || null}
+                  contacts={contacts}
+                  onChange={(id) => field.onChange(id ?? '')}
+                  searchPlaceholder={t('users.contactSearch')}
+                  emptyTitle={t('users.contactEmptyTitle')}
+                  emptyHint={t('users.contactEmptyHint')}
+                />
+                <TranslatedFormMessage messageKey={form.formState.errors.contactId?.message} />
+                {user.loginEmail ? (
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    {t('users.fieldLoginEmail')}: {user.loginEmail}
+                  </p>
+                ) : null}
+                <p className="mt-1 text-[11px] text-muted-foreground">{t('users.loginEmailNote')}</p>
               </FormItem>
             )}
           />

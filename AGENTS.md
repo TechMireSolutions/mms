@@ -74,7 +74,7 @@ Rule **bodies** must stay identical between `.cursor/rules/*.mdc` and `.agents/r
 
 Sync after `.mdc` edits: `bash .agents/scripts/sync-rules.sh`
 
-**30 rules** (3 always-on + 27 scoped): product (`mms-ui-*`, `mms-fields`, …), platform (`mms-security`, `mms-testing`, `mms-observability`, `mms-a11y`). Index: `.cursor/rules/README.md`.
+**31 rules** (3 always-on + 28 scoped): product (`mms-ui-*`, `mms-fields`, `mms-contact-link`, …), platform (`mms-security`, `mms-testing`, `mms-observability`, `mms-a11y`). Index: `.cursor/rules/README.md`.
 
 **Rule index:** [.cursor/rules/README.md](.cursor/rules/README.md) — canonical owner per topic (avoids duplicating tier/isolation/i18n prose).
 

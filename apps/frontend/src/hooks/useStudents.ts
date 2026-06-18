@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { normalizeStoredStudent } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
+import { getCollection, saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { STUDENT_COUNT_QUERY_KEY } from './useStudentCount';
 import type { Student } from '@/lib/data/studentsData';
@@ -16,7 +17,7 @@ export interface StudentRecord {
 async function fetchStudents(): Promise<StudentRecord[]> {
   const body = await apiJson<{ students: StudentRecord[] }>('/api/students');
   saveCollection('students', body.students);
-  return body.students;
+  return getCollection<StudentRecord>('students', []);
 }
 
 export function useStudents() {
@@ -38,20 +39,24 @@ export function useStudentMutations() {
   };
 
   const createStudent = useMutation({
-    mutationFn: async (student: StudentRecord) =>
-      apiJson<{ student: StudentRecord }>('/api/students', {
+    mutationFn: async (student: StudentRecord) => {
+      const [normalized] = [normalizeStoredStudent(student)];
+      return apiJson<{ student: StudentRecord }>('/api/students', {
         method: 'POST',
-        body: JSON.stringify(student),
-      }),
+        body: JSON.stringify(normalized),
+      });
+    },
     onSuccess: invalidate,
   });
 
   const updateStudent = useMutation({
-    mutationFn: async ({ id, student }: { id: string; student: StudentRecord }) =>
-      apiJson<{ student: StudentRecord }>(`/api/students/${id}`, {
+    mutationFn: async ({ id, student }: { id: string; student: StudentRecord }) => {
+      const normalized = normalizeStoredStudent(student);
+      return apiJson<{ student: StudentRecord }>(`/api/students/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(student),
-      }),
+        body: JSON.stringify(normalized),
+      });
+    },
     onSuccess: invalidate,
   });
 
@@ -64,7 +69,7 @@ export function useStudentMutations() {
   return { createStudent, updateStudent, deleteStudent };
 }
 
-/** Query-first students for analytics; falls back to localStorage cache. */
+/** Query-first students for analytics; falls back to localStorage cache (hydrated). */
 export function useStudentsCollection(): Student[] {
   const { data: fromQuery = [] } = useStudents();
   const fromLocal = useLiveCollection<Student>('students');

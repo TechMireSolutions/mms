@@ -19,6 +19,7 @@ interface BasicTabProps {
   data: ContactFormData;
   onChange: (updatedData: ContactFormData) => void;
   tabId?: string;
+  readOnlyFieldKeys?: string[];
 }
 
 /**
@@ -26,7 +27,12 @@ interface BasicTabProps {
  * @param props Component properties.
  * @returns React element.
  */
-export default function BasicTab({ data, onChange, tabId = "basic" }: BasicTabProps): React.JSX.Element {
+export default function BasicTab({
+  data,
+  onChange,
+  tabId = "basic",
+  readOnlyFieldKeys = [],
+}: BasicTabProps): React.JSX.Element {
   const { isTabFieldEnabled, isTabFieldRequired } = useContactConfig();
   const { t } = useTranslation();
   const sortedFields = useSortedFields(tabId);
@@ -54,6 +60,7 @@ export default function BasicTab({ data, onChange, tabId = "basic" }: BasicTabPr
               field={field}
               value={data[field.key]}
               onChange={(val) => upd(field.key, val)}
+              disabled={readOnlyFieldKeys.includes(field.key)}
             />
           </Field>
         );

@@ -15,6 +15,10 @@ import {
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import RegistryPersonSelect from "@/components/ui/RegistryPersonSelect";
+import UserActorSelect from "@/components/ui/UserActorSelect";
+import useTranslation from "@/hooks/useTranslation";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 const STATUS_CFG: Record<string, { label: string, cls: string }> = {
   active:   { label: "Active",   cls: "bg-info/10 text-info border-info/20" },
@@ -25,12 +29,13 @@ const STATUS_CFG: Record<string, { label: string, cls: string }> = {
 const EMPTY_DIST: Partial<Distribution> = {
   denominationId: "",
   recipientType: "student",
-  recipientName: "",
+  recipientStudentId: "",
+  recipientTeacherId: "",
   recipientClass: "",
   quantity: 1,
   reason: "",
   issuedDate: new Date().toISOString().split("T")[0],
-  issuedBy: "",
+  issuedByUserId: "",
 };
 
 interface DistributeModalProps {
@@ -42,6 +47,8 @@ interface DistributeModalProps {
 }
 
 function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeModalProps) {
+  const { t } = useTranslation();
+  const { user: authUser } = useAuth();
   const [data, setData] = useState<Partial<Distribution>>({
     ...EMPTY_DIST,
     denominationId: denoms[0]?.id || "",
@@ -55,9 +62,10 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
         ...EMPTY_DIST,
         denominationId: denoms[0]?.id || "",
         issuedDate: new Date().toISOString().split("T")[0],
+        issuedByUserId: authUser?.id || "",
       });
     }
-  }, [open, denoms]);
+  }, [open, denoms, authUser?.id]);
 
   const selectedDen = denoms.find((d) => d.id === data.denominationId);
   const availableBatches = batches.filter((b) => b.denominationId === data.denominationId && b.remaining > 0);
@@ -80,10 +88,21 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
     for (const f of orderedFields) {
       const isEnabled = fields[f.id]?.enabled !== false;
       const isRequired = !!fields[f.id]?.required;
-      if (isEnabled && isRequired) {
-        const val = (data as any)[f.id];
-        if (val === undefined || val === null || val === "") return false;
+      if (!isEnabled || !isRequired) continue;
+      if (f.id === "recipientName") {
+        const recipientId = data.recipientType === "faculty"
+          ? data.recipientTeacherId
+          : data.recipientStudentId;
+        if (!recipientId) return false;
+        continue;
       }
+      if (f.id === "issuedBy") {
+        const actorId = data.issuedByUserId || "";
+        if (!actorId) return false;
+        continue;
+      }
+      const val = (data as Record<string, unknown>)[f.id];
+      if (val === undefined || val === null || val === "") return false;
     }
     return true;
   }, [orderedFields, fields, data, totalAvailable]);
@@ -94,13 +113,26 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
       onClose={onClose}
       title="Distribute Cards"
       icon={Star}
-      size="md"
       cancelLabel="Cancel"
       saveLabel="Distribute"
       onSave={() => {
         const den = denoms.find((d) => d.id === data.denominationId);
         const batch = batches.find((b) => b.denominationId === data.denominationId && b.remaining > 0);
-        onSave({ ...data, id: `dist${Date.now()}`, denominationName: den?.name || "", batchId: batch?.id || "", status: "active" } as Distribution);
+        const payload: Distribution = {
+          ...data,
+          id: `dist${Date.now()}`,
+          denominationName: den?.name || "",
+          batchId: batch?.id || "",
+          status: "active",
+          recipientName: "",
+          issuedByUserId: data.issuedByUserId || authUser?.id || "",
+        } as Distribution;
+        if (data.recipientType === "faculty") {
+          delete payload.recipientStudentId;
+        } else {
+          delete payload.recipientTeacherId;
+        }
+        onSave(payload);
       }}
       saveDisabled={!isValid}
     >
@@ -145,7 +177,12 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                             key={rt.id}
                             type="button"
                             aria-pressed={data.recipientType === rt.id}
-                            onClick={() => upd("recipientType", rt.id)}
+                            onClick={() => setData((d) => ({
+                              ...d,
+                              recipientType: rt.id,
+                              recipientStudentId: rt.id === "student" ? d.recipientStudentId : undefined,
+                              recipientTeacherId: rt.id === "faculty" ? d.recipientTeacherId : undefined,
+                            }))}
                             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border text-sm font-medium transition-colors ${data.recipientType === rt.id ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-muted text-muted-foreground"}`}
                           >
                             <Icon className="w-3.5 h-3.5" aria-hidden="true" /> {rt.label}
@@ -158,10 +195,33 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
               }
 
               if (field.id === "recipientName") {
+                const recipientId = data.recipientType === "faculty"
+                  ? (data.recipientTeacherId || "")
+                  : (data.recipientStudentId || "");
                 return (
                   <div key="recipientName">
-                    <label htmlFor="recp-name" className={FORM_LABEL}>Recipient Name *</label>
-                    <input id="recp-name" className={FORM_INPUT} value={data.recipientName || ""} onChange={(e) => upd("recipientName", e.target.value)} placeholder="Full name" required />
+                    <RegistryPersonSelect
+                      id="hasanat-recipient"
+                      kind={data.recipientType === "faculty" ? "teacher" : "student"}
+                      label={t("hasanat.fieldRecipient")}
+                      required
+                      value={recipientId}
+                      onChange={(id) => {
+                        if (data.recipientType === "faculty") {
+                          setData((d) => ({
+                            ...d,
+                            recipientTeacherId: id,
+                            recipientStudentId: undefined,
+                          }));
+                        } else {
+                          setData((d) => ({
+                            ...d,
+                            recipientStudentId: id,
+                            recipientTeacherId: undefined,
+                          }));
+                        }
+                      }}
+                    />
                   </div>
                 );
               }
@@ -212,8 +272,13 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                 const isRequired = !!fields[field.id]?.required;
                 return (
                   <div key="issuedBy" className="sm:col-span-2">
-                    <label htmlFor="issued-by" className={FORM_LABEL}>Issued By {isRequired ? "*" : ""}</label>
-                    <input id="issued-by" className={FORM_INPUT} value={data.issuedBy || ""} onChange={(e) => upd("issuedBy", e.target.value)} placeholder="Teacher / Admin name" required={isRequired} />
+                    <UserActorSelect
+                      id="issued-by"
+                      label={t("hasanat.fieldIssuedBy")}
+                      required={isRequired}
+                      value={data.issuedByUserId || ""}
+                      onChange={(id) => setData((d) => ({ ...d, issuedByUserId: id }))}
+                    />
                   </div>
                 );
               }
@@ -320,7 +385,10 @@ export default function DistributionManager({ distributions, denoms, batches, on
   const filtered = useMemo(() => {
     return distributions.filter((d) => {
       const q = search.toLowerCase();
-      const matchSearch = !q || d.recipientName.toLowerCase().includes(q) || d.denominationName.toLowerCase().includes(q) || d.reason?.toLowerCase().includes(q);
+      const matchSearch = !q
+        || (d.recipientName || "").toLowerCase().includes(q)
+        || d.denominationName.toLowerCase().includes(q)
+        || d.reason?.toLowerCase().includes(q);
       const matchStatus = filterStatus.length === 0 || filterStatus.includes(d.status);
       return matchSearch && matchStatus;
     });

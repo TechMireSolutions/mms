@@ -3,6 +3,7 @@ import {
   GraduationCap, CalendarCheck, BookOpen, UserCheck, DollarSign, AlertCircle, Star, TrendingUp, Receipt,
   Users, Target, ShieldCheck, Award, Clock, Heart, Briefcase, Activity, CheckCircle2, PieChart, Zap, BarChart2,
 } from "lucide-react";
+import { WIDGET_CHART_PALETTES } from "@mms/shared";
 import type { CustomCard } from "../reportMetadata";
 
 export interface CustomWidget {
@@ -79,15 +80,6 @@ const ALERT_COLOR_MAP: Record<string, { bg: string; text: string; border: string
   }
 };
 
-const THEME_PALETTES: Record<string, string[]> = {
-  emerald: ["#10b981", "#34d399", "#059669", "#047857", "#065f46"],
-  green: ["#10b981", "#34d399", "#059669", "#047857", "#065f46"],
-  blue: ["#3b82f6", "#60a5fa", "#2563eb", "#1d4ed8", "#1e40af"],
-  violet: ["#8b5cf6", "#a78bfa", "#7c3aed", "#6d28d9", "#5b21b6"],
-  amber: ["#f59e0b", "#fbbf24", "#d97706", "#b45309", "#92400e"],
-  red: ["#ef4444", "#f87171", "#dc2626", "#b91c1c", "#991b1b"],
-};
-
 const COLOR_MAP: Record<string, { bg: string; text: string; ring: string }> = {
   emerald: { bg: "bg-success/10", text: "text-success", ring: "ring-success/20" },
   blue:    { bg: "bg-info/10",    text: "text-info",    ring: "ring-info/20"    },
@@ -104,7 +96,7 @@ const ICONS_LIST: Record<string, React.ElementType> = {
 export {
   WIDGET_COLOR_MAP,
   ALERT_COLOR_MAP,
-  THEME_PALETTES,
+  WIDGET_CHART_PALETTES as THEME_PALETTES,
   COLOR_MAP,
   ICONS_LIST,
 };

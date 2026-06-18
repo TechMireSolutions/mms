@@ -64,25 +64,7 @@ const LIST_TAB_DATA_KEYS: Record<string, string> = {
 // completeness (a `false` boolean is still a valid answer; AI summaries are read-only).
 const COMPLETENESS_SKIP_TYPES = new Set(["boolean", "ai_summary"]);
 
-/**
- * Returns true when a contact field value is considered "filled".
- *
- * @param {unknown} v - The value to test.
- * @returns {boolean}
- */
-function hasFieldValue(v: unknown): boolean {
-  if (v === null || v === undefined) return false;
-  if (typeof v === "string") return v.trim().length > 0;
-  if (typeof v === "number") return !Number.isNaN(v);
-  if (typeof v === "boolean") return v;
-  if (Array.isArray(v)) return v.length > 0;
-  if (typeof v === "object") {
-    const o = v as Record<string, unknown>;
-    if ("url" in o) return Boolean(o.url);
-    return Object.keys(o).length > 0;
-  }
-  return false;
-}
+import { hasFieldValue } from "@/lib/formCompleteness";
 
 /**
  * Calculates form completeness (0-100) driven entirely by the active field

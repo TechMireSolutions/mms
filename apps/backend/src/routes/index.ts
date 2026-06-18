@@ -7,6 +7,7 @@ import healthRoutes from './health.js';
 import platformAuthRoutes from './platformAuth.js';
 import platformWorkspaceRoutes from './platformWorkspaces.js';
 import studentsRoutes from './students.js';
+import teachersRoutes from './teachers.js';
 import uploadRoutes from './uploads.js';
 import workspaceRoutes from './workspace.js';
 
@@ -21,4 +22,5 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(contactRoutes, { prefix: '/api/contacts' });
   await app.register(emailRoutes, { prefix: '/api/email' });
   await app.register(studentsRoutes, { prefix: '/api/students' });
+  await app.register(teachersRoutes, { prefix: '/api/teachers' });
 }

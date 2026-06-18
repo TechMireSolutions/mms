@@ -1,8 +1,12 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Save, CheckCircle2, Users } from "lucide-react";
-import { CLASSES, STUDENTS, Exam, ExamResult } from '@/lib/data/examinationData';
+import { CLASSES, Exam, ExamResult } from '@/lib/data/examinationData';
+import { useStudentsCollection } from "@/hooks/useStudents";
+import { useLiveCollection } from "@/hooks/useLiveCollection";
+import type { Enrollment } from '@/lib/data/enrollmentData';
 import { getGrade } from "./gradeUtils";
+import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
 
 interface EnterMarksProps {
   exams: Exam[];
@@ -26,10 +30,28 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
 
   const exam = exams.find((e) => e.id === selectedExam);
 
+  const allStudents = useStudentsCollection();
+  const enrollments = useLiveCollection<Enrollment>("enrollments");
+
   const students = useMemo(() => {
     if (!exam) return [];
-    return STUDENTS.filter((s) => exam.classIds.includes(s.classId));
-  }, [exam]);
+    const classIds = new Set(exam.classIds);
+    const enrollmentByStudent = new Map(
+      enrollments
+        .filter((e) => classIds.has(e.classId))
+        .map((e) => [String(e.studentId), e]),
+    );
+    return allStudents
+      .filter((s) => enrollmentByStudent.has(String(s.id)))
+      .map((s) => {
+        const enrollment = enrollmentByStudent.get(String(s.id))!;
+        return {
+          ...s,
+          classId: enrollment.classId,
+          rollNo: s.grNumber || "",
+        };
+      });
+  }, [exam, allStudents, enrollments]);
 
   // Pre-fill from existing results using useEffect to avoid state-setting side effects in render/memo
   React.useEffect(() => {
@@ -130,7 +152,7 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
                           value={val}
                           aria-label={`Marks for ${s.name}`}
                           onChange={(e) => { setMarks((m) => ({ ...m, [s.id]: e.target.value })); setSaved(false); }}
-                          className="w-20 px-2 py-1.5 rounded-lg border border-border text-sm text-center font-semibold bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className={FORM_INPUT_COMPACT}
                           placeholder="—"
                         />
                         <span className="text-[11px] text-muted-foreground" aria-hidden="true">/ {exam.totalMarks}</span>

@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { DISTRIBUTION_TYPES, WakalaType, ObligationDistribution, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
-import ObligationModal from "./ObligationModal";
-import { FORM_LABEL, FORM_ERROR } from "@/components/ui/formStyles";
+import FormModal from "@/components/ui/FormModal";
+import useTranslation from "@/hooks/useTranslation";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
 
 export type DistributionType = "Income" | "Liability";
 
@@ -184,38 +185,42 @@ export default function WakalaTypeManager({ wakalaTypes, distributions, obligati
         })}
       </section>
 
-      {/* Wakala modal */}
-      {modal && (modal.mode === "add" || modal.mode === "edit") && (
-        <ObligationModal title={modal.mode === "add" ? "Add Wakala Type" : "Edit Wakala Type"} onClose={() => setModal(null)}>
-          <WakalaForm initial={modal.data} reps={reps} mujtahids={mujtahids} obligationTypes={obligationTypes}
-            onSave={handleSaveWakala} onCancel={() => setModal(null)} />
-        </ObligationModal>
-      )}
+      {modal && (modal.mode === "add" || modal.mode === "edit") ? (
+        <WakalaFormModal
+          title={modal.mode === "add" ? "Add Wakala Type" : "Edit Wakala Type"}
+          initial={modal.data}
+          reps={reps}
+          mujtahids={mujtahids}
+          obligationTypes={obligationTypes}
+          onSave={handleSaveWakala}
+          onClose={() => setModal(null)}
+        />
+      ) : null}
 
-      {/* Distribution modal */}
-      {modal && (modal.mode === "add-dist" || modal.mode === "edit-dist") && (
-        <ObligationModal title={modal.distMode === "add" ? "Add Distribution" : "Edit Distribution"} onClose={() => setModal(null)}>
-          <DistributionForm initial={modal.data} onSave={handleSaveDist} onCancel={() => setModal(null)} />
-        </ObligationModal>
-      )}
+      {modal && (modal.mode === "add-dist" || modal.mode === "edit-dist") ? (
+        <DistributionFormModal
+          title={modal.distMode === "add" ? "Add Distribution" : "Edit Distribution"}
+          initial={modal.data}
+          onSave={handleSaveDist}
+          onClose={() => setModal(null)}
+        />
+      ) : null}
     </div>
   );
 }
 
-interface WakalaFormProps {
+interface WakalaFormModalProps {
+  title: string;
   initial: Partial<WakalaType>;
   reps: MujtahidRep[];
   mujtahids: Mujtahid[];
   obligationTypes: ObligationType[];
   onSave: (form: Partial<WakalaType>) => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-/**
- * WakalaForm component.
- * @param {WakalaFormProps} props
- */
-function WakalaForm({ initial, reps, mujtahids, obligationTypes, onSave, onCancel }: WakalaFormProps) {
+function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onSave, onClose, title }: WakalaFormModalProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ ...initial });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -231,107 +236,137 @@ function WakalaForm({ initial, reps, mujtahids, obligationTypes, onSave, onCance
     return e;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = (): void => {
     const e2 = validate();
-    if (Object.keys(e2).length) { setErrors(e2); return; }
+    if (Object.keys(e2).length) {
+      setErrors(e2);
+      return;
+    }
     onSave(form);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="wakala-rep" className={FORM_LABEL}>Mujtahid Representative *</label>
-        <select id="wakala-rep" value={form.mujtahid_representative_id} onChange={(e) => setForm({ ...form, mujtahid_representative_id: e.target.value })}
-          className="FORM_INPUT"
-          aria-invalid={!!errors.rep}>
-          <option value="">Select representative…</option>
-          {reps.map((r) => {
-            const m = getMujtahidForRep(r.id);
-            return <option key={r.id} value={r.id}>{r.name} ({m?.name || "?"})</option>;
-          })}
-        </select>
-        {errors.rep && <p className={FORM_ERROR} role="alert">{errors.rep}</p>}
+    <FormModal
+      open
+      onClose={onClose}
+      title={title}
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("common.save")}
+      onSave={handleSave}
+      error={Object.values(errors)}
+    >
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="wakala-rep" className={FORM_LABEL}>Mujtahid Representative *</label>
+          <select
+            id="wakala-rep"
+            value={form.mujtahid_representative_id}
+            onChange={(e) => setForm({ ...form, mujtahid_representative_id: e.target.value })}
+            className={FORM_SELECT}
+            aria-invalid={!!errors.rep}
+          >
+            <option value="">Select representative…</option>
+            {reps.map((r) => {
+              const m = getMujtahidForRep(r.id);
+              return <option key={r.id} value={r.id}>{r.name} ({m?.name || "?"})</option>;
+            })}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="wakala-type" className={FORM_LABEL}>Obligation Type *</label>
+          <select
+            id="wakala-type"
+            value={form.obligation_type_id}
+            onChange={(e) => setForm({ ...form, obligation_type_id: e.target.value })}
+            className={FORM_SELECT}
+            aria-invalid={!!errors.obType}
+          >
+            <option value="">Select type…</option>
+            {obligationTypes.map((ot) => <option key={ot.id} value={ot.id}>{ot.name}</option>)}
+          </select>
+        </div>
       </div>
-      <div>
-        <label htmlFor="wakala-type" className={FORM_LABEL}>Obligation Type *</label>
-        <select id="wakala-type" value={form.obligation_type_id} onChange={(e) => setForm({ ...form, obligation_type_id: e.target.value })}
-          className="FORM_INPUT"
-          aria-invalid={!!errors.obType}>
-          <option value="">Select type…</option>
-          {obligationTypes.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
-        {errors.obType && <p className={FORM_ERROR} role="alert">{errors.obType}</p>}
-      </div>
-      <footer className="flex justify-end gap-2 pt-2 border-t border-border mt-4">
-        <button type="button" onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
-        <button type="submit"
-          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">Save</button>
-      </footer>
-    </form>
+    </FormModal>
   );
 }
 
-interface DistributionFormProps {
+interface DistributionFormModalProps {
+  title: string;
   initial: Partial<ObligationDistribution>;
   onSave: (form: Partial<ObligationDistribution>) => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-/**
- * DistributionForm component.
- * @param {DistributionFormProps} props
- */
-function DistributionForm({ initial, onSave, onCancel }: DistributionFormProps) {
+function DistributionFormModal({ initial, onSave, onClose, title }: DistributionFormModalProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ ...initial });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = (): Record<string, string> => {
     const e: Record<string, string> = {};
     if (!form.name?.trim()) e.name = "Name is required";
-    if (!form.percentage || isNaN(Number(form.percentage)) || Number(form.percentage) <= 0 || Number(form.percentage) > 100)
+    if (!form.percentage || isNaN(Number(form.percentage)) || Number(form.percentage) <= 0 || Number(form.percentage) > 100) {
       e.pct = "Enter a valid percentage (1–100)";
+    }
     return e;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = (): void => {
     const e2 = validate();
-    if (Object.keys(e2).length) { setErrors(e2); return; }
+    if (Object.keys(e2).length) {
+      setErrors(e2);
+      return;
+    }
     onSave({ ...form, percentage: Number(form.percentage) });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="dist-name" className={FORM_LABEL}>Name *</label>
-        <input id="dist-name" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="FORM_INPUT" 
-          aria-invalid={!!errors.name} />
-        {errors.name && <p className={FORM_ERROR} role="alert">{errors.name}</p>}
+    <FormModal
+      open
+      onClose={onClose}
+      title={title}
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("common.save")}
+      onSave={handleSave}
+      error={Object.values(errors)}
+    >
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="dist-name" className={FORM_LABEL}>Name *</label>
+          <input
+            id="dist-name"
+            value={form.name || ""}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className={FORM_INPUT}
+            aria-invalid={!!errors.name}
+          />
+        </div>
+        <div>
+          <label htmlFor="dist-type" className={FORM_LABEL}>Type *</label>
+          <select
+            id="dist-type"
+            value={form.type}
+            onChange={(e) => setForm({ ...form, type: e.target.value as DistributionType })}
+            className={FORM_SELECT}
+          >
+            {DISTRIBUTION_TYPES.map((dt) => <option key={dt} value={dt}>{dt}</option>)}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="dist-pct" className={FORM_LABEL}>Percentage (%) *</label>
+          <input
+            id="dist-pct"
+            type="number"
+            min="0.01"
+            max="100"
+            step="0.01"
+            value={form.percentage || ""}
+            onChange={(e) => setForm({ ...form, percentage: parseFloat(e.target.value) })}
+            className={FORM_INPUT}
+            aria-invalid={!!errors.pct}
+          />
+        </div>
       </div>
-      <div>
-        <label htmlFor="dist-type" className={FORM_LABEL}>Type *</label>
-        <select id="dist-type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as DistributionType })}
-          className="FORM_INPUT">
-          {DISTRIBUTION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="dist-pct" className={FORM_LABEL}>Percentage (%) *</label>
-        <input id="dist-pct" type="number" min="0.01" max="100" step="0.01" value={form.percentage || ""}
-          onChange={(e) => setForm({ ...form, percentage: parseFloat(e.target.value) })}
-          className="FORM_INPUT" 
-          aria-invalid={!!errors.pct} />
-        {errors.pct && <p className={FORM_ERROR} role="alert">{errors.pct}</p>}
-      </div>
-      <footer className="flex justify-end gap-2 pt-2 border-t border-border mt-4">
-        <button type="button" onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
-        <button type="submit"
-          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">Save</button>
-      </footer>
-    </form>
+    </FormModal>
   );
 }

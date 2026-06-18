@@ -1,0 +1,266 @@
+import React, { useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Search, Plus, User, Mail, Phone, Camera } from 'lucide-react';
+import type { Contact } from '@mms/shared';
+import { cn } from '@/lib/utils';
+import { uploadUserImage } from '@/lib/imageUpload';
+import { genderAvatarGradient, genderBadgeClass } from '@/lib/semanticTone';
+import ContactCreateModal, {
+  type ContactCreateDefaults,
+} from '@/components/contacts/ContactCreateModal';
+import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+
+export interface ContactPickerProps {
+  label: string;
+  value: string | number | null;
+  onChange: (id: string | number | null) => void;
+  contacts?: Contact[];
+  excludeIds?: (string | number | null)[];
+  /** @deprecated Use built-in ContactCreateModal (default). Custom handlers are no longer needed. */
+  onCreateContact?: (query: string) => void;
+  /** Show "Create contact" in the search dropdown. Default true. */
+  allowCreate?: boolean;
+  /** Prefill / lock fields when opening the shared contact form (e.g. father = male). */
+  createDefaults?: ContactCreateDefaults;
+  onAvatarChange?: (avatarUrl: string) => void;
+  searchPlaceholder?: string;
+  emptyTitle?: string;
+  emptyHint?: string;
+  createLabel?: string;
+  createWithQueryLabel?: (query: string) => string;
+}
+
+export default function ContactPicker({
+  label,
+  value,
+  onChange,
+  contacts = [],
+  excludeIds = [],
+  onCreateContact,
+  allowCreate = true,
+  createDefaults,
+  onAvatarChange,
+  searchPlaceholder,
+  emptyTitle = 'No contacts found',
+  emptyHint = 'Try adjusting your search terms or create a new contact below.',
+  createLabel = 'Create New Contact',
+  createWithQueryLabel,
+}: ContactPickerProps): React.JSX.Element {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createQuery, setCreateQuery] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const normalizedExcludeIds = useMemo(() => excludeIds.map(String), [excludeIds]);
+  const canCreate = allowCreate && !onCreateContact;
+
+  const matches = contacts.filter((c) => {
+    const cPhone = (c.phone as string | undefined) || c.phones?.[0]?.number || '';
+    return (
+      !normalizedExcludeIds.includes(String(c.id))
+      && (c.name.toLowerCase().includes(query.toLowerCase()) || cPhone.includes(query))
+    );
+  }).slice(0, 6);
+
+  const selected = contacts.find((c) => String(c.id) === String(value));
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const url = await uploadUserImage(file, 'avatar');
+      onAvatarChange?.(url);
+    } catch {
+      // ignore
+    }
+    e.target.value = '';
+  };
+
+  const openCreateFlow = (searchText: string): void => {
+    if (onCreateContact) {
+      onCreateContact(searchText);
+      return;
+    }
+    setCreateQuery(searchText);
+    setCreateOpen(true);
+  };
+
+  if (selected) {
+    const genderBadgeColor = genderBadgeClass(selected.gender ?? '');
+    const initials = selected.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+    const avatarGradient = genderAvatarGradient(selected.gender ?? '');
+    const selectedPhone = (selected.phone as string | undefined) || selected.phones?.[0]?.number;
+    const selectedEmail = (selected.email as string | undefined) || selected.emails?.[0]?.address;
+
+    return (
+      <div className="relative">
+        <span className={FORM_LABEL}>{label}</span>
+        <div className="group relative flex items-center gap-3.5 p-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/[0.01] to-primary/[0.04] dark:from-primary/[0.02] dark:to-primary/[0.06] shadow-sm hover:shadow-md transition-all duration-200">
+          <div
+            onClick={() => onAvatarChange && fileInputRef.current?.click()}
+            className={cn(
+              'w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 bg-muted border border-border flex items-center justify-center shadow-sm relative',
+              onAvatarChange && 'cursor-pointer group/avatar',
+            )}
+          >
+            {selected.avatar ? (
+              <img src={selected.avatar} alt={selected.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className={`w-full h-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white font-bold text-sm`}>
+                {initials}
+              </div>
+            )}
+            {onAvatarChange && (
+              <div className="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity duration-150">
+                <Camera className="w-4 h-4 text-white" />
+              </div>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+              <p className="text-[13px] font-bold text-foreground truncate">{selected.name}</p>
+              {selected.gender && (
+                <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full capitalize ${genderBadgeColor}`}>
+                  {selected.gender}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+              {selectedPhone && (
+                <span className="flex items-center gap-1">
+                  <Phone className="w-3 h-3 text-muted-foreground/60" />
+                  {selectedPhone}
+                </span>
+              )}
+              {selectedEmail && (
+                <span className="flex items-center gap-1">
+                  <Mail className="w-3 h-3 text-muted-foreground/60" />
+                  {selectedEmail}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors focus:outline-none focus:ring-2 focus:ring-destructive/20"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <span className={FORM_LABEL}>{label}</span>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/75 pointer-events-none" />
+        <input
+          className={cn(FORM_INPUT, 'pl-9.5 pr-8.5')}
+          placeholder={searchPlaceholder ?? `Search ${label.toLowerCase()}…`}
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 200)}
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-md hover:bg-muted"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+        <AnimatePresence>
+          {open && (matches.length > 0 || canCreate || onCreateContact) && (
+            <motion.div
+              initial={{ opacity: 0, y: 8, scale: 0.99 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.99 }}
+              transition={{ duration: 0.15 }}
+              className="absolute z-20 left-0 right-0 top-full mt-1.5 bg-card border border-border rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-border/60"
+            >
+              {matches.length === 0 && (
+                <div className="px-4.5 py-4 text-xs text-muted-foreground flex flex-col items-center justify-center gap-1.5 text-center bg-muted/5">
+                  <User className="w-5 h-5 text-muted-foreground/45" />
+                  <p className="font-semibold text-foreground/80">{emptyTitle}</p>
+                  <p className="text-[10px] text-muted-foreground">{emptyHint}</p>
+                </div>
+              )}
+              {matches.map((c) => {
+                const cInitials = c.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+                const cGradient = genderAvatarGradient(c.gender ?? '');
+                const cPhone = (c.phone as string | undefined) || c.phones?.[0]?.number;
+                const cCity = c.city as string | undefined;
+                const cTag = c.tag as string | undefined;
+
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onMouseDown={() => { onChange(c.id); setQuery(''); setOpen(false); }}
+                    className="w-full flex items-center gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-left focus:outline-none"
+                  >
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${cGradient} flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white shadow-sm`}>
+                      {cInitials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-foreground truncate">{c.name}</p>
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 truncate mt-0.5">
+                        {cPhone || '—'}
+                        {cCity && <span>· {cCity}</span>}
+                        {cTag && <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.2 rounded border border-primary/10 capitalize font-medium">{cTag}</span>}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+              {(canCreate || onCreateContact) && (
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    openCreateFlow(query);
+                    setQuery('');
+                    setOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-3 hover:bg-primary/5 hover:text-primary text-primary font-semibold text-xs text-left transition-colors border-t border-border"
+                >
+                  <Plus className="w-4 h-4 text-primary" />
+                  {query
+                    ? (createWithQueryLabel?.(query) ?? `Create contact "${query}"`)
+                    : createLabel}
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {canCreate ? (
+        <ContactCreateModal
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          allContacts={contacts}
+          initialName={createQuery}
+          createDefaults={createDefaults}
+          onCreated={(contact) => {
+            onChange(contact.id);
+            setCreateOpen(false);
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}

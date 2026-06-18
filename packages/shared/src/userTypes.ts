@@ -44,8 +44,11 @@ export interface WorkspaceRole {
 /** Local workspace user record (display layer; auth JWT uses singular `role`). */
 export interface WorkspaceUser {
   id: string;
+  contactId?: string | number;
   name: string;
   email: string;
+  /** Auth sign-in identifier when user has credentials — may differ from contact email. */
+  loginEmail?: string;
   phone: string;
   role: string;
   status: UserStatus;
@@ -84,7 +87,8 @@ export const ACTIVITY_ACTION_VALUES: readonly ActivityAction[] = [
 export interface ActivityLog {
   id: string;
   userId: string;
-  userName: string;
+  /** Hydrated from `users` on read; not persisted. */
+  userName?: string;
   action: ActivityAction;
   module: string;
   detail: string;
@@ -95,6 +99,7 @@ export interface ActivityLog {
 export const RBAC_MODULE_REGISTRY: readonly RbacModuleDef[] = [
   { id: 'dashboard', labelKey: 'nav.dashboard' },
   { id: 'students', labelKey: 'nav.students' },
+  { id: 'teachers', labelKey: 'nav.teachers' },
   { id: 'enrollments', labelKey: 'nav.enrollments' },
   { id: 'sessions', labelKey: 'nav.sessions' },
   { id: 'attendance', labelKey: 'nav.attendance' },
@@ -170,7 +175,7 @@ export const RBAC_PERMISSION_NAV: readonly RbacPermissionNavEntry[] = [
   {
     type: 'group',
     labelKey: 'nav.academics',
-    rbacIds: ['students', 'sessions', 'attendance', 'enrollments', 'hasanat', 'examinations', 'questionBank'],
+    rbacIds: ['students', 'teachers', 'sessions', 'attendance', 'enrollments', 'hasanat', 'examinations', 'questionBank'],
   },
   { type: 'module', rbacId: 'finance' },
   { type: 'module', rbacId: 'users' },
@@ -365,8 +370,10 @@ export function normalizeWorkspaceUser(
 
   return {
     id: raw.id ?? '',
+    contactId: raw.contactId,
     name,
     email: raw.email ?? '',
+    loginEmail: typeof raw.loginEmail === 'string' ? raw.loginEmail : undefined,
     phone: raw.phone ?? '',
     role,
     status: raw.status ?? 'active',

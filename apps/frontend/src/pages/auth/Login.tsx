@@ -14,15 +14,11 @@ import {
 import { requiresTwoFactor } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
 import { apexUrl } from '@/lib/config/tenantConfig';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { FORM_ERROR, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 const REMEMBER_EMAIL_KEY = "mms_login_remember_email";
-
-const fieldInputClass =
-  "h-11 border-border/70 bg-background shadow-sm transition-shadow focus-visible:ring-2 focus-visible:ring-primary/20";
 
 interface LoginErrors {
   email?: string;
@@ -181,15 +177,15 @@ export default function Login(): React.ReactElement {
 
         <fieldset disabled={isBusy} className="m-0 min-w-0 space-y-4 border-0 p-0">
           <div className="space-y-1.5">
-            <Label htmlFor={emailFieldId} className="text-foreground/90">
+            <label htmlFor={emailFieldId} className={FORM_LABEL}>
               {t("auth.emailAddress")}
-            </Label>
+            </label>
             <div className="relative">
               <Mail
                 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
                 aria-hidden
               />
-              <Input
+              <input
                 id={emailFieldId}
                 type="email"
                 name="email"
@@ -206,29 +202,28 @@ export default function Login(): React.ReactElement {
                 aria-invalid={Boolean(fieldErrors.email)}
                 aria-describedby={fieldErrors.email ? `${emailFieldId}-error` : undefined}
                 className={cn(
-                  fieldInputClass,
-                  "pl-10",
-                  fieldErrors.email && "border-destructive focus-visible:ring-destructive/25"
+                  FORM_INPUT_ICON,
+                  fieldErrors.email && "border-destructive focus:ring-destructive/25",
                 )}
               />
             </div>
-            {fieldErrors.email && (
-              <p id={`${emailFieldId}-error`} className="text-xs text-destructive" role="alert">
+            {fieldErrors.email ? (
+              <p id={`${emailFieldId}-error`} className={FORM_ERROR} role="alert">
                 {fieldErrors.email}
               </p>
-            )}
+            ) : null}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor={passwordFieldId} className="text-foreground/90">
+            <label htmlFor={passwordFieldId} className={FORM_LABEL}>
               {t("auth.password")}
-            </Label>
+            </label>
             <div className="relative">
               <Lock
                 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
                 aria-hidden
               />
-              <Input
+              <input
                 id={passwordFieldId}
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -243,9 +238,9 @@ export default function Login(): React.ReactElement {
                 aria-invalid={Boolean(fieldErrors.password)}
                 aria-describedby={fieldErrors.password ? `${passwordFieldId}-error` : undefined}
                 className={cn(
-                  fieldInputClass,
-                  "pl-10 pr-11",
-                  fieldErrors.password && "border-destructive focus-visible:ring-destructive/25"
+                  FORM_INPUT_ICON,
+                  "pr-11",
+                  fieldErrors.password && "border-destructive focus:ring-destructive/25",
                 )}
               />
               <button
@@ -258,11 +253,11 @@ export default function Login(): React.ReactElement {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {fieldErrors.password && (
-              <p id={`${passwordFieldId}-error`} className="text-xs text-destructive" role="alert">
+            {fieldErrors.password ? (
+              <p id={`${passwordFieldId}-error`} className={FORM_ERROR} role="alert">
                 {fieldErrors.password}
               </p>
-            )}
+            ) : null}
             <div className="flex justify-end pt-0.5">
               <Link
                 to={ROUTES.forgotPassword}

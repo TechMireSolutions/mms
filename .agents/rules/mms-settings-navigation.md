@@ -14,7 +14,7 @@ Authoritative split between **app-wide settings** (`/settings`) and **per-module
 Dashboard
 Contacts
 Academics ▾
-  Students · Sessions · Attendance · Enrollments · Hasanat Cards · Examinations
+  Students · Teachers · Sessions · Attendance · Enrollments · Hasanat Cards · Examinations
 Finance
 Accounting
 Obligations   (moduleId: finance — not a separate toggle)
@@ -114,9 +114,9 @@ When renaming or regrouping nav items, update `SYSTEM_MODULE_NAV` in the same ch
 
 | Data | Storage key | Where edited |
 |------|-------------|--------------|
-| App locale, security | `global_settings` | `/settings/global` |
-| Display mode, brand colours, footer | `global_settings.theme` + `branding` | `/settings/theme` |
-| Module enable/disable | `global_settings.enabledModules` | `/settings/modules` |
+| App locale, security | `global_settings` | `/settings` → Global tab |
+| Display mode, brand colours, footer | `global_settings.theme` + `branding` | `/settings` → Theme tab |
+| Module enable/disable | `global_settings.enabledModules` | `/settings` → Modules tab |
 | Module fields/prefs | `{module}_settings`, field registries | Module → Configuration |
 
 `enabledModules` changes save via `saveObject("global_settings", …)` in `SystemModulesSettings`.

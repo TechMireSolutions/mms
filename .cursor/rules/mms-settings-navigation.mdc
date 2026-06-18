@@ -16,7 +16,7 @@ Authoritative split between **app-wide settings** (`/settings`) and **per-module
 Dashboard
 Contacts
 Academics ▾
-  Students · Sessions · Attendance · Enrollments · Hasanat Cards · Examinations
+  Students · Teachers · Sessions · Attendance · Enrollments · Hasanat Cards · Examinations
 Finance
 Accounting
 Obligations   (moduleId: finance — not a separate toggle)

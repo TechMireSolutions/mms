@@ -56,7 +56,7 @@ export default async function studentsRoutes(
     }
   });
 
-  fastify.put<{ Params: { id: string } }>('/:id', async (request, reply) => {
+  fastify.put('/:id', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
     const params = parseRequest(resourceIdParamsSchema, request.params);

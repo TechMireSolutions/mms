@@ -17,8 +17,7 @@ import {
 } from "@mms/shared";
 import PlatformPageShell, { PlatformLogoMark } from "@/components/platform/PlatformPageShell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FORM_INPUT, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import useTranslation from "@/hooks/useTranslation";
 import { apiJson, ApiError } from "@/lib/apiClient";
 import { mapPlatformAuthError } from "@/lib/platformAuthErrors";
@@ -191,15 +190,15 @@ export default function PlatformAccount(): React.JSX.Element {
                   <span>{nameError}</span>
                 </div>
               ) : null}
-              <div className="space-y-2">
-                <Label htmlFor="platform-profile-name">{t("platform.profileName")}</Label>
-                <Input
+              <div className="space-y-1.5">
+                <label htmlFor="platform-profile-name" className={FORM_LABEL}>{t("platform.profileName")}</label>
+                <input
                   id="platform-profile-name"
                   autoComplete="name"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-11"
+                  className={FORM_INPUT}
                 />
               </div>
               <Button type="submit" className="w-full" disabled={savingName || name === platformUser?.name}>
@@ -222,26 +221,26 @@ export default function PlatformAccount(): React.JSX.Element {
                   <span>{passwordError}</span>
                 </div>
               ) : null}
-              <div className="space-y-2">
-                <Label htmlFor="platform-current-password">{t("platform.profileCurrentPassword")}</Label>
+              <div className="space-y-1.5">
+                <label htmlFor="platform-current-password" className={FORM_LABEL}>{t("platform.profileCurrentPassword")}</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                  <Input
+                  <input
                     id="platform-current-password"
                     type="password"
                     autoComplete="current-password"
                     required
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="pl-10 h-11"
+                    className={FORM_INPUT_ICON}
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="platform-new-password">{t("platform.profileNewPassword")}</Label>
+              <div className="space-y-1.5">
+                <label htmlFor="platform-new-password" className={FORM_LABEL}>{t("platform.profileNewPassword")}</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                  <Input
+                  <input
                     id="platform-new-password"
                     type="password"
                     autoComplete="new-password"
@@ -249,15 +248,15 @@ export default function PlatformAccount(): React.JSX.Element {
                     minLength={PLATFORM_MIN_PASSWORD_LENGTH}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="pl-10 h-11"
+                    className={FORM_INPUT_ICON}
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="platform-confirm-new-password">{t("platform.profileConfirmPassword")}</Label>
+              <div className="space-y-1.5">
+                <label htmlFor="platform-confirm-new-password" className={FORM_LABEL}>{t("platform.profileConfirmPassword")}</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                  <Input
+                  <input
                     id="platform-confirm-new-password"
                     type="password"
                     autoComplete="new-password"
@@ -265,7 +264,7 @@ export default function PlatformAccount(): React.JSX.Element {
                     minLength={PLATFORM_MIN_PASSWORD_LENGTH}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 h-11"
+                    className={FORM_INPUT_ICON}
                   />
                 </div>
               </div>

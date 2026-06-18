@@ -114,7 +114,7 @@ export default function Students() {
     return students.filter((s) => {
       const q = studentSearch.toLowerCase();
       return (
-        (!q || s.name.toLowerCase().includes(q) || s.cnic?.includes(q) || s.fatherName?.toLowerCase().includes(q)) &&
+        (!q || s.name.toLowerCase().includes(q) || s.cnic?.includes(q) || s.fatherName?.toLowerCase().includes(q) || s.guardianName?.toLowerCase().includes(q)) &&
         (studentFilterStatus.length === 0 || studentFilterStatus.includes(s.status)) &&
         (!studentFilterGender || s.gender === studentFilterGender)
       );

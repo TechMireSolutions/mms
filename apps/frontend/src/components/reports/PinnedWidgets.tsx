@@ -26,6 +26,7 @@ import {
   COLOR_MAP,
   ICONS_LIST,
 } from "./pinnedWidgets/types";
+import { FORM_INPUT_BUILDER, FORM_LABEL } from "@/components/ui/formStyles";
 import {
   getWidgetCollections,
   getFilteredRecords,
@@ -1756,23 +1757,23 @@ export function WidgetBuilder({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Title field */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">Widget Label Title</label>
+              <label className={FORM_LABEL}>Widget Label Title</label>
               <input
                 type="text"
                 value={builderTitle}
                 onChange={(e) => setBuilderTitle(e.target.value)}
                 placeholder="e.g. Total Active Leads"
-                className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                className={FORM_INPUT_BUILDER}
               />
             </div>
 
             {widgetType === "card" && mode === "dashboard" && (
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider block">Target Dashboard Role</label>
+                <label className={`${FORM_LABEL} block`}>Target Dashboard Role</label>
                 <select
                   value={builderRole}
                   onChange={(e) => setBuilderRole(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold font-sans"
+                  className={`${FORM_INPUT_BUILDER} font-sans`}
                 >
                   <option value="admin" className="bg-background text-foreground">Admin Dashboard</option>
                   <option value="teacher" className="bg-background text-foreground">Teacher Dashboard</option>
@@ -1785,11 +1786,11 @@ export function WidgetBuilder({
               <>
                 {/* Data collection select */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">Target Data Collection</label>
+                  <label className={FORM_LABEL}>Target Data Collection</label>
                   <select
                     value={builderCollection}
                     onChange={(e) => setBuilderCollection(e.target.value as CustomWidget["collection"])}
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                    className={FORM_INPUT_BUILDER}
                   >
                     {COLLECTION_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value} className="bg-background text-foreground">
@@ -1801,11 +1802,11 @@ export function WidgetBuilder({
 
                 {/* Operation type */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">Calculation Formula</label>
+                  <label className={FORM_LABEL}>Calculation Formula</label>
                   <select
                     value={builderOperation}
                     onChange={(e) => setBuilderOperation(e.target.value as CustomWidget["operation"])}
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                    className={FORM_INPUT_BUILDER}
                   >
                     <option value="count" className="bg-background text-foreground">Count (Total Items)</option>
                     <option value="percentage" className="bg-background text-foreground">Percentage Ratio (%)</option>
@@ -1816,14 +1817,14 @@ export function WidgetBuilder({
 
                 {/* Target fields for numeric values */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">
+                  <label className={FORM_LABEL}>
                     Target Field {["count", "percentage"].includes(builderOperation) && "(Deactivated)"}
                   </label>
                   <select
                     disabled={["count", "percentage"].includes(builderOperation)}
                     value={builderTargetField}
                     onChange={(e) => setBuilderTargetField(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                    className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
                   >
                     {METADATA_FIELDS[builderCollection].numericFields.length === 0 ? (
                       <option value="" className="bg-background text-foreground">No Numeric Fields Available</option>
@@ -1839,11 +1840,11 @@ export function WidgetBuilder({
 
                 {/* Filter fields options */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">Query Filter field (Optional)</label>
+                  <label className={FORM_LABEL}>Query Filter field (Optional)</label>
                   <select
                     value={builderFilterField}
                     onChange={(e) => setBuilderFilterField(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                    className={FORM_INPUT_BUILDER}
                   >
                     <option value="" className="bg-background text-foreground">-- No Filter (All Records) --</option>
                     {METADATA_FIELDS[builderCollection].fields.map((field) => (
@@ -1857,12 +1858,12 @@ export function WidgetBuilder({
                 {/* Query filter condition inputs */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">Operator</label>
+                    <label className={FORM_LABEL}>Operator</label>
                     <select
                       disabled={!builderFilterField}
                       value={builderFilterOperator}
                       onChange={(e) => setBuilderFilterOperator(e.target.value as CustomWidget["filterOperator"])}
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                      className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
                     >
                       <option value="equals" className="bg-background text-foreground">Equals</option>
                       <option value="contains" className="bg-background text-foreground">Contains</option>
@@ -1871,14 +1872,14 @@ export function WidgetBuilder({
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">Match Value</label>
+                    <label className={FORM_LABEL}>Match Value</label>
                     <input
                       type="text"
                       disabled={!builderFilterField}
                       value={builderFilterValue}
                       onChange={(e) => setBuilderFilterValue(e.target.value)}
                       placeholder="Value..."
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                      className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
                     />
                   </div>
                 </div>
@@ -1886,11 +1887,11 @@ export function WidgetBuilder({
                 {widgetType === "card" && (
                   <>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider block">Subtext Style</label>
+                      <label className={`${FORM_LABEL} block`}>Subtext Style</label>
                       <select
                         value={subTextType}
                         onChange={(e) => setSubTextType(e.target.value as "fixed" | "dynamic")}
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold font-sans"
+                        className={`${FORM_INPUT_BUILDER} font-sans`}
                       >
                         <option value="dynamic" className="bg-background text-foreground">Dynamic (Matched counts)</option>
                         <option value="fixed" className="bg-background text-foreground">Fixed custom subtitle text</option>
@@ -1899,19 +1900,19 @@ export function WidgetBuilder({
 
                     {subTextType === "fixed" && (
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider block">Fixed Custom Subtitle</label>
+                        <label className={`${FORM_LABEL} block`}>Fixed Custom Subtitle</label>
                         <input
                           type="text"
                           value={fixedSubText}
                           onChange={(e) => setFixedSubText(e.target.value)}
                           placeholder="e.g. Registered this semester"
-                          className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                          className={FORM_INPUT_BUILDER}
                         />
                       </div>
                     )}
 
                     <div className="space-y-1 col-span-1 sm:col-span-2 border-t border-border/40 pt-3">
-                      <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider block">
+                      <label className={`${FORM_LABEL} block`}>
                         Trend Percentage Source
                       </label>
                       <div className="grid grid-cols-2 gap-2 bg-card/20 border border-border/60 p-1 rounded-xl max-w-sm">
@@ -1983,11 +1984,11 @@ export function WidgetBuilder({
               <>
                 {/* Switch options fields */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">Switch Action Target</label>
+                  <label className={FORM_LABEL}>Switch Action Target</label>
                   <select
                     value={switchActionType}
                     onChange={(e) => setSwitchActionType(e.target.value as "app_setting" | "db_record")}
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                    className={FORM_INPUT_BUILDER}
                   >
                     <option value="app_setting" className="bg-background text-foreground">App Visibilities & Settings Toggle</option>
                     <option value="db_record" className="bg-background text-foreground">Specific Database Record Toggle</option>
@@ -1996,11 +1997,11 @@ export function WidgetBuilder({
 
                 {switchActionType === "app_setting" ? (
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">Select Control Parameter</label>
+                    <label className={FORM_LABEL}>Select Control Parameter</label>
                     <select
                       value={switchStateKey}
                       onChange={(e) => setSwitchStateKey(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                      className={FORM_INPUT_BUILDER}
                     >
                       <option value="section_enrollmentChart" className="bg-background text-foreground">Enrollment trends chart visibility</option>
                       <option value="section_revenueChart" className="bg-background text-foreground">Revenue chart visibility</option>
@@ -2014,14 +2015,14 @@ export function WidgetBuilder({
                 ) : (
                   <>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">Record Collection</label>
+                      <label className={FORM_LABEL}>Record Collection</label>
                       <select
                         value={switchCollection}
                         onChange={(e) => {
                           setSwitchCollection(e.target.value as CustomWidget["collection"]);
                           setSwitchRecordId("");
                         }}
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                        className={FORM_INPUT_BUILDER}
                       >
                         {COLLECTION_OPTIONS.map(opt => (
                           <option key={opt.value} value={opt.value} className="bg-background text-foreground">{opt.label}</option>
@@ -2030,11 +2031,11 @@ export function WidgetBuilder({
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">Select Target Record</label>
+                      <label className={FORM_LABEL}>Select Target Record</label>
                       <select
                         value={switchRecordId}
                         onChange={(e) => setSwitchRecordId(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                        className={FORM_INPUT_BUILDER}
                       >
                         {dbRecordsList.length === 0 ? (
                           <option value="" className="bg-background text-foreground">No records loaded</option>
@@ -2050,23 +2051,23 @@ export function WidgetBuilder({
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">ON Toggle label</label>
+                    <label className={FORM_LABEL}>ON Toggle label</label>
                     <input
                       type="text"
                       value={switchLabelOn}
                       onChange={(e) => setSwitchLabelOn(e.target.value)}
                       placeholder="e.g. Active"
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                      className={FORM_INPUT_BUILDER}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">OFF Toggle label</label>
+                    <label className={FORM_LABEL}>OFF Toggle label</label>
                     <input
                       type="text"
                       value={switchLabelOff}
                       onChange={(e) => setSwitchLabelOff(e.target.value)}
                       placeholder="e.g. Inactive"
-                      className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-card/40 backdrop-blur-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                      className={FORM_INPUT_BUILDER}
                     />
                   </div>
                 </div>
@@ -2130,7 +2131,7 @@ export function WidgetBuilder({
 
           {/* Theme Palette selecting color */}
           <div className="space-y-1.5 text-left font-sans">
-            <label className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider block">Default Theme Color</label>
+            <label className={`${FORM_LABEL} block`}>Default Theme Color</label>
             <div className="flex flex-wrap gap-2">
               {["emerald", "blue", "violet", "amber", "red"].map((colorName) => {
                 const isSelected = builderColor === colorName;

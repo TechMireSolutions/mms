@@ -25,6 +25,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import useTranslation from "@/hooks/useTranslation";
 import SyncStatusBadge from "./SyncStatusBadge";
 
 interface Notification {
@@ -52,6 +53,7 @@ export interface TopBarActionsProps {
  */
 export default function TopBarActions({ compact = false, className }: TopBarActionsProps): React.JSX.Element {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const initials = user?.name
     ? user.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()
@@ -146,9 +148,9 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link to={ROUTES.users}>
+            <Link to={ROUTES.profile}>
               <User className="mr-2 h-4 w-4" />
-              Profile
+              {t("account.title")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

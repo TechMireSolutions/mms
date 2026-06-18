@@ -10,16 +10,7 @@ import {
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { METADATA_FIELDS, type ReportCollection } from "./reportMetadata";
 
-const ALT_THEME_PALETTES: Record<string, string[]> = {
-  accessibleColorblind: ["#0072B2", "#E69F00", "#009E73", "#F0E442", "#D55E00", "#CC79A7", "#56B4E9"],
-  tolVibrant: ["#EE7733", "#0077BB", "#33BBEE", "#EE3377", "#CC3311", "#009988", "#BBBBBB"],
-  tolMuted: ["#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#CC6677", "#882255", "#AA4499"],
-  emeraldForest: ["#10b981", "#34d399", "#059669", "#047857", "#065f46"],
-  oceanBreeze: ["#3b82f6", "#60a5fa", "#2563eb", "#1d4ed8", "#1e40af"],
-  cosmicViolet: ["#8b5cf6", "#a78bfa", "#7c3aed", "#6d28d9", "#5b21b6"],
-  sunsetGlow: ["#f59e0b", "#fbbf24", "#d97706", "#b45309", "#92400e"],
-  cyberpunkNeon: ["#ec4899", "#f43f5e", "#d946ef", "#a855f7", "#e11d48"]
-};
+import { getStaticChartPaletteMap } from "@mms/shared";
 
 export interface VisualizerConfig {
   id: string;
@@ -47,7 +38,7 @@ export default function DynamicChartRenderer({ config, height = 200 }: DynamicCh
   const THEME_PALETTES: Record<string, string[]> = useMemo(
     () => ({
       brand: [...brandPalette.charts],
-      ...ALT_THEME_PALETTES,
+      ...getStaticChartPaletteMap(),
     }),
     [brandPalette],
   );

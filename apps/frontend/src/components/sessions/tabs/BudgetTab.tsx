@@ -39,7 +39,6 @@ function TransactionModal({ open, type, onClose, onSave }: TransactionModalProps
       onClose={onClose}
       title={type === "income" ? "Add Income" : "Add Expense"}
       icon={type === "income" ? TrendingUp : TrendingDown}
-      size="md"
       cancelLabel="Cancel"
       saveLabel="Add"
       onSave={() => onSave({ ...data, amount: +data.amount, id: `tx${Date.now()}` })}

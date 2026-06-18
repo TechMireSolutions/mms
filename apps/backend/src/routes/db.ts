@@ -158,52 +158,44 @@ export default async function dbRoutes(
 
   // Save/Overwrite a specific collection
   fastify.post('/collections/:name', async (request, reply) => {
-      const params = parseRequest(resourceNameParamsSchema, request.params);
-      if (!params.ok) return replyValidationError(reply, params.message);
-      const { name } = params.data;
-      const user = request.user as User;
-      if (!canWriteCollection(user, name)) {
-        return reply.status(403).send({
-          type: 'forbidden',
-          message: `You do not have permission to write collection "${name}"`
-        });
-      }
-      try {
-        const bodyParsed = parseRequest(collectionSaveBodySchema, request.body);
-        if (!bodyParsed.ok) return replyValidationError(reply, bodyParsed.message);
-        let data = normalizeCollectionSaveBody(bodyParsed.data);
-
-        if (!data) {
-          return reply.status(400).send({
-            type: 'validation_error',
-            message: 'Request body must be an array of documents'
-          });
-        }
-
-        if (name === 'contacts') {
-          data = data.map((item) => applyTitleCaseToContact(item as Record<string, unknown>));
-        }
-
-        await persistCollection(name, data);
-        if (AUDITED_COLLECTIONS.has(name)) {
-          await recordAudit({
-            userId: user.id,
-            userEmail: user.email,
-            action: 'collection.write',
-            entityType: 'collection',
-            entityId: name,
-            summary: `Wrote ${data.length} row(s)`,
-          });
-        }
-        return reply.send({ success: true });
-      } catch (error) {
-        return reply.status(500).send({
-          type: 'database_error',
-          message: `Failed to save collection "${name}"`
-        });
-      }
+    const params = parseRequest(resourceNameParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    const { name } = params.data;
+    const user = request.user as User;
+    if (!canWriteCollection(user, name)) {
+      return reply.status(403).send({
+        type: 'forbidden',
+        message: `You do not have permission to write collection "${name}"`,
+      });
     }
-  );
+    try {
+      const bodyParsed = parseRequest(collectionSaveBodySchema, request.body);
+      if (!bodyParsed.ok) return replyValidationError(reply, bodyParsed.message);
+      let data = normalizeCollectionSaveBody(bodyParsed.data);
+
+      if (name === 'contacts') {
+        data = data.map((item) => applyTitleCaseToContact(item as Record<string, unknown>));
+      }
+
+      await persistCollection(name, data);
+      if (AUDITED_COLLECTIONS.has(name)) {
+        await recordAudit({
+          userId: user.id,
+          userEmail: user.email,
+          action: 'collection.write',
+          entityType: 'collection',
+          entityId: name,
+          summary: `Wrote ${data.length} row(s)`,
+        });
+      }
+      return reply.send({ success: true });
+    } catch {
+      return reply.status(500).send({
+        type: 'database_error',
+        message: `Failed to save collection "${name}"`,
+      });
+    }
+  });
 
   // Get a specific object (KV)
   fastify.get('/objects/:key', async (request, reply) => {

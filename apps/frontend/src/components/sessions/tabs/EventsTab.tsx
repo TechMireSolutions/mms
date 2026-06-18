@@ -39,7 +39,6 @@ function EventModal({ open, event, onClose, onSave }: EventModalProps) {
       onClose={onClose}
       title={event ? "Edit Event" : "Add Event"}
       icon={Calendar}
-      size="md"
       cancelLabel="Cancel"
       saveLabel="Save"
       onSave={() => onSave({ ...data, id: event?.id || `ev${Date.now()}` } as SessionEvent)}

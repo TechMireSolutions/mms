@@ -3,10 +3,13 @@ import { z } from 'zod';
 
 const statusSchema = z.enum(USER_STATUS_VALUES);
 
+const contactIdSchema = z.union([
+  z.string().trim().min(1, 'users.addErrorContact'),
+  z.number(),
+]);
+
 export const editUserSchema = z.object({
-  name: z.string().trim().min(1, 'users.errorNameRequired'),
-  email: z.string().trim().min(1, 'users.errorEmailRequired').email('users.errorEmailRequired'),
-  phone: z.string(),
+  contactId: contactIdSchema,
   role: z.string().min(1, 'users.errorRoleRequired'),
   status: statusSchema,
   twoFactorEnabled: z.boolean(),
@@ -15,9 +18,7 @@ export const editUserSchema = z.object({
 export type EditUserFormValues = z.infer<typeof editUserSchema>;
 
 export const inviteUserSchema = z.object({
-  name: z.string().trim().min(1, 'users.errorNameEmailRequired'),
-  email: z.string().trim().min(1, 'users.errorNameEmailRequired').email('users.errorNameEmailRequired'),
-  phone: z.string(),
+  contactId: contactIdSchema,
   role: z.string().min(1, 'users.errorRoleRequired'),
   status: statusSchema,
   sendEmail: z.boolean(),

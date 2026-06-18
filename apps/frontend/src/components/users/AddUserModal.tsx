@@ -707,6 +707,7 @@ export default function AddUserModal({ onClose, onAdd, existingEmails = [] }: Ad
     const customFields = settings.customFields || [];
     const newUser: SystemUser = {
       id: `u${Date.now()}`,
+      contactId: form.contactId!,
       name: toTitleCase(form.name.trim()) as string,
       email: form.email.trim().toLowerCase(),
       phone: form.phone.trim(),
@@ -735,7 +736,7 @@ export default function AddUserModal({ onClose, onAdd, existingEmails = [] }: Ad
       title={t("users.addTitle")}
       subtitle={t("users.addSubtitle")}
       icon={UserPlus}
-      size="md"
+      size="lg"
       footer={
         success ? undefined : (
           <div className="flex w-full items-center justify-between gap-2">

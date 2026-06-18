@@ -30,7 +30,6 @@ function DiscountModal({ open, discount, onClose, onSave }: DiscountModalProps) 
       onClose={onClose}
       title={discount ? "Edit Discount" : "Add Discount"}
       icon={Tag}
-      size="md"
       cancelLabel="Cancel"
       saveLabel="Save"
       onSave={() => onSave({ ...data, id: discount?.id || `d${Date.now()}` } as Discount)}

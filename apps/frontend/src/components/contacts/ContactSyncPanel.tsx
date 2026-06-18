@@ -8,6 +8,7 @@ import {
 
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { normalizeToE164, parsePhoneNumber, Contact } from "@mms/shared";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 
 // ── vCard helpers ──────────────────────────────────────────────────────────────
@@ -378,21 +379,21 @@ function GoogleContactsPanel({ contacts, onImport }: GoogleContactsPanelProps): 
           <div className="space-y-3 p-3 rounded-xl bg-muted/30 border border-border">
             <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">{uiStrings.googleOauthCredentialsHeader}</h4>
             <div>
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1" htmlFor="clientId">{uiStrings.clientIdLabel}</label>
+              <label className={FORM_LABEL} htmlFor="clientId">{uiStrings.clientIdLabel}</label>
               <input
                 id="clientId"
-                className="w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className={FORM_INPUT}
                 value={form.clientId}
                 onChange={(e) => setForm((f) => ({ ...f, clientId: e.target.value }))}
                 placeholder="xxxx.apps.googleusercontent.com"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1" htmlFor="clientSecret">{uiStrings.clientSecretLabel}</label>
+              <label className={FORM_LABEL} htmlFor="clientSecret">{uiStrings.clientSecretLabel}</label>
               <input
                 id="clientSecret"
                 type="password"
-                className="w-full px-3 py-2 rounded-lg border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className={FORM_INPUT}
                 value={form.clientSecret}
                 onChange={(e) => setForm((f) => ({ ...f, clientSecret: e.target.value }))}
                 placeholder="GOCSPX-…"
@@ -441,12 +442,12 @@ function GoogleContactsPanel({ contacts, onImport }: GoogleContactsPanelProps): 
 
             {showAuthCode && (
               <div className="space-y-2 p-3 rounded-xl bg-info/10 border border-info/30 text-info">
-                <label className="text-xs font-semibold text-info block" htmlFor="authCode">
+                <label className={FORM_LABEL} htmlFor="authCode">
                   {uiStrings.pasteAuthCodeLabel}
                 </label>
                 <input
                   id="authCode"
-                  className="w-full px-3 py-2 rounded-lg border border-info/40 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-info/30"
+                  className={FORM_INPUT}
                   value={authCode}
                   onChange={(e) => setAuthCode(e.target.value)}
                   placeholder={uiStrings.pasteAuthCodePlaceholder}

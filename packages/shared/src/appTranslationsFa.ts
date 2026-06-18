@@ -8,6 +8,7 @@ export const APP_TRANSLATIONS_FA = {
   "nav.contacts": "مخاطبین",
   "nav.academics": "آموزش",
   "nav.students": "دانش‌آموزان",
+  "nav.teachers": "معلمان",
   "nav.sessions": "جلسات",
   "nav.attendance": "حضور و غیاب",
   "nav.enrollments": "ثبت‌نام",
@@ -38,6 +39,7 @@ export const APP_TRANSLATIONS_FA = {
 
   "common.save": "ذخیره",
   "common.cancel": "لغو",
+  "common.formProgress": "پیشرفت",
   "common.yes": "بله",
   "common.no": "خیر",
   "common.add": "افزودن",

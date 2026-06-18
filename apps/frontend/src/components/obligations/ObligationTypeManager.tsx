@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { DESIGNATED_FOR_OPTIONS, ObligationType } from '@/lib/data/obligationsData';
-import ObligationModal from "./ObligationModal";
-import { FORM_LABEL, FORM_ERROR } from "@/components/ui/formStyles";
+import FormModal from "@/components/ui/FormModal";
+import useTranslation from "@/hooks/useTranslation";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
 
 export type DesignatedFor = "Syed" | "Non-Syed" | "Both" | "None";
 
@@ -114,26 +115,27 @@ export default function ObligationTypeManager({ types, onChange }: ObligationTyp
         </table>
       </section>
 
-      {modal && (
-        <ObligationModal title={modal.mode === "add" ? "Add Obligation Type" : "Edit Obligation Type"} onClose={() => setModal(null)}>
-          <ObligationTypeForm initial={modal.data} onSave={handleSave} onCancel={() => setModal(null)} />
-        </ObligationModal>
-      )}
+      {modal ? (
+        <ObligationTypeFormModal
+          title={modal.mode === "add" ? "Add Obligation Type" : "Edit Obligation Type"}
+          initial={modal.data}
+          onSave={handleSave}
+          onClose={() => setModal(null)}
+        />
+      ) : null}
     </div>
   );
 }
 
-interface ObligationTypeFormProps {
+interface ObligationTypeFormModalProps {
+  title: string;
   initial: Partial<ObligationType>;
   onSave: (form: Partial<ObligationType>) => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-/**
- * ObligationTypeForm component.
- * @param {ObligationTypeFormProps} props
- */
-function ObligationTypeForm({ initial, onSave, onCancel }: ObligationTypeFormProps) {
+function ObligationTypeFormModal({ initial, onSave, onClose, title }: ObligationTypeFormModalProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ ...initial });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -143,44 +145,58 @@ function ObligationTypeForm({ initial, onSave, onCancel }: ObligationTypeFormPro
     return e;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = (): void => {
     const e2 = validate();
-    if (Object.keys(e2).length) { setErrors(e2); return; }
+    if (Object.keys(e2).length) {
+      setErrors(e2);
+      return;
+    }
     onSave(form);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="type-name" className={FORM_LABEL}>Name *</label>
-        <input id="type-name" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="FORM_INPUT" 
-          aria-invalid={!!errors.name} />
-        {errors.name && <p className={FORM_ERROR} role="alert">{errors.name}</p>}
+    <FormModal
+      open
+      onClose={onClose}
+      title={title}
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("common.save")}
+      onSave={handleSave}
+      error={Object.values(errors)}
+    >
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="type-name" className={FORM_LABEL}>Name *</label>
+          <input
+            id="type-name"
+            value={form.name || ""}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className={FORM_INPUT}
+            aria-invalid={!!errors.name}
+          />
+        </div>
+        <div>
+          <label htmlFor="type-designated" className={FORM_LABEL}>Designated For *</label>
+          <select
+            id="type-designated"
+            value={form.designated_for}
+            onChange={(e) => setForm({ ...form, designated_for: e.target.value as DesignatedFor })}
+            className={FORM_SELECT}
+          >
+            {DESIGNATED_FOR_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="qty"
+            checked={form.quantity_based}
+            onChange={(e) => setForm({ ...form, quantity_based: e.target.checked })}
+            className="rounded border-border text-primary focus:ring-primary/20"
+          />
+          <label htmlFor="qty" className="text-sm font-medium text-foreground cursor-pointer">Quantity Based</label>
+        </div>
       </div>
-      <div>
-        <label htmlFor="type-designated" className={FORM_LABEL}>Designated For *</label>
-        <select id="type-designated" value={form.designated_for} onChange={(e) => setForm({ ...form, designated_for: e.target.value as DesignatedFor })}
-          className="FORM_INPUT">
-          {DESIGNATED_FOR_OPTIONS.map((o) => <option key={o}>{o}</option>)}
-        </select>
-      </div>
-      <div className="flex items-center gap-3">
-        <input type="checkbox" id="qty" checked={form.quantity_based} onChange={(e) => setForm({ ...form, quantity_based: e.target.checked })}
-          className="rounded border-border text-primary focus:ring-primary/20" />
-        <label htmlFor="qty" className="text-sm font-medium text-foreground cursor-pointer">Quantity Based</label>
-      </div>
-      <footer className="flex justify-end gap-2 pt-2 border-t border-border mt-4">
-        <button type="button" onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">
-          Cancel
-        </button>
-        <button type="submit"
-          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-          Save
-        </button>
-      </footer>
-    </form>
+    </FormModal>
   );
 }

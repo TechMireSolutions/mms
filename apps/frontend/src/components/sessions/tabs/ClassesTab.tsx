@@ -1,7 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Edit2, Users, GraduationCap } from "lucide-react";
-import { TEACHERS, Session, Class } from '@/lib/data/sessionsData';
+import { Session, Class } from '@/lib/data/sessionsData';
+import type { Teacher, AppTranslationKey } from '@mms/shared';
+import useTranslation from '@/hooks/useTranslation';
+import { useTeachersCollection } from '@/hooks/useTeachers';
+import {
+  assignClassTeacher,
+  teacherNameById,
+  teacherOptionsForClass,
+} from '@/lib/teachers/teacherAssignment';
 import FormModal from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
@@ -11,17 +19,20 @@ const GENDER_COLORS: Record<string, string> = {
   any:    "bg-muted text-muted-foreground border-border",
 };
 
-const EMPTY_CLASS: Partial<Class> = { name: "", ageMin: 5, ageMax: 18, gender: "any", teacherId: "", teacherName: "", capacity: 20, enrolled: 0, room: "" };
+const EMPTY_CLASS: Partial<Class> = { name: "", ageMin: 5, ageMax: 18, gender: "any", teacherId: "", capacity: 20, enrolled: 0, room: "" };
 
 interface ClassCardProps {
   cls: Class;
+  teachers: Teacher[];
   onEdit: (cls: Class) => void;
   onDelete: (id: string) => void;
 }
 
-function ClassCard({ cls, onEdit, onDelete }: ClassCardProps) {
+function ClassCard({ cls, teachers, onEdit, onDelete }: ClassCardProps) {
+  const { t } = useTranslation();
   const pct = Math.round((cls.enrolled / cls.capacity) * 100);
   const barColor = pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-warning" : "bg-success";
+  const teacherLabel = teacherNameById(teachers, cls.teacherId) || cls.teacherName || t('sessions.classes.unassigned');
 
   return (
     <motion.article
@@ -64,10 +75,9 @@ function ClassCard({ cls, onEdit, onDelete }: ClassCardProps) {
 
       <div className="flex items-center gap-2 text-[12px] text-muted-foreground mb-3">
         <Users className="w-3.5 h-3.5" aria-hidden="true" />
-        <span>Teacher: <span className="font-medium text-foreground">{cls.teacherName || "Unassigned"}</span></span>
+        <span>{t('sessions.classes.teacher')}: <span className="font-medium text-foreground">{teacherLabel}</span></span>
       </div>
 
-      {/* Capacity bar */}
       <div aria-label={`Enrolled ${cls.enrolled} out of ${cls.capacity}`}>
         <div className="flex items-center justify-between mb-1" aria-hidden="true">
           <span className="text-[11px] text-muted-foreground">Capacity</span>
@@ -84,24 +94,42 @@ function ClassCard({ cls, onEdit, onDelete }: ClassCardProps) {
 interface ClassModalProps {
   open: boolean;
   cls: Class | null;
+  teachers: Teacher[];
   onClose: () => void;
   onSave: (cls: Class) => void;
 }
 
-function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
+function ClassModal({ open, cls, teachers, onClose, onSave }: ClassModalProps) {
+  const { t } = useTranslation();
   const [data, setData] = useState<Partial<Class>>(cls ? { ...cls } : { ...EMPTY_CLASS });
   const upd = <K extends keyof Class>(f: K, v: Class[K]) => setData((d) => ({ ...d, [f]: v }));
 
+  const teacherOptions = useMemo(
+    () => teacherOptionsForClass(teachers, data.teacherId || cls?.teacherId),
+    [teachers, data.teacherId, cls?.teacherId],
+  );
+
   const handleTeacher = (id: string) => {
-    const t = TEACHERS.find((x) => x.id === id);
-    setData((d) => ({ ...d, teacherId: id, teacherName: t?.name || "" }));
+    setData((d) => ({ ...d, ...assignClassTeacher(id) }));
   };
 
   React.useEffect(() => {
     if (open) {
-      setData(cls ? { ...cls } : { ...EMPTY_CLASS });
+      const base = cls ? { ...cls } : { ...EMPTY_CLASS };
+      setData(base.teacherId ? { ...base, ...assignClassTeacher(String(base.teacherId)) } : base);
     }
   }, [open, cls]);
+
+  const handleSave = () => {
+    const teacherFields = data.teacherId
+      ? assignClassTeacher(String(data.teacherId))
+      : { teacherId: '' };
+    onSave({
+      ...data,
+      ...teacherFields,
+      id: cls?.id || `c${Date.now()}`,
+    } as Class);
+  };
 
   return (
     <FormModal
@@ -109,10 +137,9 @@ function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
       onClose={onClose}
       title={cls ? "Edit Class" : "Add Class"}
       icon={GraduationCap}
-      size="md"
       cancelLabel="Cancel"
       saveLabel="Save Class"
-      onSave={() => onSave({ ...data, id: cls?.id || `c${Date.now()}` } as Class)}
+      onSave={handleSave}
       saveDisabled={!data.name}
     >
       <div className="space-y-4">
@@ -145,11 +172,20 @@ function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
           </div>
         </div>
         <div>
-          <label className={FORM_LABEL} htmlFor="class-teacher">Teacher</label>
+          <label className={FORM_LABEL} htmlFor="class-teacher">{t('sessions.classes.teacher')}</label>
           <select id="class-teacher" className={`${FORM_INPUT} cursor-pointer`} value={data.teacherId || ""} onChange={(e) => handleTeacher(e.target.value)}>
-            <option value="">Unassigned</option>
-            {TEACHERS.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            <option value="">{t('sessions.classes.unassigned')}</option>
+            {teacherOptions.map((teacher) => (
+              <option key={teacher.id} value={teacher.id}>
+                {teacher.name}
+                {teacher.specialization ? ` · ${teacher.specialization}` : ''}
+                {teacher.status !== 'active' ? ` (${t(`teachers.status.${teacher.status}` as AppTranslationKey)})` : ''}
+              </option>
+            ))}
           </select>
+          {teacherOptions.length === 0 && (
+            <p className="text-[11px] text-muted-foreground mt-1.5">{t('sessions.classes.noTeachersHint')}</p>
+          )}
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="class-room">Room</label>
@@ -169,18 +205,21 @@ interface ClassesTabProps {
  * ClassesTab Component
  *
  * Renders the classes tab for a session, allowing managing individual classes.
- *
- * @param {ClassesTabProps} props - The component props.
- * @returns {React.ReactElement}
  */
 export default function ClassesTab({ session, onUpdate }: ClassesTabProps) {
+  const teachers = useTeachersCollection();
   const [showModal, setShowModal] = useState(false);
   const [editCls, setEditCls] = useState<Class | null>(null);
 
   const handleSave = (cls: Class) => {
+    const teacherFields = cls.teacherId
+      ? assignClassTeacher(String(cls.teacherId))
+      : { teacherId: '' };
+    const synced = { ...cls, ...teacherFields };
+
     const classes = session.classes || [];
-    const existing = classes.find((c) => c.id === cls.id);
-    const updated = existing ? classes.map((c) => c.id === cls.id ? cls : c) : [...classes, cls];
+    const existing = classes.find((c) => c.id === synced.id);
+    const updated = existing ? classes.map((c) => c.id === synced.id ? synced : c) : [...classes, synced];
     onUpdate({ ...session, classes: updated });
     setShowModal(false);
     setEditCls(null);
@@ -211,7 +250,7 @@ export default function ClassesTab({ session, onUpdate }: ClassesTabProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {session.classes.map((cls) => (
-            <ClassCard key={cls.id} cls={cls} onEdit={handleEdit} onDelete={handleDelete} />
+            <ClassCard key={cls.id} cls={cls} teachers={teachers} onEdit={handleEdit} onDelete={handleDelete} />
           ))}
         </div>
       )}
@@ -219,6 +258,7 @@ export default function ClassesTab({ session, onUpdate }: ClassesTabProps) {
       <ClassModal
         open={showModal}
         cls={editCls}
+        teachers={teachers}
         onClose={() => { setShowModal(false); setEditCls(null); }}
         onSave={handleSave}
       />

@@ -72,7 +72,6 @@ function AddActivityModal({ open, onClose, onSave }: AddActivityModalProps) {
       onClose={onClose}
       title="Add Activity"
       icon={Clock}
-      size="md"
       cancelLabel="Cancel"
       saveLabel="Add"
       onSave={() => onSave({ ...data, id: `tt${Date.now()}` } as TimetableItem)}

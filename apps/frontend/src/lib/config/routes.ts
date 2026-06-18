@@ -6,6 +6,7 @@ export const ROUTES = {
   home: "/",
   contacts: "/contacts",
   students: "/students",
+  teachers: "/teachers",
   enrollments: "/enrollments",
   sessions: "/sessions",
   attendance: "/attendance",
@@ -16,6 +17,7 @@ export const ROUTES = {
   accounting: "/accounting",
   obligations: "/obligations",
   users: "/users",
+  profile: "/profile",
   settings: "/settings",
   login: "/login",
   forgotPassword: "/forgot-password",
@@ -99,6 +101,7 @@ export const DEFAULT_AUTH_REDIRECT = ROUTES.home;
 export const TENANT_APP_PATHS: readonly string[] = [
   ROUTES.contacts,
   ROUTES.students,
+  ROUTES.teachers,
   ROUTES.enrollments,
   ROUTES.sessions,
   ROUTES.attendance,
@@ -109,6 +112,7 @@ export const TENANT_APP_PATHS: readonly string[] = [
   ROUTES.accounting,
   ROUTES.obligations,
   ROUTES.users,
+  ROUTES.profile,
 ];
 
 export function isTenantAppPath(pathname: string): boolean {

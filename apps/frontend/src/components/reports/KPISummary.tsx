@@ -8,10 +8,12 @@ import {
 } from "lucide-react";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useStudentsCollection } from "../../hooks/useStudents";
+import { useTeachersCollection } from "../../hooks/useTeachers";
 import { type Contact } from "../../lib/contactFields";
 import { type AttendanceRecord } from '@/lib/data/attendanceData';
 import { type Invoice } from '@/lib/data/financeData';
 import { type Student } from '@/lib/data/studentsData';
+import { type Teacher } from '@/lib/data/teachersData';
 import { type Session } from '@/lib/data/sessionsData';
 import { type Distribution } from '@/lib/data/hasanatData';
 import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from "@mms/shared";
@@ -67,6 +69,7 @@ const CATEGORY_NAMES: Record<string, string> = {
   questionBank: "Question Bank",
   enrollments: "Enrollments",
   faculty: "Faculty",
+  teachers: "Teachers",
   accounting: "Accounting",
 };
 
@@ -97,6 +100,7 @@ function computeCustomCard(
   card: CustomCard,
   collections: {
     students: Student[];
+    teachers: Teacher[];
     sessions: Session[];
     finance_invoices: Invoice[];
     attendance_records: AttendanceRecord[];
@@ -254,6 +258,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   const records = useLiveCollection("attendance_records");
   const invoices = useLiveCollection("finance_invoices");
   const students = useStudentsCollection();
+  const teachers = useTeachersCollection();
   const exams = useLiveCollection("exams");
   const examResults = useLiveCollection("exam_results");
   const sessions = useLiveCollection("sessions");
@@ -579,10 +584,30 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         categories: ["questionBank"],
         isAvailable: qbSubmissionCount > 0 && qbTotalMax > 0,
       },
+      {
+        icon: GraduationCap,
+        label: "Total Faculty",
+        value: String(teachers.length),
+        sub: `${teachers.filter((t) => t.status === "active").length} active`,
+        color: "primary",
+        trend: "flat",
+        categories: ["teachers", "faculty"],
+        isAvailable: teachers.length > 0,
+      },
+      {
+        icon: Activity,
+        label: "On Leave",
+        value: String(teachers.filter((t) => t.status === "on_leave").length),
+        sub: "Faculty currently on leave",
+        color: "amber",
+        trend: "flat",
+        categories: ["teachers", "faculty"],
+        isAvailable: teachers.some((t) => t.status === "on_leave"),
+      },
     ];
 
     return items;
-  }, [contacts, records, invoices, students, exams, examResults, sessions, distributions, qbQuestions, qbTests, qbResults, category]);
+  }, [contacts, records, invoices, students, teachers, exams, examResults, sessions, distributions, qbQuestions, qbTests, qbResults, category]);
 
   // Determine standard possible cards for this category and user role
   const standardPossibleCards = useMemo(() => {
@@ -622,6 +647,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     if (category === "sessions") return "sessions";
     if (category === "examinations" || category === "enrollments") return "students";
     if (category === "questionBank") return "questions";
+    if (category === "teachers" || category === "faculty") return "teachers";
     return "students";
   }, [category]);
 
@@ -652,6 +678,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     return customCards.map((card) => {
       return computeCustomCard(card, {
         students,
+        teachers,
         sessions,
         finance_invoices: invoices,
         attendance_records: records,
@@ -662,7 +689,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         assessment_results: qbResults,
       });
     });
-  }, [customCards, students, sessions, invoices, records, distributions, contacts, qbQuestions, qbTests, qbResults]);
+  }, [customCards, students, teachers, sessions, invoices, records, distributions, contacts, qbQuestions, qbTests, qbResults]);
 
   // Merge standard and custom possible cards, preventing duplicates if standard label is overridden
   const possibleCards = useMemo(() => {
@@ -670,11 +697,6 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     const uniqueStandard = standardPossibleCards.filter(s => !customLabels.includes(s.label));
     return [...uniqueStandard, ...computedCustomKPIs];
   }, [standardPossibleCards, computedCustomKPIs]);
-
-  // Check which are available (standard isAvailable or always true for custom)
-  const availableCards = useMemo(() => {
-    return possibleCards.filter(k => k.isAvailable);
-  }, [possibleCards]);
 
   // Primary volume counts for the dynamic limit formula
   const primaryVolume = useMemo(() => {
@@ -693,12 +715,13 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         return qbQuestions.length + qbTests.length + qbResults.length;
       case "enrollments":
         return students.length + sessions.length;
+      case "teachers":
       case "faculty":
-        return 0;
+        return teachers.length;
       default:
         return 0;
     }
-  }, [category, students, contacts, records, invoices, distributions, examResults, sessions, qbQuestions, qbTests, qbResults]);
+  }, [category, students, teachers, contacts, records, invoices, distributions, examResults, sessions, qbQuestions, qbTests, qbResults]);
 
   // User-configurable active visibility controls state
   const [selectedLabels, setSelectedLabels] = useState<string[]>(() => {

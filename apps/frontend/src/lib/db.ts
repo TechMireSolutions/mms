@@ -17,6 +17,79 @@ import {
   type TenantDatabaseSnapshot,
 } from "@mms/shared";
 import { getAppDomain } from "./config/tenantConfig";
+import {
+  hydrateCollectionRows,
+  normalizeCollectionRows,
+} from "./contactLink/collectionSync";
+import type { ContactLike } from "@mms/shared";
+
+const LINK_MANAGED_COLLECTIONS = new Set([
+  "students",
+  "teachers",
+  "enrollments",
+  "attendance_records",
+  "finance_invoices",
+  "finance_payments",
+  "sessions",
+  "users",
+  "user_activity_logs",
+  "hasanat_distributions",
+  "hasanat_redemptions",
+  "assessment_results",
+  "exam_results",
+  "hasanat_payouts",
+  "hasanat_batches",
+]);
+
+type CollectionRow = Record<string, unknown>;
+
+function readRawCollection<T = CollectionRow>(key: string): T[] {
+  try {
+    const saved = localStorage.getItem(scopedStorageKey(key));
+    if (saved === null) return [];
+    const parsed = JSON.parse(saved) as unknown;
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getLinkHydrationContext() {
+  const contacts = readRawCollection<ContactLike>("contacts");
+  const rawStudents = readRawCollection("students");
+  const rawTeachers = readRawCollection("teachers");
+  const base = {
+    contacts,
+    students: [] as CollectionRow[],
+    teachers: [] as CollectionRow[],
+    users: [] as CollectionRow[],
+    distributions: [] as CollectionRow[],
+  };
+  const students = hydrateCollectionRows("students", rawStudents, base);
+  const teachers = hydrateCollectionRows("teachers", rawTeachers, base);
+  const users = hydrateCollectionRows(
+    "users",
+    readRawCollection("users"),
+    { ...base, students, teachers },
+  );
+  return {
+    contacts,
+    students,
+    teachers,
+    users,
+    distributions: readRawCollection("hasanat_distributions"),
+  };
+}
+
+function hydrateLinkedCollection<T>(key: string, rows: T[]): T[] {
+  if (!LINK_MANAGED_COLLECTIONS.has(key)) return rows;
+  return hydrateCollectionRows(key, rows as CollectionRow[], getLinkHydrationContext()) as T[];
+}
+
+function normalizeLinkedCollection<T>(key: string, rows: T[]): T[] {
+  if (!LINK_MANAGED_COLLECTIONS.has(key)) return rows;
+  return normalizeCollectionRows(key, rows as CollectionRow[]) as T[];
+}
 
 /** Active workspace localStorage key prefix (`mms_` on apex, `mms_t:{slug}:` on tenant). */
 export function getWorkspaceLocalStoragePrefix(): string {
@@ -31,111 +104,6 @@ function getStoragePrefix(): string {
 
 function scopedStorageKey(key: string): string {
   return `${getStoragePrefix()}${key}`;
-}
-
-interface StudentRecord extends Record<string, unknown> {
-  contactId?: string | number;
-  fatherContactId?: string | number;
-  motherContactId?: string | number;
-  name?: string;
-  gender?: string;
-  dob?: string;
-  phone?: string;
-  email?: string;
-  city?: string;
-  fatherName?: string;
-  motherName?: string;
-}
-
-interface ContactRecord extends Record<string, unknown> {
-  id: string | number;
-  name?: string;
-  gender?: string;
-  dob?: string;
-  phone?: string;
-  email?: string;
-  city?: string;
-  phones?: { number: string }[];
-  emails?: { address: string }[];
-}
-
-/**
- * Hydrates a list of students by resolving contact details from the contacts collection.
- *
- * @param {StudentRecord[]} studentsList - The list of raw/stored students.
- * @returns {StudentRecord[]} The hydrated list of students with resolved contact/parent fields.
- */
-function hydrateStudents(studentsList: StudentRecord[]): StudentRecord[] {
-  if (!Array.isArray(studentsList)) return studentsList;
-  const contacts = getCollection<ContactRecord>("contacts", []);
-  return studentsList.map((student) => {
-    if (!student) return student;
-    const hydrated = { ...student };
-    
-    // If student is linked to a contact, retrieve fields from that contact
-    if (student.contactId) {
-      const contact = contacts.find((c) => String(c.id) === String(student.contactId));
-      if (contact) {
-        hydrated.name = contact.name || hydrated.name;
-        hydrated.gender = contact.gender || hydrated.gender;
-        hydrated.dob = contact.dob || hydrated.dob;
-        hydrated.phone = contact.phone || (contact.phones && contact.phones[0]?.number) || hydrated.phone;
-        hydrated.email = contact.email || (contact.emails && contact.emails[0]?.address) || hydrated.email;
-        hydrated.city = contact.city || hydrated.city;
-      }
-    }
-    
-    // If father is linked to a contact, retrieve name from that contact
-    if (student.fatherContactId) {
-      const contact = contacts.find((c) => String(c.id) === String(student.fatherContactId));
-      if (contact) {
-        hydrated.fatherName = contact.name || hydrated.fatherName;
-      }
-    }
-
-    // If mother is linked to a contact, retrieve name from that contact
-    if (student.motherContactId) {
-      const contact = contacts.find((c) => String(c.id) === String(student.motherContactId));
-      if (contact) {
-        hydrated.motherName = contact.name || hydrated.motherName;
-      }
-    }
-
-    return hydrated;
-  });
-}
-
-/**
- * Normalizes a list of students before saving to avoid duplicate data.
- *
- * @param {StudentRecord[]} studentsList - The list of hydrated students.
- * @returns {StudentRecord[]} The normalized list of students.
- */
-function normalizeStudentsBeforeSave(studentsList: StudentRecord[]): StudentRecord[] {
-  if (!Array.isArray(studentsList)) return studentsList;
-  return studentsList.map((student) => {
-    if (!student) return student;
-    const normalized = { ...student };
-
-    if (normalized.contactId) {
-      delete normalized.name;
-      delete normalized.gender;
-      delete normalized.dob;
-      delete normalized.phone;
-      delete normalized.email;
-      delete normalized.city;
-    }
-
-    if (normalized.fatherContactId) {
-      delete normalized.fatherName;
-    }
-
-    if (normalized.motherContactId) {
-      delete normalized.motherName;
-    }
-
-    return normalized;
-  });
 }
 
 // ─── Sync Status ─────────────────────────────────────────────────────────────
@@ -188,8 +156,12 @@ async function syncToServer(url: string, body: unknown): Promise<ServerSyncResul
       body: JSON.stringify(body)
     });
     if (!response.ok) {
-      console.warn(`Sync to server failed for ${url} (status: ${response.status})`);
-      setSyncStatus('error');
+      const expectedPreAuth =
+        response.status === 401 && localStorage.getItem('mms_user') === null;
+      if (!expectedPreAuth) {
+        console.warn(`Sync to server failed for ${url} (status: ${response.status})`);
+      }
+      setSyncStatus(expectedPreAuth ? 'idle' : 'error');
       return { ok: false, status: response.status };
     }
     setSyncStatus('idle');
@@ -251,7 +223,6 @@ export async function syncDatabase(): Promise<void> {
   try {
     const data = await fetchTenantSnapshot();
     applySnapshotToLocalCache(data);
-    console.log("Database sync from backend completed successfully.");
   } catch (error) {
     console.error("Failed to sync database with backend:", error);
   }
@@ -290,11 +261,10 @@ export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]
       const parsed = JSON.parse(saved) as unknown;
       if (Array.isArray(parsed)) {
         let collection = parsed as T[];
-        if (key === "students") {
-          collection = hydrateStudents(collection as unknown as StudentRecord[]) as unknown as T[];
-        } else if (key === "sessions") {
+        if (key === "sessions") {
           collection = validateSessions(collection) as unknown as T[];
         }
+        collection = hydrateLinkedCollection(key, collection);
         return collection;
       }
     }
@@ -302,11 +272,10 @@ export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]
       return [];
     }
     let dataToSave = defaultData;
-    if (key === "students") {
-      dataToSave = normalizeStudentsBeforeSave(defaultData as unknown as StudentRecord[]) as unknown as T[];
-    } else if (key === "sessions") {
+    if (key === "sessions") {
       dataToSave = validateSessions(defaultData) as unknown as T[];
     }
+    dataToSave = normalizeLinkedCollection(key, dataToSave);
     localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
 
     // Defer so reads during render (e.g. useLiveCollection init) don't update other components synchronously
@@ -314,11 +283,10 @@ export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]
       void syncToServer(`/api/db/collections/${key}`, dataToSave);
     });
 
-    let seedData = defaultData;
-    if (key === "students") {
-      seedData = hydrateStudents(dataToSave as unknown as StudentRecord[]) as unknown as T[];
-    } else if (key === "sessions") {
-      seedData = validateSessions(dataToSave) as unknown as T[];
+    let seedData = hydrateLinkedCollection(key, dataToSave);
+    if (key === "sessions") {
+      seedData = validateSessions(seedData) as unknown as T[];
+      seedData = hydrateLinkedCollection(key, seedData);
     }
     return seedData;
   } catch (error) {
@@ -338,9 +306,10 @@ export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]
 export function saveCollection<T>(key: string, data: T[]): void {
   try {
     let dataToSave = data;
-    if (key === "students") {
-      dataToSave = normalizeStudentsBeforeSave(data as unknown as StudentRecord[]) as unknown as T[];
+    if (key === "sessions") {
+      dataToSave = validateSessions(data) as unknown as T[];
     }
+    dataToSave = normalizeLinkedCollection(key, dataToSave);
     localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("local-database-update"));
@@ -484,7 +453,7 @@ export function cachePublicBranding(partial: PublicBranding): void {
   const existing = mergeBrandingSettings(
     readObjectLocal<BrandingSettings>("branding") ?? DEFAULT_BRANDING_SETTINGS,
   );
-  saveObject("branding", mergeBrandingSettings({ ...existing, ...partial }));
+  writeObjectLocal("branding", mergeBrandingSettings({ ...existing, ...partial }));
 }
 
 /**

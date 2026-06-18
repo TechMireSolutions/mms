@@ -6,6 +6,8 @@ import AuthLayout from "../../components/auth/AuthLayout";
 import { ROUTES } from '@/lib/config/routes';
 import { apexUrl } from '@/lib/config/tenantConfig';
 import useTranslation from "@/hooks/useTranslation";
+import { FORM_ERROR, FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 /**
  * ForgotPassword Page Component
@@ -96,7 +98,7 @@ export default function ForgotPassword() {
             className="space-y-4"
           >
             <div>
-              <label className="text-sm font-medium text-foreground block mb-1.5">
+              <label className={FORM_LABEL}>
                 {t("auth.emailAddress")}
               </label>
               <input
@@ -104,11 +106,12 @@ export default function ForgotPassword() {
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(""); }}
                 placeholder="you@madrasa.app"
-                className={`w-full px-3.5 py-2.5 rounded-lg border text-sm bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
-                  error ? "border-destructive focus:ring-destructive/20" : "border-border focus:border-primary/40"
-                }`}
+                className={cn(
+                  FORM_INPUT,
+                  error ? "border-destructive focus:ring-destructive/20" : "",
+                )}
               />
-              {error && <p className="text-destructive text-xs mt-1">{error}</p>}
+              {error ? <p className={FORM_ERROR}>{error}</p> : null}
             </div>
 
             <button

@@ -100,16 +100,9 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
   }, [filters, records, allClasses]);
 
   const summary = useMemo<AttendanceSummaryItem[]>(() => {
-     // Group student stats by class
      const cGroup: Record<string, { totalStudents: number, sumRates: number, perfect: number, below: number }> = {};
-     
-     // We derive this from the *unfiltered by student* studentAtt list to get accurate class summaries
-     const allStudentStats = studentAtt; // Wait, studentAtt is filtered by student name too.
-     
-     // Let's re-calculate just for the class summary to ignore student name filters but respect class filter
-     const list = studentAtt; // actually, the user wants the summary to reflect the current table view
-     
-     list.forEach(s => {
+
+     studentAtt.forEach(s => {
        if (!cGroup[s.class]) {
           cGroup[s.class] = { totalStudents: 0, sumRates: 0, perfect: 0, below: 0 };
        }
