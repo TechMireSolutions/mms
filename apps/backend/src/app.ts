@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { misconfiguredAppDomainHint } from '@mms/shared';
 import fastify, { FastifyInstance } from 'fastify';
 import { loadBackendEnv } from './config/loadEnv.js';
 import { loadServerConfig } from './config/serverConfig.js';
@@ -32,8 +33,14 @@ export async function buildApp(): Promise<FastifyInstance> {
     if (!appDomain) {
       app.log.error(
         'MMS_APP_DOMAIN is not set — tenant subdomains will not resolve. ' +
-          'Set MMS_APP_DOMAIN in apps/backend/.env (e.g. your-apex-domain.com).',
+          'Set MMS_APP_DOMAIN in apps/backend/.env (e.g. mmsv2.example.com).',
       );
+    } else {
+      const sampleHost = appDomain.includes('.') ? appDomain : `platform.${appDomain}`;
+      const hint = misconfiguredAppDomainHint(sampleHost, appDomain);
+      if (hint) {
+        app.log.error({ hint }, 'MMS_APP_DOMAIN misconfiguration');
+      }
     }
   }
 

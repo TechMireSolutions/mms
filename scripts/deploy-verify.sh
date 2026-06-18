@@ -32,6 +32,7 @@ read_env_var() {
 
 BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
 assert_production_backend_port "$BACKEND_PORT" "Backend PORT in ${ENV_FILE}" || exit 1
+APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '')"
 
 curl_ok() {
   local url="$1"
@@ -40,12 +41,28 @@ curl_ok() {
 
 report_setup_status() {
   local base="$1"
+  local host="${2:-}"
   local status
-  status="$(curl -fsS "${base}/api/platform/auth/setup/status" 2>/dev/null || echo '{}')"
-  echo "Platform setup status: ${status}"
+  local code
+  if [[ -n "$host" ]]; then
+    code="$(curl -s -o /tmp/mms-setup.json -w '%{http_code}' \
+      -H "Host: ${host}" -H "X-Forwarded-Host: ${host}" \
+      "${base}/api/platform/auth/setup/status")"
+    status="$(cat /tmp/mms-setup.json 2>/dev/null || echo '{}')"
+  else
+    code="$(curl -s -o /tmp/mms-setup.json -w '%{http_code}' \
+      "${base}/api/platform/auth/setup/status")"
+    status="$(cat /tmp/mms-setup.json 2>/dev/null || echo '{}')"
+  fi
+  echo "Platform setup status (HTTP ${code}): ${status}"
+  if [[ "$code" == "403" ]]; then
+    echo "ERROR: Platform apex misconfigured — set MMS_APP_DOMAIN to full hostname (e.g. mmsv2.aabtaab.com)"
+    return 1
+  fi
   if echo "${status}" | grep -q '"smtpConfigured":false'; then
     echo "WARNING: Platform email not configured — add PLATFORM_RESEND_API_KEY (or SMTP_*) and PLATFORM_EMAIL_FROM as GitHub Actions secrets"
   fi
+  return 0
 }
 
 resolve_public_url() {
@@ -85,7 +102,7 @@ if curl_ok "${LOCAL_BASE}/health"; then
 fi
 
 if [[ "$LOCAL_OK" == true ]]; then
-  report_setup_status "$LOCAL_BASE"
+  report_setup_status "$LOCAL_BASE" "$APP_DOMAIN" || LOCAL_OK=false
   PUBLIC_API_URL="$(resolve_public_url)"
   if [[ -z "$PUBLIC_API_URL" ]]; then
     echo "Local deploy OK (no MMS_APP_DOMAIN for public check)"
@@ -94,7 +111,7 @@ if [[ "$LOCAL_OK" == true ]]; then
   echo "Trying public site: ${PUBLIC_API_URL}/"
   if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/"; then
     echo "Public site OK"
-    report_setup_status "$PUBLIC_API_URL"
+    report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
     exit 0
   fi
   echo "ERROR: public URL failed — Apache likely proxying to wrong port (run scripts/fix-apache-upstream.sh)"
@@ -106,7 +123,7 @@ if [[ -n "$PUBLIC_API_URL" ]]; then
   echo "Trying public health: ${PUBLIC_API_URL}/health"
   if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/"; then
     echo "Public site OK (local backend check failed — investigate ports)"
-    report_setup_status "$PUBLIC_API_URL"
+    report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
     exit 0
   fi
 fi

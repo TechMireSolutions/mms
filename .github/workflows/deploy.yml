@@ -1,18 +1,52 @@
 name: Deploy MMSv2 to Hetzner
 
 on:
-  push:
-    branches:
-      - main
+  # Deploy only after CI passes on main (avoids shipping broken builds).
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: mms-production-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     env:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
 
     steps:
+      - name: Validate deploy secrets
+        env:
+          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -z "${{ secrets.SERVER_IP }}" ] && missing="${missing} SERVER_IP"
+          [ -z "${{ secrets.SERVER_USER }}" ] && missing="${missing} SERVER_USER"
+          [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ] && missing="${missing} SSH_PRIVATE_KEY"
+          if [ -n "${missing}" ]; then
+            echo "ERROR: Missing GitHub Actions secrets:${missing}"
+            echo "Add them under Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          if [ -z "${MMS_APP_DOMAIN}" ]; then
+            echo "::warning::MMS_APP_DOMAIN is not set — tenant routing and VITE_APP_DOMAIN will fail"
+            echo "Set MMS_APP_DOMAIN to your full platform hostname (e.g. mmsv2.aabtaab.com)"
+          else
+            echo "MMS_APP_DOMAIN=${MMS_APP_DOMAIN}"
+            dots="$(printf '%s' "${MMS_APP_DOMAIN}" | tr -cd '.' | wc -c | tr -d ' ')"
+            if [ "${dots}" -lt 2 ]; then
+              echo "::warning::MMS_APP_DOMAIN looks short — if your site is mmsv2.${MMS_APP_DOMAIN}, use the full hostname"
+            fi
+          fi
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -32,14 +66,13 @@ jobs:
           pnpm run build
           tar czf mms-dist.tar.gz apps/backend/dist apps/frontend/dist packages/shared/dist
 
-      # Platform secrets (Settings → Secrets → Actions):
-      #   MMS_APP_DOMAIN=your-platform-domain.com  (apex; tenants are {slug}.<domain>)
-      #   PLATFORM_APP_URL=https://your-platform-domain.com
-      #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM + PLATFORM_APP_URL
-      #   OR PLATFORM_SMTP_* + PLATFORM_EMAIL_FROM
-      #   Optional bootstrap: PLATFORM_ALLOW_ENV_BOOTSTRAP=true, PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD
-      #   Optional verify fallback: MMS_API_URL=https://your-api-host (public /health)
-      #   Backend listen port on server: PORT=5002 in apps/backend/.env (default in scripts/lib/deploy-ports.sh)
+      # Required secrets (Settings → Secrets → Actions):
+      #   SERVER_IP, SERVER_USER, SSH_PRIVATE_KEY
+      #   MMS_APP_DOMAIN=mmsv2.aabtaab.com  (full apex — NOT the root domain alone)
+      #   PLATFORM_APP_URL=https://mmsv2.aabtaab.com
+      #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM  OR  PLATFORM_SMTP_*
+      # Optional: PLATFORM_ALLOW_ENV_BOOTSTRAP, PLATFORM_ADMIN_*, MMS_API_URL
+      # Server backend listens on PORT=5002 (scripts/lib/deploy-ports.sh)
       - name: Copy build tarball to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -82,22 +115,41 @@ jobs:
             git pull origin main
             bash scripts/deploy-on-server.sh
 
-      - name: Verify public site (after deploy)
+      - name: Verify production site
         env:
           MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
         run: |
+          set -euo pipefail
           if [ -z "${MMS_APP_DOMAIN}" ]; then
             echo "MMS_APP_DOMAIN not set — skip public verify"
             exit 0
           fi
+          BASE="https://${MMS_APP_DOMAIN}"
           for i in 1 2 3 4 5 6 7 8 9 10; do
-            if curl -fsS --connect-timeout 5 --max-time 15 "https://${MMS_APP_DOMAIN}/health" >/dev/null \
-              && curl -fsS --connect-timeout 5 --max-time 15 "https://${MMS_APP_DOMAIN}/" >/dev/null; then
-              echo "Production OK: https://${MMS_APP_DOMAIN}/"
-              exit 0
+            if curl -fsS --connect-timeout 5 --max-time 15 "${BASE}/health" >/dev/null \
+              && curl -fsS --connect-timeout 5 --max-time 15 "${BASE}/" >/dev/null; then
+              break
             fi
             echo "Waiting for public site (attempt ${i}/10)..."
             sleep 10
+            if [ "$i" -eq 10 ]; then
+              echo "ERROR: ${BASE} unreachable — check Apache ProxyPass → :5002"
+              exit 1
+            fi
           done
-          echo "ERROR: https://${MMS_APP_DOMAIN}/ still unreachable — check Deploy SSH logs and Apache ProxyPass"
-          exit 1
+          echo "Health and SPA OK: ${BASE}/"
+
+          SETUP_CODE="$(curl -s -o /tmp/setup.json -w '%{http_code}' "${BASE}/api/platform/auth/setup/status")"
+          echo "Platform setup/status → HTTP ${SETUP_CODE}"
+          if [ "${SETUP_CODE}" = "403" ]; then
+            echo "ERROR: Apex misconfigured — MMS_APP_DOMAIN must be ${MMS_APP_DOMAIN} (full hostname, not root domain)"
+            exit 1
+          fi
+
+          CONFIG="$(curl -fsS "${BASE}/api/public/deployment-config")"
+          echo "deployment-config: ${CONFIG}"
+          if ! echo "${CONFIG}" | grep -q "\"appDomain\":\"${MMS_APP_DOMAIN}\""; then
+            echo "::warning::deployment-config appDomain does not match MMS_APP_DOMAIN — check server .env"
+          fi
+
+          echo "Production OK: ${BASE}/"

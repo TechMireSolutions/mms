@@ -97,5 +97,11 @@ else
   echo "WARNING: Platform email not in ${ENV_FILE} — add PLATFORM_RESEND_API_KEY (or SMTP_*) and PLATFORM_EMAIL_FROM as GitHub Actions secrets"
 fi
 if ! grep -q '^MMS_APP_DOMAIN=.\+' "$ENV_FILE" 2>/dev/null; then
-  echo "WARNING: MMS_APP_DOMAIN missing in ${ENV_FILE} — set to your apex domain (e.g. mms.example.com)"
+  echo "WARNING: MMS_APP_DOMAIN missing in ${ENV_FILE} — set to your apex domain (e.g. mmsv2.example.com)"
+elif grep -q '^MMS_APP_DOMAIN=' "$ENV_FILE" 2>/dev/null; then
+  MERGED_DOMAIN="$(grep '^MMS_APP_DOMAIN=' "$ENV_FILE" | tail -1 | cut -d= -f2- | tr -d '"')"
+  DOT_COUNT="$(printf '%s' "$MERGED_DOMAIN" | tr -cd '.' | wc -c | tr -d ' ')"
+  if [[ "$DOT_COUNT" -eq 1 ]]; then
+    echo "WARNING: MMS_APP_DOMAIN=${MERGED_DOMAIN} is 2 labels — if your platform URL is mmsv2.${MERGED_DOMAIN}, set MMS_APP_DOMAIN=mmsv2.${MERGED_DOMAIN}"
+  fi
 fi

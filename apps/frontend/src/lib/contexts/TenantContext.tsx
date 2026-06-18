@@ -5,7 +5,8 @@ import {
   buildTenantUrl,
   buildApexUrl,
 } from "@mms/shared";
-import { getAppDomain, getTenantUrlOptions } from "../config/tenantConfig";
+import { getTenantUrlOptions } from "../config/tenantConfig";
+import { useDeploymentAppDomain } from "@/hooks/useDeploymentAppDomain";
 import {
   useWorkspaceBySubdomain,
   type PublicWorkspace,
@@ -28,7 +29,7 @@ const TenantContext = createContext<TenantContextValue | undefined>(undefined);
 
 export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
-  const appDomain = getAppDomain();
+  const appDomain = useDeploymentAppDomain();
   const subdomain = useMemo(
     () => (typeof window !== "undefined" ? parseTenantFromHost(hostname, appDomain) : null),
     [hostname, appDomain],

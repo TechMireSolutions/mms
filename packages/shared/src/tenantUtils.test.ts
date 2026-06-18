@@ -3,8 +3,10 @@ import {
   inferAppDomainFromHostname,
   isOriginAllowedForAppDomain,
   isTrustedWorkspaceOrigin,
+  misconfiguredAppDomainHint,
   parseTenantFromHost,
   resolveAppDomain,
+  resolveAppDomainForRequest,
 } from './tenantUtils.js';
 
 const PLATFORM = 'platform.example.com';
@@ -24,6 +26,11 @@ describe('inferAppDomainFromHostname', () => {
     expect(inferAppDomainFromHostname(`dar-ul-quran.${PLATFORM}`)).toBe(PLATFORM);
     expect(inferAppDomainFromHostname('dar-ul-quran.example.com')).toBe('example.com');
   });
+
+  it('returns apex for mmsv2.aabtaab.com (3-part platform host)', () => {
+    expect(inferAppDomainFromHostname('mmsv2.aabtaab.com')).toBe('mmsv2.aabtaab.com');
+    expect(inferAppDomainFromHostname('dar-ul-quran.mmsv2.aabtaab.com')).toBe('mmsv2.aabtaab.com');
+  });
 });
 
 describe('resolveAppDomain', () => {
@@ -42,6 +49,26 @@ describe('resolveAppDomain', () => {
 
   it('falls back to localhost when host cannot be inferred', () => {
     expect(resolveAppDomain('')).toBe('localhost');
+  });
+});
+
+describe('misconfiguredAppDomainHint', () => {
+  it('detects when platform host is misread as tenant', () => {
+    const hint = misconfiguredAppDomainHint('mmsv2.aabtaab.com', 'aabtaab.com');
+    expect(hint).toMatch(/Set MMS_APP_DOMAIN=mmsv2\.aabtaab\.com/);
+  });
+
+  it('returns null when configured domain matches host', () => {
+    expect(misconfiguredAppDomainHint('mmsv2.aabtaab.com', 'mmsv2.aabtaab.com')).toBeNull();
+  });
+});
+
+describe('resolveAppDomainForRequest', () => {
+  it('self-corrects short MMS_APP_DOMAIN for platform host', () => {
+    expect(resolveAppDomainForRequest('mmsv2.aabtaab.com', 'aabtaab.com')).toBe(
+      'mmsv2.aabtaab.com',
+    );
+    expect(parseTenantFromHost('mmsv2.aabtaab.com', 'mmsv2.aabtaab.com')).toBeNull();
   });
 });
 

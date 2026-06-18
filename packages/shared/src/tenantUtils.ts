@@ -85,6 +85,7 @@ export function isApexHost(hostname: string, appDomain: string): boolean {
 const APEX_3PART_LABELS = new Set([
   'platform',
   'mms',
+  'mmsv2',
   'app',
   'staging',
   'dev',
@@ -143,6 +144,53 @@ export function resolveAppDomain(
     return inferred;
   }
   return LOCAL_DEV_APP_DOMAIN;
+}
+
+/**
+ * When `configuredAppDomain` is too short, a 3-part platform host can be misread as a tenant.
+ * e.g. host `mmsv2.aabtaab.com` + config `aabtaab.com` → tenant `mmsv2` (wrong).
+ */
+export function misconfiguredAppDomainHint(
+  hostname: string,
+  configuredAppDomain: string,
+): string | null {
+  const host = hostname.toLowerCase().split(':')[0];
+  const configured = configuredAppDomain.toLowerCase().trim();
+  if (!configured || host === configured || host === `www.${configured}`) {
+    return null;
+  }
+
+  const tenant = parseTenantFromHost(host, configured);
+  if (!tenant) return null;
+
+  const hostLabels = host.split('.');
+  const configLabels = configured.split('.');
+  if (hostLabels.length === configLabels.length + 1 && host.endsWith(`.${configured}`)) {
+    return (
+      `MMS_APP_DOMAIN is "${configured}" but "${host}" is treated as tenant "${tenant}". ` +
+      `Set MMS_APP_DOMAIN=${host}.`
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Apex domain for the current request — self-corrects common MMS_APP_DOMAIN typos.
+ */
+export function resolveAppDomainForRequest(
+  hostname: string,
+  configuredDomain?: string | null,
+): string {
+  const host = hostname.toLowerCase().split(':')[0];
+  const configured = configuredDomain?.trim();
+  if (configured) {
+    const hint = misconfiguredAppDomainHint(host, configured);
+    if (hint && host.split('.').length === configured.split('.').length + 1) {
+      return host;
+    }
+  }
+  return resolveAppDomain(host, configured);
 }
 
 /**
