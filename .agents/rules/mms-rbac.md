@@ -91,7 +91,7 @@ Registry `permissions: string[]` on fields/tabs uses same vocabulary (`mms-field
 
 `DEFAULT_WORKSPACE_ROLES` in `@mms/shared/userTypes.ts` — JWT `User.role` is **singular** string, not `roles[]`.
 
-Users module RBAC matrix: **Configuration → Permissions** (`RolesPermissions.tsx`).
+Users module RBAC matrix: **Setup → Permissions** (`RolesPermissions.tsx`).
 
 ## Audit
 

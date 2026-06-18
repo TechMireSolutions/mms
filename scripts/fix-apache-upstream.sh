@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# Point Apache ProxyPass at the Fastify backend (default :3000). Requires root/sudo.
+# Point Apache ProxyPass at the Fastify backend (default :5002). Requires root/sudo.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
+
+# shellcheck source=lib/deploy-ports.sh
+source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
 
 ENV_FILE="${1:-apps/backend/.env}"
 
@@ -26,7 +29,7 @@ read_env_var() {
   echo "$value"
 }
 
-BACKEND_PORT="$(read_env_var PORT 3000)"
+BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
 APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '')"
 if [[ -z "$APP_DOMAIN" && -n "${MMS_APP_DOMAIN:-}" ]]; then
   APP_DOMAIN="${MMS_APP_DOMAIN}"

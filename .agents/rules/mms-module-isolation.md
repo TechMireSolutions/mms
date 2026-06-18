@@ -7,17 +7,17 @@ trigger: model_decision
 Every feature module page uses **exactly three top-level tabs** from `useModuleTierTabs()`:
 
 ```
-Operations | Analytics | Configuration
-                              └─ Fields | Preferences (and module-specific config sub-tabs)
+work | reports | setup
+              └─ Fields | Preferences (and module-specific setup sub-tabs)
 ```
 
 ## Tier ownership
 
-| Tier | Allowed content | Banned |
-|------|-----------------|--------|
-| **Operations** | CRUD, lists, wizards, mark/record flows, module dashboards scoped to that domain | KPI rows, `ModuleReports`, cross-module widgets, report builders, other modules' summaries |
-| **Analytics** | `KPISummary` (module category only), `ModuleReports` / module report panels, charts derived from this module's collections | Foreign-module KPIs, invoice widgets on Obligations, Hasanat payouts on Finance, enrollment reports under Operations |
-| **Configuration** | `{module}_settings`, field registries, preferences, RBAC matrix (Users) | Live data tables, analytics, global institution settings (those live under `/settings`) |
+| Tier id | Allowed content | Banned |
+|---------|-----------------|--------|
+| **work** | CRUD, lists, wizards, mark/record flows, module dashboards scoped to that domain | KPI rows, `ModuleReports`, cross-module widgets, report builders, other modules' summaries |
+| **reports** | `KPISummary` (module category only), `ModuleReports` / module report panels, charts derived from this module's collections | Foreign-module KPIs, invoice widgets on Obligations, Hasanat payouts on Finance, enrollment reports under Work |
+| **setup** | `{module}_settings`, field registries, preferences, RBAC matrix (Users) | Live data tables, analytics, global institution settings (those live under `/settings`) |
 
 **Dashboard** (`/`) is not a feature module — it may show cross-module pinned widgets but does not use the three-tier shell. New feature modules must not mimic Dashboard layout; use `useModuleTierTabs` + `ResponsiveAccordionTabs`.
 
@@ -44,8 +44,8 @@ Pass the **module's own** analytics category — never a shared umbrella that pu
 
 ## Placement rules
 
-1. **`KPISummary` only inside the Analytics tab** — never above `ResponsiveAccordionTabs` (visible on all tiers).
-2. **Reports only in Analytics** — no Operations sub-tab named "Reports" unless it is operational export (rare); prefer Analytics.
+1. **`KPISummary` only inside the Reports tab** — never above `ResponsiveAccordionTabs` (visible on all tiers).
+2. **Reports only in Reports** — no Work sub-tab named "Reports" unless it is operational export (rare); prefer Reports tier.
 3. **PageHeader actions** stay module-scoped; no links/widgets to other modules.
 4. **Custom card / widget builders** in `ModuleReports` must default `initialCollection` to the active module's collection.
 
@@ -53,13 +53,13 @@ Pass the **module's own** analytics category — never a shared umbrella that pu
 
 ```
 - [ ] Three tiers via useModuleTierTabs + ResponsiveAccordionTabs
-- [ ] Operations = transactional UI only
-- [ ] Analytics = KPISummary(moduleCategory) + module reports/charts
-- [ ] Configuration = *Settings panel(s) only
-- [ ] No sibling-module imports in Operations/Analytics (e.g. Finance → HasanatPayouts)
+- [ ] Work = transactional UI only (`work` tab)
+- [ ] Reports = KPISummary(moduleCategory) + module reports/charts (`reports` tab)
+- [ ] Setup = *Settings panel(s) only (`setup` tab)
+- [ ] No sibling-module imports in Work/Reports (e.g. Finance → HasanatPayouts)
 - [ ] category prop matches module table above
 ```
 
 Reference: `Contacts.tsx`, `Students.tsx`, `Finance.tsx` after isolation pass.
 
-Heavy Operations/Analytics trees: wrap in `ErrorBoundary` per tier (`mms-observability.md`).
+Heavy Work/Reports trees: wrap in `ErrorBoundary` per tier (`mms-observability.md`).

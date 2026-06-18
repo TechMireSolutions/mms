@@ -24,10 +24,8 @@ import { useLiveCollection } from "../hooks/useLiveCollection";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 
 /**
- * Obligations management component.
- * Handles religious obligations (Khums, Zakat, etc.), including Mujtahid tracking,
- * Wakala configurations, and collection history.
- * 
+ * Obligations — Khums, Zakat, and collections. Work | Reports | Setup.
+ *
  * @returns {React.ReactElement} The Obligations component.
  */
 export default function Obligations() {
@@ -48,7 +46,7 @@ export default function Obligations() {
     ],
     [t]
   );
-  const [activeTab, setActiveTab] = useState("operations");
+  const [activeTab, setActiveTab] = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("summary");
   const [activeConfigTab, setActiveConfigTab] = useState("types");
 
@@ -73,7 +71,7 @@ export default function Obligations() {
     setShowForm(false);
   };
 
-  const effectiveTab = PAGE_TABS.find((t) => t.id === activeTab) ? activeTab : "operations";
+  const effectiveTab = PAGE_TABS.find((t) => t.id === activeTab) ? activeTab : "work";
   const effectiveSubTab = OPS_SUB_TABS.find((t) => t.id === activeSubTab) ? activeSubTab : "summary";
   const effectiveConfigTab = CONFIG_SUB_TABS.find((t) => t.id === activeConfigTab) ? activeConfigTab : "types";
 
@@ -102,8 +100,8 @@ export default function Obligations() {
         onTabChange={setActiveTab}
         panelIdPrefix="obligations-tab"
       >
-      {/* Sub-tabs for Operations */}
-      {effectiveTab === "operations" && (
+      {/* Work tier sub-tabs */}
+      {effectiveTab === "work" && (
         <SubTabBar
           tabs={OPS_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
           value={effectiveSubTab}
@@ -111,7 +109,7 @@ export default function Obligations() {
         />
       )}
 
-      {effectiveTab === "configuration" && (
+      {effectiveTab === "setup" && (
         <SubTabBar
           tabs={CONFIG_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
           value={effectiveConfigTab}
@@ -121,13 +119,13 @@ export default function Obligations() {
 
       {/* Content */}
       <AnimatePresence mode="wait">
-        <motion.div key={effectiveTab + "-" + (effectiveTab === "operations" ? effectiveSubTab : (effectiveTab === "configuration" ? effectiveConfigTab : "main"))}
+        <motion.div key={effectiveTab + "-" + (effectiveTab === "work" ? effectiveSubTab : (effectiveTab === "setup" ? effectiveConfigTab : "main"))}
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
           className="space-y-4">
 
           <ErrorBoundary>
-          {effectiveTab === "analytics" && (
+          {effectiveTab === "reports" && (
             <ObligationsSummaryComponent
               collections={collections}
               obligationTypes={obligationTypes}
@@ -138,7 +136,7 @@ export default function Obligations() {
             />
           )}
 
-          {effectiveTab === "operations" && effectiveSubTab === "summary" && (
+          {effectiveTab === "work" && effectiveSubTab === "summary" && (
             <ObligationsSummaryComponent
               collections={collections}
               obligationTypes={obligationTypes}
@@ -149,7 +147,7 @@ export default function Obligations() {
             />
           )}
 
-          {effectiveTab === "operations" && effectiveSubTab === "collections" && (
+          {effectiveTab === "work" && effectiveSubTab === "collections" && (
             <div className="space-y-4">
               <ObligationCollectionList
                 collections={collections}
@@ -162,11 +160,11 @@ export default function Obligations() {
             </div>
           )}
 
-          {effectiveTab === "configuration" && effectiveConfigTab === "types" && (
+          {effectiveTab === "setup" && effectiveConfigTab === "types" && (
             <ObligationTypeManager types={obligationTypes} onChange={(t) => saveCollection("obligation_types", t)} />
           )}
 
-          {effectiveTab === "configuration" && effectiveConfigTab === "mujtahids" && (
+          {effectiveTab === "setup" && effectiveConfigTab === "mujtahids" && (
             <MujtahidManager 
               mujtahids={mujtahids} 
               reps={reps} 
@@ -175,7 +173,7 @@ export default function Obligations() {
             />
           )}
 
-          {effectiveTab === "configuration" && effectiveConfigTab === "wakala" && (
+          {effectiveTab === "setup" && effectiveConfigTab === "wakala" && (
             <WakalaTypeManager
               wakalaTypes={wakalaTypes}
               distributions={distributions}

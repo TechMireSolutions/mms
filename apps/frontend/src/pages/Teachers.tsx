@@ -34,6 +34,9 @@ function teacherStatusLabel(t: (key: AppTranslationKey) => string, status: strin
   return t(key);
 }
 
+/**
+ * Teachers — faculty roster and profiles. Standard 3-tier layout (Work | Reports | Setup).
+ */
 export default function Teachers(): React.JSX.Element {
   const PAGE_TABS = useModuleTierTabs();
   const configSubTabs = useConfigSubTabs();
@@ -44,7 +47,7 @@ export default function Teachers(): React.JSX.Element {
   const { data: rawTeachers = [], isLoading } = useTeachers();
   const { createTeacher, updateTeacher, deleteTeacher } = useTeacherMutations();
 
-  const [activeTab, setActiveTab] = useState('operations');
+  const [activeTab, setActiveTab] = useState('work');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSpecialization, setFilterSpecialization] = useState('');
@@ -151,9 +154,9 @@ export default function Teachers(): React.JSX.Element {
         panelIdPrefix="teachers-tab"
       >
         <AnimatePresence mode="wait">
-          {activeTab === 'operations' ? (
+          {activeTab === 'work' ? (
             <motion.div
-              key="operations"
+              key="work"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -259,9 +262,9 @@ export default function Teachers(): React.JSX.Element {
                 )}
               </ErrorBoundary>
             </motion.div>
-          ) : activeTab === 'analytics' ? (
+          ) : activeTab === 'reports' ? (
             <motion.div
-              key="analytics"
+              key="reports"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -276,7 +279,7 @@ export default function Teachers(): React.JSX.Element {
             </motion.div>
           ) : (
             <motion.div
-              key="configuration"
+              key="setup"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}

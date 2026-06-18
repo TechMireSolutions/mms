@@ -21,7 +21,7 @@ import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 
 /**
- * Examinations — formal exams, marking, and results.
+ * Examinations — formal exams, marking, and results. Work | Reports | Setup.
  */
 export default function Examinations(): React.JSX.Element {
   const PAGE_TABS = useModuleTierTabs();
@@ -34,7 +34,7 @@ export default function Examinations(): React.JSX.Element {
     ],
     [t],
   );
-  const [activeTab, setActiveTab] = useState("operations");
+  const [activeTab, setActiveTab] = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("exams");
   const [configSubTab, setConfigSubTab] = useState<"fields" | "preferences">("fields");
 
@@ -61,7 +61,7 @@ export default function Examinations(): React.JSX.Element {
     ]);
   };
 
-  const effectiveTab = PAGE_TABS.find((tab) => tab.id === activeTab) ? activeTab : "operations";
+  const effectiveTab = PAGE_TABS.find((tab) => tab.id === activeTab) ? activeTab : "work";
   const effectiveSubTab = OPS_SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : "exams";
 
   return (
@@ -90,7 +90,7 @@ export default function Examinations(): React.JSX.Element {
         onTabChange={setActiveTab}
         panelIdPrefix="examinations-tab"
       >
-        {effectiveTab === "operations" && (
+        {effectiveTab === "work" && (
           <SubTabBar
             tabs={OPS_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
             value={effectiveSubTab}
@@ -108,7 +108,7 @@ export default function Examinations(): React.JSX.Element {
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              {effectiveTab === "configuration" && (
+              {effectiveTab === "setup" && (
                 <div className="space-y-4">
                   <SubTabBar
                     tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
@@ -119,14 +119,14 @@ export default function Examinations(): React.JSX.Element {
                 </div>
               )}
 
-              {effectiveTab === "analytics" && (
+              {effectiveTab === "reports" && (
                 <div className="space-y-4">
                   <KPISummary category="examinations" />
                   <ModuleReports category="examinations" />
                 </div>
               )}
 
-              {effectiveTab === "operations" && effectiveSubTab === "exams" && (
+              {effectiveTab === "work" && effectiveSubTab === "exams" && (
                 <ExamsList
                   exams={exams}
                   onNew={() => {
@@ -139,7 +139,7 @@ export default function Examinations(): React.JSX.Element {
                   }}
                 />
               )}
-              {effectiveTab === "operations" && effectiveSubTab === "results" && (
+              {effectiveTab === "work" && effectiveSubTab === "results" && (
                 <ResultsView exams={exams} results={examResults} />
               )}
             </motion.div>

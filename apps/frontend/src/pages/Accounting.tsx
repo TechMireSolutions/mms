@@ -45,9 +45,8 @@ const SUB_TAB_KEYS: Record<SubTabId, "accounting.tabs.overview" | "accounting.ta
 };
 
 /**
- * Accounting and bookkeeping page component.
- * Allows managing accounts, journal entries, ledgers, and fiscal years.
- * 
+ * Accounting and bookkeeping — Work | Reports | Setup.
+ *
  * @returns {React.ReactElement} The Accounting page component.
  */
 export default function Accounting() {
@@ -62,7 +61,7 @@ export default function Accounting() {
     })),
     [t]
   );
-  const [activeTab, setActiveTab]     = useState("operations");
+  const [activeTab, setActiveTab]     = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [configSubTab, setConfigSubTab] = useState<"fields" | "preferences">("fields");
   const accounts = useLiveCollection("accounting_accounts");
@@ -123,8 +122,8 @@ export default function Accounting() {
         onTabChange={setActiveTab}
         panelIdPrefix="accounting-tab"
       >
-      {/* Sub-tabs for Operations */}
-      {activeTab === "operations" && (
+      {/* Work tier sub-tabs */}
+      {activeTab === "work" && (
         <SubTabBar
           tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
           value={activeSubTab}
@@ -140,7 +139,7 @@ export default function Accounting() {
           className="space-y-4">
 
           <ErrorBoundary>
-          {activeTab === "analytics" && (
+          {activeTab === "reports" && (
             <div className="space-y-4">
               <KPISummary category="accounting" />
               <FinancialReports
@@ -153,23 +152,23 @@ export default function Accounting() {
             </div>
           )}
           
-          {activeTab === "operations" && activeSubTab === "overview" && (
+          {activeTab === "work" && activeSubTab === "overview" && (
             <AccountingDashboard accounts={accounts} entries={entries} settings={settings} fiscalYears={fiscalYears} fmt={fmt} />
           )}
 
-          {activeTab === "operations" && activeSubTab === "journal" && (
+          {activeTab === "work" && activeSubTab === "journal" && (
             <JournalEntries entries={entries} accounts={accounts} settings={settings} fiscalYears={fiscalYears} onChange={setEntries} fmt={fmt} />
           )}
-          {activeTab === "operations" && activeSubTab === "ledger" && (
+          {activeTab === "work" && activeSubTab === "ledger" && (
             <GeneralLedger accounts={accounts} entries={entries} fmt={fmt} />
           )}
-          {activeTab === "operations" && activeSubTab === "trial" && (
+          {activeTab === "work" && activeSubTab === "trial" && (
             <TrialBalance accounts={accounts} entries={entries} fiscalYears={fiscalYears} fmt={fmt} />
           )}
-          {activeTab === "operations" && activeSubTab === "coa" && (
+          {activeTab === "work" && activeSubTab === "coa" && (
             <ChartOfAccounts accounts={accounts} onChange={setAccounts} />
           )}
-          {activeTab === "configuration" && (
+          {activeTab === "setup" && (
             <div className="space-y-4">
               <SubTabBar
                 tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}

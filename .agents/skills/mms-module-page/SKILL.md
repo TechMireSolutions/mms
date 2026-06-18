@@ -1,6 +1,6 @@
 ---
 name: mms-module-page
-description: Creates or modifies MMS module pages with Operations, Analytics, and Configuration tabs, PageHeader CTAs, and settings panels. Use when adding a new module, module page, settings panel, or the standard three-tier tab layout.
+description: Creates or modifies MMS module pages with Work, Reports, and Setup tabs, PageHeader CTAs, and settings panels. Use when adding a new module, module page, settings panel, or the standard three-tier tab layout.
 ---
 
 # MMS Module Page Pattern
@@ -8,8 +8,8 @@ description: Creates or modifies MMS module pages with Operations, Analytics, an
 ## Required structure
 
 ```
-Operations  |  Analytics  |  Configuration
-                                    └─ Fields | Preferences
+work  |  reports  |  setup
+                    └─ Fields | Preferences
 ```
 
 Reference implementations:
@@ -28,14 +28,14 @@ Reference implementations:
 - [ ] Registry: SYSTEM_MODULES + SYSTEM_MODULE_NAV + enabledModules default in @mms/shared
 - [ ] PageHeader with unconditional actions in .actions
 - [ ] ResponsiveAccordionTabs + useModuleTierTabs (mms-ui-tabs.mdc)
-- [ ] Operations: CRUD/list views
-- [ ] Analytics: KPISummary(category) + ModuleReports from components/reports/
-- [ ] Configuration: *Settings panel (Fields + Preferences sub-tabs)
+- [ ] Work: CRUD/list views (`work` tab)
+- [ ] Reports: KPISummary(category) + ModuleReports (`reports` tab)
+- [ ] Setup: *Settings panel (Fields + Preferences sub-tabs) (`setup` tab)
 - [ ] Data: useLiveCollection OR TanStack Query — not one-shot useState
 - [ ] Internal API via apiClient (mms-frontend.mdc)
 - [ ] Module settings object: {module}_settings via saveObject
 - [ ] Types/settings defaults in packages/shared/src/settingsTypes.ts
-- [ ] ErrorBoundary on Operations + Analytics tiers
+- [ ] ErrorBoundary on Work + Reports tiers
 - [ ] can() for write/admin actions — not role === (mms-rbac.mdc)
 ```
 
@@ -59,13 +59,13 @@ Reference implementations:
 
 Each tier is **module-scoped only** (`mms-module-isolation.mdc`):
 
-| Tier | Content |
-|------|---------|
-| Operations | CRUD, lists, wizards — no KPIs or reports |
-| Analytics | `KPISummary(moduleCategory)` + `ModuleReports` / module charts |
-| Configuration | `{module}_settings`, fields, preferences |
+| Tier (id) | User label | Content |
+|-----------|------------|---------|
+| operations | Work | CRUD, lists, wizards — no KPIs or reports |
+| analytics | Reports | `KPISummary(moduleCategory)` + `ModuleReports` / module charts |
+| configuration | Setup | `{module}_settings`, fields, preferences |
 
-- `KPISummary` **inside Analytics tab only** — never above the tier tabs.
+- `KPISummary` **inside Reports tab only** — never above the tier tabs.
 - Use the module's own `category` (not `academic`).
 
 ## Responsive tabs
@@ -76,7 +76,7 @@ Wrap tier navigation in `ResponsiveAccordionTabs` — `mms-ui-tabs.mdc`. Inner t
 
 - Add a fourth top-level tier
 - Gate PageHeader CTAs on `activeTab`
-- Mount `*Settings` under `/settings` — Configuration tab only
+- Mount `*Settings` under `/settings` — Setup tab only
 - Use raw `fetch('/api/...')` — use `apiClient`
 - Duplicate data paths (Query mutations + parallel `saveCollection` writes for same entity)
 - Nest `ContactConfigProvider` on module pages

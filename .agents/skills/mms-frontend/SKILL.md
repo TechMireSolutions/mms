@@ -75,7 +75,7 @@ Reference: `hooks/useStudents.ts`, `hooks/useContacts.ts`, `pages/Students.tsx`.
 - [ ] Nav in lib/navConfig.tsx + SYSTEM_MODULES in @mms/shared
 - [ ] Three-tier tabs: useModuleTierTabs + ResponsiveAccordionTabs
 - [ ] PageHeader actions unconditional (not gated on activeTab)
-- [ ] ErrorBoundary on Operations/Analytics
+- [ ] ErrorBoundary on Work/Reports
 - [ ] Copy via t() — mms-i18n.mdc (no new uiStrings outside Contacts)
 - [ ] Internal API via apiClient
 - [ ] RBAC via can() — not role === (mms-rbac.mdc)

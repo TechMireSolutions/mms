@@ -120,7 +120,7 @@ function SettingsPanel({ contacts, onImport }: SettingsPanelProps) {
   );
 }
 
-// ── Inner page (must be inside ContactConfigProvider) ─────────────────────────
+// ── Inner page (must be inside ContactConfigProvider) — Work | Reports | Setup ──
 function ContactsInner() {
   const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
@@ -182,7 +182,7 @@ function ContactsInner() {
   const [showDuplicates,  setShowDuplicates]  = useState(false);
   const [whatsappTargets, setWhatsappTargets] = useState<Contact[] | null>(null);
   const [smsTargets, setSmsTargets] = useState<Contact[] | null>(null);
-  const [activeTab,       setActiveTab]       = useState("operations");
+  const [activeTab,       setActiveTab]       = useState("work");
 
   const defaultCountry  = prefs.defaultCountry  || "";
   const defaultCity     = prefs.defaultCity     || "";
@@ -329,12 +329,12 @@ function ContactsInner() {
         panelIdPrefix="contacts-tab"
       >
       <AnimatePresence mode="wait">
-        {activeTab === "operations" ? (
-          <motion.div key="operations" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+        {activeTab === "work" ? (
+          <motion.div key="work" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
             <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-card/40 backdrop-blur-xl border border-border/50 p-3 rounded-2xl shadow-sm">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-2">
-                  {t("module.operations")} ({viewMode === "kanban" ? (uiStrings.kanbanBoard || "Kanban Board") : (uiStrings.listView || "List View")})
+                  {t("module.work")} ({viewMode === "kanban" ? (uiStrings.kanbanBoard || "Kanban Board") : (uiStrings.listView || "List View")})
                 </span>
               </div>
 
@@ -505,8 +505,8 @@ function ContactsInner() {
             </AnimatePresence>
           </motion.div>
 
-        ) : activeTab === "analytics" ? (
-          <motion.div key="analytics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+        ) : activeTab === "reports" ? (
+          <motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
             <ErrorBoundary>
               <div className="space-y-4">
                 <KPISummary category="contacts" />
@@ -515,7 +515,7 @@ function ContactsInner() {
             </ErrorBoundary>
           </motion.div>
         ) : (
-          <motion.div key="configuration" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+          <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
             <ErrorBoundary>
               <SettingsPanel
                 contacts={contacts}

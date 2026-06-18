@@ -75,6 +75,12 @@ ensure_jwt_secret() {
 }
 ensure_jwt_secret
 
+if ! grep -q '^PORT=' "$ENV_FILE" 2>/dev/null; then
+  # shellcheck source=lib/deploy-ports.sh
+  source "$(dirname "${BASH_SOURCE[0]}")/lib/deploy-ports.sh"
+  write_env_var "PORT" "$MMS_PROD_BACKEND_PORT"
+fi
+
 if [ -z "${PLATFORM_APP_URL:-}" ] && [ -n "${MMS_APP_DOMAIN:-}" ]; then
   write_env_var "PLATFORM_APP_URL" "https://${MMS_APP_DOMAIN}"
 fi
@@ -88,4 +94,7 @@ if [ -n "$HAS_PROVIDER" ] && [ -n "$HAS_FROM" ]; then
   echo "Platform email: configured in ${ENV_FILE}"
 else
   echo "WARNING: Platform email not in ${ENV_FILE} — add PLATFORM_RESEND_API_KEY (or SMTP_*) and PLATFORM_EMAIL_FROM as GitHub Actions secrets"
+fi
+if ! grep -q '^MMS_APP_DOMAIN=.\+' "$ENV_FILE" 2>/dev/null; then
+  echo "WARNING: MMS_APP_DOMAIN missing in ${ENV_FILE} — set to your apex domain (e.g. mms.example.com)"
 fi

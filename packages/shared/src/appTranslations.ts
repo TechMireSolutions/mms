@@ -1,6 +1,7 @@
 import { APP_TRANSLATIONS_FA } from "./appTranslationsFa.js";
 import { APP_TRANSLATIONS_UR } from "./appTranslationsUr.js";
 import { normalizeAppLanguage, type AppLanguageCode } from "./languageUtils.js";
+import { normalizeModuleTierTabId } from "./moduleTierTabs.js";
 
 const en = {
   "nav.dashboard": "Dashboard",
@@ -180,9 +181,12 @@ const en = {
   "global.timeout120": "2 hours",
   "global.timeout480": "8 hours",
 
-  "module.operations": "Operations",
-  "module.analytics": "Analytics",
-  "module.configuration": "Configuration",
+  "module.work": "Work",
+  "module.reports": "Reports",
+  "module.setup": "Setup",
+  "module.workHint": "Daily tasks and records",
+  "module.reportsHint": "Charts, KPIs, and exports",
+  "module.setupHint": "Fields and module preferences",
   "module.fields": "Fields",
   "module.preferences": "Preferences",
 
@@ -1089,12 +1093,12 @@ const en = {
   "questionBank.formTab.questionHint": "Question text, type, answer, and custom fields",
   "questionBank.categoriesMultiHint": "A question can belong to multiple categories",
   "questionBank.categoriesSelected": "{count} categories selected",
-  "questionBank.categoriesDisabledHint": "Enable the category field in Configuration to assign categories",
+  "questionBank.categoriesDisabledHint": "Enable the category field in Setup to assign categories",
   "questionBank.addSource": "Add source",
   "questionBank.removeSource": "Remove source {n}",
   "questionBank.sourceEntry": "Source {n}",
   "questionBank.sourcesMultiHint": "Add multiple bibliographic references for this question",
-  "questionBank.sourcesDisabledHint": "Enable source fields in Configuration to add references",
+  "questionBank.sourcesDisabledHint": "Enable source fields in Setup to add references",
   "questionBank.sourceBooksTitle": "Source books",
   "questionBank.sourceBooksHint": "Define each book once with its fields. Books appear in the citation dropdown.",
   "questionBank.addSourceBook": "Add book",
@@ -1679,9 +1683,12 @@ const ar: Record<AppTranslationKey, string> = {
   "global.timeout120": "ساعتان",
   "global.timeout480": "٨ ساعات",
 
-  "module.operations": "العمليات",
-  "module.analytics": "التحليلات",
-  "module.configuration": "الإعداد",
+  "module.work": "العمل",
+  "module.reports": "التقارير",
+  "module.setup": "الإعداد",
+  "module.workHint": "المهام اليومية والسجلات",
+  "module.reportsHint": "الرسوم البيانية ومؤشرات الأداء والتصدير",
+  "module.setupHint": "الحقول وتفضيلات الوحدة",
   "module.fields": "الحقول",
   "module.preferences": "التفضيلات",
 
@@ -3086,9 +3093,9 @@ export function translateSystemModuleDescription(
 }
 
 const MODULE_TAB_KEYS: Record<string, AppTranslationKey> = {
-  operations: "module.operations",
-  analytics: "module.analytics",
-  configuration: "module.configuration",
+  work: "module.work",
+  reports: "module.reports",
+  setup: "module.setup",
   fields: "module.fields",
   preferences: "module.preferences",
 };
@@ -3099,6 +3106,6 @@ export function translateModuleTabLabel(
   fallback: string,
   language: string
 ): string {
-  const key = MODULE_TAB_KEYS[tabId];
+  const key = MODULE_TAB_KEYS[normalizeModuleTierTabId(tabId)];
   return key ? translateApp(key, language) : fallback;
 }

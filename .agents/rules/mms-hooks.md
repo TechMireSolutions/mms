@@ -83,7 +83,7 @@ Hotspots still on `role ===`: `Dashboard.tsx`, `WelcomeBanner.tsx`, `KPISummary.
 
 | Hook | Purpose |
 |------|---------|
-| `useModuleTierTabs()` | Operations / Analytics / Configuration |
+| `useModuleTierTabs()` | `work` / `reports` / `setup` |
 | `useConfigSubTabs()` / `usePersistedTabState()` | Sub-tab persistence |
 | `useTranslation()` | `t`, `lang`, `dir` — all new copy via `t()` |
 | `useBodyScrollLock(active?)` | Reference-counted modal scroll lock |

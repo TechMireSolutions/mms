@@ -1,3 +1,5 @@
+import { DEFAULT_MODULE_TIER_TAB_LABELS } from './moduleTierTabs.js';
+
 export type WhatsAppStatus = 'PENDING' | 'REGISTERED' | 'NOT_REGISTERED' | 'FAILED';
 
 export interface WhatsAppPreferences {
@@ -521,7 +523,7 @@ export const DEFAULT_UI_STRINGS: Record<string, string> = {
   predefinedOptionsDescription: "Configure dropdown menus and lists used globally in contact fields (e.g. gender options, relationship labels, dial prefixes).",
   selectListToConfigure: "Select List to Configure",
   defaultViewLayout: "Default View Layout",
-  defaultViewLayoutDescription: "Select how contacts are displayed in operations view",
+  defaultViewLayoutDescription: "Select how contacts are displayed in work view",
   listViewLabel: "List View",
   kanbanBoardLabel: "Kanban Board",
   generalPreferences: "General Preferences",
@@ -840,9 +842,9 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
 export const REMOVED_FORM_FIELD_KEYS: readonly string[] = ["lifecycleStage", "rating"];
 
 export const DEFAULT_PAGE_TABS: TabDefinition[] = [
-  { key: "operations",    label: "Operations",         enabled: true, order: 0, isSystem: true },
-  { key: "analytics",     label: "Analytics",          enabled: true, order: 1, isSystem: true },
-  { key: "configuration", label: "Configuration",      enabled: true, order: 2, isSystem: true },
+  { key: "work",    label: DEFAULT_MODULE_TIER_TAB_LABELS.work,    enabled: true, order: 0, isSystem: true },
+  { key: "reports", label: DEFAULT_MODULE_TIER_TAB_LABELS.reports, enabled: true, order: 1, isSystem: true },
+  { key: "setup",   label: DEFAULT_MODULE_TIER_TAB_LABELS.setup,   enabled: true, order: 2, isSystem: true },
 ];
 
 export const DEFAULT_FORM_TABS: TabDefinition[] = [

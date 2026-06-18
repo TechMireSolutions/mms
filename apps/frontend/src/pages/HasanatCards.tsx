@@ -27,9 +27,8 @@ const SUB_TABS = [
 ];
 
 /**
- * Hasanat Cards management component.
- * Allows handling denominations, stock, distribution, and redemptions.
- * 
+ * Hasanat Cards — denominations, stock, and redemptions. Work | Reports | Setup.
+ *
  * @returns {React.ReactElement} The HasanatCards page component.
  */
 export default function HasanatCards() {
@@ -43,7 +42,7 @@ export default function HasanatCards() {
     ],
     [configSubTabs, t],
   );
-  const [activeTab, setActiveTab] = useState("operations");
+  const [activeTab, setActiveTab] = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [configSubTab, setConfigSubTab] = useState<"denominations" | "fields" | "preferences">("denominations");
   const denoms = useLiveCollection("hasanat_denoms");
@@ -66,7 +65,7 @@ export default function HasanatCards() {
     { label: "Returned", value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
   ];
 
-  const effectiveTab = PAGE_TABS.find((t) => t.id === activeTab) ? activeTab : "operations";
+  const effectiveTab = PAGE_TABS.find((t) => t.id === activeTab) ? activeTab : "work";
   const effectiveSubTab = SUB_TABS.find((t) => t.id === activeSubTab) ? activeSubTab : "overview";
 
   return (
@@ -85,8 +84,8 @@ export default function HasanatCards() {
         onTabChange={setActiveTab}
         panelIdPrefix="hasanat-tab"
       >
-      {/* Sub-tabs for Operations */}
-      {effectiveTab === "operations" && (
+      {/* Work tier sub-tabs */}
+      {effectiveTab === "work" && (
         <SubTabBar
           tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
           value={effectiveSubTab}
@@ -105,13 +104,13 @@ export default function HasanatCards() {
           className="space-y-4"
         >
           <ErrorBoundary>
-          {effectiveTab === "analytics" && (
+          {effectiveTab === "reports" && (
             <div className="space-y-4">
               <KPISummary category="hasanat" />
               <ModuleReports category="hasanat" />
             </div>
           )}
-          {effectiveTab === "configuration" && (
+          {effectiveTab === "setup" && (
             <div className="space-y-4">
               <SubTabBar
                 tabs={HASANAT_CONFIG_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
@@ -124,10 +123,10 @@ export default function HasanatCards() {
             </div>
           )}
           
-          {effectiveTab === "operations" && effectiveSubTab === "overview"     && <HasanatDashboard />}
-          {effectiveTab === "operations" && effectiveSubTab === "stock"         && <StockManager batches={batches} denoms={denoms} onUpdate={(b) => saveCollection("hasanat_batches", b)} />}
-          {effectiveTab === "operations" && effectiveSubTab === "distribute"    && <DistributionManager distributions={distributions} denoms={denoms} batches={batches} onUpdate={(d) => saveCollection("hasanat_distributions", d)} />}
-          {effectiveTab === "operations" && effectiveSubTab === "redemptions"   && <RedemptionTracker distributions={distributions} onUpdateDistributions={(d) => saveCollection("hasanat_distributions", d)} />}
+          {effectiveTab === "work" && effectiveSubTab === "overview"     && <HasanatDashboard />}
+          {effectiveTab === "work" && effectiveSubTab === "stock"         && <StockManager batches={batches} denoms={denoms} onUpdate={(b) => saveCollection("hasanat_batches", b)} />}
+          {effectiveTab === "work" && effectiveSubTab === "distribute"    && <DistributionManager distributions={distributions} denoms={denoms} batches={batches} onUpdate={(d) => saveCollection("hasanat_distributions", d)} />}
+          {effectiveTab === "work" && effectiveSubTab === "redemptions"   && <RedemptionTracker distributions={distributions} onUpdateDistributions={(d) => saveCollection("hasanat_distributions", d)} />}
           </ErrorBoundary>
         </motion.div>
       </AnimatePresence>

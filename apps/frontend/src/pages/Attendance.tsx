@@ -33,9 +33,8 @@ const DEFAULT_FILTERS = {
 };
 
 /**
- * Attendance page component.
- * Allows tracking, managing, and analyzing student attendance.
- * 
+ * Attendance — tracking and reports. Work | Reports | Setup.
+ *
  * @returns {React.ReactElement} The Attendance page component.
  */
 export default function Attendance() {
@@ -44,7 +43,7 @@ export default function Attendance() {
   const { t } = useTranslation();
   const role = useViewerRole();
   const { can } = usePermissions();
-  const [activeTab, setActiveTab] = useState("operations");
+  const [activeTab, setActiveTab] = useState("work");
   const [activeOpsTab, setActiveOpsTab] = useState("mark");
   const [activeAnalyticsTab, setActiveAnalyticsTab] = useState("charts");
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -65,8 +64,8 @@ export default function Attendance() {
     && (can("users.manage") || can("attendance.write") || can("enrollments.write") || !can("finance.write"));
 
   const visibleTopTabs = PAGE_TABS.filter((tab) => {
-    if (tab.id === "configuration") return can("settings.global.write");
-    if (tab.id === "analytics") return canSeeAttendanceAnalytics;
+    if (tab.id === "setup") return can("settings.global.write");
+    if (tab.id === "reports") return canSeeAttendanceAnalytics;
     return true;
   });
 
@@ -87,12 +86,12 @@ export default function Attendance() {
     [t, canSeeAttendanceAnalytics],
   );
 
-  const effectiveTab = visibleTopTabs.find((t) => t.id === activeTab) ? activeTab : "operations";
+  const effectiveTab = visibleTopTabs.find((t) => t.id === activeTab) ? activeTab : "work";
   const effectiveOpsTab = visibleOperationsTabs.find((t) => t.id === activeOpsTab) ? activeOpsTab : (visibleOperationsTabs[0]?.id || "records");
   const effectiveAnalyticsTab = visibleAnalyticsTabs.find((t) => t.id === activeAnalyticsTab) ? activeAnalyticsTab : (visibleAnalyticsTabs[0]?.id || "reports");
 
   const renderContent = () => {
-    if (effectiveTab === "configuration") {
+    if (effectiveTab === "setup") {
       return (
         <div className="space-y-4">
           <SubTabBar
@@ -105,7 +104,7 @@ export default function Attendance() {
       );
     }
 
-    if (effectiveTab === "analytics") {
+    if (effectiveTab === "reports") {
       return (
         <div className="space-y-5">
           <KPISummary category="attendance" role={role} />
@@ -124,7 +123,7 @@ export default function Attendance() {
       );
     }
 
-    // Operations Tab
+    // Work tier
     return (
       <div className="space-y-5">
         {visibleOperationsTabs.length > 1 && (

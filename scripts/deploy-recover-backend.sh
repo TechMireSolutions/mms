@@ -5,8 +5,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+# shellcheck source=lib/deploy-ports.sh
+source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+
 ENV_FILE="${1:-apps/backend/.env}"
-BACKEND_PORT=3000
+BACKEND_PORT="$MMS_PROD_BACKEND_PORT"
 DIST_ENTRY="apps/backend/dist/index.js"
 
 read_env_var() {
@@ -28,7 +31,7 @@ read_env_var() {
   echo "$value"
 }
 
-BACKEND_PORT="$(read_env_var PORT 3000)"
+BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
 
 curl_health() {
   curl -fsS --connect-timeout 3 --max-time 8 "http://127.0.0.1:${BACKEND_PORT}/health" >/dev/null 2>&1 \

@@ -119,7 +119,7 @@ function SessionCard({ session, onClick }: SessionCardProps) {
 }
 
 /**
- * Sessions management page component.
+ * Sessions management — Work | Reports | Setup.
  * @returns The Sessions page.
  */
 export default function Sessions() {
@@ -134,7 +134,7 @@ export default function Sessions() {
   const [showForm, setShowForm] = useState(false);
   const [editSession, setEditSession] = useState<Session | null>(null);
   const [detailSession, setDetailSession] = useState<Session | null>(null);
-  const [activeTab, setActiveTab] = useState("operations");
+  const [activeTab, setActiveTab] = useState("work");
   const [subTab, setSubTab] = useState("fields");
 
   const filtered = useMemo(() => {
@@ -189,9 +189,9 @@ export default function Sessions() {
         panelIdPrefix="sessions-tab"
       >
       <AnimatePresence mode="wait">
-        {activeTab === "operations" ? (
+        {activeTab === "work" ? (
           <motion.div
-            key="operations"
+            key="work"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
@@ -310,14 +310,14 @@ export default function Sessions() {
               </div>
             )}
           </motion.div>
-        ) : activeTab === "analytics" ? (
-          <motion.div key="analytics" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
+        ) : activeTab === "reports" ? (
+          <motion.div key="reports" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
             <KPISummary category="sessions" />
             <ModuleReports category="sessions" />
           </motion.div>
         ) : (
           <motion.div
-            key="configuration"
+            key="setup"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}

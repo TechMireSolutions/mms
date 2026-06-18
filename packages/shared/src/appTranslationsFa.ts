@@ -31,9 +31,12 @@ export const APP_TRANSLATIONS_FA = {
   "global.saveSettings": "ذخیره تنظیمات",
   "global.resetToDefaults": "بازگشت به پیش‌فرض",
 
-  "module.operations": "عملیات",
-  "module.analytics": "تحلیل‌ها",
-  "module.configuration": "پیکربندی",
+  "module.work": "کار",
+  "module.reports": "گزارش‌ها",
+  "module.setup": "راه‌اندازی",
+  "module.workHint": "کارهای روزانه و سوابق",
+  "module.reportsHint": "نمودارها، شاخص‌ها و خروجی",
+  "module.setupHint": "فیلدها و ترجیحات ماژول",
   "module.fields": "فیلدها",
   "module.preferences": "ترجیحات",
 

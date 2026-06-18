@@ -27,6 +27,7 @@ pnpm workspace monorepo: React frontend, Fastify backend, shared types package, 
 
 | Variable | App | Notes |
 |----------|-----|-------|
+| `PORT` | backend | **Production (Hetzner):** `5002` (Apache upstream). **Local dev:** `3000` or `MMS_BACKEND_PORT` |
 | `VITE_API_URL` | frontend | Dev default: Vite proxies `/api` → `http://localhost:3000` |
 | `JWT_SECRET` | backend | **Required** — server refuses to start without it |
 | `DATABASE_URL` | backend | Default: `postgresql://postgres:postgres@localhost:5432/mms` |
@@ -95,4 +96,14 @@ docker run -p 3000:3000 \
   mms-backend
 ```
 
-PostgreSQL must be reachable at `DATABASE_URL`. The image exposes port **3000**.
+PostgreSQL must be reachable at `DATABASE_URL`. The image exposes port **3000** by default; set `-e PORT=5002` and `-p 5002:5002` to match Hetzner.
+
+## Production (Hetzner)
+
+Fastify listens on **`PORT=5002`** (see `scripts/lib/deploy-ports.sh`). Apache `ProxyPass` must target `http://127.0.0.1:5002/`. Deploy scripts (`deploy-recover-backend.sh`, `fix-apache-upstream.sh`, `deploy-verify.sh`) use this default when `PORT` is unset in `apps/backend/.env`.
+
+```bash
+# On server after deploy issues:
+bash scripts/server-diagnose.sh apps/backend/.env
+bash scripts/fix-apache-upstream.sh apps/backend/.env
+```

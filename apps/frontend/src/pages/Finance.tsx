@@ -21,8 +21,8 @@ import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 
 /**
- * Finance page component for tracking and managing invoices and payments.
- * 
+ * Finance — invoices and payments. Work | Reports | Setup.
+ *
  * @returns {React.ReactElement} The Finance page component.
  */
 export default function Finance() {
@@ -36,7 +36,7 @@ export default function Finance() {
     ],
     [t]
   );
-  const [activeTab, setActiveTab] = useState("operations");
+  const [activeTab, setActiveTab] = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("invoices");
   const [subTab, setSubTab] = useState("fields");
   const invoices = useLiveCollection("finance_invoices");
@@ -73,7 +73,7 @@ export default function Finance() {
         onTabChange={setActiveTab}
         panelIdPrefix="finance-tab"
       >
-        {activeTab === "operations" && (
+        {activeTab === "work" && (
           <SubTabBar
             tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
             value={activeSubTab}
@@ -84,13 +84,13 @@ export default function Finance() {
         <AnimatePresence mode="wait">
           <motion.div key={activeTab + "-" + activeSubTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-4">
             <ErrorBoundary>
-            {activeTab === "analytics" && (
+            {activeTab === "reports" && (
               <div className="space-y-4">
                 <KPISummary category="financial" />
                 <ModuleReports category="financial" />
               </div>
             )}
-            {activeTab === "configuration" && (
+            {activeTab === "setup" && (
               <div className="space-y-4">
                 <SubTabBar
                   tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
@@ -101,8 +101,8 @@ export default function Finance() {
               </div>
             )}
 
-            {activeTab === "operations" && activeSubTab === "invoices" && <InvoiceList invoices={invoices} onView={setViewInvoice} onRecord={setRecordInvoice} />}
-            {activeTab === "operations" && activeSubTab === "payments" && <PaymentTracker payments={payments} />}
+            {activeTab === "work" && activeSubTab === "invoices" && <InvoiceList invoices={invoices} onView={setViewInvoice} onRecord={setRecordInvoice} />}
+            {activeTab === "work" && activeSubTab === "payments" && <PaymentTracker payments={payments} />}
             </ErrorBoundary>
           </motion.div>
         </AnimatePresence>

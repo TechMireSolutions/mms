@@ -82,6 +82,15 @@ export function isApexHost(hostname: string, appDomain: string): boolean {
  * Derive the apex app domain from a browser/API host when env is unset.
  * e.g. `{slug}.platform.example.com` → `platform.example.com`
  */
+const APEX_3PART_LABELS = new Set([
+  'platform',
+  'mms',
+  'app',
+  'staging',
+  'dev',
+  'www',
+]);
+
 export function inferAppDomainFromHostname(hostname: string): string | null {
   const host = hostname.toLowerCase().split(":")[0];
   if (!host || host === "localhost" || host.endsWith(".localhost")) {
@@ -100,6 +109,14 @@ export function inferAppDomainFromHostname(hostname: string): string | null {
   }
 
   if (parts.length === 3) {
+    const sub = parts[0];
+    if (sub && APEX_3PART_LABELS.has(sub)) {
+      return host;
+    }
+    const candidateApex = parts.slice(1).join(".");
+    if (sub && isValidSubdomain(sub) && parseTenantFromHost(host, candidateApex) === sub) {
+      return candidateApex;
+    }
     return host;
   }
 

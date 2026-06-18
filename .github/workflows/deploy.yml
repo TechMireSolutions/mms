@@ -39,6 +39,7 @@ jobs:
       #   OR PLATFORM_SMTP_* + PLATFORM_EMAIL_FROM
       #   Optional bootstrap: PLATFORM_ALLOW_ENV_BOOTSTRAP=true, PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD
       #   Optional verify fallback: MMS_API_URL=https://your-api-host (public /health)
+      #   Backend listen port on server: PORT=5002 in apps/backend/.env (default in scripts/lib/deploy-ports.sh)
       - name: Copy build tarball to server
         uses: appleboy/scp-action@v0.1.7
         with:

@@ -45,7 +45,7 @@ E2E when touching auth/routing: `pnpm exec playwright test`
 - [ ] No hardcoded labels/colours/status maps — `t()` + registries
 - [ ] No new `uiStrings` keys outside Contacts module
 - [ ] Fields/tabs from registry
-- [ ] Module tier: Operations | Analytics | Configuration
+- [ ] Module tier: `work` | `reports` | `setup`
 - [ ] `ResponsiveAccordionTabs` / `SubTabBar` — no inline tab bars
 - [ ] `FormModal` for add/edit entity dialogs when touching legacy overlays
 

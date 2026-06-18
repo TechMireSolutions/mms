@@ -15,7 +15,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Inline `role ===` checks | Dashboard widget personalization uses `useViewerRole()` | `can()` for permissions — `mms-rbac.md` |
 | Custom tab provisioning | JSON document store only | Table + migration + CRUD per custom tab — `mms-fields.md` |
 | WebSockets | Not implemented | Replace polling for server push — `mms-core.md` |
-| Operations/Analytics sub-tabs | Residual inline bars in deep components | `SubTabBar` per `mms-ui-tabs.md` |
+| Work/Reports sub-tabs | Residual inline bars in deep components | `SubTabBar` per `mms-ui-tabs.md` |
 | `category="academic"` in reports/KPI | Removed from module pages | Module-specific categories only (`mms-module-isolation.md`) |
 | Legacy entity forms | ObligationModal, some detail drawers | `FormModal` — `mms-ui-forms.md` |
 | Status colours inline | Residual in chart color maps | `StatusBadge` + semantic tokens — `mms-ui-visual.md` |
@@ -41,7 +41,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | `contact.md` | Aligned with `@mms/shared` + `FormPrimitives` |
 | `Enrollment.tsx` | Removed; `/enrollments` → `Enrollments.tsx` |
 | Orphan route guards | Removed duplicate guards and deleted `PlaceholderPage`; canonical `ProtectedRoute` kept in `components/routing/` (`HostRoutes`) |
-| Settings page module panels | Removed; module config only in each module's Configuration tab |
+| Settings page module panels | Removed; module config only in each module's Setup tab |
 | Settings scope | `/settings`: global · modules · branding · theme · backup (`SETTINGS_SECTIONS`) |
 | System Modules layout | `SYSTEM_MODULE_NAV` mirrors nav; Academics group; registry in `@mms/shared` |
 | Attendance nav | Under Academics group in `navConfig.tsx`, not top-level |
@@ -60,7 +60,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | SubTabBar (Accounting, Enrollments, Hasanat, Sessions, Students, Contacts config) | Inline pill bars replaced |
 | AccountModal → FormModal | Chart of accounts add/edit dialog |
 | Enrollments `can('enrollments.write')` | Replaces accountant role string checks |
-| Attendance tier tabs via `can()` | Configuration/analytics visibility |
+| Attendance tier tabs via `can()` | Setup/Reports visibility |
 | Contacts page header i18n | `t()` for title, subtitle, actions |
 | Contacts toolbar/stats i18n | Toolbar, column customizer, stats cards, avatar alt via `t()` |
 | Contacts collection form tab i18n | Phone, email, address, social collection controls via `t()` |
@@ -102,5 +102,6 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | User modals RHF + Zod | `EditUserModal`, `InviteUserModal` on `FormModal` + `lib/forms/` |
 | Contacts i18n bridge | `useContactCopy()` — `t()` with `uiStrings` fallback; SMS panel migrated |
 | Vite `@` alias | `path.resolve('./src')` aligned with Vitest + tsconfig |
+| Module tier tab ids | `work` / `reports` / `setup` — ids match UI names; legacy `operations` / `analytics` / `configuration` normalized on read |
 
 Do not reintroduce resolved violations.

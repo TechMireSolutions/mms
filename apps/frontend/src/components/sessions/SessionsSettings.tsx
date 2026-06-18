@@ -244,7 +244,7 @@ export default function SessionsSettings({ mode }: SessionsSettingsProps): React
             <div className="py-3 border-t border-border mt-3 flex items-center justify-between">
               <div>
                 <p className="text-[13px] font-semibold text-foreground">Default View Layout</p>
-                <p className="text-[11px] text-muted-foreground">Select how sessions are displayed in operations view</p>
+                <p className="text-[11px] text-muted-foreground">Select how sessions are displayed in work view</p>
               </div>
               <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
                 <button

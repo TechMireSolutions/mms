@@ -1,4 +1,4 @@
-# MMS production vhost — Apache proxies all traffic to Fastify on :3000 (API + SPA).
+# MMS production vhost — Apache proxies all traffic to Fastify on :5002 (API + SPA) by default.
 # Replace @@MMS_APP_DOMAIN@@ and @@BACKEND_PORT@@ before enabling.
 # SSL paths: adjust for your certbot / hosting layout.
 

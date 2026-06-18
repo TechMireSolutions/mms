@@ -32,7 +32,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { notify } from '@/lib/notify';
 
 /**
- * Users and roles — Operations | Analytics | Configuration.
+ * Users and roles — Work | Reports | Setup.
  */
 export default function Users(): React.JSX.Element {
   const PAGE_TABS = useModuleTierTabs();
@@ -53,7 +53,7 @@ export default function Users(): React.JSX.Element {
     ],
     [t],
   );
-  const [activeTab, setActiveTab] = usePersistedTabState<string>('users_active_tab', 'operations');
+  const [activeTab, setActiveTab] = usePersistedTabState<string>('users_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = usePersistedTabState<string>('users_ops_subtab', 'users');
   const [configSubTab, setConfigSubTab] = usePersistedTabState<string>(
     'users_config_subtab',
@@ -85,8 +85,8 @@ export default function Users(): React.JSX.Element {
   );
 
   useEffect(() => {
-    if (!isAdmin && (activeTab === 'configuration' || activeTab === 'analytics')) {
-      setActiveTab('operations');
+    if (!isAdmin && (activeTab === 'setup' || activeTab === 'reports')) {
+      setActiveTab('work');
     }
   }, [isAdmin, activeTab, setActiveTab]);
 
@@ -161,11 +161,11 @@ export default function Users(): React.JSX.Element {
   };
 
   const visibleTopTabs = PAGE_TABS.filter((tab) => {
-    if (tab.id === 'configuration' || tab.id === 'analytics') return isAdmin;
+    if (tab.id === 'setup' || tab.id === 'reports') return isAdmin;
     return true;
   });
 
-  const effectiveTab = visibleTopTabs.find((tab) => tab.id === activeTab) ? activeTab : 'operations';
+  const effectiveTab = visibleTopTabs.find((tab) => tab.id === activeTab) ? activeTab : 'work';
   const effectiveSubTab = SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : 'users';
 
   return (
@@ -199,7 +199,7 @@ export default function Users(): React.JSX.Element {
         hideWhenSingle
         panelIdPrefix="users-tab"
       >
-        {effectiveTab === 'operations' && (
+        {effectiveTab === 'work' && (
           <SubTabBar
             tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
             value={effectiveSubTab}
@@ -217,10 +217,10 @@ export default function Users(): React.JSX.Element {
               transition={{ duration: 0.18 }}
               className="space-y-4"
             >
-              {effectiveTab === 'analytics' && (
+              {effectiveTab === 'reports' && (
                 <ModuleReports category="faculty" role={viewerRole} />
               )}
-              {effectiveTab === 'configuration' && (
+              {effectiveTab === 'setup' && (
                 <div className="space-y-4">
                   <SubTabBar
                     tabs={USERS_CONFIG_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
@@ -233,7 +233,7 @@ export default function Users(): React.JSX.Element {
                 </div>
               )}
 
-              {effectiveTab === 'operations' && effectiveSubTab === 'users' && (
+              {effectiveTab === 'work' && effectiveSubTab === 'users' && (
                 <UsersList
                   users={users}
                   onView={setViewing}
@@ -245,7 +245,7 @@ export default function Users(): React.JSX.Element {
                 />
               )}
 
-              {effectiveTab === 'operations' && effectiveSubTab === 'activity' && (
+              {effectiveTab === 'work' && effectiveSubTab === 'activity' && (
                 <ActivityLogs logs={logs} users={users} />
               )}
             </motion.div>

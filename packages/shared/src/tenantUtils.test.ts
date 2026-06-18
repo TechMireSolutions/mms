@@ -22,6 +22,7 @@ describe('inferAppDomainFromHostname', () => {
 
   it('returns apex for tenant hosts', () => {
     expect(inferAppDomainFromHostname(`dar-ul-quran.${PLATFORM}`)).toBe(PLATFORM);
+    expect(inferAppDomainFromHostname('dar-ul-quran.example.com')).toBe('example.com');
   });
 });
 

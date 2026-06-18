@@ -29,6 +29,8 @@ import {
   DEFAULT_SETTINGS_SUB_TABS,
   DEFAULT_COLUMN_REGISTRY,
   REMOVED_FORM_FIELD_KEYS,
+  refreshModuleTierTabLabels,
+  refreshModuleTierTabKeys,
 } from "./contactFields";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -91,7 +93,10 @@ function migrateConfig(config: unknown): FieldConfig {
     });
   };
 
-  cfg.pageTabs = normalizeTabs(cfg.pageTabs) ?? defaults.pageTabs;
+  const normalizedPageTabs = refreshModuleTierTabLabels(
+    refreshModuleTierTabKeys(normalizeTabs(cfg.pageTabs) ?? defaults.pageTabs ?? DEFAULT_PAGE_TABS),
+  );
+  cfg.pageTabs = normalizedPageTabs;
   cfg.formTabs = normalizeTabs(cfg.formTabs) ?? defaults.formTabs;
   cfg.detailTabs = normalizeTabs(cfg.detailTabs) ?? defaults.detailTabs;
   cfg.settingsSubTabs = normalizeTabs(cfg.settingsSubTabs) ?? defaults.settingsSubTabs;

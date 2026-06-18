@@ -154,7 +154,7 @@ Re-export from the original entry file so imports stay stable.
 ## Resilience & a11y
 
 - Lazy route `Suspense` fallbacks: accessible loading text (`t('common.loading')`)
-- Module pages: `ErrorBoundary` on Operations/Analytics content (`mms-observability.md`)
+- Module pages: `ErrorBoundary` on Work/Reports content (`mms-observability.md`)
 - New UI: keyboard + `aria-label` baseline — `mms-a11y.md`
 - API/query failures: `notify.error` with `t()` — no silent `catch`
 

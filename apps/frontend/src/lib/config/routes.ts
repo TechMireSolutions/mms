@@ -65,7 +65,7 @@ export function isEntryPath(
   return false;
 }
 
-/** App-wide settings sections only — module config lives in each module's Configuration tab. */
+/** App-wide settings sections only — module config lives in each module's Setup tab. */
 export const SETTINGS_SECTIONS = [
   "global",
   "modules",

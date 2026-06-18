@@ -43,6 +43,7 @@ Helper scripts:
 | `VITE_API_URL` | frontend | dev default via Vite proxy `/api` → `:3000` |
 | `JWT_SECRET` | backend | **yes** — server refuses start without it |
 | `DATABASE_URL` | backend | default `postgresql://postgres:postgres@localhost:5432/mms` |
+| `PORT` | backend | **Hetzner:** `5002` (`scripts/lib/deploy-ports.sh`). **Local dev:** `3000` / `MMS_BACKEND_PORT` |
 | `ALLOWED_ORIGIN` | backend | production CORS (must match frontend origin with `credentials: true`) |
 | `NODE_ENV` | backend | `production` tightens CORS |
 | `LOG_LEVEL` | backend | optional — Fastify logger level |
@@ -81,8 +82,9 @@ Create `apps/backend/.env` locally — never commit real secrets. See root and p
 
 Deploy should curl `/ready` after PM2 restart (`mms-observability.md`).
 
-## Production deploy (target)
+## Production deploy (Hetzner)
 
+- Fastify + SPA on **`PORT=5002`** — Apache `ProxyPass` → `http://127.0.0.1:5002/` (`scripts/fix-apache-upstream.sh`)
 - Reverse proxy terminates TLS; sets `x-forwarded-host` for tenant resolution
 - `ALLOWED_ORIGIN`, `JWT_SECRET`, `DATABASE_URL` from secrets manager — never in image layers
 - Security headers at proxy — `mms-security.md`

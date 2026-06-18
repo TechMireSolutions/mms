@@ -24,9 +24,8 @@ import { useStudentsCollection } from "../hooks/useStudents";
 import { useEnrollmentViewerRole } from "@/hooks/useViewerRole";
 
 /**
- * Enrollments management page.
- * Allows managing student enrollment into sessions and classes with Dashboard and Settings tabs.
- * 
+ * Enrollments management — Work | Reports | Setup.
+ *
  * @returns {React.ReactElement} The Enrollments page component.
  */
 export default function Enrollments() {
@@ -40,7 +39,7 @@ export default function Enrollments() {
     [t]
   );
   const TABS = useModuleTierTabs();
-  const [tab, setTab]                 = useState("operations");
+  const [tab, setTab]                 = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("list");
   const role = useEnrollmentViewerRole();
   const { can } = usePermissions();
@@ -116,7 +115,7 @@ export default function Enrollments() {
         actions={
           <div className="flex items-center gap-2">
             {canWriteEnrollments && (
-              <button onClick={() => { setTab("operations"); setShowWizard(true); }}
+              <button onClick={() => { setTab("work"); setShowWizard(true); }}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
                 <Plus className="w-3.5 h-3.5" /> {t("enrollments.new")}
               </button>
@@ -131,8 +130,8 @@ export default function Enrollments() {
         onTabChange={setTab}
         panelIdPrefix="enrollments-tab"
       >
-      {/* Sub-tabs for Operations */}
-      {tab === "operations" && (
+      {/* Work tier sub-tabs */}
+      {tab === "work" && (
         <SubTabBar
           tabs={SUB_TABS
             .filter((item) => canWriteEnrollments || item.id !== "eligibility")
@@ -149,7 +148,7 @@ export default function Enrollments() {
           exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
           className="space-y-4"
         >
-          {tab === "analytics" && (
+          {tab === "reports" && (
             <ErrorBoundary>
               <div className="space-y-4">
                 <KPISummary category="enrollments" />
@@ -157,7 +156,7 @@ export default function Enrollments() {
               </div>
             </ErrorBoundary>
           )}
-          {tab === "operations" && activeSubTab === "list" && (
+          {tab === "work" && activeSubTab === "list" && (
             <ErrorBoundary>
               <EnrollmentList
                 enrollments={enrollments}
@@ -168,13 +167,13 @@ export default function Enrollments() {
             </ErrorBoundary>
           )}
 
-          {tab === "operations" && activeSubTab === "eligibility" && (
+          {tab === "work" && activeSubTab === "eligibility" && (
             <ErrorBoundary>
               <EligibilityCheck />
             </ErrorBoundary>
           )}
 
-          {tab === "configuration" && (
+          {tab === "setup" && (
             <ErrorBoundary>
               <div className="space-y-4">
                 <SubTabBar

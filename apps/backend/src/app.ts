@@ -26,6 +26,17 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   await initDb();
   await registerPlugins(app, config);
+
+  if (config.isProd) {
+    const appDomain = process.env.MMS_APP_DOMAIN?.trim();
+    if (!appDomain) {
+      app.log.error(
+        'MMS_APP_DOMAIN is not set — tenant subdomains will not resolve. ' +
+          'Set MMS_APP_DOMAIN in apps/backend/.env (e.g. your-apex-domain.com).',
+      );
+    }
+  }
+
   await registerRoutes(app);
   const spaActive = await registerFrontendSpa(app, config);
 

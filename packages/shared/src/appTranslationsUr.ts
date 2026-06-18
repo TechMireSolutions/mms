@@ -177,9 +177,12 @@ export const APP_TRANSLATIONS_UR = {
   "global.timeout120": "2 گھنٹے",
   "global.timeout480": "8 گھنٹے",
 
-  "module.operations": "عملیات",
-  "module.analytics": "تجزیات",
-  "module.configuration": "ترتیب",
+  "module.work": "کام",
+  "module.reports": "رپورٹس",
+  "module.setup": "سیٹ اپ",
+  "module.workHint": "روزانہ کے کام اور ریکارڈ",
+  "module.reportsHint": "چارٹس، اہم اشارے اور برآمد",
+  "module.setupHint": "فیلڈز اور ماڈیول ترجیحات",
   "module.fields": "فیلڈز",
   "module.preferences": "ترجیحات",
 

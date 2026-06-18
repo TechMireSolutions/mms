@@ -8,6 +8,9 @@ ENV_FILE="${MMS_DEPLOY_ENV:-apps/backend/.env}"
 
 cd "$ROOT_DIR" || { echo "FATAL: cannot cd to ${ROOT_DIR}"; exit 1; }
 
+# shellcheck source=lib/deploy-ports.sh
+source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+
 git reset --hard HEAD
 git pull origin main
 if [ $? -ne 0 ]; then
@@ -66,14 +69,14 @@ fi
 
 if [ -f scripts/deploy-recover-frontend.sh ]; then
   bash scripts/deploy-recover-frontend.sh "$ENV_FILE" || {
-    echo "WARNING: separate frontend PM2 recovery failed — backend should serve SPA on port ${BACKEND_PORT:-3000}"
+    echo "WARNING: separate frontend PM2 recovery failed — backend should serve SPA on port ${MMS_PROD_BACKEND_PORT}"
     pm2 logs mmsv2-frontend --lines 30 --nostream || true
   }
 fi
 
 if [ -f scripts/fix-apache-upstream.sh ]; then
   bash scripts/fix-apache-upstream.sh "$ENV_FILE" || {
-    echo "ERROR: Apache upstream patch failed — ProxyPass must point to :3000"
+    echo "ERROR: Apache upstream patch failed — ProxyPass must point to :${MMS_PROD_BACKEND_PORT}"
     DEPLOY_OK=false
   }
 fi

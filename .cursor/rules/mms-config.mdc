@@ -24,10 +24,10 @@ Persist via `db.ts` — not ephemeral React state alone. App-wide singletons use
 | Module on/off | `global_settings.enabledModules` | `/settings/modules` |
 | Institution | branding object (identity fields) | `/settings/branding` |
 | Theme | branding object (colours, footer) | `/settings/theme` |
-| Module prefs | `students_settings`, `attendance_settings`, … | Module → **Configuration → Preferences** |
-| Fields/tabs | `contact_field_config`, … | Module → **Configuration → Fields** |
+| Module prefs | `students_settings`, `attendance_settings`, … | Module → **Setup → Preferences** |
+| Fields/tabs | `contact_field_config`, … | Module → **Setup → Fields** |
 
-**`/settings` does not host per-module Fields/Preferences** — use each module's Configuration tab.
+**`/settings` does not host per-module Fields/Preferences** — use each module's Setup tab.
 
 ## ContactConfigProvider
 
@@ -61,11 +61,11 @@ Settings that affect visible UI must **preview on change**; **Save** still persi
 2. **`onPreview(draft)`** on every draft change — theme, language, nav modules, branding chrome, field visibility, etc.
 3. **`revertSettingsPreviews()`** when leaving `/settings` without save (`RouterBridge`).
 4. **Clear preview** after successful save (`clearGlobalSettingsPreview` / `clearBrandingSettingsPreview` or typed save helpers).
-5. Module `*Settings` panels: same pattern via `useSettingsDraft`; wire `onPreview` for any preference that affects Operations UI before Save.
+5. Module `*Settings` panels: same pattern via `useSettingsDraft`; wire `onPreview` for any preference that affects Work-tier UI before Save.
 
 ## Shared settings panels
 
-`*Settings` / `*SettingsPanel` components have **one implementation** — imported by the module page Configuration tab only. Do not fork or re-mount under `/settings`.
+`*Settings` / `*SettingsPanel` components have **one implementation** — imported by the module page Setup tab only. Do not fork or re-mount under `/settings`.
 
 ## Current vs target
 

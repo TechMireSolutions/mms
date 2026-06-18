@@ -5,7 +5,7 @@ export interface ConfigSubTab {
   label: string;
 }
 
-/** Fields / Preferences sub-tabs for module Configuration tier. */
+/** Fields / Preferences sub-tabs for module `setup` tier. */
 export function useConfigSubTabs(): ConfigSubTab[] {
   const { t } = useTranslation();
   return [

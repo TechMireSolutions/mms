@@ -23,6 +23,9 @@ import { runMigration005 } from './migrations/005_normalize_teacher_contacts.js'
 import { runMigration006 } from './migrations/006_normalize_contact_linked_collections.js';
 import { runMigration007 } from './migrations/007_normalize_actor_user_links.js';
 import { runMigration008 } from './migrations/008_backfill_login_email.js';
+import { runMigration009 } from './migrations/009_seed_demo_students.js';
+import { runMigration010 } from './migrations/010_seed_demo_teacher_contacts.js';
+import { runMigration011 } from './migrations/011_expand_demo_roster.js';
 import { purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { setDb } from './dbClient.js';
@@ -77,6 +80,9 @@ export async function initDb(): Promise<void> {
     await runMigration006();
     await runMigration007();
     await runMigration008();
+    await runMigration009();
+    await runMigration010();
+    await runMigration011();
     await purgeExpiredAuthArtifacts();
     await ensurePlatformSuperUserFromEnv();
 

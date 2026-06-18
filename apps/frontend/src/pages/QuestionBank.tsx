@@ -24,7 +24,7 @@ import { saveCollection } from '../lib/db';
 import { useLiveCollection } from '../hooks/useLiveCollection';
 
 /**
- * Question Bank — Operations | Analytics | Configuration.
+ * Question Bank — Work | Reports | Setup.
  */
 export default function QuestionBankPage(): React.JSX.Element {
   const PAGE_TABS = useModuleTierTabs();
@@ -41,7 +41,7 @@ export default function QuestionBankPage(): React.JSX.Element {
     ],
     [t],
   );
-  const [activeTab, setActiveTab] = usePersistedTabState<string>('question_bank_active_tab', 'operations');
+  const [activeTab, setActiveTab] = usePersistedTabState<string>('question_bank_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = usePersistedTabState<string>('question_bank_ops_subtab', 'questions');
   const [configSubTab, setConfigSubTab] = usePersistedTabState<string>(
     'question_bank_config_subtab',
@@ -59,7 +59,7 @@ export default function QuestionBankPage(): React.JSX.Element {
   );
 
   const openAddQuestion = useCallback((): void => {
-    setActiveTab('operations');
+    setActiveTab('work');
     setActiveSubTab('questions');
     setEditQuestion(null);
     setShowQuestionModal(true);
@@ -80,7 +80,7 @@ export default function QuestionBankPage(): React.JSX.Element {
     setEditQuestion(null);
   }, []);
 
-  const effectiveTab = PAGE_TABS.find((tab) => tab.id === activeTab) ? activeTab : 'operations';
+  const effectiveTab = PAGE_TABS.find((tab) => tab.id === activeTab) ? activeTab : 'work';
   const effectiveSubTab = OPS_SUB_TABS.find((tab) => tab.id === activeSubTab)
     ? activeSubTab
     : 'questions';
@@ -111,7 +111,7 @@ export default function QuestionBankPage(): React.JSX.Element {
         onTabChange={setActiveTab}
         panelIdPrefix="question-bank-tab"
       >
-        {effectiveTab === 'operations' && (
+        {effectiveTab === 'work' && (
           <SubTabBar
             tabs={OPS_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
             value={effectiveSubTab}
@@ -129,7 +129,7 @@ export default function QuestionBankPage(): React.JSX.Element {
               transition={{ duration: 0.18 }}
               className="space-y-4"
             >
-              {effectiveTab === 'configuration' && (
+              {effectiveTab === 'setup' && (
                 <div className="space-y-4">
                   <SubTabBar
                     tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
@@ -140,7 +140,7 @@ export default function QuestionBankPage(): React.JSX.Element {
                 </div>
               )}
 
-              {effectiveTab === 'analytics' && (
+              {effectiveTab === 'reports' && (
                 <div className="space-y-4">
                   <KPISummary category="questionBank" />
                   <ModuleReports category="questionBank" />
@@ -156,7 +156,7 @@ export default function QuestionBankPage(): React.JSX.Element {
                 </div>
               )}
 
-              {effectiveTab === 'operations' && effectiveSubTab === 'questions' && (
+              {effectiveTab === 'work' && effectiveSubTab === 'questions' && (
                 <QuestionsPanel
                   questions={questions}
                   onUpdate={setQuestions}
@@ -168,7 +168,7 @@ export default function QuestionBankPage(): React.JSX.Element {
                 />
               )}
 
-              {effectiveTab === 'operations' && effectiveSubTab === 'generate' && (
+              {effectiveTab === 'work' && effectiveSubTab === 'generate' && (
                 <GenerateTest
                   questions={questions}
                   tests={tests}

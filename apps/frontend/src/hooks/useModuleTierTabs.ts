@@ -1,9 +1,11 @@
 import { LayoutDashboard, BarChart2, Settings, type LucideIcon } from "lucide-react";
+import type { ModuleTierTabId } from "@mms/shared";
 import { useTranslation } from "./useTranslation";
 
 export interface ModuleTierTab {
-  id: "operations" | "analytics" | "configuration";
+  id: ModuleTierTabId;
   label: string;
+  description: string;
   icon: LucideIcon;
 }
 
@@ -11,9 +13,24 @@ export interface ModuleTierTab {
 export function useModuleTierTabs(): ModuleTierTab[] {
   const { t } = useTranslation();
   return [
-    { id: "operations", label: t("module.operations"), icon: LayoutDashboard },
-    { id: "analytics", label: t("module.analytics"), icon: BarChart2 },
-    { id: "configuration", label: t("module.configuration"), icon: Settings },
+    {
+      id: "work",
+      label: t("module.work"),
+      description: t("module.workHint"),
+      icon: LayoutDashboard,
+    },
+    {
+      id: "reports",
+      label: t("module.reports"),
+      description: t("module.reportsHint"),
+      icon: BarChart2,
+    },
+    {
+      id: "setup",
+      label: t("module.setup"),
+      description: t("module.setupHint"),
+      icon: Settings,
+    },
   ];
 }
 

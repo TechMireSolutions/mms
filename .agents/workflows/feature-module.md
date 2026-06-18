@@ -1,5 +1,5 @@
 ---
-description: Add or extend an MMS module with Operations, Analytics, and Configuration tabs
+description: Add or extend an MMS module with Work, Reports, and Setup tabs
 ---
 
 # Workflow: Feature Module

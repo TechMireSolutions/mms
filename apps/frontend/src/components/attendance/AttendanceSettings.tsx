@@ -251,7 +251,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
               <SettingRow label="Geo-location Tagging" sub="Record teacher's GPS coordinates when submitting attendance">
                 <Toggle checked={settings.geoTagging ?? false} onChange={(v) => set("geoTagging", v)} />
               </SettingRow>
-              <SettingRow label="Default View Layout" sub="Select default layout format for attendance records in operations view">
+              <SettingRow label="Default View Layout" sub="Select default layout format for attendance records in work view">
                 <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
                   <button
                     type="button"

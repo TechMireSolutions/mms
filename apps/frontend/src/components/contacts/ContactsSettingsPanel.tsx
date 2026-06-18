@@ -4,8 +4,10 @@ import {
   TAB_REGISTRY, DEFAULT_ENABLED_TABS, DEFAULT_REQUIRED_TABS,
   FieldConfig, ContactPreferences, TabDefinition,
   CONFIG_VERSION, COLOR_PALETTES, DEFAULT_UI_STRINGS,
-  SETTINGS_LIST_OPTIONS, FieldDefinition, toTitleCase as sharedToTitleCase
+  SETTINGS_LIST_OPTIONS, FieldDefinition, toTitleCase as sharedToTitleCase,
+  isModuleTierTabId, type AppTranslationKey,
 } from "@mms/shared";
+import useTranslation from "@/hooks/useTranslation";
 import { saveDefaultConfig, loadDefaultConfig } from "../../lib/contactFieldsStore";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
@@ -86,6 +88,7 @@ interface ContactPrefs extends ContactPreferences {
  * @returns React element.
  */
 export default function ContactsSettingsPanel({ config, onConfigChange, mode }: ContactsSettingsPanelProps): React.JSX.Element {
+  const { t } = useTranslation();
   const {
     updatePrefs,
     genders,
@@ -490,39 +493,50 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
           <p className="text-[11px] text-muted-foreground">{description}</p>
         </div>
         <div className="border border-border rounded-xl divide-y divide-border bg-card">
-          {sorted.map((t) => (
-            <div key={t.key} className="flex items-center gap-3 px-3 py-2 text-xs">
-              <div className="w-24 font-mono font-semibold text-muted-foreground truncate" title={t.key}>
-                {t.key}
+          {sorted.map((tab) => {
+            const tierLabel = tabType === "page" && tab.isSystem && isModuleTierTabId(tab.key)
+              ? t(`module.${tab.key}` as AppTranslationKey)
+              : null;
+            return (
+            <div key={tab.key} className="flex items-center gap-3 px-3 py-2 text-xs">
+              <div className="w-24 font-mono font-semibold text-muted-foreground truncate" title={tab.key}>
+                {tab.key}
               </div>
+              {tierLabel ? (
+                <span className="flex-1 min-w-0 px-2 py-1 text-foreground text-xs font-medium">
+                  {tierLabel}
+                </span>
+              ) : (
               <input
                 type="text"
-                value={t.label}
-                onChange={(e) => updateTabProperty(tabType, t.key, "label", e.target.value)}
+                value={tab.label}
+                onChange={(e) => updateTabProperty(tabType, tab.key, "label", e.target.value)}
                 className="flex-1 min-w-0 px-2 py-1 rounded border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                 placeholder="Tab Label"
               />
+              )}
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground">{localUiStrings.tabOrderLabel}</span>
                 <input
                   type="number"
-                  value={t.order}
-                  onChange={(e) => updateTabProperty(tabType, t.key, "order", parseInt(e.target.value) || 0)}
+                  value={tab.order}
+                  onChange={(e) => updateTabProperty(tabType, tab.key, "order", parseInt(e.target.value) || 0)}
                   className="w-10 px-1 py-0.5 rounded border border-border bg-background text-foreground text-xs text-center focus:outline-none"
                 />
               </div>
               <button
                 type="button"
-                onClick={() => updateTabProperty(tabType, t.key, "enabled", !t.enabled)}
+                onClick={() => updateTabProperty(tabType, tab.key, "enabled", !tab.enabled)}
                 className="relative flex items-center justify-center w-11 h-11 flex-shrink-0"
-                aria-label={`${localUiStrings?.toggleTab || "Toggle tab"} ${t.key}`}
+                aria-label={`${localUiStrings?.toggleTab || "Toggle tab"} ${tab.key}`}
               >
-                <div className="relative rounded-full transition-colors" style={{ width: 34, height: 18, backgroundColor: t.enabled ? "hsl(var(--primary))" : "hsl(var(--border))" }}>
-                  <span style={{ width: 14, height: 14, top: 2, left: t.enabled ? 18 : 2, position: "absolute", borderRadius: "50%", background: "white", transition: "left 0.2s" }} />
+                <div className="relative rounded-full transition-colors" style={{ width: 34, height: 18, backgroundColor: tab.enabled ? "hsl(var(--primary))" : "hsl(var(--border))" }}>
+                  <span style={{ width: 14, height: 14, top: 2, left: tab.enabled ? 18 : 2, position: "absolute", borderRadius: "50%", background: "white", transition: "left 0.2s" }} />
                 </div>
               </button>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );

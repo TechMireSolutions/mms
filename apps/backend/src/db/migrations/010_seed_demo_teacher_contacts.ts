@@ -1,0 +1,121 @@
+import {
+  DEFAULT_TEACHERS_SETTINGS,
+  DEMO_TEACHER_CONTACTS,
+  DEMO_TEACHERS,
+  WORKSPACES_COLLECTION,
+  parseTenantScopedStorageKey,
+  tenantCollectionKey,
+  tenantObjectKey,
+  type Contact,
+  type Workspace,
+} from '@mms/shared';
+import {
+  getCollectionByStorageName,
+  getObjectByStorageKey,
+  listCollectionStorageNames,
+  saveCollection,
+  saveObject,
+} from '../database.js';
+
+const TEACHERS_COLLECTION = 'teachers';
+const CONTACTS_COLLECTION = 'contacts';
+const TEACHERS_SETTINGS_KEY = 'teachers_settings';
+
+function mergeContactsById(existing: Contact[], demo: Contact[]): Contact[] {
+  const byId = new Map<string, Contact>();
+  for (const row of existing) {
+    byId.set(String(row.id), row);
+  }
+  for (const row of demo) {
+    const key = String(row.id);
+    if (!byId.has(key)) {
+      byId.set(key, row);
+    }
+  }
+  return [...byId.values()];
+}
+
+async function discoverTenantSubdomains(): Promise<Set<string>> {
+  const subdomains = new Set<string>();
+  const names = await listCollectionStorageNames();
+  for (const name of names) {
+    const parsed = parseTenantScopedStorageKey(name);
+    if (parsed) subdomains.add(parsed.subdomain);
+  }
+
+  const workspaces = await getCollectionByStorageName(WORKSPACES_COLLECTION);
+  if (Array.isArray(workspaces)) {
+    for (const entry of workspaces) {
+      const subdomain = (entry as Workspace).subdomain;
+      if (subdomain) subdomains.add(subdomain);
+    }
+  }
+
+  return subdomains;
+}
+
+async function seedTenantTeachers(
+  teachersKey: string,
+  contactsKey: string,
+  settingsKey: string,
+): Promise<boolean> {
+  let changed = false;
+  const existingTeachers = await getCollectionByStorageName(teachersKey);
+  if (!Array.isArray(existingTeachers) || existingTeachers.length === 0) {
+    await saveCollection(teachersKey, [...DEMO_TEACHERS]);
+    changed = true;
+  }
+
+  const existingContacts = await getCollectionByStorageName(contactsKey);
+  const merged = mergeContactsById(
+    Array.isArray(existingContacts) ? (existingContacts as Contact[]) : [],
+    DEMO_TEACHER_CONTACTS,
+  );
+  if (!Array.isArray(existingContacts) || merged.length !== existingContacts.length) {
+    await saveCollection(contactsKey, merged);
+    changed = true;
+  }
+
+  const settings = await getObjectByStorageKey(settingsKey);
+  if (settings === null) {
+    await saveObject(settingsKey, DEFAULT_TEACHERS_SETTINGS);
+    changed = true;
+  }
+
+  return changed;
+}
+
+/**
+ * Ensures demo teacher rows and faculty contact profiles exist.
+ * Idempotent — merges missing contacts; seeds teachers only when collection is empty.
+ */
+export async function runMigration010(): Promise<void> {
+  const subdomains = await discoverTenantSubdomains();
+  let changed = false;
+
+  if (subdomains.size === 0) {
+    if (
+      await seedTenantTeachers(TEACHERS_COLLECTION, CONTACTS_COLLECTION, TEACHERS_SETTINGS_KEY)
+    ) {
+      console.log('[Migration 010] Seeded demo teachers (legacy storage)');
+      changed = true;
+    }
+  } else {
+    for (const subdomain of subdomains) {
+      if (
+        await seedTenantTeachers(
+          tenantCollectionKey(subdomain, TEACHERS_COLLECTION),
+          tenantCollectionKey(subdomain, CONTACTS_COLLECTION),
+          tenantObjectKey(subdomain, TEACHERS_SETTINGS_KEY),
+        )
+      ) {
+        console.log(`[Migration 010] Seeded demo teachers for tenant "${subdomain}"`);
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) {
+    console.log('[Migration 010] Demo teachers migration completed.');
+  }
+}

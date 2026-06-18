@@ -5,8 +5,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+# shellcheck source=lib/deploy-ports.sh
+source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+
 ENV_FILE="${1:-apps/backend/.env}"
-FRONTEND_PORT=4173
+FRONTEND_PORT="$MMS_PROD_FRONTEND_PORT"
 DIST_DIR="apps/frontend/dist"
 
 read_env_var() {
@@ -28,7 +31,7 @@ read_env_var() {
   echo "$value"
 }
 
-FRONTEND_PORT="$(read_env_var FRONTEND_PORT 4173)"
+FRONTEND_PORT="$(read_env_var FRONTEND_PORT "$MMS_PROD_FRONTEND_PORT")"
 
 curl_frontend() {
   curl -fsS --connect-timeout 3 --max-time 8 "http://127.0.0.1:${FRONTEND_PORT}/" >/dev/null 2>&1 \

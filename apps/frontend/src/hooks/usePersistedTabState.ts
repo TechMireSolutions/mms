@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { normalizeModuleTierTabId } from "@mms/shared";
 
 /**
  * Tab state synced to sessionStorage so module navigation does not reset the active tier.
@@ -10,7 +11,8 @@ export function usePersistedTabState<T extends string>(
   const [value, setValue] = useState<T>(() => {
     try {
       const saved = sessionStorage.getItem(key);
-      return saved ? (saved as T) : defaultValue;
+      if (!saved) return defaultValue;
+      return normalizeModuleTierTabId(saved) as T;
     } catch {
       return defaultValue;
     }

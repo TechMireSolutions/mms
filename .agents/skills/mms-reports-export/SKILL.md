@@ -7,7 +7,7 @@ description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboar
 
 ## Placement
 
-Analytics tab **inside** each module — no standalone `/reports` page.
+Reports tab **inside** each module — no standalone `/reports` page.
 
 Components: `apps/frontend/src/components/reports/`
 
@@ -23,7 +23,7 @@ const data = useLiveCollection('finance_invoices', SEED);
 ## Add module report
 
 1. Register in `reportMetadata.ts` if shared definition needed
-2. Embed in module page Analytics tab via `ModuleReports` / custom component
+2. Embed in module page Reports tab via `ModuleReports` / custom component
 3. Module-aware filters — hide irrelevant chips
 4. Recharts for charts; glassmorphism cards
 

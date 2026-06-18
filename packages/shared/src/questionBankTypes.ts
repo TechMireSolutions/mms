@@ -234,7 +234,7 @@ export interface QuestionSourceReference {
   notes?: string;
 }
 
-/** System field ids for source reference sub-fields (Configuration → Fields). */
+/** System field ids for source reference sub-fields (Setup → Fields). */
 export const QUESTION_SOURCE_FIELD_IDS = [
   'sourceBookName',
   'sourceSeries',
@@ -691,7 +691,7 @@ export function formatQuestionSourceCitation(
   return parts.length > 0 ? parts.join(' · ') : null;
 }
 
-/** i18n keys for system question form fields (Configuration → Fields registry). */
+/** i18n keys for system question form fields (Setup → Fields registry). */
 export const QUESTION_BANK_FIELD_LABEL_KEYS: Record<string, AppTranslationKey> = {
   text: 'questionBank.questionText',
   categoryId: 'questionBank.category',

@@ -72,7 +72,7 @@ function applyGrNumberMigration(
 
 /**
  * Students Directory and Records Page.
- * Implements the standard 3-tier tab system (Operations | Analytics | Configuration).
+ * Implements the standard 3-tier tab system (Work | Reports | Setup).
  */
 export default function Students() {
   const PAGE_TABS = useModuleTierTabs();
@@ -81,7 +81,7 @@ export default function Students() {
   const { data: serverCount } = useStudentCount();
   const { data: rawStudents = [], isLoading } = useStudents();
   const { createStudent, updateStudent, deleteStudent } = useStudentMutations();
-  const [activeTab, setActiveTab] = useState("operations");
+  const [activeTab, setActiveTab] = useState("work");
 
   const settings = useMemo(
     () => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS),
@@ -181,9 +181,9 @@ export default function Students() {
         panelIdPrefix="students-tab"
       >
       <AnimatePresence mode="wait">
-        {activeTab === "operations" ? (
+        {activeTab === "work" ? (
           <motion.div
-            key="operations"
+            key="work"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
@@ -291,9 +291,9 @@ export default function Students() {
               )}
             </ErrorBoundary>
           </motion.div>
-        ) : activeTab === "analytics" ? (
+        ) : activeTab === "reports" ? (
           <motion.div
-            key="analytics"
+            key="reports"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
@@ -308,7 +308,7 @@ export default function Students() {
           </motion.div>
         ) : (
           <motion.div
-            key="configuration"
+            key="setup"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}

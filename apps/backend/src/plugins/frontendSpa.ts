@@ -5,7 +5,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ServerConfig } from '../config/serverConfig.js';
 import { resolveBackendRoot } from '../config/loadEnv.js';
 
-/** Production: serve built SPA static assets. Returns true when SPA is active. */
+/** Production: serve built SPA static assets on the API port (Apache → :5002). Returns true when SPA is active. */
 export async function registerFrontendSpa(
   app: FastifyInstance,
   config: ServerConfig,

@@ -4,7 +4,7 @@ trigger: model_decision
 
 # MMS Settings & Navigation
 
-Authoritative split between **app-wide settings** (`/settings`) and **per-module configuration** (each module's Configuration tab). Navigation and the System Modules page share one registry in `@mms/shared`.
+Authoritative split between **app-wide settings** (`/settings`) and **per-module setup** (each module's **Setup** tab, id `configuration`). Navigation and the System Modules page share one registry in `@mms/shared`.
 
 ## App navigation (`lib/navConfig.tsx`)
 
@@ -45,12 +45,12 @@ Do **not** add per-module Fields/Preferences panels to `Settings.tsx`:
 
 - Contacts, Students, Sessions, Attendance, Enrollments, Hasanat, Examinations, Finance, Accounting, Users module settings
 
-Module-specific prefs (currency, academic year, cutoff times, grading, etc.) belong in that module's **Configuration → Preferences** — never on Global Settings or a central module-settings nav.
+Module-specific prefs (currency, academic year, cutoff times, grading, etc.) belong in that module's **Setup → Preferences** — never on Global Settings or a central module-settings nav.
 
 ## Per-module configuration
 
 - Tier layout and **content scope** → `mms-module-isolation.md`; tab shell → `mms-ui-tabs.md`.
-- Reuse `*Settings` / `*SettingsPanel` — **single implementation**, module **Configuration** tab only.
+- Reuse `*Settings` / `*SettingsPanel` — **single implementation**, module **Setup** tab only.
 - `ContactConfigProvider`: `App.tsx` only (`mms-config.md`).
 
 ## System Modules registry (`@mms/shared`)
@@ -105,7 +105,7 @@ Required modules (`dashboard`, `contacts`, `students`, `users`) show a **Require
 2. **Registry** — add entry to `SYSTEM_MODULES` in `settingsTypes.ts`.
 3. **Layout** — add to `SYSTEM_MODULE_NAV` (standalone or Academics `moduleIds`).
 4. **Defaults** — add key to `DEFAULT_GLOBAL_SETTINGS.enabledModules`.
-5. **Page** — module page with Operations | Analytics | Configuration; wire `*Settings` in Configuration tab.
+5. **Page** — module page with Work | Reports | Setup; wire `*Settings` in Setup tab.
 6. **Do not** add a new section to `Settings.tsx` or `SETTINGS_SECTIONS`.
 
 When renaming or regrouping nav items, update `SYSTEM_MODULE_NAV` in the same change — keep settings UI and sidebar in sync.
@@ -117,7 +117,7 @@ When renaming or regrouping nav items, update `SYSTEM_MODULE_NAV` in the same ch
 | App locale, security | `global_settings` | `/settings` → Global tab |
 | Display mode, brand colours, footer | `global_settings.theme` + `branding` | `/settings` → Theme tab |
 | Module enable/disable | `global_settings.enabledModules` | `/settings` → Modules tab |
-| Module fields/prefs | `{module}_settings`, field registries | Module → Configuration |
+| Module fields/prefs | `{module}_settings`, field registries | Module → Setup |
 
 `enabledModules` changes save via `saveObject("global_settings", …)` in `SystemModulesSettings`.
 
@@ -128,7 +128,7 @@ When renaming or regrouping nav items, update `SYSTEM_MODULE_NAV` in the same ch
 { id: "students", label: "Students Settings", ... }  // in Settings.tsx NAV
 
 // ❌ Module-specific fields on Global Settings
-<select>Currency</select>  // belongs in Finance → Configuration
+<select>Currency</select>  // belongs in Finance → Setup
 
 // ❌ Flat module grid ignoring Academics grouping
 SYSTEM_MODULES.map(...)  // use SYSTEM_MODULE_NAV for layout

@@ -5,8 +5,11 @@ set -uo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+# shellcheck source=lib/deploy-ports.sh
+source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+
 ENV_FILE="${1:-apps/backend/.env}"
-BACKEND_PORT=3000
+BACKEND_PORT="$MMS_PROD_BACKEND_PORT"
 
 read_env_var() {
   local key="$1"
@@ -27,7 +30,7 @@ read_env_var() {
   echo "$value"
 }
 
-BACKEND_PORT="$(read_env_var PORT 3000)"
+BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
 
 curl_ok() {
   local url="$1"

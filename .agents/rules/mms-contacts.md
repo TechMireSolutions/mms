@@ -26,7 +26,7 @@ Server-first via TanStack Query (`mms-query.md`):
 - **Write:** `useContactMutations()` only — do not parallel `saveCollection` in page handlers
 - `fetchContacts` calls `saveCollection('contacts', …)` inside `queryFn` for dashboard widgets still on `useLiveCollection`
 
-## Operations views
+## Work-tier views
 
 List (`ContactsTable`) | Kanban (`ContactKanban` by lifecycle stage).
 
