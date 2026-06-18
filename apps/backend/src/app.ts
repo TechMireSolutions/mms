@@ -9,9 +9,6 @@ import { registerRoutes } from './routes/index.js';
 
 loadBackendEnv();
 
-/**
- * Builds the Fastify application instance.
- */
 export async function buildApp(): Promise<FastifyInstance> {
   const config = loadServerConfig();
 
@@ -30,7 +27,24 @@ export async function buildApp(): Promise<FastifyInstance> {
   await initDb();
   await registerPlugins(app, config);
   await registerRoutes(app);
-  await registerFrontendSpa(app, config);
+  const spaActive = await registerFrontendSpa(app, config);
+
+  // setNotFoundHandler must be called exactly once per Fastify instance.
+  // In production with a built SPA, serve index.html for non-API routes so
+  // client-side routing works. Otherwise return a stable JSON 404 shape.
+  if (spaActive) {
+    app.setNotFoundHandler(async (request, reply) => {
+      const pathname = request.url.split('?')[0] ?? '';
+      if (pathname.startsWith('/api') || pathname.startsWith('/uploads')) {
+        return reply.status(404).send({ type: 'not_found', message: 'Not found' });
+      }
+      return reply.sendFile('index.html');
+    });
+  } else {
+    app.setNotFoundHandler((_request, reply) => {
+      reply.status(404).send({ type: 'not_found', message: 'Route not found' });
+    });
+  }
 
   return app;
 }

@@ -5,20 +5,20 @@ import type { FastifyInstance } from 'fastify';
 import type { ServerConfig } from '../config/serverConfig.js';
 import { resolveBackendRoot } from '../config/loadEnv.js';
 
-/** Production: serve built SPA from apps/frontend/dist on the API port (Apache → :3000 only). */
+/** Production: serve built SPA static assets. Returns true when SPA is active. */
 export async function registerFrontendSpa(
   app: FastifyInstance,
   config: ServerConfig,
-): Promise<void> {
+): Promise<boolean> {
   if (!config.isProd) {
-    return;
+    return false;
   }
 
   const distRoot = join(resolveBackendRoot(), '..', 'frontend', 'dist');
   const indexHtml = join(distRoot, 'index.html');
   if (!existsSync(indexHtml)) {
     app.log.warn({ distRoot }, 'Frontend dist missing — skipping SPA static hosting');
-    return;
+    return false;
   }
 
   await app.register(fastifyStatic, {
@@ -28,13 +28,6 @@ export async function registerFrontendSpa(
     decorateReply: true,
   });
 
-  app.setNotFoundHandler(async (request, reply) => {
-    const pathname = request.url.split('?')[0] ?? '';
-    if (pathname.startsWith('/api') || pathname.startsWith('/uploads')) {
-      return reply.status(404).send({ type: 'not_found', message: 'Not found' });
-    }
-    return reply.sendFile('index.html');
-  });
-
   app.log.info({ distRoot }, 'Serving frontend SPA from backend');
+  return true;
 }
