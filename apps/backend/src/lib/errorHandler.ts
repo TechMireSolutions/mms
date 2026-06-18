@@ -1,10 +1,6 @@
 import type { FastifyError, FastifyInstance } from 'fastify';
 
 export function registerErrorHandlers(app: FastifyInstance, isProd: boolean): void {
-  app.setNotFoundHandler((_request, reply) => {
-    reply.status(404).send({ type: 'not_found', message: 'Route not found' });
-  });
-
   app.setErrorHandler((error: FastifyError, request, reply) => {
     if (error.validation) {
       return reply.status(400).send({

@@ -65,10 +65,13 @@ patch_proxy_in_file() {
 
 should_patch_file() {
   local conf="$1"
+  # Match by domain name in file content (most reliable, works on every deploy).
   if [[ -n "$APP_DOMAIN" ]] && grep -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
     return 0
   fi
-  if grep -qE "ProxyPass.*/ http://(127\\.0\\.0\\.1|localhost):(5173|4173|8080|3001)/?" "$conf" 2>/dev/null; then
+  # Fallback: any ProxyPass pointing at a local port — catches re-deployments
+  # where the port was already patched and no longer matches a specific old value.
+  if grep -qE "ProxyPass[[:space:]]+/[[:space:]]+http://(127\\.0\\.0\\.1|localhost):[0-9]+" "$conf" 2>/dev/null; then
     return 0
   fi
   return 1
