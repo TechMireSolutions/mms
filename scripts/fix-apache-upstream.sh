@@ -58,7 +58,7 @@ patch_proxy_in_file() {
   fi
   echo "Patching ProxyPass in ${conf} → ${UPSTREAM}"
   run_priv sed -i -E \
-    "s|(ProxyPass(Reverse)?[[:space:]]+/[[:space:]]+)http://(127\\.0\\.0\\.1|localhost):[0-9]+/?|\1${UPSTREAM}|g" \
+    "s#(ProxyPass(Reverse)?[[:space:]]+/[[:space:]]+)http://(127\\.0\\.0\\.1|localhost):[0-9]+/?#\1${UPSTREAM}#g" \
     "$conf"
   return 0
 }

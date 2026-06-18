@@ -59,11 +59,18 @@ set +e
 pm2 delete mmsv2-frontend 2>/dev/null
 set -e
 
-pm2 start "pnpm exec vite preview --host 127.0.0.1 --port ${FRONTEND_PORT}" \
+# Resolve vite binary without relying on pnpm being in PATH.
+VITE_BIN="$ROOT_DIR/apps/frontend/node_modules/.bin/vite"
+if [[ ! -x "$VITE_BIN" ]]; then
+  VITE_BIN="$ROOT_DIR/node_modules/.bin/vite"
+fi
+
+pm2 start "$VITE_BIN" \
   --name mmsv2-frontend \
   --cwd "$ROOT_DIR/apps/frontend" \
   --update-env \
-  --time
+  --time \
+  -- preview --host 127.0.0.1 --port "${FRONTEND_PORT}"
 
 for _ in $(seq 1 30); do
   if curl_frontend; then

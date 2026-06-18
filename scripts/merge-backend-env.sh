@@ -11,6 +11,7 @@ mkdir -p "$(dirname "$ENV_FILE")"
 touch "$ENV_FILE"
 
 DEPLOY_KEYS=(
+  NODE_ENV
   PLATFORM_RESEND_API_KEY
   PLATFORM_SMTP_HOST
   PLATFORM_SMTP_PORT
@@ -51,6 +52,9 @@ write_env_var() {
 for key in "${DEPLOY_KEYS[@]}"; do
   write_env_var "$key" "${!key-}"
 done
+
+# Always force production mode on the server.
+write_env_var "NODE_ENV" "production"
 
 if [ -z "${PLATFORM_APP_URL:-}" ] && [ -n "${MMS_APP_DOMAIN:-}" ]; then
   write_env_var "PLATFORM_APP_URL" "https://${MMS_APP_DOMAIN}"
