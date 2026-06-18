@@ -68,13 +68,8 @@ patch_proxy_in_file() {
 
 should_patch_file() {
   local conf="$1"
-  # Match by domain name in file content (most reliable, works on every deploy).
+  # Only patch vhosts for MMS_APP_DOMAIN — never other sites (aabtaab.com, darulquran.pk, …).
   if [[ -n "$APP_DOMAIN" ]] && grep -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
-    return 0
-  fi
-  # Fallback: any ProxyPass pointing at a local port — catches re-deployments
-  # where the port was already patched and no longer matches a specific old value.
-  if grep -qE "ProxyPass[[:space:]]+/[[:space:]]+http://(127\\.0\\.0\\.1|localhost):[0-9]+" "$conf" 2>/dev/null; then
     return 0
   fi
   return 1

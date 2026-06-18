@@ -4,6 +4,7 @@ import {
   isOriginAllowedForAppDomain,
   isTrustedWorkspaceOrigin,
   misconfiguredAppDomainHint,
+  isHostAllowedForAppDomain,
   parseTenantFromHost,
   resolveAppDomain,
   resolveAppDomainForRequest,
@@ -69,6 +70,17 @@ describe('resolveAppDomainForRequest', () => {
       'mmsv2.aabtaab.com',
     );
     expect(parseTenantFromHost('mmsv2.aabtaab.com', 'mmsv2.aabtaab.com')).toBeNull();
+  });
+});
+
+describe('isHostAllowedForAppDomain', () => {
+  const domain = 'mmsv2.aabtaab.com';
+
+  it('allows apex and tenants only', () => {
+    expect(isHostAllowedForAppDomain('mmsv2.aabtaab.com', domain)).toBe(true);
+    expect(isHostAllowedForAppDomain('dar-ul-quran.mmsv2.aabtaab.com', domain)).toBe(true);
+    expect(isHostAllowedForAppDomain('aabtaab.com', domain)).toBe(false);
+    expect(isHostAllowedForAppDomain('darulquran.pk', domain)).toBe(false);
   });
 });
 

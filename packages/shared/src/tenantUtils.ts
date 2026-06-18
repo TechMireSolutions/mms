@@ -79,6 +79,18 @@ export function isApexHost(hostname: string, appDomain: string): boolean {
 }
 
 /**
+ * True when `hostname` is the configured MMS apex or a tenant under `appDomain`.
+ * Used in production to reject Apache vhosts that incorrectly proxy other domains to MMS.
+ */
+export function isHostAllowedForAppDomain(hostname: string, appDomain: string): boolean {
+  const host = hostname.toLowerCase().split(':')[0];
+  const domain = appDomain.toLowerCase().trim();
+  if (!domain || !host) return false;
+  if (host === domain || host === `www.${domain}`) return true;
+  return parseTenantFromHost(host, domain) !== null;
+}
+
+/**
  * Derive the apex app domain from a browser/API host when env is unset.
  * e.g. `{slug}.platform.example.com` → `platform.example.com`
  */

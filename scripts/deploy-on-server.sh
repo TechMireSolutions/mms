@@ -97,6 +97,19 @@ if [ -f scripts/deploy-recover-frontend.sh ]; then
   }
 fi
 
+if [ -f scripts/apache/isolate-mms-vhost.sh ]; then
+  bash scripts/apache/isolate-mms-vhost.sh "$ENV_FILE" || {
+    echo "ERROR: failed to strip MMS proxy from non-MMS Apache vhosts"
+    DEPLOY_OK=false
+  }
+fi
+
+if [ -f scripts/apache/install-mms-vhost.sh ]; then
+  bash scripts/apache/install-mms-vhost.sh "$ENV_FILE" || {
+    echo "WARNING: MMS vhost install failed — ensure mmsv2.conf exists for ${MMS_APP_DOMAIN:-MMS_APP_DOMAIN}"
+  }
+fi
+
 if [ -f scripts/fix-apache-upstream.sh ]; then
   bash scripts/fix-apache-upstream.sh "$ENV_FILE" || {
     echo "ERROR: Apache upstream patch failed — ProxyPass must point to :${MMS_PROD_BACKEND_PORT}"
