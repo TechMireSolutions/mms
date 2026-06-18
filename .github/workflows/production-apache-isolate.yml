@@ -2,18 +2,25 @@ name: Production — isolate MMS host
 
 on:
   workflow_dispatch:
+    inputs:
+      mms_app_domain:
+        description: Platform apex hostname (must match production URL)
+        required: true
+        default: mmsv2.aabtaab.com
+        type: string
 
 concurrency:
   group: mms-production-apache-isolate
   cancel-in-progress: false
 
+env:
+  MMS_APP_DOMAIN: ${{ github.event.inputs.mms_app_domain || secrets.MMS_APP_DOMAIN }}
+
 jobs:
   isolate:
     runs-on: ubuntu-latest
     steps:
-      - name: Validate secrets
-        env:
-          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+      - name: Validate configuration
         run: |
           set -euo pipefail
           missing=""
@@ -21,19 +28,23 @@ jobs:
           [ -z "${{ secrets.SERVER_USER }}" ] && missing="${missing} SERVER_USER"
           [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ] && missing="${missing} SSH_PRIVATE_KEY"
           if [ -n "${missing}" ]; then
-            echo "ERROR: Missing secrets:${missing}"
+            echo "ERROR: Missing GitHub secrets:${missing}"
+            echo "Add them under Settings → Secrets and variables → Actions"
             exit 1
           fi
           if [ -z "${MMS_APP_DOMAIN}" ]; then
-            echo "ERROR: Set MMS_APP_DOMAIN secret to mmsv2.aabtaab.com"
+            echo "ERROR: MMS_APP_DOMAIN is empty"
+            echo "Set the workflow input or add MMS_APP_DOMAIN secret (e.g. mmsv2.aabtaab.com)"
             exit 1
           fi
           echo "Target: https://${MMS_APP_DOMAIN}/"
+          if [ -z "${{ secrets.MMS_APP_DOMAIN }}" ]; then
+            echo "::warning::MMS_APP_DOMAIN secret is not set — using workflow input only. Add the secret for deploy.yml too."
+          fi
 
       - name: Apply Apache isolation on server
         uses: appleboy/ssh-action@v1.0.3
         env:
-          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
           PLATFORM_APP_URL: ${{ secrets.PLATFORM_APP_URL }}
           PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
           PLATFORM_SMTP_HOST: ${{ secrets.PLATFORM_SMTP_HOST }}
@@ -63,8 +74,6 @@ jobs:
             bash scripts/apply-production-host-isolation.sh apps/backend/.env
 
       - name: Verify MMS apex and foreign domains
-        env:
-          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
         run: |
           set -euo pipefail
           BASE="https://${MMS_APP_DOMAIN}"
