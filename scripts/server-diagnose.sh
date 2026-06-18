@@ -33,6 +33,9 @@ read_env_var() {
 
 BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT)"
 FRONTEND_PORT="$(read_env_var FRONTEND_PORT "$MMS_PROD_FRONTEND_PORT")"
+if ! assert_production_backend_port "$BACKEND_PORT" "Backend PORT in ${ENV_FILE}"; then
+  echo "Fix: bash scripts/merge-backend-env.sh ${ENV_FILE}"
+fi
 
 echo "══ MMS server diagnose ══"
 echo "Root: ${ROOT_DIR}"

@@ -50,5 +50,6 @@ export * from './permissions.js';
 export * from './auditTypes.js';
 export * from './platformTypes.js';
 export * from './platformSetupValidation.js';
+export * from './serverPorts.js';
 export * from './tenantAuthTypes.js';
 

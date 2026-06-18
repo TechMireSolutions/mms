@@ -75,6 +75,7 @@ read_env_var() {
 
 export PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
 export NODE_ENV=production
+assert_production_backend_port "$PORT" "Deploy PORT" || exit 1
 
 pm2 restart mmsv2-frontend --update-env 2>/dev/null || pm2 restart mmsv2-frontend 2>/dev/null || true
 pm2 restart mmsv2-backend --update-env 2>/dev/null || pm2 restart mmsv2-backend 2>/dev/null || true

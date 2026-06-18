@@ -32,6 +32,7 @@ read_env_var() {
 }
 
 BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
+assert_production_backend_port "$BACKEND_PORT" "Backend recovery PORT" || exit 1
 
 curl_health() {
   curl -fsS --connect-timeout 3 --max-time 8 "http://127.0.0.1:${BACKEND_PORT}/health" >/dev/null 2>&1 \

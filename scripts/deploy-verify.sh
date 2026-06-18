@@ -31,6 +31,7 @@ read_env_var() {
 }
 
 BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
+assert_production_backend_port "$BACKEND_PORT" "Backend PORT in ${ENV_FILE}" || exit 1
 
 curl_ok() {
   local url="$1"

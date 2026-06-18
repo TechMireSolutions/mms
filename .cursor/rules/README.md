@@ -34,7 +34,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | Contacts CRM module | `mms-contacts.mdc` | `mms-config` (provider mount only) |
 | Fastify API / routes | `mms-backend.mdc` | `mms-auth`, `mms-database` |
 | PostgreSQL / Drizzle | `mms-database.mdc` | `mms-data-layer` |
-| Dev / env / Docker | `mms-ops.mdc` | `mms-ci` (pipeline pointer) |
+| Dev / env / Docker | `mms-ops.mdc` | `mms-ci` (pipeline pointer), `mms-production-ports.mdc` (Hetzner ports) |
 | Copy layers (`t` / `labelKey` / legacy `uiStrings`) | `mms-i18n.mdc` | `mms-ui-rendering` (notify), `mms-contacts` (legacy) |
 | Contact-first person links (ids only on save) | `mms-contact-link.mdc` | `mms-core`, `mms-data-layer`, `mms-contacts` |
 | Open migration gaps | `mms-migration-status.mdc` | — (always-on register) |
@@ -52,6 +52,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-data-layer.mdc` | `db.ts`, seeds, sync |
 | `mms-hooks.mdc` | `useLiveCollection`, `useSortedFields`, branding |
 | `mms-ops.mdc` | pnpm, env, Docker, commands |
+| `mms-production-ports.mdc` | Hetzner listen ports — forbidden 3000/3001, canonical 5002 |
 | `mms-auth.mdc` | Auth, users, JWT |
 | `mms-config.mdc` | Settings hierarchy, persistence, preview |
 | `mms-settings-navigation.mdc` | Nav grouping, `/settings` scope, `SYSTEM_MODULE_NAV` |

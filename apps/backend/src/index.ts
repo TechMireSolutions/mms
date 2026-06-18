@@ -1,3 +1,4 @@
+import { resolveBackendListenPort } from '@mms/shared';
 import { buildApp } from './app.js';
 import { closeDatabase } from './db/database.js';
 
@@ -6,8 +7,7 @@ import { closeDatabase } from './db/database.js';
  */
 async function startServer(): Promise<void> {
   const app = await buildApp();
-  const defaultPort = process.env.NODE_ENV === 'production' ? '5002' : '3000';
-  const port = parseInt(process.env.PORT || defaultPort, 10);
+  const port = resolveBackendListenPort(process.env);
   const host = process.env.HOST || '0.0.0.0';
 
   await app.listen({ port, host });

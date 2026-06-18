@@ -78,7 +78,9 @@ ensure_jwt_secret
 # Production always listens on :5002 (Apache upstream).
 # shellcheck source=lib/deploy-ports.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/deploy-ports.sh"
+assert_prod_backend_port_default || exit 1
 write_env_var "PORT" "$MMS_PROD_BACKEND_PORT"
+assert_production_backend_port "$MMS_PROD_BACKEND_PORT" "Merged PORT" || exit 1
 
 if [ -z "${PLATFORM_APP_URL:-}" ] && [ -n "${MMS_APP_DOMAIN:-}" ]; then
   write_env_var "PLATFORM_APP_URL" "https://${MMS_APP_DOMAIN}"
