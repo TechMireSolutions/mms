@@ -56,6 +56,25 @@ done
 # Always force production mode on the server.
 write_env_var "NODE_ENV" "production"
 
+# Ensure JWT_SECRET exists and is at least 32 chars (required in production).
+# Never overwrites a secret that is already long enough.
+ensure_jwt_secret() {
+  local current
+  current="$(grep '^JWT_SECRET=' "$ENV_FILE" 2>/dev/null | tail -1 || true)"
+  current="${current#JWT_SECRET=}"
+  current="${current%\"}"
+  current="${current#\"}"
+  if [[ ${#current} -ge 32 ]]; then
+    return 0
+  fi
+  local new_secret
+  new_secret="$(openssl rand -hex 32 2>/dev/null \
+    || head -c 32 /dev/urandom | base64 | tr -d '\n/+=' | head -c 64)"
+  write_env_var "JWT_SECRET" "$new_secret"
+  echo "Generated new JWT_SECRET (previous was absent or shorter than 32 chars)"
+}
+ensure_jwt_secret
+
 if [ -z "${PLATFORM_APP_URL:-}" ] && [ -n "${MMS_APP_DOMAIN:-}" ]; then
   write_env_var "PLATFORM_APP_URL" "https://${MMS_APP_DOMAIN}"
 fi
