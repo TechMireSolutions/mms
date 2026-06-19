@@ -6,8 +6,8 @@ trigger: model_decision
 
 ## Prerequisites
 
-- Node.js 22.5+ (backend uses native tooling; PostgreSQL via Docker or local install)
-- pnpm 11.x (`packageManager` in root `package.json`)
+- Node.js **26+** (see root `package.json` `engines`)
+- pnpm **11.8+** (`packageManager` field — `corepack enable`)
 
 ## Commands (from repo root)
 

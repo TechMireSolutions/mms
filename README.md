@@ -19,9 +19,30 @@ pnpm workspace monorepo: React frontend, Fastify backend, shared types package, 
 
 ## Prerequisites
 
-- **Node.js** 22+
-- **pnpm** 11.x (`corepack enable` or `npm i -g pnpm`)
+- **Node.js** 26+ (`engines` in root `package.json`)
+- **pnpm** 11.8+ (`corepack enable` uses `packageManager` from root `package.json`)
 - **PostgreSQL** 15+ (local install or Docker)
+
+## Tech stack (current)
+
+| Layer | Version |
+|-------|---------|
+| Node.js | 26 |
+| pnpm | 11.8 |
+| Turbo | 2.9 |
+| TypeScript | 6 |
+| React | 19 |
+| Vite | 8 |
+| Tailwind CSS | 4 |
+| TanStack Query | 5 |
+| Fastify | 5 |
+| Drizzle ORM | 0.45 |
+| PostgreSQL | 17 (CI) |
+| Vitest | 4 |
+| Playwright | 1.61 |
+| Zod | 4 |
+
+Run `pnpm outdated -r` from the repo root to check for newer releases.
 
 ## Environment
 

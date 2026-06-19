@@ -6,7 +6,7 @@
 
 FROM node:26-alpine AS base
 ENV PUPPETEER_SKIP_DOWNLOAD=true
-RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.8.0 --activate
 WORKDIR /app
 
 FROM base AS deps
