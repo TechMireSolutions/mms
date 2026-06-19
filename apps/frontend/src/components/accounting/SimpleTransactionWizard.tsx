@@ -127,7 +127,7 @@ function StepTypeSelection({ selected, onSelect }: { selected: QuickActionType |
                 const isSelected = selected?.id === item.id;
                 return (
                   <button key={item.id} type="button" aria-pressed={isSelected} onClick={() => onSelect({ ...item, group: group.group, color: group.color })}
-                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center ${isSelected ? colors.selected : `border-border bg-white hover:bg-background ${colors.item}`}`}>
+                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center ${isSelected ? colors.selected : `border-border bg-card hover:bg-muted/50 ${colors.item}`}`}>
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isSelected ? colors.icon : "bg-muted text-muted-foreground"}`} aria-hidden="true">
                       <Icon className="w-4.5 h-4.5 w-[18px] h-[18px]" />
                     </div>

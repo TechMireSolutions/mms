@@ -17,16 +17,26 @@ description: Adds or changes field/tab registries, CustomFieldsBuilder, Draggabl
 
 1. Extend schema in `packages/shared/src/contactTypes.ts`
 2. Handle render case in `FormPrimitives.tsx` (contacts) or module equivalent
-3. Wire persistence — registry save + value on entity save
+3. Wire **persistence** — registry save + value on entity save (see Field persistence gate below)
 4. `pnpm typecheck` at root
 
-## Field persistence gate
+## Field persistence gate (create & review)
 
-New/changed fields must reach PostgreSQL: `@shared` type → DEFAULT + merge → read → write (`/api/db`) → UI binding → seeds.
+Before merging any new/changed field, complete all layers:
 
-Reviewer: grep field key across type, merge, form, save. Block orphaned `useState`.
+```
+@shared type → DEFAULT_* + merge → read (getObject/getCollection) → write (save* + /api/db) → UI binding → seeds (if default)
+```
 
-See `rules/mms-fields.md` and `mms-data-layer.md`.
+| Storage | Write path |
+|---------|------------|
+| Settings singleton | `getBrandingSettings` / `await saveBrandingSettings`, etc. |
+| Collection entity | `saveCollection` with full row object |
+| Registry definition | `saveObject('{module}_field_config', …)` |
+
+**Reviewer test:** grep the field key — must appear in type, merge, form, and save. Block if only in `useState`.
+
+See `.cursor/rules/mms-fields.mdc` and `mms-data-layer.mdc`.
 
 ## Module field settings
 

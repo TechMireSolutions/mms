@@ -2,8 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
 import { getAuditLog } from "./MarkAttendance";
-import { SESSIONS_DATA } from '@/lib/data/sessionsData';
-import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useSessionsCollection } from '@/hooks/useSessions';
 import { AttendanceFilterState } from "./AttendanceFilters";
 
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {
@@ -60,7 +59,7 @@ function describeEntry(e: AuditEntry, studentNameFor: (id?: string) => string): 
  * @returns {React.ReactElement} The rendered audit log component.
  */
 export default function AuditLog({ filters }: AuditLogProps) {
-  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
   const students = useStudentsCollection();
 
   const studentNameFor = (id?: string): string => {

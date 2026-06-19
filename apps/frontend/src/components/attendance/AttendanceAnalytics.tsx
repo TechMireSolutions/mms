@@ -9,8 +9,7 @@ import {
   calcClassStats, calcStudentRate, getMonthlyTrend, ATTENDANCE_STATUSES, AttendanceRecord,
   AttendanceStatus,
 } from '@/lib/data/attendanceData';
-import { SESSIONS_DATA } from '@/lib/data/sessionsData';
-import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useSessionsCollection } from '@/hooks/useSessions';
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
 
 interface StatCardProps {
@@ -57,10 +56,10 @@ interface AttendanceAnalyticsProps {
 export default function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsProps) {
   const { primary, secondary, charts } = useBrandPalette();
   const COLORS = useMemo(
-    () => [primary, "#ef4444", secondary, charts[3]],
+    () => [primary, charts[0], secondary, charts[3]],
     [primary, secondary, charts],
   );
-  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>
@@ -213,7 +212,7 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
           </div>
           <div className="flex flex-wrap gap-2">
             {lowAttendance.map((s) => (
-              <div key={s.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-warning/30">
+              <div key={s.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-warning/30">
                 <span className="text-xs font-semibold text-foreground">{s.name}</span>
                 <span className="text-[11px] font-bold text-destructive">{s.rate}%</span>
               </div>

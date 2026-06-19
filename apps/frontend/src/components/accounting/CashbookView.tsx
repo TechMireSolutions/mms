@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Search, TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { JournalEntry, Account } from '@/lib/data/accountingData';
+import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 
 // Money-in account IDs (asset accounts that receive income)
 const MONEY_IN_CREDITS = ["a4000","a4100","a4200","a4300","a4400"]; // Revenue accounts
@@ -168,11 +170,12 @@ export default function CashbookView({ entries, accounts, fmt }: CashbookViewPro
                       {new Date(row.date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}
                     </td>
                     <td className="px-3 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                        row._type === "in"       ? "bg-success/15 text-success border-success/30"
-                        : row._type === "out"   ? "bg-destructive/15 text-destructive border-destructive/30"
-                        : "bg-info/15 text-info border-info/30"
-                      }`}>
+                      <span className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border",
+                        row._type === "in" ? FLOW_TONE.in.badge
+                          : row._type === "out" ? FLOW_TONE.out.badge
+                          : SEMANTIC_BADGE.infoStrong,
+                      )}>
                         {row._type === "in" ? <TrendingUp className="w-2.5 h-2.5" aria-hidden="true" /> : row._type === "out" ? <TrendingDown className="w-2.5 h-2.5" aria-hidden="true" /> : <ArrowUpDown className="w-2.5 h-2.5" aria-hidden="true" />}
                         {row._typeLabel}
                       </span>

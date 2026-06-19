@@ -238,12 +238,12 @@ export default function AccountProfile(): React.JSX.Element {
                 <span className="font-medium text-foreground">{profile.loginEmail}</span>
               </div>
               {loginVerified ? (
-                <p className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                <p className="flex items-center gap-1.5 text-xs text-success">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   {t("account.emailVerified")}
                 </p>
               ) : (
-                <p className="text-xs text-amber-600 dark:text-amber-400">{t("account.emailNotVerified")}</p>
+                <p className="text-xs text-warning">{t("account.emailNotVerified")}</p>
               )}
               {profile.pendingLoginEmail ? (
                 <p className="text-xs text-muted-foreground">

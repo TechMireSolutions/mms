@@ -63,6 +63,21 @@ export default tseslint.config(
       ],
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector: "Literal[value=/\\bbg-white\\b/]",
+          message: "Prefer bg-card or SURFACE tokens over bg-white.",
+        },
+        {
+          selector: "Literal[value=/text-\\[#/]",
+          message: "Prefer semantic text tokens over arbitrary hex in className.",
+        },
+        {
+          selector: "Literal[value=/#ef4444|#047857|#f59e0b/]",
+          message: "Use branding palette or semanticTone tokens instead of hardcoded hex.",
+        },
+      ],
     },
   },
 );

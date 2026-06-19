@@ -2,11 +2,10 @@ import React, { useState, useMemo } from "react";
 import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
-import { SESSIONS_DATA } from '@/lib/data/sessionsData';
+import { useSessionsCollection } from '@/hooks/useSessions';
 import { useTeachersCollection } from '@/hooks/useTeachers';
 import { activeTeachersForAssignment } from '@/lib/teachers/teacherAssignment';
 import useTranslation from '@/hooks/useTranslation';
-import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 export interface AttendanceFilterState {
   sessionId: string;
@@ -45,7 +44,7 @@ interface Session {
 export default function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
-  const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA as Session[]);
+  const sessions = useSessionsCollection();
   const teachers = useTeachersCollection();
   const assignableTeachers = useMemo(() => activeTeachersForAssignment(teachers), [teachers]);
   

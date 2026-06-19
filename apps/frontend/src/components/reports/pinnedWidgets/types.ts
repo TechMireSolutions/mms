@@ -49,16 +49,6 @@ export interface CustomWidget {
   isPinnedToDashboard: boolean;
 }
 
-const WIDGET_COLOR_MAP: Record<string, string> = {
-  emerald: "#10b981",
-  green: "#10b981",
-  blue: "#3b82f6",
-  violet: "#8b5cf6",
-  amber: "#f59e0b",
-  red: "#ef4444",
-  yellow: "#eab308",
-};
-
 const ALERT_COLOR_MAP: Record<string, { bg: string; text: string; border: string; glow: string }> = {
   red: {
     bg: "bg-destructive/10 dark:bg-destructive/20",
@@ -94,7 +84,6 @@ const ICONS_LIST: Record<string, React.ElementType> = {
 };
 
 export {
-  WIDGET_COLOR_MAP,
   ALERT_COLOR_MAP,
   WIDGET_CHART_PALETTES as THEME_PALETTES,
   COLOR_MAP,

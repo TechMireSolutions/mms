@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { BookOpen, Calendar, Users, DollarSign } from "lucide-react";
 import { Session } from '@/lib/data/sessionsData';
+import { SEMANTIC_BADGE, WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
+import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import useTranslation from "@/hooks/useTranslation";
 
 /**
  * Format a date string to a localized PK date.
@@ -29,6 +32,14 @@ interface Step2SelectSessionProps {
  * @returns The Step2SelectSession component.
  */
 export default function Step2SelectSession({ value, onChange, sessions = [] }: Step2SelectSessionProps): React.ReactElement {
+  const { t } = useTranslation();
+  const sessionStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(
+    () => ({
+      full: { label: t("enrollment.session.full"), cls: SEMANTIC_BADGE.destructiveStrong },
+      almost_full: { label: t("enrollment.session.almostFull"), cls: SEMANTIC_BADGE.warningStrong },
+    }),
+    [t],
+  );
   const activeSessions = sessions.filter((s) => s.status === "active");
 
   return (
@@ -69,8 +80,8 @@ export default function Step2SelectSession({ value, onChange, sessions = [] }: S
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-bold text-foreground">{session.name}</p>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{session.type}</span>
-                    {isFull && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">Full</span>}
-                    {!isFull && spotsLeft <= 5 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-warning/15 text-warning">Almost Full</span>}
+                    {isFull && <StatusBadge status="full" config={sessionStatusConfig} size="sm" />}
+                    {!isFull && spotsLeft <= 5 && <StatusBadge status="almost_full" config={sessionStatusConfig} size="sm" />}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -98,7 +109,7 @@ export default function Step2SelectSession({ value, onChange, sessions = [] }: S
                 </div>
                 {selected && (
                   <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <div className="w-2 h-2 rounded-full bg-white" />
+                    <div className={`h-2 w-2 rounded-full ${WIZARD_SELECTION_DOT}`} />
                   </div>
                 )}
               </div>

@@ -19,13 +19,6 @@ import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 
-const SUB_TABS = [
-  { id: "overview",    label: "Overview",     icon: LayoutDashboard },
-  { id: "stock",       label: "Stock",        icon: Package },
-  { id: "distribute",  label: "Distribute",   icon: Send },
-  { id: "redemptions", label: "Redemptions",  icon: Gift },
-];
-
 /**
  * Hasanat Cards — denominations, stock, and redemptions. Work | Reports | Setup.
  *
@@ -42,6 +35,15 @@ export default function HasanatCards() {
     ],
     [configSubTabs, t],
   );
+  const SUB_TABS = useMemo(
+    () => [
+      { id: "overview" as const, label: t("hasanat.tabs.overview"), icon: LayoutDashboard },
+      { id: "stock" as const, label: t("hasanat.tabs.stock"), icon: Package },
+      { id: "distribute" as const, label: t("hasanat.tabs.distribute"), icon: Send },
+      { id: "redemptions" as const, label: t("hasanat.tabs.redemptions"), icon: Gift },
+    ],
+    [t],
+  );
   const [activeTab, setActiveTab] = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [configSubTab, setConfigSubTab] = useState<"denominations" | "fields" | "preferences">("denominations");
@@ -56,14 +58,17 @@ export default function HasanatCards() {
   const totalReturned = distributions.filter((d) => d.status === "returned").reduce((s, d) => d.quantity + s, 0);
   const totalActive = distributions.filter((d) => d.status === "active").reduce((s, d) => d.quantity + s, 0);
 
-  const stats = [
-    { label: "Total Stock", value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10" },
-    { label: "Available", value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20" },
-    { label: "Distributed", value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
-    { label: "Redeemed", value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20" },
-    { label: "Active", value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20" },
-    { label: "Returned", value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
-  ];
+  const stats = useMemo(
+    () => [
+      { label: t("hasanat.stats.totalStock"), value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10" },
+      { label: t("hasanat.stats.available"), value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20" },
+      { label: t("hasanat.stats.distributed"), value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
+      { label: t("hasanat.stats.redeemed"), value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20" },
+      { label: t("hasanat.stats.active"), value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20" },
+      { label: t("hasanat.stats.returned"), value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
+    ],
+    [t, totalStock, totalRemaining, totalDistributed, totalRedeemed, totalActive, totalReturned],
+  );
 
   const effectiveTab = PAGE_TABS.find((t) => t.id === activeTab) ? activeTab : "work";
   const effectiveSubTab = SUB_TABS.find((t) => t.id === activeSubTab) ? activeSubTab : "overview";

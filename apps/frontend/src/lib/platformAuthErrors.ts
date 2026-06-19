@@ -25,6 +25,8 @@ export function mapPlatformAuthError(apiError: ApiError, t: TranslateFn): string
       return t("platform.forgotResetExpired");
     case "invalid_current_password":
       return t("platform.profileWrongPassword");
+    case "invalid_credentials":
+      return t("platform.invalidCredentials");
     default:
       return apiError.message || t("errors.boundary.description");
   }

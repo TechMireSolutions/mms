@@ -3,8 +3,7 @@ import { Search, Pencil, Trash2, X, ChevronLeft, ChevronRight } from "lucide-rea
 import { motion } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
 import { ATTENDANCE_STATUSES, AttendanceRecord } from '@/lib/data/attendanceData';
-import { SESSIONS_DATA } from '@/lib/data/sessionsData';
-import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useSessionsCollection } from '@/hooks/useSessions';
 import usePermissions from "@/hooks/usePermissions";
 import StatusBadge from "./StatusBadge";
 import StatusToggle from "./StatusToggle";
@@ -30,7 +29,7 @@ interface AttendanceRecordsProps {
  */
 export default function AttendanceRecords({ filters, role, records, setRecords }: AttendanceRecordsProps) {
   const { can } = usePermissions();
-  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

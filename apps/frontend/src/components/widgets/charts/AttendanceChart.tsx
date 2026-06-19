@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useBrandedDashboardChartColors } from "@/hooks/useBrandedDashboardChartColors";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   ResponsiveContainer, Cell, PieChart, Pie, Tooltip, TooltipContentProps,
   ComposedChart, Area, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -37,6 +38,7 @@ const HasanatTooltip = ({ active = false, payload = [] }: Partial<TooltipContent
  */
 export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { attendance: ATTENDANCE_COLORS } = useBrandedDashboardChartColors();
+  const palette = useBrandPalette();
   const records = getCollection<AttendanceRecord>("attendance_records", ATTENDANCE_RECORDS);
 
   const [chartType, setChartType] = useState<"bar" | "line" | "area">(() => {
@@ -77,6 +79,11 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
 
   const isSemantic = colorTheme === "semantic";
   const themeColor = ATTENDANCE_COLORS[colorTheme] || ATTENDANCE_COLORS.brand;
+  const semanticBarFill = (rate: number): string => {
+    if (rate >= 90) return palette.primary;
+    if (rate >= 80) return palette.secondary;
+    return palette.charts[0];
+  };
 
   return (
     <section aria-labelledby="attendance-chart-heading" className="bg-card rounded-xl border border-border p-5">
@@ -167,7 +174,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
               {attendanceData.map((entry, i) => (
                 <Cell
                   key={i}
-                  fill={isSemantic ? (entry.rate >= 90 ? "#047857" : entry.rate >= 80 ? "#D4A853" : "#DC2626") : themeColor}
+                  fill={isSemantic ? semanticBarFill(entry.rate) : themeColor}
                   fillOpacity={0.85}
                 />
               ))}

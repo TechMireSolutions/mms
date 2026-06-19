@@ -5,6 +5,7 @@ import { TrendingUp, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from "recharts";
 import { INVOICES, MONTHLY_REVENUE } from '@/lib/data/financeData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { KPI_TONE } from "@/lib/semanticTone";
 
 const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
 
@@ -33,9 +34,7 @@ export default function FinanceSummary() {
       value: fmt(totalCollected),
       sub: `${paidCount} invoices paid`,
       icon: CheckCircle2,
-      color: "text-success",
-      bg: "bg-success/10",
-      border: "border-success/20",
+      tone: KPI_TONE.success,
       chart: MONTHLY_REVENUE.map((m) => ({ v: m.collected })),
       chartColor: primary,
     },
@@ -44,9 +43,7 @@ export default function FinanceSummary() {
       value: fmt(totalOutstanding),
       sub: `${invoices.filter((i) => ["pending", "partial"].includes(i.status)).length} pending`,
       icon: Clock,
-      color: "text-warning",
-      bg: "bg-warning/10",
-      border: "border-warning/20",
+      tone: KPI_TONE.warning,
       chart: MONTHLY_REVENUE.map((m) => ({ v: m.outstanding })),
       chartColor: secondary,
     },
@@ -55,20 +52,16 @@ export default function FinanceSummary() {
       value: fmt(totalOverdue),
       sub: `${invoices.filter((i) => i.status === "overdue").length} invoices overdue`,
       icon: AlertCircle,
-      color: "text-destructive",
-      bg: "bg-destructive/10",
-      border: "border-destructive/20",
+      tone: KPI_TONE.destructive,
       chart: MONTHLY_REVENUE.map((m) => ({ v: Math.round(m.outstanding * 0.6) })),
-      chartColor: "#ef4444",
+      chartColor: charts[0],
     },
     {
       label: "Collection Rate",
       value: `${collectionRate}%`,
       sub: `${totalInvoices} total invoices`,
       icon: TrendingUp,
-      color: "text-primary",
-      bg: "bg-primary/10",
-      border: "border-primary/10",
+      tone: KPI_TONE.primary,
       chart: MONTHLY_REVENUE.map((m, i) => ({ v: 70 + i * 3 })),
       chartColor: charts[2],
     },
@@ -84,16 +77,16 @@ export default function FinanceSummary() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
-            className={`rounded-xl border ${card.border} bg-card p-4 overflow-hidden relative`}
+            className={`rounded-xl border ${card.tone.border} bg-card p-4 overflow-hidden relative`}
           >
             <header className="flex items-start justify-between mb-3">
               <div>
                 <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide m-0">{card.label}</h3>
-                <p className={`text-[18px] font-bold ${card.color} mt-0.5 m-0`}>{card.value}</p>
+                <p className={`text-[18px] font-bold ${card.tone.text} mt-0.5 m-0`}>{card.value}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{card.sub}</p>
               </div>
-              <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center flex-shrink-0`} aria-hidden="true">
-                <Icon className={`w-4 h-4 ${card.color}`} />
+              <div className={`w-8 h-8 rounded-lg ${card.tone.bg} flex items-center justify-center flex-shrink-0`} aria-hidden="true">
+                <Icon className={`w-4 h-4 ${card.tone.text}`} />
               </div>
             </header>
             <div className="h-12 -mx-4 -mb-4" aria-hidden="true">

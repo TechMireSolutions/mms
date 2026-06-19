@@ -7,6 +7,7 @@ import TopBarActions from "./TopBarActions";
 import MobileSidebar from "./MobileSidebar";
 import useBranding from "@/hooks/useBranding";
 import useSessionTimeout from "@/hooks/useSessionTimeout";
+import { LOGO_IMAGE } from "@/lib/semanticTone";
 
 /**
  * Main authenticated application shell layout. Orchestrates the primary sidebar,
@@ -54,7 +55,7 @@ export default function AppLayout(): React.JSX.Element {
             <img
               src={branding.logoUrl}
               alt="Logo"
-              className="h-7 w-7 shrink-0 rounded-md border border-border bg-white object-cover"
+              className={`h-7 w-7 shrink-0 rounded-md ${LOGO_IMAGE}`}
             />
           ) : (
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10">

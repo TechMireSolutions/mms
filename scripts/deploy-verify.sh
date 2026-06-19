@@ -91,7 +91,8 @@ if curl_ok "${LOCAL_BASE}/health"; then
   if curl_ok "${LOCAL_BASE}/ready"; then
     echo "Backend ready (database connected)"
   else
-    echo "WARNING: /ready failed — check DATABASE_URL and PostgreSQL"
+    echo "ERROR: /ready failed — check DATABASE_URL and PostgreSQL"
+    LOCAL_OK=false
   fi
   if curl_ok "${LOCAL_BASE}/"; then
     echo "SPA root OK on backend port ${BACKEND_PORT}"
@@ -109,7 +110,7 @@ if [[ "$LOCAL_OK" == true ]]; then
     exit 0
   fi
   echo "Trying public site: ${PUBLIC_API_URL}/"
-  if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/"; then
+  if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/ready" && curl_ok "${PUBLIC_API_URL}/"; then
     echo "Public site OK"
     report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
     exit 0
@@ -121,7 +122,7 @@ fi
 PUBLIC_API_URL="$(resolve_public_url)"
 if [[ -n "$PUBLIC_API_URL" ]]; then
   echo "Trying public health: ${PUBLIC_API_URL}/health"
-  if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/"; then
+  if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/ready" && curl_ok "${PUBLIC_API_URL}/"; then
     echo "Public site OK (local backend check failed — investigate ports)"
     report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
     exit 0

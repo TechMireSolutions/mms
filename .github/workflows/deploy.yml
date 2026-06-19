@@ -127,6 +127,7 @@ jobs:
           BASE="https://${MMS_APP_DOMAIN}"
           for i in 1 2 3 4 5 6 7 8 9 10; do
             if curl -fsS --connect-timeout 5 --max-time 15 "${BASE}/health" >/dev/null \
+              && curl -fsS --connect-timeout 5 --max-time 15 "${BASE}/ready" >/dev/null \
               && curl -fsS --connect-timeout 5 --max-time 15 "${BASE}/" >/dev/null; then
               break
             fi
@@ -137,7 +138,7 @@ jobs:
               exit 1
             fi
           done
-          echo "Health and SPA OK: ${BASE}/"
+          echo "Health, ready, and SPA OK: ${BASE}/"
 
           SETUP_CODE="$(curl -s -o /tmp/setup.json -w '%{http_code}' "${BASE}/api/platform/auth/setup/status")"
           echo "Platform setup/status → HTTP ${SETUP_CODE}"

@@ -11,7 +11,7 @@ import {
   DEFAULT_STUDENTS_SETTINGS,
   getSortedStudentFields
 } from "@mms/shared";
-import { SESSIONS_DATA } from '@/lib/data/sessionsData';
+import { useSessionsCollection } from '@/hooks/useSessions';
 import { CONTACTS } from '@/lib/data/contactsData';
 import { calcAge, type Student } from '@/lib/data/studentsData';
 import type { Contact } from "../../lib/contactFields";
@@ -34,7 +34,7 @@ const DETAIL_TABS = [
  */
 export default function StudentDetail({ student, onClose, onEdit }: StudentDetailProps): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<string>("overview");
-  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
   const contacts = useLiveCollection<Contact>("contacts", CONTACTS);
 
   const settings = useMemo(() => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS), []);
@@ -180,7 +180,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                         href={`https://wa.me/${primaryPhone.replace(/[^\d]/g, "")}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card hover:bg-success/10 hover:border-success/30 transition-all text-[#075E54] text-center"
+                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card hover:bg-success/10 hover:border-success/30 transition-all text-success text-center"
                       >
                         <MessageCircle className="w-4 h-4 mx-auto" />
                         <span className="text-[10px] font-bold">WhatsApp</span>

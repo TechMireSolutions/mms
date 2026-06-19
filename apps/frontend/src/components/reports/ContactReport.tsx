@@ -2,10 +2,9 @@ import React, { useMemo } from "react";
 import { Users, ShieldCheck, Target, TrendingUp } from "lucide-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
-
-const COLORS = ["#047857", "#0ea5e9", "#f59e0b", "#6366f1", "#ec4899", "#94a3b8"];
 
 import { CONTACTS } from '@/lib/data/contactsData';
 import { Contact } from "../../lib/contactFields";
@@ -34,6 +33,8 @@ export interface LifecycleStageItem {
  */
 export default function ContactReport(_props: { onEditVisual?: (config: unknown) => void } = {}) {
   const contacts = useLiveCollection<Contact>("contacts", CONTACTS);
+  const { primary, secondary, charts } = useBrandPalette();
+  const COLORS = useMemo(() => [primary, charts[3], secondary, charts[4], charts[2], charts[1]], [primary, secondary, charts]);
   
   const students = useLiveCollection<Student>("students", STUDENTS);
 
@@ -125,7 +126,7 @@ export default function ContactReport(_props: { onEditVisual?: (config: unknown)
                 <XAxis type="number" domain={[0, 100]} unit="%" hide />
                 <YAxis dataKey="stage" type="category" width={100} tick={{ fontSize: 11, fontWeight: 600 }} />
                 <Tooltip formatter={(v) => v !== undefined ? `${v}% Conversion` : ""} />
-                <Bar dataKey="conversionRate" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={24} />
+                <Bar dataKey="conversionRate" fill={charts[4]} radius={[0, 4, 4, 0]} barSize={24} />
               </BarChart>
             </ResponsiveContainer>
           </div>

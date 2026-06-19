@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { AlertCircle, ArrowRight, Loader2, Lock, Mail } from "lucide-react";
 import PlatformAuthLayout from "@/components/platform/PlatformAuthLayout";
 import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
+import { ApiError } from "@/lib/apiClient";
+import { mapPlatformAuthError } from "@/lib/platformAuthErrors";
 import useTranslation from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
@@ -13,7 +15,7 @@ import { ROUTES } from "@/lib/config/routes";
  */
 export default function PlatformSignIn(): React.JSX.Element {
   const { t } = useTranslation();
-  const { platformLogin, isLoadingPlatformAuth } = usePlatformAuth();
+  const { platformLogin, isPlatformLoginSubmitting } = usePlatformAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,8 +25,10 @@ export default function PlatformSignIn(): React.JSX.Element {
     setError(null);
     try {
       await platformLogin(email.trim(), password);
-    } catch {
-      setError(t("platform.invalidCredentials"));
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"),
+      );
     }
   };
 
@@ -85,8 +89,8 @@ export default function PlatformSignIn(): React.JSX.Element {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full h-11" disabled={isLoadingPlatformAuth}>
-          {isLoadingPlatformAuth ? (
+        <Button type="submit" className="w-full h-11" disabled={isPlatformLoginSubmitting}>
+          {isPlatformLoginSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
               {t("auth.signingIn")}

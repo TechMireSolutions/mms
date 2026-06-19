@@ -40,7 +40,7 @@ function CheckRow({ check, index }: CheckRowProps): React.ReactElement {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-[13px] font-semibold text-foreground">{check.label}</p>
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cfg.color} bg-white border`}>
+          <span className={`rounded-full border bg-card px-1.5 py-0.5 text-[10px] font-bold ${cfg.color}`}>
             {cfg.label}
           </span>
         </div>

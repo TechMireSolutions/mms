@@ -1,5 +1,26 @@
 /** Semantic Tailwind tone classes — prefer these over raw palette utilities. */
 
+export const SURFACE = {
+  glass: 'border border-border/60 bg-card/80 backdrop-blur-xl',
+  card: 'rounded-xl border border-border bg-card shadow-surface',
+  elevated: 'rounded-xl border border-border bg-card shadow-surface-lg',
+  mutedHeader: 'border-b border-border bg-muted/20',
+} as const;
+
+/** Logo / avatar image on themed backgrounds */
+export const LOGO_IMAGE =
+  'object-cover bg-card border border-border';
+
+/** Toggle switch thumb — theme-aware (not raw white) */
+export const TOGGLE_THUMB = 'bg-card shadow-sm';
+
+/** Selected wizard / radio inner dot */
+export const WIZARD_SELECTION_DOT = 'bg-primary-foreground';
+
+/** Frosted chip on primary gradient banners */
+export const BANNER_FROST_CHIP =
+  'bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/15';
+
 export const SEMANTIC_BADGE = {
   success: 'bg-success/10 text-success border-success/20',
   successStrong: 'bg-success/15 text-success border-success/30',
@@ -100,3 +121,47 @@ export function trendTextClass(delta: number): string {
   if (delta < 0) return 'text-destructive';
   return 'text-muted-foreground';
 }
+
+/** Payment method chips (finance module). */
+export const PAYMENT_METHOD_BADGE: Record<string, string> = {
+  Cash: SEMANTIC_BADGE.success,
+  'Bank Transfer': SEMANTIC_BADGE.info,
+  Online: 'bg-primary/10 text-primary border-primary/20',
+  Cheque: SEMANTIC_BADGE.warning,
+  Other: SEMANTIC_BADGE.muted,
+};
+
+/** Money-in / money-out summary surfaces (cashbook, accounting). */
+export const FLOW_TONE = {
+  in: {
+    border: 'border-success/30',
+    bg: 'bg-success/10',
+    text: 'text-success',
+    badge: SEMANTIC_BADGE.successStrong,
+  },
+  out: {
+    border: 'border-destructive/30',
+    bg: 'bg-destructive/10',
+    text: 'text-destructive',
+    badge: SEMANTIC_BADGE.destructiveStrong,
+  },
+} as const;
+
+/** KPI stat card shell — icon tint + surface. */
+export const KPI_TONE = {
+  success: { text: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+  warning: { text: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
+  destructive: { text: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
+  primary: { text: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+  info: { text: 'text-info', bg: 'bg-info/10', border: 'border-info/20' },
+} as const;
+
+/** Obligation / wakala type chips */
+export const OBLIGATION_TYPE_BADGE: Record<string, string> = {
+  Syed: 'bg-primary/15 text-primary border-primary/30',
+  'Non-Syed': SEMANTIC_BADGE.infoStrong,
+  Both: SEMANTIC_BADGE.success,
+  None: SEMANTIC_BADGE.muted,
+  Income: SEMANTIC_BADGE.success,
+  Liability: SEMANTIC_BADGE.destructive,
+};

@@ -15,7 +15,7 @@ import CustomFieldsBuilder, { type CustomFieldConfig } from '../ui/CustomFieldsB
 import DraggableFieldList from '../ui/DraggableFieldList';
 import SettingsFormActions from '../ui/SettingsFormActions';
 import { Switch } from '../ui/switch';
-import { SettingsCallout, SettingsPanel } from '@/components/settings/SettingsShared';
+import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
 
 interface UsersSettingsPanelProps {
   mode?: 'fields' | 'preferences';

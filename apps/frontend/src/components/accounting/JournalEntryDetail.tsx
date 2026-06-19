@@ -1,7 +1,10 @@
 import React from "react";
-import { X, Pencil, CheckCircle2, Clock, RotateCcw, Tag } from "lucide-react";
+import { X, Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
+import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import useTranslation from "@/hooks/useTranslation";
 
 interface JournalEntryDetailProps {
   entry: JournalEntry;
@@ -21,6 +24,11 @@ interface JournalEntryDetailProps {
  * @returns {React.ReactElement}
  */
 export default function JournalEntryDetail({ entry, accounts, fmt, onClose, onEdit, onReverse }: JournalEntryDetailProps) {
+  const { t } = useTranslation();
+  const journalStatusConfig: Record<string, StatusBadgeConfigItem> = {
+    posted: { label: t("accounting.journal.status.posted"), cls: SEMANTIC_BADGE.successStrong },
+    draft: { label: t("accounting.journal.status.draft"), cls: SEMANTIC_BADGE.warningStrong },
+  };
   const getAccount = (id: string) => accounts.find((a) => a.id === id);
   const totalD = entry.lines.reduce((s, l) => s + l.debit, 0);
   const totalC = entry.lines.reduce((s, l) => s + l.credit, 0);
@@ -36,10 +44,7 @@ export default function JournalEntryDetail({ entry, accounts, fmt, onClose, onEd
         <header className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card z-10">
           <div className="flex items-center gap-3">
             <h2 id="modal-title" className="text-base font-bold text-foreground font-mono m-0">{entry.ref}</h2>
-            {entry.status === "posted"
-              ? <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/15 text-success border border-success/30"><CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" />Posted</span>
-              : <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning/15 text-warning border border-warning/30"><Clock className="w-2.5 h-2.5" aria-hidden="true" />Draft</span>
-            }
+            <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
             {entry.reversed_ref && (
               <span className="text-[10px] font-semibold text-warning bg-warning/10 px-2 py-0.5 rounded-full border border-warning/30">
                 ↩ Reversal of {entry.reversed_ref}

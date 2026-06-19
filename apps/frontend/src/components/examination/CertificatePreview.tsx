@@ -5,6 +5,8 @@ import { getRankSuffix } from "./gradeUtils";
 import { StudentResultItem } from "./StudentResultCard";
 import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "../../lib/db";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
+import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 
 interface CertificatePreviewProps {
   result: StudentResultItem;
@@ -23,6 +25,7 @@ interface CertificatePreviewProps {
  */
 export default function CertificatePreview({ result, exam, onClose }: CertificatePreviewProps): React.ReactElement {
   const certRef = useRef<HTMLDivElement | null>(null);
+  const { primary, secondary } = useBrandPalette();
 
   const handlePrint = () => {
     if (!certRef.current) return;
@@ -93,9 +96,9 @@ export default function CertificatePreview({ result, exam, onClose }: Certificat
           <div ref={certRef}>
             <div style={{
               width: "100%",
-              background: "white",
-              border: "16px solid #047857",
-              outline: "4px solid #d97706",
+              background: PRINT_NEUTRAL.paper,
+              border: `16px solid ${primary}`,
+              outline: `4px solid ${secondary}`,
               outlineOffset: "-20px",
               padding: "40px 48px",
               textAlign: "center",
@@ -111,45 +114,45 @@ export default function CertificatePreview({ result, exam, onClose }: Certificat
                   [pos.includes("left") ? "left" : "right"]: "8px",
                   width: "32px",
                   height: "32px",
-                  borderTop: pos.includes("top") ? "4px solid #d97706" : "none",
-                  borderBottom: pos.includes("bottom") ? "4px solid #d97706" : "none",
-                  borderLeft: pos.includes("left") ? "4px solid #d97706" : "none",
-                  borderRight: pos.includes("right") ? "4px solid #d97706" : "none",
+                  borderTop: pos.includes("top") ? `4px solid ${secondary}` : "none",
+                  borderBottom: pos.includes("bottom") ? `4px solid ${secondary}` : "none",
+                  borderLeft: pos.includes("left") ? `4px solid ${secondary}` : "none",
+                  borderRight: pos.includes("right") ? `4px solid ${secondary}` : "none",
                 };
                 return <div key={pos} style={styles} />;
               })}
 
               {/* Arabic bismillah */}
-              <p style={{ fontFamily: "'Amiri', serif", fontSize: "20px", color: "#047857", marginBottom: "4px" }}>
+              <p style={{ fontFamily: "'Amiri', serif", fontSize: "20px", color: primary, marginBottom: "4px" }}>
                 بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ
               </p>
 
-              <div style={{ width: "60px", height: "2px", background: "linear-gradient(to right, #d97706, #047857, #d97706)", margin: "12px auto" }} />
+              <div style={{ width: "60px", height: "2px", background: `linear-gradient(to right, ${secondary}, ${primary}, ${secondary})`, margin: "12px auto" }} />
 
               {/* Institution */}
-              <p style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "4px", color: "#6b7280", textTransform: "uppercase", marginBottom: "16px" }}>
+              <p style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "4px", color: PRINT_NEUTRAL.caption, textTransform: "uppercase", marginBottom: "16px" }}>
                 Madrasa Management System
               </p>
 
               {/* Title */}
-              <h1 style={{ fontSize: "32px", fontWeight: "700", color: "#047857", fontFamily: "'Amiri', serif", marginBottom: "4px" }}>
+              <h1 style={{ fontSize: "32px", fontWeight: "700", color: primary, fontFamily: "'Amiri', serif", marginBottom: "4px" }}>
                 Certificate of Achievement
               </h1>
-              <p style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "24px" }}>This is to certify that</p>
+              <p style={{ fontSize: "12px", color: PRINT_NEUTRAL.subcaption, marginBottom: "24px" }}>This is to certify that</p>
 
               {/* Student name */}
-              <h2 style={{ fontSize: "28px", fontWeight: "700", color: "#1a1a1a", borderBottom: "2px solid #d97706", display: "inline-block", padding: "0 24px 6px", marginBottom: "20px" }}>
+              <h2 style={{ fontSize: "28px", fontWeight: "700", color: PRINT_NEUTRAL.text, borderBottom: `2px solid ${secondary}`, display: "inline-block", padding: "0 24px 6px", marginBottom: "20px" }}>
                 {result.student?.name}
               </h2>
 
               {/* Body text */}
-              <p style={{ fontSize: "13px", color: "#4b5563", lineHeight: "1.8", maxWidth: "480px", margin: "0 auto 20px" }}>
+              <p style={{ fontSize: "13px", color: PRINT_NEUTRAL.body, lineHeight: "1.8", maxWidth: "480px", margin: "0 auto 20px" }}>
                 has successfully completed the examination in{" "}
-                <strong style={{ color: "#047857" }}>{exam.subject}</strong> — <em>{exam.name}</em>,
+                <strong style={{ color: primary }}>{exam.subject}</strong> — <em>{exam.name}</em>,
                 achieving a score of{" "}
-                <strong style={{ color: "#047857" }}>{result.marksObtained} out of {exam.totalMarks}</strong>{" "}
+                <strong style={{ color: primary }}>{result.marksObtained} out of {exam.totalMarks}</strong>{" "}
                 ({result.pct}%) and securing{" "}
-                <strong style={{ color: "#d97706" }}>{rankLabel} position</strong> in class.
+                <strong style={{ color: secondary }}>{rankLabel} position</strong> in class.
               </p>
 
               {/* Grade badge */}
@@ -164,24 +167,24 @@ export default function CertificatePreview({ result, exam, onClose }: Certificat
                 marginBottom: "24px",
               }}>
                 <span style={{ fontSize: "24px", fontWeight: "700", color: result.grade.color }}>{result.grade.label}</span>
-                <span style={{ fontSize: "12px", color: "#6b7280" }}>Grade</span>
+                <span style={{ fontSize: "12px", color: PRINT_NEUTRAL.caption }}>Grade</span>
                 <div style={{ width: "1px", height: "24px", background: result.grade.border }} />
                 <span style={{ fontSize: "16px", fontWeight: "700", color: result.grade.color }}>{result.pct}%</span>
               </div>
 
               {/* Date & signatures row */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "24px", borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "24px", borderTop: `1px solid ${PRINT_NEUTRAL.border}`, paddingTop: "16px" }}>
                 <div style={{ textAlign: "left" }}>
-                  <div style={{ width: "120px", borderBottom: "1px solid #9ca3af", marginBottom: "4px" }} />
-                  <p style={{ fontSize: "10px", color: "#6b7280" }}>Class Teacher</p>
+                  <div style={{ width: "120px", borderBottom: `1px solid ${PRINT_NEUTRAL.subcaption}`, marginBottom: "4px" }} />
+                  <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.caption }}>Class Teacher</p>
                 </div>
                 <div style={{ textAlign: "center" }}>
-                  <p style={{ fontSize: "10px", color: "#9ca3af" }}>Date of Examination</p>
-                  <p style={{ fontSize: "12px", fontWeight: "600", color: "#374151" }}>{date}</p>
+                  <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.subcaption }}>Date of Examination</p>
+                  <p style={{ fontSize: "12px", fontWeight: "600", color: PRINT_NEUTRAL.emphasis }}>{date}</p>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ width: "120px", borderBottom: "1px solid #9ca3af", marginBottom: "4px", marginLeft: "auto" }} />
-                  <p style={{ fontSize: "10px", color: "#6b7280" }}>Principal / Director</p>
+                  <div style={{ width: "120px", borderBottom: `1px solid ${PRINT_NEUTRAL.subcaption}`, marginBottom: "4px", marginLeft: "auto" }} />
+                  <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.caption }}>Principal / Director</p>
                 </div>
               </div>
             </div>

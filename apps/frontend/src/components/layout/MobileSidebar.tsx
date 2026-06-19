@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import useGlobalSettings from "@/hooks/useGlobalSettings";
 import useTranslation from "@/hooks/useTranslation";
 import { NAV_ITEMS } from "@/lib/config/navConfig";
+import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { isNavPathActive, ROUTES } from "@/lib/config/routes";
 import { prefetchRoute } from "@/lib/routing/routePrefetch";
 
@@ -101,7 +102,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
               <img
                 src={branding.logoUrl}
                 alt="Logo"
-                className="w-8 h-8 rounded-lg object-cover bg-white border border-sidebar-border"
+                className={`h-8 w-8 rounded-lg ${LOGO_IMAGE} border-sidebar-border`}
               />
             ) : (
               <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">

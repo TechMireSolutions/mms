@@ -79,7 +79,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(true);
     setAuthChecked(true);
     localStorage.setItem('mms_user', JSON.stringify(authUser));
-    localStorage.removeItem('mms_token');
     // Background sync — must not block the UI from becoming interactive
     void syncDatabase();
   }, []);
@@ -178,7 +177,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = (shouldRedirect = true): void => {
     clear2FAState();
-    localStorage.removeItem('mms_token');
     localStorage.removeItem('mms_user');
     setUser(null);
     setIsAuthenticated(false);

@@ -60,7 +60,7 @@ export function useBrandedDashboardChartColors(): {
       blue: charts[3],
       violet: charts[4],
       amber: secondary,
-      red: '#dc2626',
+      red: charts[0],
     };
 
     const revenue: Record<string, RevenueThemeColors> = {
@@ -70,7 +70,7 @@ export function useBrandedDashboardChartColors(): {
       violet: { revenue: charts[4], expenses: charts[3], fillOpacityRevenue: 0.85, fillOpacityExpenses: 0.5 },
       blue: { revenue: charts[3], expenses: charts[1], fillOpacityRevenue: 0.85, fillOpacityExpenses: 0.5 },
       amber: { revenue: secondary, expenses: charts[2], fillOpacityRevenue: 0.85, fillOpacityExpenses: 0.5 },
-      red: { revenue: '#dc2626', expenses: '#f87171', fillOpacityRevenue: 0.85, fillOpacityExpenses: 0.5 },
+      red: { revenue: charts[0], expenses: charts[1], fillOpacityRevenue: 0.85, fillOpacityExpenses: 0.5 },
     };
 
     const hasanat: Record<string, HasanatThemeColors> = {

@@ -15,7 +15,7 @@ import { useIsAdminViewer } from '@/hooks/useViewerRole';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
-import { SettingsMetaBadge } from '@/components/settings/SettingsShared';
+import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { UserRoleBadge, UserStatusBadge } from '@/components/users/UserBadges';
 
 interface AvatarProps {

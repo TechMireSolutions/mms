@@ -11,10 +11,10 @@ import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
 import EmptyState from "../ui/EmptyState";
 
-import RevenueChart from "../dashboard/charts/RevenueChart";
-import FeeCollectionSummary from "../dashboard/FeeCollectionSummary";
-import OutstandingFeesTable from "../dashboard/OutstandingFeesTable";
-import OverdueObligationsWidget from "../dashboard/OverdueObligationsWidget";
+import RevenueChart from "@/components/widgets/charts/RevenueChart";
+import FeeCollectionSummary from "@/components/widgets/FeeCollectionSummary";
+import OutstandingFeesTable from "@/components/widgets/OutstandingFeesTable";
+import OverdueObligationsWidget from "@/components/widgets/OverdueObligationsWidget";
 
 /** Invoice status values supported by the financial report. */
 type InvoiceStatus = "paid" | "pending" | "overdue" | "partial" | "cancelled";
@@ -56,7 +56,7 @@ const STATUS_COLOR: Record<InvoiceStatus, string> = {
 export default function FinancialReport({ filters }: FinancialReportProps): React.JSX.Element {
   const palette = useBrandPalette();
   const PIE_COLORS = useMemo(
-    () => [palette.primary, palette.secondary, palette.charts[2], palette.charts[3], "#EF4444"],
+    () => [palette.primary, palette.secondary, palette.charts[2], palette.charts[3], palette.charts[0]],
     [palette],
   );
   const financeInvoices = useLiveCollection<Invoice>("finance_invoices", INVOICES);
@@ -158,7 +158,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
             <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `${v / 1000}k`} />
             <Tooltip formatter={(v) => v !== undefined ? PKR(Number(v)) : ""} />
             <Area type="monotone" dataKey="collected"   stroke="hsl(var(--primary))" fill="url(#colorCollected)" strokeWidth={2} name="Collected"   />
-            <Area type="monotone" dataKey="outstanding" stroke="#EF4444"              fill="transparent"          strokeWidth={2} strokeDasharray="4 2" name="Outstanding" />
+            <Area type="monotone" dataKey="outstanding" stroke={palette.charts[0]} fill="transparent" strokeWidth={2} strokeDasharray="4 2" name="Outstanding" />
           </AreaChart>
         </ResponsiveContainer>
       </div>

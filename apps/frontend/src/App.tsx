@@ -12,11 +12,11 @@ import { AppProviders } from '@/providers/AppProviders';
 
 const AuthenticatedApp = (): React.JSX.Element | null => {
   const { isApex } = useTenant();
-  const { isLoadingPlatformAuth, platformAuthChecked } = usePlatformAuth();
+  const { isCheckingPlatformAuth, platformAuthChecked } = usePlatformAuth();
   const { isLoadingAuth, authError, authChecked } = useAuth();
 
   const bootLoading = isApex
-    ? !platformAuthChecked || isLoadingPlatformAuth
+    ? !platformAuthChecked || isCheckingPlatformAuth
     : isLoadingAuth && !authChecked;
 
   if (bootLoading) {

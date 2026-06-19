@@ -26,6 +26,8 @@ import { runMigration008 } from './migrations/008_backfill_login_email.js';
 import { runMigration009 } from './migrations/009_seed_demo_students.js';
 import { runMigration010 } from './migrations/010_seed_demo_teacher_contacts.js';
 import { runMigration011 } from './migrations/011_expand_demo_roster.js';
+import { runMigration012 } from './migrations/012_migrate_users_to_tables.js';
+import { deleteTenantUsersByWorkspace } from './repositories/tenantUserRepository.js';
 import { purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { setDb } from './dbClient.js';
@@ -83,6 +85,7 @@ export async function initDb(): Promise<void> {
     await runMigration009();
     await runMigration010();
     await runMigration011();
+    await runMigration012();
     await purgeExpiredAuthArtifacts();
     await ensurePlatformSuperUserFromEnv();
 
@@ -289,6 +292,8 @@ export async function resetTenantData(): Promise<void> {
   for (const [key, data] of Object.entries(getMinimalObjects())) {
     await saveObject(key, data);
   }
+
+  await deleteTenantUsersByWorkspace(tenant);
 }
 
 /**
@@ -300,6 +305,9 @@ export async function resetDatabase(): Promise<void> {
   try {
     // Design Boundary Constraint: Drizzle ORM does not support dynamic schema teardown / dropping tables 
     // at runtime via type-safe query builders. Therefore, administrative DROP statements must execute raw SQL.
+    await db.execute(sql`DROP TABLE IF EXISTS tenant_users;`);
+    await db.execute(sql`DROP TABLE IF EXISTS platform_users;`);
+    await db.execute(sql`DROP TABLE IF EXISTS auth_artifacts;`);
     await db.execute(sql`DROP TABLE IF EXISTS collections;`);
     await db.execute(sql`DROP TABLE IF EXISTS objects;`);
     await db.execute(sql`DROP TABLE IF EXISTS __drizzle_migrations;`);

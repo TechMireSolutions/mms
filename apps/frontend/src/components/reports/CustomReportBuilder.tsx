@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical, Plus, Check, Trash2, FileSpreadsheet, FileText, Settings, Database, Sliders } from "lucide-react";
 import { CONTACTS } from '@/lib/data/contactsData';
 import { STUDENTS } from '@/lib/data/studentsData';
-import { SESSIONS_DATA } from '@/lib/data/sessionsData';
+import { useSessionsCollection } from '@/hooks/useSessions';
 import { INVOICES } from '@/lib/data/financeData';
 import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 import { DISTRIBUTIONS } from '@/lib/data/hasanatData';
@@ -132,7 +132,8 @@ interface CustomReportBuilderProps {
 export default function CustomReportBuilder({ onClose, initialSource }: CustomReportBuilderProps): React.JSX.Element {
   const contactsColl = useLiveCollection<Record<string, unknown>>("contacts", CONTACTS as unknown as Record<string, unknown>[]);
   const studentsColl = useLiveCollection<Record<string, unknown>>("students", STUDENTS as unknown as Record<string, unknown>[]);
-  const sessionsColl = useLiveCollection<Record<string, unknown>>("sessions", SESSIONS_DATA as unknown as Record<string, unknown>[]);
+  const sessionsFromQuery = useSessionsCollection();
+  const sessionsColl = sessionsFromQuery as unknown as Record<string, unknown>[];
   const financialColl = useLiveCollection<Record<string, unknown>>("finance_invoices", INVOICES as unknown as Record<string, unknown>[]);
   const attendanceColl = useLiveCollection<Record<string, unknown>>("attendance_records", ATTENDANCE_RECORDS as unknown as Record<string, unknown>[]);
   const hasanatColl = useLiveCollection<Record<string, unknown>>("hasanat_distributions", DISTRIBUTIONS as unknown as Record<string, unknown>[]);

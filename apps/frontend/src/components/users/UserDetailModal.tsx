@@ -13,7 +13,7 @@ import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
 import Modal from '@/components/ui/Modal';
 import { UserRoleBadge, UserStatusBadge } from '@/components/users/UserBadges';
-import { SettingsMetaBadge } from '@/components/settings/SettingsShared';
+import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 
 interface RowProps {
   label: string;

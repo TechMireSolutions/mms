@@ -12,7 +12,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Contact `uiStrings` map | Contacts module toasts/labels | New copy → `appTranslations` + `t()`; no new `uiStrings` keys |
 | TanStack Query | Students + contacts + workspace registry + auth; most modules still localStorage | New REST resources Query-first — `mms-query.md` |
 | `can()` permissions hook | Shipped; Enrollments + Attendance wired; registry partial | Full registry-driven matrix — `mms-rbac.md` |
-| Inline `role ===` checks | Dashboard widget personalization uses `useViewerRole()` | `can()` for permissions — `mms-rbac.md` |
+| Inline `role ===` checks | Dashboard widget filtering uses `resolveDashboardPersona(can)`; `useViewerRole` derives from `can()` | Full registry-driven matrix — `mms-rbac.md` |
 | Custom tab provisioning | JSON document store only | Table + migration + CRUD per custom tab — `mms-fields.md` |
 | WebSockets | Not implemented | Replace polling for server push — `mms-core.md` |
 | Work/Reports sub-tabs | Residual inline bars in deep components | `SubTabBar` per `mms-ui-tabs.md` |
@@ -23,7 +23,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Server-first data | Students + contacts Query-first; most modules localStorage primary | Query + API authoritative for new modules — `mms-data-layer.md` |
 | Per-entity REST API | `/api/students` + `/api/contacts` CRUD; generic `/api/db` for rest | Resource routes + validation per domain — `mms-backend.md` |
 | Internal `fetch('/api/...')` | External OAuth only | All MMS API via `apiClient` — `mms-frontend.md` |
-| JWT in localStorage | Removed — httpOnly cookies only; `apiClient` has no token reads | Remove `mms_token` cleanup in `AuthContext` when stable — `mms-auth.md` |
+| JWT in localStorage | Removed — httpOnly cookies only; `apiClient` has no token reads | — resolved |
 | Client error reporting | Console/toasts only | Sentry or equivalent — `mms-observability.md` |
 | Global a11y pass | Partial (dropdowns only) | WCAG baseline on new UI — `mms-a11y.md` |
 
@@ -86,11 +86,17 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Playwright smoke | `e2e/smoke.spec.ts`, `e2e/interactive.spec.ts` |
 | Playwright in CI | API smoke job with Postgres + backend boot |
 | Contacts REST API | `/api/contacts` CRUD + Zod + `useContacts` Query hooks |
+| Attendance REST API | `/api/attendance` CRUD + bulk PUT + Zod + `useAttendance` Query hooks |
+| Sessions REST API | `/api/sessions` CRUD + Zod + `useSessions` Query hooks |
+| Platform / tenant user tables | `platform_users` + `tenant_users` relational tables; auth services use tables (legacy JSON migrated on startup) |
 | Attendance RBAC UI | `can()` for tabs, mark, edit, delete; role banner via `t()` |
 | Tenant workspace Query | `useWorkspaceBySubdomain` + `usePublicBranding` replace `useEffect` fetch |
 | Destructive colour tokens | `text-red-500` → `text-destructive` across frontend components |
 | Contacts write RBAC | `canWriteCollection` on contact mutations |
 | Legacy `mms_token` removed | Cookie-only session via `apiClient` |
+| `mms_token` cleanup removed | No `localStorage.removeItem('mms_token')` in auth contexts |
+| Cross-module widget imports | Shared KPI/charts in `components/widgets/`; `SettingsShell` in `ui/`; branding in `components/branding/` |
+| Client error reporting stub | `lib/clientErrorReporting.ts` wired in `ErrorBoundary` |
 | Dashboard widget defaults | Permission-based via `can()` not inline `role ===` |
 | Collection read RBAC | `canReadCollection` / `canReadObject` on db + REST list endpoints |
 | Bulk sync body limit | `MMS_SYNC_MAX_BODY_BYTES` (default 10 MiB) on `POST /api/db/sync` |

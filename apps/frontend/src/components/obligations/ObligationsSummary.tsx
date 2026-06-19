@@ -9,8 +9,8 @@ import ExportToolbar from "./ExportToolbar";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import useDebounce from "../../hooks/useDebounce";
 import { DatePicker } from "../ui/DatePicker";
-
-const COLORS = ["#059669","#2563eb","#d97706","#7c3aed","#dc2626","#0891b2"];
+import { KPI_TONE } from "@/lib/semanticTone";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 
 function fmt(amount: string | number | null | undefined, code = "PKR"): string {
   return `${code} ${parseFloat(amount as string || "0").toLocaleString()}`;
@@ -26,12 +26,12 @@ interface StatCardProps {
 }
 
 function StatCard({ label, value, sub, icon: Icon, color = "primary", trend }: StatCardProps) {
-  const colorMap: Record<string, { bg: string, text: string, iconBg: string }> = {
-    primary:  { bg: "bg-primary/8",  text: "text-primary",  iconBg: "bg-primary/10" },
-    emerald:  { bg: "bg-success/10",  text: "text-success", iconBg: "bg-success/15" },
-    blue:     { bg: "bg-info/10",     text: "text-info",    iconBg: "bg-info/15" },
-    amber:    { bg: "bg-warning/10",    text: "text-warning",   iconBg: "bg-warning/15" },
-    purple:   { bg: "bg-primary/10",   text: "text-primary",  iconBg: "bg-primary/15" },
+  const colorMap: Record<string, { bg: string; text: string; iconBg: string }> = {
+    primary: { bg: "bg-primary/8", text: KPI_TONE.primary.text, iconBg: KPI_TONE.primary.bg },
+    emerald: { bg: KPI_TONE.success.bg, text: KPI_TONE.success.text, iconBg: "bg-success/15" },
+    blue: { bg: KPI_TONE.info.bg, text: KPI_TONE.info.text, iconBg: "bg-info/15" },
+    amber: { bg: KPI_TONE.warning.bg, text: KPI_TONE.warning.text, iconBg: "bg-warning/15" },
+    purple: { bg: KPI_TONE.primary.bg, text: KPI_TONE.primary.text, iconBg: "bg-primary/15" },
   };
   const c = colorMap[color];
   return (
@@ -97,6 +97,8 @@ export default function ObligationsSummary({
   collections, obligationTypes, reps, mujtahids, wakalaTypes, distributions
 }: ObligationsSummaryProps) {
   const users = useMergedObligationUsers();
+  const { primary, secondary, charts } = useBrandPalette();
+  const COLORS = useMemo(() => [primary, charts[3], secondary, charts[4], charts[0], charts[2]], [primary, secondary, charts]);
 
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo]     = useState("");
@@ -346,7 +348,7 @@ export default function ObligationsSummary({
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
                   <Tooltip formatter={(v) => v !== undefined ? fmt(Number(v)) : ""} />
-                  <Bar dataKey="total" fill="#059669" radius={[6,6,0,0]} />
+                  <Bar dataKey="total" fill={primary} radius={[6,6,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
             </article>

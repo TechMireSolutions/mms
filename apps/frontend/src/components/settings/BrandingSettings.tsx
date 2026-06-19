@@ -10,15 +10,15 @@ import SectionCard from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
-import BrandingIdentityPreview from '@/components/settings/BrandingIdentityPreview';
-import { SettingsCallout, SettingsPanel } from '@/components/settings/SettingsShared';
+import BrandingIdentityPreview from '@/components/branding/BrandingIdentityPreview';
+import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
 import {
   FieldHint,
   ImageUploadField,
   NAME_MAX,
   SocialLinksEditor,
   TAGLINE_MAX,
-} from '@/components/settings/BrandingShared';
+} from '@/components/branding/BrandingShared';
 
 /**
  * Institution identity — name, logo, contact, address, and social profiles.

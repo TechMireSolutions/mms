@@ -22,6 +22,7 @@ Agent skills for Cursor and Antigravity. Cursor discovers these from `descriptio
 | [mms-reports-export](mms-reports-export/SKILL.md) | Analytics, charts, PDF/Excel |
 | [mms-migration-fixes](mms-migration-fixes/SKILL.md) | Known tech debt from migration-status |
 | [mms-code-review](mms-code-review/SKILL.md) | PR / change review against MMS standards |
+| [mms-ops-deploy](mms-ops-deploy/SKILL.md) | Hetzner deploy, Apache isolation, PORT 5002, GitHub Actions |
 
 ## Rules vs skills
 
@@ -45,4 +46,8 @@ pnpm install && pnpm typecheck && pnpm test
 
 Identical skills in `.agents/skills/`. Workflows in `.agents/workflows/`. Rules in `.agents/rules/`.
 
-After editing skills here, copy to `.agents/skills/` (or run project sync script if available).
+After editing skills in `.agents/skills/`, run:
+
+```bash
+bash .agents/scripts/sync-skills.sh
+```

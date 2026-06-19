@@ -9,6 +9,7 @@ import useTranslation from "@/hooks/useTranslation";
 import { NAV_ITEMS } from "@/lib/config/navConfig";
 import { isNavPathActive, ROUTES } from "@/lib/config/routes";
 import { prefetchRoute } from "@/lib/routing/routePrefetch";
+import { LOGO_IMAGE } from "@/lib/semanticTone";
 
 export interface SidebarProps {
   /** If true, shrinks the sidebar to an icon-only strip. */
@@ -86,7 +87,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
             <img
               src={branding.logoUrl}
               alt="Logo"
-              className="w-8 h-8 rounded-lg object-cover bg-white border border-sidebar-border flex-shrink-0"
+              className={`h-8 w-8 shrink-0 rounded-lg ${LOGO_IMAGE} border-sidebar-border`}
             />
           ) : (
             <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center flex-shrink-0">

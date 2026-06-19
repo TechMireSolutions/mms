@@ -1,3 +1,5 @@
+import { DEFAULT_BRANDING_SETTINGS, resolveBrandingChartPaletteHex } from "@mms/shared";
+
 export const ROLES = ["admin", "teacher", "accountant"] as const;
 export type UserRole = typeof ROLES[number];
 
@@ -95,11 +97,17 @@ export interface HasanatPoint {
   color: string;
 }
 
+const defaultChartPalette = resolveBrandingChartPaletteHex(
+  DEFAULT_BRANDING_SETTINGS.primaryColor,
+  DEFAULT_BRANDING_SETTINGS.secondaryColor,
+  "light",
+);
+
 export const hasanatData: HasanatPoint[] = [
-  { name: "Memorisation", value: 2800, color: "#047857" },
-  { name: "Attendance",   value: 1400, color: "#D4A853" },
-  { name: "Behaviour",    value: 840,  color: "#4F46E5" },
-  { name: "Homework",     value: 600,  color: "#0891B2" },
+  { name: "Memorisation", value: 2800, color: defaultChartPalette.primary },
+  { name: "Attendance",   value: 1400, color: defaultChartPalette.secondary },
+  { name: "Behaviour",    value: 840,  color: defaultChartPalette.charts[4] },
+  { name: "Homework",     value: 600,  color: defaultChartPalette.charts[3] },
 ];
 
 // ── Sessions ─────────────────────────────────────────────────────────────

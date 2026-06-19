@@ -15,7 +15,7 @@ import { useContactsCollection } from "@/hooks/useContacts";
 import useTranslation from "@/hooks/useTranslation";
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
-import ContactPicker from "../ui/ContactPicker";
+import ContactPicker from "../contactLink/ContactPicker";
 import { calculateKeyedUnitsCompleteness } from "@/lib/formCompleteness";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "../ui/formStyles";
 

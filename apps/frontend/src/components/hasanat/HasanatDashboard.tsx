@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Star, Package, Gift, RotateCcw, TrendingUp, Layers } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { DENOMINATIONS, STOCK_BATCHES, DISTRIBUTIONS, Denomination, StockBatch, Distribution } from '@/lib/data/hasanatData';
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 
 /**
  * HasanatDashboard Component
@@ -15,6 +16,8 @@ import { DENOMINATIONS, STOCK_BATCHES, DISTRIBUTIONS, Denomination, StockBatch, 
  * @returns React element representing the Hasanat points dashboard.
  */
 export default function HasanatDashboard() {
+  const palette = useBrandPalette();
+
   const totalStock = STOCK_BATCHES.reduce((s: number, b: StockBatch) => s + b.quantity, 0);
   const totalRemaining = STOCK_BATCHES.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
   const totalDistributed = DISTRIBUTIONS.reduce((s: number, d: Distribution) => s + d.quantity, 0);
@@ -22,6 +25,16 @@ export default function HasanatDashboard() {
   const totalReturned = DISTRIBUTIONS.filter((d: Distribution) => d.status === "returned").reduce((s: number, d: Distribution) => s + d.quantity, 0);
   const totalActive = DISTRIBUTIONS.filter((d: Distribution) => d.status === "active").reduce((s: number, d: Distribution) => s + d.quantity, 0);
   const usedPct = totalStock > 0 ? Math.round(((totalStock - totalRemaining) / totalStock) * 100) : 0;
+
+  const pieData = useMemo(
+    () => [
+      { name: "Active", value: totalActive, color: palette.charts[3] },
+      { name: "Redeemed", value: totalRedeemed, color: palette.charts[4] },
+      { name: "Returned", value: totalReturned, color: palette.charts[1] },
+      { name: "Available", value: totalRemaining, color: palette.primary },
+    ],
+    [palette, totalActive, totalRedeemed, totalReturned, totalRemaining],
+  );
 
   const stats = [
     { label: "Total Stock", value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10" },
@@ -44,13 +57,6 @@ export default function HasanatDashboard() {
     const remaining = batches.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
     return { ...den, total, remaining, used: total - remaining };
   }).filter((d: DenStockEntry) => d.total > 0);
-
-  const pieData = [
-    { name: "Active", value: totalActive, color: "#3b82f6" },
-    { name: "Redeemed", value: totalRedeemed, color: "#7c3aed" },
-    { name: "Returned", value: totalReturned, color: "#9ca3af" },
-    { name: "Available", value: totalRemaining, color: "#10b981" },
-  ];
 
   return (
     <div className="space-y-5">

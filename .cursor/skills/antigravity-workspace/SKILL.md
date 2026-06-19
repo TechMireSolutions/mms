@@ -34,7 +34,7 @@ See `skills/README.md`. Invoke by task keywords or `@skill-name` if your client 
 ```bash
 pnpm install && pnpm typecheck
 bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
-pnpm dev   # or ./restart_servers.sh
+pnpm dev   # foreground turbo — prefer ./restart_servers.sh for local dev
 ```
 
 ## Sync policy
@@ -43,7 +43,7 @@ When changing standards:
 
 1. Update `.cursor/rules/*.mdc` (Cursor)
 2. Mirror `.agents/rules/*.md`
-3. Mirror `.agents/skills/*/SKILL.md` with `.cursor/skills/`
+3. Mirror `.agents/skills/*/SKILL.md` with `.cursor/skills/` via `bash .agents/scripts/sync-skills.sh`
 
 ## Project root guide
 

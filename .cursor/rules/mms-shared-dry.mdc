@@ -6,6 +6,8 @@ alwaysApply: false
 
 # @mms/shared & DRY
 
+App-wide DRY policy: **`mms-dry.mdc`**. This file covers the shared package only.
+
 ## Exports map
 
 | File | Contents |

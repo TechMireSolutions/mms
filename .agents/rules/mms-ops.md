@@ -6,7 +6,7 @@ trigger: model_decision
 
 ## Prerequisites
 
-- Node.js **26+** (see root `package.json` `engines`)
+- Node.js **26+** (see root `package.json` `engines`) — keep current per **`mms-dependencies.md`**
 - pnpm **11.8+** (`packageManager` field — `corepack enable`)
 
 ## Commands (from repo root)
@@ -31,9 +31,10 @@ cd apps/backend && pnpm dev && pnpm typecheck && pnpm test && pnpm lint
 Helper scripts:
 
 ```bash
-./restart_servers.sh              # Postgres + restart + health check
-./restart_servers.sh status       # check :3000 / :5173
-./scripts/stop_servers.sh          # stop dev servers
+./restart_servers.sh              # start dev (GNU screen) + Postgres + health check
+./restart_servers.sh status       # screen session, :3000 / :5173
+./restart_servers.sh stop         # stop screen + servers
+./restart_servers.sh --foreground # run in this terminal (blocks)
 ```
 
 ## Environment

@@ -78,19 +78,20 @@ cd apps/frontend && pnpm lint
 cd apps/backend && pnpm dev
 ```
 
-Quick restart (PostgreSQL Docker, kills stale ports, health checks, logs to `.logs/`):
+Quick restart (PostgreSQL Docker, GNU screen, health checks):
 
 ```bash
-./restart_servers.sh           # full restart (recommended)
-./restart_servers.sh --quick   # faster, no health wait
-./scripts/stop_servers.sh      # stop background servers
+./restart_servers.sh              # start (recommended)
+./restart_servers.sh status       # screen + ports
+./restart_servers.sh stop         # stop everything
+./restart_servers.sh --foreground # run in this terminal
 ```
 
 ## Local development
 
 1. Start PostgreSQL and create database `mms` (or match `DATABASE_URL`).
 2. Set `JWT_SECRET` in `apps/backend/.env`.
-3. From repo root: `pnpm install && pnpm dev` (or `./restart_servers.sh`).
+3. From repo root: `pnpm install && ./restart_servers.sh`.
 4. Open `http://localhost:5173` — API at `http://localhost:3000` (`GET /health`).
 
 Migrations and seeds run on backend startup when the database is empty.
@@ -119,12 +120,34 @@ docker run -p 3000:3000 \
 
 PostgreSQL must be reachable at `DATABASE_URL`. The image exposes port **3000** by default; set `-e PORT=5002` and `-p 5002:5002` to match Hetzner.
 
-## Production (Hetzner)
+## Production (Ubuntu VPS / Hetzner)
 
-Fastify listens on **`PORT=5002`** (see `scripts/lib/deploy-ports.sh`). Apache `ProxyPass` must target `http://127.0.0.1:5002/`. Deploy scripts (`deploy-recover-backend.sh`, `fix-apache-upstream.sh`, `deploy-verify.sh`) use this default when `PORT` is unset in `apps/backend/.env`.
+Fastify serves **API + SPA** on **`PORT=5002`**. Apache terminates TLS and proxies to `http://127.0.0.1:5002/`.
+
+### First-time server setup
 
 ```bash
-# On server after deploy issues:
+# On a fresh Ubuntu 22.04/24.04 VPS (as sudo-capable user):
+sudo bash scripts/production/bootstrap-ubuntu-vps.sh
+
+# After cloning repo to /var/www/mmsv2 and creating apps/backend/.env:
+cd /var/www/mmsv2
+pnpm install && pnpm build
+bash scripts/production/setup-pm2-startup.sh   # PM2 + boot persistence
+bash scripts/apply-production-host-isolation.sh apps/backend/.env
+
+# Daily PostgreSQL backups (cron example):
+# 0 3 * * * /var/www/mmsv2/scripts/production/backup-postgres.sh
+```
+
+Required `apps/backend/.env` on server: `JWT_SECRET`, `DATABASE_URL`, `PORT=5002`, `NODE_ENV=production`, `MMS_APP_DOMAIN`.
+
+GitHub Actions (`deploy.yml`) deploys after CI on `main`. Set secrets: `SERVER_IP`, `SERVER_USER`, `SSH_PRIVATE_KEY`, `MMS_APP_DOMAIN`.
+
+### Troubleshooting
+
+```bash
 bash scripts/server-diagnose.sh apps/backend/.env
 bash scripts/fix-apache-upstream.sh apps/backend/.env
+curl -fsS http://127.0.0.1:5002/ready   # must be 200 + database connected
 ```

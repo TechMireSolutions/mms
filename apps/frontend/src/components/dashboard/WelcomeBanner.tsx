@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { Sparkles, Calendar } from "lucide-react";
 import { getIntlLocaleForLanguage } from "@mms/shared";
 import type { AppTranslationKey } from "@mms/shared";
-import { SESSIONS_DATA } from '@/lib/data/sessionsData';
-import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useSessionsCollection } from '@/hooks/useSessions';
 import { useStudentsCollection } from "../../hooks/useStudents";
 import useTranslation from "@/hooks/useTranslation";
+import { BANNER_FROST_CHIP } from "@/lib/semanticTone";
 
 interface WelcomeBannerProps {
   role?: "admin" | "teacher" | "accountant" | string;
@@ -29,7 +29,7 @@ const BADGE_BY_ROLE: Record<string, AppTranslationKey> = {
  */
 export default function WelcomeBanner({ role = "admin" }: WelcomeBannerProps): React.JSX.Element {
   const { t, language } = useTranslation();
-  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
   const students = useStudentsCollection();
   const normalizedRole = (role ?? "admin").toLowerCase();
   const greetingKey = GREETING_BY_ROLE[normalizedRole] ?? "dashboard.greeting.admin";
@@ -89,7 +89,7 @@ export default function WelcomeBanner({ role = "admin" }: WelcomeBannerProps): R
           <p className="text-sm text-white/65 mt-1 max-w-lg mb-0">{subtitle}</p>
         </div>
 
-        <div className="flex-shrink-0 flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl px-4 py-2.5 self-start sm:self-auto">
+        <div className={`flex-shrink-0 flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5 self-start sm:self-auto`}>
           <Calendar className="w-4 h-4 text-white/70" aria-hidden="true" />
           <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{today}</span>
         </div>

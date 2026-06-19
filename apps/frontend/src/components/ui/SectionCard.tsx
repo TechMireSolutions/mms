@@ -1,4 +1,6 @@
 import React from "react";
+import { cn } from "@/lib/utils";
+import { SURFACE } from "@/lib/semanticTone";
 
 export interface SectionCardProps {
   title?: React.ReactNode;
@@ -10,31 +12,26 @@ export interface SectionCardProps {
   children: React.ReactNode;
 }
 
-/**
- * SectionCard — consistent content card used inside pages.
- *
- * @param {SectionCardProps} props - The component props.
- * @returns {React.ReactElement} The rendered SectionCard component.
- */
+/** Section card — semantic tokens + `cn()` for class merging. */
 export default function SectionCard({
   title,
   subtitle,
   icon: Icon,
   actions,
   padding = true,
-  className = "",
+  className,
   children,
 }: SectionCardProps): React.ReactElement {
   const hasHeader = title || Icon || actions;
 
   return (
-    <div className={`rounded-xl border border-border bg-card shadow-sm overflow-hidden ${className}`}>
+    <div className={cn(SURFACE.card, "overflow-hidden", className)}>
       {hasHeader && (
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/20">
+        <div className={cn("flex items-center justify-between px-5 py-3.5", SURFACE.mutedHeader)}>
           <div className="flex items-center gap-2.5">
             {Icon && (
-              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Icon className="w-3.5 h-3.5 text-primary" />
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
+                <Icon className="h-3.5 w-3.5 text-primary" />
               </div>
             )}
             <div>
@@ -45,7 +42,7 @@ export default function SectionCard({
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
       )}
-      <div className={padding ? "px-5 py-4" : ""}>{children}</div>
+      <div className={padding ? "px-5 py-4" : undefined}>{children}</div>
     </div>
   );
 }

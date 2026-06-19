@@ -21,7 +21,12 @@ import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { saveCollection, getObject, saveObject } from "../lib/db";
 import { DEFAULT_ATT_SETTINGS, type AttendanceRecord } from '@/lib/data/attendanceData';
-import { useLiveCollection } from "../hooks/useLiveCollection";
+import {
+  useAttendanceRecordsCollection,
+  useAttendanceMutations,
+  ATTENDANCE_QUERY_KEY,
+} from '@/hooks/useAttendance';
+import { useQueryClient } from '@tanstack/react-query';
 import { useViewerRole } from "@/hooks/useViewerRole";
 import usePermissions from "@/hooks/usePermissions";
 
@@ -47,14 +52,18 @@ export default function Attendance() {
   const [activeOpsTab, setActiveOpsTab] = useState("mark");
   const [activeAnalyticsTab, setActiveAnalyticsTab] = useState("charts");
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const records = useLiveCollection("attendance_records");
+  const queryClient = useQueryClient();
+  const records = useAttendanceRecordsCollection();
+  const { replaceAll } = useAttendanceMutations();
   const [settings, setSettings] = useState(() => getObject("attendance_settings", DEFAULT_ATT_SETTINGS));
   const [subTab, setSubTab] = useState("fields");
 
   const setRecords = useCallback((updater: React.SetStateAction<AttendanceRecord[]>) => {
     const next = typeof updater === "function" ? updater(records) : updater;
     saveCollection("attendance_records", next);
-  }, [records]);
+    queryClient.setQueryData(ATTENDANCE_QUERY_KEY, next);
+    replaceAll.mutate(next);
+  }, [records, replaceAll, queryClient]);
 
   useEffect(() => {
     saveObject("attendance_settings", settings);

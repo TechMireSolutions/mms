@@ -25,18 +25,18 @@ import ModuleReports from "../components/reports/ModuleReports";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import KPISummary from "../components/reports/KPISummary";
 import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
-import { saveCollection, formatDate, getObject } from "../lib/db";
-import { useLiveCollection } from "../hooks/useLiveCollection";
+import { formatDate, getObject } from "../lib/db";
+import { useSessionsCollection, useSessionMutations } from "@/hooks/useSessions";
 import { SessionsSettings as SessionsSettingsData, DEFAULT_SESSIONS_SETTINGS } from "@mms/shared";
 
 type SessionStatus = "active" | "upcoming" | "completed" | "cancelled";
 type SessionType = typeof SESSION_TYPES[number];
 
-const STATUS_CONFIG: Record<SessionStatus, { label: string; cls: string }> = {
-  active:    { label: "Active",    cls: "bg-success/10 text-success border-success/20" },
-  upcoming:  { label: "Upcoming",  cls: "bg-info/10 text-info border-info/20" },
-  completed: { label: "Completed", cls: "bg-muted text-muted-foreground border-border" },
-  cancelled: { label: "Cancelled", cls: "bg-destructive/10 text-destructive border-destructive/20" },
+const STATUS_CLS: Record<SessionStatus, string> = {
+  active: "bg-success/10 text-success border-success/20",
+  upcoming: "bg-info/10 text-info border-info/20",
+  completed: "bg-muted text-muted-foreground border-border",
+  cancelled: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 const TYPE_COLORS: Partial<Record<SessionType, string>> = {
@@ -50,12 +50,13 @@ const TYPE_COLORS: Partial<Record<SessionType, string>> = {
 interface SessionCardProps {
   session: Session;
   onClick: () => void;
+  statusLabel: string;
 }
 
-function SessionCard({ session, onClick }: SessionCardProps) {
+function SessionCard({ session, onClick, statusLabel }: SessionCardProps) {
   const totalEnrolled = session.classes?.reduce((s, c) => s + c.enrolled, 0) ?? 0;
   const totalCapacity = session.classes?.reduce((s, c) => s + c.capacity, 0) ?? 0;
-  const statusCfg = STATUS_CONFIG[session.status as SessionStatus] ?? STATUS_CONFIG.active;
+  const statusCls = STATUS_CLS[session.status as SessionStatus] ?? STATUS_CLS.active;
   const pct = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
 
   const fmtDate = (d: string | undefined) => formatDate(d, true);
@@ -73,8 +74,8 @@ function SessionCard({ session, onClick }: SessionCardProps) {
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[session.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
               {session.type}
             </span>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusCfg.cls}`}>
-              {statusCfg.label}
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusCls}`}>
+              {statusLabel}
             </span>
           </div>
           <h3 className="text-[14px] font-bold text-foreground truncate group-hover:text-primary transition-colors">{session.name}</h3>
@@ -126,7 +127,8 @@ export default function Sessions() {
   const PAGE_TABS = useModuleTierTabs();
   const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
-  const sessions = useLiveCollection("sessions");
+  const sessions = useSessionsCollection();
+  const { createSession, updateSession } = useSessionMutations();
   const settings = getObject<SessionsSettingsData>("sessions_settings", DEFAULT_SESSIONS_SETTINGS);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<SessionStatus[]>([]);
@@ -149,15 +151,23 @@ export default function Sessions() {
 
   const handleSave = (data: Session) => {
     const existing = sessions.find((s) => s.id === data.id);
-    saveCollection("sessions", existing ? sessions.map((s) => s.id === data.id ? data : s) : [...sessions, data]);
-    if (detailSession?.id === data.id) setDetailSession(data);
-    setShowForm(false);
-    setEditSession(null);
+    const onDone = () => {
+      if (detailSession?.id === data.id) setDetailSession(data);
+      setShowForm(false);
+      setEditSession(null);
+    };
+    if (existing) {
+      updateSession.mutate({ id: data.id, session: data }, { onSuccess: onDone });
+    } else {
+      createSession.mutate(data, { onSuccess: onDone });
+    }
   };
 
   const handleUpdate = (updated: Session) => {
-    saveCollection("sessions", sessions.map((s) => s.id === updated.id ? updated : s));
-    setDetailSession(updated);
+    updateSession.mutate(
+      { id: updated.id, session: updated },
+      { onSuccess: () => setDetailSession(updated) },
+    );
   };
 
   const toggleFilter = <T,>(list: T[], setList: React.Dispatch<React.SetStateAction<T[]>>, val: T) =>
@@ -166,6 +176,15 @@ export default function Sessions() {
   const hasFilters = filterStatus.length > 0 || filterType.length > 0;
 
   const statuses: SessionStatus[] = ["active", "upcoming", "completed", "cancelled"];
+  const statusLabels = useMemo(
+    () => ({
+      active: t("sessions.status.active"),
+      upcoming: t("sessions.status.upcoming"),
+      completed: t("sessions.status.completed"),
+      cancelled: t("sessions.status.cancelled"),
+    }),
+    [t],
+  );
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
@@ -213,7 +232,7 @@ export default function Sessions() {
                   <DropdownMenuSeparator />
                   {statuses.map((s) => (
                     <DropdownMenuCheckboxItem key={s} checked={filterStatus.includes(s)} onCheckedChange={() => toggleFilter(filterStatus, setFilterStatus, s)}>
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                      {statusLabels[s]}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
@@ -240,7 +259,7 @@ export default function Sessions() {
 
             <FilterChips
               chips={[
-                ...filterStatus.map((s) => ({ key: s, label: s, onRemove: () => toggleFilter(filterStatus, setFilterStatus, s) })),
+                ...filterStatus.map((s) => ({ key: s, label: statusLabels[s], onRemove: () => toggleFilter(filterStatus, setFilterStatus, s) })),
                 ...filterType.map((t) => ({ key: t, label: t, onRemove: () => toggleFilter(filterType, setFilterType, t) })),
               ]}
               onClearAll={() => { setFilterStatus([]); setFilterType([]); }}
@@ -250,7 +269,7 @@ export default function Sessions() {
             {filtered.length === 0 ? (
               <EmptyState
                 icon={BookOpen}
-                title="No sessions found"
+                title={t("sessions.empty.title")}
                 description="Try adjusting your filters or create a new session."
                 action={<ActionButton variant="primary" icon={Plus} onClick={() => setShowForm(true)}>New Session</ActionButton>}
               />
@@ -272,7 +291,8 @@ export default function Sessions() {
                       {filtered.map((s) => {
                         const totalEnrolled = s.classes?.reduce((sum: number, c: { enrolled: number }) => sum + c.enrolled, 0) ?? 0;
                         const totalCapacity = s.classes?.reduce((sum: number, c: { capacity: number }) => sum + c.capacity, 0) ?? 0;
-                        const statusCfg = STATUS_CONFIG[s.status as SessionStatus] ?? STATUS_CONFIG.active;
+                        const statusKey = s.status as SessionStatus;
+                        const statusCls = STATUS_CLS[statusKey] ?? STATUS_CLS.active;
                         return (
                           <tr key={s.id} onClick={() => setDetailSession(s)} className="hover:bg-muted/20 cursor-pointer transition-colors group">
                             <td className="px-4 py-3 font-semibold text-foreground group-hover:text-primary transition-colors">{s.name}</td>
@@ -291,8 +311,8 @@ export default function Sessions() {
                               {totalEnrolled}/{totalCapacity || "—"}
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusCfg.cls}`}>
-                                {statusCfg.label}
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusCls}`}>
+                                {statusLabels[statusKey] ?? statusLabels.active}
                               </span>
                             </td>
                           </tr>
@@ -305,7 +325,12 @@ export default function Sessions() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filtered.map((s) => (
-                  <SessionCard key={s.id} session={s} onClick={() => setDetailSession(s)} />
+                  <SessionCard
+                    key={s.id}
+                    session={s}
+                    onClick={() => setDetailSession(s)}
+                    statusLabel={statusLabels[s.status as SessionStatus] ?? statusLabels.active}
+                  />
                 ))}
               </div>
             )}

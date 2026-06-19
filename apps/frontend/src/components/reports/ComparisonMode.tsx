@@ -9,7 +9,8 @@ import {
 } from "recharts";
 import { CONTACTS } from '@/lib/data/contactsData';
 import { Contact } from "../../lib/contactFields";
-import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
+import { Session } from '@/lib/data/sessionsData';
+import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useContactConfig, calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
 
@@ -126,7 +127,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const { primary, secondary } = useBrandPalette();
   const { fieldConfig } = useContactConfig();
   const contacts = useLiveCollection<Contact>("contacts", CONTACTS);
-  const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
   const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(() => sessions.filter((s) => s.id !== "all").map(s => ({ id: s.id, name: s.name })), [sessions]);
 
   const LIFECYCLE_OPTIONS = useMemo(() => {

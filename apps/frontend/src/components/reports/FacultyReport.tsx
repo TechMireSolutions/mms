@@ -3,8 +3,8 @@ import { GraduationCap, BookOpen, Users, Clock } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
-import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { Session } from '@/lib/data/sessionsData';
+import { useSessionsCollection } from "@/hooks/useSessions";
 import { useTeachersCollection } from '@/hooks/useTeachers';
 import { teacherNameById } from '@/lib/teachers/teacherAssignment';
 import ReportSummaryCard from "./ReportSummaryCard";
@@ -39,7 +39,7 @@ interface FacultyReportProps {
  * @returns The FacultyReport component.
  */
 export default function FacultyReport({ filters: _filters }: FacultyReportProps): React.JSX.Element {
-  const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
   const teachers = useTeachersCollection();
 
   const resolveClassTeacher = (teacherId: string, teacherName: string): string => {

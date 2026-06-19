@@ -1,26 +1,21 @@
 import { randomBytes } from 'node:crypto';
 import type { PlatformUser, StoredPlatformUser } from '@mms/shared';
-import { PLATFORM_SUPER_USERS_OBJECT_KEY } from '@mms/shared';
-import { getObject, saveObject } from '../../db/database.js';
+import {
+  countPlatformUserRows,
+  findPlatformUserRowByEmail,
+  findPlatformUserRowById,
+  insertPlatformUser,
+  listPlatformUsers,
+  updatePlatformUserRow,
+} from '../../db/repositories/platformUserRepository.js';
 import { hashPassword, verifyPassword } from '../auth/passwordService.js';
 
-async function loadStoredUsers(): Promise<StoredPlatformUser[]> {
-  const raw = await getObject(PLATFORM_SUPER_USERS_OBJECT_KEY);
-  if (!raw || !Array.isArray(raw)) return [];
-  return raw as StoredPlatformUser[];
-}
-
-async function persistUsers(users: StoredPlatformUser[]): Promise<void> {
-  await saveObject(PLATFORM_SUPER_USERS_OBJECT_KEY, users);
-}
-
 export async function countPlatformUsers(): Promise<number> {
-  const users = await loadStoredUsers();
-  return users.length;
+  return countPlatformUserRows();
 }
 
 export async function hasPlatformUsers(): Promise<boolean> {
-  return (await countPlatformUsers()) > 0;
+  return (await countPlatformUserRows()) > 0;
 }
 
 export async function createVerifiedPlatformUser(input: {
@@ -41,7 +36,7 @@ export async function createVerifiedPlatformUser(input: {
     createdAt: new Date().toISOString(),
     emailVerifiedAt: new Date().toISOString(),
   };
-  await persistUsers([user]);
+  await insertPlatformUser(user);
   return user;
 }
 
@@ -49,48 +44,29 @@ export async function updatePlatformUserPassword(
   userId: string,
   passwordHash: string,
 ): Promise<StoredPlatformUser> {
-  const users = await loadStoredUsers();
-  const index = users.findIndex((u) => u.id === userId);
-  if (index < 0) {
+  const updated = await updatePlatformUserRow(userId, { passwordHash });
+  if (!updated) {
     throw new Error('Platform user not found');
   }
-
-  const updated: StoredPlatformUser = {
-    ...users[index],
-    passwordHash,
-  };
-  users[index] = updated;
-  await persistUsers(users);
   return updated;
 }
 
 export async function findPlatformUserByEmail(email: string): Promise<StoredPlatformUser | null> {
-  const normalized = email.trim().toLowerCase();
-  const users = await loadStoredUsers();
-  return users.find((u) => u.email.toLowerCase() === normalized) ?? null;
+  return findPlatformUserRowByEmail(email);
 }
 
 export async function getStoredPlatformUserById(id: string): Promise<StoredPlatformUser | null> {
-  const users = await loadStoredUsers();
-  return users.find((u) => u.id === id) ?? null;
+  return findPlatformUserRowById(id);
 }
 
 export async function updatePlatformUserName(
   userId: string,
   name: string,
 ): Promise<StoredPlatformUser> {
-  const users = await loadStoredUsers();
-  const index = users.findIndex((u) => u.id === userId);
-  if (index < 0) {
+  const updated = await updatePlatformUserRow(userId, { name: name.trim() });
+  if (!updated) {
     throw new Error('Platform user not found');
   }
-
-  const updated: StoredPlatformUser = {
-    ...users[index],
-    name: name.trim(),
-  };
-  users[index] = updated;
-  await persistUsers(users);
   return updated;
 }
 
@@ -99,30 +75,27 @@ export async function changePlatformUserPassword(
   currentPassword: string,
   newPassword: string,
 ): Promise<StoredPlatformUser> {
-  const users = await loadStoredUsers();
-  const index = users.findIndex((u) => u.id === userId);
-  if (index < 0) {
+  const stored = await findPlatformUserRowById(userId);
+  if (!stored) {
     throw new Error('Platform user not found');
   }
 
-  const stored = users[index];
   const ok = await verifyPassword(currentPassword, stored.passwordHash);
   if (!ok) {
     throw new Error('Invalid current password');
   }
 
-  const updated: StoredPlatformUser = {
-    ...stored,
+  const updated = await updatePlatformUserRow(userId, {
     passwordHash: await hashPassword(newPassword),
-  };
-  users[index] = updated;
-  await persistUsers(users);
+  });
+  if (!updated) {
+    throw new Error('Platform user not found');
+  }
   return updated;
 }
 
 export async function getPublicPlatformUserById(id: string): Promise<PlatformUser | null> {
-  const users = await loadStoredUsers();
-  const user = users.find((u) => u.id === id);
+  const user = await findPlatformUserRowById(id);
   if (!user) return null;
   return { id: user.id, email: user.email, name: user.name };
 }
@@ -143,8 +116,7 @@ export async function validatePlatformCredentials(
  * Production first-run uses email-verified setup instead.
  */
 export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
-  const existing = await loadStoredUsers();
-  if (existing.length > 0) return;
+  if ((await countPlatformUserRows()) > 0) return;
 
   if (process.env.PLATFORM_ALLOW_ENV_BOOTSTRAP !== 'true') {
     return;
@@ -169,6 +141,23 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     passwordHash: await hashPassword(password),
     createdAt: new Date().toISOString(),
   };
-  await persistUsers([user]);
+  await insertPlatformUser(user);
   console.log(`Platform super-user seeded from env for ${user.email}`);
+}
+
+/** Used by data migration — reads legacy object store if present. */
+export async function importLegacyPlatformUsers(users: StoredPlatformUser[]): Promise<number> {
+  let imported = 0;
+  for (const user of users) {
+    const existing = await findPlatformUserRowByEmail(user.email);
+    if (existing) continue;
+    await insertPlatformUser(user);
+    imported += 1;
+  }
+  return imported;
+}
+
+/** @internal test helper */
+export async function listAllPlatformUsersForMigration(): Promise<StoredPlatformUser[]> {
+  return listPlatformUsers();
 }

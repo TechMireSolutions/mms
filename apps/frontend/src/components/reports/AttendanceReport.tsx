@@ -1,15 +1,17 @@
 import React, { useMemo } from "react";
 import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { ATTENDANCE_RECORDS, AttendanceRecord } from '@/lib/data/attendanceData';
+import { AttendanceRecord } from '@/lib/data/attendanceData';
 import { Session } from '@/lib/data/sessionsData';
+import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
+import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
 import EmptyState from "../ui/EmptyState";
 
-import { AttendanceChart } from "../dashboard/charts/AttendanceChart";
-import TodayAttendanceWidget from "../attendance/TodayAttendanceWidget";
+import { AttendanceChart } from "@/components/widgets/charts/AttendanceChart";
+import TodayAttendanceWidget from "@/components/widgets/TodayAttendanceWidget";
 import { VisualizerConfig } from "./reportMetadata";
 
 interface AttendanceReportProps {
@@ -45,9 +47,9 @@ export interface StudentAttendanceItem {
  * @returns React.JSX.Element
  */
 export default function AttendanceReport({ filters }: AttendanceReportProps): React.JSX.Element {
-  const records = useLiveCollection<AttendanceRecord>("attendance_records", ATTENDANCE_RECORDS);
+  const records = useAttendanceRecordsCollection();
 
-  const sessions = useLiveCollection<Session>("sessions", []);
+  const sessions = useSessionsCollection();
   const allClasses = useMemo(() => sessions.flatMap(s => s.classes || []), [sessions]);
 
   const studentAtt = useMemo<StudentAttendanceItem[]>(() => {

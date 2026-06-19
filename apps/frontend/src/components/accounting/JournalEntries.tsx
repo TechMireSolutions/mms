@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
 import {
   Plus, Eye, Pencil, Trash2, Search, CheckCircle2,
-  Clock, RotateCcw, Filter, Download, BookOpen,
+  RotateCcw, Filter, Download, BookOpen,
   DollarSign, Heart, Zap, UserCheck, Layers,
-  Sparkles, ListFilter,
+  Sparkles,
   TrendingUp
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
@@ -13,6 +13,10 @@ import SimpleTransactionWizard from "./SimpleTransactionWizard";
 import CashbookView from "./CashbookView";
 import { createReversalEntry, JOURNAL_TAGS, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
+import SubTabBar from "../ui/SubTabBar";
+import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import useTranslation from "@/hooks/useTranslation";
 
 interface QuickActionType {
   id: string;
@@ -46,12 +50,6 @@ function parseNaturalLanguage(text: string): QuickActionType | null {
   return null;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  return status === "posted"
-    ? <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-success/15 text-success border-success/30"><CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" />Posted</span>
-    : <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-warning/15 text-warning border-warning/30"><Clock className="w-2.5 h-2.5" aria-hidden="true" />Draft</span>;
-}
-
 interface JournalEntriesProps {
   entries: JournalEntry[];
   accounts: Account[];
@@ -72,6 +70,21 @@ interface JournalEntriesProps {
  * @returns {React.ReactElement}
  */
 export default function JournalEntries({ entries, accounts, settings, fiscalYears, onChange, fmt }: JournalEntriesProps) {
+  const { t } = useTranslation();
+  const journalStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(
+    () => ({
+      posted: { label: t("accounting.journal.status.posted"), cls: SEMANTIC_BADGE.successStrong },
+      draft: { label: t("accounting.journal.status.draft"), cls: SEMANTIC_BADGE.warningStrong },
+    }),
+    [t],
+  );
+  const journalSubTabs = useMemo(
+    () => [
+      { key: "transactions" as const, label: t("accounting.journal.tabs.transactions") },
+      { key: "cashbook" as const, label: t("accounting.journal.tabs.cashbook") },
+    ],
+    [t],
+  );
   // Mode: "simple" | "advanced"
   const [mode, setMode] = useState<"simple" | "advanced">("simple");
   // Active tab: "transactions" | "cashbook"
@@ -184,21 +197,12 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
           <ModeToggle />
         </header>
 
-        {/* Tabs: Transactions | Cashbook */}
-        <nav aria-label="Simple Mode Views" className="flex border-b border-border gap-0">
-          {[
-            { id: "transactions", label: "Transactions",     icon: DollarSign },
-            { id: "cashbook",     label: "Cashbook Register", icon: ListFilter },
-          ].map((t) => {
-            const Icon = t.icon;
-            return (
-              <button key={t.id} type="button" aria-current={tab === t.id ? "page" : undefined} onClick={() => setTab(t.id as "transactions" | "cashbook")}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-all ${tab === t.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-                <Icon className="w-4 h-4" aria-hidden="true" /> {t.label}
-              </button>
-            );
-          })}
-        </nav>
+        <SubTabBar
+          tabs={journalSubTabs}
+          value={tab}
+          onChange={setTab}
+          panelIdPrefix="journal-simple"
+        />
 
         {tab === "cashbook" ? (
           <CashbookView entries={entries} accounts={accounts} fmt={fmt} />
@@ -290,7 +294,7 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                               {isIn ? "+" : "−"}{fmt(amount)}
                             </p>
                           </div>
-                          <StatusBadge status={entry.status} />
+                          <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
                         </div>
                       </article>
                     );
@@ -447,7 +451,7 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                       <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-success">
                         {totalC.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="px-3 py-2.5"><StatusBadge status={entry.status} /></td>
+                      <td className="px-3 py-2.5"><StatusBadge status={entry.status} config={journalStatusConfig} size="sm" /></td>
                       <td className="px-3 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button type="button" aria-label={`View entry ${entry.ref}`} onClick={() => { setSelected(entry); setModal("view"); }}

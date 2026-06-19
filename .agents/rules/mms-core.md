@@ -52,6 +52,10 @@ packages/shared/   @mms/shared
 
 | Topic | Owner |
 |-------|--------|
+| Dependencies & latest stack | `mms-dependencies.md` |
+| File structure | `mms-structure.md` |
+| Naming (files, symbols, routes) | `mms-naming.md` |
+| DRY / single source of truth | `mms-dry.md` |
 | Security, rate limits, tenant isolation | `mms-security.md` |
 | Testing & CI tests | `mms-testing.md` |
 | Logging, health, error boundaries | `mms-observability.md` |

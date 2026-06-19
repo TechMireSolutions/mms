@@ -25,7 +25,7 @@ import DraggableFieldList from '../ui/DraggableFieldList';
 import SubTabBar, { type SubTab } from '@/components/ui/SubTabBar';
 import SettingsFormActions from '../ui/SettingsFormActions';
 import { Switch } from '../ui/switch';
-import { SettingsCallout, SettingsPanel } from '@/components/settings/SettingsShared';
+import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
 import CategoryManager from './CategoryManager';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 

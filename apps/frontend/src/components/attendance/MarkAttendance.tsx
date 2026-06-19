@@ -5,9 +5,8 @@ import {
   WifiOff, Wifi, MapPin, Lock, Scan, UploadCloud,
 } from "lucide-react";
 import { CLASS_STUDENTS, ClassStudent, ATTENDANCE_STATUSES, STATUS_MAP, AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
-import { SESSIONS_DATA } from '@/lib/data/sessionsData';
+import { useSessionsCollection } from '@/hooks/useSessions';
 import { getObject } from "../../lib/db";
-import { useLiveCollection } from "../../hooks/useLiveCollection";
 import usePermissions from "@/hooks/usePermissions";
 import StatusToggle from "./StatusToggle";
 import { AttendanceFilterState } from "./AttendanceFilters";
@@ -233,7 +232,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
  */
 export default function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
   const { can } = usePermissions();
-  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

@@ -98,12 +98,12 @@ export default function StudentResultCard({ result, exam, allResults, onClose, o
         {/* Stats */}
         <div className="grid grid-cols-3 divide-x divide-border border-t border-border" role="status" aria-label="Student metrics summary">
           {[
-            { label: "Marks", value: `${result.marksObtained}/${exam.totalMarks}` },
-            { label: "Rank", value: getRankSuffix(position) + ` / ${total}` },
-            { label: "Status", value: result.passed ? "PASS" : "FAIL", color: result.passed ? "#059669" : "#dc2626" },
+            { label: "Marks", value: `${result.marksObtained}/${exam.totalMarks}`, className: "text-foreground" },
+            { label: "Rank", value: getRankSuffix(position) + ` / ${total}`, className: "text-foreground" },
+            { label: "Status", value: result.passed ? "PASS" : "FAIL", className: result.passed ? "text-success" : "text-destructive" },
           ].map((s) => (
             <div key={s.label} className="px-3 py-3.5 text-center">
-              <p className="text-[14px] font-bold" style={s.color ? { color: s.color } : { color: "hsl(var(--foreground))" }}>{s.value}</p>
+              <p className={`text-[14px] font-bold ${s.className}`}>{s.value}</p>
               <p className="text-[10px] text-muted-foreground">{s.label}</p>
             </div>
           ))}

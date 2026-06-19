@@ -4,14 +4,15 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line,
 } from "recharts";
-import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
+import { Session } from '@/lib/data/sessionsData';
 import { STUDENTS, Student } from '@/lib/data/studentsData';
+import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
 import EmptyState from "../ui/EmptyState";
 
-import SessionsTable from "../dashboard/SessionsTable";
+import SessionsTable from "@/components/widgets/SessionsTable";
 
 /** Active filter state passed down from the parent report view. */
 interface SessionReportFilters {
@@ -68,7 +69,7 @@ function utilisationColour(rate: number): string {
  * @returns The SessionReport component.
  */
 export default function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
-  const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
   const students = useLiveCollection<Student>("students", STUDENTS);
 
   const sessionCapacity = useMemo<SessionCapacityItem[]>(() => {

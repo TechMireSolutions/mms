@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Scale, DollarSign, Download } from "lucide-react";
 import { computeFinancials, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
+import SubTabBar from "../ui/SubTabBar";
+import useTranslation from "@/hooks/useTranslation";
 
 interface StatCardProps {
   label: string;
@@ -19,7 +21,7 @@ function StatCard({ label, value, icon: Icon, color }: StatCardProps) {
           <p className="text-xl font-bold text-foreground mt-1 font-mono truncate m-0">{value}</p>
         </div>
         {Icon && (
-          <div className="w-9 h-9 rounded-xl bg-white/60 flex items-center justify-center ml-2 flex-shrink-0" aria-hidden="true">
+          <div className="ms-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card/60" aria-hidden="true">
             <Icon className="w-5 h-5 text-current opacity-70" />
           </div>
         )}
@@ -91,13 +93,8 @@ function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: R
   );
 }
 
-const VIEWS = [
-  { id: "income",   label: "Income Statement" },
-  { id: "balance",  label: "Balance Sheet" },
-  { id: "cashflow", label: "Cash Flow" },
-] as const;
-
-type ViewType = typeof VIEWS[number]["id"];
+const VIEW_IDS = ["income", "balance", "cashflow"] as const;
+type ViewType = typeof VIEW_IDS[number];
 
 interface FinancialReportsProps {
   accounts: Account[];
@@ -116,6 +113,15 @@ interface FinancialReportsProps {
  * @returns {React.ReactElement}
  */
 export default function FinancialReports({ accounts, entries, fiscalYears, settings, fmt }: FinancialReportsProps) {
+  const { t } = useTranslation();
+  const reportViews = useMemo(
+    () => [
+      { key: "income" as const, label: t("accounting.reports.views.income") },
+      { key: "balance" as const, label: t("accounting.reports.views.balance") },
+      { key: "cashflow" as const, label: t("accounting.reports.views.cashflow") },
+    ],
+    [t],
+  );
   const [view,     setView]     = useState<ViewType>("income");
   const activeFY   = (fiscalYears || []).find((f) => f.status === "active");
   const [dateFrom, setDateFrom] = useState(activeFY?.startDate || "");
@@ -191,16 +197,12 @@ export default function FinancialReports({ accounts, entries, fiscalYears, setti
         <StatCard label="Total Assets"   value={fmt(assets)}    icon={Scale}        color="bg-info/10" />
       </div>
 
-      {/* Report tabs */}
-      <nav aria-label="Report Views" className="flex border-b border-border gap-1">
-        {VIEWS.map((v) => (
-          <button key={v.id} onClick={() => setView(v.id)}
-            aria-current={view === v.id ? "page" : undefined}
-            className={`px-5 py-3 text-[13px] font-semibold border-b-2 transition-all ${view === v.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-            {v.label}
-          </button>
-        ))}
-      </nav>
+      <SubTabBar
+        tabs={reportViews}
+        value={view}
+        onChange={setView}
+        panelIdPrefix="financial-report"
+      />
 
       {/* Income Statement */}
       {view === "income" && (

@@ -2,13 +2,15 @@
 
 Project rules for the Madrasa Management System. Cursor loads `.mdc` files from this directory automatically.
 
-## Always applied (3)
+## Always applied (5)
 
 | Rule | Purpose |
 |------|---------|
 | `antigravity-global.mdc` | Agent cognition, output economy, security, TS/git standards |
 | `mms-core.mdc` | Stack, boundaries, domain, edit discipline — **index only; details in scoped rules** |
 | `mms-migration-status.mdc` | Target vs current gaps + recently resolved — do not regress |
+| `mms-dependencies.mdc` | Latest stable Node, pnpm, and workspace dependency upgrades |
+| `mms-dry.mdc` | DRY — single source of truth, extraction thresholds, duplication bans |
 
 ## Canonical ownership (avoid duplicating elsewhere)
 
@@ -38,15 +40,21 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | Copy layers (`t` / `labelKey` / legacy `uiStrings`) | `mms-i18n.mdc` | `mms-ui-rendering` (notify), `mms-contacts` (legacy) |
 | Contact-first person links (ids only on save) | `mms-contact-link.mdc` | `mms-core`, `mms-data-layer`, `mms-contacts` |
 | Open migration gaps | `mms-migration-status.mdc` | — (always-on register) |
+| Dependencies / latest stack | `mms-dependencies.mdc` | `mms-ops` (prereqs pointer) |
+| File structure & colocation | `mms-structure.mdc` | `mms-frontend`, `mms-backend` (layout tables) |
+| Naming (files, symbols, routes) | `mms-naming.mdc` | `antigravity-global` (Names line) |
+| DRY / duplication | `mms-dry.mdc` | `mms-shared-dry` (package exports only) |
 | Security, rate limits, audit, tenant isolation | `mms-security.mdc` | `mms-auth`, `mms-backend` (pointers only) |
 | Testing strategy & CI tests | `mms-testing.mdc` | `mms-shared-dry`, `mms-ci` |
 | Logging, health, error boundaries | `mms-observability.mdc` | `mms-backend`, `mms-ui-rendering` |
 | Accessibility (WCAG baseline) | `mms-a11y.mdc` | `mms-ui-rendering`, `mms-i18n` |
 
-## File-scoped (auto-attach by glob) — 28 rules
+## File-scoped (auto-attach by glob) — 30 rules
 
 | Rule | Focus |
 |------|-------|
+| `mms-structure.mdc` | Monorepo layout, colocation, file-size splits |
+| `mms-naming.mdc` | Files, folders, symbols, routes, i18n keys |
 | `mms-contact-link.mdc` | Contact-first persons — link ids, hydrate/strip, pickers |
 | `mms-shared-dry.mdc` | `@mms/shared` package |
 | `mms-data-layer.mdc` | `db.ts`, seeds, sync |
@@ -112,4 +120,4 @@ After editing `.mdc` files, run: `bash .agents/scripts/sync-rules.sh`
 
 ## Verify in Cursor
 
-**Settings → Rules** — three always-apply rules + 27 file-scoped rules when matching paths are open (**30 total**).
+**Settings → Rules** — five always-apply rules + 30 file-scoped rules when matching paths are open (**35 total**).

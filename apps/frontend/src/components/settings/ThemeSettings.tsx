@@ -12,15 +12,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import Modal from '@/components/ui/Modal';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
-import BrandColorPanel from '@/components/settings/BrandColorPanel';
+import BrandColorPanel from '@/components/branding/BrandColorPanel';
 import ThemeModeSelector from '@/components/settings/ThemeModeSelector';
-import { FieldHint, FOOTER_MAX } from '@/components/settings/BrandingShared';
+import { FieldHint, FOOTER_MAX } from '@/components/branding/BrandingShared';
 import {
   SettingsCallout,
   SettingsColoursBadge,
   SettingsMetaBadge,
   SettingsPanel,
-} from '@/components/settings/SettingsShared';
+} from '@/components/ui/SettingsShell';
 
 /**
  * All visual theming — display mode, brand colours, and footer (single settings tab).

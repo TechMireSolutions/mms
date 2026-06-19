@@ -11,7 +11,7 @@ import {
 import { getObject } from '@/lib/db';
 import useTranslation from '@/hooks/useTranslation';
 import FormModal from '@/components/ui/FormModal';
-import ContactPicker from '@/components/ui/ContactPicker';
+import ContactPicker from '@/components/contactLink/ContactPicker';
 import { Input } from '@/components/ui/input';
 import { FORM_SELECT, FORM_TEXTAREA } from '@/components/ui/formStyles';
 import {

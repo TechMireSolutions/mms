@@ -9,6 +9,13 @@ import {
 } from '@mms/shared';
 import type { Contact } from '@mms/shared';
 import { getCollection, saveCollection } from '../../db/database.js';
+import { getRequestTenant } from '../../lib/tenantContext.js';
+import {
+  findTenantUserRowById,
+  listTenantUsersByWorkspace,
+  replaceTenantUsersForWorkspace,
+  type TenantUserRow,
+} from '../../db/repositories/tenantUserRepository.js';
 import { hashPassword, verifyPassword } from './passwordService.js';
 import { loadContacts, updateContactById } from '../contactService.js';
 import { assertPasswordMeetsPolicy } from '../globalSettingsService.js';
@@ -35,6 +42,14 @@ type PersistedUser = StoredTenantUser & Record<string, unknown>;
 const COLLECTION = 'users';
 const CONTACTS_COLLECTION = 'contacts';
 
+function requireTenantSubdomain(): string {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    throw new Error('Tenant context is required for workspace user operations');
+  }
+  return tenant.trim().toLowerCase();
+}
+
 async function getContacts(): Promise<ContactLike[]> {
   const raw = await getCollection(CONTACTS_COLLECTION);
   if (!Array.isArray(raw)) return [];
@@ -42,6 +57,12 @@ async function getContacts(): Promise<ContactLike[]> {
 }
 
 async function getRawUsers(): Promise<PersistedUser[]> {
+  const subdomain = requireTenantSubdomain();
+  const fromTable = await listTenantUsersByWorkspace(subdomain);
+  if (fromTable.length > 0) {
+    return fromTable as PersistedUser[];
+  }
+
   const raw = await getCollection(COLLECTION);
   if (!Array.isArray(raw)) return [];
   return raw as PersistedUser[];
@@ -96,6 +117,8 @@ function toPublicUser(authUser: StoredUser): PublicUser {
 }
 
 async function saveUsers(next: PersistedUser[]): Promise<void> {
+  const subdomain = requireTenantSubdomain();
+  await replaceTenantUsersForWorkspace(subdomain, next as TenantUserRow[]);
   await saveCollection(COLLECTION, next);
 }
 
@@ -105,7 +128,7 @@ export async function getWorkspaceUserRow(userId: string): Promise<PersistedUser
 }
 
 export async function getLinkedContactId(userId: string): Promise<string | number | null> {
-  const user = await getRawUsers().then((rows) => rows.find((r) => r.id === userId));
+  const user = await findTenantUserRowById(userId);
   const contactId = user?.contactId;
   if (contactId == null || contactId === '') return null;
   return contactId;
@@ -236,10 +259,15 @@ export async function validateCredentials(
 }
 
 export async function verifyUserPassword(userId: string, password: string): Promise<boolean> {
-  const users = await getRawUsers();
-  const row = users.find((u) => u.id === userId);
+  const row = await findTenantUserRowById(userId);
   const passwordHash = typeof row?.passwordHash === 'string' ? row.passwordHash : '';
-  if (!passwordHash) return false;
+  if (!passwordHash) {
+    const users = await getRawUsers();
+    const legacy = users.find((u) => u.id === userId);
+    const legacyHash = typeof legacy?.passwordHash === 'string' ? legacy.passwordHash : '';
+    if (!legacyHash) return false;
+    return verifyPassword(password, legacyHash);
+  }
   return verifyPassword(password, passwordHash);
 }
 

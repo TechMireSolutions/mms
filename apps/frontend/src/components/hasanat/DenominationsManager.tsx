@@ -4,10 +4,9 @@ import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, CreditCard } from "lucide
 import { Denomination } from '@/lib/data/hasanatData';
 import FormModal from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { DEFAULT_DENOMINATION_COLOR, getDenominationPresetColors } from "@/lib/denominationColors";
 
-const EMPTY: Denomination = { id: "", name: "", points: 100, color: "#10b981", description: "", icon: "⭐", active: true };
-
-const PRESET_COLORS = ["#cd7f32", "#9ca3af", "#d97706", "#7c3aed", "#2563eb", "#10b981", "#ef4444", "#ec4899"];
+const EMPTY: Denomination = { id: "", name: "", points: 100, color: DEFAULT_DENOMINATION_COLOR, description: "", icon: "⭐", active: true };
 const PRESET_ICONS = ["⭐", "🌟", "✨", "💎", "👑", "🏆", "🎖️", "📿"];
 
 interface DenomModalProps {
@@ -19,6 +18,7 @@ interface DenomModalProps {
 
 function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
   const [data, setData] = useState<Denomination>(denom || { ...EMPTY });
+  const presetColors = getDenominationPresetColors();
   const upd = <K extends keyof Denomination>(f: K, v: Denomination[K]) => setData((d: Denomination) => ({ ...d, [f]: v }));
 
   React.useEffect(() => {
@@ -80,7 +80,7 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
         <fieldset>
           <legend className={FORM_LABEL}>Color</legend>
           <div className="flex gap-2 flex-wrap items-center">
-            {PRESET_COLORS.map((c) => (
+            {presetColors.map((c) => (
               <button
                 type="button"
                 aria-pressed={data.color === c}

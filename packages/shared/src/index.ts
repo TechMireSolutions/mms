@@ -37,6 +37,7 @@ export * from './tenantStorage.js';
 export * from './userTypes.js';
 export * from './questionBankTypes.js';
 export * from './utils.js';
+export * from './gradeUtils.js';
 export * from './teacherTypes.js';
 export * from './teacherUtils.js';
 export * from './demoSeedBuilders.js';

@@ -12,6 +12,9 @@ import {
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
+import { SEMANTIC_BADGE, TOGGLE_THUMB } from "@/lib/semanticTone";
+import useTranslation from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
 
 interface AttendanceSettingsProps {
   role: string;
@@ -53,7 +56,7 @@ function Toggle({ checked, onChange }: ToggleProps) {
       className={`relative w-10 rounded-full transition-colors flex items-center ${checked ? "bg-primary" : "bg-border"}`}
       style={{ height: "22px" }}
     >
-      <span className={`absolute w-4 h-4 rounded-full bg-white shadow transition-all ${checked ? "left-5" : "left-1"}`} />
+      <span className={`absolute h-4 w-4 rounded-full ${TOGGLE_THUMB} transition-all ${checked ? "left-5" : "left-1"}`} />
     </button>
   );
 }
@@ -65,6 +68,7 @@ function Toggle({ checked, onChange }: ToggleProps) {
  * such as late thresholds, QR code enablement, and notifications.
  */
 export default function AttendanceSettings({ role, settings, setSettings, mode }: AttendanceSettingsProps) {
+  const { t } = useTranslation();
   const [saved, setSaved] = useState(false);
 
   if (role !== "admin") {
@@ -278,13 +282,13 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
                 </div>
               </SettingRow>
               <SettingRow label="Facial Recognition" sub="AI-powered face scan for attendance (coming soon)">
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-warning/15 text-warning">Coming Soon</span>
+                <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>
               </SettingRow>
               <SettingRow label="Daily Auto-Lock" sub="Automatically lock attendance after end-of-day submission">
                 <Toggle checked={settings.lockAfterSubmit} onChange={(v) => set("lockAfterSubmit", v)} />
               </SettingRow>
               <SettingRow label="Audit Logging" sub="Record all edits and submissions in an audit trail (always on)">
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-success/15 text-success">Active</span>
+                <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>
               </SettingRow>
             </div>
           </article>

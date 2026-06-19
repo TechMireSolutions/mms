@@ -43,7 +43,7 @@ await apiFetch('/api/students/1', { method: 'DELETE' });
 | `apiFetch` / `apiJson` with `credentials: 'include'` | Raw `fetch('/api/...')` in hooks, contexts, or lib helpers |
 | External OAuth (Google People API, etc.) | — may use raw `fetch` to third-party URLs only |
 
-**Session:** httpOnly cookies (`mms_access` / `mms_refresh`) — `apiClient` does **not** read `localStorage` tokens. `AuthContext` only `removeItem('mms_token')` on login/logout for legacy cleanup. Backend `attachAccessTokenFromCookie` copies cookie → `Authorization` for JWT verify (`mms-auth.md`).
+**Session:** httpOnly cookies (`mms_access` / `mms_refresh`) — `apiClient` does **not** read or write `localStorage` tokens. Backend `attachAccessTokenFromCookie` copies cookie → `Authorization` for JWT verify (`mms-auth.md`).
 
 ## Bundle size
 

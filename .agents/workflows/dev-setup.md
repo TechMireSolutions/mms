@@ -15,11 +15,10 @@ description: Install dependencies, verify environment, and start MMS dev servers
    ```bash
    pnpm install && pnpm typecheck
    ```
-4. Start servers (choose one):
+4. Start servers:
    ```bash
-   pnpm dev
-   # OR
-   ./restart_servers.sh
+   ./restart_servers.sh              # GNU screen (default)
+   ./restart_servers.sh --foreground # or this terminal
    ```
 5. Confirm:
    - Backend: `curl http://localhost:3000/health`

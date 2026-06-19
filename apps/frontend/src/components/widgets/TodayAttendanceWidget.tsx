@@ -2,10 +2,9 @@ import React, { useMemo } from "react";
 import { UserCheck, Users, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/config/routes";
-import { ATTENDANCE_RECORDS, ATTENDANCE_STATUSES } from '@/lib/data/attendanceData';
-import { SESSIONS_DATA } from '@/lib/data/sessionsData';
-import { useLiveCollection } from "../../hooks/useLiveCollection";
-
+import { ATTENDANCE_STATUSES } from '@/lib/data/attendanceData';
+import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
+import { useSessionsCollection } from "@/hooks/useSessions";
 // Type definitions
 interface ClassInfo {
   id: string;
@@ -46,8 +45,8 @@ interface ClassBreakdown {
  * @returns {React.ReactElement} The rendered widget component.
  */
 export default function TodayAttendanceWidget({ title }: { title?: string }) {
-  const attendanceRecords = useLiveCollection<AttendanceRecord>("attendance_records", ATTENDANCE_RECORDS);
-  const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
+  const attendanceRecords = useAttendanceRecordsCollection();
+  const sessions = useSessionsCollection();
 
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

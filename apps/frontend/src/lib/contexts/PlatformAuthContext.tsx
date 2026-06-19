@@ -22,7 +22,10 @@ function PlatformSessionTimeoutWatcher({
 export interface PlatformAuthContextType {
   platformUser: PlatformUser | null;
   isPlatformAuthenticated: boolean;
-  isLoadingPlatformAuth: boolean;
+  /** True while probing existing session (`/me`) on boot. */
+  isCheckingPlatformAuth: boolean;
+  /** True while a sign-in form submission is in flight. */
+  isPlatformLoginSubmitting: boolean;
   platformAuthChecked: boolean;
   platformLogin: (email: string, password: string) => Promise<void>;
   platformLogout: () => void;
@@ -35,7 +38,8 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { isApex } = useTenant();
   const [platformUser, setPlatformUser] = useState<PlatformUser | null>(null);
   const [isPlatformAuthenticated, setIsPlatformAuthenticated] = useState(false);
-  const [isLoadingPlatformAuth, setIsLoadingPlatformAuth] = useState(false);
+  const [isCheckingPlatformAuth, setIsCheckingPlatformAuth] = useState(false);
+  const [isPlatformLoginSubmitting, setIsPlatformLoginSubmitting] = useState(false);
   const [platformAuthChecked, setPlatformAuthChecked] = useState(false);
 
   const checkPlatformAuth = useCallback(async (): Promise<void> => {
@@ -46,7 +50,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
-    setIsLoadingPlatformAuth(true);
+    setIsCheckingPlatformAuth(true);
     try {
       const data = await apiJson<{ user: PlatformUser }>('/api/platform/auth/me');
       markPlatformBrowserSession();
@@ -58,32 +62,35 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setIsPlatformAuthenticated(false);
     } finally {
       setPlatformAuthChecked(true);
-      setIsLoadingPlatformAuth(false);
+      setIsCheckingPlatformAuth(false);
     }
   }, [isApex]);
 
   const platformLogin = useCallback(async (email: string, password: string): Promise<void> => {
-    setIsLoadingPlatformAuth(true);
+    setIsPlatformLoginSubmitting(true);
     try {
       const data = await apiJson<{ user: PlatformUser }>('/api/platform/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
       localStorage.removeItem('mms_user');
-      localStorage.removeItem('mms_token');
       markPlatformBrowserSession();
       setPlatformUser(data.user);
       setIsPlatformAuthenticated(true);
       setPlatformAuthChecked(true);
+    } catch (error) {
+      clearPlatformBrowserSession();
+      setPlatformUser(null);
+      setIsPlatformAuthenticated(false);
+      throw error;
     } finally {
-      setIsLoadingPlatformAuth(false);
+      setIsPlatformLoginSubmitting(false);
     }
   }, []);
 
   const platformLogout = useCallback((): void => {
     void apiFetch('/api/platform/auth/logout', { method: 'POST' });
     localStorage.removeItem('mms_user');
-    localStorage.removeItem('mms_token');
     clearPlatformBrowserSession();
     setPlatformUser(null);
     setIsPlatformAuthenticated(false);
@@ -98,7 +105,8 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     () => ({
       platformUser,
       isPlatformAuthenticated,
-      isLoadingPlatformAuth,
+      isCheckingPlatformAuth,
+      isPlatformLoginSubmitting,
       platformAuthChecked,
       platformLogin,
       platformLogout,
@@ -107,7 +115,8 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [
       platformUser,
       isPlatformAuthenticated,
-      isLoadingPlatformAuth,
+      isCheckingPlatformAuth,
+      isPlatformLoginSubmitting,
       platformAuthChecked,
       platformLogin,
       platformLogout,

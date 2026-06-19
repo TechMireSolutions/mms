@@ -4,6 +4,8 @@ import { DESIGNATED_FOR_OPTIONS, ObligationType } from '@/lib/data/obligationsDa
 import FormModal from "@/components/ui/FormModal";
 import useTranslation from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
+import { OBLIGATION_TYPE_BADGE, SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 
 export type DesignatedFor = "Syed" | "Non-Syed" | "Both" | "None";
 
@@ -16,14 +18,8 @@ interface TypeBadgeProps {
  * @param {TypeBadgeProps} props
  */
 function TypeBadge({ val }: TypeBadgeProps) {
-  const colors: Record<string, string> = {
-    Syed: "bg-primary/15 text-primary border-primary/30",
-    "Non-Syed": "bg-info/15 text-info border-info/30",
-    Both: "bg-success/15 text-success border-success/30",
-    None: "bg-muted text-muted-foreground border-border",
-  };
   return (
-    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${colors[val] || colors.None}`}>
+    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", OBLIGATION_TYPE_BADGE[val] || OBLIGATION_TYPE_BADGE.None)}>
       {val}
     </span>
   );
@@ -92,7 +88,7 @@ export default function ObligationTypeManager({ types, onChange }: ObligationTyp
               <tr key={t.id} className="hover:bg-muted/20 transition-colors">
                 <td className="px-4 py-3 font-semibold text-foreground">{t.name}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${t.quantity_based ? "bg-success/15 text-success border-success/30" : "bg-muted text-muted-foreground border-border"}`}>
+                  <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", t.quantity_based ? SEMANTIC_BADGE.successStrong : SEMANTIC_BADGE.muted)}>
                     {t.quantity_based ? "Yes" : "No"}
                   </span>
                 </td>

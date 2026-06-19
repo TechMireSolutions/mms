@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { useAuth } from "@/lib/contexts/AuthContext";
+import usePermissions from "@/hooks/usePermissions";
+import { resolveDashboardPersona } from "@/lib/dashboardPersona";
 
 export type ViewerRole = "admin" | "teacher" | "accountant";
 export type EnrollmentViewerRole = "admin" | "staff" | "accountant";
@@ -19,18 +20,19 @@ export function normalizeEnrollmentViewerRole(role: string | undefined): Enrollm
   return normalized;
 }
 
-/** Active viewer role from the signed-in session — no preview override. */
+/** Active viewer persona from RBAC — prefer over raw JWT role string. */
 export function useViewerRole(): ViewerRole {
-  const { user } = useAuth();
-  return useMemo(() => normalizeViewerRole(user?.role), [user?.role]);
+  const { can } = usePermissions();
+  return useMemo(() => resolveDashboardPersona(can), [can]);
 }
 
 /** Whether the signed-in viewer has admin privileges (gates Users config/analytics). */
 export function useIsAdminViewer(): boolean {
-  return useViewerRole() === "admin";
+  const { can } = usePermissions();
+  return can("users.manage");
 }
 
 export function useEnrollmentViewerRole(): EnrollmentViewerRole {
-  const { user } = useAuth();
-  return useMemo(() => normalizeEnrollmentViewerRole(user?.role), [user?.role]);
+  const role = useViewerRole();
+  return useMemo(() => (role === "teacher" ? "staff" : role), [role]);
 }

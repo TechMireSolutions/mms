@@ -18,6 +18,7 @@ import {
   isColorblindSafeChartPalette,
 } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
+import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
 import { getCollection } from "../../lib/db";
 import { METADATA_FIELDS, VisualizerConfig, type ReportCollection } from "./reportMetadata";
 
@@ -542,7 +543,7 @@ export default function DynamicChartVisualizer({
       );
     }
 
-    const firstColor = currentColors[0] || "#3b82f6";
+    const firstColor = currentColors[0] || getBrandingChartPalette().primary;
 
     switch (chartType) {
       case "bar":
@@ -1050,7 +1051,7 @@ export default function DynamicChartVisualizer({
           </div>
 
           {/* Recharts wrapper */}
-          <div ref={chartRef} className="p-4 bg-white/5 border border-border/30 rounded-3xl backdrop-blur-md shadow-inner relative overflow-hidden">
+          <div ref={chartRef} className="relative overflow-hidden rounded-3xl border border-border/30 bg-card/5 p-4 shadow-inner backdrop-blur-md">
             {renderChart()}
           </div>
 

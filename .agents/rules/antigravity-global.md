@@ -15,7 +15,7 @@ trigger: always_on
 - **Focus:** Edit in-scope files only. Ask before deletions or large removals.
 - **Style:** Terse, functional code. No boilerplate or filler comments.
 - **Precision:** Prefer targeted patches — altered functions/blocks, not whole files unless requested.
-- **Names:** Semantic identifiers; assume standard library knowledge.
+- **Names:** Semantic identifiers — full policy in `mms-naming.md`
 
 ## Communication (two modes)
 

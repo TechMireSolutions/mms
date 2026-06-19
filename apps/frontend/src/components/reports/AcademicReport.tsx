@@ -5,7 +5,7 @@ import {
 } from "recharts";
 import { EXAM_RESULTS, EXAMS, STUDENTS, ExamResult, Exam, ExamStudent } from '@/lib/data/examinationData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import { getGrade } from "../examination/gradeUtils";
+import { getGrade } from '@mms/shared';
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
 import EmptyState from "../ui/EmptyState";

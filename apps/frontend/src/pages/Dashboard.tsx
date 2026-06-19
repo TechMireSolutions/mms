@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import StatsGrid from "../components/dashboard/StatsGrid";
 import QuickActionsPanel from "../components/dashboard/QuickActionsPanel";
 import NotificationsPanel from "../components/dashboard/NotificationsPanel";
-import { useViewerRole } from "@/hooks/useViewerRole";
+import { resolveDashboardPersona, widgetMatchesPersona } from "@/lib/dashboardPersona";
 import usePermissions from "@/hooks/usePermissions";
 import type { Permission } from "@mms/shared";
 import { DashboardWidgets, CustomWidget, WidgetBuilder, getOrInitializeCustomWidgets } from "../components/reports/PinnedWidgets";
@@ -15,11 +15,13 @@ import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useStudentsCollection } from "@/hooks/useStudents";
 import { useTeachersCollection } from "@/hooks/useTeachers";
 import { useContactsCollection } from "@/hooks/useContacts";
+import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
+import { useSessionsCollection } from "@/hooks/useSessions";
 import useGlobalSettings from "@/hooks/useGlobalSettings";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
-import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
+import { type Session } from '@/lib/data/sessionsData';
 import { INVOICES, type Invoice } from '@/lib/data/financeData';
-import { ATTENDANCE_RECORDS, type AttendanceRecord } from '@/lib/data/attendanceData';
+import { type AttendanceRecord } from '@/lib/data/attendanceData';
 import { DISTRIBUTIONS, type Distribution } from '@/lib/data/hasanatData';
 import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
 import { revenueData as defaultRevenueData } from '@/lib/data/dashboardData';
@@ -128,15 +130,15 @@ function defaultWidgetCategory(can: (permission: Permission) => boolean): string
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
-  const role = useViewerRole();
   const { can } = usePermissions();
+  const dashboardPersona = useMemo(() => resolveDashboardPersona(can), [can]);
   const globalSettings = useGlobalSettings();
 
   const students = useStudentsCollection();
   const teachers = useTeachersCollection();
-  const sessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
   const invoices = useLiveCollection<Invoice>("finance_invoices", INVOICES);
-  const attendanceRecords = useLiveCollection<AttendanceRecord>("attendance_records", ATTENDANCE_RECORDS);
+  const attendanceRecords = useAttendanceRecordsCollection();
   const hasanatDistributions = useLiveCollection<Distribution>("hasanat_distributions", DISTRIBUTIONS);
   const contacts = useContactsCollection();
   const questions = useLiveCollection("questions", QUESTIONS);
@@ -305,8 +307,8 @@ export default function Dashboard() {
   };
 
   const activeCustomCards = useMemo(() => {
-    return customWidgets.filter((w) => w.widgetType === "card" && w.role === role && !w.id.startsWith("def-"));
-  }, [customWidgets, role]);
+    return customWidgets.filter((w) => w.widgetType === "card" && widgetMatchesPersona(w.role, dashboardPersona) && !w.id.startsWith("def-"));
+  }, [customWidgets, dashboardPersona]);
 
   // Preview memos migrated to DynamicCardBuilder component
 
@@ -391,7 +393,7 @@ export default function Dashboard() {
     const isEn = (id: string) => enabledModules[id] !== false;
     
     // Filter customWidgets to get those of widgetType === "card" and role === role
-    const cardWidgets = customWidgets.filter((w) => w.widgetType === "card" && w.role === role);
+    const cardWidgets = customWidgets.filter((w) => w.widgetType === "card" && widgetMatchesPersona(w.role, dashboardPersona));
 
     // Filter by module enablement
     const enabledCardWidgets = cardWidgets.filter((w) => {
@@ -452,7 +454,7 @@ export default function Dashboard() {
         trend: result.trend || 0
       };
     });
-  }, [role, enabledModules, customWidgets, students, sessions, invoices, attendanceRecords, hasanatDistributions, contacts, questions, tests, assessmentResults]);
+  }, [dashboardPersona, enabledModules, customWidgets, students, sessions, invoices, attendanceRecords, hasanatDistributions, contacts, questions, tests, assessmentResults]);
 
   const allCardsForRole = stats;
   const selectedCount = useMemo(() => {
@@ -463,7 +465,7 @@ export default function Dashboard() {
     return stats.filter((s) => !disabledCardIds.includes(s.id));
   }, [stats, disabledCardIds]);
 
-  const Body = BODIES[role as keyof typeof BODIES] ?? AdminDashboard;
+  const Body = BODIES[dashboardPersona] ?? AdminDashboard;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -685,7 +687,7 @@ export default function Dashboard() {
       {/* Stats */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={`stats-${role}`}
+          key={`stats-${dashboardPersona}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -731,7 +733,7 @@ export default function Dashboard() {
       {/* Role body */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={`body-${role}`}
+          key={`body-${dashboardPersona}`}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}

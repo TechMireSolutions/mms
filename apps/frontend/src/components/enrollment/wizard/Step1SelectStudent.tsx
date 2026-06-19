@@ -3,6 +3,7 @@ import { Search, User, Calendar } from "lucide-react";
 import { calcAge, Student } from '@/lib/data/studentsData';
 import { FORM_INPUT_ICON } from "@/components/ui/formStyles";
 import { Session } from '@/lib/data/sessionsData';
+import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
 
 interface Step1SelectStudentProps {
   value: Student | null | undefined;
@@ -105,7 +106,7 @@ export default function Step1SelectStudent({ value, onChange, students = [], ses
               </div>
               {selected && (
                 <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <div className="w-2 h-2 rounded-full bg-white" />
+                  <div className={`h-2 w-2 rounded-full ${WIZARD_SELECTION_DOT}`} />
                 </div>
               )}
             </button>

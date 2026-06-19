@@ -7,7 +7,7 @@ import useTranslation from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { useContactsCollection } from '@/hooks/useContacts';
 import FormModal from '@/components/ui/FormModal';
-import ContactPicker from '@/components/ui/ContactPicker';
+import ContactPicker from '@/components/contactLink/ContactPicker';
 import { Button } from '@/components/ui/button';
 import { FORM_SELECT } from '@/components/ui/formStyles';
 import {

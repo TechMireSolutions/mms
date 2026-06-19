@@ -16,6 +16,7 @@ import DraggableFieldList from "../ui/DraggableFieldList";
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "../ui/formStyles";
+import { TOGGLE_THUMB } from "@/lib/semanticTone";
 
 const DATE_FORMATS = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"];
 const DECIMAL_SEPARATORS = [
@@ -85,7 +86,7 @@ function Toggle({ checked, onChange, ariaLabel }: ToggleProps) {
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? "bg-primary" : "bg-muted border border-border"}`}
     >
-      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`} aria-hidden="true" />
+      <span className={`inline-block h-4 w-4 transform rounded-full ${TOGGLE_THUMB} transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`} aria-hidden="true" />
     </button>
   );
 }

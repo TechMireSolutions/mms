@@ -106,7 +106,7 @@ export default function ReportsPanel() {
     () => [
       { name: "Paid", value: INVOICES.filter((i) => i.status === "paid").length, color: primary },
       { name: "Pending", value: INVOICES.filter((i) => i.status === "pending").length, color: secondary },
-      { name: "Overdue", value: INVOICES.filter((i) => i.status === "overdue").length, color: "#ef4444" },
+      { name: "Overdue", value: INVOICES.filter((i) => i.status === "overdue").length, color: charts[0] },
       { name: "Partial", value: INVOICES.filter((i) => i.status === "partial").length, color: charts[3] },
     ],
     [primary, secondary, charts],
@@ -146,7 +146,7 @@ export default function ReportsPanel() {
               <Legend wrapperStyle={{ fontSize: 11 }} />
               <Bar dataKey="collected" name="Collected" fill={CHART_COLORS[0]} radius={[3, 3, 0, 0]} maxBarSize={32} />
               <Bar dataKey="outstanding" name="Outstanding" fill={CHART_COLORS[1]} radius={[3, 3, 0, 0]} maxBarSize={32} />
-              <Line dataKey="expenses" name="Expenses" stroke="#ef4444" strokeWidth={2} dot={false} />
+              <Line dataKey="expenses" name="Expenses" stroke={charts[0]} strokeWidth={2} dot={false} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

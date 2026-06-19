@@ -1,4 +1,5 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 export interface StatusBadgeConfigItem {
@@ -26,6 +27,7 @@ const DEFAULT_CONFIG: Record<string, StatusBadgeConfigItem> = {
   ongoing:   { label: "Ongoing",   cls: SEMANTIC_BADGE.warning },
   success:   { label: "Success",   cls: SEMANTIC_BADGE.success },
   failed:    { label: "Failed",    cls: SEMANTIC_BADGE.destructive },
+  posted:    { label: "Posted",    cls: SEMANTIC_BADGE.successStrong },
   draft:     { label: "Draft",     cls: SEMANTIC_BADGE.muted },
 };
 
@@ -39,7 +41,7 @@ export default function StatusBadge({
   const sizeClass = size === "sm" ? "text-[9px] px-1.5 py-0.5" : "text-[11px] px-2 py-0.5";
 
   return (
-    <span className={`inline-flex items-center font-bold rounded-full border ${sizeClass} ${cfg.cls}`}>
+    <span className={cn('inline-flex items-center font-bold rounded-full border', sizeClass, cfg.cls)}>
       {cfg.label}
     </span>
   );

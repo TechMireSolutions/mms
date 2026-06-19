@@ -11,9 +11,8 @@ import {
 import StatusBadge from "../ui/StatusBadge";
 import EmptyState from "../ui/EmptyState";
 import { calcAge, type Student } from '@/lib/data/studentsData';
-import { SESSIONS_DATA } from '@/lib/data/sessionsData';
+import { useSessionsCollection } from '@/hooks/useSessions';
 import { formatDate, getObject } from "../../lib/db";
-import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { type StudentsSettings, DEFAULT_STUDENTS_SETTINGS } from "@mms/shared";
 import StudentDetail from "./StudentDetail";
 
@@ -57,7 +56,7 @@ export default function StudentList({
   onBulkStatusChange,
   layout = "list"
 }: StudentListProps): JSX.Element {
-  const sessions = useLiveCollection("sessions", SESSIONS_DATA);
+  const sessions = useSessionsCollection();
 
   const settings = useMemo(() => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS), []);
   const fields = settings.fields || DEFAULT_STUDENTS_SETTINGS.fields || {};

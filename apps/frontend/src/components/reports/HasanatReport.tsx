@@ -12,7 +12,7 @@ import ReportExportBar from "./ReportExportBar";
 import EmptyState from "../ui/EmptyState";
 
 /** Active filter state passed down from the parent report view. */
-import { HasanatChart } from "../dashboard/charts/AttendanceChart";
+import { HasanatChart } from "@/components/widgets/charts/AttendanceChart";
 
 interface HasanatReportFilters {
   /** Class name to filter by, or "all" for no filter. */

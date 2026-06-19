@@ -1,6 +1,6 @@
 ---
 name: mms-dev-setup
-description: Sets up and runs the MMS monorepo (pnpm, PostgreSQL, backend :3000, frontend :5173, typecheck, lint, tests). Use when installing dependencies, starting dev servers, fixing env issues, or onboarding to the project.
+description: Sets up and runs the MMS monorepo (pnpm, Node 26+, PostgreSQL, backend :3000, frontend :5173, typecheck, lint, tests). Use when installing dependencies, starting dev servers, fixing env issues, or onboarding to the project.
 ---
 
 # MMS Dev Setup
@@ -10,15 +10,14 @@ description: Sets up and runs the MMS monorepo (pnpm, PostgreSQL, backend :3000,
 ```bash
 # From repo root
 pnpm install
-pnpm dev                         # turbo: backend + frontend (foreground)
-./restart_servers.sh             # Postgres + pnpm dev (turbo) detached + health check
-./restart_servers.sh status      # verify :3000 / :5173; flags stale PIDs
-./restart_servers.sh --quick     # skip cache clear / shortened health wait
-./restart_servers.sh --separate  # two-process mode (backend then frontend)
-./scripts/stop_servers.sh        # stop servers started by restart script
+./restart_servers.sh              # start dev (GNU screen — default, survives agent exit)
+./restart_servers.sh status       # screen session + ports + health
+./restart_servers.sh stop         # stop screen + servers
+./restart_servers.sh --foreground # run in this terminal (Ctrl+C stops)
+./restart_servers.sh --quick      # skip Vite cache clear / shorter wait
 ```
 
-Run `./restart_servers.sh` in a **dedicated terminal** if processes die when the agent shell exits.
+`./restart_servers.sh` is the **only** dev-server entry point (screen by default). `pnpm dev` is for manual foreground turbo use.
 
 ## Verify environment
 

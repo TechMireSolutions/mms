@@ -41,3 +41,28 @@ export function getBrandingChartPaletteCss(): string[] {
     readThemeCssColor(name),
   );
 }
+
+/** Widget builder colour name → branded chart hex (Recharts). */
+export function resolveWidgetChartHex(name: string, palette: BrandingChartPaletteHex): string {
+  const key = name.toLowerCase();
+  const map: Record<string, string> = {
+    emerald: palette.primary,
+    green: palette.primary,
+    blue: palette.charts[3],
+    violet: palette.charts[4],
+    amber: palette.secondary,
+    red: palette.charts[0],
+    yellow: palette.charts[2],
+  };
+  return map[key] ?? palette.primary;
+}
+
+/** Threshold alert swatch for dashboard widgets (Recharts). */
+export function resolveThresholdChartHex(
+  color: 'red' | 'amber' | 'yellow' | undefined,
+  palette: BrandingChartPaletteHex,
+): string {
+  if (color === 'amber') return palette.secondary;
+  if (color === 'yellow') return palette.charts[2];
+  return palette.charts[0];
+}

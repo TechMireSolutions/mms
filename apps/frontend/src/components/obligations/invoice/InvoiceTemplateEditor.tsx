@@ -11,6 +11,7 @@ import {
 import {
   PAGE_SIZES, AVAILABLE_FIELDS, loadTemplate, saveTemplate, resetTemplate, InvoiceTemplate, TemplateElement, ElementStyle
 } from "../../../lib/invoiceTemplateStore";
+import { getPrintBrandingTokens, PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 
 const SNAP = 4; // px grid snap
 
@@ -76,6 +77,7 @@ export interface InvoiceTemplateEditorProps {
  * @param {InvoiceTemplateEditorProps} props
  */
 export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTemplateEditorProps) {
+  const printTokens = getPrintBrandingTokens();
   const [template, setTemplate] = useState<InvoiceTemplate>(() => loadTemplate());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showGuides, setShowGuides] = useState(true);
@@ -151,13 +153,13 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
   };
 
   const addStaticText = () => {
-    const el: TemplateElement = { id: newId(), type: "static", label: "New Text", x: 20, y: 20, w: 200, h: 18, style: { fontSize: 11, color: "#333" } };
+    const el: TemplateElement = { id: newId(), type: "static", label: "New Text", x: 20, y: 20, w: 200, h: 18, style: { fontSize: 11, color: PRINT_NEUTRAL.text } };
     commitUpdate((els) => [...els, el]);
     setSelectedId(el.id);
   };
 
   const addDivider = () => {
-    const el: TemplateElement = { id: newId(), type: "divider", label: "", x: 20, y: 20, w: size.width - 40, h: 1, style: { color: "#e5e7eb" } };
+    const el: TemplateElement = { id: newId(), type: "divider", label: "", x: 20, y: 20, w: size.width - 40, h: 1, style: { color: PRINT_NEUTRAL.border } };
     commitUpdate((els) => [...els, el]);
     setSelectedId(el.id);
   };
@@ -166,7 +168,7 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
     const el: TemplateElement = {
       id: newId(), type: "field", label: fieldDef.label, field: fieldDef.field,
       x: 20, y: 20, w: 160, h: 16,
-      style: { fontSize: 10, color: "#222" },
+      style: { fontSize: 10, color: PRINT_NEUTRAL.text },
     };
     commitUpdate((els) => [...els, el]);
     setSelectedId(el.id);
@@ -299,13 +301,13 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
       fontFamily: s.fontFamily || "inherit",
       fontStyle: s.fontStyle || "normal",
       textAlign: s.textAlign || "left",
-      color: s.color || "#222",
+      color: s.color || PRINT_NEUTRAL.text,
       direction: s.direction || "ltr",
       overflow: "visible",
       cursor: "move",
       boxSizing: "border-box",
       userSelect: "none",
-      outline: isSelected ? "2px solid #047857" : "1px dashed transparent",
+      outline: isSelected ? `2px solid ${printTokens.primary}` : "1px dashed transparent",
       outlineOffset: 1,
       transition: "outline 0.1s",
     };
@@ -323,12 +325,12 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
         })();
         return b.logoUrl
           ? <img src={b.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: s.objectFit || "contain" }} />
-          : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#f0fdf4", borderRadius: 6, border: "2px dashed #d1fae5" }}>
-              <span style={{ fontSize: 24, fontWeight: "bold", color: "#047857" }}>م</span>
+          : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: printTokens.logoPlaceholderBg, borderRadius: 6, border: `2px dashed ${printTokens.logoPlaceholderBorder}` }}>
+              <span style={{ fontSize: 24, fontWeight: "bold", color: printTokens.primary }}>م</span>
             </div>;
       }
       if (el.type === "divider") {
-        return <div style={{ borderTop: `${el.h || 1}px solid ${s.color || "#e5e7eb"}`, width: "100%", marginTop: (el.h || 1) / 2 }} />;
+        return <div style={{ borderTop: `${el.h || 1}px solid ${s.color || printTokens.border}`, width: "100%", marginTop: (el.h || 1) / 2 }} />;
       }
       if (el.type === "field") {
         return <span style={{ opacity: 0.7, fontStyle: "italic" }}>{el.label}</span>;
@@ -350,7 +352,7 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
             style={{
               position: "absolute", bottom: -4, right: -4,
               width: 10, height: 10,
-              background: "#047857", borderRadius: 2,
+              background: printTokens.primary, borderRadius: 2,
               cursor: "se-resize", zIndex: 10,
             }}
           />
@@ -359,9 +361,9 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
         {isSelected && (
           <div style={{ position: "absolute", top: -22, left: 0, display: "flex", gap: 2, zIndex: 20 }}>
             <button type="button" onClick={(e) => { e.stopPropagation(); duplicateEl(el.id); }}
-              style={{ padding: "1px 4px", background: "#047857", color: "#fff", border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>⧉</button>
+              style={{ padding: "1px 4px", background: printTokens.primary, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>⧉</button>
             <button type="button" onClick={(e) => { e.stopPropagation(); deleteEl(el.id); }}
-              style={{ padding: "1px 4px", background: "#ef4444", color: "#fff", border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>✕</button>
+              style={{ padding: "1px 4px", background: printTokens.destructive, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>✕</button>
           </div>
         )}
       </div>
@@ -455,15 +457,15 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
             {/* Page background */}
             <div style={{
               position: "absolute", inset: 0,
-              background: "#fff",
+              background: printTokens.paper,
               boxShadow: "0 4px 30px rgba(0,0,0,0.15)",
-              border: "1px solid #e5e7eb",
+              border: `1px solid ${printTokens.border}`,
             }} />
             {/* Page boundary label */}
             {showGuides && (
               <div style={{
                 position: "absolute", top: -20, left: 0,
-                fontSize: 10, color: "#888", fontFamily: "monospace",
+                fontSize: 10, color: PRINT_NEUTRAL.muted, fontFamily: "monospace",
               }}>
                 {PAGE_SIZES[template.pageSize]?.label} — {size.width}×{size.height}px
               </div>
@@ -517,7 +519,7 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
                   <div className="space-y-2">
                     <StyleInput label="Font Size (px)" type="number" value={selectedEl.style?.fontSize || 10}
                       onChange={(v) => patchStyle(selectedEl.id, { fontSize: Number(v) })} min={7} max={72} />
-                    <StyleInput label="Color" type="color" value={selectedEl.style?.color || "#222"}
+                    <StyleInput label="Color" type="color" value={selectedEl.style?.color || PRINT_NEUTRAL.text}
                       onChange={(v) => patchStyle(selectedEl.id, { color: String(v) })} />
                     <div className="flex gap-1">
                       <StyleBtn title="Bold" active={selectedEl.style?.fontWeight === "bold"}
@@ -570,7 +572,7 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
               {selectedEl.type === "divider" && (
                 <div>
                   <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">Divider</p>
-                  <StyleInput label="Color" type="color" value={selectedEl.style?.color || "#e5e7eb"}
+                  <StyleInput label="Color" type="color" value={selectedEl.style?.color || PRINT_NEUTRAL.border}
                     onChange={(v) => patchStyle(selectedEl.id, { color: String(v) })} />
                 </div>
               )}

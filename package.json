@@ -7,7 +7,7 @@
     "node": ">=26"
   },
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=mms-frontend --filter=mms-backend",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

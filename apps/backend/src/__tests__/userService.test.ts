@@ -1,12 +1,26 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const mockListTenantUsers = vi.fn();
+const mockFindTenantUserById = vi.fn();
+const mockReplaceTenantUsers = vi.fn();
 const mockGetCollection = vi.fn();
 const mockSaveCollection = vi.fn();
 const mockVerifyPassword = vi.fn();
+const mockGetRequestTenant = vi.fn();
+
+vi.mock('../db/repositories/tenantUserRepository.js', () => ({
+  listTenantUsersByWorkspace: (...args: unknown[]) => mockListTenantUsers(...args),
+  findTenantUserRowById: (...args: unknown[]) => mockFindTenantUserById(...args),
+  replaceTenantUsersForWorkspace: (...args: unknown[]) => mockReplaceTenantUsers(...args),
+}));
 
 vi.mock('../db/database.js', () => ({
   getCollection: (...args: unknown[]) => mockGetCollection(...args),
   saveCollection: (...args: unknown[]) => mockSaveCollection(...args),
+}));
+
+vi.mock('../lib/tenantContext.js', () => ({
+  getRequestTenant: () => mockGetRequestTenant(),
 }));
 
 vi.mock('../services/auth/passwordService.js', () => ({
@@ -19,7 +33,7 @@ vi.mock('../services/contactService.js', () => ({
   updateContactById: vi.fn(),
 }));
 
-vi.mock('../globalSettingsService.js', () => ({
+vi.mock('../services/globalSettingsService.js', () => ({
   assertPasswordMeetsPolicy: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -29,24 +43,23 @@ describe('userService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockVerifyPassword.mockResolvedValue(true);
+    mockGetRequestTenant.mockReturnValue('dar-ul-quran');
   });
 
   it('matches login by loginEmail not contact CRM email', async () => {
+    mockListTenantUsers.mockResolvedValue([
+      {
+        id: 'auth-1',
+        role: 'admin',
+        contactId: '42',
+        loginEmail: 'admin@workspace.local',
+        emailVerifiedAt: '2026-01-01T00:00:00.000Z',
+        workspaceSubdomain: 'dar-ul-quran',
+        passwordHash: 'salt:hash',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    ]);
     mockGetCollection.mockImplementation(async (name: string) => {
-      if (name === 'users') {
-        return [
-          {
-            id: 'auth-1',
-            role: 'admin',
-            contactId: 42,
-            loginEmail: 'admin@workspace.local',
-            emailVerifiedAt: '2026-01-01T00:00:00.000Z',
-            workspaceSubdomain: 'dar-ul-quran',
-            passwordHash: 'salt:hash',
-            createdAt: '2026-01-01T00:00:00.000Z',
-          },
-        ];
-      }
       if (name === 'contacts') {
         return [
           {
@@ -75,21 +88,20 @@ describe('userService', () => {
   });
 
   it('does not sign in with contact email when loginEmail differs', async () => {
+    mockListTenantUsers.mockResolvedValue([
+      {
+        id: 'auth-1',
+        role: 'admin',
+        contactId: '42',
+        loginEmail: 'admin@workspace.local',
+        emailVerifiedAt: '2026-01-01T00:00:00.000Z',
+        workspaceSubdomain: 'dar-ul-quran',
+        passwordHash: 'salt:hash',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    ]);
+    mockFindTenantUserById.mockResolvedValue(null);
     mockGetCollection.mockImplementation(async (name: string) => {
-      if (name === 'users') {
-        return [
-          {
-            id: 'auth-1',
-            role: 'admin',
-            contactId: 42,
-            loginEmail: 'admin@workspace.local',
-            emailVerifiedAt: '2026-01-01T00:00:00.000Z',
-            workspaceSubdomain: 'dar-ul-quran',
-            passwordHash: 'salt:hash',
-            createdAt: '2026-01-01T00:00:00.000Z',
-          },
-        ];
-      }
       if (name === 'contacts') {
         return [
           {

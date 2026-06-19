@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import FormModal from '@/components/ui/FormModal';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { UserRoleBadge } from './UserBadges';
-import { SettingsMetaBadge } from '@/components/settings/SettingsShared';
+import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 
 interface PermCellProps {
   checked: boolean;

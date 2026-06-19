@@ -2,14 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import { CreditCard } from "lucide-react";
 import { Payment } from '@/lib/data/financeData';
-
-const METHOD_COLORS: Record<string, string> = {
-  "Cash":          "bg-success/10 text-success border-success/20",
-  "Bank Transfer": "bg-info/10 text-info border-info/20",
-  "Online":        "bg-primary/10 text-primary border-primary/20",
-  "Cheque":        "bg-warning/10 text-warning border-warning/20",
-  "Other":         "bg-muted text-muted-foreground border-border",
-};
+import { PAYMENT_METHOD_BADGE } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 
 const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
 
@@ -39,7 +33,7 @@ export default function PaymentTracker({ payments }: PaymentTrackerProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" aria-label="Payments by Method">
         {Object.entries(byMethod).map(([method, amount]) => (
           <article key={method} className="rounded-xl border border-border bg-card p-3">
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${METHOD_COLORS[method] || METHOD_COLORS.Other}`}>{method}</span>
+            <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", PAYMENT_METHOD_BADGE[method] || PAYMENT_METHOD_BADGE.Other)}>{method}</span>
             <p className="text-[15px] font-bold text-foreground mt-2 m-0">{fmt(amount)}</p>
             <p className="text-[10px] text-muted-foreground m-0">{payments.filter((p) => p.method === method).length} payment{payments.filter((p) => p.method === method).length !== 1 ? "s" : ""}</p>
           </article>
@@ -82,7 +76,7 @@ export default function PaymentTracker({ payments }: PaymentTrackerProps) {
                     <td className="px-4 py-3 text-[11px] font-mono text-muted-foreground">{p.invoiceId}</td>
                     <td className="px-4 py-3 text-[13px] font-bold text-success whitespace-nowrap">{fmt(p.amount)}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${METHOD_COLORS[p.method] || METHOD_COLORS.Other}`}>{p.method}</span>
+                      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", PAYMENT_METHOD_BADGE[p.method] || PAYMENT_METHOD_BADGE.Other)}>{p.method}</span>
                     </td>
                     <td className="px-4 py-3 text-[12px] text-muted-foreground">{p.receivedBy || "—"}</td>
                     <td className="px-4 py-3 text-[12px] text-muted-foreground">{p.note || "—"}</td>

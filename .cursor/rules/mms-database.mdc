@@ -20,8 +20,10 @@ alwaysApply: false
 | `collections` | `name` PK, `data` text — JSON-stringified **arrays** |
 | `objects` | `key` PK, `data` text — JSON-stringified **singletons** |
 | `auth_artifacts` | Ephemeral auth — `id`, `kind`, `payload`, `expires_at`, `created_at` |
+| `platform_users` | Apex platform super-users — **not** tenant-scoped; unique `email` |
+| `tenant_users` | Madrasa auth users — scoped by `workspace_subdomain`; unique `(workspace_subdomain, login_email)` |
 
-Logical domain data lives as JSON inside `collections` / `objects`, keyed per tenant:
+Auth credentials for platform and tenant operators live in **`platform_users`** / **`tenant_users`**, not in JSON blobs. Legacy `platform_super_users` object and tenant `users` collections are migrated on startup (`012_migrate_users_to_tables.ts`); tenant writes dual-sync to the `users` collection for the Users module UI until full REST migration.
 
 - Tenant collection: `t:{subdomain}:{logicalName}`
 - Tenant object: `t:{subdomain}:{logicalKey}`
@@ -41,7 +43,7 @@ Tenant key resolution happens in `database.ts` via `getRequestTenant()` from `te
 - No ad-hoc raw SQL in application route code
 - `resetTenantData()` — deletes tenant-scoped rows only; reseeds **minimal** defaults
 
-**DDL migrations shipped:** `0001_auth_artifacts.sql` (auth_artifacts table).
+**DDL migrations shipped:** `0001_auth_artifacts.sql`, `0002_platform_tenant_users.sql`.
 
 ## Seeds
 

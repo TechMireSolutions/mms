@@ -52,7 +52,7 @@ interface SessionDataPoint {
 export default function EnrollmentReports({ enrollments }: EnrollmentReportsProps): React.ReactElement {
   const palette = useBrandPalette();
   const COLORS = useMemo(
-    () => [palette.primary, palette.secondary, "#dc2626", palette.charts[3]],
+    () => [palette.primary, palette.secondary, palette.charts[0], palette.charts[3]],
     [palette],
   );
   const total      = enrollments.length;

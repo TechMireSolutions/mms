@@ -6,7 +6,7 @@ Madrasa Management System monorepo. For **Cursor** and **Antigravity** (and any 
 
 ```bash
 pnpm install && pnpm typecheck
-pnpm dev                    # or ./restart_servers.sh
+pnpm install && ./restart_servers.sh   # local dev (screen)
 bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
 ```
 
@@ -16,7 +16,7 @@ bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
 .agent/              → symlink to .agents/ (Antigravity standard path)
 .agents/
   rules/             # behavioural rules (always_on + model_decision)
-  skills/            # 13 capability modules (SKILL.md per folder)
+  skills/            # 15 capability modules (SKILL.md per folder)
   workflows/         # multi-step procedures
   skills-manifest.json
 ```
@@ -38,8 +38,12 @@ Start here in Antigravity: **skill `antigravity-workspace`**
 | `rules/antigravity-global.md` | `rules/antigravity-global.mdc` |
 | `rules/mms-core.md` | `rules/mms-core.mdc` |
 | `rules/mms-migration-status.md` | `rules/mms-migration-status.mdc` |
+| `rules/mms-dependencies.md` | `rules/mms-dependencies.mdc` |
+| `rules/mms-dry.md` | `rules/mms-dry.mdc` |
 
-## Skills (13)
+Engineering layout & naming (file-scoped): `mms-structure.md`, `mms-naming.md`.
+
+## Skills (15)
 
 | Skill | Purpose |
 |-------|---------|
@@ -53,6 +57,8 @@ Start here in Antigravity: **skill `antigravity-workspace`**
 | `mms-auth-users` | Auth & users |
 | `mms-shared-package` | `@mms/shared` |
 | `mms-backend-api` | Fastify backend |
+| `mms-backend-security` | Tenant isolation, RBAC, cookies, rate limits |
+| `mms-ops-deploy` | Hetzner deploy, Apache, PORT 5002, GitHub Actions |
 | `mms-reports-export` | Analytics & export |
 | `mms-migration-fixes` | Tech debt fixes |
 | `mms-code-review` | PR review |
@@ -74,7 +80,9 @@ Rule **bodies** must stay identical between `.cursor/rules/*.mdc` and `.agents/r
 
 Sync after `.mdc` edits: `bash .agents/scripts/sync-rules.sh`
 
-**31 rules** (3 always-on + 28 scoped): product (`mms-ui-*`, `mms-fields`, `mms-contact-link`, …), platform (`mms-security`, `mms-testing`, `mms-observability`, `mms-a11y`). Index: `.cursor/rules/README.md`.
+Sync skills to Cursor: `bash .agents/scripts/sync-skills.sh`
+
+**35 rules** (5 always-on + 30 scoped): product (`mms-ui-*`, `mms-fields`, `mms-structure`, `mms-naming`, …), platform (`mms-dependencies`, `mms-dry`, `mms-security`, …). Index: `.cursor/rules/README.md`.
 
 **Rule index:** [.cursor/rules/README.md](.cursor/rules/README.md) — canonical owner per topic (avoids duplicating tier/isolation/i18n prose).
 

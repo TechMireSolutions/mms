@@ -8,19 +8,20 @@ import { BarChart, Bar, XAxis, YAxis,
   ResponsiveContainer, Pie, Cell 
 } from "recharts";
 import { getCollection, saveCollection } from "../../lib/db";
+import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
+import { resolveThresholdChartHex, resolveWidgetChartHex } from "@/lib/brandingChartPalette";
 import { Session, Class } from '@/lib/data/sessionsData';
 import { METADATA_FIELDS, COLLECTION_OPTIONS, computeCustomCard, CustomCard } from "./reportMetadata";
-import SessionsTable from "../dashboard/SessionsTable";
-import OutstandingFeesTable from "../dashboard/OutstandingFeesTable";
-import FeeCollectionSummary from "../dashboard/FeeCollectionSummary";
-import OverdueObligationsWidget from "../dashboard/OverdueObligationsWidget";
-import TodayAttendanceWidget from "../attendance/TodayAttendanceWidget";
-import EnrollmentChart from "../dashboard/charts/EnrollmentChart";
-import RevenueChart from "../dashboard/charts/RevenueChart";
-import { AttendanceChart, HasanatChart } from "../dashboard/charts/AttendanceChart";
+import SessionsTable from "@/components/widgets/SessionsTable";
+import OutstandingFeesTable from "@/components/widgets/OutstandingFeesTable";
+import FeeCollectionSummary from "@/components/widgets/FeeCollectionSummary";
+import OverdueObligationsWidget from "@/components/widgets/OverdueObligationsWidget";
+import TodayAttendanceWidget from "@/components/widgets/TodayAttendanceWidget";
+import EnrollmentChart from "@/components/widgets/charts/EnrollmentChart";
+import RevenueChart from "@/components/widgets/charts/RevenueChart";
+import { AttendanceChart, HasanatChart } from "@/components/widgets/charts/AttendanceChart";
 import {
   CustomWidget,
-  WIDGET_COLOR_MAP,
   ALERT_COLOR_MAP,
   THEME_PALETTES,
   COLOR_MAP,
@@ -334,6 +335,7 @@ function CustomWidgetRenderer({
   onSwitchToggle: (widget: CustomWidget) => void;
   onMetricClick: (widget: CustomWidget) => void;
 }): React.JSX.Element {
+  const palette = useBrandPalette();
   
   const wType = widget.widgetType || (["bar", "line", "area", "pie", "radar"].includes(widget.chartType || "") ? "chart" : "kpi");
 
@@ -426,9 +428,9 @@ function CustomWidgetRenderer({
     );
   }
 
-  const colorHex = isAlert 
-    ? (widget.thresholdColor === "red" ? "#ef4444" : widget.thresholdColor === "amber" ? "#f59e0b" : "#eab308")
-    : (WIDGET_COLOR_MAP[widget.color] || "hsl(var(--primary))");
+  const colorHex = isAlert
+    ? resolveThresholdChartHex(widget.thresholdColor, palette)
+    : resolveWidgetChartHex(widget.color, palette);
 
   const alertScheme = isAlert ? ALERT_COLOR_MAP[widget.thresholdColor || "red"] : null;
 
@@ -705,11 +707,12 @@ function CustomWidgetChartFallback({
   widget: CustomWidget;
   collections: ReturnType<typeof getWidgetCollections>;
 }): React.JSX.Element | null {
+  const palette = useBrandPalette();
   const data = useMemo(() => {
     return computeWidgetChartData(widget, collections);
   }, [widget, collections]);
 
-  const colorHex = WIDGET_COLOR_MAP[widget.color] || "hsl(var(--primary))";
+  const colorHex = resolveWidgetChartHex(widget.color, palette);
 
   if (data.length === 0) {
     return (
@@ -1491,6 +1494,7 @@ export function WidgetBuilder({
   initialWidgetType = "kpi"
 }: WidgetBuilderProps): React.JSX.Element {
   const collections = useMemo(() => getWidgetCollections(), []);
+  const palette = useBrandPalette();
   
   const [widgetType, setWidgetType] = useState<CustomWidget["widgetType"]>(() => {
     if (editWidgetConfig) return editWidgetConfig.widgetType || "kpi";
@@ -2135,7 +2139,7 @@ export function WidgetBuilder({
             <div className="flex flex-wrap gap-2">
               {["emerald", "blue", "violet", "amber", "red"].map((colorName) => {
                 const isSelected = builderColor === colorName;
-                const cMap = WIDGET_COLOR_MAP[colorName] || "#000";
+                const cMap = resolveWidgetChartHex(colorName, palette);
                 return (
                   <button
                     key={colorName}

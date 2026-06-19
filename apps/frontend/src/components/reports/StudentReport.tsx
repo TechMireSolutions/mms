@@ -6,7 +6,7 @@ import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
 import EmptyState from "../ui/EmptyState";
 
-import EnrollmentChart from "../dashboard/charts/EnrollmentChart";
+import EnrollmentChart from "@/components/widgets/charts/EnrollmentChart";
 
 /** Sub-tab labels available within the student report. */
 const SUB_TABS = ["Student List", "Enrollment History"] as const;

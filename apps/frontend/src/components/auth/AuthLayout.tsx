@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import useBranding from "@/hooks/useBranding";
+import { LOGO_IMAGE } from "@/lib/semanticTone";
 import useTenantBranding from "@/hooks/useTenantBranding";
 import useTranslation from "@/hooks/useTranslation";
 
@@ -59,7 +60,7 @@ export default function AuthLayout({
                 <img
                   src={branding.logoUrl}
                   alt=""
-                  className="h-16 w-16 rounded-2xl border border-border object-cover bg-white shadow-sm"
+                  className={`h-16 w-16 rounded-2xl shadow-surface ${LOGO_IMAGE}`}
                 />
               ) : (
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">

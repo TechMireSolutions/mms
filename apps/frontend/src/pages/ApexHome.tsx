@@ -8,10 +8,10 @@ import PlatformConsole from "@/pages/PlatformConsole";
 
 /** Apex home: first-run setup, platform sign-in, or authenticated console. */
 export default function ApexHome(): React.JSX.Element {
-  const { isPlatformAuthenticated, platformAuthChecked, isLoadingPlatformAuth } = usePlatformAuth();
+  const { isPlatformAuthenticated, platformAuthChecked, isCheckingPlatformAuth } = usePlatformAuth();
   const { setupStatus, isLoadingSetup } = usePlatformSetupStatus();
 
-  if (!platformAuthChecked || isLoadingPlatformAuth || isLoadingSetup) {
+  if (!platformAuthChecked || isCheckingPlatformAuth || isLoadingSetup) {
     return <PlatformLoadingScreen />;
   }
 

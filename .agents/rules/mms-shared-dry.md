@@ -4,6 +4,8 @@ trigger: model_decision
 
 # @mms/shared & DRY
 
+App-wide DRY policy: **`mms-dry.md`**. This file covers the shared package only.
+
 ## Exports map
 
 | File | Contents |

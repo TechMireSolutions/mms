@@ -9,6 +9,8 @@ import {
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useStudentsCollection } from "../../hooks/useStudents";
 import { useTeachersCollection } from "../../hooks/useTeachers";
+import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
+import { useSessionsCollection } from "@/hooks/useSessions";
 import { type Contact } from "../../lib/contactFields";
 import { type AttendanceRecord } from '@/lib/data/attendanceData';
 import { type Invoice } from '@/lib/data/financeData';
@@ -255,13 +257,13 @@ function getDefaultCardConfig(category: string, label: string): CustomCard {
 export default function KPISummary({ category, role }: KPISummaryProps): React.JSX.Element {
   const { can } = usePermissions();
   const contacts = useLiveCollection("contacts");
-  const records = useLiveCollection("attendance_records");
+  const records = useAttendanceRecordsCollection();
   const invoices = useLiveCollection("finance_invoices");
   const students = useStudentsCollection();
   const teachers = useTeachersCollection();
   const exams = useLiveCollection("exams");
   const examResults = useLiveCollection("exam_results");
-  const sessions = useLiveCollection("sessions");
+  const sessions = useSessionsCollection();
   const distributions = useLiveCollection("hasanat_distributions");
   const qbQuestions = useLiveCollection("questions");
   const qbTests = useLiveCollection("tests");

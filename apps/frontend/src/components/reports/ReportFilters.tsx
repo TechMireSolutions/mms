@@ -2,8 +2,8 @@ import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Filter, ChevronDown, ChevronUp, X, Calendar } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
-import { useLiveCollection } from "../../hooks/useLiveCollection";
-import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
+import { useSessionsCollection } from "@/hooks/useSessions";
+import { type Session } from '@/lib/data/sessionsData';
 
 const STATUSES: string[] = ["all", "active", "inactive", "completed"];
 
@@ -37,7 +37,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
   const allowed = CATEGORY_FILTERS[category] || ["session", "class", "status", "dateFrom", "dateTo", "student"];
 
-  const rawSessions = useLiveCollection<Session>("sessions", SESSIONS_DATA);
+  const rawSessions = useSessionsCollection();
 
   const sessions = useMemo(() => {
     return [{ id: "all", name: "All Sessions" }, ...rawSessions.map(s => ({ id: s.id, name: s.name }))];

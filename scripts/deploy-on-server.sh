@@ -77,8 +77,15 @@ export PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
 export NODE_ENV=production
 assert_production_backend_port "$PORT" "Deploy PORT" || exit 1
 
-pm2 restart mmsv2-frontend --update-env 2>/dev/null || pm2 restart mmsv2-frontend 2>/dev/null || true
-pm2 restart mmsv2-backend --update-env 2>/dev/null || pm2 restart mmsv2-backend 2>/dev/null || true
+mkdir -p "$ROOT_DIR/.logs"
+pm2 delete mmsv2-frontend 2>/dev/null || true
+
+if [ -f "$ROOT_DIR/ecosystem.config.cjs" ]; then
+  pm2 startOrReload "$ROOT_DIR/ecosystem.config.cjs" --only mmsv2-backend --update-env \
+    || pm2 restart mmsv2-backend --update-env 2>/dev/null || true
+else
+  pm2 restart mmsv2-backend --update-env 2>/dev/null || pm2 restart mmsv2-backend 2>/dev/null || true
+fi
 
 DEPLOY_OK=true
 
@@ -87,13 +94,6 @@ if [ -f scripts/deploy-recover-backend.sh ]; then
     echo "ERROR: backend recovery failed"
     DEPLOY_OK=false
     pm2 logs mmsv2-backend --lines 50 --nostream || true
-  }
-fi
-
-if [ -f scripts/deploy-recover-frontend.sh ]; then
-  bash scripts/deploy-recover-frontend.sh "$ENV_FILE" || {
-    echo "WARNING: separate frontend PM2 recovery failed — backend should serve SPA on port ${MMS_PROD_BACKEND_PORT}"
-    pm2 logs mmsv2-frontend --lines 30 --nostream || true
   }
 fi
 

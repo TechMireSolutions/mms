@@ -7,7 +7,7 @@ import {
 } from '@mms/shared';
 import { getBrandingSettings, saveBrandingSettings } from '@/lib/db';
 import { clearBrandingSettingsPreview, previewBrandingSettings } from '@/lib/settingsPreview';
-import { loadBranding } from '@/components/settings/BrandingShared';
+import { loadBranding } from '@/components/branding/BrandingShared';
 import { serverSyncErrorKey } from '@/lib/serverSyncErrors';
 import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';

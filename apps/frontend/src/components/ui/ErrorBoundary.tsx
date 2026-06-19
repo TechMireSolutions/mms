@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import ErrorState from "./ErrorState";
+import { reportClientError } from "@/lib/clientErrorReporting";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -26,7 +27,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   }
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error("[ErrorBoundary] Unhandled exception caught in component tree:", error, errorInfo);
+    reportClientError(error, { componentStack: errorInfo.componentStack });
   }
 
   private handleRetry = (): void => {

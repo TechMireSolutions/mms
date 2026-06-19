@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import BrandColorPanel from "@/components/settings/BrandColorPanel";
-import BrandingIdentityPreview from "@/components/settings/BrandingIdentityPreview";
+import BrandColorPanel from "@/components/branding/BrandColorPanel";
+import BrandingIdentityPreview from "@/components/branding/BrandingIdentityPreview";
 import {
   FieldHint,
   FOOTER_MAX,
@@ -24,7 +24,7 @@ import {
   NAME_MAX,
   TAGLINE_MAX,
   defaultFooterForMadrasa,
-} from "@/components/settings/BrandingShared";
+} from "@/components/branding/BrandingShared";
 
 interface CreateMadrasaProps {
   data: OnboardingData;
