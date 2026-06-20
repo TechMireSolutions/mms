@@ -2,7 +2,7 @@ import {
   buildApexUrl,
   buildTenantUrl,
   isApexHost,
-  resolveAppDomain,
+  resolveAppDomainForRequest,
   type TenantUrlOptions,
 } from "@mms/shared";
 import { env } from "@/lib/config/env";
@@ -10,7 +10,7 @@ import { env } from "@/lib/config/env";
 /** Apex domain for this deployment (localhost in dev, platform domain in prod). */
 export function getAppDomain(): string {
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-  return resolveAppDomain(hostname, env.appDomain);
+  return resolveAppDomainForRequest(hostname, env.appDomain);
 }
 
 export function getTenantUrlOptions(): TenantUrlOptions {

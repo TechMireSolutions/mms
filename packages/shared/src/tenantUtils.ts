@@ -206,6 +206,23 @@ export function resolveAppDomainForRequest(
     if (hint && host.split('.').length === configured.split('.').length + 1) {
       return host;
     }
+
+    // Configured apex is too short for multi-label tenants
+    // (e.g. dar-ul-quran.mmsv2.example.com + example.com → no tenant parsed).
+    if (
+      parseTenantFromHost(host, configured) === null
+      && host !== configured
+      && host !== `www.${configured}`
+    ) {
+      const inferred = inferAppDomainFromHostname(host);
+      if (
+        inferred
+        && inferred !== configured
+        && parseTenantFromHost(host, inferred) !== null
+      ) {
+        return inferred;
+      }
+    }
   }
   return resolveAppDomain(host, configured);
 }

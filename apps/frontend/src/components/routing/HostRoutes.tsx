@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { ROUTES, TENANT_APP_PATHS } from "@/lib/config/routes";
 import { apexUrl } from "@/lib/config/tenantConfig";
+import { isBrowserOnTenantHost } from "@/lib/tenantHost";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import PlatformProtectedRoute from "@/components/routing/PlatformProtectedRoute";
 import GuestRoute from "@/components/routing/GuestRoute";
@@ -84,8 +85,9 @@ const apexTenantGate = (
  */
 export default function HostRoutes(): React.JSX.Element {
   const { isApex } = useTenant();
+  const onTenantHost = !isApex || isBrowserOnTenantHost();
 
-  if (isApex) {
+  if (!onTenantHost) {
     return (
       <Routes>
         <Route path={ROUTES.home} element={<ApexHome />} />

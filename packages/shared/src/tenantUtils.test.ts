@@ -86,6 +86,18 @@ describe('resolveAppDomainForRequest', () => {
       parseTenantFromHost('dar-ul-quran.mmsv2.aabtaab.com', 'mmsv2.aabtaab.com'),
     ).toBe('dar-ul-quran');
   });
+
+  it('self-corrects short MMS_APP_DOMAIN for madrasa tenant hosts', () => {
+    expect(
+      resolveAppDomainForRequest('dar-ul-quran.mmsv2.aabtaab.com', 'aabtaab.com'),
+    ).toBe('mmsv2.aabtaab.com');
+    expect(
+      parseTenantFromHost(
+        'dar-ul-quran.mmsv2.aabtaab.com',
+        resolveAppDomainForRequest('dar-ul-quran.mmsv2.aabtaab.com', 'aabtaab.com'),
+      ),
+    ).toBe('dar-ul-quran');
+  });
 });
 
 describe('isHostAllowedForAppDomain', () => {

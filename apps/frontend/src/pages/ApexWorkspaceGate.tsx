@@ -77,7 +77,8 @@ export default function ApexWorkspaceGate({
           showSignInPickerLink={variant === "forgotPassword"}
         />
 
-        {variant === "login" || variant === "forgotPassword" || variant === "default" ? (
+        {!isBrowserOnTenantHost()
+          && (variant === "login" || variant === "forgotPassword" || variant === "default") ? (
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-left space-y-3">
             <p className="text-sm text-muted-foreground">{t("apex.platformAdminHint")}</p>
             <Button asChild variant="default" className="w-full">
