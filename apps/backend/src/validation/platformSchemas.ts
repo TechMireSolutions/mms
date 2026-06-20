@@ -47,3 +47,7 @@ export const platformChangePasswordBodySchema = z.object({
 export const workspaceEnabledPatchBodySchema = z.object({
   enabled: z.boolean(),
 });
+
+export const workspaceDeleteBodySchema = z.object({
+  password: z.string().min(1),
+});

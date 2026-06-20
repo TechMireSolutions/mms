@@ -94,6 +94,13 @@ export async function changePlatformUserPassword(
   return updated;
 }
 
+/** Verifies the platform super-user password without changing credentials. */
+export async function verifyPlatformUserPassword(userId: string, password: string): Promise<boolean> {
+  const stored = await findPlatformUserRowById(userId);
+  if (!stored) return false;
+  return verifyPassword(password, stored.passwordHash);
+}
+
 export async function getPublicPlatformUserById(id: string): Promise<PlatformUser | null> {
   const user = await findPlatformUserRowById(id);
   if (!user) return null;

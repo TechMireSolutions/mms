@@ -11,7 +11,13 @@ import {
   toPublicBranding,
   WORKSPACES_COLLECTION,
 } from '@mms/shared';
-import { getCollection, saveCollection, getObject } from '../db/database.js';
+import {
+  getCollection,
+  saveCollection,
+  getObject,
+  purgeTenantDataBySubdomain,
+  runInTransaction,
+} from '../db/database.js';
 import { getRequestTenant, runWithTenant } from '../lib/tenantContext.js';
 
 async function listWorkspaces(): Promise<Workspace[]> {
@@ -69,6 +75,22 @@ export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> 
     }),
   );
   return summaries.sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
+}
+
+/** Permanently removes a workspace registry entry and all tenant-scoped data. */
+export async function deleteWorkspace(subdomain: string): Promise<Workspace | null> {
+  const normalized = normalizeSubdomainInput(subdomain);
+  const workspaces = await listWorkspaces();
+  const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
+  if (index === -1) return null;
+
+  const removed = workspaces[index];
+  await runInTransaction(async () => {
+    await purgeTenantDataBySubdomain(normalized);
+    workspaces.splice(index, 1);
+    await saveCollection(WORKSPACES_COLLECTION, workspaces);
+  });
+  return removed;
 }
 
 export async function setWorkspaceEnabled(

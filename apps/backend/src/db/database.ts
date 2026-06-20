@@ -259,13 +259,13 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
 }
 
 /**
- * Resets only the current tenant's data and reseeds minimal defaults.
- * Requires tenant context from the request host.
+ * Deletes all PostgreSQL rows scoped to a workspace subdomain (collections, objects, tenant users).
+ * Does not modify the global workspaces registry.
  */
-export async function resetTenantData(): Promise<void> {
-  const tenant = getRequestTenant();
+export async function purgeTenantDataBySubdomain(subdomain: string): Promise<void> {
+  const tenant = subdomain.trim().toLowerCase();
   if (!tenant) {
-    throw new Error('Tenant context is required to reset workspace data');
+    throw new Error('Subdomain is required to purge tenant data');
   }
 
   const colRows = await listCollectionStorageNames();
@@ -284,6 +284,21 @@ export async function resetTenantData(): Promise<void> {
     }
   }
 
+  await deleteTenantUsersByWorkspace(tenant);
+}
+
+/**
+ * Resets only the current tenant's data and reseeds minimal defaults.
+ * Requires tenant context from the request host.
+ */
+export async function resetTenantData(): Promise<void> {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    throw new Error('Tenant context is required to reset workspace data');
+  }
+
+  await purgeTenantDataBySubdomain(tenant);
+
   const collections = await getMinimalCollectionsForSeed();
   for (const [name, data] of Object.entries(collections)) {
     if (name === WORKSPACES_COLLECTION) continue;
@@ -292,8 +307,6 @@ export async function resetTenantData(): Promise<void> {
   for (const [key, data] of Object.entries(getMinimalObjects())) {
     await saveObject(key, data);
   }
-
-  await deleteTenantUsersByWorkspace(tenant);
 }
 
 /**
