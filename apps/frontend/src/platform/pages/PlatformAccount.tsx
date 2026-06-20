@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import {
   AlertCircle,
   ArrowLeft,
@@ -23,6 +23,7 @@ import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
 import { ROUTES } from "@/lib/config/routes";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { usePlatformProfile, useUpdatePlatformProfileName } from "@/platform/hooks/usePlatformProfile";
+import PlatformLoadingScreen from "@/platform/components/PlatformLoadingScreen";
 import { notify } from "@/lib/notify";
 
 /**
@@ -30,9 +31,22 @@ import { notify } from "@/lib/notify";
  */
 export default function PlatformAccount(): React.JSX.Element {
   const { t } = useTranslation();
-  const { platformUser } = usePlatformAuth();
+  const {
+    platformUser,
+    isPlatformAuthenticated,
+    platformAuthChecked,
+    isCheckingPlatformAuth,
+  } = usePlatformAuth();
   const { data: profile, isLoading: loadingProfile, isError: profileError } = usePlatformProfile();
   const updateName = useUpdatePlatformProfileName();
+
+  if (!platformAuthChecked || isCheckingPlatformAuth) {
+    return <PlatformLoadingScreen />;
+  }
+
+  if (!isPlatformAuthenticated) {
+    return <Navigate to={ROUTES.home} replace />;
+  }
 
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);

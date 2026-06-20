@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { ROUTES } from '@/lib/config/routes';
-import { apexUrl } from '@/lib/config/tenantConfig';
 import useTranslation from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { FORM_ERROR, FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
@@ -94,12 +93,6 @@ export default function ForgotPassword() {
                 <ArrowLeft className="w-3 h-3" /> {t("auth.backToSignIn")}
               </Link>
             </p>
-            <p className="text-center text-xs text-muted-foreground">
-              {t("auth.notYourMadrasa")}{" "}
-              <a href={apexUrl(ROUTES.login)} className="font-medium text-primary hover:underline">
-                {t("auth.viewAllMadrasaLinks")}
-              </a>
-            </p>
           </motion.div>
         ) : (
           <motion.form
@@ -148,27 +141,6 @@ export default function ForgotPassword() {
                 <ArrowLeft className="w-3 h-3" /> {t("auth.backToSignIn")}
               </Link>
             </p>
-
-            <div className="border-t border-border/50 pt-4 text-center text-xs text-muted-foreground space-y-2">
-              <p>
-                {t("auth.notYourMadrasa")}{" "}
-                <a
-                  href={apexUrl(ROUTES.login)}
-                  className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-                >
-                  {t("auth.viewAllMadrasaLinks")}
-                </a>
-              </p>
-              <p>
-                {t("auth.noAccount")}{" "}
-                <a
-                  href={apexUrl(ROUTES.onboarding)}
-                  className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-                >
-                  {t("auth.createMadrasa")}
-                </a>
-              </p>
-            </div>
           </motion.form>
         )}
       </AnimatePresence>

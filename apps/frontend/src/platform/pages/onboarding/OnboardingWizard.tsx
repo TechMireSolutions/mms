@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, Sparkles } from "lucide-react";
 import WizardLayout from "@/platform/components/onboarding/WizardLayout";
@@ -18,6 +18,8 @@ import AdminSetup from "./steps/AdminSetup";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import useTranslation from "@/hooks/useTranslation";
 import { isApiError } from "@/lib/apiClient";
+import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
+import PlatformLoadingScreen from "@/platform/components/PlatformLoadingScreen";
 
 export interface OnboardingData {
   name: string;
@@ -87,11 +89,20 @@ const initialData: OnboardingData = {
 
 /** Platform-protected wizard to provision a new madrasa workspace. */
 export default function OnboardingWizard(): React.JSX.Element {
+  const { isPlatformAuthenticated, platformAuthChecked, isCheckingPlatformAuth } = usePlatformAuth();
   const { onboard } = useAuth();
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<OnboardingData>(initialData);
   const [loading, setLoading] = useState(false);
+
+  if (!platformAuthChecked || isCheckingPlatformAuth) {
+    return <PlatformLoadingScreen />;
+  }
+
+  if (!isPlatformAuthenticated) {
+    return <Navigate to={ROUTES.home} replace />;
+  }
   const [done, setDone] = useState(false);
   const [handoffCode, setHandoffCode] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);

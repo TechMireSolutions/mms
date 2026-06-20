@@ -14,7 +14,6 @@ import {
 } from "@/lib/twoFactor";
 import { requiresTwoFactor } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
-import { apexUrl } from '@/lib/config/tenantConfig';
 import { Button } from "@/components/ui/button";
 import { FORM_ERROR, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
@@ -313,27 +312,6 @@ export default function Login(): React.ReactElement {
             )}
           </Button>
         </fieldset>
-
-        <div className="border-t border-border/50 pt-4 text-center text-xs text-muted-foreground space-y-2">
-          <p>
-            {t("auth.noAccount")}{" "}
-            <a
-              href={apexUrl(ROUTES.onboarding)}
-              className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-            >
-              {t("auth.createMadrasa")}
-            </a>
-          </p>
-          <p>
-            {t("auth.notYourMadrasa")}{" "}
-            <a
-              href={apexUrl(ROUTES.login)}
-              className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-            >
-              {t("auth.viewAllMadrasaLinks")}
-            </a>
-          </p>
-        </div>
       </form>
     </AuthLayout>
     </>

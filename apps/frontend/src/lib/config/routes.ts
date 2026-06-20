@@ -27,31 +27,76 @@ export const ROUTES = {
   onboarding: "/onboarding",
 } as const;
 
-/** Paths that do not require authentication */
+/** Paths that do not require tenant authentication */
 export const PUBLIC_PATHS: readonly string[] = [
   ROUTES.login,
   ROUTES.forgotPassword,
   ROUTES.platformForgotPassword,
   ROUTES.twoFactor,
+];
+
+/**
+ * Platform apex paths reachable without a platform super-user session.
+ * Setup/sign-in/console share `/`; tenant module URLs show the workspace gate.
+ */
+export const PLATFORM_ENTRY_PATHS: readonly string[] = [
+  ROUTES.home,
+  ROUTES.login,
+  ROUTES.forgotPassword,
+  ROUTES.platformForgotPassword,
+  ROUTES.twoFactor,
+];
+
+/** Platform paths that require platform super-user authentication. */
+export const PLATFORM_PROTECTED_PATHS: readonly string[] = [
   ROUTES.onboarding,
+  ROUTES.platformAccount,
 ];
 
 /**
  * Pre-authenticated entry routes — always English/LTR regardless of saved global language.
- * Includes apex marketing home (`/` on apex host only).
+ * Tenant: login, forgot, 2FA. Apex: {@link PLATFORM_ENTRY_PATHS} plus workspace gate URLs.
  */
 export const ENTRY_PATHS: readonly string[] = [
   ROUTES.login,
   ROUTES.forgotPassword,
   ROUTES.platformForgotPassword,
   ROUTES.twoFactor,
-  ROUTES.onboarding,
 ];
+
+/** True when pathname is an apex workspace-picker gate (tenant module URL on platform host). */
+export function isPlatformWorkspaceGatePath(pathname: string): boolean {
+  if (pathname === ROUTES.settings || pathname.startsWith(`${ROUTES.settings}/`)) {
+    return true;
+  }
+  return isTenantAppPath(pathname);
+}
+
+/** True when unauthenticated users may view this path on the platform apex host. */
+export function isPlatformEntryPath(pathname: string): boolean {
+  if (
+    PLATFORM_ENTRY_PATHS.some(
+      (path) => pathname === path || (path !== ROUTES.home && pathname.startsWith(`${path}/`)),
+    )
+  ) {
+    return true;
+  }
+  return isPlatformWorkspaceGatePath(pathname);
+}
+
+export function isPlatformProtectedPath(pathname: string): boolean {
+  return PLATFORM_PROTECTED_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
+}
 
 export function isEntryPath(
   pathname: string,
   options?: { isApex?: boolean }
 ): boolean {
+  if (options?.isApex) {
+    return isPlatformEntryPath(pathname);
+  }
   if (
     ENTRY_PATHS.some(
       (path) => pathname === path || pathname.startsWith(`${path}/`)
@@ -59,7 +104,7 @@ export function isEntryPath(
   ) {
     return true;
   }
-  if (options?.isApex && pathname === ROUTES.home) {
+  if (pathname === ROUTES.onboarding) {
     return true;
   }
   return false;
