@@ -3,6 +3,7 @@ import type { Contact } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
+import { CONTACTS } from '@/lib/data/contactsData';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 
 export const CONTACTS_QUERY_KEY = ['contacts', 'list'] as const;
@@ -14,12 +15,13 @@ async function fetchContacts(): Promise<Contact[]> {
   return body.contacts;
 }
 
-export function useContacts() {
+export function useContacts(options?: { enabled?: boolean }) {
+  const queryEnabled = options?.enabled ?? true;
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: CONTACTS_QUERY_KEY,
     queryFn: fetchContacts,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && queryEnabled,
     staleTime: 30_000,
   });
 }
@@ -59,9 +61,11 @@ export function useContactMutations() {
 }
 
 /** Query-first contacts; falls back to localStorage cache. */
-export function useContactsCollection(): Contact[] {
-  const { data: fromQuery = [] } = useContacts();
-  const fromLocal = useLiveCollection<Contact>('contacts');
+export function useContactsCollection(options?: { enabled?: boolean }): Contact[] {
+  const enabled = options?.enabled ?? true;
+  const { data: fromQuery = [] } = useContacts({ enabled });
+  const fromLocal = useLiveCollection<Contact>('contacts', CONTACTS, { enabled });
+  if (!enabled) return [];
   if (fromQuery.length > 0) {
     return fromQuery;
   }

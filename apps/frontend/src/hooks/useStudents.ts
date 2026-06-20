@@ -6,6 +6,7 @@ import { getCollection, saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { STUDENT_COUNT_QUERY_KEY } from './useStudentCount';
 import type { Student } from '@/lib/data/studentsData';
+import { STUDENTS } from '@/lib/data/studentsData';
 
 export const STUDENTS_QUERY_KEY = ['students', 'list'] as const;
 
@@ -20,12 +21,13 @@ async function fetchStudents(): Promise<StudentRecord[]> {
   return getCollection<StudentRecord>('students', []);
 }
 
-export function useStudents() {
+export function useStudents(options?: { enabled?: boolean }) {
+  const queryEnabled = options?.enabled ?? true;
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: STUDENTS_QUERY_KEY,
     queryFn: fetchStudents,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && queryEnabled,
     staleTime: 30_000,
   });
 }
@@ -70,9 +72,11 @@ export function useStudentMutations() {
 }
 
 /** Query-first students for analytics; falls back to localStorage cache (hydrated). */
-export function useStudentsCollection(): Student[] {
-  const { data: fromQuery = [] } = useStudents();
-  const fromLocal = useLiveCollection<Student>('students');
+export function useStudentsCollection(options?: { enabled?: boolean }): Student[] {
+  const enabled = options?.enabled ?? true;
+  const { data: fromQuery = [] } = useStudents({ enabled });
+  const fromLocal = useLiveCollection<Student>('students', STUDENTS, { enabled });
+  if (!enabled) return [];
   if (fromQuery.length > 0) {
     return fromQuery as unknown as Student[];
   }

@@ -14,12 +14,13 @@ async function fetchAttendanceRecords(): Promise<AttendanceRecord[]> {
   return getCollection<AttendanceRecord>('attendance_records', []);
 }
 
-export function useAttendanceRecords() {
+export function useAttendanceRecords(options?: { enabled?: boolean }) {
+  const queryEnabled = options?.enabled ?? true;
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: ATTENDANCE_QUERY_KEY,
     queryFn: fetchAttendanceRecords,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && queryEnabled,
     staleTime: 15_000,
   });
 }
@@ -70,9 +71,11 @@ export function useAttendanceMutations() {
 }
 
 /** Query-first attendance; falls back to localStorage cache (hydrated). */
-export function useAttendanceRecordsCollection(): AttendanceRecord[] {
-  const { data: fromQuery = [] } = useAttendanceRecords();
-  const fromLocal = useLiveCollection<AttendanceRecord>('attendance_records', ATTENDANCE_RECORDS);
+export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {
+  const enabled = options?.enabled ?? true;
+  const { data: fromQuery = [] } = useAttendanceRecords({ enabled });
+  const fromLocal = useLiveCollection<AttendanceRecord>('attendance_records', ATTENDANCE_RECORDS, { enabled });
+  if (!enabled) return [];
   if (fromQuery.length > 0) {
     return fromQuery;
   }

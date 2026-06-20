@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Teacher } from '@mms/shared';
 import { normalizeStoredTeacher } from '@mms/shared';
+import { TEACHERS } from '@/lib/data/teachersData';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
@@ -20,12 +21,13 @@ async function fetchTeachers(): Promise<TeacherRecord[]> {
   return getCollection<TeacherRecord>('teachers', []);
 }
 
-export function useTeachers() {
+export function useTeachers(options?: { enabled?: boolean }) {
+  const queryEnabled = options?.enabled ?? true;
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: TEACHERS_QUERY_KEY,
     queryFn: fetchTeachers,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && queryEnabled,
     staleTime: 30_000,
   });
 }
@@ -70,9 +72,11 @@ export function useTeacherMutations() {
 }
 
 /** Query-first teachers for analytics; falls back to localStorage cache (hydrated). */
-export function useTeachersCollection(): Teacher[] {
-  const { data: fromQuery = [] } = useTeachers();
-  const fromLocal = useLiveCollection<Teacher>('teachers');
+export function useTeachersCollection(options?: { enabled?: boolean }): Teacher[] {
+  const enabled = options?.enabled ?? true;
+  const { data: fromQuery = [] } = useTeachers({ enabled });
+  const fromLocal = useLiveCollection<Teacher>('teachers', TEACHERS, { enabled });
+  if (!enabled) return [];
   if (fromQuery.length > 0) {
     return fromQuery as unknown as Teacher[];
   }

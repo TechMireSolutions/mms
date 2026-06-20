@@ -14,24 +14,33 @@ import { getCollection } from "../lib/db";
 export function useLiveCollection<T = any>(
   dbKey: string,
   defaultData: T[] = [] as T[],
+  options?: { enabled?: boolean },
 ): T[] {
+  const enabled = options?.enabled ?? true;
   const defaultDataRef = useRef(defaultData);
   defaultDataRef.current = defaultData;
 
   const [data, setData] = useState<T[]>(() =>
-    getCollection<T>(dbKey, defaultDataRef.current)
+    enabled ? getCollection<T>(dbKey, defaultDataRef.current) : ([] as T[]),
   );
 
   useEffect(() => {
+    if (!enabled) {
+      setData([] as T[]);
+      return;
+    }
+
     const handleUpdate = (): void => {
       setData(getCollection<T>(dbKey, defaultDataRef.current));
     };
 
+    handleUpdate();
     window.addEventListener("local-database-update", handleUpdate);
     return () => {
       window.removeEventListener("local-database-update", handleUpdate);
     };
-  }, [dbKey]);
+  }, [dbKey, enabled]);
 
+  if (!enabled) return [] as T[];
   return data;
 }

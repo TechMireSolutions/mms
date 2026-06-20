@@ -1,3 +1,4 @@
+import type { AppTranslationKey } from '@mms/shared';
 import React from "react";
 import {
   GraduationCap, CalendarCheck, BookOpen, UserCheck, DollarSign, AlertCircle, Star, TrendingUp, Receipt,
@@ -9,6 +10,8 @@ import type { CustomCard } from "../reportMetadata";
 export interface CustomWidget {
   id: string;
   title: string;
+  /** When set, dashboard/report UI uses `t(titleKey)` instead of `title`. */
+  titleKey?: AppTranslationKey;
   category: string;
   collection: CustomCard["collection"];
   

@@ -7,6 +7,7 @@ import {
   Award, Clock, Heart, Briefcase, Activity, CheckCircle2, PieChart,
   Zap, BarChart2
 } from "lucide-react";
+import useTranslation from "@/hooks/useTranslation";
 
 const ICONS: Record<string, React.ElementType> = {
   GraduationCap, CalendarCheck, BookOpen, UserCheck, DollarSign, AlertCircle, Star, TrendingUp, Receipt,
@@ -47,15 +48,6 @@ interface StatsGridProps {
   onAddCardClick?: () => void;
 }
 
-/**
- * StatsGrid Component
- *
- * Displays a responsive grid of statistic cards.
- * Enforces strict semantic layout hierarchy, aspect ratios, action limits, and text truncation.
- *
- * @param {StatsGridProps} props - Component properties containing stat data and configuration options.
- * @returns {React.ReactElement} The grid of statistics.
- */
 export default function StatsGrid({
   stats,
   customCardIds = [],
@@ -63,9 +55,11 @@ export default function StatsGrid({
   onEditCustomCard,
   isEditMode = false,
   onAddCardClick
-}: StatsGridProps) {
+}: StatsGridProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
-    <section aria-label="Dashboard Statistics" className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 font-sans">
+    <section aria-label={t("dashboard.statsSectionLabel")} className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 font-sans">
       {stats.map((stat, i) => {
         const Icon = ICONS[stat.icon] || DollarSign;
         const c = COLOR_MAP[stat.color] || COLOR_MAP.emerald;
@@ -80,22 +74,25 @@ export default function StatsGrid({
             transition={{ delay: i * 0.05, duration: 0.35, ease: "easeOut" }}
             className="bg-card rounded-xl border border-border p-4 md:p-5 hover:shadow-md hover:shadow-black/[0.04] transition-all duration-300 group relative text-left flex flex-col justify-between"
           >
-            {/* Header Zone: Icon container and Actions */}
             <header className="flex items-start justify-between mb-3 select-none">
-              {/* Aspect Ratio Constraint on Icon Container */}
-              <div 
-                className={`w-9 h-9 rounded-lg ${c.bg} ring-4 ${c.ring} flex items-center justify-center aspect-square flex-shrink-0`} 
+              <div
+                className={`w-9 h-9 rounded-lg ${c.bg} ring-4 ${c.ring} flex items-center justify-center aspect-square flex-shrink-0`}
                 aria-hidden="true"
               >
                 <Icon className={`w-4.5 h-4.5 ${c.text}`} style={{ width: 18, height: 18 }} />
               </div>
 
-              {/* Action Zone Limits: Restrict to max 2 primary actions */}
               <div className="flex items-center gap-1">
                 {stat.trend !== 0 && !isEditMode && (
-                  <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
-                    isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
-                  }`} aria-label={`Trend ${isPositive ? 'up' : 'down'} ${Math.abs(stat.trend)} percent`}>
+                  <span
+                    className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
+                      isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+                    }`}
+                    aria-label={t("dashboard.trendAria", {
+                      direction: isPositive ? t("dashboard.trendUp") : t("dashboard.trendDown"),
+                      value: Math.abs(stat.trend),
+                    })}
+                  >
                     {isPositive ? "+" : ""}{stat.trend}%
                   </span>
                 )}
@@ -108,7 +105,7 @@ export default function StatsGrid({
                           onEditCustomCard(stat.id);
                         }}
                         className="p-1 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all cursor-pointer border border-transparent hover:border-primary/10"
-                        title="Edit card configuration"
+                        title={t("dashboard.editCardConfig")}
                         type="button"
                       >
                         <Pencil className="w-3.5 h-3.5" />
@@ -121,7 +118,7 @@ export default function StatsGrid({
                           onDeleteCustomCard(stat.id);
                         }}
                         className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all cursor-pointer border border-transparent hover:border-destructive/10"
-                        title="Delete custom card"
+                        title={t("dashboard.deleteCard")}
                         type="button"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -132,7 +129,6 @@ export default function StatsGrid({
               </div>
             </header>
 
-            {/* Body Zone: Information metrics with strict text truncation */}
             <main className="space-y-0.5 flex-1 min-w-0">
               <p className="text-[22px] font-black text-foreground tracking-tight leading-none m-0 truncate">
                 {stat.value}
@@ -142,7 +138,6 @@ export default function StatsGrid({
               </h4>
             </main>
 
-            {/* Footer Zone: Metadata and subtitle logs */}
             <footer className="text-[11px] text-muted-foreground mt-2.5 border-t border-border/30 pt-2 m-0 truncate">
               {stat.sub}
             </footer>
@@ -150,7 +145,7 @@ export default function StatsGrid({
         );
       })}
 
-      {onAddCardClick && (
+      {isEditMode && onAddCardClick && (
         <motion.button
           onClick={onAddCardClick}
           initial={{ opacity: 0, y: 16 }}
@@ -163,7 +158,7 @@ export default function StatsGrid({
             <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
           <span className="text-xs font-bold group-hover:text-primary transition-colors">
-            {isEditMode ? "Exit Customization" : "Customize Cards"}
+            {t("dashboard.addMetricCard")}
           </span>
         </motion.button>
       )}

@@ -18,12 +18,13 @@ async function fetchSessions(): Promise<SessionRecord[]> {
   return getCollection<SessionRecord>('sessions', []);
 }
 
-export function useSessions() {
+export function useSessions(options?: { enabled?: boolean }) {
+  const queryEnabled = options?.enabled ?? true;
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: SESSIONS_QUERY_KEY,
     queryFn: fetchSessions,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && queryEnabled,
     staleTime: 30_000,
   });
 }
@@ -62,9 +63,11 @@ export function useSessionMutations() {
 }
 
 /** Query-first sessions; falls back to localStorage cache (hydrated). */
-export function useSessionsCollection(): Session[] {
-  const { data: fromQuery = [] } = useSessions();
-  const fromLocal = useLiveCollection<Session>('sessions', SESSIONS_DATA);
+export function useSessionsCollection(options?: { enabled?: boolean }): Session[] {
+  const enabled = options?.enabled ?? true;
+  const { data: fromQuery = [] } = useSessions({ enabled });
+  const fromLocal = useLiveCollection<Session>('sessions', SESSIONS_DATA, { enabled });
+  if (!enabled) return [];
   if (fromQuery.length > 0) {
     return fromQuery as Session[];
   }

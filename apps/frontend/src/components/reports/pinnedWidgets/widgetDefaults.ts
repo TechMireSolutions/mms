@@ -1,4 +1,11 @@
 import type { CustomWidget } from "./types";
+import { DEFAULT_WIDGET_TITLE_KEYS } from "@/lib/dashboardWidgets";
+import { DASHBOARD_WIDGETS_KEY } from "@/lib/dashboardPreferences";
+
+function withDefaultTitleKey(widget: CustomWidget): CustomWidget {
+  const titleKey = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
+  return titleKey ? { ...widget, titleKey } : widget;
+}
 
 export function getDefaultCustomWidgets(category: string): CustomWidget[] {
   const defaults: Record<string, CustomWidget[]> = {
@@ -532,30 +539,36 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
  */
 export function getOrInitializeCustomWidgets(): CustomWidget[] {
   try {
-    const saved = localStorage.getItem("kpi_custom_widgets");
+    const saved = localStorage.getItem(DASHBOARD_WIDGETS_KEY);
     const defaults = [
       ...getDefaultCustomWidgets("contacts"),
       ...getDefaultCustomWidgets("students"),
       ...getDefaultCustomWidgets("financial"),
       ...getDefaultCustomWidgets("hasanat"),
-      ...getDefaultCustomWidgets("sessions")
-    ];
+      ...getDefaultCustomWidgets("sessions"),
+    ].map(withDefaultTitleKey);
     if (!saved) {
-      localStorage.setItem("kpi_custom_widgets", JSON.stringify(defaults));
+      localStorage.setItem(DASHBOARD_WIDGETS_KEY, JSON.stringify(defaults));
       return defaults;
     }
-    const parsed = JSON.parse(saved) as CustomWidget[];
+    const parsed = (JSON.parse(saved) as CustomWidget[]).map(withDefaultTitleKey);
     let modified = false;
-    const existingIds = new Set(parsed.map(w => w.id));
+    const existingIds = new Set(parsed.map((w) => w.id));
     const merged = [...parsed];
     for (const def of defaults) {
       if (!existingIds.has(def.id)) {
         merged.push(def);
         modified = true;
+      } else {
+        const idx = merged.findIndex((w) => w.id === def.id);
+        if (idx >= 0 && def.titleKey && !merged[idx].titleKey) {
+          merged[idx] = { ...merged[idx], titleKey: def.titleKey };
+          modified = true;
+        }
       }
     }
     if (modified) {
-      localStorage.setItem("kpi_custom_widgets", JSON.stringify(merged));
+      localStorage.setItem(DASHBOARD_WIDGETS_KEY, JSON.stringify(merged));
     }
     return merged;
   } catch (e) {
