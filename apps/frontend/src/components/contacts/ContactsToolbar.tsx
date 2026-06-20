@@ -65,7 +65,7 @@ export default function ContactsToolbar({
  
   return (
     <div className="flex flex-col sm:flex-row gap-2">
-      {/* Search */}
+      
       <div className="relative flex-1">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         <input
@@ -87,7 +87,7 @@ export default function ContactsToolbar({
       </div>
  
       <div className="flex items-center gap-2 flex-shrink-0">
-        {/* Filters + Sort */}
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -134,7 +134,7 @@ export default function ContactsToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Clear filters */}
+        
         {hasActiveFilters && (
           <button
             type="button"
@@ -146,7 +146,7 @@ export default function ContactsToolbar({
           </button>
         )}
 
-        {/* Column customizer */}
+        
         <ColumnCustomizer />
       </div>
     </div>

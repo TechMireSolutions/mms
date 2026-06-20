@@ -20,8 +20,6 @@ function GenderIcon({ gender }: { gender?: string }): React.JSX.Element | null {
   if (g === "female") return <Venus className="w-3.5 h-3.5 text-muted-foreground inline" />;
   return <User className="w-3.5 h-3.5 text-muted-foreground inline" />;
 }
-
-// Drawer only loads when a contact is actually clicked
 const ContactDetailDrawer = lazy(() => import("./ContactDetailDrawer"));
 
 import ContactAvatar from "./ContactAvatar";
@@ -327,8 +325,6 @@ export default function ContactsTable({
         return <td key={col.id} className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{formatCellValue(c[col.id], uiStrings)}</span></td>;
     }
   };
-
-  // Only columns that are actually sortable
   const COL_SORT_FIELD: Record<string, string> = {
     name: "name",
     isSyed: "isSyed",

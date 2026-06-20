@@ -5,16 +5,13 @@ import {
   FieldConfig, ContactPreferences, TabDefinition,
   CONFIG_VERSION, DEFAULT_UI_STRINGS,
   FieldDefinition, toTitleCase as sharedToTitleCase,
-  isModuleTierTabId, type AppTranslationKey,
 } from "@mms/shared";
-import useTranslation from "@/hooks/useTranslation";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/ContactDraggableFieldList";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 const toTitleCase = (str: string): string => sharedToTitleCase(str) as string;
-
 
 interface ToggleProps {
   label: string;
@@ -85,7 +82,6 @@ interface ContactPrefs extends ContactPreferences {
  * @returns React element.
  */
 export default function ContactsSettingsPanel({ config, onConfigChange, mode }: ContactsSettingsPanelProps): React.JSX.Element {
-  const { t } = useTranslation();
   const { updatePrefs } = useContactConfig();
 
   const [enabledTabs, setEnabledTabs] = useState<Set<string>>(() => new Set(config.enabledTabs || DEFAULT_ENABLED_TABS));
@@ -141,32 +137,10 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
     }
   });
 
-  const [localPageTabs, setLocalPageTabs] = useState<TabDefinition[]>(() => config.pageTabs || []);
   const [localUiStrings, setLocalUiStrings] = useState<Record<string, string>>(() => ({
     ...DEFAULT_UI_STRINGS,
     ...(config.uiStrings || {}),
   }));
-  const [localFormTabs, setLocalFormTabs] = useState<TabDefinition[]>(() => config.formTabs || []);
-  const [localDetailTabs, setLocalDetailTabs] = useState<TabDefinition[]>(() => config.detailTabs || []);
-  const [localSettingsSubTabs, setLocalSettingsSubTabs] = useState<TabDefinition[]>(() =>
-    (config.settingsSubTabs || []).filter((tab) => tab.key !== "uistrings"),
-  );
-
-  const updateTabProperty = (
-    tabType: "page" | "form" | "detail" | "settings",
-    tabId: string,
-    key: "label" | "enabled" | "order",
-    value: string | boolean | number
-  ) => {
-    const updateFn = (prev: TabDefinition[]) =>
-      prev.map((t) => (t.key === tabId ? { ...t, [key]: value } : t));
-    
-    if (tabType === "page") setLocalPageTabs(updateFn);
-    else if (tabType === "form") setLocalFormTabs(updateFn);
-    else if (tabType === "detail") setLocalDetailTabs(updateFn);
-    else if (tabType === "settings") setLocalSettingsSubTabs(updateFn);
-    setSaved(false);
-  };
 
   const [saved, setSaved] = useState<boolean>(false);
   const updPref = <K extends keyof ContactPrefs>(k: K, v: ContactPrefs[K]): void => {
@@ -244,8 +218,6 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
     setTabFieldOrder((prev) => ({ ...prev, [tabId]: reorderedFields.map((f) => f.key) }));
     setSaved(false);
   };
-
-  // When fields change via CustomFieldsBuilder (adding new field)
   const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
     const newKeys = newFields.map((f) => f.key);
     setTabFieldOrder((prev) => ({
@@ -314,10 +286,10 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
       enabledTabs: Array.from(enabledTabs),
       requiredTabs: Array.from(requiredTabs),
       fields: buildFieldsMap(),
-      pageTabs: applyTitleCaseToTabs(localPageTabs),
-      formTabs: applyTitleCaseToTabs(localFormTabs),
-      detailTabs: applyTitleCaseToTabs(localDetailTabs),
-      settingsSubTabs: applyTitleCaseToTabs(localSettingsSubTabs.filter((tab) => tab.key !== "uistrings")),
+      pageTabs: applyTitleCaseToTabs(config.pageTabs || []),
+      formTabs: applyTitleCaseToTabs(config.formTabs || []),
+      detailTabs: applyTitleCaseToTabs(config.detailTabs || []),
+      settingsSubTabs: applyTitleCaseToTabs((config.settingsSubTabs || []).filter((tab) => tab.key !== "uistrings")),
       uiStrings: localUiStrings,
     };
     onConfigChange(cfg);
@@ -339,74 +311,11 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
   const showFields = mode === "fields";
   const showPrefs = mode === "preferences";
 
-  const renderTabConfigList = (
-    tabs: TabDefinition[],
-    tabType: "page" | "form" | "detail" | "settings",
-    title: string,
-    description: string
-  ) => {
-    const sorted = [...tabs].sort((a, b) => a.order - b.order);
-    return (
-      <div className="space-y-3">
-        <div>
-          <p className="text-[13px] font-bold text-foreground">{title}</p>
-          <p className="text-[11px] text-muted-foreground">{description}</p>
-        </div>
-        <div className="border border-border rounded-xl divide-y divide-border bg-card">
-          {sorted.map((tab) => {
-            const tierLabel = tabType === "page" && tab.isSystem && isModuleTierTabId(tab.key)
-              ? t(`module.${tab.key}` as AppTranslationKey)
-              : null;
-            return (
-            <div key={tab.key} className="flex items-center gap-3 px-3 py-2 text-xs">
-              <div className="w-24 font-mono font-semibold text-muted-foreground truncate" title={tab.key}>
-                {tab.key}
-              </div>
-              {tierLabel ? (
-                <span className="flex-1 min-w-0 px-2 py-1 text-foreground text-xs font-medium">
-                  {tierLabel}
-                </span>
-              ) : (
-              <input
-                type="text"
-                value={tab.label}
-                onChange={(e) => updateTabProperty(tabType, tab.key, "label", e.target.value)}
-                className="flex-1 min-w-0 px-2 py-1 rounded border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="Tab Label"
-              />
-              )}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground">{localUiStrings.tabOrderLabel}</span>
-                <input
-                  type="number"
-                  value={tab.order}
-                  onChange={(e) => updateTabProperty(tabType, tab.key, "order", parseInt(e.target.value) || 0)}
-                  className="w-10 px-1 py-0.5 rounded border border-border bg-background text-foreground text-xs text-center focus:outline-none"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => updateTabProperty(tabType, tab.key, "enabled", !tab.enabled)}
-                className="relative flex items-center justify-center w-11 h-11 flex-shrink-0"
-                aria-label={`${localUiStrings?.toggleTab || "Toggle tab"} ${tab.key}`}
-              >
-                <div className="relative rounded-full transition-colors" style={{ width: 34, height: 18, backgroundColor: tab.enabled ? "hsl(var(--primary))" : "hsl(var(--border))" }}>
-                  <span style={{ width: 14, height: 14, top: 2, left: tab.enabled ? 18 : 2, position: "absolute", borderRadius: "50%", background: "white", transition: "left 0.2s" }} />
-                </div>
-              </button>
-            </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6 max-w-3xl text-left">
       {showFields && (
         <>
-          {/* Info */}
+          
           <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info">
             <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-info" />
             <div>
@@ -417,7 +326,7 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
             </div>
           </div>
 
-          {/* Contact Form Fields by Tab */}
+          
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Layout className="w-4 h-4 text-primary" />
@@ -429,7 +338,7 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
               </span>
             </div>
 
-            {/* ── All tabs from registry ── */}
+            
             {TAB_REGISTRY.map((tab) => {
               const tabId = tab.key;
               const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
@@ -526,7 +435,7 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
 
       {showPrefs && (
         <>
-          {/* General prefs */}
+          
           <section className="rounded-xl border border-border bg-card overflow-hidden">
             <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
               <Users className="w-4 h-4 text-primary" />
@@ -579,61 +488,11 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
                 onChange={(v) => updPref("showWhatsApp", v)}
                 ariaLabel={`${localUiStrings.toggleOption} ${localUiStrings.showWhatsAppActionsLabel}`}
               />
-              <div className="py-3 border-t border-border mt-3 flex items-center justify-between">
-                <div>
-                  <p className="text-[13px] font-semibold text-foreground">{localUiStrings.defaultViewLayout}</p>
-                  <p className="text-[11px] text-muted-foreground">{localUiStrings.defaultViewLayoutDescription}</p>
-                </div>
-                <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
-                  <button
-                    type="button"
-                    onClick={() => updPref("defaultViewLayout", "list")}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      (prefs.defaultViewLayout || "list") === "list"
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {localUiStrings.listViewLabel}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updPref("defaultViewLayout", "kanban")}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      prefs.defaultViewLayout === "kanban"
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {localUiStrings.kanbanBoardLabel}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Module Layout & Tabs */}
-          <section className="rounded-xl border border-border bg-card overflow-hidden">
-            <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
-              <Layout className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold text-foreground">{localUiStrings.moduleLayoutAndTabs}</span>
-            </div>
-            <div className="p-4 space-y-6">
-              <p className="text-xs text-muted-foreground">
-                {localUiStrings.moduleLayoutDescription}
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {renderTabConfigList(localPageTabs, "page", localUiStrings.pageTabsTitle, localUiStrings.pageTabsDescription)}
-                {renderTabConfigList(localFormTabs, "form", localUiStrings.formTabsTitle, localUiStrings.formTabsDescription)}
-                {renderTabConfigList(localDetailTabs, "detail", localUiStrings.detailTabsTitle, localUiStrings.detailTabsDescription)}
-                {renderTabConfigList(localSettingsSubTabs, "settings", localUiStrings.settingsSubTabsTitle, localUiStrings.settingsSubTabsDescription)}
-              </div>
             </div>
           </section>
         </>
       )}
 
-      {/* Save */}
       <div className="flex items-center gap-3 pt-2 border-t border-border sticky bottom-0 bg-background pb-2 flex-wrap">
         <button
           type="button"

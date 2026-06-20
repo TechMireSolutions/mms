@@ -13,8 +13,6 @@ export default function ColumnCustomizer(): React.JSX.Element {
   const { t } = useTranslation();
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
-
-  // Derive visible vs hidden from registry directly
   const visibleColumns = useMemo(() => {
     return [...columnRegistry].filter(c => c.enabled).sort((a, b) => a.order - b.order);
   }, [columnRegistry]);
@@ -51,8 +49,6 @@ export default function ColumnCustomizer(): React.JSX.Element {
       setDragOver(null);
       return;
     }
-    
-    // We only reorder visible columns relative to each other
     const visibleIds = visibleColumns.map(c => c.key);
     const fromIdx = visibleIds.indexOf(dragging);
     const toIdx = visibleIds.indexOf(targetId);
@@ -61,8 +57,6 @@ export default function ColumnCustomizer(): React.JSX.Element {
       const newVisibleIds = [...visibleIds];
       const [moved] = newVisibleIds.splice(fromIdx, 1);
       newVisibleIds.splice(toIdx, 0, moved);
-      
-      // Update the registry orders
       const updated = columnRegistry.map(c => {
         const orderIdx = newVisibleIds.indexOf(c.key);
         if (orderIdx !== -1) {
@@ -92,7 +86,7 @@ export default function ColumnCustomizer(): React.JSX.Element {
           <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">{t("contacts.columns")}</h4>
         </div>
 
-        {/* Active columns — draggable */}
+        
         <div className="space-y-1">
           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">{t("contacts.visibleAndOrder")}</span>
           {visibleColumns.map((col) => (
@@ -128,7 +122,7 @@ export default function ColumnCustomizer(): React.JSX.Element {
           ))}
         </div>
 
-        {/* Hidden columns */}
+        
         {hiddenColumns.length > 0 && (
           <div className="space-y-1 pt-1 border-t border-border">
             <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">{t("contacts.hidden")}</span>

@@ -13,7 +13,6 @@ import { formatDate } from "@mms/shared";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 
-
 const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
   overview: LayoutDashboard,
   timeline: History,
@@ -36,8 +35,6 @@ const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
 };
 
 import ContactAvatar from "./ContactAvatar";
-
-
 
 interface ContactDetailDrawerProps {
   contact: Contact;
@@ -66,8 +63,6 @@ export default function ContactDetailDrawer({
   const { enabledTabIds, isTabFieldEnabled, fieldConfig, lifecycleColors, uiStrings, fields } = useContactConfig();
   const { user } = useAuth();
   useBodyScrollLock();
-
-  // Local contact state to support switching dynamically via relationship links
   const [c, setC] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
   
@@ -120,8 +115,6 @@ export default function ContactDetailDrawer({
       c[f.key] !== undefined && c[f.key] !== null && c[f.key] !== "" && c[f.key] !== false &&
       !(Array.isArray(c[f.key]) && (c[f.key] as unknown[]).length === 0)
   );
-
-  // Group by field group
   const grouped = fieldsToRender.reduce<Record<string, typeof fieldsToRender>>((acc, f) => {
     const g = f.group || uiStrings?.otherGroup;
     if (!acc[g]) acc[g] = [];
@@ -194,7 +187,7 @@ export default function ContactDetailDrawer({
         className="relative w-full max-w-sm h-full bg-card border-l border-border shadow-2xl flex flex-col z-10"
         aria-label={uiStrings.contactDetails}
       >
-        {/* Header */}
+        
         <div className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 px-5 pt-4 border-b border-border space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -236,7 +229,7 @@ export default function ContactDetailDrawer({
             </div>
           </div>
 
-          {/* Nav Tabs */}
+          
           <div className="flex gap-1">
             {detailTabs.map((t: { key: string; label: string; icon: LucideIcon | typeof Tag }) => {
               const Icon = t.icon;
@@ -269,7 +262,7 @@ export default function ContactDetailDrawer({
             >
               {activeTab === "overview" && (
                 <>
-                  {/* Hero */}
+                  
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50">
                     <ContactAvatar contact={c} uiStrings={uiStrings} className="w-16 h-16 rounded-2xl text-2xl" />
                     <div className="flex-1 min-w-0">
@@ -297,7 +290,7 @@ export default function ContactDetailDrawer({
                     </div>
                   </div>
 
-                  {/* AI Insights */}
+                  
                   <div className="space-y-2">
                     <div className="flex items-center gap-1.5 text-primary">
                        <BrainCircuit className="w-3.5 h-3.5" />
@@ -308,7 +301,7 @@ export default function ContactDetailDrawer({
                     </div>
                   </div>
 
-                  {/* Quick Actions */}
+                  
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {enabledTabIds.has("phones") && (
                       <button
@@ -353,7 +346,7 @@ export default function ContactDetailDrawer({
                     )}
                   </div>
 
-                  {/* Identity Grid */}
+                  
                   <div className="space-y-4">
                     {Object.entries(grouped).filter(([_, fields]) => fields.some(f => f.tab === "basic" || !["timeline", "network", "files"].includes(f.tab))).map(([group, fields]) => (
                       <div key={group} className="space-y-2">
@@ -379,7 +372,7 @@ export default function ContactDetailDrawer({
                       </div>
                     ))}
 
-                    {/* Dynamic List Sections (Phones, Emails, Addresses, Socials, Emergency) */}
+                    
                     {enabledTabIds.has("phones") && c.phones && c.phones.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
@@ -721,7 +714,7 @@ export default function ContactDetailDrawer({
                 </div>
               )}
 
-              {/* Fallback for custom tabs */}
+              
               {!["overview", "timeline", "network", "files"].includes(activeTab) && (
                  <div className="space-y-4">
                     {Object.entries(grouped)
@@ -755,7 +748,7 @@ export default function ContactDetailDrawer({
           </AnimatePresence>
         </div>
 
-        {/* Footer Meta */}
+        
         <div className="px-5 py-4 border-t border-border bg-muted/10 flex items-center justify-between">
            <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
               <Clock className="w-3 h-3" />

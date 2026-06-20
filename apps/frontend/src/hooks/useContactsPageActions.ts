@@ -77,34 +77,6 @@ export function useContactsPageActions() {
     [upsertContact, t, saveFailed],
   );
 
-  const updateStage = useCallback(
-    async (contact: Contact, newStage: string, activityContent: string): Promise<void> => {
-      const updated: Contact = {
-        ...contact,
-        lifecycleStage: newStage,
-        activities: [
-          {
-            id: `act-${Date.now()}`,
-            type: 'stage_change',
-            content: activityContent,
-            date: new Date().toISOString().slice(0, 10),
-            by: 'System',
-          },
-          ...(contact.activities || []),
-        ],
-      };
-      try {
-        await updateContact.mutateAsync({ id: String(contact.id), contact: updated });
-        notify.success(t('contacts.stageUpdatedTitle'), {
-          description: t('contacts.stageUpdatedDesc', { stage: newStage }),
-        });
-      } catch {
-        saveFailed();
-      }
-    },
-    [updateContact, t, saveFailed],
-  );
-
   const isMutating =
     upsertContact.isPending || updateContact.isPending || deleteContact.isPending;
 
@@ -113,7 +85,6 @@ export function useContactsPageActions() {
     removeContact,
     mergeContacts,
     importContacts,
-    updateStage,
     updateContact,
     isMutating,
   };

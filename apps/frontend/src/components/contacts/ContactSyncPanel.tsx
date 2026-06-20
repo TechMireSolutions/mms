@@ -10,9 +10,6 @@ import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { normalizeToE164, parsePhoneNumber, Contact } from "@mms/shared";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
-
-// ── vCard helpers ──────────────────────────────────────────────────────────────
-
 /**
  * Parses a raw vCard (.vcf) formatted string into an array of normalized contact objects.
  * @param text The raw vCard content.
@@ -90,8 +87,6 @@ function toVCard(contact: Contact): string {
   lines.push("END:VCARD");
   return lines.join("\r\n");
 }
-
-// ── Google Contacts OAuth Setup Panel ─────────────────────────────────────────
 
 const GOOGLE_STORAGE_KEY = "mms_google_contacts_config";
 
@@ -183,8 +178,6 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
 
   const isConfigured = !!(config.clientId && config.clientSecret);
   const isConnected = !!config.accessToken;
-
-  // Step 1: Save credentials
   const handleSaveCredentials = (): void => {
     if (!form.clientId.trim() || !form.clientSecret.trim()) {
       setError(uiStrings.clientIdRequiredMsg || "Both Client ID and Client Secret are required.");
@@ -196,8 +189,6 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
     setShowSetup(false);
     setError("");
   };
-
-  // Step 2: Open Google OAuth consent screen
   const handleConnect = (): void => {
     if (!config.clientId) return;
     const redirectUri = window.location.origin + "/contacts";
@@ -207,12 +198,9 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
       redirectUri
     )}&response_type=code&scope=${scope}&access_type=offline&state=${state}&prompt=consent`;
     window.open(url, "_blank", "width=500,height=600");
-    // Inform user to paste the auth code
     setError(uiStrings.oauthRedirectInstruction || "After authorizing, Google will redirect to your app. Copy the 'code' parameter from the URL and paste it below.");
     setShowAuthCode(true);
   };
-
-  // Step 3: Exchange auth code for access token (via backend/OAuth API)
   const handleExchangeCode = async (): Promise<void> => {
     if (!authCode.trim() || !config.clientId || !config.clientSecret) return;
     setExchanging(true);
@@ -242,8 +230,6 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
       setExchanging(false);
     }
   };
-
-  // Step 4: Fetch contacts from Google People API
   const handleSync = async (): Promise<void> => {
     if (!config.accessToken) return;
     setSyncing(true);
@@ -258,7 +244,6 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
         }`;
         const res = await fetch(url, { headers: { Authorization: `Bearer ${config.accessToken}` } });
         if (res.status === 401) {
-          // Token expired
           const cfg = { ...config };
           delete cfg.accessToken;
           delete cfg.refreshToken;
@@ -339,7 +324,7 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
 
   return (
     <section className="rounded-xl border border-border bg-card overflow-hidden">
-      {/* Header */}
+      
       <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
@@ -364,7 +349,7 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
       </div>
 
       <div className="p-4 space-y-4 text-left">
-        {/* Setup instructions */}
+        
         {!isConfigured && !showSetup && (
           <div className="flex items-start gap-3 p-3 rounded-xl bg-warning/10 border border-warning/30 text-xs text-warning">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-warning" />
@@ -375,7 +360,7 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
           </div>
         )}
 
-        {/* Credentials form */}
+        
         {showSetup && (
           <div className="space-y-3 p-3 rounded-xl bg-muted/30 border border-border">
             <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">{uiStrings.googleOauthCredentialsHeader}</h4>
@@ -427,7 +412,7 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
           </div>
         )}
 
-        {/* Connect / Auth code exchange */}
+        
         {isConfigured && !isConnected && !showSetup && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">{uiStrings.googleCredentialsSavedMsg}</p>
@@ -473,7 +458,7 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
           </div>
         )}
 
-        {/* Connected state — sync */}
+        
         {isConnected && (
           <div className="space-y-3">
             <div className="flex items-center gap-2 p-3 rounded-xl bg-success/10 border border-success/30 text-success">
@@ -602,7 +587,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
         <span className="text-[10px] text-muted-foreground">{uiStrings.vcardLabel || "(vCard / .vcf)"}</span>
       </div>
       <div className="p-4 space-y-4 text-left">
-        {/* How to export */}
+        
         <div className="rounded-lg bg-muted/30 border border-border p-3 text-xs text-muted-foreground space-y-1">
           <p className="font-semibold text-foreground">{uiStrings.howToExportAppleTitle || "How to export from Apple Contacts:"}</p>
           <ol className="list-decimal list-inside space-y-0.5">
@@ -613,7 +598,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
           </ol>
         </div>
 
-        {/* Upload */}
+        
         <input ref={fileRef} type="file" accept=".vcf,text/vcard" className="hidden" onChange={handleFile} />
         {previewList.length === 0 && !result && (
           <button
@@ -696,7 +681,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
           </div>
         )}
 
-        {/* Export */}
+        
         <div className="border-t border-border pt-3 flex items-center justify-between">
           <span className="text-xs text-muted-foreground">{uiStrings.exportAppleInstructions || "Export contacts to import into Apple Contacts"}</span>
           <button
@@ -729,7 +714,7 @@ export default function ContactSyncPanel({ contacts = [], onImport, canWrite = t
   const { uiStrings } = useContactConfig();
   return (
     <div className="space-y-5 max-w-3xl text-left">
-      {/* Info */}
+      
       <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info">
         <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-info" />
         <div>

@@ -34,40 +34,29 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
 
   const SIZE = 280; // canvas display size (px)
   const RADIUS = SIZE / 2;
-
-  // Load image element once
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
       setImgEl(img);
-      // Start at a scale that fills the circle
       const fit = Math.max(SIZE / img.naturalWidth, SIZE / img.naturalHeight);
       setScale(fit);
     };
     img.src = src;
   }, [src]);
-
-  // Redraw canvas whenever params change
   useEffect(() => {
     if (!imgEl || !canvasRef.current) return;
     const ctx = canvasRef.current.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, SIZE, SIZE);
-
-    // Clip to circle
     ctx.save();
     ctx.beginPath();
     ctx.arc(RADIUS, RADIUS, RADIUS, 0, Math.PI * 2);
     ctx.clip();
-
-    // Draw image with transform
     ctx.translate(RADIUS + offset.x, RADIUS + offset.y);
     ctx.rotate((rotation * Math.PI) / 180);
     ctx.scale(scale, scale);
     ctx.drawImage(imgEl, -imgEl.naturalWidth / 2, -imgEl.naturalHeight / 2);
     ctx.restore();
-
-    // Overlay ring
     ctx.save();
     ctx.strokeStyle = "rgba(255,255,255,0.9)";
     ctx.lineWidth = 3;
@@ -75,8 +64,6 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
     ctx.arc(RADIUS, RADIUS, RADIUS - 2, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
-
-    // Dim outside circle
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.45)";
     ctx.fillRect(0, 0, SIZE, SIZE);
@@ -86,8 +73,6 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
     ctx.fill();
     ctx.restore();
   }, [imgEl, scale, rotation, offset]);
-
-  // Drag handlers
   const onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>): void => {
     setDragging(true);
     setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
@@ -104,8 +89,6 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
   const onMouseUp = (): void => {
     setDragging(false);
   };
-
-  // Touch
   const onTouchStart = (e: React.TouchEvent<HTMLCanvasElement>): void => {
     const t = e.touches[0];
     setDragging(true);
@@ -159,7 +142,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
         exit={{ opacity: 0, scale: 0.95 }}
         className="relative bg-card rounded-2xl border border-border shadow-2xl z-10 w-full max-w-sm overflow-hidden"
       >
-        {/* Header */}
+        
         <div className="flex items-center justify-between px-5 py-4 border-b border-border text-left">
           <div>
             <h3 className="text-sm font-bold text-foreground">{uiStrings?.cropProfilePhoto || "Crop Profile Photo"}</h3>
@@ -175,7 +158,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
           </button>
         </div>
 
-        {/* Canvas */}
+        
         <div className="flex items-center justify-center bg-neutral-900 py-6">
           <canvas
             ref={canvasRef}
@@ -201,9 +184,9 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
           />
         </div>
 
-        {/* Controls */}
+        
         <div className="px-5 py-3 border-t border-border space-y-3">
-          {/* Zoom */}
+          
           <div className="flex items-center gap-3">
             <ZoomOut className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             <input
@@ -218,7 +201,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
             />
             <ZoomIn className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </div>
-          {/* Rotate + actions */}
+          
           <div className="flex items-center gap-2">
             <button
               type="button"

@@ -10,20 +10,12 @@ import AvatarCropper from "../AvatarCropper";
 import FormSelect from "../../ui/FormSelect";
 import useTranslation from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "../../ui/formStyles";
-
-// ── Shared style constants (re-export for contact form tabs) ─────────────────
 export const INPUT = FORM_INPUT;
 export const SELECT = FORM_SELECT;
 export const LABEL = FORM_LABEL;
-
-// Collection (repeatable) card chrome — one source of truth so every tab matches.
 export const COLLECTION_CARD = "rounded-xl border border-border bg-muted/20 p-3 space-y-3";
-// Body fields render full-width single-column so every text box is the same width.
 export const COLLECTION_BODY = "space-y-3";
-// Consistent width for the card-header "type" dropdown across tabs.
 export const TYPE_SELECT_WIDTH = "w-32";
-
-// Shared destructive affordance (config-overridable, no hardcoded Tailwind colour scattered around)
 const REMOVE_BTN = "text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10";
 
 /**
@@ -324,7 +316,7 @@ function TagsInput({ selected = [], predefined = [], onChange }: TagsInputProps)
 
   return (
     <div className="space-y-2.5">
-      {/* Selected chips */}
+      
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {selected.map((tag) => (
@@ -346,7 +338,7 @@ function TagsInput({ selected = [], predefined = [], onChange }: TagsInputProps)
         </div>
       )}
 
-      {/* Predefined tag chips (only show un-selected ones) */}
+      
       {predefined.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {predefined.filter((t) => !selected.includes(t)).map((tag) => (
@@ -362,7 +354,7 @@ function TagsInput({ selected = [], predefined = [], onChange }: TagsInputProps)
         </div>
       )}
 
-      {/* Custom tag input */}
+      
       <div className="flex gap-2">
         <input
           ref={inputRef}
@@ -500,7 +492,6 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
             type: "image/avif",
           });
         } catch {
-          // ignore failed upload
         }
         e.target.value = "";
         return;
@@ -667,8 +658,6 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
       />
     );
   }
-
-  // Fallback to text, number inputs
   const inputType = field.type === "number" ? "number" : "text";
   return (
     <input

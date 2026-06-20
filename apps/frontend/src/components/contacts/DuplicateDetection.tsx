@@ -21,8 +21,6 @@ interface DuplicatePair {
   contacts: [Contact, Contact];
 }
 
-// ── Field Resolvers ─────────────────────────────────────────────────────────
-
 const getLabelForField = (field: string, uiStrings: Record<string, string>): string => {
   const key = `${field}Field`;
   return uiStrings[key] || field;
@@ -39,8 +37,6 @@ const getValueForField = (field: string, contact: Contact, uiStrings: Record<str
   const val = contact[field as keyof Contact];
   return (val as string) || uiStrings.emptyDash;
 };
-
-// ── Components ─────────────────────────────────────────────────────────────
 
 interface ConfidenceBadgeProps {
   score: number;
@@ -218,8 +214,6 @@ export default function DuplicateDetection({
   const [mergedPairIds, setMergedPairIds] = useState<Set<string>>(new Set());
   const [keepIndex, setKeepIndex] = useState<Record<string, number>>({});
   const [merging, setMerging] = useState<DuplicatePair | null>(null);
-
-  // ── Dynamic scan for duplicates ──────────────────────────────────────────
   const detectedPairs = useMemo<DuplicatePair[]>(() => {
     const list: DuplicatePair[] = [];
     const n = contacts.length;
@@ -288,11 +282,7 @@ export default function DuplicateDetection({
 
     const mergedRaw = mergeContacts(keep, other, uiStrings);
     const mergedResult = applyTitleCaseToContact(mergedRaw as Record<string, unknown>) as Contact;
-
-    // Trigger parent state update
     onMerge(keep.id, other.id, mergedResult);
-
-    // Track merged pair locally to update view
     setMergedPairIds((prev) => {
       const next = new Set(prev);
       next.add(pair.id);
@@ -319,7 +309,7 @@ export default function DuplicateDetection({
         animate={{ opacity: 1, y: 0 }}
         className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col z-10 text-left"
       >
-        {/* Header */}
+        
         <div className="px-6 py-4 border-b border-border flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${prefs.duplicateDetectionColorWarning ?? COLOR_PALETTES.amber.bg}`}>
@@ -342,7 +332,7 @@ export default function DuplicateDetection({
           </button>
         </div>
 
-        {/* Merged badge */}
+        
         {totalMerged > 0 && (
           <div className={`mx-6 mt-4 flex items-center gap-2 rounded-xl px-4 py-2.5 ${prefs.duplicateDetectionColorSuccess ?? COLOR_PALETTES.emerald.bg}`}>
             <Check className={`w-4 h-4 ${prefs.duplicateDetectionColorSuccessText ?? COLOR_PALETTES.emerald.text}`} />
@@ -352,7 +342,7 @@ export default function DuplicateDetection({
           </div>
         )}
 
-        {/* Content */}
+        
         <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5 space-y-5">
           {activePairs.length === 0 ? (
             <div className="py-12 text-center">
@@ -365,7 +355,7 @@ export default function DuplicateDetection({
               const ki = keepIndex[pair.id] ?? 0;
               return (
                 <div key={pair.id} className="rounded-xl border border-border bg-muted/10 overflow-hidden">
-                  {/* Pair header */}
+                  
                   <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <ConfidenceBadge score={pair.confidence} uiStrings={uiStrings} prefs={prefs} />
@@ -391,7 +381,7 @@ export default function DuplicateDetection({
                     </div>
                   </div>
 
-                  {/* Cards */}
+                  
                   <div className="p-4">
                     <p className="text-[11px] text-muted-foreground mb-3 font-medium">{uiStrings.selectRecordToKeep}</p>
                     <div className="flex gap-3">
@@ -423,7 +413,7 @@ export default function DuplicateDetection({
         </div>
       </motion.div>
 
-      {/* Merge preview modal */}
+      
       <AnimatePresence>
         {merging && (
           <MergePreview

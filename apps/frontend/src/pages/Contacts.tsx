@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
+import React, { useState, useMemo, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2, LayoutList, LayoutGrid } from "lucide-react";
+import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2 } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import useTranslation from "@/hooks/useTranslation";
@@ -17,15 +17,12 @@ import ContactsTable from "../components/contacts/ContactsTable";
 import ContactsToolbar from "../components/contacts/ContactsToolbar";
 import ContactStatsBar from "../components/contacts/ContactStatsBar";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
-
-// Heavy components — loaded only when first needed
 const ContactForm          = lazy(() => import("../components/contacts/ContactForm"));
 const DuplicateDetection   = lazy(() => import("../components/contacts/DuplicateDetection"));
 const WhatsAppPanel        = lazy(() => import("../components/contacts/WhatsAppPanel"));
 const SmsPanel             = lazy(() => import("../components/contacts/SmsPanel"));
 const ContactsSettingsPanel = lazy(() => import("../components/contacts/ContactsSettingsPanel"));
 const ContactSyncPanel     = lazy(() => import("../components/contacts/ContactSyncPanel"));
-const ContactKanban        = lazy(() => import("../components/contacts/ContactKanban"));
 
 function LazyFallback() {
   return (
@@ -44,9 +41,7 @@ import {
   Contact,
   PhoneNumber,
 } from "@mms/shared";
-import { EditableSelect } from "../components/contacts/form/FormPrimitives";
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
 function TableSkeleton({ rows = 6, cols = 5 }) {
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -88,7 +83,6 @@ const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
   sync: "contacts.setup.sync",
 };
 
-// ── Settings sub-panel ────────────────────────────────────────────────────────
 function SettingsPanel({ contacts, onImport, canWrite }: SettingsPanelProps) {
   const { t } = useTranslation();
   const { fieldConfig, updateConfig } = useContactConfig();
@@ -127,16 +121,15 @@ function SettingsPanel({ contacts, onImport, canWrite }: SettingsPanelProps) {
   );
 }
 
-// ── Inner page (must be inside ContactConfigProvider) — Work | Reports | Setup ──
 function ContactsInner() {
   const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
   const { can } = usePermissions();
   const canWrite = can("contacts.write");
-  const { fieldConfig, prefs, countryCodesMap, updateVisibleColumns, lifecycleStages, updateLifecycleStages, defaultContactRating, uiStrings } = useContactConfig();
+  const { prefs, countryCodesMap, lifecycleStages, defaultContactRating, uiStrings } = useContactConfig();
   const tableColumns = useContactColumns();
   const { isLoading: isContactsLoading } = useContacts();
-  const { saveContact, removeContact, mergeContacts, importContacts, updateStage, updateContact } =
+  const { saveContact, removeContact, mergeContacts, importContacts, updateContact } =
     useContactsPageActions();
 
   const rawContacts = useContactsCollection();
@@ -172,13 +165,6 @@ function ContactsInner() {
 
   const [search,          setSearch]          = useState("");
   const [filterGender,    setFilterGender]    = useState("");
-  const [filterStage,     setFilterStage]     = useState("");
-  const [viewMode,        setViewMode]        = useState<"list" | "kanban">("list");
-  useEffect(() => {
-    if (prefs.defaultViewLayout === "list" || prefs.defaultViewLayout === "kanban") {
-      setViewMode(prefs.defaultViewLayout);
-    }
-  }, [prefs.defaultViewLayout]);
   const [sortField,       setSortField]       = useState("name");
   const [sortDir,         setSortDir]         = useState<"asc" | "desc">("asc");
   const [selected,        setSelected]        = useState<(string | number)[]>([]);
@@ -202,13 +188,9 @@ function ContactsInner() {
     [t],
   );
 
-  // ── Filtered + sorted contacts ────────────────────────────────────────────
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     const list = contacts.filter((c) => {
-      const stage = c.lifecycleStage || "Lead";
-      if (filterStage && stage !== filterStage) return false;
-
       if (q) {
         const phone = getPrimaryPhone(c) || "";
         const email = (c.emails || [])[0]?.address || (c.email as string) || "";
@@ -240,12 +222,11 @@ function ContactsInner() {
       }
       return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
     });
-  }, [contacts, search, filterGender, filterStage, sortField, sortDir]);
+  }, [contacts, search, filterGender, sortField, sortDir]);
 
-  const hasActiveFilters  = !!(filterGender || filterStage || search);
-  const activeFilterCount = (filterGender ? 1 : 0) + (filterStage ? 1 : 0);
+  const hasActiveFilters  = !!(filterGender || search);
+  const activeFilterCount = filterGender ? 1 : 0;
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleSort = useCallback((field: string) => {
     if (sortField === field) setSortDir((d) => d === "asc" ? "desc" : "asc");
     else { setSortField(field); setSortDir("asc"); }
@@ -288,15 +269,6 @@ function ContactsInner() {
     void updateContact.mutateAsync({ id: String(updated.id), contact: updated }).catch(() => {});
   }, [canWrite, updateContact]);
 
-  const handleStageChange = useCallback((id: string | number, newStage: string) => {
-    if (!canWrite) return;
-    const c = contacts.find((x) => x.id === id);
-    if (!c) return;
-    const oldStage = c.lifecycleStage || "Lead";
-    const activityContent = `${uiStrings.lifecycleStageUpdatedFrom || "Lifecycle stage updated from"} ${oldStage} ${uiStrings.to || "to"} ${newStage}`;
-    void updateStage(c, newStage, activityContent);
-  }, [canWrite, contacts, uiStrings, updateStage]);
-
   const handleExportCSV = () => {
     const headers = visibleColumns.map((c) => c.label);
     const rows = [headers];
@@ -322,11 +294,10 @@ function ContactsInner() {
     a.click();
   };
 
-  const clearFilters = useCallback(() => { setFilterGender(""); setFilterStage(""); setSearch(""); }, []);
+  const clearFilters = useCallback(() => { setFilterGender(""); setSearch(""); }, []);
 
   const visibleColumns = tableColumns;
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-7xl mx-auto space-y-4">
       <title>MMS - {t("nav.contacts")}</title>
@@ -357,49 +328,7 @@ function ContactsInner() {
       <AnimatePresence mode="wait">
         {activeTab === "work" ? (
           <motion.div key="work" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-card/40 backdrop-blur-xl border border-border/50 p-3 rounded-2xl shadow-sm">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-2">
-                  {t("contacts.viewLayout")}: {viewMode === "kanban" ? t("contacts.kanbanView") : t("contacts.listView")}
-                </span>
-                <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("list")}
-                    aria-pressed={viewMode === "list"}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                      viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <LayoutList className="w-3.5 h-3.5" /> {t("contacts.listView")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("kanban")}
-                    aria-pressed={viewMode === "kanban"}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                      viewMode === "kanban" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5" /> {t("contacts.kanbanView")}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{t("contacts.stageLabel")}:</span>
-                <EditableSelect
-                  options={lifecycleStages || []}
-                  value={filterStage}
-                  onChange={(val) => setFilterStage(val)}
-                  onUpdateOptions={canWrite ? updateLifecycleStages : () => {}}
-                  placeholder={t("contacts.allStages")}
-                  className="w-40"
-                />
-              </div>
-            </div>
-
-            <ContactStatsBar contacts={contacts} fieldConfig={fieldConfig} />
+            <ContactStatsBar contacts={contacts} />
 
             <ErrorBoundary>
               <ContactsToolbar
@@ -412,25 +341,16 @@ function ContactsInner() {
               />
             </ErrorBoundary>
 
-            {/* Active filter chips */}
             <AnimatePresence>
-              {(filterGender || filterStage) && (
+              {filterGender && (
                 <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="flex flex-wrap gap-1.5">
-                  {filterGender && (
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-                      {uiStrings.genderFilterLabel || "Gender"}: {genderLabel(filterGender)} <button onClick={() => setFilterGender("")} className="hover:opacity-70"><X className="w-3 h-3" /></button>
-                    </span>
-                  )}
-                  {filterStage && (
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-                      {t("contacts.stageLabel")}: {filterStage} <button onClick={() => setFilterStage("")} className="hover:opacity-70"><X className="w-3 h-3" /></button>
-                    </span>
-                  )}
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
+                    {uiStrings.genderFilterLabel || "Gender"}: {genderLabel(filterGender)} <button onClick={() => setFilterGender("")} className="hover:opacity-70"><X className="w-3 h-3" /></button>
+                  </span>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Bulk action bar */}
             <AnimatePresence>
               {selected.length > 0 && (
                 <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
@@ -478,7 +398,6 @@ function ContactsInner() {
               )}
             </AnimatePresence>
 
-            {/* Content area */}
             <AnimatePresence mode="wait">
               {isContactsLoading ? (
                 <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -498,37 +417,20 @@ function ContactsInner() {
                       )}
                     </div>
                   ) : (
-                    viewMode === "list" ? (
-                      <ErrorBoundary>
-                        <ContactsTable
-                          contacts={filtered} selected={selected}
-                          onSelect={handleSelect} onSelectAll={handleSelectAll}
-                          onEdit={handleEdit as (contact: object) => void} onDelete={handleDelete}
-                          onWhatsApp={(targets) => setWhatsappTargets(targets as Contact[])}
-                          onSms={(targets) => setSmsTargets(targets as Contact[])}
-                          sortField={sortField} sortDir={sortDir} onSort={handleSort}
-                          columns={visibleColumns}
-                          allContacts={contacts}
-                          onUpdateContact={handleUpdateContact}
-                          canWrite={canWrite}
-                        />
-                      </ErrorBoundary>
-                    ) : (
-                      <Suspense fallback={<LazyFallback />}>
-                        <ErrorBoundary>
-                          <ContactKanban
-                            contacts={filtered}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onWhatsApp={(targets: Contact[]) => setWhatsappTargets(targets)}
-                            onSms={(targets: Contact[]) => setSmsTargets(targets)}
-                            onStageChange={handleStageChange}
-                            fieldConfig={fieldConfig}
-                            canWrite={canWrite}
-                          />
-                        </ErrorBoundary>
-                      </Suspense>
-                    )
+                    <ErrorBoundary>
+                      <ContactsTable
+                        contacts={filtered} selected={selected}
+                        onSelect={handleSelect} onSelectAll={handleSelectAll}
+                        onEdit={handleEdit as (contact: object) => void} onDelete={handleDelete}
+                        onWhatsApp={(targets) => setWhatsappTargets(targets as Contact[])}
+                        onSms={(targets) => setSmsTargets(targets as Contact[])}
+                        sortField={sortField} sortDir={sortDir} onSort={handleSort}
+                        columns={visibleColumns}
+                        allContacts={contacts}
+                        onUpdateContact={handleUpdateContact}
+                        canWrite={canWrite}
+                      />
+                    </ErrorBoundary>
                   )}
                 </motion.div>
               )}
@@ -561,7 +463,6 @@ function ContactsInner() {
       </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      {/* Modals — lazy loaded, only mounted when needed */}
       <Suspense fallback={null}>
         <AnimatePresence>
           <ContactForm

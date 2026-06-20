@@ -10,8 +10,6 @@ import EmailTab     from "./form/EmailTab";
 import AddressTab   from "./form/AddressTab";
 import SocialTab    from "./form/SocialTab";
 import EmergencyTab from "./form/EmergencyTab";
-
-// ── Constants ─────────────────────────────────────────────────────────────────
 const ICON_MAP: Record<string, LucideIcon> = {
   User, Phone, Mail, MapPin, Share2, Heart
 };
@@ -23,8 +21,6 @@ const TAB_DATA_KEY: Record<string, string> = {
   socials: "socials",
   emergency: "emergencyContacts",
 };
-
-// ── Tab Rendering Registry ──────────────────────────────────────────────────
 interface TabRenderProps {
   data: Partial<Contact>;
   onChange: (d: Partial<Contact>) => void;
@@ -99,8 +95,6 @@ interface ContactFormProps {
   /** When true, gender cannot be changed (e.g. father/mother pickers). */
   lockGender?: boolean;
 }
-
-// ── Main form ─────────────────────────────────────────────────────────────────
 /**
  * ContactForm component for creating or editing contact records.
  *
@@ -126,7 +120,6 @@ export default function ContactForm({
   initialDraft,
   lockGender = false,
 }: ContactFormProps): React.JSX.Element {
-  // Always read from context (live updates from settings panel)
   const { fieldConfig, prefs, enabledTabIds, requiredTabIds, fields, countryCodesMap, lifecycleStages, defaultContactRating, defaultValueFor, uiStrings } = useContactConfig();
   const validate = useContactValidation();
 
@@ -172,7 +165,6 @@ export default function ContactForm({
         number: parsed.number,
       };
     });
-    // contactId is validated as a string field — coerce legacy numeric ids.
     const emergencyContacts = (contact.emergencyContacts || []).map((ec) => ({
       ...ec,
       contactId: ec.contactId == null || ec.contactId === "" ? "" : String(ec.contactId),
@@ -184,7 +176,6 @@ export default function ContactForm({
       emergencyContacts,
     };
   });
-
 
   const [saving,      setSaving]      = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
@@ -238,8 +229,6 @@ export default function ContactForm({
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       notify.error(uiStrings.pleaseFixErrors, { description: validationErrors[0].message });
-      
-      // Auto-focus the tab containing the first error
       if (validationErrors[0].tabId) {
         setTab(validationErrors[0].tabId);
       }
