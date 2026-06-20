@@ -8,7 +8,7 @@ import BackupClearHistoryModal from '@/components/settings/backup/BackupClearHis
 import BackupExportSection from '@/components/settings/backup/BackupExportSection';
 import BackupHistorySection from '@/components/settings/backup/BackupHistorySection';
 import BackupImportSection from '@/components/settings/backup/BackupImportSection';
-import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
+import { SettingsPanel } from '@/components/ui/SettingsShell';
 import { useBackupRestore } from '@/hooks/useBackupRestore';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTenant } from '@/lib/contexts/TenantContext';
@@ -32,7 +32,7 @@ export default function BackupRestore(): React.JSX.Element {
     return (
       <SettingsPanel width="medium" introKey="settings.introBackup">
         <SectionCard title={t('backup.adminOnlyTitle')} icon={ShieldAlert}>
-          <SettingsCallout variant="warning">{t('backup.adminOnlyDesc')}</SettingsCallout>
+          <p className="text-xs leading-relaxed text-muted-foreground">{t('backup.adminOnlyDesc')}</p>
         </SectionCard>
       </SettingsPanel>
     );
@@ -51,7 +51,6 @@ export default function BackupRestore(): React.JSX.Element {
         />
       }
     >
-      <SettingsCallout>{t('backup.note')}</SettingsCallout>
       <p className="text-xs text-muted-foreground">{backup.workspaceNote}</p>
 
       <SectionCard title={t('backup.tipsTitle')} icon={ListChecks} padding={false}>

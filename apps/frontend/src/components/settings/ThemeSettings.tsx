@@ -16,7 +16,6 @@ import ThemeModeSelector from '@/components/settings/ThemeModeSelector';
 import CornerStyleSelector from '@/components/settings/CornerStyleSelector';
 import { FieldHint, FOOTER_MAX } from '@/components/branding/BrandingShared';
 import {
-  SettingsCallout,
   SettingsColoursBadge,
   SettingsMetaBadge,
   SettingsPanel,
@@ -75,7 +74,6 @@ export default function ThemeSettings(): React.JSX.Element {
           resetLabel={t('theme.resetAppearance')}
           saveLabel={t('theme.save')}
           savingLabel={t('theme.saving')}
-          savedLabel={t('theme.saved')}
           onReset={() => setConfirmResetOpen(true)}
           onSave={() => void handleSave()}
           dirty={isDirty}
@@ -84,8 +82,6 @@ export default function ThemeSettings(): React.JSX.Element {
         />
       }
     >
-      <SettingsCallout>{t('theme.themeNote')}</SettingsCallout>
-
       <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium" aria-live="polite">
         <span className="text-muted-foreground">{t('theme.activeConfig')}:</span>
         <SettingsMetaBadge variant="primary">{displayModeSummary}</SettingsMetaBadge>

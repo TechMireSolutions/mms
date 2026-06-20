@@ -37,8 +37,7 @@ export function SettingsPanel({
 
   return (
     <div className={cn(SETTINGS_WIDTH[width], 'space-y-5 pb-2')}>
-      {/* Desktop section header lives in Settings.tsx — intro callout for mobile accordion only */}
-      <SettingsPanelIntro description={t(introDescKey)} className="lg:hidden" />
+      <SettingsPanelIntro description={t(introDescKey)} />
       <SettingsStatusBadges isDirty={isDirty} saved={saved} />
       <div className="space-y-5">{children}</div>
       {footer}

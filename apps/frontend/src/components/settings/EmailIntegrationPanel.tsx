@@ -128,10 +128,8 @@ export default function EmailIntegrationPanel({
       </div>
 
       <SettingsCallout variant={emailNotificationsEnabled ? 'info' : 'warning'}>
-        {emailNotificationsEnabled ? t('email.enabledNote') : t('email.disabledNote')}
+        {emailNotificationsEnabled ? t('email.separateSaveNote') : t('email.disabledNote')}
       </SettingsCallout>
-
-      <SettingsCallout>{t('email.separateSaveNote')}</SettingsCallout>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">

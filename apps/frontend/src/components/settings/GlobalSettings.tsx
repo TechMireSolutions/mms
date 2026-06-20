@@ -90,7 +90,6 @@ export default function GlobalSettings(): React.JSX.Element {
           resetLabel={t('global.resetToDefaults')}
           saveLabel={t('global.saveSettings')}
           savingLabel={t('global.saving')}
-          savedLabel={t('settings.savedBadge')}
           onReset={() => setConfirmResetOpen(true)}
           onSave={() => void handleSaveGlobal()}
           dirty={isGlobalDirty}

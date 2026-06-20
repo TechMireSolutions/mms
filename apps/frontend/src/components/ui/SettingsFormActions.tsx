@@ -6,7 +6,6 @@ export interface SettingsFormActionsProps {
   resetLabel: string;
   saveLabel: string;
   savingLabel?: string;
-  savedLabel?: string;
   onReset: () => void;
   onSave?: () => void;
   dirty?: boolean;
@@ -24,7 +23,6 @@ export default function SettingsFormActions({
   resetLabel,
   saveLabel,
   savingLabel,
-  savedLabel,
   onReset,
   onSave,
   dirty = false,
@@ -34,7 +32,7 @@ export default function SettingsFormActions({
   saveDisabled = false,
   showSave = true,
 }: SettingsFormActionsProps): React.JSX.Element {
-  const saveText = saving ? (savingLabel ?? saveLabel) : saved ? (savedLabel ?? saveLabel) : saveLabel;
+  const saveText = saving ? (savingLabel ?? saveLabel) : saveLabel;
 
   return (
     <div

@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import BrandingIdentityPreview from '@/components/branding/BrandingIdentityPreview';
-import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
+import { SettingsPanel } from '@/components/ui/SettingsShell';
 import {
   FieldHint,
   ImageUploadField,
@@ -68,7 +68,6 @@ export default function BrandingSettings(): React.JSX.Element {
           resetLabel={t('branding.resetIdentity')}
           saveLabel={t('branding.save')}
           savingLabel={t('branding.saving')}
-          savedLabel={t('branding.saved')}
           onReset={() => setConfirmResetOpen(true)}
           onSave={() =>
             void handleSaveIdentity({
@@ -83,10 +82,7 @@ export default function BrandingSettings(): React.JSX.Element {
       }
     >
       <SectionCard title={t('branding.previewTitle')} subtitle={t('branding.previewSubtitle')}>
-        <SettingsCallout>{t('branding.identityNote')}</SettingsCallout>
-        <div className="mt-3">
-          <BrandingIdentityPreview data={data} />
-        </div>
+        <BrandingIdentityPreview data={data} />
       </SectionCard>
 
       <SectionCard title={t('branding.profileTitle')} subtitle={t('branding.profileDesc')} icon={Type}>

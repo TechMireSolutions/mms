@@ -5,7 +5,7 @@ import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContex
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import ModuleSettingsNavGrid from '@/components/settings/modules/ModuleSettingsNavGrid';
 import SettingsConfirmResetModal from '@/components/settings/SettingsConfirmResetModal';
-import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
+import { SettingsPanel } from '@/components/ui/SettingsShell';
 
 /**
  * Enable/disable application modules. Layout mirrors app navigation (`SYSTEM_MODULE_NAV`).
@@ -59,7 +59,6 @@ export default function SystemModulesSettings(): React.JSX.Element {
           resetLabel={t('module.system.resetModules')}
           saveLabel={t('module.system.save')}
           savingLabel={t('module.system.saving')}
-          savedLabel={t('module.system.savedLabel')}
           onReset={() => setConfirmResetOpen(true)}
           onSave={() => void handleSaveModules()}
           dirty={isModulesDirty}
@@ -68,7 +67,6 @@ export default function SystemModulesSettings(): React.JSX.Element {
         />
       }
     >
-      <SettingsCallout>{t('module.system.note')}</SettingsCallout>
       <ModuleSettingsNavGrid enabledModules={enabledModules} onToggleModule={updModule} />
 
       <SettingsConfirmResetModal

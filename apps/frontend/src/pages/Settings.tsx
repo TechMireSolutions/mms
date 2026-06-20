@@ -52,12 +52,8 @@ export default function Settings(): React.JSX.Element {
   const tabs: AccordionTabItem[] = SETTINGS_NAV.map((item) => ({
     id: item.id,
     label: t(item.labelKey),
-    description: t(item.descKey),
     icon: item.icon,
   }));
-
-  const activeNav = SETTINGS_NAV.find((item) => item.id === tab);
-  const ActiveIcon = activeNav?.icon;
 
   return (
     <SettingsTabProvider value={{ activeTab: tab, setActiveTab: setTab }}>
@@ -90,19 +86,6 @@ export default function Settings(): React.JSX.Element {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.18 }}
                 >
-                  {activeNav && ActiveIcon ? (
-                    <div className="mb-5 hidden items-start gap-3 border-b border-border/60 pb-4 lg:flex">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <ActiveIcon className="h-5 w-5" aria-hidden />
-                      </span>
-                      <div className="min-w-0">
-                        <h2 className="text-base font-bold text-foreground">{t(activeNav.labelKey)}</h2>
-                        <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                          {t(activeNav.descKey)}
-                        </p>
-                      </div>
-                    </div>
-                  ) : null}
                   <SettingsContent section={tab} />
                 </motion.div>
               </AnimatePresence>

@@ -5,17 +5,16 @@ import { SETTINGS_SECTIONS, type SettingsSection } from '@/lib/config/routes';
 export interface SettingsNavItem {
   id: SettingsSection;
   labelKey: AppTranslationKey;
-  descKey: AppTranslationKey;
   icon: LucideIcon;
 }
 
 /** Sidebar order for `/settings` — keep ids aligned with {@link SETTINGS_SECTIONS}. */
 export const SETTINGS_NAV: SettingsNavItem[] = [
-  { id: 'global', labelKey: 'settings.global', descKey: 'settings.globalDesc', icon: Globe },
-  { id: 'branding', labelKey: 'settings.branding', descKey: 'settings.brandingDesc', icon: Palette },
-  { id: 'theme', labelKey: 'settings.theme', descKey: 'settings.themeDesc', icon: Sparkles },
-  { id: 'modules', labelKey: 'settings.modules', descKey: 'settings.modulesDesc', icon: Boxes },
-  { id: 'backup', labelKey: 'settings.backup', descKey: 'settings.backupDesc', icon: Database },
+  { id: 'global', labelKey: 'settings.global', icon: Globe },
+  { id: 'branding', labelKey: 'settings.branding', icon: Palette },
+  { id: 'theme', labelKey: 'settings.theme', icon: Sparkles },
+  { id: 'modules', labelKey: 'settings.modules', icon: Boxes },
+  { id: 'backup', labelKey: 'settings.backup', icon: Database },
 ];
 
 const navIds = new Set(SETTINGS_NAV.map((item) => item.id));
