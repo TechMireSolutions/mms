@@ -138,6 +138,7 @@ function saveGoogleConfig(cfg: GoogleOauthConfig): void {
 interface GoogleContactsPanelProps {
   contacts: Contact[];
   onImport: (contacts: Contact[]) => void;
+  canWrite?: boolean;
 }
 
 interface GoogleTokenResponse {
@@ -168,7 +169,7 @@ interface GooglePeopleResponse {
 /**
  * GoogleContactsPanel component to configure and run Google Contacts synchronization.
  */
-function GoogleContactsPanel({ contacts, onImport }: GoogleContactsPanelProps): React.JSX.Element {
+function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleContactsPanelProps): React.JSX.Element {
   const { uiStrings } = useContactConfig();
   const [config, setConfig] = useState<GoogleOauthConfig>(() => loadGoogleConfig());
   const [showSetup, setShowSetup] = useState<boolean>(false);
@@ -517,7 +518,7 @@ function GoogleContactsPanel({ contacts, onImport }: GoogleContactsPanelProps): 
             <button
               type="button"
               onClick={handleSync}
-              disabled={syncing}
+              disabled={syncing || !canWrite}
               className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
             >
               {syncing ? (
@@ -542,12 +543,13 @@ function GoogleContactsPanel({ contacts, onImport }: GoogleContactsPanelProps): 
 interface AppleContactsPanelProps {
   contacts: Contact[];
   onImport: (contacts: Contact[]) => void;
+  canWrite?: boolean;
 }
 
 /**
  * AppleContactsPanel component to import and export vCard files.
  */
-function AppleContactsPanel({ contacts, onImport }: AppleContactsPanelProps): React.JSX.Element {
+function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContactsPanelProps): React.JSX.Element {
   const { uiStrings } = useContactConfig();
   const mobileLabel = uiStrings.mobileLabel;
   const personalLabel = uiStrings.personalLabel;
@@ -616,8 +618,9 @@ function AppleContactsPanel({ contacts, onImport }: AppleContactsPanelProps): Re
         {previewList.length === 0 && !result && (
           <button
             type="button"
-            onClick={() => fileRef.current?.click()}
-            className="w-full flex flex-col items-center justify-center gap-2 py-7 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer bg-card"
+            onClick={() => canWrite && fileRef.current?.click()}
+            disabled={!canWrite}
+            className="w-full flex flex-col items-center justify-center gap-2 py-7 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer bg-card disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card"
           >
             <FileText className="w-7 h-7 opacity-40" />
             <span className="text-sm font-semibold text-foreground">{uiStrings.uploadVcfBtn || "Upload .vcf file"}</span>
@@ -658,7 +661,7 @@ function AppleContactsPanel({ contacts, onImport }: AppleContactsPanelProps): Re
               <button
                 type="button"
                 onClick={handleImport}
-                disabled={importing}
+                disabled={importing || !canWrite}
                 className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
               >
                 {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
@@ -716,12 +719,13 @@ function AppleContactsPanel({ contacts, onImport }: AppleContactsPanelProps): Re
 interface ContactSyncPanelProps {
   contacts?: Contact[];
   onImport: (contacts: Contact[]) => void;
+  canWrite?: boolean;
 }
 
 /**
  * ContactSyncPanel component for managing Google and Apple Contacts synchronization.
  */
-export default function ContactSyncPanel({ contacts = [], onImport }: ContactSyncPanelProps): React.JSX.Element {
+export default function ContactSyncPanel({ contacts = [], onImport, canWrite = true }: ContactSyncPanelProps): React.JSX.Element {
   const { uiStrings } = useContactConfig();
   return (
     <div className="space-y-5 max-w-3xl text-left">
@@ -736,8 +740,8 @@ export default function ContactSyncPanel({ contacts = [], onImport }: ContactSyn
         </div>
       </div>
 
-      <GoogleContactsPanel contacts={contacts} onImport={onImport} />
-      <AppleContactsPanel contacts={contacts} onImport={onImport} />
+      <GoogleContactsPanel contacts={contacts} onImport={onImport} canWrite={canWrite} />
+      <AppleContactsPanel contacts={contacts} onImport={onImport} canWrite={canWrite} />
     </div>
   );
 }

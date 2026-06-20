@@ -14,12 +14,13 @@ interface ContactCardProps {
   onWhatsApp: (contacts: Contact[]) => void;
   onSms: (contacts: Contact[]) => void;
   onStageChange: (id: string | number, newStage: string) => void;
+  canWrite?: boolean;
 }
 
 /**
  * Individual ContactCard component.
  */
-function ContactCard({ contact, onEdit, onDelete, onWhatsApp, onSms, onStageChange }: ContactCardProps): React.JSX.Element {
+function ContactCard({ contact, onEdit, onDelete, onWhatsApp, onSms, onStageChange, canWrite = true }: ContactCardProps): React.JSX.Element {
   const { lifecycleStages, updateLifecycleStages, uiStrings } = useContactConfig();
   const phone = getPrimaryPhone(contact);
   const email = getPrimaryEmail(contact);
@@ -65,22 +66,26 @@ function ContactCard({ contact, onEdit, onDelete, onWhatsApp, onSms, onStageChan
           </div>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={handleEdit}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            type="button"
-            aria-label={uiStrings.editContactAria}
-          >
-            <Edit2 className="w-3 h-3" />
-          </button>
-          <button
-            onClick={handleDelete}
-            className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${uiStrings?.deleteActionClass || "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"}`}
-            type="button"
-            aria-label={uiStrings.deleteContactAria}
-          >
-            <Trash2 className="w-3 h-3" />
-          </button>
+          {canWrite && (
+            <>
+              <button
+                onClick={handleEdit}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                type="button"
+                aria-label={uiStrings.editContactAria}
+              >
+                <Edit2 className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleDelete}
+                className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${uiStrings?.deleteActionClass || "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"}`}
+                type="button"
+                aria-label={uiStrings.deleteContactAria}
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -105,8 +110,8 @@ function ContactCard({ contact, onEdit, onDelete, onWhatsApp, onSms, onStageChan
         <EditableSelect
           options={lifecycleStages || []}
           value={contact.lifecycleStage || uiStrings.defaultLifecycleStage}
-          onChange={(val) => onStageChange(contact.id, val)}
-          onUpdateOptions={updateLifecycleStages}
+          onChange={(val) => canWrite && onStageChange(contact.id, val)}
+          onUpdateOptions={canWrite ? updateLifecycleStages : () => {}}
           placeholder={uiStrings.moveToPlaceholder}
           className="w-28"
         />
@@ -148,6 +153,7 @@ interface ContactKanbanProps {
   onSms: (contacts: Contact[]) => void;
   onStageChange: (id: string | number, newStage: string) => void;
   fieldConfig?: FieldConfig;
+  canWrite?: boolean;
 }
 
 /**
@@ -163,6 +169,7 @@ export default function ContactKanban({
   onSms,
   onStageChange,
   fieldConfig,
+  canWrite = true,
 }: ContactKanbanProps): React.JSX.Element {
   const { lifecycleStages, lifecycleColors, uiStrings } = useContactConfig();
   const grouped = (lifecycleStages || []).reduce<Record<string, Contact[]>>((acc, stage) => {
@@ -201,6 +208,7 @@ export default function ContactKanban({
                     onWhatsApp={onWhatsApp}
                     onSms={onSms}
                     onStageChange={onStageChange}
+                    canWrite={canWrite}
                   />
                 ))
               )}

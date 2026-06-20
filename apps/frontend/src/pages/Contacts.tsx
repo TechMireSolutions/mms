@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2 } from "lucide-react";
+import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2, LayoutList, LayoutGrid } from "lucide-react";
+import type { AppTranslationKey } from "@mms/shared";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import useTranslation from "@/hooks/useTranslation";
+import usePermissions from "@/hooks/usePermissions";
+import { useContacts, useContactsCollection } from "@/hooks/useContacts";
+import { useContactsPageActions } from "@/hooks/useContactsPageActions";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import PageHeader from "../components/ui/PageHeader";
@@ -11,6 +15,7 @@ import SubTabBar from "@/components/ui/SubTabBar";
 import ActionButton from "../components/ui/ActionButton";
 import ContactsTable from "../components/contacts/ContactsTable";
 import ContactsToolbar from "../components/contacts/ContactsToolbar";
+import ContactStatsBar from "../components/contacts/ContactStatsBar";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 
 // Heavy components — loaded only when first needed
@@ -29,9 +34,6 @@ function LazyFallback() {
     </div>
   );
 }
-import { saveCollection } from "../lib/db";
-import { useContactsCollection, useContactMutations } from "../hooks/useContacts";
-import { notify } from "@/lib/notify";
 import {
   useContactConfig, useContactColumns, calculateProfileHealth
 } from '@/lib/contexts/ContactConfigContext';
@@ -77,22 +79,31 @@ function TableSkeleton({ rows = 6, cols = 5 }) {
 interface SettingsPanelProps {
   contacts: Contact[];
   onImport: (list: Contact[]) => void;
+  canWrite: boolean;
 }
 
+const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
+  fields: "contacts.setup.fields",
+  preferences: "contacts.setup.preferences",
+  sync: "contacts.setup.sync",
+  uistrings: "contacts.setup.uiStrings",
+};
+
 // ── Settings sub-panel ────────────────────────────────────────────────────────
-function SettingsPanel({ contacts, onImport }: SettingsPanelProps) {
+function SettingsPanel({ contacts, onImport, canWrite }: SettingsPanelProps) {
+  const { t } = useTranslation();
   const { fieldConfig, updateConfig } = useContactConfig();
   const settingsSubTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.settingsSubTabs || [];
     const sorted = [...tabsFromConfig]
       .sort((a, b) => a.order - b.order)
-      .filter((t) => t.enabled);
+      .filter((tab) => tab.enabled);
 
-    return sorted.map((t) => ({
-      key: t.key,
-      label: t.label,
+    return sorted.map((tab) => ({
+      key: tab.key,
+      label: SETUP_TAB_LABEL_KEYS[tab.key] ? t(SETUP_TAB_LABEL_KEYS[tab.key]) : tab.label,
     }));
-  }, [fieldConfig.settingsSubTabs]);
+  }, [fieldConfig.settingsSubTabs, t]);
 
   const [sub, setSub] = useState(() => settingsSubTabs[0]?.key || "fields");
   return (
@@ -113,7 +124,7 @@ function SettingsPanel({ contacts, onImport }: SettingsPanelProps) {
           <ContactsSettingsPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="uistrings" />
         )}
         {sub === "sync" && (
-          <ContactSyncPanel contacts={contacts} onImport={onImport as (contacts: object[]) => void} />
+          <ContactSyncPanel contacts={contacts} onImport={onImport as (contacts: object[]) => void} canWrite={canWrite} />
         )}
       </Suspense>
     </div>
@@ -124,12 +135,14 @@ function SettingsPanel({ contacts, onImport }: SettingsPanelProps) {
 function ContactsInner() {
   const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
+  const { can } = usePermissions();
+  const canWrite = can("contacts.write");
   const { fieldConfig, prefs, countryCodesMap, updateVisibleColumns, lifecycleStages, updateLifecycleStages, defaultContactRating, uiStrings } = useContactConfig();
-  const tableColumns = useContactColumns(); // ← dynamic, auto-updates with config
+  const tableColumns = useContactColumns();
+  const { isLoading: isContactsLoading } = useContacts();
+  const { saveContact, removeContact, mergeContacts, importContacts, updateStage, updateContact } =
+    useContactsPageActions();
 
-  const [isLoading,       setIsLoading]       = useState(true);
-
-  const { upsertContact, deleteContact } = useContactMutations();
   const rawContacts = useContactsCollection();
 
   const contacts = useMemo(() => {
@@ -161,10 +174,6 @@ function ContactsInner() {
     });
   }, [rawContacts, prefs?.defaultCountry, countryCodesMap, lifecycleStages, defaultContactRating]);
 
-  const saveContacts = useCallback((updater: Contact[] | ((prev: Contact[]) => Contact[])) => {
-    const next = typeof updater === "function" ? updater(contacts) : updater;
-    saveCollection("contacts", next);
-  }, [contacts]);
   const [search,          setSearch]          = useState("");
   const [filterGender,    setFilterGender]    = useState("");
   const [filterStage,     setFilterStage]     = useState("");
@@ -188,10 +197,14 @@ function ContactsInner() {
   const defaultCity     = prefs.defaultCity     || "";
   const defaultProvince = prefs.defaultProvince || "";
 
-  useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 400);
-    return () => clearTimeout(t);
-  }, []);
+  const genderLabel = useCallback(
+    (gender: string) => {
+      const key = `contacts.gender.${gender.toLowerCase()}` as AppTranslationKey;
+      const translated = t(key);
+      return translated === key ? gender.charAt(0).toUpperCase() + gender.slice(1) : translated;
+    },
+    [t],
+  );
 
   // ── Filtered + sorted contacts ────────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -245,33 +258,48 @@ function ContactsInner() {
   const handleSelect    = useCallback((id: string | number) => setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]), []);
   const handleSelectAll = useCallback(() => setSelected((s) => s.length === filtered.length ? [] : filtered.map((c) => c.id)), [filtered]);
 
-  const handleEdit = useCallback((c: Contact) => { setEditContact(c); setShowForm(true); }, []);
-  const handleNew  = useCallback(() => { setEditContact(null); setShowForm(true); }, []);
+  const handleEdit = useCallback((c: Contact) => {
+    if (!canWrite) return;
+    setEditContact(c);
+    setShowForm(true);
+  }, [canWrite]);
+  const handleNew = useCallback(() => {
+    if (!canWrite) return;
+    setEditContact(null);
+    setShowForm(true);
+  }, [canWrite]);
 
   const handleSave = useCallback((data: Contact) => {
+    if (!canWrite) return;
+    const isNew = !editContact;
     const payload = editContact
       ? { ...editContact, ...data }
       : { ...data, id: data.id ?? Date.now() };
-    void upsertContact.mutateAsync(payload).then(() => {
+    void saveContact(payload, isNew).then(() => {
       setShowForm(false);
       setEditContact(null);
-    }).catch(() => {
-      notify.error(t("settings.serverSaveFailed"));
-    });
-  }, [editContact, upsertContact, t]);
+    }).catch(() => {});
+  }, [editContact, saveContact, canWrite]);
 
   const handleDelete = useCallback((id: string | number) => {
+    if (!canWrite) return;
     const c = contacts.find((x) => x.id === id);
-    void deleteContact.mutateAsync(String(id)).then(() => {
-      notify.info(t("contacts.deletedTitle"), {
-        description: c?.name
-          ? t("contacts.deletedDescription", { name: c.name })
-          : t("contacts.deletedDescriptionDefault"),
-      });
-    }).catch(() => {
-      notify.error(t("settings.serverSaveFailed"));
-    });
-  }, [contacts, t, deleteContact]);
+    void removeContact(id, c?.name);
+  }, [contacts, removeContact, canWrite]);
+
+  const handleUpdateContact = useCallback((updated: Contact) => {
+    if (!canWrite) return;
+    void updateContact.mutateAsync({ id: String(updated.id), contact: updated }).catch(() => {});
+  }, [canWrite, updateContact]);
+
+  const handleStageChange = useCallback((id: string | number, newStage: string) => {
+    if (!canWrite) return;
+    const c = contacts.find((x) => x.id === id);
+    if (!c) return;
+    const oldStage = c.lifecycleStage || "Lead";
+    const activityContent = `${uiStrings.lifecycleStageUpdatedFrom || "Lifecycle stage updated from"} ${oldStage} ${uiStrings.to || "to"} ${newStage}`;
+    void updateStage(c, newStage, activityContent);
+  }, [canWrite, contacts, uiStrings, updateStage]);
 
   const handleExportCSV = () => {
     const headers = visibleColumns.map((c) => c.label);
@@ -317,7 +345,9 @@ function ContactsInner() {
             <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
               <Download className="w-3.5 h-3.5" /> {t("common.export")}
             </button>
-            <ActionButton variant="primary" icon={UserPlus} onClick={handleNew}>{t("contacts.addContact")}</ActionButton>
+            {canWrite && (
+              <ActionButton variant="primary" icon={UserPlus} onClick={handleNew}>{t("contacts.addContact")}</ActionButton>
+            )}
           </>
         }
       />
@@ -332,24 +362,48 @@ function ContactsInner() {
         {activeTab === "work" ? (
           <motion.div key="work" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
             <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-card/40 backdrop-blur-xl border border-border/50 p-3 rounded-2xl shadow-sm">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-2">
-                  {t("module.work")} ({viewMode === "kanban" ? (uiStrings.kanbanBoard || "Kanban Board") : (uiStrings.listView || "List View")})
+                  {t("contacts.viewLayout")}: {viewMode === "kanban" ? t("contacts.kanbanView") : t("contacts.listView")}
                 </span>
+                <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("list")}
+                    aria-pressed={viewMode === "list"}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <LayoutList className="w-3.5 h-3.5" /> {t("contacts.listView")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("kanban")}
+                    aria-pressed={viewMode === "kanban"}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      viewMode === "kanban" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" /> {t("contacts.kanbanView")}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{uiStrings.stageLabel || "Stage:"}</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{t("contacts.stageLabel")}:</span>
                 <EditableSelect
                   options={lifecycleStages || []}
                   value={filterStage}
                   onChange={(val) => setFilterStage(val)}
-                  onUpdateOptions={updateLifecycleStages}
-                  placeholder={uiStrings.allStages || "All Stages"}
+                  onUpdateOptions={canWrite ? updateLifecycleStages : () => {}}
+                  placeholder={t("contacts.allStages")}
                   className="w-40"
                 />
               </div>
             </div>
+
+            <ContactStatsBar contacts={contacts} fieldConfig={fieldConfig} />
 
             <ErrorBoundary>
               <ContactsToolbar
@@ -368,12 +422,12 @@ function ContactsInner() {
                 <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="flex flex-wrap gap-1.5">
                   {filterGender && (
                     <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-                      {uiStrings.genderFilterLabel || "Gender"}: {filterGender} <button onClick={() => setFilterGender("")} className="hover:opacity-70"><X className="w-3 h-3" /></button>
+                      {uiStrings.genderFilterLabel || "Gender"}: {genderLabel(filterGender)} <button onClick={() => setFilterGender("")} className="hover:opacity-70"><X className="w-3 h-3" /></button>
                     </span>
                   )}
                   {filterStage && (
                     <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-                      {uiStrings.stageLabel || "Stage:"} {filterStage} <button onClick={() => setFilterStage("")} className="hover:opacity-70"><X className="w-3 h-3" /></button>
+                      {t("contacts.stageLabel")}: {filterStage} <button onClick={() => setFilterStage("")} className="hover:opacity-70"><X className="w-3 h-3" /></button>
                     </span>
                   )}
                 </motion.div>
@@ -387,7 +441,7 @@ function ContactsInner() {
                   className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-primary/[0.05] border border-primary/20 backdrop-blur-md">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">{selected.length} {uiStrings.selectedCount || "selected"}</span>
+                    <span className="text-sm font-semibold text-foreground">{t("contacts.selectedCount", { count: selected.length })}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {(() => {
@@ -421,7 +475,7 @@ function ContactsInner() {
                       );
                     })()}
                     <button onClick={() => setSelected([])} className="px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                      {uiStrings.deselect || "Deselect"}
+                      {t("contacts.deselect")}
                     </button>
                   </div>
                 </motion.div>
@@ -430,7 +484,7 @@ function ContactsInner() {
 
             {/* Content area */}
             <AnimatePresence mode="wait">
-              {isLoading ? (
+              {isContactsLoading ? (
                 <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <TableSkeleton rows={6} cols={visibleColumns.length} />
                 </motion.div>
@@ -439,8 +493,8 @@ function ContactsInner() {
                   {filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 rounded-xl border-2 border-dashed border-border text-muted-foreground gap-3">
                       <UserX className="w-8 h-8 opacity-30" />
-                      <p className="text-sm font-semibold">{hasActiveFilters ? (uiStrings.noContactsMatchFilters || "No contacts match your filters") : (uiStrings.noContactsYet || "No contacts yet")}</p>
-                      <p className="text-xs text-center max-w-xs">{hasActiveFilters ? (uiStrings.tryAdjustingFilters || "Try adjusting your search or filters.") : (uiStrings.clickAddContact || "Click \"Add Contact\" to create your first contact.")}</p>
+                      <p className="text-sm font-semibold">{hasActiveFilters ? t("contacts.noContactsMatchFilters") : t("contacts.noContactsYet")}</p>
+                      <p className="text-xs text-center max-w-xs">{hasActiveFilters ? t("contacts.tryAdjustingFilters") : t("contacts.clickAddContact")}</p>
                       {hasActiveFilters && (
                         <button onClick={clearFilters} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors">
                           <RefreshCw className="w-3 h-3" /> {uiStrings.clearFiltersBtn || "Clear Filters"}
@@ -459,7 +513,8 @@ function ContactsInner() {
                           sortField={sortField} sortDir={sortDir} onSort={handleSort}
                           columns={visibleColumns}
                           allContacts={contacts}
-                          onUpdateContact={(updated) => saveContacts((cs) => cs.map((x) => x.id === updated.id ? updated : x))}
+                          onUpdateContact={handleUpdateContact}
+                          canWrite={canWrite}
                         />
                       </ErrorBoundary>
                     ) : (
@@ -471,30 +526,9 @@ function ContactsInner() {
                             onDelete={handleDelete}
                             onWhatsApp={(targets: Contact[]) => setWhatsappTargets(targets)}
                             onSms={(targets: Contact[]) => setSmsTargets(targets)}
-                            onStageChange={(id: string | number, newStage: string) => {
-                              saveContacts((cs) => cs.map((c) => {
-                                if (c.id === id) {
-                                  const oldStage = c.lifecycleStage || "Lead";
-                                  const stageActivity = {
-                                    id: `act-${Date.now()}`,
-                                    type: "stage_change" as const,
-                                    content: `${uiStrings.lifecycleStageUpdatedFrom || "Lifecycle stage updated from"} ${oldStage} ${uiStrings.to || "to"} ${newStage}`,
-                                    date: new Date().toISOString().slice(0, 10),
-                                    by: "System"
-                                  };
-                                  return {
-                                    ...c,
-                                    lifecycleStage: newStage,
-                                    activities: [stageActivity, ...(c.activities || [])]
-                                  };
-                                }
-                                return c;
-                              }));
-                              notify.success(uiStrings.stageUpdatedTitle || "Stage updated", {
-                                description: `${uiStrings.contactStageUpdatedTo || "Contact stage updated to"} ${newStage}`
-                              });
-                            }}
+                            onStageChange={handleStageChange}
                             fieldConfig={fieldConfig}
+                            canWrite={canWrite}
                           />
                         </ErrorBoundary>
                       </Suspense>
@@ -519,9 +553,10 @@ function ContactsInner() {
             <ErrorBoundary>
               <SettingsPanel
                 contacts={contacts}
+                canWrite={canWrite}
                 onImport={(list: Contact[]) => {
-                  saveContacts((cs) => [...cs, ...list]);
-                  notify.success(`${list.length} ${list.length !== 1 ? (uiStrings.contactsImportedSuccessfully || "contacts imported successfully") : (uiStrings.contactImportedSuccessfully || "contact imported successfully")}`);
+                  if (!canWrite) return;
+                  void importContacts(list);
                 }}
               />
             </ErrorBoundary>
@@ -549,14 +584,8 @@ function ContactsInner() {
               contacts={contacts}
               onClose={() => setShowDuplicates(false)}
               onMerge={(keepId, deleteId, mergedData) => {
-                saveContacts((cs) =>
-                  cs
-                    .map((c) => (c.id === keepId ? { ...c, ...mergedData } : c))
-                    .filter((c) => c.id !== deleteId)
-                );
-                notify.success(uiStrings.contactsMergedTitle || "Contacts merged", {
-                  description: uiStrings.duplicateContactMergedSuccess || "The duplicate contact was merged successfully.",
-                });
+                if (!canWrite) return;
+                void mergeContacts(keepId, deleteId, mergedData as Contact);
               }}
             />
           )}

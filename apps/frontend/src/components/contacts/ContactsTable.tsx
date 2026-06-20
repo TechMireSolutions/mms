@@ -98,6 +98,7 @@ interface ContactsTableProps {
   columns?: ColumnConfig[];
   allContacts?: Contact[];
   onUpdateContact?: (contact: Contact) => void;
+  canWrite?: boolean;
 }
 
 /**
@@ -134,6 +135,7 @@ export default function ContactsTable({
   columns = [],
   allContacts = [],
   onUpdateContact,
+  canWrite = true,
 }: ContactsTableProps): React.JSX.Element {
   const { lifecycleColors, uiStrings } = useContactConfig();
   const [viewContact, setViewContact] = useState<Contact | null>(null);
@@ -394,7 +396,7 @@ export default function ContactsTable({
                           <DropdownMenuItem onClick={() => setViewContact(c)}>
                             <Eye className="w-3.5 h-3.5 mr-2" /> {uiStrings.viewProfile}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onEdit(c)}>
+                          <DropdownMenuItem onClick={() => onEdit(c)} disabled={!canWrite}>
                             <Edit2 className="w-3.5 h-3.5 mr-2" /> {uiStrings.edit}
                           </DropdownMenuItem>
                           <DropdownMenuItem disabled={!hasWhatsApp(c)} onClick={() => onWhatsApp([c])}>
@@ -404,7 +406,7 @@ export default function ContactsTable({
                             <MessageSquare className="w-3.5 h-3.5 mr-2 text-primary" /> {uiStrings.sms}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onDelete(c.id)} className="text-destructive focus:text-destructive">
+                          <DropdownMenuItem onClick={() => onDelete(c.id)} disabled={!canWrite} className="text-destructive focus:text-destructive">
                             <Trash2 className="w-3.5 h-3.5 mr-2" /> {uiStrings.deleteContact}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -430,11 +432,11 @@ export default function ContactsTable({
             <ContactDetailDrawer
               contact={viewContact}
               onClose={() => setViewContact(null)}
-              onEdit={(c) => { setViewContact(null); onEdit(c); }}
+              onEdit={(c) => { setViewContact(null); if (canWrite) onEdit(c); }}
               onWhatsApp={onWhatsApp}
               onSms={onSms}
               allContacts={allContacts}
-              onUpdateContact={onUpdateContact}
+              onUpdateContact={canWrite ? onUpdateContact : undefined}
             />
           )}
         </AnimatePresence>
