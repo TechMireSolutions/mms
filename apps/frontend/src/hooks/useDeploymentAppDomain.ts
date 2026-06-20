@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { resolveAppDomainForRequest } from '@mms/shared';
+import { resolveAppDomain } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
 import { env } from '@/lib/config/env';
 
@@ -15,7 +15,9 @@ async function fetchDeploymentAppDomain(): Promise<string> {
  */
 export function useDeploymentAppDomain(): string {
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-  const fallback = resolveAppDomainForRequest(hostname, env.appDomain);
+  // resolveAppDomain (not resolveAppDomainForRequest) — configured apex must not be
+  // replaced by the current tenant hostname while deployment-config is loading.
+  const fallback = resolveAppDomain(hostname, env.appDomain);
 
   const { data } = useQuery({
     queryKey: DEPLOYMENT_CONFIG_KEY,

@@ -5,11 +5,17 @@ import PlatformLoadingScreen from "@/components/platform/PlatformLoadingScreen";
 import PlatformSignIn from "@/pages/auth/PlatformSignIn";
 import PlatformSetup from "@/pages/auth/PlatformSetup";
 import PlatformConsole from "@/pages/PlatformConsole";
+import Login from "@/pages/auth/Login";
+import { isBrowserOnTenantHost } from "@/lib/tenantHost";
 
 /** Apex home: first-run setup, platform sign-in, or authenticated console. */
 export default function ApexHome(): React.JSX.Element {
   const { isPlatformAuthenticated, platformAuthChecked, isCheckingPlatformAuth } = usePlatformAuth();
   const { setupStatus, isLoadingSetup } = usePlatformSetupStatus();
+
+  if (isBrowserOnTenantHost()) {
+    return <Login />;
+  }
 
   if (!platformAuthChecked || isCheckingPlatformAuth || isLoadingSetup) {
     return <PlatformLoadingScreen />;
