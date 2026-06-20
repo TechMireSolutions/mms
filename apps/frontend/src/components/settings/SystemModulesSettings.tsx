@@ -1,49 +1,30 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { getEffectiveGlobalSettings } from '@/lib/db';
-import { normalizeEnabledModules, SYSTEM_MODULES_BY_ID, type GlobalSettings } from '@mms/shared';
-import { notify } from '@/lib/notify';
+import React, { useMemo, useState } from 'react';
+import { normalizeEnabledModules, SYSTEM_MODULES_BY_ID } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
-import { useSettingsDraft } from '@/hooks/useSettingsDraft';
-import { useSavedFlash } from '@/hooks/useSavedFlash';
+import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContext';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import ModuleSettingsNavGrid from '@/components/settings/modules/ModuleSettingsNavGrid';
 import SettingsConfirmResetModal from '@/components/settings/SettingsConfirmResetModal';
 import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
-import {
-  previewEnabledModulesDraft,
-  resetEnabledModulesToDefaults,
-  saveEnabledModulesDraft,
-} from '@/lib/settingsModulesDraft';
 
 /**
  * Enable/disable application modules. Layout mirrors app navigation (`SYSTEM_MODULE_NAV`).
  */
 export default function SystemModulesSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const { saved: savedFlash, flashSaved, clearSaved } = useSavedFlash();
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
-  const load = useCallback(() => getEffectiveGlobalSettings(), []);
-
-  const onPreview = useCallback((draft: GlobalSettings) => {
-    previewEnabledModulesDraft(draft);
-  }, []);
-
-  const onSave = useCallback(
-    async (draft: GlobalSettings) => {
-      saveEnabledModulesDraft(draft);
-      flashSaved();
-      notify.success(t('module.system.saved'), { description: t('module.system.savedDesc') });
-    },
-    [flashSaved, t],
-  );
-
-  const { data, dirty, saving, upd, handleSave, resetDraft } = useSettingsDraft({
-    load,
-    onPreview,
-    onSave,
-    skipDatabaseSyncWhenDirty: true,
-  });
+  const {
+    data,
+    isModulesDirty,
+    saved,
+    saving,
+    upd,
+    handleSaveModules,
+    handleResetModules,
+    clearSaved,
+  } = useSettingsGlobalDraft();
 
   const enabledModules = useMemo(
     () => normalizeEnabledModules(data.enabledModules),
@@ -57,19 +38,22 @@ export default function SystemModulesSettings(): React.JSX.Element {
     clearSaved();
   };
 
-  const handleReset = (): void => {
-    resetEnabledModulesToDefaults();
-    resetDraft();
-    clearSaved();
-    notify.success(t('module.system.resetToast'), { description: t('module.system.resetToastDesc') });
+  const confirmReset = async (): Promise<void> => {
+    setResetting(true);
+    try {
+      const ok = await handleResetModules();
+      if (ok) setConfirmResetOpen(false);
+    } finally {
+      setResetting(false);
+    }
   };
 
   return (
     <SettingsPanel
       width="wide"
       introKey="settings.introModules"
-      isDirty={dirty}
-      saved={savedFlash}
+      isDirty={isModulesDirty}
+      saved={saved}
       footer={
         <SettingsFormActions
           resetLabel={t('module.system.resetModules')}
@@ -77,10 +61,10 @@ export default function SystemModulesSettings(): React.JSX.Element {
           savingLabel={t('module.system.saving')}
           savedLabel={t('module.system.savedLabel')}
           onReset={() => setConfirmResetOpen(true)}
-          onSave={() => void handleSave()}
-          dirty={dirty}
+          onSave={() => void handleSaveModules()}
+          dirty={isModulesDirty}
           saving={saving}
-          saved={savedFlash}
+          saved={saved}
         />
       }
     >
@@ -90,13 +74,11 @@ export default function SystemModulesSettings(): React.JSX.Element {
       <SettingsConfirmResetModal
         open={confirmResetOpen}
         onClose={() => setConfirmResetOpen(false)}
-        onConfirm={() => {
-          handleReset();
-          setConfirmResetOpen(false);
-        }}
+        onConfirm={confirmReset}
         titleKey="module.system.confirmResetTitle"
         descKey="module.system.confirmResetDesc"
         warningKey="module.system.resetWarning"
+        loading={resetting}
       />
     </SettingsPanel>
   );

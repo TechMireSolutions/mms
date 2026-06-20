@@ -10,6 +10,7 @@ import { SETTINGS_SECTION_COMPONENTS } from '@/lib/config/settingsSectionCompone
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { SettingsTabProvider } from '@/lib/contexts/SettingsTabContext';
 import { SettingsBrandingDraftProvider } from '@/lib/contexts/SettingsBrandingDraftContext';
+import { SettingsGlobalDraftProvider } from '@/lib/contexts/SettingsGlobalDraftContext';
 
 function SettingsContent({ section }: { section: SettingsSection }): React.JSX.Element {
   const { t } = useTranslation();
@@ -60,53 +61,55 @@ export default function Settings(): React.JSX.Element {
 
   return (
     <SettingsTabProvider value={{ activeTab: tab, setActiveTab: setTab }}>
-      <SettingsBrandingDraftProvider
-        saveSuccessMessage={t('branding.savedToast')}
-        saveSuccessDescription={t('branding.savedToastDesc')}
-      >
-      <div className="mx-auto max-w-7xl space-y-5">
-        <title>MMS - {t('settings.title')}</title>
-        <meta name="description" content={t('settings.subtitle')} />
-        <PageHeader
-          icon={SettingsIcon}
-          title={t('settings.title')}
-          subtitle={t('settings.subtitle')}
-        />
-
-        <ResponsiveAccordionTabs
-          tabs={tabs}
-          activeTab={tab}
-          onTabChange={handleTabChange}
-          desktopLayout="sidebar"
-          panelIdPrefix="settings-panel"
+      <SettingsGlobalDraftProvider>
+        <SettingsBrandingDraftProvider
+          saveSuccessMessage={t('branding.savedToast')}
+          saveSuccessDescription={t('branding.savedToastDesc')}
         >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={tab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
+          <div className="mx-auto max-w-7xl space-y-5">
+            <title>MMS - {t('settings.title')}</title>
+            <meta name="description" content={t('settings.subtitle')} />
+            <PageHeader
+              icon={SettingsIcon}
+              title={t('settings.title')}
+              subtitle={t('settings.subtitle')}
+            />
+
+            <ResponsiveAccordionTabs
+              tabs={tabs}
+              activeTab={tab}
+              onTabChange={handleTabChange}
+              desktopLayout="sidebar"
+              panelIdPrefix="settings-panel"
             >
-              {activeNav && ActiveIcon ? (
-                <div className="mb-5 hidden items-start gap-3 border-b border-border/60 pb-4 lg:flex">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <ActiveIcon className="h-5 w-5" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <h2 className="text-base font-bold text-foreground">{t(activeNav.labelKey)}</h2>
-                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                      {t(activeNav.descKey)}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-              <SettingsContent section={tab} />
-            </motion.div>
-          </AnimatePresence>
-        </ResponsiveAccordionTabs>
-      </div>
-      </SettingsBrandingDraftProvider>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={tab}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  {activeNav && ActiveIcon ? (
+                    <div className="mb-5 hidden items-start gap-3 border-b border-border/60 pb-4 lg:flex">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <ActiveIcon className="h-5 w-5" aria-hidden />
+                      </span>
+                      <div className="min-w-0">
+                        <h2 className="text-base font-bold text-foreground">{t(activeNav.labelKey)}</h2>
+                        <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                          {t(activeNav.descKey)}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+                  <SettingsContent section={tab} />
+                </motion.div>
+              </AnimatePresence>
+            </ResponsiveAccordionTabs>
+          </div>
+        </SettingsBrandingDraftProvider>
+      </SettingsGlobalDraftProvider>
     </SettingsTabProvider>
   );
 }

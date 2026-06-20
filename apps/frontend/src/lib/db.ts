@@ -389,6 +389,18 @@ export function saveGlobalSettings(data: GlobalSettings): void {
   saveObject("global_settings", mergeGlobalSettings(data));
 }
 
+/** Persists global settings locally and waits for PostgreSQL sync. */
+export async function saveGlobalSettingsAsync(data: GlobalSettings): Promise<ServerSyncResult> {
+  const merged = mergeGlobalSettings(data);
+  try {
+    writeObjectLocal("global_settings", merged);
+    return await syncToServer("/api/db/objects/global_settings", merged);
+  } catch (error) {
+    console.error("Error writing global_settings to local database:", error);
+    return { ok: false };
+  }
+}
+
 /** Reads `branding` merged with defaults. */
 export function getBrandingSettings(): BrandingSettings {
   return mergeBrandingSettings(getObject<BrandingSettings>("branding", DEFAULT_BRANDING_SETTINGS));

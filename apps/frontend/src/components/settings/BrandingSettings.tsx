@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Mail, Phone, Globe, MapPin, Share2, Building2, Type,
 } from 'lucide-react';
 import { resetBrandingIdentity } from '@mms/shared';
@@ -6,6 +6,7 @@ import { saveBrandingSettings } from '@/lib/db';
 import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';
 import { useSettingsBrandingDraft } from '@/lib/contexts/SettingsBrandingDraftContext';
+import SettingsConfirmResetModal from '@/components/settings/SettingsConfirmResetModal';
 import SectionCard from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,7 +27,9 @@ import {
  */
 export default function BrandingSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const { data, isIdentityDirty, saved, saving, upd, handleSave, applyPersisted } =
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const { data, isIdentityDirty, saved, saving, upd, handleSaveIdentity, applyPersisted } =
     useSettingsBrandingDraft();
 
   const handleReset = async (): Promise<void> => {
@@ -44,6 +47,16 @@ export default function BrandingSettings(): React.JSX.Element {
     }
   };
 
+  const confirmReset = async (): Promise<void> => {
+    setResetting(true);
+    try {
+      await handleReset();
+      setConfirmResetOpen(false);
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <SettingsPanel
       width="medium"
@@ -56,9 +69,9 @@ export default function BrandingSettings(): React.JSX.Element {
           saveLabel={t('branding.save')}
           savingLabel={t('branding.saving')}
           savedLabel={t('branding.saved')}
-          onReset={() => void handleReset()}
+          onReset={() => setConfirmResetOpen(true)}
           onSave={() =>
-            void handleSave({
+            void handleSaveIdentity({
               saveSuccessMessage: t('branding.savedToast'),
               saveSuccessDescription: t('branding.savedToastDesc'),
             })
@@ -256,6 +269,16 @@ export default function BrandingSettings(): React.JSX.Element {
           <SocialLinksEditor links={data.socialLinks} onChange={(links) => upd('socialLinks', links)} />
         </SectionCard>
       </div>
+
+      <SettingsConfirmResetModal
+        open={confirmResetOpen}
+        onClose={() => setConfirmResetOpen(false)}
+        onConfirm={confirmReset}
+        titleKey="branding.confirmResetTitle"
+        descKey="branding.confirmResetDesc"
+        warningKey="branding.resetWarning"
+        loading={resetting}
+      />
     </SettingsPanel>
   );
 }

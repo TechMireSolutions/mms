@@ -2,6 +2,7 @@ import {
   DEFAULT_GLOBAL_SETTINGS,
   mergeGlobalSettings,
   normalizeDateFormat,
+  normalizeEnabledModules,
   normalizePasswordPolicy,
   normalizeSessionTimeout,
   normalizeTimezone,
@@ -27,10 +28,54 @@ export function globalSettingsPreviewPatch(draft: GlobalSettings): Partial<Globa
   };
 }
 
+/** Live-preview patch for global preferences + module visibility. */
+export function previewGlobalSettingsDraft(draft: GlobalSettings): Partial<GlobalSettings> {
+  return {
+    ...globalSettingsPreviewPatch(draft),
+    enabledModules: normalizeEnabledModules(draft.enabledModules),
+  };
+}
+
+export function isGlobalPreferencesDirty(data: GlobalSettings, baseline: GlobalSettings): boolean {
+  return (
+    JSON.stringify(globalSettingsPreviewPatch(data)) !==
+    JSON.stringify(globalSettingsPreviewPatch(baseline))
+  );
+}
+
+export function isEnabledModulesDraftDirty(data: GlobalSettings, baseline: GlobalSettings): boolean {
+  return (
+    JSON.stringify(normalizeEnabledModules(data.enabledModules)) !==
+    JSON.stringify(normalizeEnabledModules(baseline.enabledModules))
+  );
+}
+
 /** Merge draft preview fields into persisted global settings for Save. */
 export function mergeGlobalSettingsDraft(draft: GlobalSettings): GlobalSettings {
   return mergeGlobalSettings({
     ...getGlobalSettings(),
+    ...globalSettingsPreviewPatch(draft),
+  });
+}
+
+/** After global prefs save, keep unsaved module toggles in the shared draft. */
+export function retainModulesDraftAfterGlobalSave(
+  persisted: GlobalSettings,
+  draft: GlobalSettings,
+): GlobalSettings {
+  return mergeGlobalSettings({
+    ...persisted,
+    enabledModules: normalizeEnabledModules(draft.enabledModules),
+  });
+}
+
+/** After modules save, keep unsaved global pref edits in the shared draft. */
+export function retainGlobalDraftAfterModulesSave(
+  persisted: GlobalSettings,
+  draft: GlobalSettings,
+): GlobalSettings {
+  return mergeGlobalSettings({
+    ...persisted,
     ...globalSettingsPreviewPatch(draft),
   });
 }

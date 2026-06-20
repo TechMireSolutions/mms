@@ -8,10 +8,18 @@ import {
 import { getBrandingSettings, saveBrandingSettings } from '@/lib/db';
 import { clearBrandingSettingsPreview, previewBrandingSettings } from '@/lib/settingsPreview';
 import { buildBrandingPreviewPatch } from '@/lib/brandingPreviewPatch';
+import {
+  mergeBrandingIdentityForSave,
+  retainThemeDraftAfterIdentitySave,
+} from '@/lib/brandingIdentityDraft';
 import { loadBranding } from '@/components/branding/BrandingShared';
 import { serverSyncErrorKey } from '@/lib/serverSyncErrors';
 import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';
+
+export interface UseBrandingDraftSaveOptions {
+  skipToast?: boolean;
+}
 
 export interface UseBrandingDraftSaveToast {
   saveSuccessMessage: string;
@@ -32,7 +40,8 @@ export interface UseBrandingDraftResult {
   saved: boolean;
   saving: boolean;
   upd: <K extends keyof BrandingSettings>(field: K, value: BrandingSettings[K]) => void;
-  handleSave: (toast?: UseBrandingDraftSaveToast) => Promise<boolean>;
+  handleSave: (toast?: UseBrandingDraftSaveToast, options?: UseBrandingDraftSaveOptions) => Promise<boolean>;
+  handleSaveIdentity: (toast?: UseBrandingDraftSaveToast) => Promise<boolean>;
   applyPersisted: (next: BrandingSettings) => void;
 }
 
@@ -89,15 +98,18 @@ export function useBrandingDraft({
     setData(merged);
     clearBrandingSettingsPreview();
     clearSaved();
-  }, []);
+  }, [clearSaved]);
 
   const upd = useCallback(<K extends keyof BrandingSettings>(field: K, value: BrandingSettings[K]): void => {
     setData((current) => ({ ...current, [field]: value }));
     clearSaved();
-  }, []);
+  }, [clearSaved]);
 
   const handleSave = useCallback(
-    async (toast?: UseBrandingDraftSaveToast): Promise<boolean> => {
+    async (
+      toast?: UseBrandingDraftSaveToast,
+      options?: UseBrandingDraftSaveOptions,
+    ): Promise<boolean> => {
       setSaving(true);
       try {
         const merged = mergeBrandingSettings(data);
@@ -112,9 +124,11 @@ export function useBrandingDraft({
         setData(merged);
         clearBrandingSettingsPreview();
         flashSaved();
-        notify.success(toast?.saveSuccessMessage ?? saveSuccessMessage, {
-          description: toast?.saveSuccessDescription ?? saveSuccessDescription,
-        });
+        if (!options?.skipToast) {
+          notify.success(toast?.saveSuccessMessage ?? saveSuccessMessage, {
+            description: toast?.saveSuccessDescription ?? saveSuccessDescription,
+          });
+        }
         return true;
       } finally {
         setSaving(false);
@@ -123,5 +137,33 @@ export function useBrandingDraft({
     [data, flashSaved, saveSuccessDescription, saveSuccessMessage, t],
   );
 
-  return { data, baseline, isDirty, saved, saving, upd, handleSave, applyPersisted };
+  const handleSaveIdentity = useCallback(
+    async (toast?: UseBrandingDraftSaveToast): Promise<boolean> => {
+      setSaving(true);
+      try {
+        const persisted = mergeBrandingIdentityForSave(data, baseline);
+        const result = await saveBrandingSettings(persisted);
+        if (!result.ok) {
+          notify.error(t('settings.serverSaveFailed'), {
+            description: t(serverSyncErrorKey(result.status)),
+          });
+          return false;
+        }
+        const nextData = retainThemeDraftAfterIdentitySave(persisted, data);
+        setBaseline(persisted);
+        setData(nextData);
+        previewBrandingSettings(buildBrandingPreviewPatch(nextData, trackKeys));
+        flashSaved();
+        notify.success(toast?.saveSuccessMessage ?? saveSuccessMessage, {
+          description: toast?.saveSuccessDescription ?? saveSuccessDescription,
+        });
+        return true;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [baseline, data, flashSaved, saveSuccessDescription, saveSuccessMessage, t, trackKeys],
+  );
+
+  return { data, baseline, isDirty, saved, saving, upd, handleSave, handleSaveIdentity, applyPersisted };
 }

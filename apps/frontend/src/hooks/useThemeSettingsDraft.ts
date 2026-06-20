@@ -15,7 +15,7 @@ import {
   getEffectiveGlobalSettings,
   getGlobalSettings,
   saveBrandingSettings,
-  saveGlobalSettings,
+  saveGlobalSettingsAsync,
 } from '@/lib/db';
 import { clearGlobalSettingsPreview, previewGlobalSettings } from '@/lib/settingsPreview';
 import { serverSyncErrorKey } from '@/lib/serverSyncErrors';
@@ -113,39 +113,47 @@ export function useThemeSettingsDraft(
     const wasBrandingDirty = branding.isThemeFieldsDirty;
 
     if (wasBrandingDirty) {
-      const ok = await branding.handleSave({ saveSuccessMessage, saveSuccessDescription });
+      const ok = await branding.handleSave(
+        { saveSuccessMessage, saveSuccessDescription },
+        { skipToast: true },
+      );
       if (!ok) return;
     }
 
+    let savedThemeMode = false;
     if (displayModeDirty) {
       setThemeSaving(true);
       try {
         const current = getGlobalSettings();
-        saveGlobalSettings(
+        const result = await saveGlobalSettingsAsync(
           mergeGlobalSettings({ ...current, theme: normalizeThemeMode(displayMode) }),
         );
+        if (!result.ok) {
+          notify.error(t('settings.serverSaveFailed'), {
+            description: t(serverSyncErrorKey(result.status)),
+          });
+          return;
+        }
         setThemeBaseline(normalizeThemeMode(displayMode));
         clearGlobalSettingsPreview();
-
-        if (!wasBrandingDirty) {
-          notify.success(saveSuccessMessage, { description: saveSuccessDescription });
-        }
+        savedThemeMode = true;
       } finally {
         setThemeSaving(false);
       }
     }
 
-    if (isDirty) {
+    if (wasBrandingDirty || savedThemeMode) {
       flashSaved();
+      notify.success(saveSuccessMessage, { description: saveSuccessDescription });
     }
   }, [
     branding,
     displayMode,
     displayModeDirty,
     flashSaved,
-    isDirty,
     saveSuccessDescription,
     saveSuccessMessage,
+    t,
   ]);
 
   const handleReset = useCallback(async (): Promise<boolean> => {
@@ -162,7 +170,15 @@ export function useThemeSettingsDraft(
       }
 
       const current = getGlobalSettings();
-      saveGlobalSettings(mergeGlobalSettings({ ...current, theme: defaultMode }));
+      const themeResult = await saveGlobalSettingsAsync(
+        mergeGlobalSettings({ ...current, theme: defaultMode }),
+      );
+      if (!themeResult.ok) {
+        notify.error(t('settings.serverSaveFailed'), {
+          description: t(serverSyncErrorKey(themeResult.status)),
+        });
+        return false;
+      }
       setDisplayModeState(defaultMode);
       setThemeBaseline(defaultMode);
       clearGlobalSettingsPreview();

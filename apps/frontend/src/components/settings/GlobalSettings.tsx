@@ -1,15 +1,11 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Bell, Lock, Languages } from 'lucide-react';
-import { getGlobalSettings, saveGlobalSettings } from '@/lib/db';
-import { clearGlobalSettingsPreview, previewGlobalSettings } from '@/lib/settingsPreview';
 import {
   APP_LANGUAGES,
-  applyDocumentLanguage,
   DEFAULT_GLOBAL_SETTINGS,
   formatLanguageSelectLabel,
   getPasswordPolicyHintKey,
   isRtlLanguage,
-  mergeGlobalSettings,
   normalizeDateFormat,
   normalizePasswordPolicy,
   normalizeSessionTimeout,
@@ -20,13 +16,10 @@ import {
   type AppLanguageCode,
   type AppTranslationKey,
   type DateFormatId,
-  type GlobalSettings as GlobalSettingsData,
   type PasswordPolicyLevel,
 } from '@mms/shared';
-import { notify } from '@/lib/notify';
-import { useSettingsDraft } from '@/hooks/useSettingsDraft';
-import { useSavedFlash } from '@/hooks/useSavedFlash';
 import useTranslation from '@/hooks/useTranslation';
+import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContext';
 import FormSelect from '@/components/ui/FormSelect';
 import { Label } from '@/components/ui/label';
 import SectionCard from '@/components/ui/SectionCard';
@@ -42,7 +35,6 @@ import {
   SettingsPanel,
   SettingsToggleRow,
 } from '@/components/ui/SettingsShell';
-import { globalSettingsPreviewPatch, mergeGlobalSettingsDraft } from '@/lib/settingsGlobalDraft';
 
 /**
  * Regional preferences, notifications, and security.
@@ -50,42 +42,18 @@ import { globalSettingsPreviewPatch, mergeGlobalSettingsDraft } from '@/lib/sett
  */
 export default function GlobalSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const { saved: savedFlash, flashSaved, clearSaved } = useSavedFlash();
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
-  const load = useCallback(() => getGlobalSettings(), []);
-
-  const onPreview = useCallback((draft: GlobalSettingsData) => {
-    previewGlobalSettings(globalSettingsPreviewPatch(draft));
-    applyDocumentLanguage(draft.language);
-  }, []);
-
-  const onSave = useCallback(
-    async (draft: GlobalSettingsData) => {
-      const merged = mergeGlobalSettingsDraft(draft);
-      saveGlobalSettings(merged);
-      clearGlobalSettingsPreview();
-      applyDocumentLanguage(merged.language);
-      flashSaved();
-      notify.success(t('global.savedToast'), { description: t('global.savedToastDesc') });
-    },
-    [flashSaved, t],
-  );
-
-  const { data, dirty, saving, upd: updDraft, handleSave, resetDraft } = useSettingsDraft({
-    load,
-    onPreview,
-    onSave,
-    skipDatabaseSyncWhenDirty: true,
-  });
-
-  const upd = useCallback(
-    <K extends keyof GlobalSettingsData>(field: K, value: GlobalSettingsData[K]): void => {
-      updDraft(field, value);
-      clearSaved();
-    },
-    [clearSaved, updDraft],
-  );
+  const {
+    data,
+    isGlobalDirty,
+    saved,
+    saving,
+    upd,
+    handleSaveGlobal,
+    handleResetGlobal,
+  } = useSettingsGlobalDraft();
 
   const notificationChannel = useMemo(
     () => resolveNotificationChannel(data),
@@ -101,27 +69,22 @@ export default function GlobalSettings(): React.JSX.Element {
     strong: 'global.passwordPolicyStrong',
   };
 
-  const handleReset = (): void => {
-    const current = getGlobalSettings();
-    const reset = mergeGlobalSettings({
-      ...DEFAULT_GLOBAL_SETTINGS,
-      enabledModules: current.enabledModules,
-      theme: current.theme,
-    });
-    saveGlobalSettings(reset);
-    clearGlobalSettingsPreview();
-    resetDraft();
-    clearSaved();
-    applyDocumentLanguage(reset.language);
-    notify.success(t('global.resetToast'), { description: t('global.resetToastDesc') });
+  const confirmReset = async (): Promise<void> => {
+    setResetting(true);
+    try {
+      const ok = await handleResetGlobal();
+      if (ok) setConfirmResetOpen(false);
+    } finally {
+      setResetting(false);
+    }
   };
 
   return (
     <SettingsPanel
       width="narrow"
       introKey="settings.introGlobal"
-      isDirty={dirty}
-      saved={savedFlash}
+      isDirty={isGlobalDirty}
+      saved={saved}
       footer={
         <SettingsFormActions
           resetLabel={t('global.resetToDefaults')}
@@ -129,10 +92,10 @@ export default function GlobalSettings(): React.JSX.Element {
           savingLabel={t('global.saving')}
           savedLabel={t('settings.savedBadge')}
           onReset={() => setConfirmResetOpen(true)}
-          onSave={() => void handleSave()}
-          dirty={dirty}
+          onSave={() => void handleSaveGlobal()}
+          dirty={isGlobalDirty}
           saving={saving}
-          saved={savedFlash}
+          saved={saved}
         />
       }
     >
@@ -281,13 +244,11 @@ export default function GlobalSettings(): React.JSX.Element {
       <SettingsConfirmResetModal
         open={confirmResetOpen}
         onClose={() => setConfirmResetOpen(false)}
-        onConfirm={() => {
-          handleReset();
-          setConfirmResetOpen(false);
-        }}
+        onConfirm={confirmReset}
         titleKey="global.confirmResetTitle"
         descKey="global.confirmResetDesc"
         warningKey="global.resetWarning"
+        loading={resetting}
       />
     </SettingsPanel>
   );
