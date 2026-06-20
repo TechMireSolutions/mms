@@ -2,6 +2,7 @@ import {
   deriveBrandColorsFromPalette,
   type LogoBrandColors,
 } from '@mms/shared';
+import { resolveApiUrl } from '@/lib/apiClient';
 
 export interface ExtractLogoBrandColorsOptions {
   /** Longest canvas edge when sampling pixels (performance vs accuracy). */
@@ -31,6 +32,46 @@ function rgbToHex(r: number, g: number, b: number): string {
   const toHex = (channel: number) =>
     Math.max(0, Math.min(255, channel)).toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function isInlineImageSource(src: string): boolean {
+  return src.startsWith('data:') || src.startsWith('blob:');
+}
+
+function normalizeImageSource(src: string): string {
+  const trimmed = src.trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed) || isInlineImageSource(trimmed)) {
+    return trimmed;
+  }
+  return resolveApiUrl(trimmed);
+}
+
+/** Fetches server-stored AVIF/WebP logos as a blob URL so canvas sampling is not tainted in dev. */
+async function resolveImageLoadSource(
+  src: string,
+): Promise<{ src: string; revoke?: () => void }> {
+  const normalized = normalizeImageSource(src);
+  if (!normalized) {
+    throw new Error('empty_image_source');
+  }
+
+  if (isInlineImageSource(normalized)) {
+    return { src: normalized };
+  }
+
+  const response = await fetch(normalized, { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error('Failed to fetch image for colour extraction');
+  }
+
+  const blob = await response.blob();
+  if (!blob.type.startsWith('image/')) {
+    throw new Error('Invalid image payload');
+  }
+
+  const objectUrl = URL.createObjectURL(blob);
+  return { src: objectUrl, revoke: () => URL.revokeObjectURL(objectUrl) };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -87,18 +128,23 @@ function sampleDominantSwatches(
 
 /**
  * Samples a logo image and derives accessible primary/accent brand colours.
+ * Accepts data URLs (fresh uploads) and stored `/uploads/…` AVIF/WebP paths.
  * Browser-only — uses canvas pixel sampling with transparency filtering and quantization.
  */
 export async function extractLogoBrandColors(
-  imageDataUrl: string,
+  imageSource: string,
   options?: ExtractLogoBrandColorsOptions,
 ): Promise<LogoBrandColors | null> {
-  if (!imageDataUrl.startsWith('data:image/')) return null;
+  if (!imageSource.trim()) return null;
 
   const resolved = { ...DEFAULT_OPTIONS, ...options };
+  let revokeObjectUrl: (() => void) | undefined;
 
   try {
-    const image = await loadImage(imageDataUrl);
+    const loadSource = await resolveImageLoadSource(imageSource);
+    revokeObjectUrl = loadSource.revoke;
+
+    const image = await loadImage(loadSource.src);
     const longestEdge = Math.max(image.naturalWidth, image.naturalHeight, 1);
     const scale = resolved.sampleSize / longestEdge;
     const width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -118,5 +164,7 @@ export async function extractLogoBrandColors(
     return deriveBrandColorsFromPalette(swatches);
   } catch {
     return null;
+  } finally {
+    revokeObjectUrl?.();
   }
 }
