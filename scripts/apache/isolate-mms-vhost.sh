@@ -54,7 +54,7 @@ run_priv() {
   fi
 }
 
-MMS_PORTS="${BACKEND_PORT}|3000|3001|5173|4173"
+MMS_PORTS="${BACKEND_PORT}"
 STRIPPED=false
 
 for conf in /etc/apache2/sites-enabled/*; do
