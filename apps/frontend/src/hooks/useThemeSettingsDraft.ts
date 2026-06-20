@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import {
-  BRANDING_THEME_FIELD_KEYS,
   DEFAULT_GLOBAL_SETTINGS,
   formatBrandingFooterDefault,
   formatThemeDisplayModeSummary,
