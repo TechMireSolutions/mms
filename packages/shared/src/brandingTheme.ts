@@ -187,8 +187,15 @@ export function ensureAccentButtonContrast(accentHex: string): string {
   if (!base) return normalized;
 
   let adjusted = base;
-  for (let step = 0; step < 12; step += 1) {
+  for (let step = 0; step < 24; step += 1) {
     adjusted = tone(adjusted, { l: -4, s: Math.min(6, Math.max(0, 70 - adjusted.s)) });
+    const candidate = hslColorToHex(adjusted);
+    const candidateRatio = getContrastRatio('#ffffff', candidate);
+    if (candidateRatio !== null && meetsWcagAaTextContrast(candidateRatio)) return candidate;
+  }
+
+  while (adjusted.l > 14) {
+    adjusted = tone(adjusted, { l: -3, s: -5 });
     const candidate = hslColorToHex(adjusted);
     const candidateRatio = getContrastRatio('#ffffff', candidate);
     if (candidateRatio !== null && meetsWcagAaTextContrast(candidateRatio)) return candidate;
