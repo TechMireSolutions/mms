@@ -82,7 +82,9 @@
     "always_on": [
       "rules/antigravity-global.md",
       "rules/mms-core.md",
-      "rules/mms-migration-status.md"
+      "rules/mms-migration-status.md",
+      "rules/mms-dependencies.md",
+      "rules/mms-dry.md"
     ],
     "directory": "rules/"
   },

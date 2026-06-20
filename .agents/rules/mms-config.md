@@ -16,14 +16,17 @@ Persist via `db.ts` — not ephemeral React state alone. App-wide singletons use
 
 ## UI entry points
 
-| Config | Key | Where |
-|--------|-----|-------|
-| App-wide | `global_settings` | `/settings/global` |
-| Module on/off | `global_settings.enabledModules` | `/settings/modules` |
-| Institution | branding object (identity fields) | `/settings/branding` |
-| Theme | branding object (colours, footer) | `/settings/theme` |
-| Module prefs | `students_settings`, `attendance_settings`, … | Module → **Setup → Preferences** |
-| Fields/tabs | `contact_field_config`, … | Module → **Setup → Fields** |
+All app-wide settings use **single URL `/settings`** with in-page tab ids — not separate routes.
+
+| Config | Key | Tab id | Where |
+|--------|-----|--------|-------|
+| App-wide | `global_settings` | `global` | `/settings` → Global |
+| Module on/off | `global_settings.enabledModules` | `modules` | `/settings` → Modules |
+| Institution | branding object (identity fields) | `branding` | `/settings` → Branding |
+| Theme | branding object (colours, footer) + `global_settings.theme` | `theme` | `/settings` → Theme |
+| Backup | `backups` collection + export files | `backup` | `/settings` → Backup |
+| Module prefs | `students_settings`, `attendance_settings`, … | — | Module → **Setup → Preferences** |
+| Fields/tabs | `contact_field_config`, … | — | Module → **Setup → Fields** |
 
 **`/settings` does not host per-module Fields/Preferences** — use each module's Setup tab.
 
@@ -51,6 +54,10 @@ Settings that affect visible UI must **preview on change**; **Save** still persi
 | `settingsPreviewStore.ts` | In-memory overlay; `getEffectiveGlobalSettings()` / `getEffectiveBrandingSettings()` |
 | `settingsPreview.ts` | `previewGlobalSettings`, `previewBrandingSettings`, `revertSettingsPreviews` |
 | `useSettingsDraft` | Standard panel hook: draft + dirty + `onPreview` + `onSave` |
+| `useBrandingDraft` / `useThemeSettingsDraft` | Same `branding` record; theme adds display mode from `global_settings.theme` |
+| `useSavedFlash` | Shared 2.5s post-save indicator across settings panels |
+| `settingsGlobalDraft.ts` | `globalSettingsPreviewPatch`, `mergeGlobalSettingsDraft` for Global tab |
+| `settingsModulesDraft.ts` | `previewEnabledModulesDraft`, `saveEnabledModulesDraft`, `resetEnabledModulesToDefaults` |
 | `useGlobalSettings` / `useBranding` | Read effective values; listen to `settings-preview-update` |
 
 ### Panel rules

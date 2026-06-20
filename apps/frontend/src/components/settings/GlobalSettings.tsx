@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Bell, Lock, Languages } from 'lucide-react';
-import { getGlobalSettings, saveGlobalSettings } from '../../lib/db';
+import { getGlobalSettings, saveGlobalSettings } from '@/lib/db';
 import { clearGlobalSettingsPreview, previewGlobalSettings } from '@/lib/settingsPreview';
 import {
   APP_LANGUAGES,
@@ -25,6 +25,7 @@ import {
 } from '@mms/shared';
 import { notify } from '@/lib/notify';
 import { useSettingsDraft } from '@/hooks/useSettingsDraft';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 import useTranslation from '@/hooks/useTranslation';
 import FormSelect from '@/components/ui/FormSelect';
 import { Label } from '@/components/ui/label';
@@ -39,31 +40,8 @@ import {
   SettingsMetaBadge,
   SettingsPanel,
   SettingsToggleRow,
-} from '@/components/settings/SettingsShared';
-
-function globalPreviewPatch(draft: GlobalSettingsData): Partial<GlobalSettingsData> {
-  return {
-    language: draft.language,
-    timezone: normalizeTimezone(draft.timezone, DEFAULT_GLOBAL_SETTINGS.timezone),
-    dateFormat: normalizeDateFormat(
-      draft.dateFormat,
-      DEFAULT_GLOBAL_SETTINGS.dateFormat as DateFormatId,
-    ),
-    emailNotifications: draft.emailNotifications,
-    smsNotifications: draft.smsNotifications,
-    twoFactor: draft.twoFactor,
-    sessionTimeout: normalizeSessionTimeout(draft.sessionTimeout),
-    passwordPolicy: normalizePasswordPolicy(draft.passwordPolicy),
-  };
-}
-
-function persistGlobalDraft(draft: GlobalSettingsData): GlobalSettingsData {
-  const current = getGlobalSettings();
-  return mergeGlobalSettings({
-    ...current,
-    ...globalPreviewPatch(draft),
-  });
-}
+} from '@/components/ui/SettingsShell';
+import { globalSettingsPreviewPatch, mergeGlobalSettingsDraft } from '@/lib/settingsGlobalDraft';
 
 /**
  * Regional preferences, notifications, and security.
@@ -71,26 +49,25 @@ function persistGlobalDraft(draft: GlobalSettingsData): GlobalSettingsData {
  */
 export default function GlobalSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const [savedFlash, setSavedFlash] = useState(false);
+  const { saved: savedFlash, flashSaved, clearSaved } = useSavedFlash();
 
   const load = useCallback(() => getGlobalSettings(), []);
 
   const onPreview = useCallback((draft: GlobalSettingsData) => {
-    previewGlobalSettings(globalPreviewPatch(draft));
+    previewGlobalSettings(globalSettingsPreviewPatch(draft));
     applyDocumentLanguage(draft.language);
   }, []);
 
   const onSave = useCallback(
     async (draft: GlobalSettingsData) => {
-      const merged = persistGlobalDraft(draft);
+      const merged = mergeGlobalSettingsDraft(draft);
       saveGlobalSettings(merged);
       clearGlobalSettingsPreview();
       applyDocumentLanguage(merged.language);
-      setSavedFlash(true);
-      window.setTimeout(() => setSavedFlash(false), 2500);
+      flashSaved();
       notify.success(t('global.savedToast'), { description: t('global.savedToastDesc') });
     },
-    [t],
+    [flashSaved, t],
   );
 
   const { data, dirty, saving, upd, handleSave, resetDraft } = useSettingsDraft({
@@ -124,7 +101,7 @@ export default function GlobalSettings(): React.JSX.Element {
     saveGlobalSettings(reset);
     clearGlobalSettingsPreview();
     resetDraft();
-    setSavedFlash(false);
+    clearSaved();
     applyDocumentLanguage(reset.language);
     notify.success(t('global.resetToast'), { description: t('global.resetToastDesc') });
   };
@@ -139,6 +116,8 @@ export default function GlobalSettings(): React.JSX.Element {
         <SettingsFormActions
           resetLabel={t('global.resetToDefaults')}
           saveLabel={t('global.saveSettings')}
+          savingLabel={t('theme.saving')}
+          savedLabel={t('settings.savedBadge')}
           onReset={handleReset}
           onSave={() => void handleSave()}
           dirty={dirty}

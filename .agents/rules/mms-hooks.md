@@ -52,6 +52,9 @@ Fields filtered by `enabled`, sorted by `order`. Use with `FormPrimitives` — n
 | `useGlobalSettings()` | Reactive `global_settings` (incl. `enabledModules`, theme) |
 | `useBranding()` | Branding CSS variables from `branding` object |
 | `useBrandingDraft()` / `useThemeSettingsDraft()` / `useSettingsDraft()` | Settings preview before save (`mms-config.md`) |
+| `useSavedFlash()` | 2.5s post-save flash for settings panel footers |
+| `useApplyLogoColors()` | Samples logo → applies primary/secondary via `extractLogoBrandColors` |
+| `useBackupRestore()` | Backup export/import/decrypt/restore/history state machine |
 | `useBrandedDashboardChartColors()` | Chart palette from branding |
 | `useTenantBranding()` | Blocks auth UI until public branding fetched |
 | `useWorkspaceBySubdomain()` | TanStack Query workspace lookup by subdomain |

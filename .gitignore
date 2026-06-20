@@ -45,6 +45,9 @@ blob-report/
 # Local pnpm store (should never be committed)
 .pnpm-store/
 
+# Claude Code personal overrides
+.claude/settings.local.json
+
 # WhatsApp Web session data
 .wwebjs_auth
 .wwebjs_cache

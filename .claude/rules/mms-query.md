@@ -1,0 +1,101 @@
+---
+description: TanStack Query for server state — when to use vs useLiveCollection
+paths:
+  - "apps/frontend/src/hooks/**"
+  - "apps/frontend/src/pages/**"
+  - "apps/frontend/src/lib/contexts/AuthContext.tsx"
+  - "apps/frontend/src/lib/apiClient.ts"
+  - "apps/frontend/src/lib/query-client.ts"
+---
+
+# MMS Data Fetching (TanStack Query)
+
+## Choose the right layer
+
+| Data | Pattern | Rule owner |
+|------|---------|------------|
+| Local collections (`mms_*` / sync API) | `useLiveCollection` + `saveCollection` | `mms-data-layer.md` |
+| Dedicated REST endpoints | `useQuery` / `useMutation` + **`apiJson`** | this file |
+| Cross-view refresh (local) | `local-database-update` event | `mms-data-layer.md` |
+
+**Banned:** bare `fetch` in `useEffect` for server state; raw `fetch('/api/...')` in hooks — use `apiClient` (`mms-frontend.md`).
+
+## Reference implementations
+
+| Hook | Query key | Endpoint |
+|------|-----------|----------|
+| `useWorkspaceRegistry` | `['workspace', 'registry']` | `GET /api/workspace/registry` |
+| `useStudents` | `STUDENTS_QUERY_KEY` | `GET /api/students` |
+| `useStudentMutations` | invalidates students + count | `POST/PUT/DELETE /api/students` |
+| `useStudentCount` | `STUDENT_COUNT_QUERY_KEY` | `GET /api/students/count` |
+| `useContacts` | `CONTACTS_QUERY_KEY` | `GET /api/contacts` |
+| `useContactMutations` | invalidates contacts + count | `POST/PUT/DELETE /api/contacts` |
+
+Auth/session: `AuthContext` — `/api/auth/me`, login, handoff (via `apiClient`).
+
+**Resolved:** `TenantContext` workspace lookup and `useTenantBranding` fallback use Query (`useWorkspaceBySubdomain`, `usePublicBranding`).
+
+## Query client defaults
+
+`lib/query-client.ts`: `refetchOnWindowFocus: false`, `retry: 1`. List endpoints typically `staleTime: 30_000`.
+
+## Query conventions
+
+```tsx
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiJson } from '@/lib/apiClient';
+import { useAuth } from '@/lib/contexts/AuthContext';
+
+export const STUDENTS_QUERY_KEY = ['students', 'list'] as const;
+
+useQuery({
+  queryKey: STUDENTS_QUERY_KEY,
+  queryFn: () => apiJson<{ students: Student[] }>('/api/students').then(r => r.students),
+  enabled: isAuthenticated,
+  staleTime: 30_000,
+});
+```
+
+- **Keys:** stable tuples — export as `const` from the hook file
+- **Auth gate:** `enabled: isAuthenticated` from `useAuth()` on tenant REST hooks
+- **Mutations:** `onSuccess` → `queryClient.invalidateQueries` for affected keys (include count keys when applicable)
+- **Errors:** surface via `notify.error` with `t()` — no silent failure; expose `isError` in UI where appropriate
+- **Loading:** use `isPending` / `isFetching` — not parallel one-shot `useState` loaders
+
+## Hybrid migration (Query + localStorage cache)
+
+When KPI/report widgets still read `useLiveCollection`, sync after server fetch:
+
+```ts
+async function fetchContacts(): Promise<Contact[]> {
+  const body = await apiJson<{ contacts: Contact[] }>('/api/contacts');
+  saveCollection('contacts', body.contacts);
+  return body.contacts;
+}
+
+/** Query-first; falls back to localStorage when query empty (offline/boot). */
+export function useContactsCollection(): Contact[] {
+  const { data: fromQuery = [] } = useContacts();
+  const fromLocal = useLiveCollection<Contact>('contacts');
+  return fromQuery.length > 0 ? fromQuery : fromLocal;
+}
+```
+
+Pages use `useXxxCollection()` for reads; mutations go through `useXxxMutations()` only — not parallel `saveCollection` + Query for the same write.
+
+## Scope
+
+- Existing module CRUD on `/api/db/collections/*` stays on `useLiveCollection` until migrated intentionally
+- **New domain with backend resource routes:** Query-first — server is source of truth (`mms-data-layer.md` trajectory)
+- **Do not** add `useLiveCollection` for an entity that already has Query hooks in the same page
+
+## Checklist (new REST feature)
+
+- [ ] `useQuery` or `useMutation` — not manual `useEffect` + `fetch`
+- [ ] All requests through `apiFetch` / `apiJson`
+- [ ] Query key exported as named constant
+- [ ] `enabled: isAuthenticated` when tenant-scoped
+- [ ] DTO types from `@mms/shared` or colocated interface
+- [ ] Invalidation on writes (list + count keys)
+- [ ] Page uses hook — not duplicate `useLiveCollection` for same entity reads
+- [ ] Optional: `saveCollection` in `queryFn` if legacy analytics still on localStorage

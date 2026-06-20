@@ -9,11 +9,16 @@ description: Extends @mms/shared with types, settings defaults, contact schemas,
 
 ```
 packages/shared/src/
-  index.ts          # User + re-exports
-  contactTypes.ts   # Contact, FieldDefinition, TAB_REGISTRY, …
-  settingsTypes.ts  # GlobalSettings, *Settings, DEFAULT_*, optimizeImage (AVIF), canvasToOptimizedDataUrl
-  utils.ts          # formatDate, parsePhoneNumber, toTitleCase, …
+  index.ts              # Re-exports
+  contactTypes.ts       # Contact, FieldDefinition, TAB_REGISTRY, …
+  settingsTypes.ts      # GlobalSettings, SYSTEM_MODULES, SYSTEM_MODULE_NAV, DEFAULT_*, image optimize
+  brandingTheme.ts      # CSS token derivation, light/dark surfaces, WCAG AA contrast
+  logoBrandColors.ts    # Accessible primary/secondary from logo palette
+  logoPaletteSampling.ts
+  utils.ts              # formatDate, parsePhoneNumber, toTitleCase, …
 ```
+
+Unit tests: `brandingTheme.test.ts`, `logoBrandColors.test.ts` — add tests for new pure helpers.
 
 ## Add export
 

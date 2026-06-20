@@ -11,6 +11,7 @@ alwaysApply: false
 - **Surfaces:** Glassmorphism (`backdrop-blur`, translucent borders) — match existing module cards.
 - **Charts:** Recharts only.
 - **Theme:** CSS variables from `branding` + `global_settings`; `useBranding()` / `App.tsx` injection.
+- **Accessible brand colours:** `@mms/shared` `brandingTheme.ts` + `logoBrandColors.ts` — WCAG AA on primary/accent and muted text tokens; FE previews use derived tokens (`BrandColorPanel`), not raw hex on surfaces.
 - **Responsive:** Mobile-first — `mms-frontend.mdc` owns breakpoints and touch targets.
 - **Motion:** Honour `prefers-reduced-motion` for decorative Framer loops (`mms-a11y.mdc`).
 

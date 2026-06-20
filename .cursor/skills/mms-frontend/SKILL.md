@@ -72,7 +72,7 @@ Reference: `hooks/useStudents.ts`, `hooks/useContacts.ts`, `pages/Students.tsx`.
 
 ```
 - [ ] Page in src/pages/ — lazy import in HostRoutes.tsx
-- [ ] Nav in lib/navConfig.tsx + SYSTEM_MODULES in @mms/shared
+- [ ] Nav in `lib/config/navConfig.tsx` + SYSTEM_MODULES in @mms/shared
 - [ ] Three-tier tabs: useModuleTierTabs + ResponsiveAccordionTabs
 - [ ] PageHeader actions unconditional (not gated on activeTab)
 - [ ] ErrorBoundary on Work/Reports
@@ -83,6 +83,27 @@ Reference: `hooks/useStudents.ts`, `hooks/useContacts.ts`, `pages/Students.tsx`.
 ```
 
 Full module pattern: skill `mms-module-page`.
+
+## Settings page (`/settings`)
+
+App-wide settings only — **not** per-module Fields/Preferences (those live in module Setup tabs).
+
+```
+pages/Settings.tsx          → SETTINGS_NAV + lazy SETTINGS_SECTION_COMPONENTS
+components/settings/        → Global, Branding, Theme, SystemModules, BackupRestore
+components/settings/backup/ → export/import/history sections (logic in useBackupRestore)
+components/settings/modules/ModuleSettingsNavGrid.tsx → SYSTEM_MODULE_NAV toggles
+hooks/useSettingsDraft.ts   → generic draft + preview + save
+hooks/useBrandingDraft.ts   → branding record (Branding + Theme tabs)
+hooks/useThemeSettingsDraft.ts
+hooks/useBackupRestore.ts   → backup state machine
+hooks/useSavedFlash.ts      → post-save footer flash
+hooks/useApplyLogoColors.ts → logo → primary/secondary
+```
+
+Rules: `mms-settings-navigation.mdc`, `mms-config.mdc`, `mms-hooks.mdc`.
+
+New section checklist: add to `SETTINGS_SECTIONS`, `SETTINGS_NAV`, `SETTINGS_SECTION_COMPONENTS`; use `SettingsPanel` + `SettingsFormActions`; preview via `settingsPreview.ts`; all copy via `t()`.
 
 ## Provider tree (do not break)
 
@@ -100,6 +121,11 @@ Never nest `ContactConfigProvider` on child pages.
 | `lib/contexts/TenantContext.tsx` | Subdomain / workspace |
 | `lib/config/routes.ts` | Path constants |
 | `lib/config/navConfig.tsx` | Sidebar nav |
+| `lib/config/settingsNavConfig.ts` | `/settings` sidebar items |
+| `lib/config/settingsSectionComponents.tsx` | Lazy settings section registry |
+| `lib/config/moduleIcons.ts` | `resolveModuleIcon()` for system modules |
+| `lib/settingsGlobalDraft.ts` / `lib/settingsModulesDraft.ts` | Global/Modules preview + save helpers |
+| `lib/backup/` | Backup download, history, restore types |
 | `lib/routing/routePrefetch.ts` | Lazy route chunk warmup |
 | `lib/data/*Data.ts` | Module seed/mock collections |
 | `lib/notify.ts` | Toasts — sole user feedback API |

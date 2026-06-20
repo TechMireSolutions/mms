@@ -12,6 +12,9 @@ App-wide DRY policy: **`mms-dry.md`**. This file covers the shared package only.
 |------|----------|
 | `contactTypes.ts` | `Contact`, `FieldDefinition`, `FieldConfig`, `TAB_REGISTRY`, `INITIAL_FIELD_SEED`, `GENDERS`, … |
 | `settingsTypes.ts` | `GlobalSettings`, `SYSTEM_MODULES`, `SYSTEM_MODULE_NAV`, per-module `*Settings`, `DEFAULT_*`, `optimizeImage` (AVIF), `canvasToOptimizedDataUrl` |
+| `brandingTheme.ts` | CSS token derivation, light/dark surfaces, WCAG AA contrast (`ensureAccentButtonContrast`, preset accessibility) |
+| `logoBrandColors.ts` | Logo palette → accessible primary/secondary pick |
+| `logoPaletteSampling.ts` | Pure palette math helpers for logo colour extraction |
 | `appTranslations.ts` | `AppTranslationKey`, `APP_TRANSLATIONS`, `translateApp`, `translateAppParams` |
 | `appTranslationsUr.ts` / `appTranslationsFa.ts` | Urdu / Persian override packs (`mms-i18n.md`) |
 | `languageUtils.ts` | `APP_LANGUAGES`, locale helpers |

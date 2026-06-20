@@ -18,7 +18,7 @@ import FormSelect from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { SettingsCallout, SettingsMetaBadge } from '@/components/settings/SettingsShared';
+import { SettingsCallout, SettingsMetaBadge } from '@/components/ui/SettingsShell';
 
 interface EmailIntegrationPanelProps {
   emailNotificationsEnabled: boolean;

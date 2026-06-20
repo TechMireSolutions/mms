@@ -1,6 +1,6 @@
 # MMS Project Skills
 
-Agent skills for Cursor and Antigravity. Cursor discovers these from `description` frontmatter; Antigravity reads `.agent/skills/` (symlink → `.agents/skills/`).
+Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover these from `description` frontmatter; Antigravity reads `.agent/skills/` (symlink → `.agents/skills/`).
 
 **Antigravity:** start with [antigravity-workspace](antigravity-workspace/SKILL.md). Manifest: [.agents/skills-manifest.json](../.agents/skills-manifest.json)
 
@@ -31,9 +31,9 @@ Agent skills for Cursor and Antigravity. Cursor discovers these from `descriptio
 | **Rules** | `.cursor/rules/*.mdc` | Auto-applied (always or by glob) |
 | **Skills** | `.cursor/skills/*/SKILL.md` | Invoked when description matches task |
 
-Always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`.
+Always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-dependencies`, `mms-dry`.
 
-Frontend work: rules `mms-frontend`, `mms-query`, `mms-hooks`, `mms-ui-*` + skill **`mms-frontend`**.
+Frontend work: rules `mms-frontend`, `mms-query`, `mms-hooks`, `mms-ui-*`, `mms-settings-navigation`, `mms-config` + skill **`mms-frontend`** (includes `/settings` page patterns).
 
 ## Verify setup
 
@@ -42,12 +42,18 @@ bash .cursor/skills/mms-dev-setup/scripts/verify-env.sh
 pnpm install && pnpm typecheck && pnpm test
 ```
 
-## Antigravity mirror
+## Antigravity / Claude / Cursor mirror
 
-Identical skills in `.agents/skills/`. Workflows in `.agents/workflows/`. Rules in `.agents/rules/`.
+| Tool | Skills path |
+|------|-------------|
+| Antigravity | `.agents/skills/` (canonical) |
+| Cursor | `.cursor/skills/` |
+| Claude Code | `.claude/skills/` |
 
-After editing skills in `.agents/skills/`, run:
+Identical skill folders in all three. Workflows in `.agents/workflows/` (Claude reference: `.claude/docs/workflows/`). Rules in `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`.
+
+After editing skills or rules:
 
 ```bash
-bash .agents/scripts/sync-skills.sh
+bash .agents/scripts/sync-all.sh
 ```

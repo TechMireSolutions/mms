@@ -6,7 +6,7 @@ trigger: model_decision
 
 Authoritative split between **app-wide settings** (`/settings`) and **per-module setup** (each module's **Setup** tab, id `configuration`). Navigation and the System Modules page share one registry in `@mms/shared`.
 
-## App navigation (`lib/navConfig.tsx`)
+## App navigation (`lib/config/navConfig.tsx`)
 
 `NAV_ITEMS` is the sidebar/mobile nav source of truth.
 
@@ -37,7 +37,24 @@ All sections live at **`/settings`** only. Tab state is in-page (`usePersistedTa
 | `theme` | `ThemeSettings` | Display mode (light/dark/system), brand colours, footer |
 | `backup` | `BackupRestore` | Data backup |
 
-`SETTINGS_SECTIONS` in `routes.ts` lists **only** these five ids. Legacy `/settings/:section` redirects to `/settings`. Use `setActiveTab()` from `SettingsTabContext` for cross-panel jumps (e.g. Theme → Institution).
+`SETTINGS_SECTIONS` in `lib/config/routes.ts` lists **only** these five ids. Legacy `/settings/:section` redirects to `/settings`. Use `setActiveTab()` from `SettingsTabContext` for cross-panel jumps (e.g. Theme → Institution).
+
+### Settings page architecture
+
+| Layer | Owner | Role |
+|-------|-------|------|
+| Tab shell | `pages/Settings.tsx` | `SETTINGS_NAV` sidebar + lazy section mount |
+| Nav config | `lib/config/settingsNavConfig.ts` | Order, icons, i18n keys — runtime check vs `SETTINGS_SECTIONS` |
+| Section registry | `lib/config/settingsSectionComponents.tsx` | `SETTINGS_SECTION_COMPONENTS` — lazy map keyed by `SettingsSection` |
+| Panel shell | `components/ui/SettingsShell.tsx` | `SettingsPanel`, callouts, badges |
+| Actions | `components/ui/SettingsFormActions.tsx` | Save/Reset footer — all labels via `t()` |
+| Draft hooks | `useSettingsDraft`, `useBrandingDraft`, `useThemeSettingsDraft` | Draft + dirty + preview + save |
+| Draft helpers | `lib/settingsGlobalDraft.ts`, `lib/settingsModulesDraft.ts` | Preview patch / merge for Global + Modules panels |
+| Module grid | `components/settings/modules/ModuleSettingsNavGrid.tsx` | Renders `SYSTEM_MODULE_NAV` with toggles |
+| Module icons | `lib/config/moduleIcons.ts` | `resolveModuleIcon()` for `SYSTEM_MODULES.icon` strings |
+| Backup | `hooks/useBackupRestore.ts` + `lib/backup/*` + `components/settings/backup/*` | Logic in hook; UI split into export/import/history sections |
+
+**Banned:** resurrecting `SettingsShared.tsx` or monolithic panel files — extract hooks + section components when a panel exceeds ~300 lines.
 
 ### Banned on `/settings`
 
@@ -88,7 +105,7 @@ Mirrors sidebar grouping for `/settings/modules`:
 2. **Group `Academics`**: `students`, `sessions`, `attendance`, `enrollment`, `hasanat`, `examination`
 3. Standalone: `finance`, `accounting`, `users`
 
-`SystemModulesSettings` renders standalone entries in pairs (2-col grid) and Academics as a nested bordered panel with a group header (`BookOpen`).
+`SystemModulesSettings` delegates layout to **`ModuleSettingsNavGrid`** — standalone entries in pairs (2-col grid) and Academics as a nested bordered panel with a group header (`BookOpen`).
 
 ### Not in `SYSTEM_MODULE_NAV`
 
@@ -101,7 +118,7 @@ Required modules (`dashboard`, `contacts`, `students`, `users`) show a **Require
 
 ## Adding or moving a module (checklist)
 
-1. **Nav** — add to `NAV_ITEMS` in `navConfig.tsx` (standalone or Academics `subItems`); set `moduleId`.
+1. **Nav** — add to `NAV_ITEMS` in `lib/config/navConfig.tsx` (standalone or Academics `subItems`); set `moduleId`.
 2. **Registry** — add entry to `SYSTEM_MODULES` in `settingsTypes.ts`.
 3. **Layout** — add to `SYSTEM_MODULE_NAV` (standalone or Academics `moduleIds`).
 4. **Defaults** — add key to `DEFAULT_GLOBAL_SETTINGS.enabledModules`.
@@ -116,10 +133,10 @@ When renaming or regrouping nav items, update `SYSTEM_MODULE_NAV` in the same ch
 |------|-------------|--------------|
 | App locale, security | `global_settings` | `/settings` → Global tab |
 | Display mode, brand colours, footer | `global_settings.theme` + `branding` | `/settings` → Theme tab |
-| Module enable/disable | `global_settings.enabledModules` | `/settings` → Modules tab |
+| Module enable/disable | `global_settings.enabledModules` | `/settings` → Modules tab (`saveEnabledModulesDraft`) |
 | Module fields/prefs | `{module}_settings`, field registries | Module → Setup |
 
-`enabledModules` changes save via `saveObject("global_settings", …)` in `SystemModulesSettings`.
+Module toggles persist via `saveEnabledModulesDraft` in `settingsModulesDraft.ts` — not raw `saveObject`.
 
 ## Anti-patterns
 

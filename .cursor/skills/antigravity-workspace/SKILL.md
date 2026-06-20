@@ -15,7 +15,10 @@ description: Orients Antigravity agents to the MMS workspace layout — .agents 
   workflows/   # slash-command style procedures
 ```
 
-Cursor equivalent: `.cursor/rules/` + `.cursor/skills/` (keep in sync when editing).
+Cursor equivalent: `.cursor/rules/` + `.cursor/skills/`  
+Claude Code equivalent: `.claude/rules/` + `.claude/skills/` + root `CLAUDE.md`
+
+Keep in sync when editing: `bash .agents/scripts/sync-all.sh`
 
 ## Always-on rules
 
@@ -24,6 +27,8 @@ Cursor equivalent: `.cursor/rules/` + `.cursor/skills/` (keep in sync when editi
 | `rules/antigravity-global.md` | Agent cognition, output, security |
 | `rules/mms-core.md` | MMS stack & boundaries |
 | `rules/mms-migration-status.md` | Known tech debt — don't fix opportunistically |
+| `rules/mms-dependencies.md` | Node/pnpm/workspace dependency upgrades |
+| `rules/mms-dry.md` | DRY policy and extraction thresholds |
 
 ## Skills index
 
@@ -34,16 +39,23 @@ See `skills/README.md`. Invoke by task keywords or `@skill-name` if your client 
 ```bash
 pnpm install && pnpm typecheck
 bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
-pnpm dev   # foreground turbo — prefer ./restart_servers.sh for local dev
+./restart_servers.sh   # local dev (screen)
 ```
 
 ## Sync policy
 
 When changing standards:
 
-1. Update `.cursor/rules/*.mdc` (Cursor)
-2. Mirror `.agents/rules/*.md`
-3. Mirror `.agents/skills/*/SKILL.md` with `.cursor/skills/` via `bash .agents/scripts/sync-skills.sh`
+1. Update `.cursor/rules/*.mdc` (Cursor) or `.agents/skills/*/SKILL.md` (skills)
+2. Run `bash .agents/scripts/sync-all.sh` to mirror **Antigravity**, **Cursor**, and **Claude Code**
+
+| Target | Path | Frontmatter |
+|--------|------|-------------|
+| Cursor | `.cursor/rules/*.mdc` | `globs` + `alwaysApply` |
+| Antigravity | `.agents/rules/*.md` | `trigger: always_on \| model_decision` |
+| Claude Code | `.claude/rules/*.md` | `paths:` (scoped) or none (always-on) |
+
+Skills canonical in `.agents/skills/` → mirrored to `.cursor/skills/` and `.claude/skills/`.
 
 ## Project root guide
 

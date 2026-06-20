@@ -20,7 +20,11 @@ App shell, bundles, and cross-cutting FE concerns. Module/UI detail lives in sco
 | `hooks/` | Reusable hooks — server state + live collections |
 | `lib/apiClient.ts`, `lib/db.ts`, `lib/notify.ts` | Core infrastructure |
 | `lib/contexts/` | React contexts (`AuthContext`, `TenantContext`, …) |
-| `lib/config/` | `env`, `routes`, `navConfig`, `tenantConfig` |
+| `lib/config/` | `env`, `routes`, `navConfig`, `tenantConfig`, `settingsNavConfig`, `settingsSectionComponents`, `moduleIcons` |
+| `lib/settingsPreview.ts`, `lib/settingsPreviewStore.ts` | Live settings preview overlay |
+| `lib/settingsGlobalDraft.ts`, `lib/settingsModulesDraft.ts` | Global/Modules panel draft helpers |
+| `lib/backup/` | Backup download, history entry, restore types |
+| `lib/extractLogoBrandColors.ts` | Canvas logo sampling → `@mms/shared` palette |
 | `lib/routing/` | `appNavigate`, `routePrefetch` |
 | `lib/data/` | Module seed/mock collections (`*Data.ts`) |
 | `lib/contactConfig/` | Contact validation, prefs, profile metrics (split from context) |
@@ -126,6 +130,21 @@ export function useStudentsCollection() {
 
 Avoid bare `fetch` in `useEffect` for server state.
 
+## Settings page (`/settings`)
+
+Thin orchestrator pattern — detail in `mms-settings-navigation.md` + `mms-config.md`.
+
+| Piece | Path |
+|-------|------|
+| Page shell | `pages/Settings.tsx` — `SETTINGS_NAV` + `SETTINGS_SECTION_COMPONENTS` |
+| Nav config | `lib/config/settingsNavConfig.ts` |
+| Lazy sections | `lib/config/settingsSectionComponents.tsx` |
+| Panels | `components/settings/{Global,Branding,Theme,SystemModules,Backup}*.tsx` |
+| Sub-sections | `components/settings/backup/*`, `components/settings/modules/ModuleSettingsNavGrid.tsx` |
+| Shared shell | `components/ui/SettingsShell.tsx`, `SettingsFormActions.tsx` |
+
+New settings section checklist: add id to `SETTINGS_SECTIONS` + `SETTINGS_NAV` + `SETTINGS_SECTION_COMPONENTS`; panel uses `useSettingsDraft` or domain draft hook; preview via `settingsPreview.ts`; i18n via `t()`.
+
 ## Large module files
 
 Split by concern — keep page files thin:
@@ -134,6 +153,8 @@ Split by concern — keep page files thin:
 |--------|-----------|
 | Contact config | `lib/contactConfig/` (profileMetrics, prefsStorage, validationSchema) |
 | Pinned widgets | `components/reports/pinnedWidgets/` (types, widgetDataUtils, widgetDefaults) |
+| Settings backup | `hooks/useBackupRestore.ts` + `lib/backup/*` + `components/settings/backup/*` |
+| Settings modules | `components/settings/modules/ModuleSettingsNavGrid.tsx` |
 
 Re-export from the original entry file so imports stay stable.
 

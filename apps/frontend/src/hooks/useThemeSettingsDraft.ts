@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 import {
   BRANDING_THEME_FIELD_KEYS,
   DEFAULT_GLOBAL_SETTINGS,
@@ -54,6 +55,7 @@ export function useThemeSettingsDraft(
   saveSuccessDescription: string,
 ): UseThemeSettingsDraftResult {
   const { t, language } = useTranslation();
+  const { saved: savedFlash, flashSaved, clearSaved: clearSavedFlash } = useSavedFlash();
   const branding = useBrandingDraft({
     saveSuccessMessage,
     saveSuccessDescription,
@@ -62,7 +64,6 @@ export function useThemeSettingsDraft(
 
   const [themeBaseline, setThemeBaseline] = useState(loadPersistedThemeMode);
   const [displayMode, setDisplayModeState] = useState(loadEffectiveThemeMode);
-  const [savedFlash, setSavedFlash] = useState(false);
   const [themeSaving, setThemeSaving] = useState(false);
   const [systemPrefersDark, setSystemPrefersDark] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches,
@@ -110,7 +111,7 @@ export function useThemeSettingsDraft(
 
   const setDisplayMode = useCallback((mode: ThemeMode): void => {
     setDisplayModeState(normalizeThemeMode(mode));
-    setSavedFlash(false);
+    clearSavedFlash();
   }, []);
 
   const handleSave = useCallback(async (): Promise<void> => {
@@ -140,13 +141,13 @@ export function useThemeSettingsDraft(
     }
 
     if (isDirty) {
-      setSavedFlash(true);
-      window.setTimeout(() => setSavedFlash(false), 2500);
+      flashSaved();
     }
   }, [
     branding,
     displayMode,
     displayModeDirty,
+    flashSaved,
     isDirty,
     saveSuccessDescription,
     saveSuccessMessage,

@@ -49,7 +49,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | Logging, health, error boundaries | `mms-observability.mdc` | `mms-backend`, `mms-ui-rendering` |
 | Accessibility (WCAG baseline) | `mms-a11y.mdc` | `mms-ui-rendering`, `mms-i18n` |
 
-## File-scoped (auto-attach by glob) — 30 rules
+## File-scoped (auto-attach by glob) — 31 rules
 
 | Rule | Focus |
 |------|-------|
@@ -89,13 +89,21 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 
 `.cursor/skills/` — task-discovered workflow guides. Index: [../skills/README.md](../skills/README.md). Overview: [../../AGENTS.md](../../AGENTS.md).
 
-## Agent mirror
+## Agent mirrors
 
-`.agents/rules/` — same body content for Antigravity (`.md` + `trigger` frontmatter). **Rename policy:** use `mms-*` everywhere (no standalone `reports.md`).
+| Tool | Rules | Skills |
+|------|-------|--------|
+| **Antigravity** | `.agents/rules/*.md` (`.agent/` symlink) | `.agents/skills/` |
+| **Claude Code** | `.claude/rules/*.md` | `.claude/skills/` |
+| **Cursor** | `.cursor/rules/*.mdc` (canonical for rule bodies) | `.cursor/skills/` |
 
-**Sync policy:** rule bodies must stay identical; only frontmatter differs (Cursor: `globs` + `alwaysApply`; Antigravity: `trigger`). Cross-references use `.mdc` here, `.md` in `.agents/rules/`. Update **both** trees when changing standards.
+**Sync policy:** rule bodies identical across all three; only frontmatter differs (Cursor: `globs` + `alwaysApply`; Antigravity: `trigger`; Claude: `paths` or always-on). Cross-references use `.mdc` in Cursor, `.md` elsewhere.
 
-After editing `.mdc` files, run: `bash .agents/scripts/sync-rules.sh`
+After editing standards:
+
+```bash
+bash .agents/scripts/sync-all.sh
+```
 
 ## PR / change checklist
 
@@ -105,7 +113,7 @@ After editing `.mdc` files, run: `bash .agents/scripts/sync-rules.sh`
 - [ ] Module tiers respect `mms-module-isolation.mdc`
 - [ ] Shared logic in `@mms/shared` if cross-app or 2+ modules
 - [ ] No commit unless user requested
-- [ ] Update **both** `.cursor/rules/*.mdc` and `.agents/rules/*.md` when changing standards
+- [ ] Update **all mirrors** when changing standards: `bash .agents/scripts/sync-all.sh`
 - [ ] Auth/write routes: `mms-security.mdc` + `mms-rbac.mdc`
 - [ ] New UI: `mms-a11y.mdc` keyboard + labels
 - [ ] New `@mms/shared` pure helpers: unit test per `mms-testing.mdc`
@@ -120,4 +128,4 @@ After editing `.mdc` files, run: `bash .agents/scripts/sync-rules.sh`
 
 ## Verify in Cursor
 
-**Settings → Rules** — five always-apply rules + 30 file-scoped rules when matching paths are open (**35 total**).
+**Settings → Rules** — five always-apply rules + 31 file-scoped rules when matching paths are open (**36 total**).

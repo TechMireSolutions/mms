@@ -24,7 +24,7 @@ Reference implementations:
 
 ```
 - [ ] Page in apps/frontend/src/pages/ — lazy route in HostRoutes.tsx
-- [ ] Nav entry in lib/navConfig.tsx (standalone or Academics subItems; set moduleId)
+- [ ] Nav entry in `lib/config/navConfig.tsx` (standalone or Academics subItems; set moduleId)
 - [ ] Registry: SYSTEM_MODULES + SYSTEM_MODULE_NAV + enabledModules default in @mms/shared
 - [ ] PageHeader with unconditional actions in .actions
 - [ ] ResponsiveAccordionTabs + useModuleTierTabs (mms-ui-tabs.mdc)

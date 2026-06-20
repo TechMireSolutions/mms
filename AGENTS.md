@@ -1,6 +1,6 @@
 # MMS — Agent Guide
 
-Madrasa Management System monorepo. For **Cursor** and **Antigravity** (and any agent reading `.agents/`).
+Madrasa Management System monorepo. For **Cursor**, **Antigravity**, **Claude Code**, and any agent reading `.agents/`.
 
 ## Quick commands
 
@@ -29,6 +29,17 @@ Start here in Antigravity: **skill `antigravity-workspace`**
 .cursor/
   rules/             # .mdc rules (alwaysApply + globs)
   skills/            # same skills as .agents/skills/
+```
+
+## Claude Code layout
+
+```
+CLAUDE.md            # Session entry (points here + sync commands)
+.claude/
+  rules/             # path-scoped .md rules (synced from .cursor/rules)
+  skills/            # same skills as .agents/skills/
+  settings.json      # permissions template (team defaults)
+  docs/workflows/    # reference copies of .agents/workflows/
 ```
 
 ## Always-on rules (both tools)
@@ -73,16 +84,29 @@ Index: [.agents/skills/README.md](.agents/skills/README.md)
 
 When editing standards, update **both**:
 
-1. `.cursor/rules/` and `.cursor/skills/`
-2. `.agents/rules/` and `.agents/skills/`
+1. `.cursor/rules/` and `.cursor/skills/` (or edit skills in `.agents/skills/` first)
+2. `.agents/rules/` and `.agents/skills/` (Antigravity)
+3. `.claude/rules/` and `.claude/skills/` (Claude Code)
 
-Rule **bodies** must stay identical between `.cursor/rules/*.mdc` and `.agents/rules/*.md`. Only frontmatter differs: Cursor uses `globs` + `alwaysApply`; Antigravity uses `trigger` (`always_on` | `model_decision`). Cross-references use `.mdc` in Cursor, `.md` in Antigravity.
+Rule **bodies** must stay identical between `.cursor/rules/*.mdc`, `.agents/rules/*.md`, and `.claude/rules/*.md`. Only frontmatter differs:
 
-Sync after `.mdc` edits: `bash .agents/scripts/sync-rules.sh`
+| Tool | Frontmatter |
+|------|-------------|
+| Cursor | `globs` + `alwaysApply` |
+| Antigravity | `trigger: always_on \| model_decision` |
+| Claude Code | `paths:` (scoped) or none (always-on) |
 
-Sync skills to Cursor: `bash .agents/scripts/sync-skills.sh`
+Cross-references use `.mdc` in Cursor, `.md` in Antigravity and Claude.
 
-**35 rules** (5 always-on + 30 scoped): product (`mms-ui-*`, `mms-fields`, `mms-structure`, `mms-naming`, …), platform (`mms-dependencies`, `mms-dry`, `mms-security`, …). Index: `.cursor/rules/README.md`.
+**One command after rule/skill edits:**
+
+```bash
+bash .agents/scripts/sync-all.sh
+```
+
+Individual targets: `sync-rules.sh` (→ Antigravity), `sync-skills.sh` (→ Cursor), `sync-claude.sh` (→ Claude).
+
+**36 rules** (5 always-on + 31 scoped): product (`mms-ui-*`, `mms-fields`, `mms-structure`, `mms-naming`, …), platform (`mms-dependencies`, `mms-dry`, `mms-security`, …). Index: `.cursor/rules/README.md`.
 
 **Rule index:** [.cursor/rules/README.md](.cursor/rules/README.md) — canonical owner per topic (avoids duplicating tier/isolation/i18n prose).
 

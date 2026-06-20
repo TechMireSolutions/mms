@@ -48,6 +48,10 @@ E2E when touching auth/routing: `pnpm exec playwright test`
 - [ ] Module tier: `work` | `reports` | `setup`
 - [ ] `ResponsiveAccordionTabs` / `SubTabBar` — no inline tab bars
 - [ ] `FormModal` for add/edit entity dialogs when touching legacy overlays
+- [ ] Settings panels use `useSettingsDraft` / domain draft hooks + live preview — not direct `saveObject` on change
+- [ ] New settings section: registered in `SETTINGS_SECTIONS`, `SETTINGS_NAV`, `SETTINGS_SECTION_COMPONENTS`
+- [ ] Settings footer labels via `t()` — no hardcoded save-state strings in `SettingsFormActions`
+- [ ] Brand colour previews use derived tokens (`brandingTheme`) — not raw hex on surfaces
 
 ### RBAC (frontend)
 - [ ] New gates use `can()` — not `role ===` / `disabled={role === '…'}`

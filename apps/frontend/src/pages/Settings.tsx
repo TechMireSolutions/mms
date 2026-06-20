@@ -1,46 +1,17 @@
-import React, { lazy, Suspense, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Settings as SettingsIcon, Globe, Palette, Database, Boxes, Sparkles } from "lucide-react";
-import type { AppTranslationKey } from "@mms/shared";
-import PageHeader from "../components/ui/PageHeader";
-import useTranslation from "@/hooks/useTranslation";
-import ResponsiveAccordionTabs, { type AccordionTabItem } from "@/components/ui/ResponsiveAccordionTabs";
-import { isSettingsSection, type SettingsSection } from "@/lib/config/routes";
-import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import { SettingsTabProvider } from "@/lib/contexts/SettingsTabContext";
-
-const GlobalSettings = lazy(() => import("../components/settings/GlobalSettings"));
-const SystemModulesSettings = lazy(() => import("../components/settings/SystemModulesSettings"));
-const BrandingSettings = lazy(() => import("../components/settings/BrandingSettings"));
-const ThemeSettings = lazy(() => import("../components/settings/ThemeSettings"));
-const BackupRestore = lazy(() => import("../components/settings/BackupRestore"));
-
-const NAV: {
-  id: SettingsSection;
-  labelKey: AppTranslationKey;
-  descKey: AppTranslationKey;
-  icon: typeof Globe;
-}[] = [
-  { id: "global", labelKey: "settings.global", descKey: "settings.globalDesc", icon: Globe },
-  { id: "branding", labelKey: "settings.branding", descKey: "settings.brandingDesc", icon: Palette },
-  { id: "theme", labelKey: "settings.theme", descKey: "settings.themeDesc", icon: Sparkles },
-  { id: "modules", labelKey: "settings.modules", descKey: "settings.modulesDesc", icon: Boxes },
-  { id: "backup", labelKey: "settings.backup", descKey: "settings.backupDesc", icon: Database },
-];
-
-const CONTENT_COMPONENTS: Record<
-  SettingsSection,
-  React.LazyExoticComponent<() => React.JSX.Element>
-> = {
-  global: GlobalSettings,
-  modules: SystemModulesSettings,
-  branding: BrandingSettings,
-  theme: ThemeSettings,
-  backup: BackupRestore,
-};
+import React, { Suspense, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Settings as SettingsIcon } from 'lucide-react';
+import PageHeader from '@/components/ui/PageHeader';
+import useTranslation from '@/hooks/useTranslation';
+import ResponsiveAccordionTabs, { type AccordionTabItem } from '@/components/ui/ResponsiveAccordionTabs';
+import { isSettingsSection, type SettingsSection } from '@/lib/config/routes';
+import { SETTINGS_NAV } from '@/lib/config/settingsNavConfig';
+import { SETTINGS_SECTION_COMPONENTS } from '@/lib/config/settingsSectionComponents';
+import { usePersistedTabState } from '@/hooks/usePersistedTabState';
+import { SettingsTabProvider } from '@/lib/contexts/SettingsTabContext';
 
 function SettingsContent({ section }: { section: SettingsSection }): React.JSX.Element {
-  const Component = CONTENT_COMPONENTS[section];
+  const Component = SETTINGS_SECTION_COMPONENTS[section];
   return (
     <Suspense
       fallback={
@@ -60,7 +31,7 @@ function SettingsContent({ section }: { section: SettingsSection }): React.JSX.E
  */
 export default function Settings(): React.JSX.Element {
   const { t } = useTranslation();
-  const [tab, setTab] = usePersistedTabState<SettingsSection>("mms-settings-tab", "global");
+  const [tab, setTab] = usePersistedTabState<SettingsSection>('mms-settings-tab', 'global');
 
   const handleTabChange = useCallback(
     (id: string) => {
@@ -71,25 +42,25 @@ export default function Settings(): React.JSX.Element {
     [setTab],
   );
 
-  const tabs: AccordionTabItem[] = NAV.map((item) => ({
+  const tabs: AccordionTabItem[] = SETTINGS_NAV.map((item) => ({
     id: item.id,
     label: t(item.labelKey),
     description: t(item.descKey),
     icon: item.icon,
   }));
 
-  const activeNav = NAV.find((item) => item.id === tab);
+  const activeNav = SETTINGS_NAV.find((item) => item.id === tab);
   const ActiveIcon = activeNav?.icon;
 
   return (
     <SettingsTabProvider value={{ activeTab: tab, setActiveTab: setTab }}>
       <div className="mx-auto max-w-7xl space-y-5">
-        <title>MMS - {t("settings.title")}</title>
-        <meta name="description" content={t("settings.subtitle")} />
+        <title>MMS - {t('settings.title')}</title>
+        <meta name="description" content={t('settings.subtitle')} />
         <PageHeader
           icon={SettingsIcon}
-          title={t("settings.title")}
-          subtitle={t("settings.subtitle")}
+          title={t('settings.title')}
+          subtitle={t('settings.subtitle')}
         />
 
         <ResponsiveAccordionTabs

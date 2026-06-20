@@ -45,4 +45,4 @@ Do not echo file contents already in context.
 - **Errors:** Handle explicitly; no silent empty `catch`.
 - **HTML/CSS:** Semantic HTML; Tailwind utilities unless design tokens override.
 - **Git:** Conventional Commits (`feat`/`fix`/`chore`). No direct commits to `main`. **Never commit unless the user asks.**
-- **Rules:** When changing MMS standards, update **both** `.cursor/rules/*.md` and `.agents/rules/*.md` (see `.cursor/rules/README.md` sync policy).
+- **Rules:** When changing MMS standards, run `bash .agents/scripts/sync-all.sh` to mirror `.cursor/rules`, `.agents/rules`, and `.claude/rules` (see `.cursor/rules/README.md`).

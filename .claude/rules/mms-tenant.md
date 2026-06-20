@@ -1,0 +1,67 @@
+---
+description: Apex vs tenant hosts, routing gates, scoped storage
+paths:
+  - "apps/frontend/src/lib/contexts/TenantContext.tsx"
+  - "apps/frontend/src/lib/config/tenantConfig.ts"
+  - "apps/frontend/src/lib/config/routes.ts"
+  - "apps/frontend/src/components/routing/**"
+  - "apps/frontend/src/pages/Apex*.tsx"
+  - "apps/backend/src/routes/workspace.ts"
+  - "apps/backend/src/services/workspaceService.ts"
+---
+
+# MMS Multi-Tenant Routing
+
+## Hosts
+
+| Host | App surface |
+|------|-------------|
+| Apex (`localhost`, `madrasa.app`, no subdomain) | Landing, workspace gate, onboarding — **not** tenant CRM |
+| Tenant (`{slug}.localhost`, `{slug}.madrasa.app`) | Full MMS app for one madrasa |
+
+Detect via `TenantContext` / `isTenantHost()` / `themeScope.ts`.
+
+## Routing
+
+- **Apex:** `ApexLanding`, `ApexWorkspaceGate`, auth entry — use `GuestRoute` / `HostRoutes`.
+- **Tenant:** `TenantGate` wraps authenticated app; subdomain selects workspace.
+- **API:** Vite proxy sends `x-forwarded-host`; backend scopes `objects`/`collections` by tenant prefix.
+
+## Storage scope
+
+- Tenant localStorage keys: `t:{subdomain}:{key}` (see `mms-data-layer.md`).
+- Apex must not read/write tenant branding or `global_settings` overlays — `DEFAULT_BRANDING_SETTINGS` on apex (`mms-config.md` theme scope).
+
+## Auth handoff
+
+Workspace selection / auth handoff flows use `workspaceService` + `/api/workspace` + `authHandoffService` (one-time codes in `auth_artifacts`, TTL 2 min).
+
+Do not stash tenant tokens on apex localStorage. Frontend uses `POST /api/auth/handoff` after onboard.
+
+Apex workspace list uses TanStack Query (`useWorkspaceRegistry`) — `mms-query.md`.
+
+## Backend tenant resolution
+
+**File:** `apps/backend/src/utils/tenantContext.ts`
+
+| Step | Behavior |
+|------|----------|
+| `onRequest` hook | `resolveSubdomainFromRequest(hostname, x-forwarded-host)` |
+| Storage | `tenantStorage.run(subdomain, …)` — AsyncLocalStorage for request scope |
+| Protected routes | `authenticateTenant` — JWT `workspaceSubdomain` must match resolved tenant |
+| Cookie auth | `attachAccessTokenFromCookie` copies `mms_access` → `Authorization` before JWT verify |
+
+Login and `/api/auth/me` require **tenant host** — apex calls to tenant endpoints return `403` by design.
+
+## Security
+
+Cross-tenant access is a **severity-critical** bug. When touching tenant resolution or storage keys:
+
+- [ ] Verify `x-forwarded-host` drives prefix — not client body fields (`mms-security.md`)
+- [ ] Apex cannot read arbitrary tenant collections without workspace auth handoff
+
+## Banned
+
+- Mounting full module pages on apex host
+- Using tenant `getGlobalSettings()` for apex marketing pages
+- Cross-tenant collection reads without subdomain in the storage key

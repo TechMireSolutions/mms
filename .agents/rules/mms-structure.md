@@ -24,7 +24,8 @@ No new top-level app folders without explicit approval. No business logic in `sc
 | Layer | Location | Rule |
 |-------|----------|------|
 | Route shell | `pages/{Module}.tsx` | Orchestration only — tier tabs, header, lazy sections |
-| Feature UI | `components/{module}/` | One folder per domain; subfolders by concern (`form/`, `tabs/`) |
+| Feature UI | `components/{module}/` | One folder per domain; subfolders by concern (`form/`, `tabs/`, `backup/`) |
+| Settings UI | `components/settings/` | App-wide panels only; subfolders `backup/`, `modules/` |
 | Shared UI | `components/ui/` | shadcn primitives + cross-module composites |
 | Cross-route | `components/routing/`, `layout/`, `providers/` | Shell only |
 | Data hooks | `hooks/use*.ts` | Reused across ≥2 components or pages |
@@ -63,6 +64,6 @@ No new top-level app folders without explicit approval. No business logic in `sc
 ## New module checklist
 
 1. `pages/{Module}.tsx` + `components/{module}/`
-2. Register route + nav (`lib/config/routes.ts`, `navConfig.tsx`)
+2. Register route + nav (`lib/config/routes.ts`, `lib/config/navConfig.tsx`)
 3. Tier tabs via `useModuleTierTabs()` (`mms-ui-tabs.md`)
 4. Shared types/settings in `@mms/shared` if cross-app

@@ -23,6 +23,9 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | Client-side 2FA only | Server `twoFactorService` |
 | Orphan route guards | Canonical `ProtectedRoute` in `HostRoutes` |
 | Contacts REST + write RBAC | Full `/api/contacts` CRUD + `canWriteCollection` on mutations |
+| Settings monolithic panels | Split into hooks + section components; `useBackupRestore`, `ModuleSettingsNavGrid`, `settingsSectionComponents` |
+| Accessible branding theme | `logoBrandColors.ts` + `brandingTheme.ts` WCAG AA tokens |
+| Legacy `mms_token` cleanup | Removed — cookie-only session via `apiClient` |
 
 ## Open priorities
 
@@ -45,12 +48,6 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 **Problem:** Inline `role ===` checks remain (~8 files: Dashboard, KPI, Attendance, WelcomeBanner).
 
 **Fix:** Wire `usePermissions()` / `can()` when touching modules (`mms-rbac.mdc`).
-
-### P2 — Remove legacy `mms_token` cleanup
-
-**Problem:** `AuthContext` still `removeItem('mms_token')` on login/logout.
-
-**Fix:** Remove after confirming no clients depend on localStorage token path.
 
 ### P2 — Sentry / client error reporting
 

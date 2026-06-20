@@ -109,5 +109,8 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Contacts i18n bridge | `useContactCopy()` — `t()` with `uiStrings` fallback; SMS panel migrated |
 | Vite `@` alias | `path.resolve('./src')` aligned with Vitest + tsconfig |
 | Module tier tab ids | `work` / `reports` / `setup` — ids match UI names; legacy `operations` / `analytics` / `configuration` normalized on read |
+| Settings page refactor | `useBackupRestore`, `ModuleSettingsNavGrid`, `settingsSectionComponents`, `settingsNavConfig`, `settingsGlobalDraft` / `settingsModulesDraft`, `useSavedFlash`, `useApplyLogoColors`; backup UI in `components/settings/backup/`; removed `SettingsShared.tsx` |
+| Accessible branding theme | `logoBrandColors.ts`, `brandingTheme.ts` WCAG AA on primary/accent/muted tokens; `BrandColorPanel` previews derived tokens |
+| SettingsFormActions i18n | No hardcoded English save-state defaults — callers pass `savingLabel` / `savedLabel` or fall back to `saveLabel` |
 
 Do not reintroduce resolved violations.

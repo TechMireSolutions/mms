@@ -1,6 +1,6 @@
 ---
 description: Apex vs tenant hosts, routing gates, scoped storage
-globs: apps/frontend/src/lib/TenantContext.tsx,apps/frontend/src/lib/tenantConfig.ts,apps/frontend/src/lib/routes.ts,apps/frontend/src/components/routing/**,apps/frontend/src/pages/Apex*.tsx,apps/backend/src/routes/workspace.ts,apps/backend/src/services/workspaceService.ts
+globs: apps/frontend/src/lib/contexts/TenantContext.tsx,apps/frontend/src/lib/config/tenantConfig.ts,apps/frontend/src/lib/config/routes.ts,apps/frontend/src/components/routing/**,apps/frontend/src/pages/Apex*.tsx,apps/backend/src/routes/workspace.ts,apps/backend/src/services/workspaceService.ts
 alwaysApply: false
 ---
 

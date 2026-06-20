@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Sync .cursor/rules/*.mdc → .claude/rules/*.md (Claude Code paths frontmatter).
+# Sync .agents/skills/ → .claude/skills/
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$ROOT"
+
+node <<'SCRIPT'
+const fs = require("fs");
+const path = require("path");
+
+const cursorDir = ".cursor/rules";
+const claudeRulesDir = ".claude/rules";
+const agentsSkillsDir = ".agents/skills";
+const claudeSkillsDir = ".claude/skills";
+
+fs.mkdirSync(claudeRulesDir, { recursive: true });
+
+for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) {
+  const base = file.replace(/\.mdc$/, "");
+  const src = fs.readFileSync(path.join(cursorDir, file), "utf8");
+  const match = src.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+  if (!match) throw new Error(`No frontmatter: ${file}`);
+  const front = match[1];
+  const body = match[2].replace(/^\s+/, "").replace(/\.mdc\b/g, ".md");
+  const alwaysApply = /alwaysApply:\s*true/.test(front);
+  const descMatch = front.match(/^description:\s*(.+)$/m);
+  const globsMatch = front.match(/^globs:\s*(.+)$/m);
+
+  const lines = ["---"];
+  if (descMatch) lines.push(`description: ${descMatch[1].trim()}`);
+  if (!alwaysApply && globsMatch) {
+    const paths = globsMatch[1]
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (paths.length > 0) {
+      lines.push("paths:");
+      for (const p of paths) lines.push(`  - "${p}"`);
+    }
+  }
+  lines.push("---", "", body);
+  const out = lines.join("\n");
+  fs.writeFileSync(path.join(claudeRulesDir, `${base}.md`), out.endsWith("\n") ? out : `${out}\n`);
+  console.log(`synced rule ${base}.md`);
+}
+SCRIPT
+
+for dir in "$ROOT/.agents/skills"/*/; do
+  name="$(basename "$dir")"
+  mkdir -p "$ROOT/.claude/skills/$name"
+  if [[ -f "$dir/SKILL.md" ]]; then
+    cp "$dir/SKILL.md" "$ROOT/.claude/skills/$name/SKILL.md"
+    echo "synced skill $name"
+  fi
+  if [[ -d "$dir/scripts" ]]; then
+    mkdir -p "$ROOT/.claude/skills/$name/scripts"
+    cp -R "$dir/scripts/." "$ROOT/.claude/skills/$name/scripts/"
+    echo "synced scripts $name"
+  fi
+done
+
+cp "$ROOT/.agents/skills/README.md" "$ROOT/.claude/skills/README.md"
+
+mkdir -p "$ROOT/.claude/docs/workflows"
+cp "$ROOT/.agents/workflows/"*.md "$ROOT/.claude/docs/workflows/" 2>/dev/null || true
+
+echo "Done. Claude mirror: .claude/rules/ + .claude/skills/"

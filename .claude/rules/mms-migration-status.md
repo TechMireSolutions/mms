@@ -1,0 +1,116 @@
+---
+description: Known gaps between rules (target) and codebase (current) — do not opportunistically fix outside task scope
+---
+
+# MMS Migration Status
+
+Rules describe **target architecture**. Open gaps below — fix when the task covers them.
+
+| Area | Current state | Target (rules) |
+|------|---------------|----------------|
+| Hardcoded labels/colours | Widespread in modules | Config/registry + `t()` — `mms-i18n.md` |
+| Contact `uiStrings` map | Contacts module toasts/labels | New copy → `appTranslations` + `t()`; no new `uiStrings` keys |
+| TanStack Query | Students + contacts + workspace registry + auth; most modules still localStorage | New REST resources Query-first — `mms-query.md` |
+| `can()` permissions hook | Shipped; Enrollments + Attendance wired; registry partial | Full registry-driven matrix — `mms-rbac.md` |
+| Inline `role ===` checks | Dashboard widget filtering uses `resolveDashboardPersona(can)`; `useViewerRole` derives from `can()` | Full registry-driven matrix — `mms-rbac.md` |
+| Custom tab provisioning | JSON document store only | Table + migration + CRUD per custom tab — `mms-fields.md` |
+| WebSockets | Not implemented | Replace polling for server push — `mms-core.md` |
+| Work/Reports sub-tabs | Residual inline bars in deep components | `SubTabBar` per `mms-ui-tabs.md` |
+| `category="academic"` in reports/KPI | Removed from module pages | Module-specific categories only (`mms-module-isolation.md`) |
+| Legacy entity forms | ObligationModal, some detail drawers | `FormModal` — `mms-ui-forms.md` |
+| Status colours inline | Residual in chart color maps | `StatusBadge` + semantic tokens — `mms-ui-visual.md` |
+| Automated tests | Shared + backend (auth, rbac, health, security); frontend apiClient + hooks; Playwright smoke in CI `e2e/` | Expand Playwright for login/onboard — `mms-testing.md` |
+| Server-first data | Students + contacts Query-first; most modules localStorage primary | Query + API authoritative for new modules — `mms-data-layer.md` |
+| Per-entity REST API | `/api/students` + `/api/contacts` CRUD; generic `/api/db` for rest | Resource routes + validation per domain — `mms-backend.md` |
+| Internal `fetch('/api/...')` | External OAuth only | All MMS API via `apiClient` — `mms-frontend.md` |
+| JWT in localStorage | Removed — httpOnly cookies only; `apiClient` has no token reads | — resolved |
+| Client error reporting | Console/toasts only | Sentry or equivalent — `mms-observability.md` |
+| Global a11y pass | Partial (dropdowns only) | WCAG baseline on new UI — `mms-a11y.md` |
+
+## Recently resolved
+
+| Area | Resolution |
+|------|------------|
+| Contact-first person policy | `mms-contact-link.md`; `LINK_MANAGED_COLLECTIONS` + pickers (`ContactPicker`, `RegistryPersonSelect`, `UserActorSelect`); migrations 006–007 |
+| Auth seeds | `getDefaultCollectionsForSeed()` normalizes `roles[]` → `role` + `passwordHash` on DB seed |
+| RBAC | `rbacService` on `/api/db/*` writes, bulk sync, reset |
+| `ContactConfigProvider` | Single mount in `App.tsx` only |
+| `DraggableFieldList` | `ui/ContactDraggableFieldList` + `ui/DraggableFieldList` |
+| `useLiveCollection` | Module pages migrated from one-shot `getCollection` |
+| Dockerfile / README / CI | pnpm monorepo, PostgreSQL, `.github/workflows/ci.yml` |
+| `contact.md` | Aligned with `@mms/shared` + `FormPrimitives` |
+| `Enrollment.tsx` | Removed; `/enrollments` → `Enrollments.tsx` |
+| Orphan route guards | Removed duplicate guards and deleted `PlaceholderPage`; canonical `ProtectedRoute` kept in `components/routing/` (`HostRoutes`) |
+| Settings page module panels | Removed; module config only in each module's Setup tab |
+| Settings scope | `/settings`: global · modules · branding · theme · backup (`SETTINGS_SECTIONS`) |
+| System Modules layout | `SYSTEM_MODULE_NAV` mirrors nav; Academics group; registry in `@mms/shared` |
+| Attendance nav | Under Academics group in `navConfig.tsx`, not top-level |
+| Branding local-only save | `getBrandingSettings` / `await saveBrandingSettings`; server merge + `syncWorkspaceFromBranding`; no false “saved” UI |
+| Settings live preview | `settingsPreview` + `useSettingsDraft`; global/modules/branding preview before Save; revert on leave `/settings` |
+| Auth rate limiting | `@fastify/rate-limit` on `/api/auth/login` and `/api/auth/onboard` |
+| Audit log | `audit_log` collection on `users`, `global_settings`, `branding` writes |
+| Readiness probe | `GET /ready` with PostgreSQL ping |
+| `usePermissions` / `can()` | `apps/frontend/src/hooks/usePermissions.ts` + `@mms/shared` matrix |
+| `SubTabBar` (Finance, Attendance, Obligations) | Inline pill bars replaced |
+| `FormModal` (StudentForm, JournalEntryForm) | Legacy overlay shells migrated |
+| Contacts tier tabs | `useModuleTierTabs()`; delete toasts via `t()` |
+| CI `pnpm test` | Turbo `test` task + shared Vitest in workflow |
+| `.env.example` | Root + `apps/frontend` + `apps/backend` |
+| Backend ESLint | `apps/backend/eslint.config.js` + CI lint step |
+| SubTabBar (Accounting, Enrollments, Hasanat, Sessions, Students, Contacts config) | Inline pill bars replaced |
+| AccountModal → FormModal | Chart of accounts add/edit dialog |
+| Enrollments `can('enrollments.write')` | Replaces accountant role string checks |
+| Attendance tier tabs via `can()` | Setup/Reports visibility |
+| Contacts page header i18n | `t()` for title, subtitle, actions |
+| Contacts toolbar/stats i18n | Toolbar, column customizer, stats cards, avatar alt via `t()` |
+| Contacts collection form tab i18n | Phone, email, address, social collection controls via `t()` |
+| Contacts form primitives + relation i18n | FormPrimitives, Basic, Relationships, Emergency visible copy via `t()` |
+| Backend route tests | `/health`, `/ready`, `rbacService` Vitest |
+| Auth integration tests | Login subdomain guard, refresh rotation, 2FA gate, tenant JWT binding, RBAC deny |
+| Refresh token security | Opaque cookies + `auth_artifacts` validation; OTP via `crypto.randomInt()` |
+| `apiClient` standardization | Workspace, tenant, email integration, auth hooks use `apiFetch`/`apiJson` |
+| Students server-first | `useStudents` + `useStudentMutations`; localStorage cache sync on fetch |
+| ContactConfigContext split | `lib/contactConfig/` submodules; context re-exports |
+| PinnedWidgets split | `pinnedWidgets/` types, utils, defaults |
+| Frontend Vitest env | `happy-dom` for localStorage in client tests |
+| Backend ESLint in CI | `apps/backend/eslint.config.js` + CI lint step |
+| Tenant JWT binding | `authenticateTenant` on protected routes; subdomain match enforced |
+| Bulk sync download RBAC | `GET /api/db/sync` admin-only via `canDownloadBulkSync` |
+| Tenant-scoped DB reset | `POST /api/db/reset` → `resetTenantData()` not full DB drop |
+| httpOnly session cookies | `mms_access` / `mms_refresh` via `authCookieService` |
+| Server-side 2FA | `twoFactorService` + `auth_artifacts`; client no longer validates OTP |
+| DB-backed auth handoff | `authHandoffService` + `auth_artifacts` replaces in-memory map |
+| Minimal tenant seeds | `minimalSeeds.ts` for onboard/reset; no massive mock auto-seed |
+| Students REST API | `/api/students` CRUD + Zod + `useStudents` Query hooks |
+| Deploy readiness check | `curl /ready` after PM2 restart in deploy workflow |
+| Playwright smoke | `e2e/smoke.spec.ts`, `e2e/interactive.spec.ts` |
+| Playwright in CI | API smoke job with Postgres + backend boot |
+| Contacts REST API | `/api/contacts` CRUD + Zod + `useContacts` Query hooks |
+| Attendance REST API | `/api/attendance` CRUD + bulk PUT + Zod + `useAttendance` Query hooks |
+| Sessions REST API | `/api/sessions` CRUD + Zod + `useSessions` Query hooks |
+| Platform / tenant user tables | `platform_users` + `tenant_users` relational tables; auth services use tables (legacy JSON migrated on startup) |
+| Attendance RBAC UI | `can()` for tabs, mark, edit, delete; role banner via `t()` |
+| Tenant workspace Query | `useWorkspaceBySubdomain` + `usePublicBranding` replace `useEffect` fetch |
+| Destructive colour tokens | `text-red-500` → `text-destructive` across frontend components |
+| Contacts write RBAC | `canWriteCollection` on contact mutations |
+| Legacy `mms_token` removed | Cookie-only session via `apiClient` |
+| `mms_token` cleanup removed | No `localStorage.removeItem('mms_token')` in auth contexts |
+| Cross-module widget imports | Shared KPI/charts in `components/widgets/`; `SettingsShell` in `ui/`; branding in `components/branding/` |
+| Client error reporting stub | `lib/clientErrorReporting.ts` wired in `ErrorBoundary` |
+| Dashboard widget defaults | Permission-based via `can()` not inline `role ===` |
+| Collection read RBAC | `canReadCollection` / `canReadObject` on db + REST list endpoints |
+| Bulk sync body limit | `MMS_SYNC_MAX_BODY_BYTES` (default 10 MiB) on `POST /api/db/sync` |
+| Bulk sync request timeout | `withSyncTimeout` + `MMS_SYNC_REQUEST_TIMEOUT_MS` (default 2 min) on `POST /api/db/sync` |
+| Backend Zod validation | All write endpoints use `parseRequest` + `validation/*Schemas.ts` (no Fastify JSON Schema) |
+| Backend failure logging | Structured `onResponse` warn for 4xx/5xx with tenant + userId |
+| shadcn `ui/` strict TypeScript | All Radix primitives typed; `src/components/ui` in `tsc` |
+| ESLint + TypeScript | `typescript-eslint` on app `.ts/.tsx` (components, pages, hooks, lib, providers) |
+| User modals RHF + Zod | `EditUserModal`, `InviteUserModal` on `FormModal` + `lib/forms/` |
+| Contacts i18n bridge | `useContactCopy()` — `t()` with `uiStrings` fallback; SMS panel migrated |
+| Vite `@` alias | `path.resolve('./src')` aligned with Vitest + tsconfig |
+| Module tier tab ids | `work` / `reports` / `setup` — ids match UI names; legacy `operations` / `analytics` / `configuration` normalized on read |
+| Settings page refactor | `useBackupRestore`, `ModuleSettingsNavGrid`, `settingsSectionComponents`, `settingsNavConfig`, `settingsGlobalDraft` / `settingsModulesDraft`, `useSavedFlash`, `useApplyLogoColors`; backup UI in `components/settings/backup/`; removed `SettingsShared.tsx` |
+| Accessible branding theme | `logoBrandColors.ts`, `brandingTheme.ts` WCAG AA on primary/accent/muted tokens; `BrandColorPanel` previews derived tokens |
+| SettingsFormActions i18n | No hardcoded English save-state defaults — callers pass `savingLabel` / `savedLabel` or fall back to `saveLabel` |
+
+Do not reintroduce resolved violations.

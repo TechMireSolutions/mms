@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Palette, Monitor, Wand2, ImageIcon, AlertTriangle, Loader2, Box } from 'lucide-react';
 import { cornerStyleLabelKey, normalizeBrandingCornerStyle, normalizeThemeMode } from '@mms/shared';
-import { extractLogoBrandColors } from '@/lib/extractLogoBrandColors';
-import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';
+import { useApplyLogoColors } from '@/hooks/useApplyLogoColors';
 import { useThemeSettingsDraft } from '@/hooks/useThemeSettingsDraft';
 import { useSettingsTab } from '@/lib/contexts/SettingsTabContext';
 import SectionCard from '@/components/ui/SectionCard';
@@ -31,7 +30,6 @@ export default function ThemeSettings(): React.JSX.Element {
   const { setActiveTab } = useSettingsTab();
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
-  const [applyingLogoColors, setApplyingLogoColors] = useState(false);
 
   const {
     data,
@@ -48,25 +46,11 @@ export default function ThemeSettings(): React.JSX.Element {
     defaultFooterPreview,
   } = useThemeSettingsDraft(t('theme.savedToast'), t('theme.savedToastDesc'));
 
-  const applyLogoColors = async (): Promise<void> => {
-    if (!data.logoUrl.trim()) {
-      notify.error(t('theme.logoColorsMissing'), { description: t('theme.logoColorsMissingDesc') });
-      return;
-    }
-    setApplyingLogoColors(true);
-    try {
-      const colors = await extractLogoBrandColors(data.logoUrl);
-      if (!colors) {
-        notify.error(t('theme.logoColorsFailed'), { description: t('theme.logoColorsFailedDesc') });
-        return;
-      }
-      upd('primaryColor', colors.primaryColor);
-      upd('secondaryColor', colors.secondaryColor);
-      notify.success(t('theme.logoColorsApplied'), { description: t('theme.logoColorsAppliedDesc') });
-    } finally {
-      setApplyingLogoColors(false);
-    }
-  };
+  const { applying: applyingLogoColors, apply: applyLogoColors } = useApplyLogoColors({
+    logoUrl: data.logoUrl,
+    onPrimaryChange: (hex) => upd('primaryColor', hex),
+    onSecondaryChange: (hex) => upd('secondaryColor', hex),
+  });
 
   const confirmReset = async (): Promise<void> => {
     setResetting(true);

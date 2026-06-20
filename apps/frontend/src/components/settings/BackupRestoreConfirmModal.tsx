@@ -6,7 +6,7 @@ import Modal from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SettingsCallout, SettingsMetaBadge } from '@/components/settings/SettingsShared';
+import { SettingsCallout, SettingsMetaBadge } from '@/components/ui/SettingsShell';
 
 export interface BackupRestoreConfirmModalProps {
   open: boolean;

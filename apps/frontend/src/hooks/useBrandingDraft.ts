@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 import {
   isBrandingFieldsDirty,
   mergeBrandingSettings,
@@ -47,9 +48,9 @@ export function useBrandingDraft({
   trackKeys,
 }: UseBrandingDraftOptions): UseBrandingDraftResult {
   const { t } = useTranslation();
+  const { saved, flashSaved, clearSaved } = useSavedFlash();
   const [baseline, setBaseline] = useState<BrandingSettings>(loadPersistedBranding);
   const [data, setData] = useState<BrandingSettings>(loadDraftBranding);
-  const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const isDirty = useMemo(() => {
@@ -65,7 +66,7 @@ export function useBrandingDraft({
       const next = loadPersistedBranding();
       setBaseline(next);
       setData(next);
-      setSaved(false);
+      clearSaved();
     };
     window.addEventListener('local-database-update', sync);
     return () => window.removeEventListener('local-database-update', sync);
@@ -82,12 +83,12 @@ export function useBrandingDraft({
     setBaseline(merged);
     setData(merged);
     clearBrandingSettingsPreview();
-    setSaved(false);
+    clearSaved();
   }, []);
 
   const upd = useCallback(<K extends keyof BrandingSettings>(field: K, value: BrandingSettings[K]): void => {
     setData((current) => ({ ...current, [field]: value }));
-    setSaved(false);
+    clearSaved();
   }, []);
 
   const handleSave = useCallback(async (): Promise<boolean> => {
@@ -104,14 +105,13 @@ export function useBrandingDraft({
       setBaseline(merged);
       setData(merged);
       clearBrandingSettingsPreview();
-      setSaved(true);
+      flashSaved();
       notify.success(saveSuccessMessage, { description: saveSuccessDescription });
-      setTimeout(() => setSaved(false), 2500);
       return true;
     } finally {
       setSaving(false);
     }
-  }, [data, saveSuccessDescription, saveSuccessMessage, t]);
+  }, [data, flashSaved, saveSuccessDescription, saveSuccessMessage, t]);
 
   return { data, isDirty, saved, saving, upd, handleSave, applyPersisted };
 }
