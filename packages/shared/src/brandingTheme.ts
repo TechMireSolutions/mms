@@ -298,43 +298,91 @@ const BRAND_PRESET_LOOKUP = new Map(
   BRANDING_THEME_PRESETS.map((preset) => [preset.primaryColor.toLowerCase(), preset]),
 );
 
+function withAbsoluteLightness(color: HslColor, targetLightness: number): HslColor {
+  return { ...color, l: clamp(targetLightness, 0, 100) };
+}
+
+function darkModePrimaryUi(primary: HslColor): HslColor {
+  const softened = tone(primary, { s: -Math.round(primary.s * 0.3) });
+  return withAbsoluteLightness(softened, clamp(primary.l + 18, 35, 55));
+}
+
+function darkModeSecondaryUi(secondary: HslColor): HslColor {
+  const softened = tone(secondary, { s: -Math.round(secondary.s * 0.35) });
+  return withAbsoluteLightness(softened, clamp(secondary.l - 20, 30, 60));
+}
+
+function ensureAccessibleFillSurface(color: HslColor): HslColor {
+  let adjusted = color;
+  for (let step = 0; step < 24; step += 1) {
+    const hex = hslColorToHex(adjusted);
+    const whiteRatio = getContrastRatio('#ffffff', hex);
+    const darkText = hslColorToHex(tone(adjusted, { s: -15, l: -42 }));
+    const darkRatio = getContrastRatio(darkText, hex);
+    if (meetsWcagAaTextContrast(whiteRatio) || meetsWcagAaTextContrast(darkRatio)) {
+      return adjusted;
+    }
+    adjusted = tone(adjusted, { l: -4, s: Math.min(6, Math.max(0, adjusted.s - 55)) });
+  }
+  return adjusted;
+}
+
 function foregroundForSurface(surface: HslColor): string {
   const surfaceHex = hslColorToHex(surface);
   const whiteRatio = getContrastRatio('#ffffff', surfaceHex) ?? 0;
   const darkText = hslColorToHex(tone(surface, { s: -15, l: -42 }));
   const darkRatio = getContrastRatio(darkText, surfaceHex) ?? 0;
+  const whiteOk = meetsWcagAaTextContrast(whiteRatio);
+  const darkOk = meetsWcagAaTextContrast(darkRatio);
 
-  if (whiteRatio >= darkRatio) {
-    return meetsWcagAaTextContrast(whiteRatio) || whiteRatio >= darkRatio
-      ? '0 0% 100%'
-      : `${surface.h} 30% 12%`;
+  if (whiteOk && (!darkOk || whiteRatio >= darkRatio)) return '0 0% 100%';
+  if (darkOk) return `${surface.h} 30% 12%`;
+  return whiteRatio >= darkRatio ? '0 0% 100%' : `${surface.h} 30% 12%`;
+}
+
+function ensureAccessibleSemanticPair(base: HslColor): { fill: string; foreground: string } {
+  let surface = base;
+  for (let step = 0; step < 28; step += 1) {
+    const fill = hslColorToToken(surface);
+    const foreground = foregroundForSurface(surface);
+    const ratio = getContrastRatio(brandingTokenToHex(foreground), hslColorToHex(surface));
+    if (meetsWcagAaTextContrast(ratio)) {
+      return { fill, foreground };
+    }
+    surface = tone(surface, { l: -3, s: Math.min(4, Math.max(0, surface.s - 58)) });
   }
-  return meetsWcagAaTextContrast(darkRatio) ? `${surface.h} 30% 12%` : '0 0% 100%';
+
+  const fill = hslColorToToken(surface);
+  const whiteRatio = getContrastRatio('#ffffff', hslColorToHex(surface));
+  return {
+    fill,
+    foreground: meetsWcagAaTextContrast(whiteRatio) ? '0 0% 100%' : `${surface.h} 30% 12%`,
+  };
 }
 
 function buildSemanticStatusTokens(mode: BrandingThemeMode): Record<string, string> {
-  if (mode === 'light') {
-    return {
-      '--destructive': '0 72% 51%',
-      '--destructive-foreground': '0 0% 98%',
-      '--success': '142 71% 36%',
-      '--success-foreground': '0 0% 100%',
-      '--warning': '32 95% 44%',
-      '--warning-foreground': '0 0% 100%',
-      '--info': '217 91% 52%',
-      '--info-foreground': '0 0% 100%',
-    };
+  const bases =
+    mode === 'light'
+      ? {
+          '--destructive': { h: 0, s: 72, l: 51 },
+          '--success': { h: 142, s: 71, l: 36 },
+          '--warning': { h: 32, s: 95, l: 44 },
+          '--info': { h: 217, s: 91, l: 52 },
+        }
+      : {
+          '--destructive': { h: 0, s: 63, l: 31 },
+          '--success': { h: 142, s: 65, l: 32 },
+          '--warning': { h: 32, s: 90, l: 38 },
+          '--info': { h: 217, s: 88, l: 46 },
+        };
+
+  const tokens: Record<string, string> = {};
+  for (const [key, base] of Object.entries(bases)) {
+    const pair = ensureAccessibleSemanticPair(base);
+    tokens[key] = pair.fill;
+    tokens[`${key}-foreground`] = pair.foreground;
   }
-  return {
-    '--destructive': '0 62.8% 30.6%',
-    '--destructive-foreground': '0 0% 98%',
-    '--success': '142 60% 38%',
-    '--success-foreground': '0 0% 100%',
-    '--warning': '32 80% 46%',
-    '--warning-foreground': '0 0% 100%',
-    '--info': '217 80% 54%',
-    '--info-foreground': '0 0% 100%',
-  };
+  return tokens;
 }
 
 /** Hex suitable for `<meta name="theme-color">` from institution primary. */
@@ -359,17 +407,17 @@ export function buildBrandingCssVariables(
   secondaryHex: string,
   mode: BrandingThemeMode,
 ): Record<string, string> {
-  const primary = hexToHslColor(primaryHex) ?? DEFAULT_PRIMARY;
-  const secondary = hexToHslColor(secondaryHex) ?? DEFAULT_SECONDARY;
+  const primaryBase = hexToHslColor(primaryHex) ?? DEFAULT_PRIMARY;
+  const secondaryBase = hexToHslColor(secondaryHex) ?? DEFAULT_SECONDARY;
 
   const primaryUi =
     mode === 'dark'
-      ? tone(primary, { s: -Math.round(primary.s * 0.3), l: clamp(primary.l + 18, 35, 55) })
-      : primary;
+      ? ensureAccessibleFillSurface(darkModePrimaryUi(primaryBase))
+      : primaryBase;
   const secondaryUi =
     mode === 'dark'
-      ? tone(secondary, { s: -Math.round(secondary.s * 0.35), l: clamp(secondary.l - 20, 30, 60) })
-      : secondary;
+      ? ensureAccessibleFillSurface(darkModeSecondaryUi(secondaryBase))
+      : secondaryBase;
 
   const primaryToken = hslColorToToken(primaryUi);
   const secondaryToken = hslColorToToken(secondaryUi);
@@ -378,8 +426,8 @@ export function buildBrandingCssVariables(
   const chart4 = tone(secondaryUi, { s: -Math.round(secondaryUi.s * 0.35), l: -12 });
   const chart5 = tone(primaryUi, { s: -Math.round(primaryUi.s * 0.75), l: 22 });
 
-  const surfaceHue = primary.h;
-  const accentHue = secondary.h;
+  const surfaceHue = primaryBase.h;
+  const accentHue = secondaryBase.h;
   const semantic = buildSemanticStatusTokens(mode);
 
   if (mode === 'light') {

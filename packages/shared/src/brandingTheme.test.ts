@@ -8,6 +8,7 @@ import {
   getBrandingPresetAccessibility,
   getContrastRatio,
   meetsWcagAaTextContrast,
+  meetsWcagAaUiContrast,
   suggestSecondaryColor,
 } from './brandingTheme.js';
 import {
@@ -45,6 +46,94 @@ describe('BRANDING_THEME_PRESETS', () => {
       expect(access.primaryPassesAaText, `${preset.id} primary`).toBe(true);
       expect(access.accentPassesAaText, `${preset.id} accent`).toBe(true);
     }
+  });
+
+  it('every curated preset passes WCAG contrast in dark mode derived tokens', () => {
+    const textPairs = [
+      ['--primary-foreground', '--primary'],
+      ['--secondary-foreground', '--secondary'],
+      ['--accent-foreground', '--accent'],
+      ['--foreground', '--background'],
+      ['--card-foreground', '--card'],
+      ['--popover-foreground', '--popover'],
+      ['--sidebar-foreground', '--sidebar-background'],
+      ['--sidebar-primary-foreground', '--sidebar-primary'],
+      ['--sidebar-accent-foreground', '--sidebar-accent'],
+      ['--destructive-foreground', '--destructive'],
+      ['--success-foreground', '--success'],
+      ['--warning-foreground', '--warning'],
+      ['--info-foreground', '--info'],
+    ] as const;
+    const uiPairs = [
+      ['--muted-foreground', '--muted'],
+      ['--sidebar-muted-foreground', '--sidebar-background'],
+    ] as const;
+
+    const failures: string[] = [];
+    for (const preset of BRANDING_THEME_PRESETS) {
+      const vars = buildBrandingCssVariables(preset.primaryColor, preset.secondaryColor, 'dark');
+      for (const [fgKey, bgKey] of textPairs) {
+        const fgHex = brandingTokenToHex(vars[fgKey] ?? '');
+        const bgHex = brandingTokenToHex(vars[bgKey] ?? '');
+        const ratio = getContrastRatio(fgHex, bgHex);
+        if (!meetsWcagAaTextContrast(ratio)) {
+          failures.push(`${preset.id} ${fgKey}/${bgKey} ratio=${ratio?.toFixed(2)} fg=${fgHex} bg=${bgHex}`);
+        }
+      }
+      for (const [fgKey, bgKey] of uiPairs) {
+        const fgHex = brandingTokenToHex(vars[fgKey] ?? '');
+        const bgHex = brandingTokenToHex(vars[bgKey] ?? '');
+        const ratio = getContrastRatio(fgHex, bgHex);
+        if (!meetsWcagAaUiContrast(ratio)) {
+          failures.push(`${preset.id} ${fgKey}/${bgKey} ratio=${ratio?.toFixed(2)} fg=${fgHex} bg=${bgHex}`);
+        }
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
+  });
+
+  it('every curated preset passes WCAG contrast in light mode derived tokens', () => {
+    const textPairs = [
+      ['--primary-foreground', '--primary'],
+      ['--secondary-foreground', '--secondary'],
+      ['--accent-foreground', '--accent'],
+      ['--foreground', '--background'],
+      ['--card-foreground', '--card'],
+      ['--popover-foreground', '--popover'],
+      ['--sidebar-foreground', '--sidebar-background'],
+      ['--sidebar-primary-foreground', '--sidebar-primary'],
+      ['--sidebar-accent-foreground', '--sidebar-accent'],
+      ['--destructive-foreground', '--destructive'],
+      ['--success-foreground', '--success'],
+      ['--warning-foreground', '--warning'],
+      ['--info-foreground', '--info'],
+    ] as const;
+    const uiPairs = [
+      ['--muted-foreground', '--muted'],
+      ['--sidebar-muted-foreground', '--sidebar-background'],
+    ] as const;
+
+    const failures: string[] = [];
+    for (const preset of BRANDING_THEME_PRESETS) {
+      const vars = buildBrandingCssVariables(preset.primaryColor, preset.secondaryColor, 'light');
+      for (const [fgKey, bgKey] of textPairs) {
+        const fgHex = brandingTokenToHex(vars[fgKey] ?? '');
+        const bgHex = brandingTokenToHex(vars[bgKey] ?? '');
+        const ratio = getContrastRatio(fgHex, bgHex);
+        if (!meetsWcagAaTextContrast(ratio)) {
+          failures.push(`${preset.id} ${fgKey}/${bgKey} ratio=${ratio?.toFixed(2)}`);
+        }
+      }
+      for (const [fgKey, bgKey] of uiPairs) {
+        const fgHex = brandingTokenToHex(vars[fgKey] ?? '');
+        const bgHex = brandingTokenToHex(vars[bgKey] ?? '');
+        const ratio = getContrastRatio(fgHex, bgHex);
+        if (!meetsWcagAaUiContrast(ratio)) {
+          failures.push(`${preset.id} ${fgKey}/${bgKey} ratio=${ratio?.toFixed(2)}`);
+        }
+      }
+    }
+    expect(failures, failures.join('\n')).toEqual([]);
   });
 });
 

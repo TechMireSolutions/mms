@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { AlertTriangle, Check, Sparkles, Wand2 } from 'lucide-react';
 import {
   BRANDING_THEME_PRESETS,
+  brandingTokenToHex,
   buildBrandingCssVariables,
   brandingTokenToCss,
   getContrastRatio,
@@ -10,9 +11,6 @@ import {
   normalizeBrandingHex,
   resolveBrandingChartPaletteHex,
   suggestSecondaryColor,
-  hexToHslColor,
-  hslColorToHex,
-  tone,
   type AppTranslationKey,
   type BrandingThemeMode,
 } from '@mms/shared';
@@ -23,23 +21,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
-function primaryForegroundHex(primaryHex: string): string {
-  const hsl = hexToHslColor(primaryHex);
-  if (!hsl) return '#ffffff';
-  return hsl.l > 52 ? hslColorToHex(tone(hsl, { s: -20, l: -42 })) : '#ffffff';
-}
-
-function secondaryForegroundHex(secondaryHex: string, tokens: ReturnType<typeof buildBrandingCssVariables>): string {
-  const fromToken = tokens['--secondary-foreground'];
-  if (fromToken) return brandingTokenToCss(fromToken);
-  const hsl = hexToHslColor(secondaryHex);
-  if (!hsl) return '#ffffff';
-  const whiteRatio = getContrastRatio('#ffffff', secondaryHex);
-  return meetsWcagAaTextContrast(whiteRatio)
-    ? '#ffffff'
-    : hslColorToHex(tone(hsl, { s: -20, l: -42 }));
-}
 
 interface ColorFieldProps {
   id: string;
@@ -122,9 +103,15 @@ const DERIVED_SWATCHES: { labelKey: AppTranslationKey; token: keyof ReturnType<t
   { labelKey: 'theme.tokenSidebar', token: '--sidebar-background' },
 ];
 
-function presetPrimaryContrast(primaryHex: string): number | null {
-  const fg = primaryForegroundHex(primaryHex);
-  return getContrastRatio(fg, primaryHex);
+function presetPrimaryContrast(
+  primaryHex: string,
+  secondaryHex: string,
+  previewMode: BrandingThemeMode,
+): number | null {
+  const tokens = buildBrandingCssVariables(primaryHex, secondaryHex, previewMode);
+  const bgHex = brandingTokenToHex(tokens['--primary'] ?? '');
+  const fgHex = brandingTokenToHex(tokens['--primary-foreground'] ?? '');
+  return getContrastRatio(fgHex, bgHex);
 }
 
 /**
@@ -150,10 +137,12 @@ export default function BrandColorPanel({
     [primaryColor, secondaryColor, previewMode],
   );
 
-  const onPrimaryFg = primaryForegroundHex(primaryColor);
-  const onSecondaryFg = secondaryForegroundHex(secondaryColor, tokens);
-  const primaryContrast = getContrastRatio(onPrimaryFg, primaryColor);
-  const secondaryContrast = getContrastRatio(onSecondaryFg, secondaryColor);
+  const onPrimaryBg = brandingTokenToHex(tokens['--primary'] ?? '', primaryColor);
+  const onPrimaryFg = brandingTokenToHex(tokens['--primary-foreground'] ?? '', '#ffffff');
+  const onSecondaryBg = brandingTokenToHex(tokens['--secondary'] ?? '', secondaryColor);
+  const onSecondaryFg = brandingTokenToHex(tokens['--secondary-foreground'] ?? '', '#ffffff');
+  const primaryContrast = getContrastRatio(onPrimaryFg, onPrimaryBg);
+  const secondaryContrast = getContrastRatio(onSecondaryFg, onSecondaryBg);
 
   const isPresetActive = (primary: string, secondary: string): boolean =>
     primaryColor === primary && secondaryColor === secondary;
@@ -177,7 +166,11 @@ export default function BrandColorPanel({
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {BRANDING_THEME_PRESETS.map((preset) => {
             const active = isPresetActive(preset.primaryColor, preset.secondaryColor);
-            const presetContrast = presetPrimaryContrast(preset.primaryColor);
+            const presetContrast = presetPrimaryContrast(
+              preset.primaryColor,
+              preset.secondaryColor,
+              previewMode,
+            );
             const lowContrast =
               presetContrast !== null && !meetsWcagAaUiContrast(presetContrast);
             return (
@@ -287,14 +280,14 @@ export default function BrandColorPanel({
             <button
               type="button"
               className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm"
-              style={{ backgroundColor: primaryColor, color: onPrimaryFg }}
+              style={{ backgroundColor: onPrimaryBg, color: onPrimaryFg }}
             >
               {t('theme.previewPrimaryAction')}
             </button>
             <button
               type="button"
               className="w-full rounded-lg border px-4 py-2.5 text-sm font-semibold"
-              style={{ backgroundColor: secondaryColor, color: onSecondaryFg, borderColor: secondaryColor }}
+              style={{ backgroundColor: onSecondaryBg, color: onSecondaryFg, borderColor: onSecondaryBg }}
             >
               {t('theme.previewAccentAction')}
             </button>
