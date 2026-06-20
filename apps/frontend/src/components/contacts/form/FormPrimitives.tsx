@@ -492,6 +492,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
             type: "image/avif",
           });
         } catch {
+          // Upload failed; input is reset below.
         }
         e.target.value = "";
         return;
