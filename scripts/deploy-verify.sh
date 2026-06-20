@@ -72,16 +72,7 @@ resolve_public_url() {
   app_domain="$(read_env_var MMS_APP_DOMAIN '')"
   if [[ -n "$app_domain" ]]; then
     echo "https://${app_domain}"
-    return 0
   fi
-  local url="${MMS_API_URL:-}"
-  if [[ -z "$url" ]]; then
-    url="$(read_env_var MMS_API_URL '')"
-  fi
-  if [[ -n "$url" && "$url" != http* ]]; then
-    url="https://${url}"
-  fi
-  echo "${url%/}"
 }
 
 LOCAL_BASE="http://127.0.0.1:${BACKEND_PORT}"

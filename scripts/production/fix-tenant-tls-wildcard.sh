@@ -121,26 +121,17 @@ echo "HTTP-01 fallback (known tenants only, no wildcard probe):"
 echo ""
 echo "  sudo certbot certonly --cert-name ${APP_DOMAIN} --expand --apache \\"
 echo "    -d ${APP_DOMAIN} -d aabtaab.${APP_DOMAIN} -d dar-ul-quran.${APP_DOMAIN} \\"
-echo "    -d marzia-academy.${APP_DOMAIN} -d mmsv2-api.aabtaab.com"
+echo "    -d marzia-academy.${APP_DOMAIN}"
 echo ""
 echo "Then: MMS_REQUIRE_WILDCARD_TLS=0 bash scripts/apache/install-mms-vhost.sh ${ENV_FILE}"
-echo "Keep mmsv2-api.aabtaab.com on the cert if you use that host:"
-echo ""
-echo "  sudo certbot certonly --cert-name ${APP_DOMAIN} --expand \\"
-echo "    --manual --preferred-challenges dns \\"
-echo "    -d ${APP_DOMAIN} -d '${WILDCARD_SAN}' -d mmsv2-api.aabtaab.com"
 echo ""
 
 if [[ "${MMS_RUN_CERTBOT:-}" == "1" ]] && [[ -t 0 ]]; then
   read -r -p "Run certbot now? [y/N] " reply
   if [[ "$reply" =~ ^[Yy]$ ]]; then
-    EXTRA_DOMAINS=()
-    if [[ "$APP_DOMAIN" == "mmsv2.aabtaab.com" ]]; then
-      EXTRA_DOMAINS=(-d "mmsv2-api.aabtaab.com")
-    fi
     sudo certbot certonly --cert-name "$APP_DOMAIN" --expand \
       --manual --preferred-challenges dns \
-      -d "$APP_DOMAIN" -d "$WILDCARD_SAN" "${EXTRA_DOMAINS[@]}"
+      -d "$APP_DOMAIN" -d "$WILDCARD_SAN"
     bash "$ROOT_DIR/scripts/apache/install-mms-vhost.sh" "$ENV_FILE"
     sudo systemctl reload apache2
   fi

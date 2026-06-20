@@ -142,7 +142,7 @@ bash scripts/apply-production-host-isolation.sh apps/backend/.env
 
 Required `apps/backend/.env` on server: `JWT_SECRET`, `DATABASE_URL`, `PORT=5002`, `NODE_ENV=production`, `MMS_APP_DOMAIN`.
 
-GitHub Actions (`deploy.yml`) deploys after CI on `main`. Set secrets: `SERVER_IP`, `SERVER_USER`, `SSH_PRIVATE_KEY`, `MMS_APP_DOMAIN`.
+GitHub Actions (`deploy.yml`) deploys after CI on `main`. Set secrets: `SERVER_IP`, `SERVER_USER`, `SSH_PRIVATE_KEY`, `MMS_APP_DOMAIN` (full apex hostname, e.g. `mmsv2.aabtaab.com`). Do **not** use a separate `MMS_API_URL` — Apache and deploy health checks use `MMS_APP_DOMAIN` only.
 
 ### Troubleshooting
 

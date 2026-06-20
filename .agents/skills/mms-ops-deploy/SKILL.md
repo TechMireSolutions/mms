@@ -76,6 +76,8 @@ sudo bash scripts/fix-apache-upstream.sh apps/backend/.env
 
 Required secrets: `SERVER_IP`, `SERVER_USER`, `SSH_PRIVATE_KEY`, `MMS_APP_DOMAIN`.
 
+**Do not set `MMS_API_URL`.** The platform is served at `https://${MMS_APP_DOMAIN}` (apex + `*.${MMS_APP_DOMAIN}` tenants). A legacy `MMS_API_URL` secret (e.g. `mmsv2-api.…`) caused deploy health checks to fail; deploy scripts strip it from server `.env` on merge.
+
 ## Verify production
 
 ```bash

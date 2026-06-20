@@ -71,7 +71,8 @@ jobs:
       #   MMS_APP_DOMAIN=mmsv2.aabtaab.com  (full apex — NOT the root domain alone)
       #   PLATFORM_APP_URL=https://mmsv2.aabtaab.com
       #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM  OR  PLATFORM_SMTP_*
-      # Optional: PLATFORM_ALLOW_ENV_BOOTSTRAP, PLATFORM_ADMIN_*, MMS_API_URL
+      # Optional: PLATFORM_ALLOW_ENV_BOOTSTRAP, PLATFORM_ADMIN_*
+      # Public URL / deploy health checks use MMS_APP_DOMAIN only (do not set MMS_API_URL)
       # Server backend listens on PORT=5002 (scripts/lib/deploy-ports.sh)
       - name: Copy build tarball to server
         uses: appleboy/scp-action@v0.1.7
@@ -100,14 +101,13 @@ jobs:
           PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
           PLATFORM_ADMIN_NAME: ${{ secrets.PLATFORM_ADMIN_NAME }}
           MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
-          MMS_API_URL: ${{ secrets.MMS_API_URL }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           command_timeout: 20m
-          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,MMS_API_URL
+          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN
           script: |
             set -e
             cd /var/www/mmsv2

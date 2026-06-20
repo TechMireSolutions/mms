@@ -26,7 +26,6 @@ DEPLOY_KEYS=(
   PLATFORM_ADMIN_PASSWORD
   PLATFORM_ADMIN_NAME
   MMS_APP_DOMAIN
-  MMS_API_URL
 )
 
 write_env_var() {
@@ -52,6 +51,14 @@ write_env_var() {
 for key in "${DEPLOY_KEYS[@]}"; do
   write_env_var "$key" "${!key-}"
 done
+
+# MMS_API_URL was a legacy separate API host — Apache serves the platform at MMS_APP_DOMAIN only.
+if grep -q '^MMS_API_URL=' "$ENV_FILE" 2>/dev/null; then
+  tmp="${ENV_FILE}.tmp.$$"
+  grep -v '^MMS_API_URL=' "$ENV_FILE" >"$tmp" 2>/dev/null || : >"$tmp"
+  mv "$tmp" "$ENV_FILE"
+  echo "Removed deprecated MMS_API_URL from ${ENV_FILE} (public URL is https://\${MMS_APP_DOMAIN})"
+fi
 
 # Always force production mode on the server.
 write_env_var "NODE_ENV" "production"
