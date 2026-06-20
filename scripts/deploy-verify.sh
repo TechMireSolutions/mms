@@ -7,6 +7,8 @@ cd "$ROOT_DIR"
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/curl-local-backend.sh
+source "$ROOT_DIR/scripts/lib/curl-local-backend.sh"
 
 ENV_FILE="${1:-apps/backend/.env}"
 BACKEND_PORT="$MMS_PROD_BACKEND_PORT"
@@ -85,16 +87,16 @@ resolve_public_url() {
 LOCAL_BASE="http://127.0.0.1:${BACKEND_PORT}"
 LOCAL_OK=false
 
-if curl_ok "${LOCAL_BASE}/health"; then
+if curl_local_backend_ok "${LOCAL_BASE}/health" "$APP_DOMAIN"; then
   echo "Backend health OK (port ${BACKEND_PORT})"
   LOCAL_OK=true
-  if curl_ok "${LOCAL_BASE}/ready"; then
+  if curl_local_backend_ok "${LOCAL_BASE}/ready" "$APP_DOMAIN"; then
     echo "Backend ready (database connected)"
   else
     echo "ERROR: /ready failed — check DATABASE_URL and PostgreSQL"
     LOCAL_OK=false
   fi
-  if curl_ok "${LOCAL_BASE}/"; then
+  if curl_local_backend_ok "${LOCAL_BASE}/" "$APP_DOMAIN"; then
     echo "SPA root OK on backend port ${BACKEND_PORT}"
   else
     echo "ERROR: backend / did not return SPA — check apps/frontend/dist in tarball"
@@ -113,6 +115,9 @@ if [[ "$LOCAL_OK" == true ]]; then
   if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/ready" && curl_ok "${PUBLIC_API_URL}/"; then
     echo "Public site OK"
     report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
+    if [[ -f "$ROOT_DIR/scripts/verify-tenant-hosts.sh" ]]; then
+      bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || exit 1
+    fi
     exit 0
   fi
   echo "ERROR: public URL failed — Apache likely proxying to wrong port (run scripts/fix-apache-upstream.sh)"
@@ -125,6 +130,9 @@ if [[ -n "$PUBLIC_API_URL" ]]; then
   if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/ready" && curl_ok "${PUBLIC_API_URL}/"; then
     echo "Public site OK (local backend check failed — investigate ports)"
     report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
+    if [[ -f "$ROOT_DIR/scripts/verify-tenant-hosts.sh" ]]; then
+      bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || exit 1
+    fi
     exit 0
   fi
 fi

@@ -7,6 +7,8 @@ cd "$ROOT_DIR"
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/curl-local-backend.sh
+source "$ROOT_DIR/scripts/lib/curl-local-backend.sh"
 
 ENV_FILE="${1:-apps/backend/.env}"
 BACKEND_PORT="$MMS_PROD_BACKEND_PORT"
@@ -33,16 +35,17 @@ read_env_var() {
 }
 
 BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
+APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '')"
 assert_production_backend_port "$BACKEND_PORT" "Backend recovery PORT" || exit 1
 
 curl_health() {
-  curl -fsS --connect-timeout 3 --max-time 8 "http://127.0.0.1:${BACKEND_PORT}/health" >/dev/null 2>&1 \
-    || curl -fsS --connect-timeout 3 --max-time 8 "http://localhost:${BACKEND_PORT}/health" >/dev/null 2>&1
+  curl_local_backend_ok "http://127.0.0.1:${BACKEND_PORT}/health" "$APP_DOMAIN" \
+    || curl_local_backend_ok "http://localhost:${BACKEND_PORT}/health" "$APP_DOMAIN"
 }
 
 curl_ready() {
-  curl -fsS --connect-timeout 3 --max-time 8 "http://127.0.0.1:${BACKEND_PORT}/ready" >/dev/null 2>&1 \
-    || curl -fsS --connect-timeout 3 --max-time 8 "http://localhost:${BACKEND_PORT}/ready" >/dev/null 2>&1
+  curl_local_backend_ok "http://127.0.0.1:${BACKEND_PORT}/ready" "$APP_DOMAIN" \
+    || curl_local_backend_ok "http://localhost:${BACKEND_PORT}/ready" "$APP_DOMAIN"
 }
 
 if curl_health && curl_ready; then

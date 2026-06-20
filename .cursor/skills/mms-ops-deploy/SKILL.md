@@ -15,6 +15,24 @@ description: MMS production deploy on Hetzner — Apache vhost isolation, PORT=5
 
 Set full hostname in GitHub secret **`MMS_APP_DOMAIN`** — not the root domain alone.
 
+**Tenant subdomains need three layers:**
+
+| Layer | Requirement |
+|-------|-------------|
+| DNS | `A` or `CNAME` for apex **and** `*.MMS_APP_DOMAIN` → server IP |
+| TLS | Wildcard cert covering `*.MMS_APP_DOMAIN` (HTTP-01 certbot cannot issue wildcards — use DNS challenge) |
+| Apache | `mmsv2.conf` with `ServerAlias *.MMS_APP_DOMAIN` → `:5002` |
+
+Symptom → likely cause:
+
+| Symptom | Fix |
+|---------|-----|
+| Browser “can’t find server” / NXDOMAIN | Add `*.your-platform.example.com` DNS |
+| SSL certificate error on `{slug}.…` | Issue wildcard cert (DNS challenge) |
+| Wrong site or 404 on subdomain | Re-run `apply-production-host-isolation.sh` |
+| Page loads but “Workspace not found” | Madrasa not in DB — check registry; slug must match |
+| Tenant login 403 | Open tenant URL on `{slug}.MMS_APP_DOMAIN`, not apex |
+
 ## Ports (`mms-production-ports`)
 
 | Context | Port |
@@ -30,6 +48,8 @@ bash scripts/merge-backend-env.sh apps/backend/.env
 bash scripts/apply-production-host-isolation.sh apps/backend/.env
 bash scripts/deploy-on-server.sh
 bash scripts/server-diagnose.sh apps/backend/.env
+bash scripts/verify-tenant-hosts.sh [subdomain] apps/backend/.env
+bash scripts/check-workspace.sh <subdomain> apps/backend/.env
 ```
 
 **First-time VPS:** `sudo bash scripts/production/bootstrap-ubuntu-vps.sh`  
@@ -63,6 +83,8 @@ curl -fsS "https://${MMS_APP_DOMAIN}/health"
 curl -fsS "https://${MMS_APP_DOMAIN}/ready"
 curl -fsS "https://${MMS_APP_DOMAIN}/api/public/deployment-config"
 curl -fsS "https://${MMS_APP_DOMAIN}/api/platform/auth/setup/status"  # not 403
+bash scripts/verify-tenant-hosts.sh dar-ul-quran apps/backend/.env   # on server
+curl -fsS "https://dar-ul-quran.${MMS_APP_DOMAIN}/health"            # replace slug
 ```
 
 ## Rules

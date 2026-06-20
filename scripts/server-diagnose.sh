@@ -7,6 +7,8 @@ cd "$ROOT_DIR"
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/curl-local-backend.sh
+source "$ROOT_DIR/scripts/lib/curl-local-backend.sh"
 
 ENV_FILE="${1:-apps/backend/.env}"
 BACKEND_PORT="$MMS_PROD_BACKEND_PORT"
@@ -52,8 +54,8 @@ echo ""
 
 echo "── Local ports ──"
 for port in "$BACKEND_PORT" "$FRONTEND_PORT"; do
-  if curl -fsS --connect-timeout 2 --max-time 5 "http://127.0.0.1:${port}/" >/dev/null 2>&1 \
-    || curl -fsS --connect-timeout 2 --max-time 5 "http://127.0.0.1:${port}/health" >/dev/null 2>&1; then
+  if curl_local_backend_ok "http://127.0.0.1:${port}/" "$APP_DOMAIN" \
+    || curl_local_backend_ok "http://127.0.0.1:${port}/health" "$APP_DOMAIN"; then
     echo "port ${port}: responding"
   else
     echo "port ${port}: NOT responding"
@@ -62,15 +64,21 @@ done
 echo ""
 
 echo "── Backend health ──"
-curl -fsS "http://127.0.0.1:${BACKEND_PORT}/health" 2>/dev/null || echo "backend /health failed"
+curl_local_backend "http://127.0.0.1:${BACKEND_PORT}/health" "$APP_DOMAIN" || echo "backend /health failed"
 echo ""
-curl -fsS "http://127.0.0.1:${BACKEND_PORT}/ready" 2>/dev/null || echo "backend /ready failed"
+curl_local_backend "http://127.0.0.1:${BACKEND_PORT}/ready" "$APP_DOMAIN" || echo "backend /ready failed"
 echo ""
 
 echo "── Workspace registry (first 1.5k) ──"
-curl -fsS "http://127.0.0.1:${BACKEND_PORT}/api/workspace/registry" 2>/dev/null | head -c 1500 || echo "registry failed"
+curl_local_backend "http://127.0.0.1:${BACKEND_PORT}/api/workspace/registry" "$APP_DOMAIN" | head -c 1500 || echo "registry failed"
 echo ""
 echo ""
+
+if [[ -n "$APP_DOMAIN" ]] && [[ -f "$ROOT_DIR/scripts/verify-tenant-hosts.sh" ]]; then
+  echo "── Tenant subdomain checks ──"
+  bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || true
+  echo ""
+fi
 
 echo "── Recent backend logs ──"
 pm2 logs mmsv2-backend --lines 20 --nostream 2>/dev/null || true
