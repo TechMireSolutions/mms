@@ -8,7 +8,6 @@ import {
   getBrandingPresetAccessibility,
   getContrastRatio,
   meetsWcagAaTextContrast,
-  meetsWcagAaUiContrast,
   suggestSecondaryColor,
 } from './brandingTheme.js';
 import {
@@ -56,17 +55,17 @@ describe('BRANDING_THEME_PRESETS', () => {
       ['--foreground', '--background'],
       ['--card-foreground', '--card'],
       ['--popover-foreground', '--popover'],
+      ['--muted-foreground', '--muted'],
+      ['--muted-foreground', '--background'],
       ['--sidebar-foreground', '--sidebar-background'],
       ['--sidebar-primary-foreground', '--sidebar-primary'],
       ['--sidebar-accent-foreground', '--sidebar-accent'],
+      ['--sidebar-muted-foreground', '--sidebar-background'],
+      ['--sidebar-muted-foreground', '--sidebar-accent'],
       ['--destructive-foreground', '--destructive'],
       ['--success-foreground', '--success'],
       ['--warning-foreground', '--warning'],
       ['--info-foreground', '--info'],
-    ] as const;
-    const uiPairs = [
-      ['--muted-foreground', '--muted'],
-      ['--sidebar-muted-foreground', '--sidebar-background'],
     ] as const;
 
     const failures: string[] = [];
@@ -77,14 +76,6 @@ describe('BRANDING_THEME_PRESETS', () => {
         const bgHex = brandingTokenToHex(vars[bgKey] ?? '');
         const ratio = getContrastRatio(fgHex, bgHex);
         if (!meetsWcagAaTextContrast(ratio)) {
-          failures.push(`${preset.id} ${fgKey}/${bgKey} ratio=${ratio?.toFixed(2)} fg=${fgHex} bg=${bgHex}`);
-        }
-      }
-      for (const [fgKey, bgKey] of uiPairs) {
-        const fgHex = brandingTokenToHex(vars[fgKey] ?? '');
-        const bgHex = brandingTokenToHex(vars[bgKey] ?? '');
-        const ratio = getContrastRatio(fgHex, bgHex);
-        if (!meetsWcagAaUiContrast(ratio)) {
           failures.push(`${preset.id} ${fgKey}/${bgKey} ratio=${ratio?.toFixed(2)} fg=${fgHex} bg=${bgHex}`);
         }
       }
@@ -100,17 +91,17 @@ describe('BRANDING_THEME_PRESETS', () => {
       ['--foreground', '--background'],
       ['--card-foreground', '--card'],
       ['--popover-foreground', '--popover'],
+      ['--muted-foreground', '--muted'],
+      ['--muted-foreground', '--background'],
       ['--sidebar-foreground', '--sidebar-background'],
       ['--sidebar-primary-foreground', '--sidebar-primary'],
       ['--sidebar-accent-foreground', '--sidebar-accent'],
+      ['--sidebar-muted-foreground', '--sidebar-background'],
+      ['--sidebar-muted-foreground', '--sidebar-accent'],
       ['--destructive-foreground', '--destructive'],
       ['--success-foreground', '--success'],
       ['--warning-foreground', '--warning'],
       ['--info-foreground', '--info'],
-    ] as const;
-    const uiPairs = [
-      ['--muted-foreground', '--muted'],
-      ['--sidebar-muted-foreground', '--sidebar-background'],
     ] as const;
 
     const failures: string[] = [];
@@ -121,14 +112,6 @@ describe('BRANDING_THEME_PRESETS', () => {
         const bgHex = brandingTokenToHex(vars[bgKey] ?? '');
         const ratio = getContrastRatio(fgHex, bgHex);
         if (!meetsWcagAaTextContrast(ratio)) {
-          failures.push(`${preset.id} ${fgKey}/${bgKey} ratio=${ratio?.toFixed(2)}`);
-        }
-      }
-      for (const [fgKey, bgKey] of uiPairs) {
-        const fgHex = brandingTokenToHex(vars[fgKey] ?? '');
-        const bgHex = brandingTokenToHex(vars[bgKey] ?? '');
-        const ratio = getContrastRatio(fgHex, bgHex);
-        if (!meetsWcagAaUiContrast(ratio)) {
           failures.push(`${preset.id} ${fgKey}/${bgKey} ratio=${ratio?.toFixed(2)}`);
         }
       }

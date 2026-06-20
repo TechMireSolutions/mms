@@ -327,6 +327,151 @@ function ensureAccessibleFillSurface(color: HslColor): HslColor {
   return adjusted;
 }
 
+function pickAccessibleTextToken(
+  hue: number,
+  saturation: number,
+  backgrounds: readonly HslColor[],
+  candidateLightness: readonly number[],
+): string {
+  for (const lightness of candidateLightness) {
+    const foreground = { h: hue, s: saturation, l: lightness };
+    const fgHex = hslColorToHex(foreground);
+    const allPass = backgrounds.every((background) =>
+      meetsWcagAaTextContrast(getContrastRatio(fgHex, hslColorToHex(background))),
+    );
+    if (allPass) return hslColorToToken(foreground);
+  }
+
+  let bestLightness = candidateLightness[0] ?? 50;
+  let bestMinRatio = 0;
+  for (const lightness of candidateLightness) {
+    const fgHex = hslColorToHex({ h: hue, s: saturation, l: lightness });
+    const minRatio = Math.min(
+      ...backgrounds.map((background) => getContrastRatio(fgHex, hslColorToHex(background)) ?? 0),
+    );
+    if (minRatio > bestMinRatio) {
+      bestMinRatio = minRatio;
+      bestLightness = lightness;
+    }
+  }
+  return hslColorToToken({ h: hue, s: saturation, l: bestLightness });
+}
+
+function descendingLightness(from: number, to: number): number[] {
+  const values: number[] = [];
+  for (let l = from; l >= to; l -= 1) values.push(l);
+  return values;
+}
+
+function ascendingLightness(from: number, to: number): number[] {
+  const values: number[] = [];
+  for (let l = from; l <= to; l += 1) values.push(l);
+  return values;
+}
+
+function buildLightModeSurfaceTokens(surfaceHue: number, accentHue: number): Record<string, string> {
+  const background = { h: surfaceHue, s: 20, l: 98 };
+  const muted = { h: surfaceHue, s: 15, l: 94 };
+  const sidebarBackground = { h: surfaceHue, s: 30, l: 10 };
+  const sidebarAccent = { h: surfaceHue, s: 25, l: 16 };
+  const foreground = pickAccessibleTextToken(surfaceHue, 30, [background], descendingLightness(10, 8));
+  const mutedForeground = pickAccessibleTextToken(
+    surfaceHue,
+    10,
+    [muted, background],
+    descendingLightness(45, 32),
+  );
+  const sidebarForeground = pickAccessibleTextToken(
+    accentHue,
+    15,
+    [sidebarBackground],
+    ascendingLightness(85, 92),
+  );
+  const sidebarAccentForeground = pickAccessibleTextToken(
+    accentHue,
+    15,
+    [sidebarAccent],
+    ascendingLightness(92, 96),
+  );
+  const sidebarMutedForeground = pickAccessibleTextToken(
+    surfaceHue,
+    10,
+    [sidebarBackground, sidebarAccent],
+    ascendingLightness(55, 72),
+  );
+
+  return {
+    '--background': hslColorToToken(background),
+    '--foreground': foreground,
+    '--card': '0 0% 100%',
+    '--card-foreground': foreground,
+    '--popover': '0 0% 100%',
+    '--popover-foreground': foreground,
+    '--muted': hslColorToToken(muted),
+    '--muted-foreground': mutedForeground,
+    '--border': `${surfaceHue} 15% 90%`,
+    '--input': `${surfaceHue} 15% 90%`,
+    '--sidebar-background': hslColorToToken(sidebarBackground),
+    '--sidebar-foreground': sidebarForeground,
+    '--sidebar-accent': hslColorToToken(sidebarAccent),
+    '--sidebar-accent-foreground': sidebarAccentForeground,
+    '--sidebar-border': `${surfaceHue} 20% 18%`,
+    '--sidebar-muted-foreground': sidebarMutedForeground,
+  };
+}
+
+function buildDarkModeSurfaceTokens(surfaceHue: number, accentHue: number): Record<string, string> {
+  const background = { h: surfaceHue, s: 20, l: 5 };
+  const muted = { h: surfaceHue, s: 15, l: 14 };
+  const card = { h: surfaceHue, s: 20, l: 8 };
+  const sidebarBackground = { h: surfaceHue, s: 25, l: 6 };
+  const sidebarAccent = { h: surfaceHue, s: 20, l: 12 };
+  const foreground = pickAccessibleTextToken(accentHue, 15, [background], ascendingLightness(92, 96));
+  const mutedForeground = pickAccessibleTextToken(
+    surfaceHue,
+    10,
+    [muted, background],
+    ascendingLightness(55, 72),
+  );
+  const sidebarForeground = pickAccessibleTextToken(
+    accentHue,
+    15,
+    [sidebarBackground],
+    ascendingLightness(85, 92),
+  );
+  const sidebarAccentForeground = pickAccessibleTextToken(
+    accentHue,
+    15,
+    [sidebarAccent],
+    ascendingLightness(92, 96),
+  );
+  const sidebarMutedForeground = pickAccessibleTextToken(
+    surfaceHue,
+    10,
+    [sidebarBackground, sidebarAccent],
+    ascendingLightness(50, 72),
+  );
+
+  return {
+    '--background': hslColorToToken(background),
+    '--foreground': foreground,
+    '--card': hslColorToToken(card),
+    '--card-foreground': foreground,
+    '--popover': hslColorToToken(card),
+    '--popover-foreground': foreground,
+    '--muted': hslColorToToken(muted),
+    '--muted-foreground': mutedForeground,
+    '--border': `${surfaceHue} 15% 16%`,
+    '--input': `${surfaceHue} 15% 16%`,
+    '--sidebar-background': hslColorToToken(sidebarBackground),
+    '--sidebar-foreground': sidebarForeground,
+    '--sidebar-accent': hslColorToToken(sidebarAccent),
+    '--sidebar-accent-foreground': sidebarAccentForeground,
+    '--sidebar-border': `${surfaceHue} 15% 14%`,
+    '--sidebar-muted-foreground': sidebarMutedForeground,
+  };
+}
+
 function foregroundForSurface(surface: HslColor): string {
   const surfaceHex = hslColorToHex(surface);
   const whiteRatio = getContrastRatio('#ffffff', surfaceHex) ?? 0;
@@ -410,14 +555,12 @@ export function buildBrandingCssVariables(
   const primaryBase = hexToHslColor(primaryHex) ?? DEFAULT_PRIMARY;
   const secondaryBase = hexToHslColor(secondaryHex) ?? DEFAULT_SECONDARY;
 
-  const primaryUi =
-    mode === 'dark'
-      ? ensureAccessibleFillSurface(darkModePrimaryUi(primaryBase))
-      : primaryBase;
-  const secondaryUi =
-    mode === 'dark'
-      ? ensureAccessibleFillSurface(darkModeSecondaryUi(secondaryBase))
-      : secondaryBase;
+  const primaryUi = ensureAccessibleFillSurface(
+    mode === 'dark' ? darkModePrimaryUi(primaryBase) : primaryBase,
+  );
+  const secondaryUi = ensureAccessibleFillSurface(
+    mode === 'dark' ? darkModeSecondaryUi(secondaryBase) : secondaryBase,
+  );
 
   const primaryToken = hslColorToToken(primaryUi);
   const secondaryToken = hslColorToToken(secondaryUi);
@@ -430,45 +573,12 @@ export function buildBrandingCssVariables(
   const accentHue = secondaryBase.h;
   const semantic = buildSemanticStatusTokens(mode);
 
-  if (mode === 'light') {
-    return {
-      ...semantic,
-      '--primary': primaryToken,
-      '--primary-foreground': foregroundForSurface(primaryUi),
-      '--secondary': secondaryToken,
-      '--secondary-foreground': foregroundForSurface(secondaryUi),
-      '--accent': secondaryToken,
-      '--accent-foreground': foregroundForSurface(secondaryUi),
-      '--ring': primaryToken,
-      '--chart-1': primaryToken,
-      '--chart-2': secondaryToken,
-      '--chart-3': hslColorToToken(chart3),
-      '--chart-4': hslColorToToken(chart4),
-      '--chart-5': hslColorToToken(chart5),
-      '--background': `${surfaceHue} 20% 98%`,
-      '--foreground': `${surfaceHue} 30% 10%`,
-      '--card': '0 0% 100%',
-      '--card-foreground': `${surfaceHue} 30% 10%`,
-      '--popover': '0 0% 100%',
-      '--popover-foreground': `${surfaceHue} 30% 10%`,
-      '--muted': `${surfaceHue} 15% 94%`,
-      '--muted-foreground': `${surfaceHue} 10% 45%`,
-      '--border': `${surfaceHue} 15% 90%`,
-      '--input': `${surfaceHue} 15% 90%`,
-      '--sidebar-background': `${surfaceHue} 30% 10%`,
-      '--sidebar-foreground': `${accentHue} 15% 85%`,
-      '--sidebar-primary': secondaryToken,
-      '--sidebar-primary-foreground': foregroundForSurface(secondaryUi),
-      '--sidebar-accent': `${surfaceHue} 25% 16%`,
-      '--sidebar-accent-foreground': `${accentHue} 15% 92%`,
-      '--sidebar-border': `${surfaceHue} 20% 18%`,
-      '--sidebar-ring': secondaryToken,
-      '--sidebar-muted-foreground': `${surfaceHue} 10% 55%`,
-    };
-  }
+  const surfaceTokens =
+    mode === 'light'
+      ? buildLightModeSurfaceTokens(surfaceHue, accentHue)
+      : buildDarkModeSurfaceTokens(surfaceHue, accentHue);
 
-  return {
-    ...semantic,
+  const brandTokens = {
     '--primary': primaryToken,
     '--primary-foreground': foregroundForSurface(primaryUi),
     '--secondary': secondaryToken,
@@ -481,25 +591,23 @@ export function buildBrandingCssVariables(
     '--chart-3': hslColorToToken(chart3),
     '--chart-4': hslColorToToken(chart4),
     '--chart-5': hslColorToToken(chart5),
-    '--background': `${surfaceHue} 20% 5%`,
-    '--foreground': `${accentHue} 15% 92%`,
-    '--card': `${surfaceHue} 20% 8%`,
-    '--card-foreground': `${accentHue} 15% 92%`,
-    '--popover': `${surfaceHue} 20% 8%`,
-    '--popover-foreground': `${accentHue} 15% 92%`,
-    '--muted': `${surfaceHue} 15% 14%`,
-    '--muted-foreground': `${surfaceHue} 10% 55%`,
-    '--border': `${surfaceHue} 15% 16%`,
-    '--input': `${surfaceHue} 15% 16%`,
-    '--sidebar-background': `${surfaceHue} 25% 6%`,
-    '--sidebar-foreground': `${accentHue} 15% 85%`,
     '--sidebar-primary': secondaryToken,
     '--sidebar-primary-foreground': foregroundForSurface(secondaryUi),
-    '--sidebar-accent': `${surfaceHue} 20% 12%`,
-    '--sidebar-accent-foreground': `${accentHue} 15% 92%`,
-    '--sidebar-border': `${surfaceHue} 15% 14%`,
     '--sidebar-ring': secondaryToken,
-    '--sidebar-muted-foreground': `${surfaceHue} 10% 50%`,
+  };
+
+  if (mode === 'light') {
+    return {
+      ...semantic,
+      ...surfaceTokens,
+      ...brandTokens,
+    };
+  }
+
+  return {
+    ...semantic,
+    ...surfaceTokens,
+    ...brandTokens,
   };
 }
 
