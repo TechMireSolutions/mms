@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const SAVED_FLASH_MS = 2500;
 
@@ -9,13 +9,26 @@ export function useSavedFlash(): {
   clearSaved: () => void;
 } {
   const [saved, setSaved] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const flashSaved = useCallback((): void => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     setSaved(true);
-    window.setTimeout(() => setSaved(false), SAVED_FLASH_MS);
+    timerRef.current = setTimeout(() => {
+      setSaved(false);
+      timerRef.current = null;
+    }, SAVED_FLASH_MS);
   }, []);
 
   const clearSaved = useCallback((): void => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
     setSaved(false);
   }, []);
 

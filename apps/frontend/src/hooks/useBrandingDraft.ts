@@ -1,17 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import {
   isBrandingFieldsDirty,
   mergeBrandingSettings,
-  pickBrandingFields,
   type BrandingSettings,
 } from '@mms/shared';
 import { getBrandingSettings, saveBrandingSettings } from '@/lib/db';
 import { clearBrandingSettingsPreview, previewBrandingSettings } from '@/lib/settingsPreview';
+import { buildBrandingPreviewPatch } from '@/lib/brandingPreviewPatch';
 import { loadBranding } from '@/components/branding/BrandingShared';
 import { serverSyncErrorKey } from '@/lib/serverSyncErrors';
 import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';
+
+export interface UseBrandingDraftSaveToast {
+  saveSuccessMessage: string;
+  saveSuccessDescription: string;
+}
 
 export interface UseBrandingDraftOptions {
   saveSuccessMessage: string;
@@ -22,11 +27,12 @@ export interface UseBrandingDraftOptions {
 
 export interface UseBrandingDraftResult {
   data: BrandingSettings;
+  baseline: BrandingSettings;
   isDirty: boolean;
   saved: boolean;
   saving: boolean;
   upd: <K extends keyof BrandingSettings>(field: K, value: BrandingSettings[K]) => void;
-  handleSave: () => Promise<boolean>;
+  handleSave: (toast?: UseBrandingDraftSaveToast) => Promise<boolean>;
   applyPersisted: (next: BrandingSettings) => void;
 }
 
@@ -74,8 +80,7 @@ export function useBrandingDraft({
 
   useEffect(() => {
     const merged = mergeBrandingSettings(data);
-    const patch = trackKeys ? pickBrandingFields(merged, trackKeys) : merged;
-    previewBrandingSettings(patch);
+    previewBrandingSettings(buildBrandingPreviewPatch(merged, trackKeys));
   }, [data, trackKeys]);
 
   const applyPersisted = useCallback((next: BrandingSettings): void => {
@@ -91,27 +96,32 @@ export function useBrandingDraft({
     clearSaved();
   }, []);
 
-  const handleSave = useCallback(async (): Promise<boolean> => {
-    setSaving(true);
-    try {
-      const merged = mergeBrandingSettings(data);
-      const result = await saveBrandingSettings(merged);
-      if (!result.ok) {
-        notify.error(t('settings.serverSaveFailed'), {
-          description: t(serverSyncErrorKey(result.status)),
+  const handleSave = useCallback(
+    async (toast?: UseBrandingDraftSaveToast): Promise<boolean> => {
+      setSaving(true);
+      try {
+        const merged = mergeBrandingSettings(data);
+        const result = await saveBrandingSettings(merged);
+        if (!result.ok) {
+          notify.error(t('settings.serverSaveFailed'), {
+            description: t(serverSyncErrorKey(result.status)),
+          });
+          return false;
+        }
+        setBaseline(merged);
+        setData(merged);
+        clearBrandingSettingsPreview();
+        flashSaved();
+        notify.success(toast?.saveSuccessMessage ?? saveSuccessMessage, {
+          description: toast?.saveSuccessDescription ?? saveSuccessDescription,
         });
-        return false;
+        return true;
+      } finally {
+        setSaving(false);
       }
-      setBaseline(merged);
-      setData(merged);
-      clearBrandingSettingsPreview();
-      flashSaved();
-      notify.success(saveSuccessMessage, { description: saveSuccessDescription });
-      return true;
-    } finally {
-      setSaving(false);
-    }
-  }, [data, flashSaved, saveSuccessDescription, saveSuccessMessage, t]);
+    },
+    [data, flashSaved, saveSuccessDescription, saveSuccessMessage, t],
+  );
 
-  return { data, isDirty, saved, saving, upd, handleSave, applyPersisted };
+  return { data, baseline, isDirty, saved, saving, upd, handleSave, applyPersisted };
 }

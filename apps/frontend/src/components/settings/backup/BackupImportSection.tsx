@@ -7,6 +7,7 @@ import useTranslation from '@/hooks/useTranslation';
 interface BackupImportSectionProps {
   dragActive: boolean;
   selectedFileName: string | null;
+  uploadLimitLabel: string;
   onDragActiveChange: (active: boolean) => void;
   onFileSelected: (file: File | undefined) => void;
 }
@@ -14,6 +15,7 @@ interface BackupImportSectionProps {
 export default function BackupImportSection({
   dragActive,
   selectedFileName,
+  uploadLimitLabel,
   onDragActiveChange,
   onFileSelected,
 }: BackupImportSectionProps): React.JSX.Element {
@@ -50,6 +52,9 @@ export default function BackupImportSection({
           {dragActive ? t('backup.dropzoneActive') : t('backup.dropzone')}
         </span>
         <span className="mt-0.5 text-xs text-muted-foreground">{t('backup.dropzoneHint')}</span>
+        <span className="mt-1 text-[11px] text-muted-foreground">
+          {t('backup.uploadLimitHint', { limit: uploadLimitLabel })}
+        </span>
         {selectedFileName ? (
           <span className="mt-2 text-xs font-medium text-primary">
             {t('backup.fileSelected', { name: selectedFileName })}

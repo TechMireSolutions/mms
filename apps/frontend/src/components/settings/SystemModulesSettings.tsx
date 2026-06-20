@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { getEffectiveGlobalSettings } from '@/lib/db';
 import { normalizeEnabledModules, SYSTEM_MODULES_BY_ID, type GlobalSettings } from '@mms/shared';
 import { notify } from '@/lib/notify';
@@ -7,6 +7,7 @@ import { useSettingsDraft } from '@/hooks/useSettingsDraft';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import ModuleSettingsNavGrid from '@/components/settings/modules/ModuleSettingsNavGrid';
+import SettingsConfirmResetModal from '@/components/settings/SettingsConfirmResetModal';
 import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
 import {
   previewEnabledModulesDraft,
@@ -20,6 +21,7 @@ import {
 export default function SystemModulesSettings(): React.JSX.Element {
   const { t } = useTranslation();
   const { saved: savedFlash, flashSaved, clearSaved } = useSavedFlash();
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 
   const load = useCallback(() => getEffectiveGlobalSettings(), []);
 
@@ -74,7 +76,7 @@ export default function SystemModulesSettings(): React.JSX.Element {
           saveLabel={t('module.system.save')}
           savingLabel={t('module.system.saving')}
           savedLabel={t('module.system.savedLabel')}
-          onReset={handleReset}
+          onReset={() => setConfirmResetOpen(true)}
           onSave={() => void handleSave()}
           dirty={dirty}
           saving={saving}
@@ -84,6 +86,18 @@ export default function SystemModulesSettings(): React.JSX.Element {
     >
       <SettingsCallout>{t('module.system.note')}</SettingsCallout>
       <ModuleSettingsNavGrid enabledModules={enabledModules} onToggleModule={updModule} />
+
+      <SettingsConfirmResetModal
+        open={confirmResetOpen}
+        onClose={() => setConfirmResetOpen(false)}
+        onConfirm={() => {
+          handleReset();
+          setConfirmResetOpen(false);
+        }}
+        titleKey="module.system.confirmResetTitle"
+        descKey="module.system.confirmResetDesc"
+        warningKey="module.system.resetWarning"
+      />
     </SettingsPanel>
   );
 }

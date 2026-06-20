@@ -74,6 +74,7 @@ export default function BackupRestore(): React.JSX.Element {
         <BackupImportSection
           dragActive={backup.dragActive}
           selectedFileName={backup.selectedFileName}
+          uploadLimitLabel={backup.uploadLimitLabel}
           onDragActiveChange={backup.setDragActive}
           onFileSelected={backup.processImportFile}
         />

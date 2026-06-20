@@ -1,11 +1,11 @@
 import React from 'react';
 import { Mail, Phone, Globe, MapPin, Share2, Building2, Type,
 } from 'lucide-react';
-import { BRANDING_IDENTITY_FIELD_KEYS, resetBrandingIdentity } from '@mms/shared';
+import { resetBrandingIdentity } from '@mms/shared';
 import { saveBrandingSettings } from '@/lib/db';
 import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';
-import { useBrandingDraft } from '@/hooks/useBrandingDraft';
+import { useSettingsBrandingDraft } from '@/lib/contexts/SettingsBrandingDraftContext';
 import SectionCard from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,11 +26,8 @@ import {
  */
 export default function BrandingSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const { data, isDirty, saved, saving, upd, handleSave, applyPersisted } = useBrandingDraft({
-    saveSuccessMessage: t('branding.savedToast'),
-    saveSuccessDescription: t('branding.savedToastDesc'),
-    trackKeys: BRANDING_IDENTITY_FIELD_KEYS,
-  });
+  const { data, isIdentityDirty, saved, saving, upd, handleSave, applyPersisted } =
+    useSettingsBrandingDraft();
 
   const handleReset = async (): Promise<void> => {
     const identityReset = resetBrandingIdentity(data);
@@ -51,7 +48,7 @@ export default function BrandingSettings(): React.JSX.Element {
     <SettingsPanel
       width="medium"
       introKey="settings.introBranding"
-      isDirty={isDirty}
+      isDirty={isIdentityDirty}
       saved={saved}
       footer={
         <SettingsFormActions
@@ -60,8 +57,13 @@ export default function BrandingSettings(): React.JSX.Element {
           savingLabel={t('branding.saving')}
           savedLabel={t('branding.saved')}
           onReset={() => void handleReset()}
-          onSave={() => void handleSave()}
-          dirty={isDirty}
+          onSave={() =>
+            void handleSave({
+              saveSuccessMessage: t('branding.savedToast'),
+              saveSuccessDescription: t('branding.savedToastDesc'),
+            })
+          }
+          dirty={isIdentityDirty}
           saving={saving}
           saved={saved}
         />

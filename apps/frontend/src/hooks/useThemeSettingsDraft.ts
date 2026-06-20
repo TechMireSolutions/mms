@@ -22,7 +22,7 @@ import { clearGlobalSettingsPreview, previewGlobalSettings } from '@/lib/setting
 import { serverSyncErrorKey } from '@/lib/serverSyncErrors';
 import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';
-import { useBrandingDraft } from '@/hooks/useBrandingDraft';
+import { useSettingsBrandingDraft } from '@/lib/contexts/SettingsBrandingDraftContext';
 
 export interface UseThemeSettingsDraftResult {
   data: BrandingSettings;
@@ -33,7 +33,7 @@ export interface UseThemeSettingsDraftResult {
   isDirty: boolean;
   saving: boolean;
   saved: boolean;
-  upd: ReturnType<typeof useBrandingDraft>['upd'];
+  upd: ReturnType<typeof useSettingsBrandingDraft>['upd'];
   handleSave: () => Promise<void>;
   handleReset: () => Promise<boolean>;
   defaultFooterPreview: string;
@@ -56,11 +56,7 @@ export function useThemeSettingsDraft(
 ): UseThemeSettingsDraftResult {
   const { t, language } = useTranslation();
   const { saved: savedFlash, flashSaved, clearSaved: clearSavedFlash } = useSavedFlash();
-  const branding = useBrandingDraft({
-    saveSuccessMessage,
-    saveSuccessDescription,
-    trackKeys: BRANDING_THEME_FIELD_KEYS,
-  });
+  const branding = useSettingsBrandingDraft();
 
   const [themeBaseline, setThemeBaseline] = useState(loadPersistedThemeMode);
   const [displayMode, setDisplayModeState] = useState(loadEffectiveThemeMode);
@@ -70,7 +66,7 @@ export function useThemeSettingsDraft(
   );
 
   const displayModeDirty = displayMode !== themeBaseline;
-  const isDirty = branding.isDirty || displayModeDirty;
+  const isDirty = branding.isThemeFieldsDirty || displayModeDirty;
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -115,10 +111,10 @@ export function useThemeSettingsDraft(
   }, []);
 
   const handleSave = useCallback(async (): Promise<void> => {
-    const wasBrandingDirty = branding.isDirty;
+    const wasBrandingDirty = branding.isThemeFieldsDirty;
 
     if (wasBrandingDirty) {
-      const ok = await branding.handleSave();
+      const ok = await branding.handleSave({ saveSuccessMessage, saveSuccessDescription });
       if (!ok) return;
     }
 

@@ -9,14 +9,20 @@ import { SETTINGS_NAV } from '@/lib/config/settingsNavConfig';
 import { SETTINGS_SECTION_COMPONENTS } from '@/lib/config/settingsSectionComponents';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { SettingsTabProvider } from '@/lib/contexts/SettingsTabContext';
+import { SettingsBrandingDraftProvider } from '@/lib/contexts/SettingsBrandingDraftContext';
 
 function SettingsContent({ section }: { section: SettingsSection }): React.JSX.Element {
+  const { t } = useTranslation();
   const Component = SETTINGS_SECTION_COMPONENTS[section];
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+        <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
+          <div
+            className="h-6 w-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary"
+            aria-hidden
+          />
+          <span className="sr-only">{t('common.loading')}</span>
         </div>
       }
     >
@@ -54,6 +60,10 @@ export default function Settings(): React.JSX.Element {
 
   return (
     <SettingsTabProvider value={{ activeTab: tab, setActiveTab: setTab }}>
+      <SettingsBrandingDraftProvider
+        saveSuccessMessage={t('branding.savedToast')}
+        saveSuccessDescription={t('branding.savedToastDesc')}
+      >
       <div className="mx-auto max-w-7xl space-y-5">
         <title>MMS - {t('settings.title')}</title>
         <meta name="description" content={t('settings.subtitle')} />
@@ -96,6 +106,7 @@ export default function Settings(): React.JSX.Element {
           </AnimatePresence>
         </ResponsiveAccordionTabs>
       </div>
+      </SettingsBrandingDraftProvider>
     </SettingsTabProvider>
   );
 }

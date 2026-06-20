@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Palette, Monitor, Wand2, ImageIcon, AlertTriangle, Loader2, Box } from 'lucide-react';
+import { Palette, Monitor, Wand2, ImageIcon, Loader2, Box } from 'lucide-react';
 import { cornerStyleLabelKey, normalizeBrandingCornerStyle, normalizeThemeMode } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
 import { useApplyLogoColors } from '@/hooks/useApplyLogoColors';
@@ -9,8 +9,8 @@ import SectionCard from '@/components/ui/SectionCard';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import Modal from '@/components/ui/Modal';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
+import SettingsConfirmResetModal from '@/components/settings/SettingsConfirmResetModal';
 import BrandColorPanel from '@/components/branding/BrandColorPanel';
 import ThemeModeSelector from '@/components/settings/ThemeModeSelector';
 import CornerStyleSelector from '@/components/settings/CornerStyleSelector';
@@ -226,36 +226,15 @@ export default function ThemeSettings(): React.JSX.Element {
         </div>
       </SectionCard>
 
-      <Modal
+      <SettingsConfirmResetModal
         open={confirmResetOpen}
-        onClose={() => !resetting && setConfirmResetOpen(false)}
-        title={t('theme.confirmResetTitle')}
-        subtitle={t('theme.confirmResetDesc')}
-        icon={AlertTriangle}
-        size="sm"
-        footer={
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setConfirmResetOpen(false)}
-              disabled={resetting}
-            >
-              {t('theme.confirmCancel')}
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => void confirmReset()}
-              disabled={resetting}
-            >
-              {t('theme.confirmResetAction')}
-            </Button>
-          </div>
-        }
-      >
-        <p className="text-sm text-muted-foreground">{t('theme.resetWarning')}</p>
-      </Modal>
+        onClose={() => setConfirmResetOpen(false)}
+        onConfirm={confirmReset}
+        titleKey="theme.confirmResetTitle"
+        descKey="theme.confirmResetDesc"
+        warningKey="theme.resetWarning"
+        loading={resetting}
+      />
     </SettingsPanel>
   );
 }

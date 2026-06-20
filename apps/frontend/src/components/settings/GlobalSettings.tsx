@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Bell, Lock, Languages } from 'lucide-react';
 import { getGlobalSettings, saveGlobalSettings } from '@/lib/db';
 import { clearGlobalSettingsPreview, previewGlobalSettings } from '@/lib/settingsPreview';
@@ -33,6 +33,7 @@ import SectionCard from '@/components/ui/SectionCard';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import DateFormatSelect from '@/components/settings/DateFormatSelect';
 import EmailIntegrationPanel from '@/components/settings/EmailIntegrationPanel';
+import SettingsConfirmResetModal from '@/components/settings/SettingsConfirmResetModal';
 import TimezoneSelect from '@/components/settings/TimezoneSelect';
 import {
   SettingsCallout,
@@ -50,6 +51,7 @@ import { globalSettingsPreviewPatch, mergeGlobalSettingsDraft } from '@/lib/sett
 export default function GlobalSettings(): React.JSX.Element {
   const { t } = useTranslation();
   const { saved: savedFlash, flashSaved, clearSaved } = useSavedFlash();
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 
   const load = useCallback(() => getGlobalSettings(), []);
 
@@ -70,12 +72,20 @@ export default function GlobalSettings(): React.JSX.Element {
     [flashSaved, t],
   );
 
-  const { data, dirty, saving, upd, handleSave, resetDraft } = useSettingsDraft({
+  const { data, dirty, saving, upd: updDraft, handleSave, resetDraft } = useSettingsDraft({
     load,
     onPreview,
     onSave,
     skipDatabaseSyncWhenDirty: true,
   });
+
+  const upd = useCallback(
+    <K extends keyof GlobalSettingsData>(field: K, value: GlobalSettingsData[K]): void => {
+      updDraft(field, value);
+      clearSaved();
+    },
+    [clearSaved, updDraft],
+  );
 
   const notificationChannel = useMemo(
     () => resolveNotificationChannel(data),
@@ -116,9 +126,9 @@ export default function GlobalSettings(): React.JSX.Element {
         <SettingsFormActions
           resetLabel={t('global.resetToDefaults')}
           saveLabel={t('global.saveSettings')}
-          savingLabel={t('theme.saving')}
+          savingLabel={t('global.saving')}
           savedLabel={t('settings.savedBadge')}
-          onReset={handleReset}
+          onReset={() => setConfirmResetOpen(true)}
           onSave={() => void handleSave()}
           dirty={dirty}
           saving={saving}
@@ -267,6 +277,18 @@ export default function GlobalSettings(): React.JSX.Element {
           </SettingsFieldGroup>
         </div>
       </SectionCard>
+
+      <SettingsConfirmResetModal
+        open={confirmResetOpen}
+        onClose={() => setConfirmResetOpen(false)}
+        onConfirm={() => {
+          handleReset();
+          setConfirmResetOpen(false);
+        }}
+        titleKey="global.confirmResetTitle"
+        descKey="global.confirmResetDesc"
+        warningKey="global.resetWarning"
+      />
     </SettingsPanel>
   );
 }
