@@ -11,9 +11,13 @@ export default async function publicRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  fastify.get('/deployment-config', async (request, reply) => {
-    const hostname = requestHostname(request);
-    const appDomain = resolveAppDomainForRequest(hostname, process.env.MMS_APP_DOMAIN);
+  fastify.get('/deployment-config', async (_request, reply) => {
+    const configured = process.env.MMS_APP_DOMAIN?.trim();
+    if (configured) {
+      return reply.send({ appDomain: configured });
+    }
+    const hostname = requestHostname(_request);
+    const appDomain = resolveAppDomainForRequest(hostname, configured);
     return reply.send({ appDomain });
   });
 }

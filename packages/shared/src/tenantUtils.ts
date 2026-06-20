@@ -177,14 +177,19 @@ export function misconfiguredAppDomainHint(
 
   const hostLabels = host.split('.');
   const configLabels = configured.split('.');
-  if (hostLabels.length === configLabels.length + 1 && host.endsWith(`.${configured}`)) {
-    return (
-      `MMS_APP_DOMAIN is "${configured}" but "${host}" is treated as tenant "${tenant}". ` +
-      `Set MMS_APP_DOMAIN=${host}.`
-    );
+  if (hostLabels.length !== configLabels.length + 1 || !host.endsWith(`.${configured}`)) {
+    return null;
   }
 
-  return null;
+  // Real madrasa slugs under a correct apex are expected — not a misconfiguration.
+  if (!APEX_3PART_LABELS.has(tenant)) {
+    return null;
+  }
+
+  return (
+      `MMS_APP_DOMAIN is "${configured}" but "${host}" is treated as tenant "${tenant}". ` +
+      `Set MMS_APP_DOMAIN=${host}.`
+  );
 }
 
 /**

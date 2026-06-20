@@ -62,6 +62,12 @@ describe('misconfiguredAppDomainHint', () => {
   it('returns null when configured domain matches host', () => {
     expect(misconfiguredAppDomainHint('mmsv2.aabtaab.com', 'mmsv2.aabtaab.com')).toBeNull();
   });
+
+  it('returns null for valid madrasa tenant under correct apex', () => {
+    expect(
+      misconfiguredAppDomainHint('dar-ul-quran.mmsv2.aabtaab.com', 'mmsv2.aabtaab.com'),
+    ).toBeNull();
+  });
 });
 
 describe('resolveAppDomainForRequest', () => {
@@ -70,6 +76,15 @@ describe('resolveAppDomainForRequest', () => {
       'mmsv2.aabtaab.com',
     );
     expect(parseTenantFromHost('mmsv2.aabtaab.com', 'mmsv2.aabtaab.com')).toBeNull();
+  });
+
+  it('keeps configured apex for madrasa tenant hosts', () => {
+    expect(
+      resolveAppDomainForRequest('dar-ul-quran.mmsv2.aabtaab.com', 'mmsv2.aabtaab.com'),
+    ).toBe('mmsv2.aabtaab.com');
+    expect(
+      parseTenantFromHost('dar-ul-quran.mmsv2.aabtaab.com', 'mmsv2.aabtaab.com'),
+    ).toBe('dar-ul-quran');
   });
 });
 
