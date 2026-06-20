@@ -10,7 +10,9 @@ source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
 
 ENV_FILE="${1:-apps/backend/.env}"
 TEMPLATE="$ROOT_DIR/scripts/apache/mmsv2-vhost.conf.template"
-TARGET="/etc/apache2/sites-available/mmsv2.conf"
+# 000- prefix: load before Moodle/default SSL vhosts when SNI matching fails.
+TARGET="/etc/apache2/sites-available/000-mmsv2.conf"
+LEGACY_TARGET="/etc/apache2/sites-available/mmsv2.conf"
 
 read_env_var() {
   local key="$1"
@@ -68,6 +70,14 @@ if [[ -d "$CERT_DIR" ]]; then
     echo "    SSLCertificateFile ${CERT_DIR}/fullchain.pem"
     echo "    SSLCertificateKeyFile ${CERT_DIR}/privkey.pem"
   } >>"$TMP"
+  if command -v openssl >/dev/null 2>&1; then
+    CERT_SANS="$(openssl x509 -in "${CERT_DIR}/fullchain.pem" -noout -ext subjectAltName 2>/dev/null || true)"
+    if ! echo "$CERT_SANS" | grep -qF "DNS:*.${APP_DOMAIN}"; then
+      echo "WARNING: cert at ${CERT_DIR} lacks DNS:*.${APP_DOMAIN}"
+      echo "         Tenant URLs will hit the default SSL vhost (e.g. Moodle) until wildcard TLS is issued:"
+      echo "         bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
+    fi
+  fi
 else
   echo "WARNING: no cert at ${CERT_DIR} — edit SSL paths in ${TARGET} after certbot"
 fi
@@ -76,8 +86,15 @@ echo "Installing ${TARGET} for ${APP_DOMAIN} → :${BACKEND_PORT}"
 run_priv cp "$TMP" "$TARGET"
 rm -f "$TMP"
 
-run_priv a2ensite mmsv2.conf 2>/dev/null || true
+run_priv a2dissite mmsv2.conf 2>/dev/null || true
+run_priv rm -f /etc/apache2/sites-enabled/mmsv2.conf 2>/dev/null || true
+run_priv a2ensite 000-mmsv2.conf 2>/dev/null || true
 run_priv a2enmod proxy proxy_http headers ssl rewrite 2>/dev/null || true
 run_priv apache2ctl configtest
 run_priv systemctl reload apache2
-echo "MMS vhost enabled — only ${APP_DOMAIN} and *.${APP_DOMAIN} should proxy to MMS"
+if [[ -f /etc/apache2/sites-enabled/000-mmsv2.conf ]] \
+  && grep -q "ServerAlias \\*\\.${APP_DOMAIN}" /etc/apache2/sites-enabled/000-mmsv2.conf 2>/dev/null; then
+  echo "MMS vhost enabled — ${APP_DOMAIN} and *.${APP_DOMAIN} → :${BACKEND_PORT}"
+else
+  echo "WARNING: 000-mmsv2.conf missing ServerAlias *.${APP_DOMAIN} on :443"
+fi

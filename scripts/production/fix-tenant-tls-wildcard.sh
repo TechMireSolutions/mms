@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+# Fix tenant URLs serving the wrong Apache vhost (e.g. Moodle → edu.aabtaab.com).
+# Root cause: TLS cert lacks *.MMS_APP_DOMAIN — Apache falls back to default SSL site.
+#
+# Usage (on production VPS as root):
+#   cd /var/www/mmsv2
+#   bash scripts/production/fix-tenant-tls-wildcard.sh apps/backend/.env
+#
+# Requires interactive certbot DNS challenge unless MMS_WILDCARD_CERT_DIR is preset.
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$ROOT_DIR"
+
+# shellcheck source=../lib/deploy-ports.sh
+source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+
+ENV_FILE="${1:-apps/backend/.env}"
+
+read_env_var() {
+  local key="$1"
+  local default="${2:-}"
+  if [[ ! -f "$ENV_FILE" ]]; then
+    echo "$default"
+    return 0
+  fi
+  local line
+  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
+  if [[ -z "$line" ]]; then
+    echo "$default"
+    return 0
+  fi
+  local value="${line#*=}"
+  value="${value%\"}"
+  value="${value#\"}"
+  echo "$value"
+}
+
+APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN "${MMS_APP_DOMAIN:-}")"
+if [[ -z "$APP_DOMAIN" ]]; then
+  echo "ERROR: MMS_APP_DOMAIN required in ${ENV_FILE}"
+  exit 1
+fi
+
+WILDCARD_SAN="*.${APP_DOMAIN}"
+PROBE_HOST="tenant-tls-probe-${RANDOM}.${APP_DOMAIN}"
+CERT_DIR="${MMS_WILDCARD_CERT_DIR:-/etc/letsencrypt/live/${APP_DOMAIN}}"
+
+cert_sans_for_sni() {
+  local sni="$1"
+  echo | openssl s_client -servername "$sni" -connect "${APP_DOMAIN}:443" 2>/dev/null \
+    | openssl x509 -noout -ext subjectAltName 2>/dev/null || true
+}
+
+cert_covers_tenant_sni() {
+  local sni="$1"
+  local sans
+  sans="$(cert_sans_for_sni "$sni")"
+  echo "$sans" | grep -qF "DNS:${WILDCARD_SAN}" \
+    || echo "$sans" | grep -qF "DNS:${sni}"
+}
+
+tenant_https_headers() {
+  curl -sI --connect-timeout 8 --max-time 20 "https://${PROBE_HOST}/" 2>/dev/null || true
+}
+
+echo "══ Fix tenant TLS / Apache routing ══"
+echo "MMS_APP_DOMAIN=${APP_DOMAIN}"
+echo "Probe host: ${PROBE_HOST}"
+echo ""
+
+echo "── Current TLS for tenant SNI ──"
+TENANT_SANS="$(cert_sans_for_sni "$PROBE_HOST")"
+echo "${TENANT_SANS:-<could not read certificate>}"
+if cert_covers_tenant_sni "$PROBE_HOST"; then
+  echo "OK: Certificate already covers ${WILDCARD_SAN}"
+else
+  echo "ERROR: Certificate does NOT cover tenant subdomains (often shows edu.aabtaab.com / Moodle)"
+fi
+echo ""
+
+echo "── Apache vhost map (443) ──"
+if command -v apache2ctl >/dev/null 2>&1; then
+  apache2ctl -S 2>&1 | grep -E ':443|${APP_DOMAIN}' || apache2ctl -S 2>&1 | grep 443 || true
+else
+  echo "WARNING: apache2ctl not found"
+fi
+echo ""
+
+echo "── Reinstall MMS vhost (000-mmsv2.conf, ServerAlias *.${APP_DOMAIN}) ──"
+bash "$ROOT_DIR/scripts/apache/install-mms-vhost.sh" "$ENV_FILE"
+bash "$ROOT_DIR/scripts/fix-apache-upstream.sh" "$ENV_FILE"
+echo ""
+
+if cert_covers_tenant_sni "$PROBE_HOST"; then
+  echo "── Verify tenant HTTPS ──"
+  HDR="$(tenant_https_headers)"
+  if echo "$HDR" | grep -qi 'X-Redirect-By: Moodle'; then
+    echo "ERROR: Still routing to Moodle — check apache2ctl -S and disable conflicting ServerAlias * vhosts"
+    exit 1
+  fi
+  CODE="$(printf '%s' "$HDR" | head -1 | awk '{print $2}')"
+  echo "https://${PROBE_HOST}/ → HTTP ${CODE:-unknown}"
+  echo "Done — tenant subdomains should serve MMS."
+  exit 0
+fi
+
+echo "── Wildcard certificate required ──"
+echo "HTTP-01 cannot issue *.${APP_DOMAIN}. Use DNS challenge once:"
+echo ""
+echo "  sudo certbot certonly --cert-name ${APP_DOMAIN} --expand \\"
+echo "    --manual --preferred-challenges dns \\"
+echo "    -d ${APP_DOMAIN} -d '${WILDCARD_SAN}'"
+echo ""
+echo "Add each _acme-challenge TXT record in Network Solutions, wait 2–5 min, press Enter in certbot."
+echo "Keep mmsv2-api.${APP_DOMAIN} if needed:"
+echo ""
+echo "  sudo certbot certonly --cert-name ${APP_DOMAIN} --expand \\"
+echo "    --manual --preferred-challenges dns \\"
+echo "    -d ${APP_DOMAIN} -d '${WILDCARD_SAN}' -d mmsv2-api.aabtaab.com"
+echo ""
+
+if [[ "${MMS_RUN_CERTBOT:-}" == "1" ]] && [[ -t 0 ]]; then
+  read -r -p "Run certbot now? [y/N] " reply
+  if [[ "$reply" =~ ^[Yy]$ ]]; then
+    EXTRA_DOMAINS=()
+    if [[ "$APP_DOMAIN" == "mmsv2.aabtaab.com" ]]; then
+      EXTRA_DOMAINS=(-d "mmsv2-api.aabtaab.com")
+    fi
+    sudo certbot certonly --cert-name "$APP_DOMAIN" --expand \
+      --manual --preferred-challenges dns \
+      -d "$APP_DOMAIN" -d "$WILDCARD_SAN" "${EXTRA_DOMAINS[@]}"
+    bash "$ROOT_DIR/scripts/apache/install-mms-vhost.sh" "$ENV_FILE"
+    sudo systemctl reload apache2
+  fi
+fi
+
+if cert_covers_tenant_sni "$PROBE_HOST"; then
+  echo "Certificate OK after certbot."
+  exit 0
+fi
+
+echo "After certbot completes, run:"
+echo "  bash scripts/apache/install-mms-vhost.sh ${ENV_FILE}"
+echo "  sudo systemctl reload apache2"
+echo "  bash scripts/verify-tenant-hosts.sh aabtaab ${ENV_FILE}"
+exit 1

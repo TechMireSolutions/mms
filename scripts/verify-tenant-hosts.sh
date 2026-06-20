@@ -9,6 +9,8 @@ cd "$ROOT_DIR"
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/curl-local-backend.sh
+source "$ROOT_DIR/scripts/lib/curl-local-backend.sh"
 
 SUBDOMAIN="${1:-}"
 ENV_FILE="${2:-apps/backend/.env}"
@@ -81,21 +83,28 @@ echo ""
 
 # ── Apache vhost ─────────────────────────────────────────────────────────────
 echo "── Apache ──"
-if [[ -f /etc/apache2/sites-enabled/mmsv2.conf ]]; then
-  if grep -q "ServerAlias \\*\\.${APP_DOMAIN}" /etc/apache2/sites-enabled/mmsv2.conf 2>/dev/null \
-    || grep -q "ServerAlias \*\.${APP_DOMAIN}" /etc/apache2/sites-enabled/mmsv2.conf 2>/dev/null; then
-    ok "mmsv2.conf has ServerAlias *.${APP_DOMAIN}"
+VHOST=""
+for candidate in /etc/apache2/sites-enabled/000-mmsv2.conf /etc/apache2/sites-enabled/mmsv2.conf; do
+  if [[ -f "$candidate" ]]; then
+    VHOST="$candidate"
+    break
+  fi
+done
+if [[ -n "$VHOST" ]]; then
+  if grep -q "ServerAlias \\*\\.${APP_DOMAIN}" "$VHOST" 2>/dev/null \
+    || grep -q "ServerAlias \*\.${APP_DOMAIN}" "$VHOST" 2>/dev/null; then
+    ok "$(basename "$VHOST") has ServerAlias *.${APP_DOMAIN}"
   else
-    fail "mmsv2.conf missing ServerAlias *.${APP_DOMAIN} — run: bash scripts/apache/install-mms-vhost.sh ${ENV_FILE}"
+    fail "$(basename "$VHOST") missing ServerAlias *.${APP_DOMAIN} — run: bash scripts/apache/install-mms-vhost.sh ${ENV_FILE}"
   fi
 else
-  fail "Missing /etc/apache2/sites-enabled/mmsv2.conf — run: bash scripts/apply-production-host-isolation.sh ${ENV_FILE}"
+  fail "Missing MMS Apache vhost — run: bash scripts/apply-production-host-isolation.sh ${ENV_FILE}"
 fi
 echo ""
 
 # ── Workspace registry ───────────────────────────────────────────────────────
 echo "── Workspaces ──"
-REGISTRY="$(curl -fsS "${LOCAL}/api/workspace/registry" 2>/dev/null || true)"
+REGISTRY="$(curl_local_backend "${LOCAL}/api/workspace/registry" "$APP_DOMAIN" 2>/dev/null || true)"
 if [[ -z "$REGISTRY" ]]; then
   fail "GET /api/workspace/registry failed — is backend running on :${BACKEND_PORT}?"
 else
@@ -127,11 +136,15 @@ if [[ -n "$SUBDOMAIN" ]]; then
   echo ""
 
   echo "── Public HTTPS ──"
-  PUB_CODE="$(curl -s -o /tmp/mms-tenant-pub.html -w '%{http_code}' \
-    --connect-timeout 5 --max-time 15 "https://${TENANT_HOST}/" 2>/dev/null || echo "000")"
-  if [[ "$PUB_CODE" == "200" ]]; then
+  PUB_HDR="$(curl -sI --connect-timeout 5 --max-time 15 "https://${TENANT_HOST}/" 2>/dev/null || true)"
+  PUB_CODE="$(printf '%s' "$PUB_HDR" | head -1 | awk '{print $2}')"
+  if echo "$PUB_HDR" | grep -qi 'X-Redirect-By: Moodle'; then
+    fail "https://${TENANT_HOST}/ is served by Moodle (wrong Apache SSL vhost)"
+    echo "       Fix: bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
+    echo "       Issue wildcard cert: *.${APP_DOMAIN} via certbot DNS challenge"
+  elif [[ "$PUB_CODE" == "200" ]]; then
     ok "https://${TENANT_HOST}/ → HTTP 200"
-  elif [[ "$PUB_CODE" == "000" ]]; then
+  elif [[ -z "$PUB_CODE" ]]; then
     fail "https://${TENANT_HOST}/ unreachable (DNS, firewall, or TLS)"
     echo "       Common fix: wildcard cert — certbot DNS challenge for *.${APP_DOMAIN}"
   else
@@ -143,13 +156,12 @@ if [[ -n "$SUBDOMAIN" ]]; then
     echo "── TLS certificate ──"
     CERT_SAN="$(echo | openssl s_client -servername "${TENANT_HOST}" -connect "${APP_DOMAIN}:443" 2>/dev/null \
       | openssl x509 -noout -text 2>/dev/null | grep -E 'DNS:' || true)"
-    if echo "$CERT_SAN" | grep -q "\\*\\.${APP_DOMAIN}\|DNS:${TENANT_HOST}"; then
+    if echo "$CERT_SAN" | grep -qF "DNS:*.${APP_DOMAIN}" || echo "$CERT_SAN" | grep -qF "DNS:${TENANT_HOST}"; then
       ok "Certificate covers ${TENANT_HOST} or *.${APP_DOMAIN}"
     else
-      fail "Certificate may not cover tenant subdomains"
+      fail "Certificate does not cover tenant subdomains (Apache may route to Moodle/default site)"
       echo "       SANs: ${CERT_SAN:-<could not read>}"
-      echo "       Issue wildcard cert: certbot certonly --manual --preferred-challenges dns \\"
-      echo "         -d ${APP_DOMAIN} -d '*.${APP_DOMAIN}'"
+      echo "       Run: bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
     fi
   fi
 
