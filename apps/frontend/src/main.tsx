@@ -2,9 +2,15 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App'
 import '@/index.css'
-import { applyAppTheme } from '@/lib/brandingTheme'
+import { isApexHost } from '@mms/shared'
+import { getAppDomain } from '@/lib/config/tenantConfig'
+import { applyApexPlatformTheme } from '@/lib/brandingThemeCore'
 
-applyAppTheme()
+if (typeof window !== 'undefined' && isApexHost(window.location.hostname, getAppDomain())) {
+  applyApexPlatformTheme('en')
+} else {
+  void import('@/lib/brandingTheme').then(({ applyAppTheme }) => applyAppTheme())
+}
 
 // Suppress Recharts v3 false-positive dimension warnings during mounting
 const originalWarn = console.warn;

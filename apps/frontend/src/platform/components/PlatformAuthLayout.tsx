@@ -1,7 +1,7 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { cn } from "@/lib/utils";
 
 export interface PlatformAuthLayoutProps {
   children: React.ReactNode;
@@ -32,11 +32,11 @@ export default function PlatformAuthLayout({
         aria-hidden
       />
 
-      <motion.div
-        initial={reducedMotion ? false : { opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={reducedMotion ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-[420px]"
+      <div
+        className={cn(
+          "relative z-10 w-full max-w-[420px]",
+          !reducedMotion && "animate-fade-in",
+        )}
       >
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-xl shadow-black/[0.04] backdrop-blur-xl dark:shadow-black/20">
           <div className="border-b border-border/50 bg-muted/15 px-6 py-6 text-center sm:px-8">
@@ -51,7 +51,7 @@ export default function PlatformAuthLayout({
 
           <div className="px-6 py-6 sm:px-8 sm:py-7">{children}</div>
         </div>
-      </motion.div>
+      </div>
     </main>
   );
 }

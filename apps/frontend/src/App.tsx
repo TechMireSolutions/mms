@@ -1,6 +1,7 @@
 import React, { useEffect, Suspense } from "react";
-import { applyAppTheme } from "./lib/brandingTheme";
+import { isApexHost } from "@mms/shared";
 import { SETTINGS_PREVIEW_EVENT } from "./lib/settingsPreview";
+import { getAppDomain } from "@/lib/config/tenantConfig";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useIsTenantHost } from '@/lib/host/useIsTenantHost';
 import UserNotRegisteredError from '@/components/routing/UserNotRegisteredError';
@@ -35,15 +36,27 @@ const AuthenticatedApp = (): React.JSX.Element | null => {
 };
 
 function App(): React.JSX.Element {
-  useEffect(() => {
-    applyAppTheme();
+  const isApexBoot =
+    typeof window !== "undefined" &&
+    isApexHost(window.location.hostname, getAppDomain());
 
-    const onThemeUpdate = () => applyAppTheme();
+  useEffect(() => {
+    const applyTheme = isApexBoot
+      ? () => import('./lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => applyApexPlatformTheme('en'))
+      : () => import('./lib/brandingTheme').then(({ applyAppTheme }) => applyAppTheme());
+
+    void applyTheme();
+
+    const onThemeUpdate = () => {
+      void applyTheme();
+    };
     window.addEventListener("local-database-update", onThemeUpdate);
     window.addEventListener(SETTINGS_PREVIEW_EVENT, onThemeUpdate);
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const listener = () => applyAppTheme();
+    const listener = () => {
+      void applyTheme();
+    };
     mediaQuery.addEventListener("change", listener);
 
     return () => {
@@ -51,7 +64,7 @@ function App(): React.JSX.Element {
       window.removeEventListener(SETTINGS_PREVIEW_EVENT, onThemeUpdate);
       mediaQuery.removeEventListener("change", listener);
     };
-  }, []);
+  }, [isApexBoot]);
 
   return (
     <AppProviders>

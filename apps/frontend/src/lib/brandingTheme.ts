@@ -1,6 +1,5 @@
 import {
   BRANDING_THEME_VARIABLES,
-  applyDocumentLanguage,
   brandingPrimaryToThemeColor,
   buildBrandingCssVariables,
   isApexHost,
@@ -16,7 +15,15 @@ import {
 } from './settingsPreviewStore';
 import { getAppDomain } from './config/tenantConfig';
 import { isEntryPath } from './config/routes';
-import { isTenantHost, MMS_PLATFORM_GLOBAL_SETTINGS } from '@/platform/lib/themeScope';
+import { isTenantHost, MMS_PLATFORM_BRANDING, MMS_PLATFORM_GLOBAL_SETTINGS } from '@/platform/lib/themeScope';
+import {
+  applyApexPlatformTheme,
+  applyBrandingFromSettings,
+  applyDocumentLanguageWithFonts,
+  resolveThemeMode,
+} from './brandingThemeCore';
+
+export { applyApexPlatformTheme } from './brandingThemeCore';
 
 function resolveDocumentLanguage(storedLanguage: string, pathname: string): string {
   const isApex =
@@ -24,13 +31,6 @@ function resolveDocumentLanguage(storedLanguage: string, pathname: string): stri
       ? isApexHost(window.location.hostname, getAppDomain())
       : true;
   return isEntryPath(pathname, { isApex }) ? 'en' : storedLanguage;
-}
-
-function resolveThemeMode(settings: GlobalSettings): BrandingThemeMode {
-  const root = document.documentElement;
-  if (settings.theme === 'dark') return 'dark';
-  if (settings.theme === 'light') return 'light';
-  return root.classList.contains('dark') ? 'dark' : 'light';
 }
 
 function syncDocumentChrome(mode: BrandingThemeMode, primaryHex: string): void {
@@ -56,13 +56,18 @@ export function applyBrandingTheme(
   branding?: Partial<Pick<BrandingSettings, 'primaryColor' | 'secondaryColor' | 'cornerStyle'>>,
   mode?: BrandingThemeMode,
 ): void {
+  if (!isTenantHost()) {
+    const activeMode = mode ?? resolveThemeMode(MMS_PLATFORM_GLOBAL_SETTINGS);
+    const merged = branding ? { ...MMS_PLATFORM_BRANDING, ...branding } : MMS_PLATFORM_BRANDING;
+    applyBrandingFromSettings(merged, activeMode);
+    return;
+  }
+
   const root = document.documentElement;
   const settings = getScopedGlobalSettings();
   const activeMode = mode ?? resolveThemeMode(settings);
   const scoped = getScopedBrandingSettings();
-  const merged = branding
-    ? { ...scoped, ...branding }
-    : scoped;
+  const merged = branding ? { ...scoped, ...branding } : scoped;
 
   const variables = buildBrandingCssVariables(
     merged.primaryColor,
@@ -87,13 +92,20 @@ export type AppThemeOverrides = Partial<Pick<GlobalSettings, 'theme' | 'language
  * Applies global theme class plus branding tokens for the active host scope.
  */
 export function applyAppTheme(pathname?: string, overrides?: AppThemeOverrides): void {
-  const base = isTenantHost() ? getScopedGlobalSettings() : MMS_PLATFORM_GLOBAL_SETTINGS;
+  const activePath =
+    pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
+
+  if (!isTenantHost()) {
+    const language = isEntryPath(activePath, { isApex: true }) ? 'en' : MMS_PLATFORM_GLOBAL_SETTINGS.language;
+    applyApexPlatformTheme(language);
+    return;
+  }
+
+  const base = getScopedGlobalSettings();
   const settings = { ...base, ...overrides };
   const root = document.documentElement;
   const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   const activeTheme = settings.theme === 'system' ? systemTheme : settings.theme;
-  const activePath =
-    pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
 
   if (activeTheme === 'dark') {
     root.classList.add('dark');
@@ -101,7 +113,7 @@ export function applyAppTheme(pathname?: string, overrides?: AppThemeOverrides):
     root.classList.remove('dark');
   }
 
-  applyDocumentLanguage(resolveDocumentLanguage(settings.language, activePath));
+  applyDocumentLanguageWithFonts(resolveDocumentLanguage(settings.language, activePath));
 
   applyBrandingTheme(undefined, activeTheme);
 }

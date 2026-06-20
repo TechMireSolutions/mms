@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { syncDatabase } from '../db';
 import { clear2FAState, mark2FAVerified, setPendingChallengeId } from '../twoFactor';
 import { type User, type Workspace } from '@mms/shared';
 import { appNavigate } from '../routing/appNavigate';
@@ -80,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthChecked(true);
     localStorage.setItem('mms_user', JSON.stringify(authUser));
     // Background sync — must not block the UI from becoming interactive
-    void syncDatabase();
+    void import('../db').then(({ syncDatabase }) => syncDatabase());
   }, []);
 
   const checkUserAuth = useCallback(async (options?: { force?: boolean }): Promise<void> => {
