@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, AlertCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthLayout from "@/tenant/components/AuthLayout";
+import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { getGlobalSettings } from "@/lib/db";
@@ -17,6 +18,7 @@ import { apexUrl } from '@/lib/config/tenantConfig';
 import { Button } from "@/components/ui/button";
 import { FORM_ERROR, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const REMEMBER_EMAIL_KEY = "mms_login_remember_email";
 
@@ -34,6 +36,7 @@ export default function Login(): React.ReactElement {
   const navigate = useNavigate();
   const location = useLocation();
   const formId = useId();
+  const reducedMotion = useReducedMotion();
   const emailFieldId = `${formId}-email`;
   const passwordFieldId = `${formId}-password`;
   const rememberFieldId = `${formId}-remember`;
@@ -140,18 +143,21 @@ export default function Login(): React.ReactElement {
   };
 
   const isBusy = loading || handoffProcessing;
+  const pageTitle = formatEntryTitle(t("auth.signInTitle"), t("entry.productName"));
 
   return (
-    <AuthLayout title={t("auth.signInTitle")}>
+    <>
+      <EntryPageHead title={pageTitle} description={t("entry.meta.tenantSignIn")} />
+      <AuthLayout title={t("auth.signInTitle")}>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-busy={isBusy}>
         <AnimatePresence mode="wait">
           {(formError || handoffProcessing) && (
             <motion.div
               key={handoffProcessing ? "handoff" : "error"}
-              initial={{ opacity: 0, y: -4 }}
+              initial={reducedMotion ? false : { opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.18 }}
+              exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
+              transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
             >
               <div
                 role="alert"
@@ -330,5 +336,6 @@ export default function Login(): React.ReactElement {
         </div>
       </form>
     </AuthLayout>
+    </>
   );
 }

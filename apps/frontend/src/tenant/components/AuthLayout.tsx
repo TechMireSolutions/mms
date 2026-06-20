@@ -1,10 +1,11 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
 import useBranding from "@/hooks/useBranding";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import useTenantBranding from "@/hooks/useTenantBranding";
 import useTranslation from "@/hooks/useTranslation";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import AuthLoadingShell from "@/components/entry/AuthLoadingShell";
 
 export interface AuthLayoutProps {
   children?: React.ReactNode;
@@ -14,30 +15,29 @@ export interface AuthLayoutProps {
 
 /**
  * Centered layout for pre-authenticated auth screens (login, 2FA, forgot password).
- * On tenant hosts, waits for public branding from the server before rendering.
+ * On tenant hosts, shows a skeleton shell until public branding is ready.
  */
 export default function AuthLayout({
   children,
   title,
   subtitle,
-}: AuthLayoutProps): JSX.Element {
+}: AuthLayoutProps): React.JSX.Element {
   const { t } = useTranslation();
   const { ready: brandingReady } = useTenantBranding();
   const branding = useBranding();
-  const displayName = branding.madrasaName.trim() || "Madrasa MS";
+  const reducedMotion = useReducedMotion();
+  const displayName = branding.madrasaName.trim() || t("entry.productName");
   const displayTagline = branding.tagline.trim();
 
   if (!brandingReady) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background px-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
-        <p className="text-sm text-muted-foreground">{t("auth.loadingWorkspace")}</p>
-      </div>
-    );
+    return <AuthLoadingShell />;
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6">
+    <main
+      id="main-content"
+      className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6"
+    >
       <div
         className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-background to-background"
         aria-hidden
@@ -48,9 +48,9 @@ export default function AuthLayout({
       />
 
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={reducedMotion ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
+        transition={reducedMotion ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }}
         className="relative z-10 w-full max-w-[420px]"
       >
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-xl shadow-black/[0.04] backdrop-blur-xl dark:shadow-black/20">
@@ -59,39 +59,48 @@ export default function AuthLayout({
               {branding.logoUrl ? (
                 <img
                   src={branding.logoUrl}
-                  alt=""
+                  alt={displayName}
+                  width={64}
+                  height={64}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
                   className={`h-16 w-16 rounded-2xl shadow-surface ${LOGO_IMAGE}`}
                 />
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
-                  <span className="font-display text-2xl font-bold text-primary">
+                <div
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 shadow-sm"
+                  role="img"
+                  aria-label={displayName}
+                >
+                  <span className="font-display text-2xl font-bold text-primary" aria-hidden>
                     {displayName.charAt(0)}
                   </span>
                 </div>
               )}
               <p className="text-base font-semibold text-foreground">{displayName}</p>
-              {displayTagline && (
+              {displayTagline ? (
                 <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
                   {displayTagline}
                 </p>
-              )}
+              ) : null}
             </div>
 
-            {title && (
+            {title ? (
               <div className="space-y-1 border-t border-border/40 pt-4">
                 <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                   {title}
                 </h1>
-                {subtitle && (
+                {subtitle ? (
                   <p className="text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
-                )}
+                ) : null}
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="px-6 py-6 sm:px-8 sm:py-7">{children}</div>
         </div>
       </motion.div>
-    </div>
+    </main>
   );
 }

@@ -18,6 +18,7 @@ import {
   validatePlatformSetupPassword,
 } from "@mms/shared";
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
+import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/platform/components/PlatformOtpInput";
 import { Button } from "@/components/ui/button";
 import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
@@ -140,9 +141,21 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
     }
   };
 
+  const pageHead = (
+    <EntryPageHead
+      title={formatEntryTitle(
+        step === "verify" ? t("platform.setupVerifyTitle") : t("platform.setupTitle"),
+        t("entry.productName"),
+      )}
+      description={t("entry.meta.platformSetup")}
+    />
+  );
+
   if (step === "verify" && setupSession) {
     return (
-      <PlatformAuthLayout
+      <>
+        {pageHead}
+        <PlatformAuthLayout
         title={t("platform.setupVerifyTitle")}
         subtitle={t("platform.setupVerifySubtitle", { email: maskEmail(setupSession.email) })}
       >
@@ -188,11 +201,14 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
           </Button>
         </form>
       </PlatformAuthLayout>
+      </>
     );
   }
 
   return (
-    <PlatformAuthLayout title={t("platform.setupTitle")} subtitle={t("platform.setupSubtitle")}>
+    <>
+      {pageHead}
+      <PlatformAuthLayout title={t("platform.setupTitle")} subtitle={t("platform.setupSubtitle")}>
       <form onSubmit={(e) => void handleRegister(e)} className="space-y-4">
         {!smtpConfigured && import.meta.env.PROD ? (
           <PlatformDevHint message={t("platform.setupSmtpRequired")} />
@@ -262,6 +278,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
         </Button>
       </form>
     </PlatformAuthLayout>
+    </>
   );
 }
 

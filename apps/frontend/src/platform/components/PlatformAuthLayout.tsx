@@ -18,7 +18,8 @@ export default function PlatformAuthLayout({
   const reducedMotion = useReducedMotion();
 
   return (
-    <div
+    <main
+      id="main-content"
       dir="ltr"
       className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6"
     >
@@ -51,6 +52,6 @@ export default function PlatformAuthLayout({
           <div className="px-6 py-6 sm:px-8 sm:py-7">{children}</div>
         </div>
       </motion.div>
-    </div>
+    </main>
   );
 }

@@ -4,6 +4,7 @@ import { applyAppTheme } from "../lib/brandingTheme";
 import { getScopedBrandingSettings } from "../lib/settingsPreviewStore";
 import { SETTINGS_PREVIEW_EVENT } from "../lib/settingsPreview";
 import { isTenantHost } from "@/platform/lib/themeScope";
+import { isEntryPath } from "@/lib/config/routes";
 
 /**
  * Custom React hook to load and track real-time changes to the institution's branding settings.
@@ -34,6 +35,10 @@ export default function useBranding(): BrandingSettings {
   }, [branding.primaryColor, branding.secondaryColor, branding.cornerStyle, branding.logoUrl, branding.faviconUrl]);
 
   useEffect(() => {
+    const pathname = window.location.pathname;
+    if (isEntryPath(pathname, { isApex: !isTenantHost() })) {
+      return;
+    }
     if (!isTenantHost()) {
       document.title = "Madrasa Management System";
       const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;

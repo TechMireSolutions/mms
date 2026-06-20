@@ -18,6 +18,7 @@ import {
   validatePlatformSetupPassword,
 } from "@mms/shared";
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
+import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/platform/components/PlatformOtpInput";
 import { Button } from "@/components/ui/button";
 import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
@@ -145,9 +146,24 @@ export default function PlatformForgotPassword(): React.JSX.Element {
     }
   };
 
+  const forgotTitle = isResetStep
+    ? t("platform.forgotResetTitle")
+    : sent
+      ? t("auth.forgotCheckEmail")
+      : t("platform.forgotTitle");
+
+  const pageHead = (
+    <EntryPageHead
+      title={formatEntryTitle(forgotTitle, t("entry.productName"))}
+      description={t("entry.meta.platformForgot")}
+    />
+  );
+
   if (isResetStep) {
     return (
-      <PlatformAuthLayout title={t("platform.forgotResetTitle")} subtitle={t("platform.forgotResetSubtitle")}>
+      <>
+        {pageHead}
+        <PlatformAuthLayout title={t("platform.forgotResetTitle")} subtitle={t("platform.forgotResetSubtitle")}>
         <form onSubmit={(e) => void handleReset(e)} className="space-y-4">
           {error ? <Alert message={error} /> : null}
           {devHint ? <DevHint message={devHint} /> : null}
@@ -228,12 +244,15 @@ export default function PlatformForgotPassword(): React.JSX.Element {
           </p>
         </form>
       </PlatformAuthLayout>
+      </>
     );
   }
 
   if (sent) {
     return (
-      <PlatformAuthLayout
+      <>
+        {pageHead}
+        <PlatformAuthLayout
         title={t("auth.forgotCheckEmail")}
         subtitle={t("platform.forgotSentGeneric", { email: email.trim() })}
       >
@@ -274,11 +293,14 @@ export default function PlatformForgotPassword(): React.JSX.Element {
           </p>
         </div>
       </PlatformAuthLayout>
+      </>
     );
   }
 
   return (
-    <PlatformAuthLayout title={t("platform.forgotTitle")} subtitle={t("platform.forgotSubtitle")}>
+    <>
+      {pageHead}
+      <PlatformAuthLayout title={t("platform.forgotTitle")} subtitle={t("platform.forgotSubtitle")}>
       <form onSubmit={(e) => void handleRequest(e)} className="space-y-4">
         {error ? <Alert message={error} /> : null}
 
@@ -320,6 +342,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
         </p>
       </form>
     </PlatformAuthLayout>
+    </>
   );
 }
 

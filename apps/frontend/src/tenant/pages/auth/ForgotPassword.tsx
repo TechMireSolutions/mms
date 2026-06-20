@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Loader2, Mail, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthLayout from "@/tenant/components/AuthLayout";
+import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { ROUTES } from '@/lib/config/routes';
 import { apexUrl } from '@/lib/config/tenantConfig';
 import useTranslation from "@/hooks/useTranslation";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { FORM_ERROR, FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +22,7 @@ import { cn } from "@/lib/utils";
  */
 export default function ForgotPassword() {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -35,8 +38,15 @@ export default function ForgotPassword() {
     setSent(true);
   };
 
+  const pageTitle = formatEntryTitle(
+    sent ? t("auth.forgotCheckEmail") : t("auth.forgotTitle"),
+    t("entry.productName"),
+  );
+
   return (
-    <AuthLayout
+    <>
+      <EntryPageHead title={pageTitle} description={t("entry.meta.tenantForgot")} />
+      <AuthLayout
       title={sent ? t("auth.forgotCheckEmail") : t("auth.forgotTitle")}
       subtitle={
         sent
@@ -48,8 +58,9 @@ export default function ForgotPassword() {
         {sent ? (
           <motion.div
             key="success"
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={reducedMotion ? false : { opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
+            transition={reducedMotion ? { duration: 0 } : undefined}
             className="space-y-5"
           >
             <div className="flex justify-center">
@@ -71,6 +82,7 @@ export default function ForgotPassword() {
             </div>
 
             <button
+              type="button"
               onClick={() => { setSent(false); setEmail(""); }}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
             >
@@ -92,10 +104,12 @@ export default function ForgotPassword() {
         ) : (
           <motion.form
             key="form"
-            initial={{ opacity: 0 }}
+            initial={reducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
+            transition={reducedMotion ? { duration: 0 } : undefined}
             onSubmit={handleSubmit}
             className="space-y-4"
+            noValidate
           >
             <div>
               <label className={FORM_LABEL}>
@@ -159,5 +173,6 @@ export default function ForgotPassword() {
         )}
       </AnimatePresence>
     </AuthLayout>
+    </>
   );
 }

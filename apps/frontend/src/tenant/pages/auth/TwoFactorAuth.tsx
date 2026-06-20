@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { maskEmail, requiresTwoFactor, resolveNotificationChannel } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
 import AuthLayout from "@/tenant/components/AuthLayout";
+import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import useGlobalSettings from "@/hooks/useGlobalSettings";
@@ -132,10 +133,15 @@ export default function TwoFactorAuth(): React.JSX.Element {
   };
 
   return (
-    <AuthLayout
-      title={t("auth.twoFactorTitle")}
-      subtitle={t(twoFactorSubtitleKey)}
-    >
+    <>
+      <EntryPageHead
+        title={formatEntryTitle(t("auth.twoFactorTitle"), t("entry.productName"))}
+        description={t("entry.meta.tenantTwoFactor")}
+      />
+      <AuthLayout
+        title={t("auth.twoFactorTitle")}
+        subtitle={t(twoFactorSubtitleKey)}
+      >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex justify-center">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -218,5 +224,6 @@ export default function TwoFactorAuth(): React.JSX.Element {
         </p>
       </form>
     </AuthLayout>
+    </>
   );
 }
