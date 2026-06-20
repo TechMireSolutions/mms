@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { PlatformLogoMark } from "@/components/platform/PlatformPageShell";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 export interface PlatformAuthLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,8 @@ export default function PlatformAuthLayout({
   title,
   subtitle,
 }: PlatformAuthLayoutProps): React.JSX.Element {
+  const reducedMotion = useReducedMotion();
+
   return (
     <div
       dir="ltr"
@@ -29,9 +32,9 @@ export default function PlatformAuthLayout({
       />
 
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={reducedMotion ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
+        transition={reducedMotion ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }}
         className="relative z-10 w-full max-w-[420px]"
       >
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-xl shadow-black/[0.04] backdrop-blur-xl dark:shadow-black/20">

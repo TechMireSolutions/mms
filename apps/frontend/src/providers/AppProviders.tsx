@@ -3,9 +3,10 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/contexts/AuthContext';
 import { BrandingPaletteProvider } from '@/lib/contexts/BrandingPaletteContext';
-import { ContactConfigProvider } from '@/lib/contexts/ContactConfigContext';
 import { PlatformAuthProvider } from '@/lib/contexts/PlatformAuthContext';
 import { TenantProvider } from '@/lib/contexts/TenantContext';
+import ApexBootPrefetch from '@/components/platform/ApexBootPrefetch';
+import TenantScopedProviders from '@/providers/TenantScopedProviders';
 import { queryClientInstance } from '@/lib/query-client';
 import RootErrorBoundary from '@/components/routing/RootErrorBoundary';
 import QueryDevtools from '@/components/dev/QueryDevtools';
@@ -25,7 +26,8 @@ export function AppProviders({ children }: AppProvidersProps): React.JSX.Element
             <BrandingPaletteProvider>
               <TenantProvider>
                 <PlatformAuthProvider>
-                  <ContactConfigProvider>{children}</ContactConfigProvider>
+                  <ApexBootPrefetch />
+                  <TenantScopedProviders>{children}</TenantScopedProviders>
                 </PlatformAuthProvider>
               </TenantProvider>
             </BrandingPaletteProvider>

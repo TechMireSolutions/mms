@@ -1,151 +1,17 @@
-import React, { useEffect } from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
-import { useTenant } from "@/lib/contexts/TenantContext";
-import { ROUTES, TENANT_APP_PATHS } from "@/lib/config/routes";
-import { apexUrl } from "@/lib/config/tenantConfig";
-import { isBrowserOnTenantHost } from "@/lib/tenantHost";
-import ProtectedRoute from "@/components/routing/ProtectedRoute";
-import PlatformProtectedRoute from "@/components/routing/PlatformProtectedRoute";
-import GuestRoute from "@/components/routing/GuestRoute";
-import TenantNotFoundScreen from "@/components/routing/TenantNotFoundScreen";
-import WorkspaceDisabledScreen from "@/components/routing/WorkspaceDisabledScreen";
-import AppLayout from "@/components/layout/AppLayout";
-import PageNotFound from "@/components/routing/PageNotFound";
-
-const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
-const Contacts = React.lazy(() => import("@/pages/Contacts"));
-const Students = React.lazy(() => import("@/pages/Students"));
-const Teachers = React.lazy(() => import("@/pages/Teachers"));
-const Enrollments = React.lazy(() => import("@/pages/Enrollments"));
-const Sessions = React.lazy(() => import("@/pages/Sessions"));
-const Finance = React.lazy(() => import("@/pages/Finance"));
-const HasanatCards = React.lazy(() => import("@/pages/HasanatCards"));
-const Examinations = React.lazy(() => import("@/pages/Examinations"));
-const QuestionBankPage = React.lazy(() => import("@/pages/QuestionBank"));
-const SettingsPage = React.lazy(() => import("@/pages/Settings"));
-const Attendance = React.lazy(() => import("@/pages/Attendance"));
-const Users = React.lazy(() => import("@/pages/Users"));
-const AccountProfile = React.lazy(() => import("@/pages/AccountProfile"));
-const Obligations = React.lazy(() => import("@/pages/Obligations"));
-const Accounting = React.lazy(() => import("@/pages/Accounting"));
-const Login = React.lazy(() => import("@/pages/auth/Login"));
-const ForgotPassword = React.lazy(() => import("@/pages/auth/ForgotPassword"));
-const TwoFactorAuth = React.lazy(() => import("@/pages/auth/TwoFactorAuth"));
-const OnboardingWizard = React.lazy(() => import("@/pages/onboarding/OnboardingWizard"));
-const ApexHome = React.lazy(() => import("@/pages/ApexHome"));
-const ApexWorkspaceGate = React.lazy(() => import("@/pages/ApexWorkspaceGate"));
-const PlatformForgotPassword = React.lazy(() => import("@/pages/auth/PlatformForgotPassword"));
-const PlatformAccount = React.lazy(() => import("@/pages/PlatformAccount"));
-
-function RedirectToApex({ path }: { path: string }): React.JSX.Element {
-  useEffect(() => {
-    window.location.href = apexUrl(path);
-  }, [path]);
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background" role="status" aria-live="polite">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden="true" />
-    </div>
-  );
-}
-
-function TenantBootGate({ children }: { children: React.ReactNode }): React.JSX.Element {
-  const { workspaceLoading, workspace, subdomain } = useTenant();
-
-  if (workspaceLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background" role="status" aria-live="polite">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden="true" />
-      </div>
-    );
-  }
-
-  if (!workspace && subdomain) {
-    return <TenantNotFoundScreen subdomain={subdomain} />;
-  }
-
-  if (workspace && workspace.enabled === false) {
-    return (
-      <WorkspaceDisabledScreen
-        madrasaName={workspace.madrasaName}
-        subdomain={workspace.subdomain}
-      />
-    );
-  }
-
-  return <>{children}</>;
-}
-
-const apexTenantGate = (
-  <ApexWorkspaceGate variant="tenantOnly" showWorkspaceList />
-);
+import React from "react";
+import { useIsTenantHost } from "@/hooks/useIsTenantHost";
+import { ApexRoutesWithSuspense } from "@/components/routing/ApexRoutes";
+import TenantRoutes from "@/components/routing/TenantRoutes";
 
 /**
- * Renders apex-only or tenant-only route trees — never both (avoids / redirect loops).
+ * Host switch — renders exactly one of platform apex or tenant madrasa trees.
  */
 export default function HostRoutes(): React.JSX.Element {
-  const { isApex } = useTenant();
-  const onTenantHost = !isApex || isBrowserOnTenantHost();
+  const isTenantHost = useIsTenantHost();
 
-  if (!onTenantHost) {
-    return (
-      <Routes>
-        <Route path={ROUTES.home} element={<ApexHome />} />
-        <Route element={<PlatformProtectedRoute />}>
-          <Route path={ROUTES.onboarding} element={<OnboardingWizard />} />
-          <Route path={ROUTES.platformAccount} element={<PlatformAccount />} />
-        </Route>
-        <Route path={ROUTES.login} element={<ApexWorkspaceGate variant="login" showWorkspaceList />} />
-        <Route
-          path={ROUTES.forgotPassword}
-          element={<ApexWorkspaceGate variant="forgotPassword" showWorkspaceList />}
-        />
-        <Route path={ROUTES.platformForgotPassword} element={<PlatformForgotPassword />} />
-        <Route path={ROUTES.twoFactor} element={<ApexWorkspaceGate variant="twoFactor" showWorkspaceList={false} />} />
-        <Route path={`${ROUTES.settings}/*`} element={apexTenantGate} />
-        {TENANT_APP_PATHS.map((path) => (
-          <Route key={path} path={path} element={apexTenantGate} />
-        ))}
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
-    );
+  if (isTenantHost) {
+    return <TenantRoutes />;
   }
 
-  return (
-    <TenantBootGate>
-      <Routes>
-        <Route path={ROUTES.onboarding} element={<RedirectToApex path={ROUTES.onboarding} />} />
-
-        <Route path={ROUTES.twoFactor} element={<TwoFactorAuth />} />
-        <Route element={<GuestRoute />}>
-          <Route path={ROUTES.login} element={<Login />} />
-          <Route path={ROUTES.forgotPassword} element={<ForgotPassword />} />
-        </Route>
-
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
-            <Route path={ROUTES.home} element={<Dashboard />} />
-            <Route path={ROUTES.contacts} element={<Contacts />} />
-            <Route path={ROUTES.students} element={<Students />} />
-            <Route path={ROUTES.teachers} element={<Teachers />} />
-            <Route path={ROUTES.enrollments} element={<Enrollments />} />
-            <Route path={ROUTES.sessions} element={<Sessions />} />
-            <Route path={ROUTES.attendance} element={<Attendance />} />
-            <Route path={ROUTES.finance} element={<Finance />} />
-            <Route path={ROUTES.hasanatCards} element={<HasanatCards />} />
-            <Route path={ROUTES.examinations} element={<Examinations />} />
-            <Route path={ROUTES.questionBank} element={<QuestionBankPage />} />
-            <Route path={ROUTES.accounting} element={<Accounting />} />
-            <Route path={ROUTES.obligations} element={<Obligations />} />
-            <Route path={ROUTES.users} element={<Users />} />
-            <Route path={ROUTES.profile} element={<AccountProfile />} />
-            <Route path={ROUTES.settings} element={<SettingsPage />} />
-            <Route path={`${ROUTES.settings}/:section`} element={<Navigate to={ROUTES.settings} replace />} />
-          </Route>
-        </Route>
-
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
-    </TenantBootGate>
-  );
+  return <ApexRoutesWithSuspense />;
 }

@@ -226,7 +226,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    void checkAppState();
+    if (!isCurrentHostApex()) {
+      void checkAppState();
+    }
     void checkUserAuth();
   }, [checkAppState, checkUserAuth]);
 

@@ -1,10 +1,11 @@
-import React from "react";
+import React, { memo } from "react";
 import { ArrowRight, ExternalLink, Loader2 } from "lucide-react";
-import type { AppTranslationKey } from "@mms/shared";
+import type { AppTranslationKey, PublicWorkspaceSummary } from "@mms/shared";
 import { ROUTES } from "@/lib/config/routes";
 import { getAppDomain, tenantUrl } from "@/lib/config/tenantConfig";
 import useTranslation from "@/hooks/useTranslation";
 import { useWorkspaceRegistry } from "@/hooks/useWorkspaceRegistry";
+import WorkspaceLogo from "@/components/platform/WorkspaceLogo";
 import { Button } from "@/components/ui/button";
 
 type WorkspaceLinkDestination = typeof ROUTES.login | typeof ROUTES.forgotPassword;
@@ -76,46 +77,15 @@ export default function WorkspaceRegistryList({
         {t(headingKey)}
       </p>
       <ul className="space-y-3">
-        {items.map((ws) => {
-          const targetUrl = tenantUrl(ws.subdomain, destinationPath);
-          return (
-            <li key={ws.subdomain}>
-              <a
-                href={targetUrl}
-                className="block w-full rounded-xl border-2 border-border bg-card p-4 shadow-sm hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group text-left"
-              >
-                <div className="flex items-center gap-3">
-                  {ws.logoUrl ? (
-                    <img
-                      src={ws.logoUrl}
-                      alt=""
-                      className="w-10 h-10 rounded-lg object-contain bg-background border border-border shrink-0"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                      <span className="text-primary font-display text-base font-bold">م</span>
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground group-hover:text-primary">
-                      {ws.madrasaName}
-                    </p>
-                    <p className="text-xs text-muted-foreground font-mono break-all">
-                      {ws.subdomain}.{appDomain}
-                    </p>
-                    {ws.tagline ? (
-                      <p className="text-xs text-muted-foreground mt-0.5">{ws.tagline}</p>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground group-hover:bg-primary/90">
-                  {t(actionLabelKey, { name: ws.madrasaName })}
-                  <ArrowRight className="w-4 h-4" aria-hidden />
-                </div>
-              </a>
-            </li>
-          );
-        })}
+        {items.map((ws) => (
+          <RegistryWorkspaceRow
+            key={ws.subdomain}
+            workspace={ws}
+            appDomain={appDomain}
+            destinationPath={destinationPath}
+            actionLabelKey={actionLabelKey}
+          />
+        ))}
       </ul>
       <p className="text-[11px] text-muted-foreground text-center flex items-center justify-center gap-1">
         <ExternalLink className="w-3 h-3" aria-hidden />
@@ -124,3 +94,46 @@ export default function WorkspaceRegistryList({
     </div>
   );
 }
+
+const RegistryWorkspaceRow = memo(function RegistryWorkspaceRow({
+  workspace: ws,
+  appDomain,
+  destinationPath,
+  actionLabelKey,
+}: {
+  workspace: PublicWorkspaceSummary;
+  appDomain: string;
+  destinationPath: WorkspaceLinkDestination;
+  actionLabelKey: AppTranslationKey;
+}): React.JSX.Element {
+  const { t } = useTranslation();
+  const targetUrl = tenantUrl(ws.subdomain, destinationPath);
+
+  return (
+    <li>
+      <a
+        href={targetUrl}
+        className="block w-full rounded-xl border-2 border-border bg-card p-4 shadow-sm hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group text-left"
+      >
+        <div className="flex items-center gap-3">
+          <WorkspaceLogo logoUrl={ws.logoUrl} madrasaName={ws.madrasaName} />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground group-hover:text-primary">
+              {ws.madrasaName}
+            </p>
+            <p className="text-xs text-muted-foreground font-mono break-all">
+              {ws.subdomain}.{appDomain}
+            </p>
+            {ws.tagline ? (
+              <p className="text-xs text-muted-foreground mt-0.5">{ws.tagline}</p>
+            ) : null}
+          </div>
+        </div>
+        <div className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground group-hover:bg-primary/90">
+          {t(actionLabelKey, { name: ws.madrasaName })}
+          <ArrowRight className="w-4 h-4" aria-hidden />
+        </div>
+      </a>
+    </li>
+  );
+});

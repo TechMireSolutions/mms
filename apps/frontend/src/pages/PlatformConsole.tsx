@@ -1,12 +1,23 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, LogOut, Plus, UserCircle } from "lucide-react";
-import PlatformWorkspaceList from "@/components/platform/PlatformWorkspaceList";
+import { ArrowRight, Loader2, LogOut, Plus, UserCircle } from "lucide-react";
 import PlatformPageShell, { PlatformLogoMark } from "@/components/platform/PlatformPageShell";
 import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
 import useTranslation from "@/hooks/useTranslation";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
+
+const PlatformWorkspaceList = lazy(() => import("@/components/platform/PlatformWorkspaceList"));
+
+function WorkspaceListFallback(): React.JSX.Element {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center justify-center py-8" role="status">
+      <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden />
+      <span className="sr-only">{t("apex.loadingMadrasas")}</span>
+    </div>
+  );
+}
 
 /**
  * Authenticated apex console — super-user provisions new madrasa workspaces.
@@ -29,7 +40,13 @@ export default function PlatformConsole(): React.JSX.Element {
           </p>
         </div>
 
-        <Button asChild className="w-full h-11 rounded-xl font-semibold">
+        <Button
+          asChild
+          className="w-full h-11 rounded-xl font-semibold"
+          onMouseEnter={() => {
+            void import("@/pages/onboarding/OnboardingWizard");
+          }}
+        >
           <Link to={ROUTES.onboarding}>
             <Plus className="w-4 h-4" aria-hidden />
             {t("auth.createMadrasa")}
@@ -37,9 +54,18 @@ export default function PlatformConsole(): React.JSX.Element {
           </Link>
         </Button>
 
-        <PlatformWorkspaceList />
+        <Suspense fallback={<WorkspaceListFallback />}>
+          <PlatformWorkspaceList />
+        </Suspense>
 
-        <Button asChild variant="outline" className="w-full h-11 rounded-xl">
+        <Button
+          asChild
+          variant="outline"
+          className="w-full h-11 rounded-xl"
+          onMouseEnter={() => {
+            void import("@/pages/PlatformAccount");
+          }}
+        >
           <Link to={ROUTES.platformAccount}>
             <UserCircle className="w-4 h-4" aria-hidden />
             {t("platform.myAccount")}

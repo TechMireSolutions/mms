@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { ExternalLink, Loader2, Trash2 } from "lucide-react";
 import type { PlatformWorkspaceRow } from "@mms/shared";
 import { getAppDomain, tenantUrl } from "@/lib/config/tenantConfig";
@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import WorkspaceLogo from "@/components/platform/WorkspaceLogo";
 
 /**
  * Super-user workspace list with enable/disable and delete controls.
@@ -86,7 +87,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   );
 }
 
-function WorkspaceRow({
+const WorkspaceRow = memo(function WorkspaceRow({
   workspace: ws,
   appDomain,
   togglePending,
@@ -138,17 +139,7 @@ function WorkspaceRow({
         }`}
       >
         <div className="flex items-start gap-3">
-          {ws.logoUrl ? (
-            <img
-              src={ws.logoUrl}
-              alt=""
-              className="w-10 h-10 rounded-lg object-contain bg-background border border-border shrink-0"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-              <span className="text-primary font-display text-base font-bold">م</span>
-            </div>
-          )}
+          <WorkspaceLogo logoUrl={ws.logoUrl} madrasaName={ws.madrasaName} />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-foreground">{ws.madrasaName}</p>
             <p className="text-xs text-muted-foreground font-mono break-all">
@@ -255,4 +246,4 @@ function WorkspaceRow({
       </AlertDialog>
     </>
   );
-}
+});

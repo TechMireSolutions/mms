@@ -7,9 +7,6 @@ import ApexEntryNav from "@/components/routing/ApexEntryNav";
 import { ROUTES } from "@/lib/config/routes";
 import useTranslation from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import Login from "@/pages/auth/Login";
-import ForgotPassword from "@/pages/auth/ForgotPassword";
-import { isBrowserOnTenantHost } from "@/lib/tenantHost";
 
 export type ApexGateVariant = "default" | "login" | "forgotPassword" | "twoFactor" | "tenantOnly";
 
@@ -44,17 +41,9 @@ export default function ApexWorkspaceGate({
   const messageKey = MESSAGE_KEYS[variant];
   const isForgotPicker = variant === "forgotPassword";
 
-  if (isBrowserOnTenantHost()) {
-    if (variant === "forgotPassword") {
-      return <ForgotPassword />;
-    }
-    if (variant === "login" || variant === "default" || variant === "tenantOnly") {
-      return <Login />;
-    }
-  }
-
   return (
-    <div
+    <main
+      id="main-content"
       dir="ltr"
       className="min-h-screen w-full overflow-x-hidden bg-background flex flex-col items-center justify-center p-4 sm:p-6"
     >
@@ -77,8 +66,7 @@ export default function ApexWorkspaceGate({
           showSignInPickerLink={variant === "forgotPassword"}
         />
 
-        {!isBrowserOnTenantHost()
-          && (variant === "login" || variant === "forgotPassword" || variant === "default") ? (
+        {variant === "login" || variant === "forgotPassword" || variant === "default" ? (
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-left space-y-3">
             <p className="text-sm text-muted-foreground">{t("apex.platformAdminHint")}</p>
             <Button asChild variant="default" className="w-full">
@@ -100,6 +88,6 @@ export default function ApexWorkspaceGate({
           {t("apex.backToMain")}
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

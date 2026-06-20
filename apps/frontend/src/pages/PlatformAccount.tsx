@@ -9,7 +9,6 @@ import {
   Mail,
   User,
 } from "lucide-react";
-import type { PlatformUserProfile } from "@mms/shared";
 import {
   PLATFORM_MIN_PASSWORD_LENGTH,
   validatePlatformSetupName,
@@ -23,6 +22,7 @@ import { apiJson, ApiError } from "@/lib/apiClient";
 import { mapPlatformAuthError } from "@/lib/platformAuthErrors";
 import { ROUTES } from "@/lib/config/routes";
 import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
+import { usePlatformProfile, useUpdatePlatformProfileName } from "@/hooks/usePlatformProfile";
 import { notify } from "@/lib/notify";
 
 /**
@@ -30,12 +30,11 @@ import { notify } from "@/lib/notify";
  */
 export default function PlatformAccount(): React.JSX.Element {
   const { t } = useTranslation();
-  const { platformUser, checkPlatformAuth } = usePlatformAuth();
+  const { platformUser } = usePlatformAuth();
+  const { data: profile, isLoading: loadingProfile, isError: profileError } = usePlatformProfile();
+  const updateName = useUpdatePlatformProfileName();
 
-  const [profile, setProfile] = useState<PlatformUserProfile | null>(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
   const [name, setName] = useState("");
-  const [savingName, setSavingName] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -45,25 +44,10 @@ export default function PlatformAccount(): React.JSX.Element {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      setLoadingProfile(true);
-      try {
-        const data = await apiJson<{ user: PlatformUserProfile }>("/api/platform/auth/me");
-        if (!cancelled) {
-          setProfile(data.user);
-          setName(data.user.name);
-        }
-      } catch {
-        if (!cancelled) setProfile(null);
-      } finally {
-        if (!cancelled) setLoadingProfile(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (profile?.name) {
+      setName(profile.name);
+    }
+  }, [profile?.name]);
 
   const handleSaveName = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
@@ -75,21 +59,13 @@ export default function PlatformAccount(): React.JSX.Element {
       return;
     }
 
-    setSavingName(true);
     try {
-      const data = await apiJson<{ user: PlatformUserProfile }>("/api/platform/auth/me", {
-        method: "PATCH",
-        body: JSON.stringify({ name: name.trim() }),
-      });
-      setProfile(data.user);
-      await checkPlatformAuth();
+      await updateName.mutateAsync(name);
       notify.success(t("platform.profileSaved"));
     } catch (err) {
       setNameError(
         err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"),
       );
-    } finally {
-      setSavingName(false);
     }
   };
 
@@ -159,7 +135,7 @@ export default function PlatformAccount(): React.JSX.Element {
             <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden />
             <span className="sr-only">{t("common.loading")}</span>
           </div>
-        ) : profile ? (
+        ) : profile && !profileError ? (
           <>
             <section className="rounded-xl border border-border bg-card p-4 space-y-3 text-left">
               <div className="flex items-center gap-2 text-sm">
@@ -201,8 +177,8 @@ export default function PlatformAccount(): React.JSX.Element {
                   className={FORM_INPUT}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={savingName || name === platformUser?.name}>
-                {savingName ? (
+              <Button type="submit" className="w-full" disabled={updateName.isPending || name === platformUser?.name}>
+                {updateName.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
                     {t("common.save")}

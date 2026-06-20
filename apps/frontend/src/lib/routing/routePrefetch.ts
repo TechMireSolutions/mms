@@ -1,7 +1,7 @@
 import { ROUTES } from '@/lib/config/routes';
+import { isCurrentHostApex } from '@/lib/config/tenantConfig';
 
-/** Lazy route loaders — mirrors HostRoutes.tsx for hover/focus prefetch. */
-const ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
+const TENANT_ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   [ROUTES.home]: () => import('@/pages/Dashboard'),
   [ROUTES.contacts]: () => import('@/pages/Contacts'),
   [ROUTES.students]: () => import('@/pages/Students'),
@@ -19,11 +19,22 @@ const ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   [ROUTES.settings]: () => import('@/pages/Settings'),
 };
 
+const APEX_ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
+  [ROUTES.home]: () => import('@/pages/ApexHome'),
+  [ROUTES.onboarding]: () => import('@/pages/onboarding/OnboardingWizard'),
+  [ROUTES.platformAccount]: () => import('@/pages/PlatformAccount'),
+  [ROUTES.platformForgotPassword]: () => import('@/pages/auth/PlatformForgotPassword'),
+};
+
 const prefetched = new Set<string>();
 
-/** Warm the JS chunk for a route path (idempotent). */
+function loadersForCurrentHost(): Record<string, () => Promise<unknown>> {
+  return isCurrentHostApex() ? APEX_ROUTE_LOADERS : TENANT_ROUTE_LOADERS;
+}
+
+/** Warm the JS chunk for a route path (idempotent, host-aware). */
 export function prefetchRoute(path: string): void {
-  const loader = ROUTE_LOADERS[path];
+  const loader = loadersForCurrentHost()[path];
   if (!loader || prefetched.has(path)) {
     return;
   }

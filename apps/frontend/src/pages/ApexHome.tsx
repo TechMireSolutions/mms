@@ -1,33 +1,44 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
 import { usePlatformSetupStatus } from "@/hooks/usePlatformSetupStatus";
 import PlatformLoadingScreen from "@/components/platform/PlatformLoadingScreen";
-import PlatformSignIn from "@/pages/auth/PlatformSignIn";
-import PlatformSetup from "@/pages/auth/PlatformSetup";
-import PlatformConsole from "@/pages/PlatformConsole";
-import Login from "@/pages/auth/Login";
-import { isBrowserOnTenantHost } from "@/lib/tenantHost";
+
+const PlatformSignIn = lazy(() => import("@/pages/auth/PlatformSignIn"));
+const PlatformSetup = lazy(() => import("@/pages/auth/PlatformSetup"));
+const PlatformConsole = lazy(() => import("@/pages/PlatformConsole"));
 
 /** Apex home: first-run setup, platform sign-in, or authenticated console. */
 export default function ApexHome(): React.JSX.Element {
   const { isPlatformAuthenticated, platformAuthChecked, isCheckingPlatformAuth } = usePlatformAuth();
   const { setupStatus, isLoadingSetup } = usePlatformSetupStatus();
 
-  if (isBrowserOnTenantHost()) {
-    return <Login />;
+  if (!platformAuthChecked || isCheckingPlatformAuth) {
+    return <PlatformLoadingScreen />;
   }
 
-  if (!platformAuthChecked || isCheckingPlatformAuth || isLoadingSetup) {
+  if (isPlatformAuthenticated) {
+    return (
+      <Suspense fallback={<PlatformLoadingScreen />}>
+        <PlatformConsole />
+      </Suspense>
+    );
+  }
+
+  if (isLoadingSetup) {
     return <PlatformLoadingScreen />;
   }
 
   if (setupStatus?.needsSetup) {
-    return <PlatformSetup smtpConfigured={setupStatus.smtpConfigured} />;
+    return (
+      <Suspense fallback={<PlatformLoadingScreen />}>
+        <PlatformSetup smtpConfigured={setupStatus.smtpConfigured} />
+      </Suspense>
+    );
   }
 
-  if (!isPlatformAuthenticated) {
-    return <PlatformSignIn />;
-  }
-
-  return <PlatformConsole />;
+  return (
+    <Suspense fallback={<PlatformLoadingScreen />}>
+      <PlatformSignIn />
+    </Suspense>
+  );
 }

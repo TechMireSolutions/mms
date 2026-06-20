@@ -20,7 +20,7 @@ export function usePlatformSetupStatus(): {
     queryKey: PLATFORM_SETUP_STATUS_QUERY_KEY,
     queryFn: fetchPlatformSetupStatus,
     enabled: isApex,
-    staleTime: 30_000,
+    staleTime: 60_000,
   });
 
   return {

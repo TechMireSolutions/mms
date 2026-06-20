@@ -21,7 +21,7 @@ export function usePlatformWorkspaces() {
     queryKey: PLATFORM_WORKSPACES_QUERY_KEY,
     queryFn: fetchPlatformWorkspaces,
     enabled: isPlatformAuthenticated,
-    staleTime: 15_000,
+    staleTime: 60_000,
   });
 }
 
