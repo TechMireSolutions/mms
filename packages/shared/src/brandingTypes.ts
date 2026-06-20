@@ -1,5 +1,10 @@
 import type { AppTranslationKey } from "./appTranslations.js";
 import { translateAppParams } from "./appTranslations.js";
+import {
+  DEFAULT_BRANDING_CORNER_STYLE,
+  normalizeBrandingCornerStyle,
+  type BrandingCornerStyle,
+} from "./brandingCornerStyle.js";
 import { normalizeToE164, parsePhoneNumber } from "./utils.js";
 
 const BRANDING_HEX = /^#[0-9a-f]{6}$/i;
@@ -27,6 +32,8 @@ export interface BrandingSettings {
   tagline: string;
   primaryColor: string;
   secondaryColor: string;
+  /** UI corner roundness — injected as CSS `--radius` on tenant hosts. */
+  cornerStyle: BrandingCornerStyle;
   logoUrl: string;
   faviconUrl: string;
   footerText: string;
@@ -203,6 +210,7 @@ export const DEFAULT_BRANDING_SETTINGS: BrandingSettings = {
   tagline: 'Nurturing Knowledge & Character',
   primaryColor: '#047857',
   secondaryColor: '#c2410c',
+  cornerStyle: DEFAULT_BRANDING_CORNER_STYLE,
   logoUrl: '',
   faviconUrl: '',
   footerText: '© 2026 MMS. All rights reserved.',
@@ -262,7 +270,7 @@ export type BrandingIdentityFields = Pick<
 /** Theme / appearance fields stored on the same branding record. */
 export type BrandingThemeFields = Pick<
   BrandingSettings,
-  'primaryColor' | 'secondaryColor' | 'footerText'
+  'primaryColor' | 'secondaryColor' | 'cornerStyle' | 'footerText'
 >;
 
 /** Keys tracked for dirty/preview on Settings → Institution. */
@@ -289,6 +297,7 @@ export const BRANDING_IDENTITY_FIELD_KEYS = [
 export const BRANDING_THEME_FIELD_KEYS = [
   'primaryColor',
   'secondaryColor',
+  'cornerStyle',
   'footerText',
 ] as const satisfies readonly (keyof BrandingThemeFields)[];
 
@@ -354,6 +363,7 @@ export function resetBrandingAppearance(
     ...current,
     primaryColor: DEFAULT_BRANDING_SETTINGS.primaryColor,
     secondaryColor: DEFAULT_BRANDING_SETTINGS.secondaryColor,
+    cornerStyle: DEFAULT_BRANDING_SETTINGS.cornerStyle,
     footerText: formatBrandingFooterDefault(name, language),
   });
 }
@@ -421,6 +431,7 @@ export function mergeBrandingSettings(partial: LegacyBranding | null | undefined
       partial?.secondaryColor,
       DEFAULT_BRANDING_SETTINGS.secondaryColor,
     ),
+    cornerStyle: normalizeBrandingCornerStyle(partial?.cornerStyle),
     socialLinks: normalizeSocialLinks(partial?.socialLinks),
   };
 

@@ -4,6 +4,8 @@ import {
   brandingPrimaryToThemeColor,
   buildBrandingCssVariables,
   isApexHost,
+  normalizeBrandingCornerStyle,
+  resolveBrandingCornerRadius,
   type BrandingSettings,
   type BrandingThemeMode,
   type GlobalSettings,
@@ -51,7 +53,7 @@ function syncDocumentChrome(mode: BrandingThemeMode, primaryHex: string): void {
  * Apex host: MMS platform defaults only. Tenant host: institution branding.
  */
 export function applyBrandingTheme(
-  branding?: Pick<BrandingSettings, 'primaryColor' | 'secondaryColor'>,
+  branding?: Partial<Pick<BrandingSettings, 'primaryColor' | 'secondaryColor' | 'cornerStyle'>>,
   mode?: BrandingThemeMode,
 ): void {
   const root = document.documentElement;
@@ -72,6 +74,9 @@ export function applyBrandingTheme(
     const value = variables[key];
     if (value) root.style.setProperty(key, value);
   }
+
+  const cornerStyle = normalizeBrandingCornerStyle(merged.cornerStyle);
+  root.style.setProperty('--radius', resolveBrandingCornerRadius(cornerStyle));
 
   syncDocumentChrome(activeMode, merged.primaryColor);
 }

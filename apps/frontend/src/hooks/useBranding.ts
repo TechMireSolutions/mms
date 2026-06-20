@@ -31,7 +31,7 @@ export default function useBranding(): BrandingSettings {
 
   useEffect(() => {
     applyAppTheme();
-  }, [branding.primaryColor, branding.secondaryColor, branding.logoUrl, branding.faviconUrl]);
+  }, [branding.primaryColor, branding.secondaryColor, branding.cornerStyle, branding.logoUrl, branding.faviconUrl]);
 
   useEffect(() => {
     if (!isTenantHost()) {

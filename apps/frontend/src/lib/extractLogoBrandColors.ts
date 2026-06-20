@@ -1,38 +1,29 @@
 import {
   deriveBrandColorsFromPalette,
+  extractDominantSwatchesFromRgba,
   type LogoBrandColors,
+  type LogoPaletteSamplingOptions,
 } from '@mms/shared';
 import { resolveApiUrl } from '@/lib/apiClient';
 
-export interface ExtractLogoBrandColorsOptions {
-  /** Longest canvas edge when sampling pixels (performance vs accuracy). */
+export type ExtractLogoBrandColorsOptions = LogoPaletteSamplingOptions & {
+  /** Longest canvas edge when downsampling before pixel read (performance vs accuracy). */
   sampleSize?: number;
-  /** Maximum dominant swatches passed to the derivation step. */
-  maxSwatches?: number;
-  /** Alpha threshold (0–255); transparent pixels are ignored. */
-  minAlpha?: number;
-  /** Bits per channel when quantizing similar pixels (higher = more precision). */
-  quantizeBits?: number;
-}
-
-const DEFAULT_OPTIONS: Required<ExtractLogoBrandColorsOptions> = {
-  sampleSize: 72,
-  maxSwatches: 10,
-  minAlpha: 40,
-  quantizeBits: 4,
 };
 
-function quantizeChannel(value: number, bits: number): number {
-  const levels = 1 << bits;
-  const step = 255 / (levels - 1);
-  return Math.round(Math.round(value / step) * step);
-}
-
-function rgbToHex(r: number, g: number, b: number): string {
-  const toHex = (channel: number) =>
-    Math.max(0, Math.min(255, channel)).toString(16).padStart(2, '0');
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
+const DEFAULT_OPTIONS: Required<Pick<ExtractLogoBrandColorsOptions, 'sampleSize'>> &
+  LogoPaletteSamplingOptions = {
+  sampleSize: 96,
+  maxSwatches: 12,
+  minAlpha: 32,
+  quantizeBits: 5,
+  minChromaSaturation: 8,
+  minLightness: 8,
+  maxLightness: 92,
+  flattenOnto: '#ffffff',
+  centerWeight: 0.35,
+  minSwatchDistance: 42,
+};
 
 function isInlineImageSource(src: string): boolean {
   return src.startsWith('data:') || src.startsWith('blob:');
@@ -99,52 +90,14 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function sampleDominantSwatches(
-  imageData: ImageData,
-  options: Required<ExtractLogoBrandColorsOptions>,
-): string[] {
-  const buckets = new Map<string, { count: number; r: number; g: number; b: number }>();
-
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    const r = imageData.data[i];
-    const g = imageData.data[i + 1];
-    const b = imageData.data[i + 2];
-    const a = imageData.data[i + 3];
-
-    if (a < options.minAlpha) continue;
-
-    const qr = quantizeChannel(r, options.quantizeBits);
-    const qg = quantizeChannel(g, options.quantizeBits);
-    const qb = quantizeChannel(b, options.quantizeBits);
-    const key = `${qr}|${qg}|${qb}`;
-
-    const existing = buckets.get(key);
-    if (existing) {
-      existing.count += 1;
-      existing.r += r;
-      existing.g += g;
-      existing.b += b;
-    } else {
-      buckets.set(key, { count: 1, r, g, b });
-    }
-  }
-
-  return [...buckets.entries()]
-    .sort((a, b) => b[1].count - a[1].count)
-    .slice(0, options.maxSwatches)
-    .map(([, bucket]) =>
-      rgbToHex(
-        Math.round(bucket.r / bucket.count),
-        Math.round(bucket.g / bucket.count),
-        Math.round(bucket.b / bucket.count),
-      ),
-    );
-}
-
 /**
- * Samples a logo image and derives accessible primary/accent brand colours.
- * Accepts data URLs (fresh uploads) and stored `/uploads/…` AVIF/WebP paths.
- * Browser-only — uses canvas pixel sampling with transparency filtering and quantization.
+ * Reads a logo image and returns primary/accent brand colours.
+ *
+ * Pipeline:
+ * 1. Load image (data URL, blob URL, or `/uploads/…` AVIF/WebP path)
+ * 2. Downsample onto a canvas for fast pixel reads
+ * 3. {@link extractDominantSwatchesFromRgba} — weighted palette extraction
+ * 4. {@link deriveBrandColorsFromPalette} — pick UI primary/accent + WCAG contrast
  */
 export async function extractLogoBrandColors(
   imageSource: string,
@@ -152,7 +105,7 @@ export async function extractLogoBrandColors(
 ): Promise<LogoBrandColors | null> {
   if (!imageSource.trim()) return null;
 
-  const resolved = { ...DEFAULT_OPTIONS, ...options };
+  const { sampleSize, ...samplingOptions } = { ...DEFAULT_OPTIONS, ...options };
   let revokeObjectUrl: (() => void) | undefined;
 
   try {
@@ -161,7 +114,7 @@ export async function extractLogoBrandColors(
 
     const image = await loadImage(loadSource.src);
     const longestEdge = Math.max(image.naturalWidth, image.naturalHeight, 1);
-    const scale = resolved.sampleSize / longestEdge;
+    const scale = sampleSize / longestEdge;
     const width = Math.max(1, Math.round(image.naturalWidth * scale));
     const height = Math.max(1, Math.round(image.naturalHeight * scale));
 
@@ -173,8 +126,8 @@ export async function extractLogoBrandColors(
     if (!context) return null;
 
     context.drawImage(image, 0, 0, width, height);
-    const pixels = context.getImageData(0, 0, width, height);
-    const swatches = sampleDominantSwatches(pixels, resolved);
+    const { data } = context.getImageData(0, 0, width, height);
+    const swatches = extractDominantSwatchesFromRgba(data, width, height, samplingOptions);
 
     return deriveBrandColorsFromPalette(swatches);
   } catch {

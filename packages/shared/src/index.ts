@@ -29,6 +29,8 @@ export * from './brandingTypes.js';
 export * from './brandingTheme.js';
 export * from './chartPalettes.js';
 export * from './logoBrandColors.js';
+export * from './logoPaletteSampling.js';
+export * from './brandingCornerStyle.js';
 export * from './moduleTierTabs.js';
 export * from './contactTypes.js';
 export * from './workspaceTypes.js';

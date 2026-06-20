@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Palette, Monitor, Wand2, ImageIcon, AlertTriangle, Loader2 } from 'lucide-react';
-import { normalizeThemeMode } from '@mms/shared';
+import { Palette, Monitor, Wand2, ImageIcon, AlertTriangle, Loader2, Box } from 'lucide-react';
+import { cornerStyleLabelKey, normalizeBrandingCornerStyle, normalizeThemeMode } from '@mms/shared';
 import { extractLogoBrandColors } from '@/lib/extractLogoBrandColors';
 import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';
@@ -14,6 +14,7 @@ import Modal from '@/components/ui/Modal';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import BrandColorPanel from '@/components/branding/BrandColorPanel';
 import ThemeModeSelector from '@/components/settings/ThemeModeSelector';
+import CornerStyleSelector from '@/components/settings/CornerStyleSelector';
 import { FieldHint, FOOTER_MAX } from '@/components/branding/BrandingShared';
 import {
   SettingsCallout,
@@ -104,6 +105,7 @@ export default function ThemeSettings(): React.JSX.Element {
       <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium" aria-live="polite">
         <span className="text-muted-foreground">{t('theme.activeConfig')}:</span>
         <SettingsMetaBadge variant="primary">{displayModeSummary}</SettingsMetaBadge>
+        <SettingsMetaBadge variant="muted">{t(cornerStyleLabelKey(normalizeBrandingCornerStyle(data.cornerStyle)))}</SettingsMetaBadge>
         <SettingsColoursBadge
           primaryColor={data.primaryColor}
           secondaryColor={data.secondaryColor}
@@ -120,6 +122,20 @@ export default function ThemeSettings(): React.JSX.Element {
           value={normalizeThemeMode(displayMode)}
           onChange={(mode) => setDisplayMode(normalizeThemeMode(mode))}
         />
+      </SectionCard>
+
+      <SectionCard
+        title={t('theme.cornerStyleTitle')}
+        subtitle={t('theme.cornerStyleDesc')}
+        icon={Box}
+      >
+        <CornerStyleSelector
+          value={normalizeBrandingCornerStyle(data.cornerStyle)}
+          onChange={(style) => upd('cornerStyle', style)}
+        />
+        <FieldHint id="corner-style-hint" className="mt-3">
+          {t('theme.cornerStyleHint')}
+        </FieldHint>
       </SectionCard>
 
       <SectionCard

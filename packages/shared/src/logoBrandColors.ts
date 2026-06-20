@@ -149,8 +149,15 @@ export function deriveBrandColorsFromPalette(
   if (!primaryHsl) return null;
 
   let secondaryColor = suggestSecondaryColor(primaryColor);
-  for (const candidate of ranked.slice(1)) {
-    if (candidate.hex === primaryColor) continue;
+  const secondaryCandidates = ranked
+    .slice(1)
+    .filter((candidate) => candidate.hex !== primaryColor)
+    .sort(
+      (a, b) =>
+        brandCandidateScore(b.hsl, b.frequencyWeight) - brandCandidateScore(a.hsl, a.frequencyWeight),
+    );
+
+  for (const candidate of secondaryCandidates) {
     if (hueDistance(candidate.hsl, primaryHsl) >= opts.minHueSeparation) {
       secondaryColor = candidate.hex;
       break;
