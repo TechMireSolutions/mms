@@ -73,9 +73,12 @@ if [[ -d "$CERT_DIR" ]]; then
   if command -v openssl >/dev/null 2>&1; then
     CERT_SANS="$(openssl x509 -in "${CERT_DIR}/fullchain.pem" -noout -ext subjectAltName 2>/dev/null || true)"
     if ! echo "$CERT_SANS" | grep -qF "DNS:*.${APP_DOMAIN}"; then
-      echo "WARNING: cert at ${CERT_DIR} lacks DNS:*.${APP_DOMAIN}"
-      echo "         Tenant URLs will hit the default SSL vhost (e.g. Moodle) until wildcard TLS is issued:"
-      echo "         bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
+      echo "ERROR: cert at ${CERT_DIR} lacks DNS:*.${APP_DOMAIN}"
+      echo "       Tenant subdomains will route to the default SSL site (e.g. Moodle → edu.aabtaab.com)."
+      echo "       Fix: bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
+      if [[ "${MMS_REQUIRE_WILDCARD_TLS:-}" == "1" ]]; then
+        exit 1
+      fi
     fi
   fi
 else

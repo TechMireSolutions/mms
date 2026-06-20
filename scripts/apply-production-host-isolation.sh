@@ -42,6 +42,7 @@ fi
 echo "MMS_APP_DOMAIN=${APP_DOMAIN}"
 
 bash scripts/apache/isolate-mms-vhost.sh "$ENV_FILE"
+export MMS_REQUIRE_WILDCARD_TLS=1
 bash scripts/apache/install-mms-vhost.sh "$ENV_FILE"
 sudo bash scripts/fix-apache-upstream.sh "$ENV_FILE"
 

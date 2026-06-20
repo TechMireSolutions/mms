@@ -11,10 +11,13 @@ cd "$ROOT_DIR"
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
 # shellcheck source=lib/curl-local-backend.sh
 source "$ROOT_DIR/scripts/lib/curl-local-backend.sh"
+# shellcheck source=lib/tenant-https-guard.sh
+source "$ROOT_DIR/scripts/lib/tenant-https-guard.sh"
 
 SUBDOMAIN="${1:-}"
 ENV_FILE="${2:-apps/backend/.env}"
 FAIL=0
+ALL_SUBDOMAINS=()
 
 read_env_var() {
   local key="$1"
@@ -109,20 +112,49 @@ if [[ -z "$REGISTRY" ]]; then
   fail "GET /api/workspace/registry failed — is backend running on :${BACKEND_PORT}?"
 else
   ok "Workspace registry reachable"
-  if [[ -z "$SUBDOMAIN" ]]; then
-    SUBDOMAIN="$(printf '%s' "$REGISTRY" | grep -oE '"subdomain":"[a-z0-9-]+"' | head -1 | cut -d'"' -f4 || true)"
-  fi
-  if [[ -z "$SUBDOMAIN" ]]; then
+  mapfile -t ALL_SUBDOMAINS < <(printf '%s' "$REGISTRY" | grep -oE '"subdomain":"[a-z0-9-]+"' | cut -d'"' -f4 | sort -u)
+  if [[ ${#ALL_SUBDOMAINS[@]} -eq 0 ]]; then
     warn "No tenants in registry yet — create a madrasa on https://${APP_DOMAIN}/ first"
   else
-    echo "Checking tenant slug: ${SUBDOMAIN}"
+    echo "Registered tenants: ${ALL_SUBDOMAINS[*]}"
+  fi
+  if [[ -z "$SUBDOMAIN" && ${#ALL_SUBDOMAINS[@]} -gt 0 ]]; then
+    SUBDOMAIN="${ALL_SUBDOMAINS[0]}"
   fi
 fi
 echo ""
 
+# Always probe a random slug — catches wildcard DNS/TLS for future madrasas too.
+PROBE_SLUG="tenant-probe-${RANDOM}"
+TENANT_HOSTS=()
+if [[ ${#ALL_SUBDOMAINS[@]:-0} -gt 0 ]]; then
+  for slug in "${ALL_SUBDOMAINS[@]}"; do
+    TENANT_HOSTS+=("${slug}.${APP_DOMAIN}")
+  done
+fi
+TENANT_HOSTS+=("${PROBE_SLUG}.${APP_DOMAIN}")
+
+if [[ ${#TENANT_HOSTS[@]} -gt 0 ]]; then
+  echo "── Public HTTPS (all tenants + probe — must not redirect off-platform) ──"
+  for TENANT_HOST in "${TENANT_HOSTS[@]}"; do
+    REASON="$(tenant_https_guard_failures "$TENANT_HOST" "$APP_DOMAIN" || true)"
+    if [[ -z "$REASON" ]]; then
+      if tenant_https_serves_mms_api "$TENANT_HOST"; then
+        ok "https://${TENANT_HOST}/ → MMS (/health 200, no foreign redirect)"
+      else
+        ok "https://${TENANT_HOST}/ → no foreign redirect (check /health separately)"
+      fi
+    else
+      fail "https://${TENANT_HOST}/ → ${REASON}"
+      echo "       Fix: bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
+    fi
+  done
+  echo ""
+fi
+
 if [[ -n "$SUBDOMAIN" ]]; then
   TENANT_HOST="${SUBDOMAIN}.${APP_DOMAIN}"
-  echo "── API (tenant host headers) ──"
+  echo "── API (sample tenant: ${SUBDOMAIN}) ──"
   CODE="$(curl -s -o /tmp/mms-tenant-ws.json -w '%{http_code}' \
     -H "Host: ${TENANT_HOST}" -H "X-Forwarded-Host: ${TENANT_HOST}" \
     "${LOCAL}/api/workspace/by-subdomain/${SUBDOMAIN}")"
@@ -132,37 +164,6 @@ if [[ -n "$SUBDOMAIN" ]]; then
     fail "GET /api/workspace/by-subdomain/${SUBDOMAIN} → HTTP ${CODE} (expected 200)"
     head -c 400 /tmp/mms-tenant-ws.json 2>/dev/null || true
     echo ""
-  fi
-  echo ""
-
-  echo "── Public HTTPS ──"
-  PUB_HDR="$(curl -sI --connect-timeout 5 --max-time 15 "https://${TENANT_HOST}/" 2>/dev/null || true)"
-  PUB_CODE="$(printf '%s' "$PUB_HDR" | head -1 | awk '{print $2}')"
-  if echo "$PUB_HDR" | grep -qi 'X-Redirect-By: Moodle'; then
-    fail "https://${TENANT_HOST}/ is served by Moodle (wrong Apache SSL vhost)"
-    echo "       Fix: bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
-    echo "       Issue wildcard cert: *.${APP_DOMAIN} via certbot DNS challenge"
-  elif [[ "$PUB_CODE" == "200" ]]; then
-    ok "https://${TENANT_HOST}/ → HTTP 200"
-  elif [[ -z "$PUB_CODE" ]]; then
-    fail "https://${TENANT_HOST}/ unreachable (DNS, firewall, or TLS)"
-    echo "       Common fix: wildcard cert — certbot DNS challenge for *.${APP_DOMAIN}"
-  else
-    fail "https://${TENANT_HOST}/ → HTTP ${PUB_CODE}"
-  fi
-
-  if command -v openssl >/dev/null 2>&1; then
-    echo ""
-    echo "── TLS certificate ──"
-    CERT_SAN="$(echo | openssl s_client -servername "${TENANT_HOST}" -connect "${APP_DOMAIN}:443" 2>/dev/null \
-      | openssl x509 -noout -text 2>/dev/null | grep -E 'DNS:' || true)"
-    if echo "$CERT_SAN" | grep -qF "DNS:*.${APP_DOMAIN}" || echo "$CERT_SAN" | grep -qF "DNS:${TENANT_HOST}"; then
-      ok "Certificate covers ${TENANT_HOST} or *.${APP_DOMAIN}"
-    else
-      fail "Certificate does not cover tenant subdomains (Apache may route to Moodle/default site)"
-      echo "       SANs: ${CERT_SAN:-<could not read>}"
-      echo "       Run: bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
-    fi
   fi
 
   echo ""

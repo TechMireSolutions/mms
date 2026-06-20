@@ -80,3 +80,16 @@ if [[ "$STRIPPED" == true ]]; then
 else
   echo "No foreign vhosts proxying MMS ports"
 fi
+
+if [[ -n "$APP_DOMAIN" ]]; then
+  for conf in /etc/apache2/sites-enabled/*; do
+    [[ -f "$conf" ]] || continue
+    if grep -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
+      continue
+    fi
+    if grep -qE 'ServerAlias[[:space:]]+\*' "$conf" 2>/dev/null \
+      && grep -q ':443' "$conf" 2>/dev/null; then
+      echo "WARNING: ${conf} has wildcard ServerAlias on :443 — may steal tenant SNI if MMS lacks *.${APP_DOMAIN} TLS"
+    fi
+  done
+fi

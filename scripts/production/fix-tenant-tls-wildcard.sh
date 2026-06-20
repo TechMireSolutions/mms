@@ -88,21 +88,19 @@ fi
 echo ""
 
 echo "── Reinstall MMS vhost (000-mmsv2.conf, ServerAlias *.${APP_DOMAIN}) ──"
+export MMS_REQUIRE_WILDCARD_TLS="${MMS_REQUIRE_WILDCARD_TLS:-0}"
 bash "$ROOT_DIR/scripts/apache/install-mms-vhost.sh" "$ENV_FILE"
 bash "$ROOT_DIR/scripts/fix-apache-upstream.sh" "$ENV_FILE"
 echo ""
 
 if cert_covers_tenant_sni "$PROBE_HOST"; then
-  echo "── Verify tenant HTTPS ──"
-  HDR="$(tenant_https_headers)"
-  if echo "$HDR" | grep -qi 'X-Redirect-By: Moodle'; then
-    echo "ERROR: Still routing to Moodle — check apache2ctl -S and disable conflicting ServerAlias * vhosts"
-    exit 1
+  echo "── Verify tenant HTTPS (all registered + random probe) ──"
+  export MMS_REQUIRE_WILDCARD_TLS=1
+  if bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE"; then
+    echo "Done — tenant subdomains serve MMS only."
+    exit 0
   fi
-  CODE="$(printf '%s' "$HDR" | head -1 | awk '{print $2}')"
-  echo "https://${PROBE_HOST}/ → HTTP ${CODE:-unknown}"
-  echo "Done — tenant subdomains should serve MMS."
-  exit 0
+  exit 1
 fi
 
 echo "── Wildcard certificate required ──"

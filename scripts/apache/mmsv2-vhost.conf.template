@@ -5,7 +5,8 @@
 <VirtualHost *:80>
     ServerName @@MMS_APP_DOMAIN@@
     ServerAlias *.@@MMS_APP_DOMAIN@@
-    Redirect permanent / https://@@MMS_APP_DOMAIN@@/
+    RewriteEngine On
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 </VirtualHost>
 
 <VirtualHost *:443>
