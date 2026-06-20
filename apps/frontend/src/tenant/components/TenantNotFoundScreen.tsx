@@ -34,7 +34,7 @@ export default function TenantNotFoundScreen({
           <ArrowRight className="w-4 h-4" aria-hidden />
         </a>
         <a
-          href={apexUrl(ROUTES.login)}
+          href={apexUrl(ROUTES.home)}
           className="inline-flex w-full items-center justify-center py-2.5 px-4 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
         >
           {t("apex.workspaceNotFoundViewAll")}

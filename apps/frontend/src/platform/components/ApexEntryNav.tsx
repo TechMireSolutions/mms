@@ -6,18 +6,18 @@ import useTranslation from "@/hooks/useTranslation";
 interface ApexEntryNavProps {
   /** Show link to apex forgot-password workspace picker */
   showForgotPasswordLink?: boolean;
-  /** Show link back to apex login workspace picker */
-  showSignInPickerLink?: boolean;
+  /** Show link back to apex home (platform sign-in) */
+  showHomeLink?: boolean;
 }
 
-/** Secondary cross-links between apex entry routes (home, login picker, forgot picker). */
+/** Secondary cross-links between apex entry routes (home and forgot-password picker). */
 export default function ApexEntryNav({
   showForgotPasswordLink = false,
-  showSignInPickerLink = false,
+  showHomeLink = false,
 }: ApexEntryNavProps): React.JSX.Element | null {
   const { t } = useTranslation();
 
-  if (!showForgotPasswordLink && !showSignInPickerLink) {
+  if (!showForgotPasswordLink && !showHomeLink) {
     return null;
   }
 
@@ -31,10 +31,10 @@ export default function ApexEntryNav({
           </Link>
         </p>
       ) : null}
-      {showSignInPickerLink ? (
+      {showHomeLink ? (
         <p>
-          <Link to={ROUTES.login} className="font-medium text-primary hover:underline">
-            {t("apex.backToSignInPicker")}
+          <Link to={ROUTES.home} className="font-medium text-primary hover:underline">
+            {t("apex.backToMain")}
           </Link>
         </p>
       ) : null}

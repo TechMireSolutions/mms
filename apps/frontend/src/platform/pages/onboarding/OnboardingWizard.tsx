@@ -226,7 +226,7 @@ export default function OnboardingWizard(): React.JSX.Element {
         <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           {submitError}{" "}
           {showSignInLink ? (
-            <Link to={ROUTES.login} className="font-semibold underline">
+            <Link to={ROUTES.home} className="font-semibold underline">
               {t("onboarding.signInInstead")}
             </Link>
           ) : null}

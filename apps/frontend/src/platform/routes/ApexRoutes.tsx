@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { ROUTES, TENANT_APP_PATHS } from '@/lib/config/routes';
 import PlatformBootGate from '@/platform/components/PlatformBootGate';
 import { PlatformFallbackRoute } from '@/platform/components/PlatformAuthRequired';
@@ -23,7 +23,7 @@ export default function ApexRoutes(): React.JSX.Element {
     <Routes>
       {/* Entry — no platform session required */}
       <Route path={ROUTES.home} element={<ApexHome />} />
-      <Route path={ROUTES.login} element={<ApexWorkspaceGate variant="login" showWorkspaceList />} />
+      <Route path={ROUTES.login} element={<Navigate to={ROUTES.home} replace />} />
       <Route
         path={ROUTES.forgotPassword}
         element={<ApexWorkspaceGate variant="forgotPassword" showWorkspaceList />}

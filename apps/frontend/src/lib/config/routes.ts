@@ -41,7 +41,6 @@ export const PUBLIC_PATHS: readonly string[] = [
  */
 export const PLATFORM_ENTRY_PATHS: readonly string[] = [
   ROUTES.home,
-  ROUTES.login,
   ROUTES.forgotPassword,
   ROUTES.platformForgotPassword,
   ROUTES.twoFactor,

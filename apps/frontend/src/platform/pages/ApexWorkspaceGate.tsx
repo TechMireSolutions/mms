@@ -9,26 +9,20 @@ import { ROUTES } from "@/lib/config/routes";
 import useTranslation from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 
-export type ApexGateVariant = "default" | "login" | "forgotPassword" | "twoFactor" | "tenantOnly";
+export type ApexGateVariant = "forgotPassword" | "twoFactor" | "tenantOnly";
 
 const TITLE_KEYS: Record<ApexGateVariant, AppTranslationKey> = {
-  default: "apex.gateTitleDefault",
-  login: "apex.gateLoginTitle",
   forgotPassword: "apex.gateForgotTitle",
   twoFactor: "apex.gateTwoFactorTitle",
   tenantOnly: "apex.gateTenantOnlyTitle",
 };
 
 const MESSAGE_KEYS: Partial<Record<ApexGateVariant, AppTranslationKey>> = {
-  default: "apex.gateMessageDefault",
-  login: "apex.gateLoginMessage",
   forgotPassword: "apex.gateForgotMessage",
   tenantOnly: "apex.gateTenantOnlyMessage",
 };
 
 const META_DESC_KEYS: Record<ApexGateVariant, AppTranslationKey> = {
-  default: "entry.meta.apexGateDefault",
-  login: "entry.meta.apexGateLogin",
   forgotPassword: "entry.meta.apexGateForgot",
   twoFactor: "entry.meta.apexGateTwoFactor",
   tenantOnly: "entry.meta.apexGateTenantOnly",
@@ -43,7 +37,7 @@ interface ApexWorkspaceGateProps {
  * Shown on the apex domain when the user hits a tenant-only route (login, app modules).
  */
 export default function ApexWorkspaceGate({
-  variant = "default",
+  variant = "tenantOnly",
   showWorkspaceList = true,
 }: ApexWorkspaceGateProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -76,12 +70,9 @@ export default function ApexWorkspaceGate({
             />
           ) : null}
 
-          <ApexEntryNav
-            showForgotPasswordLink={variant === "login"}
-            showSignInPickerLink={variant === "forgotPassword"}
-          />
+          <ApexEntryNav showHomeLink={variant === "forgotPassword"} />
 
-          {variant === "login" || variant === "forgotPassword" || variant === "default" ? (
+          {variant === "forgotPassword" ? (
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-left space-y-3">
               <p className="text-sm text-muted-foreground">{t("apex.platformAdminHint")}</p>
               <Button asChild variant="default" className="w-full">
