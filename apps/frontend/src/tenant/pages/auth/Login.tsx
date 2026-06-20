@@ -2,15 +2,15 @@ import React, { useState, useEffect, useCallback, useId } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, AlertCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import AuthLayout from "../../components/auth/AuthLayout";
+import AuthLayout from "@/tenant/components/AuthLayout";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
-import { getGlobalSettings } from "../../lib/db";
+import { getGlobalSettings } from "@/lib/db";
 import {
   clear2FAState,
   is2FAVerified,
   mark2FAVerified,
-} from "../../lib/twoFactor";
+} from "@/lib/twoFactor";
 import { requiresTwoFactor } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
 import { apexUrl } from '@/lib/config/tenantConfig';

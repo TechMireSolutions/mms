@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
+import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { ROUTES } from "@/lib/config/routes";
 import useTranslation from "@/hooks/useTranslation";
 

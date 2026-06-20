@@ -16,7 +16,7 @@ import {
 } from './settingsPreviewStore';
 import { getAppDomain } from './config/tenantConfig';
 import { isEntryPath } from './config/routes';
-import { isTenantHost, MMS_PLATFORM_GLOBAL_SETTINGS } from './themeScope';
+import { isTenantHost, MMS_PLATFORM_GLOBAL_SETTINGS } from '@/platform/lib/themeScope';
 
 function resolveDocumentLanguage(storedLanguage: string, pathname: string): string {
   const isApex =

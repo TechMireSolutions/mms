@@ -4,10 +4,10 @@ import { ArrowLeft, Loader2, ShieldCheck, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { maskEmail, requiresTwoFactor, resolveNotificationChannel } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
-import AuthLayout from "../../components/auth/AuthLayout";
+import AuthLayout from "@/tenant/components/AuthLayout";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import useGlobalSettings from "../../hooks/useGlobalSettings";
+import useGlobalSettings from "@/hooks/useGlobalSettings";
 import { FORM_ERROR, FORM_OTP_DIGIT } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import {
@@ -15,7 +15,7 @@ import {
   is2FAVerified,
   resend2FACode,
   verify2FACode,
-} from "../../lib/twoFactor";
+} from "@/lib/twoFactor";
 
 const CODE_LENGTH = 6;
 

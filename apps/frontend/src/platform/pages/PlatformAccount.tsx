@@ -14,15 +14,15 @@ import {
   validatePlatformSetupName,
   validatePlatformSetupPassword,
 } from "@mms/shared";
-import PlatformPageShell, { PlatformLogoMark } from "@/components/platform/PlatformPageShell";
+import PlatformPageShell, { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { Button } from "@/components/ui/button";
 import { FORM_INPUT, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import useTranslation from "@/hooks/useTranslation";
 import { apiJson, ApiError } from "@/lib/apiClient";
-import { mapPlatformAuthError } from "@/lib/platformAuthErrors";
+import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
 import { ROUTES } from "@/lib/config/routes";
-import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
-import { usePlatformProfile, useUpdatePlatformProfileName } from "@/hooks/usePlatformProfile";
+import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
+import { usePlatformProfile, useUpdatePlatformProfileName } from "@/platform/hooks/usePlatformProfile";
 import { notify } from "@/lib/notify";
 
 /**

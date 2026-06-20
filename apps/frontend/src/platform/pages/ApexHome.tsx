@@ -1,11 +1,11 @@
 import React, { Suspense, lazy } from "react";
-import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
-import { usePlatformSetupStatus } from "@/hooks/usePlatformSetupStatus";
-import PlatformLoadingScreen from "@/components/platform/PlatformLoadingScreen";
+import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
+import { usePlatformSetupStatus } from "@/platform/hooks/usePlatformSetupStatus";
+import PlatformLoadingScreen from "@/platform/components/PlatformLoadingScreen";
 
-const PlatformSignIn = lazy(() => import("@/pages/auth/PlatformSignIn"));
-const PlatformSetup = lazy(() => import("@/pages/auth/PlatformSetup"));
-const PlatformConsole = lazy(() => import("@/pages/PlatformConsole"));
+const PlatformSignIn = lazy(() => import("@/platform/pages/auth/PlatformSignIn"));
+const PlatformSetup = lazy(() => import("@/platform/pages/auth/PlatformSetup"));
+const PlatformConsole = lazy(() => import("@/platform/pages/PlatformConsole"));
 
 /** Apex home: first-run setup, platform sign-in, or authenticated console. */
 export default function ApexHome(): React.JSX.Element {

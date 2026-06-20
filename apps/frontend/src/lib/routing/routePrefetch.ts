@@ -20,10 +20,10 @@ const TENANT_ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
 };
 
 const APEX_ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
-  [ROUTES.home]: () => import('@/pages/ApexHome'),
-  [ROUTES.onboarding]: () => import('@/pages/onboarding/OnboardingWizard'),
-  [ROUTES.platformAccount]: () => import('@/pages/PlatformAccount'),
-  [ROUTES.platformForgotPassword]: () => import('@/pages/auth/PlatformForgotPassword'),
+  [ROUTES.home]: () => import('@/platform/pages/ApexHome'),
+  [ROUTES.onboarding]: () => import('@/platform/pages/onboarding/OnboardingWizard'),
+  [ROUTES.platformAccount]: () => import('@/platform/pages/PlatformAccount'),
+  [ROUTES.platformForgotPassword]: () => import('@/platform/pages/auth/PlatformForgotPassword'),
 };
 
 const prefetched = new Set<string>();

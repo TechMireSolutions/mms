@@ -1,15 +1,15 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { ROUTES, TENANT_APP_PATHS } from "@/lib/config/routes";
-import PlatformBootGate from "@/components/platform/PlatformBootGate";
+import PlatformBootGate from "@/platform/components/PlatformBootGate";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
-import ApexPageNotFound from "@/components/platform/ApexPageNotFound";
+import ApexPageNotFound from "@/platform/components/ApexPageNotFound";
 
-const ApexHome = React.lazy(() => import("@/pages/ApexHome"));
-const ApexWorkspaceGate = React.lazy(() => import("@/pages/ApexWorkspaceGate"));
-const OnboardingWizard = React.lazy(() => import("@/pages/onboarding/OnboardingWizard"));
-const PlatformAccount = React.lazy(() => import("@/pages/PlatformAccount"));
-const PlatformForgotPassword = React.lazy(() => import("@/pages/auth/PlatformForgotPassword"));
+const ApexHome = React.lazy(() => import("@/platform/pages/ApexHome"));
+const ApexWorkspaceGate = React.lazy(() => import("@/platform/pages/ApexWorkspaceGate"));
+const OnboardingWizard = React.lazy(() => import("@/platform/pages/onboarding/OnboardingWizard"));
+const PlatformAccount = React.lazy(() => import("@/platform/pages/PlatformAccount"));
+const PlatformForgotPassword = React.lazy(() => import("@/platform/pages/auth/PlatformForgotPassword"));
 
 const apexTenantGate = (
   <ApexWorkspaceGate variant="tenantOnly" showWorkspaceList />

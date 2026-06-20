@@ -2,11 +2,11 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import type { PlatformUser } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useTenant } from '@/lib/contexts/TenantContext';
-import usePlatformSessionTimeout from '@/hooks/usePlatformSessionTimeout';
+import usePlatformSessionTimeout from '@/platform/hooks/usePlatformSessionTimeout';
 import {
   clearPlatformBrowserSession,
   markPlatformBrowserSession,
-} from '@/lib/platformBrowserSession';
+} from '@/platform/lib/platformBrowserSession';
 
 function PlatformSessionTimeoutWatcher({
   enabled,

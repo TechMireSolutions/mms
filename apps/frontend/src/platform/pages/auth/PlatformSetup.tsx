@@ -17,16 +17,16 @@ import {
   validatePlatformSetupName,
   validatePlatformSetupPassword,
 } from "@mms/shared";
-import PlatformAuthLayout from "@/components/platform/PlatformAuthLayout";
-import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/components/platform/PlatformOtpInput";
+import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
+import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/platform/components/PlatformOtpInput";
 import { Button } from "@/components/ui/button";
 import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import useTranslation from "@/hooks/useTranslation";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
 import { apiJson, ApiError } from "@/lib/apiClient";
-import { mapPlatformAuthError } from "@/lib/platformAuthErrors";
-import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
-import { useInvalidatePlatformSetupStatus } from "@/hooks/usePlatformSetupStatus";
+import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
+import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
+import { useInvalidatePlatformSetupStatus } from "@/platform/hooks/usePlatformSetupStatus";
 
 interface PlatformSetupProps {
   smtpConfigured: boolean;

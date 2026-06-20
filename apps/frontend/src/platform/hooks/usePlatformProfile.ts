@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PlatformUserProfile } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
-import { usePlatformAuth } from '@/lib/contexts/PlatformAuthContext';
+import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 
 export const PLATFORM_PROFILE_QUERY_KEY = ['platform', 'profile'] as const;
 

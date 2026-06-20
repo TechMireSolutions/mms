@@ -7,7 +7,7 @@ import {
   useDeleteWorkspace,
   usePlatformWorkspaces,
   useSetWorkspaceEnabled,
-} from "@/hooks/usePlatformWorkspaces";
+} from "@/platform/hooks/usePlatformWorkspaces";
 import { isApiError } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import WorkspaceLogo from "@/components/platform/WorkspaceLogo";
+import WorkspaceLogo from "@/platform/components/WorkspaceLogo";
 
 /**
  * Super-user workspace list with enable/disable and delete controls.

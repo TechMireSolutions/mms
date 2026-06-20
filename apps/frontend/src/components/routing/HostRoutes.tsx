@@ -1,7 +1,7 @@
 import React from "react";
-import { useIsTenantHost } from "@/hooks/useIsTenantHost";
-import { ApexRoutesWithSuspense } from "@/components/routing/ApexRoutes";
-import TenantRoutes from "@/components/routing/TenantRoutes";
+import { useIsTenantHost } from "@/lib/host/useIsTenantHost";
+import { ApexRoutesWithSuspense } from "@/platform/routes/ApexRoutes";
+import TenantRoutes from "@/tenant/routes/TenantRoutes";
 
 /**
  * Host switch — renders exactly one of platform apex or tenant madrasa trees.

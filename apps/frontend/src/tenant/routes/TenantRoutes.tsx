@@ -3,12 +3,12 @@ import { Route, Routes, Navigate } from "react-router-dom";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { ROUTES } from "@/lib/config/routes";
 import { apexUrl } from "@/lib/config/tenantConfig";
-import ProtectedRoute from "@/components/routing/ProtectedRoute";
-import GuestRoute from "@/components/routing/GuestRoute";
-import TenantNotFoundScreen from "@/components/routing/TenantNotFoundScreen";
-import WorkspaceDisabledScreen from "@/components/routing/WorkspaceDisabledScreen";
+import ProtectedRoute from "@/tenant/components/guards/ProtectedRoute";
+import GuestRoute from "@/tenant/components/guards/GuestRoute";
+import TenantNotFoundScreen from "@/tenant/components/TenantNotFoundScreen";
+import WorkspaceDisabledScreen from "@/tenant/components/WorkspaceDisabledScreen";
 import AppLayout from "@/components/layout/AppLayout";
-import PageNotFound from "@/components/routing/PageNotFound";
+import PageNotFound from "@/tenant/components/PageNotFound";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 
 const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
@@ -27,9 +27,9 @@ const Users = React.lazy(() => import("@/pages/Users"));
 const AccountProfile = React.lazy(() => import("@/pages/AccountProfile"));
 const Obligations = React.lazy(() => import("@/pages/Obligations"));
 const Accounting = React.lazy(() => import("@/pages/Accounting"));
-const Login = React.lazy(() => import("@/pages/auth/Login"));
-const ForgotPassword = React.lazy(() => import("@/pages/auth/ForgotPassword"));
-const TwoFactorAuth = React.lazy(() => import("@/pages/auth/TwoFactorAuth"));
+const Login = React.lazy(() => import("@/tenant/pages/auth/Login"));
+const ForgotPassword = React.lazy(() => import("@/tenant/pages/auth/ForgotPassword"));
+const TwoFactorAuth = React.lazy(() => import("@/tenant/pages/auth/TwoFactorAuth"));
 
 function RedirectToApex({ path }: { path: string }): React.JSX.Element {
   React.useEffect(() => {

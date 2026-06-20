@@ -7,7 +7,7 @@ import {
   type BrandingSettings,
   type GlobalSettings,
 } from '@mms/shared';
-import { getAppDomain } from './config/tenantConfig';
+import { getAppDomain } from '@/lib/config/tenantConfig';
 
 /**
  * Hardcoded MMS platform theme for the apex domain (marketing, workspace picker, onboarding).

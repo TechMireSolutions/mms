@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, Sparkles } from "lucide-react";
-import WizardLayout from "../../components/onboarding/WizardLayout";
+import WizardLayout from "@/platform/components/onboarding/WizardLayout";
 import { ROUTES } from "@/lib/config/routes";
 import { tenantUrl, getAppDomain } from "@/lib/config/tenantConfig";
 import {

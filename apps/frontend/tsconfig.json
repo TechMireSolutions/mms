@@ -5,6 +5,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/platform/*": [
+        "./src/platform/*"
+      ],
+      "@/tenant/*": [
+        "./src/tenant/*"
       ]
     },
     "jsx": "react-jsx",

@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PlatformWorkspaceListResponse, PlatformWorkspaceRow } from '@mms/shared';
 import { apiJson, isApiError } from '@/lib/apiClient';
-import { WORKSPACE_REGISTRY_QUERY_KEY } from '@/hooks/useWorkspaceRegistry';
-import { usePlatformAuth } from '@/lib/contexts/PlatformAuthContext';
+import { WORKSPACE_REGISTRY_QUERY_KEY } from '@/platform/hooks/useWorkspaceRegistry';
+import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import useTranslation from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { PlatformLogoMark } from "@/components/platform/PlatformPageShell";
+import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 export interface PlatformAuthLayoutProps {

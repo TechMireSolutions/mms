@@ -3,7 +3,7 @@ import { type BrandingSettings } from "@mms/shared";
 import { applyAppTheme } from "../lib/brandingTheme";
 import { getScopedBrandingSettings } from "../lib/settingsPreviewStore";
 import { SETTINGS_PREVIEW_EVENT } from "../lib/settingsPreview";
-import { isTenantHost } from "../lib/themeScope";
+import { isTenantHost } from "@/platform/lib/themeScope";
 
 /**
  * Custom React hook to load and track real-time changes to the institution's branding settings.

@@ -4,8 +4,8 @@ import type { AppTranslationKey, PublicWorkspaceSummary } from "@mms/shared";
 import { ROUTES } from "@/lib/config/routes";
 import { getAppDomain, tenantUrl } from "@/lib/config/tenantConfig";
 import useTranslation from "@/hooks/useTranslation";
-import { useWorkspaceRegistry } from "@/hooks/useWorkspaceRegistry";
-import WorkspaceLogo from "@/components/platform/WorkspaceLogo";
+import { useWorkspaceRegistry } from "@/platform/hooks/useWorkspaceRegistry";
+import WorkspaceLogo from "@/platform/components/WorkspaceLogo";
 import { Button } from "@/components/ui/button";
 
 type WorkspaceLinkDestination = typeof ROUTES.login | typeof ROUTES.forgotPassword;

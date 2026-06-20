@@ -2,7 +2,7 @@ import React, { useEffect, Suspense } from "react";
 import { applyAppTheme } from "./lib/brandingTheme";
 import { SETTINGS_PREVIEW_EVENT } from "./lib/settingsPreview";
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { useIsTenantHost } from '@/hooks/useIsTenantHost';
+import { useIsTenantHost } from '@/lib/host/useIsTenantHost';
 import UserNotRegisteredError from '@/components/routing/UserNotRegisteredError';
 import RouterBridge from '@/components/routing/RouterBridge';
 import HostRoutes from '@/components/routing/HostRoutes';

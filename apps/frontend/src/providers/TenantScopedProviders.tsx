@@ -1,6 +1,6 @@
 import React from 'react';
 import { ContactConfigProvider } from '@/lib/contexts/ContactConfigContext';
-import { useIsTenantHost } from '@/hooks/useIsTenantHost';
+import { useIsTenantHost } from '@/lib/host/useIsTenantHost';
 
 /** Mounts tenant-only providers (contacts config) — skipped on platform apex. */
 export default function TenantScopedProviders({

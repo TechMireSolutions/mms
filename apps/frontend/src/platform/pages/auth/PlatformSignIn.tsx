@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, ArrowRight, Loader2, Lock, Mail } from "lucide-react";
-import PlatformAuthLayout from "@/components/platform/PlatformAuthLayout";
-import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
+import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
+import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { ApiError } from "@/lib/apiClient";
-import { mapPlatformAuthError } from "@/lib/platformAuthErrors";
+import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
 import useTranslation from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";

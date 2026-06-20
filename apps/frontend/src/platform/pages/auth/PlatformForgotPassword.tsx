@@ -17,16 +17,16 @@ import {
   validatePlatformSetupEmail,
   validatePlatformSetupPassword,
 } from "@mms/shared";
-import PlatformAuthLayout from "@/components/platform/PlatformAuthLayout";
-import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/components/platform/PlatformOtpInput";
+import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
+import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/platform/components/PlatformOtpInput";
 import { Button } from "@/components/ui/button";
 import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import useTranslation from "@/hooks/useTranslation";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
 import { apiJson, ApiError } from "@/lib/apiClient";
-import { mapPlatformAuthError } from "@/lib/platformAuthErrors";
+import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
 import { ROUTES } from "@/lib/config/routes";
-import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
+import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 
 /**
  * Apex-only forgot password for platform super-users (email OTP + new password).

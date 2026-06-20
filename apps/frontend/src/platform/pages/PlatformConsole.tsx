@@ -1,13 +1,13 @@
 import React, { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Loader2, LogOut, Plus, UserCircle } from "lucide-react";
-import PlatformPageShell, { PlatformLogoMark } from "@/components/platform/PlatformPageShell";
-import { usePlatformAuth } from "@/lib/contexts/PlatformAuthContext";
+import PlatformPageShell, { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
+import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import useTranslation from "@/hooks/useTranslation";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
 
-const PlatformWorkspaceList = lazy(() => import("@/components/platform/PlatformWorkspaceList"));
+const PlatformWorkspaceList = lazy(() => import("@/platform/components/PlatformWorkspaceList"));
 
 function WorkspaceListFallback(): React.JSX.Element {
   const { t } = useTranslation();
@@ -44,7 +44,7 @@ export default function PlatformConsole(): React.JSX.Element {
           asChild
           className="w-full h-11 rounded-xl font-semibold"
           onMouseEnter={() => {
-            void import("@/pages/onboarding/OnboardingWizard");
+            void import("@/platform/pages/onboarding/OnboardingWizard");
           }}
         >
           <Link to={ROUTES.onboarding}>
@@ -63,7 +63,7 @@ export default function PlatformConsole(): React.JSX.Element {
           variant="outline"
           className="w-full h-11 rounded-xl"
           onMouseEnter={() => {
-            void import("@/pages/PlatformAccount");
+            void import("@/platform/pages/PlatformAccount");
           }}
         >
           <Link to={ROUTES.platformAccount}>
