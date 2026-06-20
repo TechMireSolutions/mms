@@ -7,7 +7,7 @@ import {
   LayoutDashboard, History, Users as UsersIcon, FileText, BrainCircuit, ShieldCheck, Search, Zap
 } from "lucide-react";
 import { Contact, ContactActivity } from "@mms/shared";
-import { useContactConfig, calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, calcAge } from "@mms/shared";
 import { formatDate } from "@mms/shared";
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -90,7 +90,6 @@ export default function ContactDetailDrawer({
     setC(initialContact);
   }, [initialContact]);
 
-  const health = calculateProfileHealth(c);
   const rating = c.rating || 0;
 
   const age = calcAge(c.dob as string | null);
@@ -190,27 +189,7 @@ export default function ContactDetailDrawer({
         
         <div className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 px-5 pt-4 border-b border-border space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center relative border border-border"
-                style={{
-                  background: `conic-gradient(${
-                    health >= 80 ? uiStrings?.healthColorHigh : health >= 50 ? uiStrings?.healthColorMedium : uiStrings?.healthColorLow
-                  } ${health * 3.6}deg, hsl(var(--muted)) 0deg)`
-                }}
-              >
-                <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center text-[10px] font-bold text-foreground">
-                  {health}%
-                </div>
-              </div>
-              <div>
-                <h2 className="text-[13px] font-bold text-foreground leading-tight">{uiStrings.profileIntelligence}</h2>
-                <div className="flex items-center gap-1">
-                   <ShieldCheck className={`w-3 h-3 ${health >= 80 ? uiStrings?.healthClassHigh : health >= 50 ? uiStrings?.healthClassMedium : uiStrings?.healthClassLow}`} />
-                   <span className="text-[9px] font-semibold text-muted-foreground uppercase">{health >= 80 ? uiStrings.verified : uiStrings.incomplete}</span>
-                </div>
-              </div>
-            </div>
+            <h2 className="text-[13px] font-bold text-foreground leading-tight">{uiStrings.contactDetails}</h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onEdit(c)}

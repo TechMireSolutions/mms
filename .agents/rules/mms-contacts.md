@@ -48,10 +48,10 @@ Lazy-load: `DuplicateDetection`, `WhatsAppPanel`, `ContactSyncPanel`.
 - No manual WhatsApp toggles in `PhoneTab`
 - UI reads `GET /api/contacts/:id/whatsapp-status`
 
-## Avatar & health
+## Avatar
 
 - `ContactAvatar` + `AvatarCropper` — `getInitials`, `getAvatarColor` from shared
-- `calculateProfileHealth` — driven by required fields in registry
+- `calculateProfileCompleteness` — form progress driven by enabled fields in registry
 
 ## Import/export
 

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, Contact } from "@mms/shared";
 import { formatDate } from "@mms/shared";
-import { calculateProfileHealth, useContactConfig } from '@/lib/contexts/ContactConfigContext';
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 
 function GenderIcon({ gender }: { gender?: string }): React.JSX.Element | null {
   if (!gender) return null;
@@ -280,19 +280,6 @@ export default function ContactsTable({
         const relationships = (c.emergencyContacts || []).map((ec) => ec.relationship).filter(Boolean);
         return <td key="emergency_relationship" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{relationships.join(", ") || uiStrings.emptyDash}</span></td>;
       }
-      case "profileHealth": {
-        const health = calculateProfileHealth(c);
-        return (
-          <td key="profileHealth" className="px-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="w-12 bg-muted h-2 rounded-full overflow-hidden">
-                <div className={`h-full rounded-full ${health >= 80 ? (uiStrings.healthBgHigh || "bg-success") : health >= 50 ? (uiStrings.healthBgMedium || "bg-warning") : (uiStrings.healthBgLow || "bg-destructive")}`} style={{ width: `${health}%` }} />
-              </div>
-              <span className="text-[11px] font-bold text-muted-foreground">{health}%</span>
-            </div>
-          </td>
-        );
-      }
       case "lifecycleStage": {
         const stage = c.lifecycleStage || uiStrings.defaultLifecycleStage;
         const colors = lifecycleColors[stage] || { bg: "bg-muted text-muted-foreground border-border", text: "text-muted-foreground" };
@@ -331,7 +318,6 @@ export default function ContactsTable({
     city: "city",
     gender: "gender",
     dob: "dob",
-    profileHealth: "profileHealth",
     lifecycleStage: "lifecycleStage",
     rating: "rating",
   };

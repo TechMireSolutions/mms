@@ -69,7 +69,7 @@ One-shot reads outside React: `getGlobalSettings()`, `getBrandingSettings()`.
 | `useContactConfig()` | `ContactConfigContext.tsx` |
 | `useContactColumns()` | same |
 | `useContactValidation()` | same |
-| `calculateProfileHealth`, schema builders | `lib/contactConfig/*` (re-exported from context) |
+| `calculateProfileCompleteness`, schema builders | `lib/contactConfig/*` (re-exported from context) |
 
 Provider at `App.tsx` root only — never nest on child pages.
 

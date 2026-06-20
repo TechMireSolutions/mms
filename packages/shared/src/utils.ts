@@ -118,7 +118,6 @@ export function applyTitleCaseToContact(contact: Record<string, unknown>): Recor
     "updatedAt",
     "dob",
     "rating",
-    "profileHealth",
     "aiSummary",
     "email",
     "phone",

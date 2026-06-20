@@ -50,10 +50,7 @@ import {
   type ValidationError,
 } from "../contactConfig/validationSchema";
 
-export {
-  calculateProfileHealth,
-  calculateProfileCompleteness,
-} from "../contactConfig/profileMetrics";
+export { calculateProfileCompleteness } from "../contactConfig/profileMetrics";
 export {
   buildCustomFieldSchema,
   buildDynamicContactSchema,
@@ -431,9 +428,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     const filteredRegistry = registry.filter((c) => {
       if (c.key === "name") {
         return isTabFieldEnabled("basic", "firstName");
-      }
-      if (c.key === "profileHealth") {
-        return true;
       }
       if (c.key === "phone") {
         return enabledTabIds.has("phones") && isTabFieldEnabled("phones", "number");

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Users, ShieldCheck, Target, TrendingUp } from "lucide-react";
+import { Users, UserCheck, Target, TrendingUp } from "lucide-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
@@ -8,13 +8,11 @@ import ReportExportBar from "./ReportExportBar";
 
 import { CONTACTS } from '@/lib/data/contactsData';
 import { Contact } from "../../lib/contactFields";
-import { calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
 import { STUDENTS, Student } from '@/lib/data/studentsData';
 
 export interface ContactStageItem {
   stage: string;
   count: number;
-  health: number;
 }
 
 export interface LifecycleStageItem {
@@ -25,11 +23,7 @@ export interface LifecycleStageItem {
 
 /**
  * ContactReport component provides CRM-specific analytics.
- * Visualizes lifecycle stage distribution, lifecycle stages, and health metrics.
- *
- * @param {object} props - Component props.
- * @param {Function} [props.onEditVisual] - Optional callback to open the visualizer.
- * @returns {React.JSX.Element}
+ * Visualizes lifecycle stage distribution, lifecycle stages, and conversion metrics.
  */
 export default function ContactReport(_props: { onEditVisual?: (config: unknown) => void } = {}) {
   const contacts = useLiveCollection<Contact>("contacts", CONTACTS);
@@ -39,18 +33,12 @@ export default function ContactReport(_props: { onEditVisual?: (config: unknown)
   const students = useLiveCollection<Student>("students", STUDENTS);
 
   const stageDistribution = useMemo<ContactStageItem[]>(() => {
-    const counts: Record<string, { count: number; totalHealth: number }> = {};
+    const counts: Record<string, number> = {};
     contacts.forEach(c => {
       const s = c.lifecycleStage || "Lead";
-      if (!counts[s]) counts[s] = { count: 0, totalHealth: 0 };
-      counts[s].count++;
-      counts[s].totalHealth += calculateProfileHealth(c);
+      counts[s] = (counts[s] || 0) + 1;
     });
-    return Object.entries(counts).map(([stage, data]) => ({
-      stage,
-      count: data.count,
-      health: Math.round(data.totalHealth / data.count)
-    }));
+    return Object.entries(counts).map(([stage, count]) => ({ stage, count }));
   }, [contacts]);
 
   const stages = useMemo<LifecycleStageItem[]>(() => {
@@ -59,18 +47,15 @@ export default function ContactReport(_props: { onEditVisual?: (config: unknown)
       const s = c.lifecycleStage || "Lead";
       counts[s] = (counts[s] || 0) + 1;
     });
-    // For mock conversion we just use arbitrary but deterministic logic based on counts
     return Object.entries(counts).map(([stage, count]) => ({
       stage,
       count,
-      conversionRate: Math.min(100, Math.round((count / contacts.length) * 200)) // simulated
+      conversionRate: Math.min(100, Math.round((count / contacts.length) * 200))
     }));
   }, [contacts]);
 
   const totalContacts = contacts.length;
-  const avgHealth = totalContacts > 0 
-    ? Math.round(contacts.reduce((s, c) => s + calculateProfileHealth(c), 0) / totalContacts)
-    : 0;
+  const activeContacts = contacts.filter((c) => c.isActive !== false).length;
 
   const leads = contacts.filter((c) => (c.lifecycleStage || "Lead") === "Lead").length;
   const conversionRate = totalContacts > 0 ? Math.round(((totalContacts - leads) / totalContacts) * 100) : 0;
@@ -80,16 +65,14 @@ export default function ContactReport(_props: { onEditVisual?: (config: unknown)
 
   return (
     <div className="space-y-6 text-left p-4">
-      {/* KPI Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <ReportSummaryCard icon={Users} label="Total CRM Identity" value={totalContacts} color="primary" />
-        <ReportSummaryCard icon={ShieldCheck} label="Avg Profile Health" value={`${avgHealth}%`} color="green" />
+        <ReportSummaryCard icon={UserCheck} label="Active Contacts" value={activeContacts} color="green" />
         <ReportSummaryCard icon={Target} label="Lead Conversion" value={`${conversionRate}%`} color="violet" />
         <ReportSummaryCard icon={TrendingUp} label="Retention Rate" value={`${retentionRate}%`} color="amber" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Lifecycle Stage Distribution Pie */}
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-4 shadow-sm">
           <h3 className="text-sm font-bold text-foreground">Lifecycle Stage Distribution</h3>
           <div className="h-[250px] w-full">
@@ -116,7 +99,6 @@ export default function ContactReport(_props: { onEditVisual?: (config: unknown)
           </div>
         </div>
 
-        {/* Lifecycle Conversion Bar */}
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-4 shadow-sm">
           <h3 className="text-sm font-bold text-foreground">Lifecycle Stage Conversion</h3>
           <div className="h-[250px] w-full">
@@ -133,38 +115,26 @@ export default function ContactReport(_props: { onEditVisual?: (config: unknown)
         </div>
       </div>
 
-      {/* Health by Lifecycle Stage Table */}
       <div className="space-y-4">
         <ReportExportBar 
-          title="Database Integrity Report" 
+          title="Stage Distribution Report" 
           data={stageDistribution}
-          headers={["Stage", "Count", "Avg Health"]}
+          headers={["Stage", "Count"]}
         />
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 border-b border-border/50">
               <tr>
-                {["Stage", "Count", "Avg Health", "Completeness"].map((h) => (
+                {["Stage", "Count"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50 bg-transparent">
-              {stageDistribution.map((p, i) => (
+              {stageDistribution.map((p) => (
                 <tr key={p.stage} className="hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-4 font-bold text-foreground">{p.stage}</td>
                   <td className="px-4 py-4 text-muted-foreground font-medium">{p.count}</td>
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-2">
-                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                       <span className="font-bold">{p.health}%</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 w-48">
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                       <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${p.health}%`, backgroundColor: COLORS[i % COLORS.length] }} />
-                    </div>
-                  </td>
                 </tr>
               ))}
             </tbody>

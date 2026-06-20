@@ -2,11 +2,19 @@ import React, { useState, useMemo, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2 } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
+import {
+  parsePhoneNumber,
+  getPrimaryPhone,
+  hasWhatsApp,
+  Contact,
+  PhoneNumber,
+} from "@mms/shared";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import useTranslation from "@/hooks/useTranslation";
 import usePermissions from "@/hooks/usePermissions";
 import { useContacts, useContactsCollection } from "@/hooks/useContacts";
 import { useContactsPageActions } from "@/hooks/useContactsPageActions";
+import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import PageHeader from "../components/ui/PageHeader";
@@ -15,32 +23,22 @@ import SubTabBar from "@/components/ui/SubTabBar";
 import ActionButton from "../components/ui/ActionButton";
 import ContactsTable from "../components/contacts/ContactsTable";
 import ContactsToolbar from "../components/contacts/ContactsToolbar";
-import ContactStatsBar from "../components/contacts/ContactStatsBar";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
-const ContactForm          = lazy(() => import("../components/contacts/ContactForm"));
-const DuplicateDetection   = lazy(() => import("../components/contacts/DuplicateDetection"));
-const WhatsAppPanel        = lazy(() => import("../components/contacts/WhatsAppPanel"));
-const SmsPanel             = lazy(() => import("../components/contacts/SmsPanel"));
-const ContactsSettingsPanel = lazy(() => import("../components/contacts/ContactsSettingsPanel"));
-const ContactSyncPanel     = lazy(() => import("../components/contacts/ContactSyncPanel"));
 
-function LazyFallback() {
+const ContactForm = lazy(() => import("../components/contacts/ContactForm"));
+const DuplicateDetection = lazy(() => import("../components/contacts/DuplicateDetection"));
+const WhatsAppPanel = lazy(() => import("../components/contacts/WhatsAppPanel"));
+const SmsPanel = lazy(() => import("../components/contacts/SmsPanel"));
+const ContactsSettingsPanel = lazy(() => import("../components/contacts/ContactsSettingsPanel"));
+const ContactSyncPanel = lazy(() => import("../components/contacts/ContactSyncPanel"));
+
+function LazyFallback(): React.JSX.Element {
   return (
     <div className="flex items-center justify-center py-12">
       <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
     </div>
   );
 }
-import {
-  useContactConfig, useContactColumns, calculateProfileHealth
-} from '@/lib/contexts/ContactConfigContext';
-import {
-  parsePhoneNumber,
-  getPrimaryPhone,
-  hasWhatsApp,
-  Contact,
-  PhoneNumber,
-} from "@mms/shared";
 
 function TableSkeleton({ rows = 6, cols = 5 }) {
   return (
@@ -209,13 +207,8 @@ function ContactsInner() {
       let av: string | number = "";
       let bv: string | number = "";
 
-      if (sortField === "profileHealth") {
-        av = calculateProfileHealth(a);
-        bv = calculateProfileHealth(b);
-      } else {
-        av = typeof a[sortField] === "number" ? (a[sortField] as number) : String(a[sortField] || "").toLowerCase();
-        bv = typeof b[sortField] === "number" ? (b[sortField] as number) : String(b[sortField] || "").toLowerCase();
-      }
+      av = typeof a[sortField] === "number" ? (a[sortField] as number) : String(a[sortField] || "").toLowerCase();
+      bv = typeof b[sortField] === "number" ? (b[sortField] as number) : String(b[sortField] || "").toLowerCase();
 
       if (typeof av === "number" && typeof bv === "number") {
         return sortDir === "asc" ? av - bv : bv - av;
@@ -270,10 +263,10 @@ function ContactsInner() {
   }, [canWrite, updateContact]);
 
   const handleExportCSV = () => {
-    const headers = visibleColumns.map((c) => c.label);
+    const headers = tableColumns.map((c) => c.label);
     const rows = [headers];
     filtered.forEach((c) => {
-      const row = visibleColumns.map(({ id }) => {
+      const row = tableColumns.map(({ id }) => {
         if (id === "name") return c.name || "";
         if (id === "phone") return getPrimaryPhone(c) || "";
         if (id === "email") return (c.emails || [])[0]?.address || (c.email as string) || "";
@@ -295,8 +288,6 @@ function ContactsInner() {
   };
 
   const clearFilters = useCallback(() => { setFilterGender(""); setSearch(""); }, []);
-
-  const visibleColumns = tableColumns;
 
   return (
     <div className="max-w-7xl mx-auto space-y-4">
@@ -328,8 +319,6 @@ function ContactsInner() {
       <AnimatePresence mode="wait">
         {activeTab === "work" ? (
           <motion.div key="work" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-            <ContactStatsBar contacts={contacts} />
-
             <ErrorBoundary>
               <ContactsToolbar
                 search={search}             onSearchChange={setSearch}
@@ -401,7 +390,7 @@ function ContactsInner() {
             <AnimatePresence mode="wait">
               {isContactsLoading ? (
                 <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <TableSkeleton rows={6} cols={visibleColumns.length} />
+                  <TableSkeleton rows={6} cols={tableColumns.length} />
                 </motion.div>
               ) : (
                 <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
@@ -425,7 +414,7 @@ function ContactsInner() {
                         onWhatsApp={(targets) => setWhatsappTargets(targets as Contact[])}
                         onSms={(targets) => setSmsTargets(targets as Contact[])}
                         sortField={sortField} sortDir={sortDir} onSort={handleSort}
-                        columns={visibleColumns}
+                        columns={tableColumns}
                         allContacts={contacts}
                         onUpdateContact={handleUpdateContact}
                         canWrite={canWrite}

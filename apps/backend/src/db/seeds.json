@@ -32597,14 +32597,6 @@
           "fixed": true
         },
         {
-          "key": "profileHealth",
-          "label": "Profile Health",
-          "enabled": true,
-          "order": 1,
-          "sortable": true,
-          "width": 100
-        },
-        {
           "key": "gender",
           "label": "Gender",
           "enabled": true,
@@ -33102,14 +33094,6 @@
           "sortable": true,
           "width": 0,
           "fixed": true
-        },
-        {
-          "key": "profileHealth",
-          "label": "Profile Health",
-          "enabled": true,
-          "order": 1,
-          "sortable": true,
-          "width": 100
         },
         {
           "key": "gender",

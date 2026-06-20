@@ -103,7 +103,6 @@ export interface Contact {
   relationships?: ContactRelationship[];
   activities?: ContactActivity[];
   attachments?: ContactAttachment[];
-  profileHealth?: number;
   aiSummary?: string;
   [key: string]: unknown;
 }
@@ -353,7 +352,6 @@ export const DEFAULT_UI_STRINGS: Record<string, string> = {
   notRegisteredWhatsApp: "Not registered on WhatsApp",
   yes: "Yes",
   no: "No",
-  profileHealth: "Profile Health",
   crmRating: "CRM Rating",
   whatsapp: "WhatsApp",
   sms: "SMS",
@@ -371,9 +369,6 @@ export const DEFAULT_UI_STRINGS: Record<string, string> = {
   saving: "Saving…",
   saved: "Saved!",
   progress: "Progress",
-  profileIntelligence: "Profile Intelligence",
-  verified: "Verified",
-  incomplete: "Incomplete",
   aiIntelligence: "AI Intelligence",
   quietTimeline: "Quiet Timeline",
   cloudStorageRepository: "Cloud Storage Repository",
@@ -464,14 +459,6 @@ export const DEFAULT_UI_STRINGS: Record<string, string> = {
   outOf5Stars: "out of 5 stars",
   required: "Required",
   percentSymbol: "%",
-  totalContacts: "Total Contacts",
-  activeProfiles: "Active Profiles",
-  databaseHealth: "Database Health",
-  completeLabel: "Complete",
-  partialLabel: "Partial",
-  staleLabel: "Stale",
-  whatsappActive: "WhatsApp Active",
-  verifiedPhones: "Verified Phones",
   columnsLabel: "Columns",
   visibleAndOrder: "Visible & Order",
   hidden: "Hidden",
@@ -589,12 +576,6 @@ export const DEFAULT_UI_STRINGS: Record<string, string> = {
   yearsOld: "years old",
   otherGroup: "Other",
   systemUser: "System",
-  healthColorHigh: "hsl(var(--success))",
-  healthColorMedium: "hsl(var(--warning))",
-  healthColorLow: "hsl(var(--destructive))",
-  healthClassHigh: "text-success",
-  healthClassMedium: "text-warning",
-  healthClassLow: "text-destructive",
   defaultAiSummary: "AI summary will appear here once more activities are logged.",
   whatsappActiveClass: "bg-success/10 text-success border-success/30 hover:bg-success/20",
   whatsappDisabledClass: "opacity-40 cursor-not-allowed bg-muted/50 text-muted-foreground",
@@ -672,9 +653,6 @@ export const DEFAULT_UI_STRINGS: Record<string, string> = {
   customFieldsDesc: "Add your own fields. They appear below the built-in fields in this tab.",
   addField: "Add Field",
   filters: "Filters",
-  healthBgHigh: "bg-success",
-  healthBgMedium: "bg-warning",
-  healthBgLow: "bg-destructive",
   ratingActiveText: "text-amber-500 font-bold",
   ratingInactiveText: "text-muted-foreground/30 font-light",
   googleContacts: "Google Contacts",
@@ -812,13 +790,12 @@ export const DEFAULT_SETTINGS_SUB_TABS: TabDefinition[] = [
 
 export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "name",           label: "Name",           enabled: true,  order: 0, sortable: true,  width: 0,   fixed: true },
-  { key: "profileHealth",  label: "Profile Health", enabled: true,  order: 1, sortable: true,  width: 100 },
-  { key: "gender",         label: "Gender",         enabled: true,  order: 2, sortable: true,  width: 100 },
-  { key: "lifecycleStage", label: "Stage",          enabled: true,  order: 3, sortable: true,  width: 120 },
-  { key: "phone",          label: "Phone",          enabled: true,  order: 4, sortable: false,  width: 140 },
-  { key: "whatsapp",       label: "WhatsApp",       enabled: true,  order: 5, sortable: false,  width: 90  },
-  { key: "email",          label: "Email",          enabled: false, order: 6, sortable: false, width: 180 },
-  { key: "city",           label: "City",           enabled: false, order: 7, sortable: true,  width: 110 },
-  { key: "dob",            label: "Date of Birth",  enabled: false, order: 8, sortable: true,  width: 130 },
-  { key: "rating",         label: "Rating",         enabled: false, order: 9, sortable: true,  width: 80  },
+  { key: "gender",         label: "Gender",         enabled: true,  order: 1, sortable: true,  width: 100 },
+  { key: "lifecycleStage", label: "Stage",          enabled: true,  order: 2, sortable: true,  width: 120 },
+  { key: "phone",          label: "Phone",          enabled: true,  order: 3, sortable: false, width: 140 },
+  { key: "whatsapp",       label: "WhatsApp",       enabled: true,  order: 4, sortable: false, width: 90  },
+  { key: "email",          label: "Email",          enabled: false, order: 5, sortable: false, width: 180 },
+  { key: "city",           label: "City",           enabled: false, order: 6, sortable: true,  width: 110 },
+  { key: "dob",            label: "Date of Birth",  enabled: false, order: 7, sortable: true,  width: 130 },
+  { key: "rating",         label: "Rating",         enabled: false, order: 8, sortable: true,  width: 80  },
 ];

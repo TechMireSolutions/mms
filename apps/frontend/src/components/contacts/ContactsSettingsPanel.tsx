@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Check, Save, Info, Users, Layout } from "lucide-react";
 import {
   TAB_REGISTRY, DEFAULT_ENABLED_TABS, DEFAULT_REQUIRED_TABS,
@@ -137,10 +137,10 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
     }
   });
 
-  const [localUiStrings, setLocalUiStrings] = useState<Record<string, string>>(() => ({
-    ...DEFAULT_UI_STRINGS,
-    ...(config.uiStrings || {}),
-  }));
+  const localUiStrings = useMemo(
+    () => ({ ...DEFAULT_UI_STRINGS, ...(config.uiStrings || {}) }),
+    [config.uiStrings],
+  );
 
   const [saved, setSaved] = useState<boolean>(false);
   const updPref = <K extends keyof ContactPrefs>(k: K, v: ContactPrefs[K]): void => {

@@ -11,7 +11,7 @@ import { CONTACTS } from '@/lib/data/contactsData';
 import { Contact } from "../../lib/contactFields";
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import { useContactConfig, calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
+import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 
 interface ComparisonDataItem {
   metric: string;
@@ -43,11 +43,6 @@ function getContactCompData(contacts: Contact[], filterA: (c: Contact) => boolea
     return Math.round((nonLeads / list.length) * 100);
   };
 
-  const calcHealth = (list: Contact[]) => {
-    if (list.length === 0) return 0;
-    return Math.round(list.reduce((s: number, c: Contact) => s + calculateProfileHealth(c), 0) / list.length);
-  };
-
   const calcRating = (list: Contact[]) => {
     if (list.length === 0) return 0;
     const withRating = list.filter(c => typeof c.rating === "number");
@@ -58,7 +53,6 @@ function getContactCompData(contacts: Contact[], filterA: (c: Contact) => boolea
   return [
     { metric: "Total Volume",  a: setA.length, b: setB.length },
     { metric: "Conversion%",   a: calcConversion(setA), b: calcConversion(setB) },
-    { metric: "Avg Health%",    a: calcHealth(setA), b: calcHealth(setB) },
     { metric: "Engagement",    a: calcRating(setA), b: calcRating(setB) },
     { metric: "Active Status", a: setA.filter(c => c.isActive !== false).length, b: setB.filter(c => c.isActive !== false).length },
   ];
