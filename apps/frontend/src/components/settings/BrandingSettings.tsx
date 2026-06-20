@@ -121,6 +121,13 @@ export default function BrandingSettings(): React.JSX.Element {
               purpose="logo"
               onChange={(url) => upd('logoUrl', url)}
               onClear={() => upd('logoUrl', '')}
+              onBrandColorsExtracted={(colors) => {
+                upd('primaryColor', colors.primaryColor);
+                upd('secondaryColor', colors.secondaryColor);
+                notify.success(t('branding.logoColorsApplied'), {
+                  description: t('branding.logoColorsAppliedDesc'),
+                });
+              }}
             />
             <ImageUploadField
               id="branding-favicon"

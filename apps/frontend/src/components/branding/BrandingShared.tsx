@@ -9,6 +9,7 @@ import {
   IMAGE_UPLOAD_MAX_INPUT_BYTES,
   IMAGE_UPLOAD_PRESETS,
   mergeBrandingSettings,
+  prepareImageForUpload,
   type AppTranslationKey,
   type BrandingSettings,
   type BrandingSocialLink,
@@ -19,7 +20,7 @@ import { saveBrandingSettings } from '@/lib/db';
 import { getScopedBrandingSettings } from '@/lib/settingsPreviewStore';
 import useTranslation from '@/hooks/useTranslation';
 import { extractLogoBrandColors } from '@/lib/extractLogoBrandColors';
-import { uploadUserImage } from '@/lib/imageUpload';
+import { uploadImageFile } from '@/lib/imageUpload';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,18 +51,6 @@ export function loadBranding(): BrandingSettings {
   }
 
   return getScopedBrandingSettings();
-}
-
-function readBlobAsDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      if (typeof ev.target?.result === 'string') resolve(ev.target.result);
-      else reject(new Error('Failed to read image'));
-    };
-    reader.onerror = () => reject(reader.error ?? new Error('Failed to read image'));
-    reader.readAsDataURL(blob);
-  });
 }
 
 interface FieldHintProps {
@@ -126,13 +115,19 @@ export function ImageUploadField({
     setError(null);
     setUploading(true);
     try {
+      const optimized = await prepareImageForUpload(file, resolvedPurpose);
+
       if (onBrandColorsExtracted) {
-        const sourceDataUrl = await readBlobAsDataUrl(file);
-        const colors = await extractLogoBrandColors(sourceDataUrl);
-        if (colors) onBrandColorsExtracted(colors);
+        const previewUrl = URL.createObjectURL(optimized);
+        try {
+          const colors = await extractLogoBrandColors(previewUrl);
+          if (colors) onBrandColorsExtracted(colors);
+        } finally {
+          URL.revokeObjectURL(previewUrl);
+        }
       }
 
-      const url = await uploadUserImage(file, resolvedPurpose);
+      const url = await uploadImageFile(optimized, resolvedPurpose);
       onChange(url);
     } catch {
       setError(t('branding.imageErrorUpload'));
@@ -220,7 +215,7 @@ export function ImageUploadField({
           ref={inputRef}
           id={id}
           type="file"
-          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+          accept="image/png,image/jpeg,image/webp,image/avif,image/svg+xml"
           className="sr-only"
           onChange={(e) => {
             const file = e.target.files?.[0];

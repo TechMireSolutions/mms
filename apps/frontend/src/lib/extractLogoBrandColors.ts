@@ -47,6 +47,25 @@ function normalizeImageSource(src: string): string {
   return resolveApiUrl(trimmed);
 }
 
+function inferImageMimeFromUrl(url: string): string | null {
+  const path = url.split('?')[0]?.toLowerCase() ?? '';
+  if (path.endsWith('.avif')) return 'image/avif';
+  if (path.endsWith('.webp')) return 'image/webp';
+  if (path.endsWith('.png')) return 'image/png';
+  if (path.endsWith('.jpg') || path.endsWith('.jpeg')) return 'image/jpeg';
+  if (path.endsWith('.svg')) return 'image/svg+xml';
+  return null;
+}
+
+function normalizeFetchedImageBlob(blob: Blob, url: string): Blob {
+  if (blob.type.startsWith('image/')) return blob;
+  const inferred = inferImageMimeFromUrl(url);
+  if (!inferred) {
+    throw new Error('Invalid image payload');
+  }
+  return new Blob([blob], { type: inferred });
+}
+
 /** Fetches server-stored AVIF/WebP logos as a blob URL so canvas sampling is not tainted in dev. */
 async function resolveImageLoadSource(
   src: string,
@@ -65,11 +84,7 @@ async function resolveImageLoadSource(
     throw new Error('Failed to fetch image for colour extraction');
   }
 
-  const blob = await response.blob();
-  if (!blob.type.startsWith('image/')) {
-    throw new Error('Invalid image payload');
-  }
-
+  const blob = normalizeFetchedImageBlob(await response.blob(), normalized);
   const objectUrl = URL.createObjectURL(blob);
   return { src: objectUrl, revoke: () => URL.revokeObjectURL(objectUrl) };
 }
