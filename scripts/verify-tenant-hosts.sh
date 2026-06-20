@@ -124,15 +124,20 @@ else
 fi
 echo ""
 
-# Always probe a random slug — catches wildcard DNS/TLS for future madrasas too.
+# Random probe only when the cert includes *.APP_DOMAIN (wildcard TLS).
 PROBE_SLUG="tenant-probe-${RANDOM}"
 TENANT_HOSTS=()
-if [[ ${#ALL_SUBDOMAINS[@]:-0} -gt 0 ]]; then
+if [[ ${#ALL_SUBDOMAINS[@]} -gt 0 ]]; then
   for slug in "${ALL_SUBDOMAINS[@]}"; do
     TENANT_HOSTS+=("${slug}.${APP_DOMAIN}")
   done
 fi
-TENANT_HOSTS+=("${PROBE_SLUG}.${APP_DOMAIN}")
+CERT_FILE="/etc/letsencrypt/live/${APP_DOMAIN}/fullchain.pem"
+if [[ -f "$CERT_FILE" ]] && openssl x509 -in "$CERT_FILE" -noout -ext subjectAltName 2>/dev/null | grep -qF "DNS:*.${APP_DOMAIN}"; then
+  TENANT_HOSTS+=("${PROBE_SLUG}.${APP_DOMAIN}")
+else
+  warn "No wildcard TLS (*.${APP_DOMAIN}) — skipping random tenant probe (add new tenants to cert with certbot --expand)"
+fi
 
 if [[ ${#TENANT_HOSTS[@]} -gt 0 ]]; then
   echo "── Public HTTPS (all tenants + probe — must not redirect off-platform) ──"

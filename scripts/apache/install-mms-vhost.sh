@@ -73,9 +73,14 @@ if [[ -d "$CERT_DIR" ]]; then
   if command -v openssl >/dev/null 2>&1; then
     CERT_SANS="$(openssl x509 -in "${CERT_DIR}/fullchain.pem" -noout -ext subjectAltName 2>/dev/null || true)"
     if ! echo "$CERT_SANS" | grep -qF "DNS:*.${APP_DOMAIN}"; then
-      echo "ERROR: cert at ${CERT_DIR} lacks DNS:*.${APP_DOMAIN}"
-      echo "       Tenant subdomains will route to the default SSL site (e.g. Moodle → edu.aabtaab.com)."
-      echo "       Fix: bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
+      if echo "$CERT_SANS" | grep -qF ".${APP_DOMAIN}"; then
+        echo "WARNING: cert lacks wildcard DNS:*.${APP_DOMAIN} (named tenant SANs only)"
+        echo "         Registered tenants work; new madrasas need: certbot --expand --apache -d slug.${APP_DOMAIN}"
+      else
+        echo "ERROR: cert at ${CERT_DIR} lacks DNS:*.${APP_DOMAIN}"
+        echo "       Tenant subdomains will route to the default SSL site (e.g. Moodle → edu.aabtaab.com)."
+        echo "       Fix: bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
+      fi
       if [[ "${MMS_REQUIRE_WILDCARD_TLS:-}" == "1" ]]; then
         exit 1
       fi

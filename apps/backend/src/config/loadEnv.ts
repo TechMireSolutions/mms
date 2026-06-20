@@ -9,24 +9,25 @@ export function resolveBackendRoot(): string {
 }
 
 /**
- * Loads env files for the backend package. Merges repo-root `.env` then
- * `apps/backend/.env` so PM2 can use either cwd without losing JWT_SECRET.
+ * Loads env files for the backend package. Repo-root `.env` loads first;
+ * `apps/backend/.env` loads last with override so deploy secrets win.
  */
 export function loadBackendEnv(): void {
   const backendRoot = resolveBackendRoot();
   const repoRoot = resolve(backendRoot, '..', '..');
-  const candidates = [
-    join(repoRoot, '.env'),
-    join(backendRoot, '.env'),
-    resolve(process.cwd(), '.env'),
-    resolve(process.cwd(), 'apps/backend/.env'),
+  const backendEnvPath = join(backendRoot, '.env');
+  const candidates: Array<{ path: string; override: boolean }> = [
+    { path: join(repoRoot, '.env'), override: false },
+    { path: resolve(process.cwd(), '.env'), override: false },
+    { path: resolve(process.cwd(), 'apps/backend/.env'), override: false },
+    { path: backendEnvPath, override: true },
   ];
 
   const loaded = new Set<string>();
-  for (const path of candidates) {
+  for (const { path, override } of candidates) {
     const normalized = resolve(path);
     if (loaded.has(normalized) || !existsSync(normalized)) continue;
     loaded.add(normalized);
-    dotenv.config({ path: normalized });
+    dotenv.config({ path: normalized, override });
   }
 }

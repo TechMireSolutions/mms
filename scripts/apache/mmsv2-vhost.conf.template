@@ -27,7 +27,7 @@
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 
     ProxyPreserveHost On
-    RequestHeader set X-Forwarded-Host expr=%{HTTP_HOST}
+    RequestHeader unset X-Forwarded-Host
     RequestHeader set X-Forwarded-Proto "https"
 
     ProxyPass / http://127.0.0.1:@@BACKEND_PORT@@/
