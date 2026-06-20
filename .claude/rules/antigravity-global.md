@@ -9,6 +9,7 @@ description: Antigravity agent cognition, behaviour, output economy, security, a
 - **Plan:** Output a concise `<plan>` before structural or multi-file changes.
 - **Check:** Search the workspace (especially `@mms/shared`) before writing new logic.
 - **Type-check:** Verify types against schemas and `@mms/shared` before emitting code.
+- **Review:** On code edits, completion review per `mms-completion-review.md` — fix bugs before done.
 
 ## Behaviour
 

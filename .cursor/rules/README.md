@@ -2,7 +2,7 @@
 
 Project rules for the Madrasa Management System. Cursor loads `.mdc` files from this directory automatically.
 
-## Always applied (5)
+## Always applied (6)
 
 | Rule | Purpose |
 |------|---------|
@@ -11,6 +11,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-migration-status.mdc` | Target vs current gaps + recently resolved — do not regress |
 | `mms-dependencies.mdc` | Latest stable Node, pnpm, and workspace dependency upgrades |
 | `mms-dry.mdc` | DRY — single source of truth, extraction thresholds, duplication bans |
+| `mms-completion-review.mdc` | Self-review after code edits — verify, fix bugs, then mark done |
 
 ## Canonical ownership (avoid duplicating elsewhere)
 
