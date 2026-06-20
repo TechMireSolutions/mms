@@ -3,7 +3,6 @@ import { GraduationCap, BookOpen, Users, Clock } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { Session } from '@/lib/data/sessionsData';
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useTeachersCollection } from '@/hooks/useTeachers';
 import { teacherNameById } from '@/lib/teachers/teacherAssignment';

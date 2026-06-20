@@ -1,11 +1,8 @@
 import React, { useMemo } from "react";
 import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { AttendanceRecord } from '@/lib/data/attendanceData';
-import { Session } from '@/lib/data/sessionsData';
 import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
 import { useSessionsCollection } from "@/hooks/useSessions";
-import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
 import EmptyState from "../ui/EmptyState";

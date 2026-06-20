@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Filter, ChevronDown, ChevronUp, X, Calendar } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
 import { useSessionsCollection } from "@/hooks/useSessions";
-import { type Session } from '@/lib/data/sessionsData';
 
 const STATUSES: string[] = ["all", "active", "inactive", "completed"];
 

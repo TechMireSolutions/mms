@@ -9,7 +9,6 @@ import {
 } from "recharts";
 import { CONTACTS } from '@/lib/data/contactsData';
 import { Contact } from "../../lib/contactFields";
-import { Session } from '@/lib/data/sessionsData';
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useContactConfig, calculateProfileHealth } from '@/lib/contexts/ContactConfigContext';
