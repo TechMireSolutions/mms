@@ -87,7 +87,7 @@ echo ""
 # ── Apache vhost ─────────────────────────────────────────────────────────────
 echo "── Apache ──"
 VHOST=""
-for candidate in /etc/apache2/sites-enabled/000-mmsv2.conf /etc/apache2/sites-enabled/mmsv2.conf; do
+for candidate in /etc/apache2/sites-enabled/000-mmsv2.conf /etc/apache2/sites-enabled/z-mmsv2.conf /etc/apache2/sites-enabled/mmsv2.conf; do
   if [[ -f "$candidate" ]]; then
     VHOST="$candidate"
     break
