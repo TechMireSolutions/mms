@@ -68,18 +68,18 @@ report_setup_status() {
 }
 
 resolve_public_url() {
+  local app_domain
+  app_domain="$(read_env_var MMS_APP_DOMAIN '')"
+  if [[ -n "$app_domain" ]]; then
+    echo "https://${app_domain}"
+    return 0
+  fi
   local url="${MMS_API_URL:-}"
   if [[ -z "$url" ]]; then
     url="$(read_env_var MMS_API_URL '')"
   fi
-  if [[ -z "$url" && -n "${MMS_APP_DOMAIN:-}" ]]; then
-    url="https://${MMS_APP_DOMAIN}"
-  fi
-  if [[ -z "$url" ]]; then
-    url="$(read_env_var MMS_APP_DOMAIN '')"
-    if [[ -n "$url" && "$url" != http* ]]; then
-      url="https://${url}"
-    fi
+  if [[ -n "$url" && "$url" != http* ]]; then
+    url="https://${url}"
   fi
   echo "${url%/}"
 }
