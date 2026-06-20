@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { normalizeEnabledModules, SYSTEM_MODULES_BY_ID } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
 import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContext';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import ModuleSettingsNavGrid from '@/components/settings/modules/ModuleSettingsNavGrid';
-import SettingsConfirmResetModal from '@/components/settings/SettingsConfirmResetModal';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
 
 /**
@@ -12,8 +11,6 @@ import { SettingsPanel } from '@/components/ui/SettingsShell';
  */
 export default function SystemModulesSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
-  const [resetting, setResetting] = useState(false);
 
   const {
     data,
@@ -22,7 +19,6 @@ export default function SystemModulesSettings(): React.JSX.Element {
     saving,
     upd,
     handleSaveModules,
-    handleResetModules,
     clearSaved,
   } = useSettingsGlobalDraft();
 
@@ -38,16 +34,6 @@ export default function SystemModulesSettings(): React.JSX.Element {
     clearSaved();
   };
 
-  const confirmReset = async (): Promise<void> => {
-    setResetting(true);
-    try {
-      const ok = await handleResetModules();
-      if (ok) setConfirmResetOpen(false);
-    } finally {
-      setResetting(false);
-    }
-  };
-
   return (
     <SettingsPanel
       width="wide"
@@ -56,10 +42,8 @@ export default function SystemModulesSettings(): React.JSX.Element {
       saved={saved}
       footer={
         <SettingsFormActions
-          resetLabel={t('module.system.resetModules')}
           saveLabel={t('module.system.save')}
           savingLabel={t('module.system.saving')}
-          onReset={() => setConfirmResetOpen(true)}
           onSave={() => void handleSaveModules()}
           dirty={isModulesDirty}
           saving={saving}
@@ -68,16 +52,6 @@ export default function SystemModulesSettings(): React.JSX.Element {
       }
     >
       <ModuleSettingsNavGrid enabledModules={enabledModules} onToggleModule={updModule} />
-
-      <SettingsConfirmResetModal
-        open={confirmResetOpen}
-        onClose={() => setConfirmResetOpen(false)}
-        onConfirm={confirmReset}
-        titleKey="module.system.confirmResetTitle"
-        descKey="module.system.confirmResetDesc"
-        warningKey="module.system.resetWarning"
-        loading={resetting}
-      />
     </SettingsPanel>
   );
 }

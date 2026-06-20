@@ -7,6 +7,7 @@ import {
   UserCheck, ClipboardEdit, BookOpen, BarChart2,
   ShieldCheck, ClipboardList,
 } from "lucide-react";
+import { resolveModuleTierTab } from "@mms/shared";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
 import SubTabBar from "@/components/ui/SubTabBar";
@@ -95,11 +96,15 @@ export default function Attendance() {
     [t, canSeeAttendanceAnalytics],
   );
 
-  const effectiveTab = visibleTopTabs.find((t) => t.id === activeTab) ? activeTab : "work";
+  const effectiveTab = resolveModuleTierTab(
+    activeTab,
+    visibleTopTabs.map((tab) => tab.id),
+  );
   const effectiveOpsTab = visibleOperationsTabs.find((t) => t.id === activeOpsTab) ? activeOpsTab : (visibleOperationsTabs[0]?.id || "records");
   const effectiveAnalyticsTab = visibleAnalyticsTabs.find((t) => t.id === activeAnalyticsTab) ? activeAnalyticsTab : (visibleAnalyticsTabs[0]?.id || "reports");
 
   const renderContent = () => {
+    if (!effectiveTab) return null;
     if (effectiveTab === "setup") {
       return (
         <div className="space-y-4">

@@ -1,12 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Mail, Phone, Globe, MapPin, Share2, Building2, Type,
 } from 'lucide-react';
-import { resetBrandingIdentity } from '@mms/shared';
-import { saveBrandingSettings } from '@/lib/db';
-import { notify } from '@/lib/notify';
 import useTranslation from '@/hooks/useTranslation';
+import { notify } from '@/lib/notify';
 import { useSettingsBrandingDraft } from '@/lib/contexts/SettingsBrandingDraftContext';
-import SettingsConfirmResetModal from '@/components/settings/SettingsConfirmResetModal';
 import SectionCard from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,35 +24,8 @@ import {
  */
 export default function BrandingSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
-  const [resetting, setResetting] = useState(false);
-  const { data, isIdentityDirty, saved, saving, upd, handleSaveIdentity, applyPersisted } =
+  const { data, isIdentityDirty, saved, saving, upd, handleSaveIdentity } =
     useSettingsBrandingDraft();
-
-  const handleReset = async (): Promise<void> => {
-    const identityReset = resetBrandingIdentity(data);
-    try {
-      const result = await saveBrandingSettings(identityReset);
-      if (!result.ok) {
-        notify.error(t('branding.resetError'), { description: t('branding.resetErrorDesc') });
-        return;
-      }
-      applyPersisted(identityReset);
-      notify.success(t('branding.identityResetToast'), { description: t('branding.identityResetToastDesc') });
-    } catch {
-      notify.error(t('branding.resetError'), { description: t('branding.resetErrorDesc') });
-    }
-  };
-
-  const confirmReset = async (): Promise<void> => {
-    setResetting(true);
-    try {
-      await handleReset();
-      setConfirmResetOpen(false);
-    } finally {
-      setResetting(false);
-    }
-  };
 
   return (
     <SettingsPanel
@@ -65,10 +35,8 @@ export default function BrandingSettings(): React.JSX.Element {
       saved={saved}
       footer={
         <SettingsFormActions
-          resetLabel={t('branding.resetIdentity')}
           saveLabel={t('branding.save')}
           savingLabel={t('branding.saving')}
-          onReset={() => setConfirmResetOpen(true)}
           onSave={() =>
             void handleSaveIdentity({
               saveSuccessMessage: t('branding.savedToast'),
@@ -265,16 +233,6 @@ export default function BrandingSettings(): React.JSX.Element {
           <SocialLinksEditor links={data.socialLinks} onChange={(links) => upd('socialLinks', links)} />
         </SectionCard>
       </div>
-
-      <SettingsConfirmResetModal
-        open={confirmResetOpen}
-        onClose={() => setConfirmResetOpen(false)}
-        onConfirm={confirmReset}
-        titleKey="branding.confirmResetTitle"
-        descKey="branding.confirmResetDesc"
-        warningKey="branding.resetWarning"
-        loading={resetting}
-      />
     </SettingsPanel>
   );
 }

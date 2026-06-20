@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Check, RotateCcw, Save, Info, Users, Layout, Star, Search } from "lucide-react";
+import { Check, Save, Info, Users, Layout } from "lucide-react";
 import {
   TAB_REGISTRY, DEFAULT_ENABLED_TABS, DEFAULT_REQUIRED_TABS,
   FieldConfig, ContactPreferences, TabDefinition,
@@ -8,7 +8,6 @@ import {
   isModuleTierTabId, type AppTranslationKey,
 } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
-import { saveDefaultConfig, loadDefaultConfig } from "../../lib/contactFieldsStore";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/ContactDraggableFieldList";
@@ -72,7 +71,7 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
 interface ContactsSettingsPanelProps {
   config: FieldConfig;
   onConfigChange: (config: FieldConfig) => void;
-  mode?: "fields" | "preferences" | "uistrings";
+  mode?: "fields" | "preferences";
 }
 
 interface ContactPrefs extends ContactPreferences {
@@ -147,10 +146,11 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
     ...DEFAULT_UI_STRINGS,
     ...(config.uiStrings || {}),
   }));
-  const [uiStringsSearch, setUiStringsSearch] = useState<string>("");
   const [localFormTabs, setLocalFormTabs] = useState<TabDefinition[]>(() => config.formTabs || []);
   const [localDetailTabs, setLocalDetailTabs] = useState<TabDefinition[]>(() => config.detailTabs || []);
-  const [localSettingsSubTabs, setLocalSettingsSubTabs] = useState<TabDefinition[]>(() => config.settingsSubTabs || []);
+  const [localSettingsSubTabs, setLocalSettingsSubTabs] = useState<TabDefinition[]>(() =>
+    (config.settingsSubTabs || []).filter((tab) => tab.key !== "uistrings"),
+  );
 
   const updateTabProperty = (
     tabType: "page" | "form" | "detail" | "settings",
@@ -169,8 +169,6 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
   };
 
   const [saved, setSaved] = useState<boolean>(false);
-  const [savedDefault, setSavedDefault] = useState<boolean>(false);
-
   const updPref = <K extends keyof ContactPrefs>(k: K, v: ContactPrefs[K]): void => {
     setPrefs((p) => ({ ...p, [k]: v }));
     setSaved(false);
@@ -319,7 +317,7 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
       pageTabs: applyTitleCaseToTabs(localPageTabs),
       formTabs: applyTitleCaseToTabs(localFormTabs),
       detailTabs: applyTitleCaseToTabs(localDetailTabs),
-      settingsSubTabs: applyTitleCaseToTabs(localSettingsSubTabs),
+      settingsSubTabs: applyTitleCaseToTabs(localSettingsSubTabs.filter((tab) => tab.key !== "uistrings")),
       uiStrings: localUiStrings,
     };
     onConfigChange(cfg);
@@ -335,35 +333,11 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const handleReset = (): void => {
-    setEnabledTabs(new Set(DEFAULT_ENABLED_TABS));
-    setRequiredTabs(new Set(DEFAULT_REQUIRED_TABS));
-    setTabFieldEnabled(
-      Object.fromEntries(ALL_TABS.map((tabId) => [tabId, new Set((tabFields[tabId] || []).filter(f => f.enabled).map(f => f.key))]))
-    );
-    setTabFieldRequired(
-      Object.fromEntries(ALL_TABS.map((tabId) => [tabId, new Set((tabFields[tabId] || []).filter(f => f.required).map(f => f.key))]))
-    );
-    setTabFieldDefaultValues(Object.fromEntries(ALL_TABS.map((tabId) => [tabId, {}])));
-    setTabFieldPermissions(Object.fromEntries(ALL_TABS.map((tabId) => [tabId, {}])));
-    setTabFieldOrder(
-      Object.fromEntries(ALL_TABS.map((tabId) => [tabId, (tabFields[tabId] || []).map((f) => f.key)]))
-    );
-    const defaults = loadDefaultConfig();
-    setLocalPageTabs(defaults.pageTabs || []);
-    setLocalFormTabs(defaults.formTabs || []);
-    setLocalDetailTabs(defaults.detailTabs || []);
-    setLocalSettingsSubTabs(defaults.settingsSubTabs || []);
-    setLocalUiStrings(DEFAULT_UI_STRINGS);
-    setSaved(false);
-  };
-
   const isUniqueField = (tabId: string, fieldId: string): boolean =>
     tabFieldUnique[tabId]?.has(fieldId) || false;
 
   const showFields = mode === "fields";
   const showPrefs = mode === "preferences";
-  const showUiStrings = mode === "uistrings";
 
   const renderTabConfigList = (
     tabs: TabDefinition[],
@@ -658,78 +632,8 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
           </section>
         </>
       )}
-      {showUiStrings && (
-        <section className="space-y-4">
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info">
-            <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-info" />
-            <div>
-              <h3 className="font-semibold">{localUiStrings.customizeModuleUiText}</h3>
-              <p className="text-xs mt-0.5 text-info/90">
-                {localUiStrings.customizeModuleUiDescription}
-              </p>
-            </div>
-          </div>
 
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder={localUiStrings.searchUiStrings}
-              value={uiStringsSearch}
-              onChange={(e) => setUiStringsSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto pr-1 border border-border rounded-xl p-4 bg-card">
-            {Object.keys(DEFAULT_UI_STRINGS)
-              .filter((key) => {
-                const label = key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim();
-                const currentVal = localUiStrings[key] || "";
-                const defaultVal = DEFAULT_UI_STRINGS[key] || "";
-                const search = uiStringsSearch.toLowerCase();
-                return (
-                  label.toLowerCase().includes(search) ||
-                  key.toLowerCase().includes(search) ||
-                  currentVal.toLowerCase().includes(search) ||
-                  defaultVal.toLowerCase().includes(search)
-                );
-              })
-              .map((key) => {
-                const label = key
-                  .replace(/([A-Z])/g, " $1")
-                  .replace(/_/g, " ")
-                  .replace(/^\w/, (c) => c.toUpperCase())
-                  .trim();
-                return (
-                  <div key={key} className="space-y-1 text-left">
-                    <div className="flex justify-between items-baseline">
-                      <label className="text-xs font-semibold text-foreground" htmlFor={`ui-string-${key}`}>{label}</label>
-                      <span className="text-[9px] font-mono text-muted-foreground">{key}</span>
-                    </div>
-                    <input
-                      id={`ui-string-${key}`}
-                      type="text"
-                      value={localUiStrings[key] ?? ""}
-                      onChange={(e) => {
-                        setLocalUiStrings((prev) => ({ ...prev, [key]: e.target.value }));
-                        setSaved(false);
-                      }}
-                      className={FORM_INPUT}
-                      placeholder={DEFAULT_UI_STRINGS[key]}
-                    />
-                    <p className="text-[10px] text-muted-foreground italic">
-                      {localUiStrings.defaultPrefix} "{DEFAULT_UI_STRINGS[key]}"
-                    </p>
-                  </div>
-                );
-              })}
-          </div>
-        </section>
-      )}
-
-
-      {/* Save / reset */}
+      {/* Save */}
       <div className="flex items-center gap-3 pt-2 border-t border-border sticky bottom-0 bg-background pb-2 flex-wrap">
         <button
           type="button"
@@ -738,36 +642,6 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
         >
           <Save className="w-4 h-4" />
           <span>{saved ? localUiStrings.saved : localUiStrings.saveAndApply}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            saveDefaultConfig({
-              version: CONFIG_VERSION,
-              enabledTabs: Array.from(enabledTabs),
-              requiredTabs: Array.from(requiredTabs),
-              fields: buildFieldsMap(),
-              pageTabs: localPageTabs,
-              formTabs: localFormTabs,
-              detailTabs: localDetailTabs,
-              settingsSubTabs: localSettingsSubTabs,
-              uiStrings: localUiStrings,
-            });
-            setSavedDefault(true);
-            setTimeout(() => setSavedDefault(false), 2500);
-          }}
-          className="flex items-center gap-2 px-4 min-h-[44px] rounded-xl border border-warning/30 bg-warning/10 text-sm font-medium text-warning hover:bg-warning/20 transition-colors"
-        >
-          <Star className="w-4 h-4" />
-          <span>{savedDefault ? localUiStrings.setAsDefaultConfirm : localUiStrings.setAsDefault}</span>
-        </button>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="flex items-center gap-2 px-4 min-h-[44px] rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors bg-card"
-        >
-          <RotateCcw className="w-4 h-4" />
-          <span>{localUiStrings.resetToDefaults}</span>
         </button>
       </div>
     </div>

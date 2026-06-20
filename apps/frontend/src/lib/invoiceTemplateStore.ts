@@ -399,16 +399,6 @@ export function saveTemplate(tmpl: InvoiceTemplate): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tmpl));
 }
 
-/**
- * Resets the template config to seeded default values.
- *
- * @returns {InvoiceTemplate} The default template configuration.
- */
-export function resetTemplate(): InvoiceTemplate {
-  localStorage.removeItem(STORAGE_KEY);
-  return getDefaultTemplate();
-}
-
 export const AVAILABLE_FIELDS = [
   { field: "receipt_no",       label: "Receipt No" },
   { field: "received_date",    label: "Date" },

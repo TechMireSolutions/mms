@@ -61,7 +61,6 @@ const CONTACT_AR: Record<string, string> = {
   addEmailAddress: "إضافة بريد إلكتروني",
   addAddress: "إضافة عنوان",
   saveAndApply: "حفظ وتطبيق",
-  resetToDefaults: "إعادة للافتراضي",
 };
 
 const CONTACT_UR: Record<string, string> = {
@@ -123,7 +122,6 @@ const CONTACT_UR: Record<string, string> = {
   addEmailAddress: "ای میل شامل کریں",
   addAddress: "پتہ شامل کریں",
   saveAndApply: "محفوظ کریں اور لاگو کریں",
-  resetToDefaults: "ڈیفالٹ پر بحال کریں",
 };
 
 const CONTACT_FA: Record<string, string> = {

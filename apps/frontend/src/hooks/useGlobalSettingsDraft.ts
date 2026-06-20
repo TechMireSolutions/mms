@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  DEFAULT_GLOBAL_SETTINGS,
   applyDocumentLanguage,
   mergeGlobalSettings,
   normalizeEnabledModules,
@@ -36,8 +35,6 @@ export interface UseGlobalSettingsDraftResult {
   upd: <K extends keyof GlobalSettings>(field: K, value: GlobalSettings[K]) => void;
   handleSaveGlobal: (toast?: UseGlobalSettingsDraftSaveToast) => Promise<boolean>;
   handleSaveModules: (toast?: UseGlobalSettingsDraftSaveToast) => Promise<boolean>;
-  handleResetGlobal: () => Promise<boolean>;
-  handleResetModules: () => Promise<boolean>;
   applyPersisted: (next: GlobalSettings) => void;
   clearSaved: () => void;
 }
@@ -153,51 +150,6 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
     [data, flashSaved, t],
   );
 
-  const handleResetGlobal = useCallback(async (): Promise<boolean> => {
-    const current = getGlobalSettings();
-    const reset = mergeGlobalSettings({
-      ...DEFAULT_GLOBAL_SETTINGS,
-      enabledModules: current.enabledModules,
-      theme: current.theme,
-    });
-    const result = await saveGlobalSettingsAsync(reset);
-    if (!result.ok) {
-      notify.error(t('settings.serverSaveFailed'), {
-        description: t(serverSyncErrorKey(result.status)),
-      });
-      return false;
-    }
-    const nextData = retainModulesDraftAfterGlobalSave(reset, data);
-    setBaseline(reset);
-    setData(nextData);
-    clearGlobalSettingsPreview();
-    applyDocumentLanguage(reset.language);
-    clearSaved();
-    notify.success(t('global.resetToast'), { description: t('global.resetToastDesc') });
-    return true;
-  }, [clearSaved, data, t]);
-
-  const handleResetModules = useCallback(async (): Promise<boolean> => {
-    const persisted = mergeGlobalSettings({
-      ...getGlobalSettings(),
-      enabledModules: DEFAULT_GLOBAL_SETTINGS.enabledModules,
-    });
-    const result = await saveGlobalSettingsAsync(persisted);
-    if (!result.ok) {
-      notify.error(t('settings.serverSaveFailed'), {
-        description: t(serverSyncErrorKey(result.status)),
-      });
-      return false;
-    }
-    const nextData = retainGlobalDraftAfterModulesSave(persisted, data);
-    setBaseline(persisted);
-    setData(nextData);
-    clearGlobalSettingsPreview();
-    clearSaved();
-    notify.success(t('module.system.resetToast'), { description: t('module.system.resetToastDesc') });
-    return true;
-  }, [clearSaved, data, t]);
-
   return {
     data,
     baseline,
@@ -208,8 +160,6 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
     upd,
     handleSaveGlobal,
     handleSaveModules,
-    handleResetGlobal,
-    handleResetModules,
     applyPersisted,
     clearSaved,
   };

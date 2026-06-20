@@ -1,38 +1,36 @@
 import React from "react";
-import { Loader2, RotateCcw, Save } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface SettingsFormActionsProps {
-  resetLabel: string;
   saveLabel: string;
   savingLabel?: string;
-  onReset: () => void;
   onSave?: () => void;
   dirty?: boolean;
   saving?: boolean;
   saved?: boolean;
-  resetDisabled?: boolean;
   saveDisabled?: boolean;
   showSave?: boolean;
 }
 
 /**
- * Consistent Save + Reset actions for `/settings` panels.
+ * Consistent Save action for `/settings` panels.
  */
 export default function SettingsFormActions({
-  resetLabel,
   saveLabel,
   savingLabel,
-  onReset,
   onSave,
   dirty = false,
   saving = false,
   saved = false,
-  resetDisabled = false,
   saveDisabled = false,
   showSave = true,
 }: SettingsFormActionsProps): React.JSX.Element {
   const saveText = saving ? (savingLabel ?? saveLabel) : saveLabel;
+
+  if (!showSave || !onSave) {
+    return <></>;
+  }
 
   return (
     <div
@@ -44,27 +42,16 @@ export default function SettingsFormActions({
     >
       <button
         type="button"
-        onClick={onReset}
-        disabled={resetDisabled || saving}
-        className="flex min-h-[44px] items-center gap-2 rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+        onClick={onSave}
+        disabled={saveDisabled || !dirty || saving}
+        className={cn(
+          "flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50",
+          dirty && "ml-auto",
+        )}
       >
-        <RotateCcw className="h-3.5 w-3.5" />
-        <span>{resetLabel}</span>
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+        <span>{saveText}</span>
       </button>
-      {showSave && onSave ? (
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={saveDisabled || !dirty || saving}
-          className={cn(
-            "flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50",
-            dirty && "ml-auto",
-          )}
-        >
-          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-          <span>{saveText}</span>
-        </button>
-      ) : null}
     </div>
   );
 }

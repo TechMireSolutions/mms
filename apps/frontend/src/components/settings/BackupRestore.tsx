@@ -1,7 +1,6 @@
 import React from 'react';
-import { ListChecks, ShieldAlert } from 'lucide-react';
+import { ListChecks, ShieldAlert, Trash2 } from 'lucide-react';
 import SectionCard from '@/components/ui/SectionCard';
-import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import BackupRestoreConfirmModal from '@/components/settings/BackupRestoreConfirmModal';
 import BackupCredentialsModal from '@/components/settings/BackupCredentialsModal';
 import BackupClearHistoryModal from '@/components/settings/backup/BackupClearHistoryModal';
@@ -43,12 +42,16 @@ export default function BackupRestore(): React.JSX.Element {
       width="wide"
       introKey="settings.introBackup"
       footer={
-        <SettingsFormActions
-          resetLabel={t('backup.clearHistory')}
-          saveLabel={t('global.saveSettings')}
-          onReset={() => backup.setClearHistoryOpen(true)}
-          showSave={false}
-        />
+        <div className="flex w-full flex-wrap items-center gap-3 pt-1">
+          <button
+            type="button"
+            onClick={() => backup.setClearHistoryOpen(true)}
+            className="flex min-h-[44px] items-center gap-2 rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            <span>{t('backup.clearHistory')}</span>
+          </button>
+        </div>
       }
     >
       <p className="text-xs text-muted-foreground">{backup.workspaceNote}</p>

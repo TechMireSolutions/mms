@@ -5,11 +5,11 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { getObject } from "../../../lib/db";
 import {
-  Move, Trash2, Copy, RotateCcw, Save,
+  Move, Trash2, Copy, Save,
   AlignLeft, AlignCenter, AlignRight, Bold, Italic, Minus, Type, Undo2, Redo2, Eye, EyeOff,
 } from "lucide-react";
 import {
-  PAGE_SIZES, AVAILABLE_FIELDS, loadTemplate, saveTemplate, resetTemplate, InvoiceTemplate, TemplateElement, ElementStyle
+  PAGE_SIZES, AVAILABLE_FIELDS, loadTemplate, saveTemplate, InvoiceTemplate, TemplateElement, ElementStyle
 } from "../../../lib/invoiceTemplateStore";
 import { getPrintBrandingTokens, PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 
@@ -248,19 +248,11 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
     resizeState.current = { id, startX: e.clientX, startY: e.clientY, origW: el.w, origH: el.h };
   };
 
-  // ── Save / Reset ──────────────────────────────────────────────────────────
+  // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = () => {
     saveTemplate(template);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
-  };
-
-  const handleReset = () => {
-    if (!window.confirm("Reset to system default template? Your customizations will be lost.")) return;
-    const def = resetTemplate();
-    pushHistory(template);
-    setTemplate(def);
-    setSelectedId(null);
   };
 
   const handlePageSize = (ps: string) => {
@@ -400,10 +392,6 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
         </button>
 
         <div className="ml-auto flex items-center gap-2">
-          <button type="button" onClick={handleReset}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors">
-            <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> Reset Default
-          </button>
           <button type="button" onClick={handleSave}
             className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
             <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? "Saved!" : "Save Template"}

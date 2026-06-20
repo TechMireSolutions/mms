@@ -36,7 +36,7 @@ export default function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): R
     [t],
   );
 
-  const { data, dirty, saving, upd, handleSave, resetDraft } = useSettingsDraft({
+  const { data, dirty, saving, upd, handleSave } = useSettingsDraft({
     load,
     onPreview: () => {},
     onSave,
@@ -112,13 +112,7 @@ export default function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): R
       isDirty={dirty}
       footer={
         <SettingsFormActions
-          resetLabel={t('users.settingsReset')}
           saveLabel={t('users.settingsSave')}
-          onReset={() => {
-            saveObject('users_settings', DEFAULT_USERS_SETTINGS);
-            resetDraft();
-            notify.success(t('users.settingsResetToast'));
-          }}
           onSave={() => void handleSave()}
           dirty={dirty}
           saving={saving}

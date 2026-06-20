@@ -325,49 +325,6 @@ export function isBrandingFieldsDirty(
   );
 }
 
-/**
- * Resets institution identity to defaults while preserving theme colours and footer.
- */
-export function resetBrandingIdentity(current: BrandingSettings): BrandingSettings {
-  return mergeBrandingSettings({
-    ...current,
-    madrasaName: DEFAULT_BRANDING_SETTINGS.madrasaName,
-    tagline: DEFAULT_BRANDING_SETTINGS.tagline,
-    logoUrl: DEFAULT_BRANDING_SETTINGS.logoUrl,
-    faviconUrl: DEFAULT_BRANDING_SETTINGS.faviconUrl,
-    email: DEFAULT_BRANDING_SETTINGS.email,
-    phone: DEFAULT_BRANDING_SETTINGS.phone,
-    website: DEFAULT_BRANDING_SETTINGS.website,
-    legalName: DEFAULT_BRANDING_SETTINGS.legalName,
-    registrationNumber: DEFAULT_BRANDING_SETTINGS.registrationNumber,
-    addressLine1: DEFAULT_BRANDING_SETTINGS.addressLine1,
-    addressLine2: DEFAULT_BRANDING_SETTINGS.addressLine2,
-    city: DEFAULT_BRANDING_SETTINGS.city,
-    region: DEFAULT_BRANDING_SETTINGS.region,
-    postalCode: DEFAULT_BRANDING_SETTINGS.postalCode,
-    country: DEFAULT_BRANDING_SETTINGS.country,
-    socialLinks: [],
-  });
-}
-
-/**
- * Resets brand colours and footer copy to defaults while preserving institution identity
- * (name, logo, contact, address, social links, etc.).
- */
-export function resetBrandingAppearance(
-  current: BrandingSettings,
-  language: string,
-): BrandingSettings {
-  const name = current.madrasaName.trim() || DEFAULT_BRANDING_SETTINGS.madrasaName;
-  return mergeBrandingSettings({
-    ...current,
-    primaryColor: DEFAULT_BRANDING_SETTINGS.primaryColor,
-    secondaryColor: DEFAULT_BRANDING_SETTINGS.secondaryColor,
-    cornerStyle: DEFAULT_BRANDING_SETTINGS.cornerStyle,
-    footerText: formatBrandingFooterDefault(name, language),
-  });
-}
-
 function trimField(value: string | undefined, maxLen?: number): string {
   const trimmed = (value ?? '').trim();
   if (maxLen !== undefined && trimmed.length > maxLen) {

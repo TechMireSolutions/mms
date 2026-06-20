@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   normalizeModuleTierTabId,
+  resolveModuleTierTab,
   refreshModuleTierTabKeys,
   refreshModuleTierTabLabels,
 } from './moduleTierTabs.js';
@@ -12,6 +13,14 @@ describe('moduleTierTabs', () => {
     expect(normalizeModuleTierTabId('analytics')).toBe('reports');
     expect(normalizeModuleTierTabId('configuration')).toBe('setup');
     expect(normalizeModuleTierTabId('work')).toBe('work');
+    expect(normalizeModuleTierTabId('')).toBe('');
+  });
+
+  it('resolveModuleTierTab keeps collapsed and visible tabs', () => {
+    const visible = ['work', 'reports'] as const;
+    expect(resolveModuleTierTab('', visible)).toBe('');
+    expect(resolveModuleTierTab('work', visible)).toBe('work');
+    expect(resolveModuleTierTab('setup', visible)).toBe('');
   });
 
   it('upgrades legacy keys and English labels', () => {

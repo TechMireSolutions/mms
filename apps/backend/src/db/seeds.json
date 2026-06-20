@@ -32584,12 +32584,6 @@
           "label": "Sync (Google / Apple)",
           "enabled": true,
           "order": 2
-        },
-        {
-          "key": "uistrings",
-          "label": "UI Strings",
-          "enabled": true,
-          "order": 3
         }
       ],
       "columnRegistry": [
@@ -33097,12 +33091,6 @@
           "label": "Sync (Google / Apple)",
           "enabled": true,
           "order": 2
-        },
-        {
-          "key": "uistrings",
-          "label": "UI Strings",
-          "enabled": true,
-          "order": 3
         }
       ],
       "columnRegistry": [

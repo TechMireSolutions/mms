@@ -76,6 +76,7 @@ export default function Settings(): React.JSX.Element {
               activeTab={tab}
               onTabChange={handleTabChange}
               desktopLayout="sidebar"
+              collapsible={false}
               panelIdPrefix="settings-panel"
             >
               <AnimatePresence mode="wait">

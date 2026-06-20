@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, type LucideIcon } from "lucide-react";
@@ -22,6 +22,8 @@ export interface ResponsiveAccordionTabsProps {
   desktopLayout?: "horizontal" | "sidebar";
   /** Omit nav chrome when only one tab is available. */
   hideWhenSingle?: boolean;
+  /** Clicking the active tab collapses it (empty activeTab). */
+  collapsible?: boolean;
   panelIdPrefix?: string;
   className?: string;
 }
@@ -109,16 +111,31 @@ export default function ResponsiveAccordionTabs({
   children,
   desktopLayout = "horizontal",
   hideWhenSingle = false,
+  collapsible = true,
   panelIdPrefix = "tab-panel",
   className,
 }: ResponsiveAccordionTabsProps): React.JSX.Element {
   const sectionRefs = useRef<Partial<Record<string, HTMLElement | null>>>({});
   const prefix = panelIdPrefix;
 
+  const handleTabChange = useCallback(
+    (id: string) => {
+      if (collapsible && activeTab === id) {
+        onTabChange("");
+        return;
+      }
+      onTabChange(id);
+    },
+    [activeTab, collapsible, onTabChange],
+  );
+
   useEffect(() => {
     if (typeof window === "undefined" || window.innerWidth >= 1024) return;
+    if (!activeTab) return;
     sectionRefs.current[activeTab]?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [activeTab]);
+
+  const panelContent = collapsible && !activeTab ? null : children;
 
   if (hideWhenSingle && tabs.length <= 1) {
     return <div className={className}>{children}</div>;
@@ -149,7 +166,12 @@ export default function ResponsiveAccordionTabs({
                   : "border-border/70 bg-card/60 hover:border-border hover:bg-card/80",
               )}
             >
-              <TabTrigger tab={tab} active={active} panelId={panelId} onTabChange={onTabChange} />
+              <TabTrigger
+                tab={tab}
+                active={active}
+                panelId={panelId}
+                onTabChange={handleTabChange}
+              />
 
               <AnimatePresence initial={false}>
                 {active ? (
@@ -197,14 +219,19 @@ export default function ResponsiveAccordionTabs({
               }
 
               return (
-                <button key={tab.id} type="button" onClick={() => onTabChange(tab.id)} className={tabClass}>
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleTabChange(tab.id)}
+                  className={tabClass}
+                >
                   {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
                   {tab.label}
                 </button>
               );
             })}
           </div>
-          {children}
+          {panelContent}
         </div>
       ) : (
         <div className="hidden gap-5 lg:flex lg:items-start">
@@ -254,7 +281,12 @@ export default function ResponsiveAccordionTabs({
               }
 
               return (
-                <button key={tab.id} type="button" onClick={() => onTabChange(tab.id)} className={linkClass}>
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleTabChange(tab.id)}
+                  className={linkClass}
+                >
                   <div className="mb-0.5 flex items-center gap-2">
                     {Icon ? (
                       <span
@@ -284,7 +316,7 @@ export default function ResponsiveAccordionTabs({
             })}
           </nav>
           <div className="min-w-0 flex-1 rounded-xl border border-border/70 bg-card/80 p-5 shadow-sm backdrop-blur-sm lg:p-6">
-            {children}
+            {panelContent}
           </div>
         </div>
       )}

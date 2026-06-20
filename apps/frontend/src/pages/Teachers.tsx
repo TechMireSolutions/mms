@@ -277,7 +277,7 @@ export default function Teachers(): React.JSX.Element {
                 </div>
               </ErrorBoundary>
             </motion.div>
-          ) : (
+          ) : activeTab === 'setup' ? (
             <motion.div
               key="setup"
               initial={{ opacity: 0, y: 8 }}
@@ -297,7 +297,7 @@ export default function Teachers(): React.JSX.Element {
                 </div>
               </ErrorBoundary>
             </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 

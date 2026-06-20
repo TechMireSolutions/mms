@@ -3,6 +3,7 @@ import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutDashboard, Star, Package, Send, Gift, Layers, RotateCcw, TrendingUp } from "lucide-react";
+import { resolveModuleTierTab } from "@mms/shared";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
 import SubTabBar from "@/components/ui/SubTabBar";
@@ -70,7 +71,10 @@ export default function HasanatCards() {
     [t, totalStock, totalRemaining, totalDistributed, totalRedeemed, totalActive, totalReturned],
   );
 
-  const effectiveTab = PAGE_TABS.find((t) => t.id === activeTab) ? activeTab : "work";
+  const effectiveTab = resolveModuleTierTab(
+    activeTab,
+    PAGE_TABS.map((tab) => tab.id),
+  );
   const effectiveSubTab = SUB_TABS.find((t) => t.id === activeSubTab) ? activeSubTab : "overview";
 
   return (

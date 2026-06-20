@@ -512,10 +512,6 @@ export const DEFAULT_UI_STRINGS: Record<string, string> = {
   generalPreferences: "General Preferences",
   moduleLayoutAndTabs: "Module Layout & Tabs Configuration",
   moduleLayoutDescription: "Customize the names, display order, and visibility of tabs across the Contacts module. Changes apply instantly.",
-  customizeModuleUiText: "Customize Module UI Text",
-  customizeModuleUiDescription: "Override any label, placeholder, header, or button text. Leave the field blank or reset to use the default text.",
-  searchUiStrings: "Search UI strings by label or value...",
-  defaultPrefix: "Default:",
   tabIdLabel: "Order",
   noFieldsAvailable: "No fields available for this tab.",
   fieldRequired: "Required",
@@ -551,9 +547,6 @@ export const DEFAULT_UI_STRINGS: Record<string, string> = {
   settingsSubTabsTitle: "Settings Sub-tabs",
   settingsSubTabsDescription: "Tabs visible in the Contact settings panel",
   saveAndApply: "Save & Apply",
-  setAsDefault: "Set as Default",
-  setAsDefaultConfirm: "Set as Default!",
-  resetToDefaults: "Reset to Defaults",
   tabOrderLabel: "Order",
   editDefaultsAndPermissions: "Edit Defaults & Permissions",
   editFieldTitle: "Edit Field",
@@ -829,7 +822,6 @@ export const DEFAULT_SETTINGS_SUB_TABS: TabDefinition[] = [
   { key: "fields",      label: "Fields",             enabled: true, order: 0, isSystem: true },
   { key: "preferences", label: "Preferences",        enabled: true, order: 1, isSystem: true },
   { key: "sync",        label: "Sync (Google / Apple)", enabled: true, order: 2, isSystem: true },
-  { key: "uistrings",   label: "UI Strings",         enabled: true, order: 3, isSystem: true },
 ];
 
 export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [

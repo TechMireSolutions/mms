@@ -340,7 +340,7 @@ export default function Sessions() {
             <KPISummary category="sessions" />
             <ModuleReports category="sessions" />
           </motion.div>
-        ) : (
+        ) : activeTab === "setup" ? (
           <motion.div
             key="setup"
             initial={{ opacity: 0, y: 8 }}
@@ -359,7 +359,7 @@ export default function Sessions() {
               </div>
             </ErrorBoundary>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
       </ResponsiveAccordionTabs>
 

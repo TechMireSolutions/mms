@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Users as UsersIcon, Activity, UserPlus } from 'lucide-react';
 import {
   normalizeWorkspaceUser,
+  resolveModuleTierTab,
   type ActivityLog,
   type SystemUser,
   type UserStatus,
@@ -86,7 +87,7 @@ export default function Users(): React.JSX.Element {
 
   useEffect(() => {
     if (!isAdmin && (activeTab === 'setup' || activeTab === 'reports')) {
-      setActiveTab('work');
+      setActiveTab('');
     }
   }, [isAdmin, activeTab, setActiveTab]);
 
@@ -165,7 +166,10 @@ export default function Users(): React.JSX.Element {
     return true;
   });
 
-  const effectiveTab = visibleTopTabs.find((tab) => tab.id === activeTab) ? activeTab : 'work';
+  const effectiveTab = resolveModuleTierTab(
+    activeTab,
+    visibleTopTabs.map((tab) => tab.id),
+  );
   const effectiveSubTab = SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : 'users';
 
   return (

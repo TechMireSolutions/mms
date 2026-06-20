@@ -7,8 +7,6 @@
  *
  *  loadFieldConfig()       — load the active (per-session) config
  *  saveFieldConfig(cfg)    — persist the active config
- *  loadDefaultConfig()     — load the admin-set default config
- *  saveDefaultConfig(cfg)  — persist the admin-set default config
  *
  * Migration: when a stored config is detected with an older (or missing)
  * CONFIG_VERSION, migrateConfig() fills in any keys that were added in newer
@@ -167,35 +165,13 @@ import { getObject, saveObject } from "./db";
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
- * Loads the admin-set default config.
- * Falls back to hardcoded system defaults if nothing is stored.
- *
- * @returns {FieldConfig} The default field configuration.
- */
-export function loadDefaultConfig(): FieldConfig {
-  const defaults = getHardcodedDefaults();
-  const parsed = getObject("contact_field_config_default", defaults);
-  return sanitizeConfig(migrateConfig(parsed));
-}
-
-/**
- * Persists the admin-set default config.
- *
- * @param {FieldConfig} config - Configuration object to save.
- */
-export function saveDefaultConfig(config: FieldConfig): void {
-  saveObject("contact_field_config_default", { ...config, version: CONFIG_VERSION });
-}
-
-/**
  * Loads the active field config.
- * Merges missing keys from the default config so partial saves are safe.
- * Falls back to loadDefaultConfig() if nothing is stored.
+ * Merges missing keys from hardcoded defaults so partial saves are safe.
  *
  * @returns {FieldConfig} The active field configuration.
  */
 export function loadFieldConfig(): FieldConfig {
-  const fallback = loadDefaultConfig();
+  const fallback = getHardcodedDefaults();
   const parsed = getObject("contact_field_config", fallback);
   const migrated = migrateConfig(parsed);
 

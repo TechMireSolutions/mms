@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Palette, Monitor, Wand2, ImageIcon, Loader2, Box } from 'lucide-react';
 import { cornerStyleLabelKey, normalizeBrandingCornerStyle, normalizeThemeMode } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
-import SettingsConfirmResetModal from '@/components/settings/SettingsConfirmResetModal';
 import BrandColorPanel from '@/components/branding/BrandColorPanel';
 import ThemeModeSelector from '@/components/settings/ThemeModeSelector';
 import CornerStyleSelector from '@/components/settings/CornerStyleSelector';
@@ -27,8 +26,6 @@ import {
 export default function ThemeSettings(): React.JSX.Element {
   const { t } = useTranslation();
   const { setActiveTab } = useSettingsTab();
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
-  const [resetting, setResetting] = useState(false);
 
   const {
     data,
@@ -41,7 +38,6 @@ export default function ThemeSettings(): React.JSX.Element {
     saved,
     upd,
     handleSave,
-    handleReset,
     defaultFooterPreview,
   } = useThemeSettingsDraft(t('theme.savedToast'), t('theme.savedToastDesc'));
 
@@ -50,16 +46,6 @@ export default function ThemeSettings(): React.JSX.Element {
     onPrimaryChange: (hex) => upd('primaryColor', hex),
     onSecondaryChange: (hex) => upd('secondaryColor', hex),
   });
-
-  const confirmReset = async (): Promise<void> => {
-    setResetting(true);
-    try {
-      const ok = await handleReset();
-      if (ok) setConfirmResetOpen(false);
-    } finally {
-      setResetting(false);
-    }
-  };
 
   const footerPreview = data.footerText.trim() || defaultFooterPreview;
 
@@ -71,10 +57,8 @@ export default function ThemeSettings(): React.JSX.Element {
       saved={saved}
       footer={
         <SettingsFormActions
-          resetLabel={t('theme.resetAppearance')}
           saveLabel={t('theme.save')}
           savingLabel={t('theme.saving')}
-          onReset={() => setConfirmResetOpen(true)}
           onSave={() => void handleSave()}
           dirty={isDirty}
           saving={saving}
@@ -221,16 +205,6 @@ export default function ThemeSettings(): React.JSX.Element {
           </div>
         </div>
       </SectionCard>
-
-      <SettingsConfirmResetModal
-        open={confirmResetOpen}
-        onClose={() => setConfirmResetOpen(false)}
-        onConfirm={confirmReset}
-        titleKey="theme.confirmResetTitle"
-        descKey="theme.confirmResetDesc"
-        warningKey="theme.resetWarning"
-        loading={resetting}
-      />
     </SettingsPanel>
   );
 }

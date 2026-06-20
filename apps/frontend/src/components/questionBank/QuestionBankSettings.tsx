@@ -53,7 +53,7 @@ export default function QuestionBankSettings({ mode }: QuestionBankSettingsProps
     [t],
   );
 
-  const { data, dirty, saving, upd, handleSave, resetDraft } = useSettingsDraft({
+  const { data, dirty, saving, upd, handleSave } = useSettingsDraft({
     load,
     onPreview: () => {},
     onSave,
@@ -193,13 +193,7 @@ export default function QuestionBankSettings({ mode }: QuestionBankSettingsProps
       isDirty={dirty}
       footer={
         <SettingsFormActions
-          resetLabel={t('questionBank.settingsReset')}
           saveLabel={t('questionBank.settingsSave')}
-          onReset={() => {
-            saveObject('question_bank_settings', normalizeQuestionBankSettings(DEFAULT_QUESTION_BANK_SETTINGS));
-            resetDraft();
-            notify.success(t('questionBank.settingsResetToast'));
-          }}
           onSave={() => void handleSave()}
           dirty={dirty}
           saving={saving}

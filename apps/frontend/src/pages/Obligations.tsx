@@ -6,6 +6,7 @@ import {
   Scale, ClipboardList, History, 
   Shield, BookOpen, BarChart2, Plus
 } from "lucide-react";
+import { resolveModuleTierTab } from "@mms/shared";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
 import SubTabBar from "@/components/ui/SubTabBar";
@@ -71,7 +72,10 @@ export default function Obligations() {
     setShowForm(false);
   };
 
-  const effectiveTab = PAGE_TABS.find((t) => t.id === activeTab) ? activeTab : "work";
+  const effectiveTab = resolveModuleTierTab(
+    activeTab,
+    PAGE_TABS.map((tab) => tab.id),
+  );
   const effectiveSubTab = OPS_SUB_TABS.find((t) => t.id === activeSubTab) ? activeSubTab : "summary";
   const effectiveConfigTab = CONFIG_SUB_TABS.find((t) => t.id === activeConfigTab) ? activeConfigTab : "types";
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Save, RotateCcw, QrCode, Bell, Clock, Shield, Scan, ClipboardCheck } from "lucide-react";
+import { Save, QrCode, Bell, Clock, Shield, Scan, ClipboardCheck } from "lucide-react";
 import {
   DEFAULT_ATT_SETTINGS,
   type AttendanceSettings as AttendanceSettingsData
@@ -87,10 +87,6 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
   };
 
   const handleSave = () => setSaved(true);
-  const handleReset = () => { 
-    setSettings(DEFAULT_ATT_SETTINGS); 
-    setSaved(false); 
-  };
 
   const showPrefs = !mode || mode === "preferences";
   const showFields = !mode || mode === "fields";
@@ -331,14 +327,6 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
           <Save className="w-3.5 h-3.5" />
           {saved ? "Saved!" : "Save Settings"}
         </button>
-        {showPrefs && (
-          <button 
-            onClick={handleReset}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <RotateCcw className="w-3.5 h-3.5" /> Reset to Defaults
-          </button>
-        )}
       </div>
     </section>
   );

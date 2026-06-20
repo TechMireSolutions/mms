@@ -31,9 +31,22 @@ export interface ModuleTierTabLike {
   isSystem?: boolean;
 }
 
+/** Active tab id when every tier section is collapsed. */
+export const MODULE_TIER_TAB_CLOSED = '' as const;
+
 /** Maps legacy tier tab ids to canonical ids. */
 export function normalizeModuleTierTabId(id: string): string {
+  if (id === MODULE_TIER_TAB_CLOSED) return MODULE_TIER_TAB_CLOSED;
   return LEGACY_MODULE_TIER_TAB_IDS[id as LegacyModuleTierTabId] ?? id;
+}
+
+/** Keeps persisted/requested tab when visible; otherwise collapsed. */
+export function resolveModuleTierTab(
+  activeTab: string,
+  visibleTabIds: readonly string[],
+): string {
+  if (activeTab === MODULE_TIER_TAB_CLOSED) return MODULE_TIER_TAB_CLOSED;
+  return visibleTabIds.includes(activeTab) ? activeTab : MODULE_TIER_TAB_CLOSED;
 }
 
 export function isModuleTierTabId(key: string): key is ModuleTierTabId {

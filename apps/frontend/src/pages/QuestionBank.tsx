@@ -6,6 +6,7 @@ import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useQuestionBankConfig } from '@/hooks/useQuestionBankConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, ClipboardList, Sparkles, Plus } from 'lucide-react';
+import { resolveModuleTierTab } from '@mms/shared';
 import PageHeader from '../components/ui/PageHeader';
 import ResponsiveAccordionTabs from '@/components/ui/ResponsiveAccordionTabs';
 import SubTabBar from '@/components/ui/SubTabBar';
@@ -80,7 +81,10 @@ export default function QuestionBankPage(): React.JSX.Element {
     setEditQuestion(null);
   }, []);
 
-  const effectiveTab = PAGE_TABS.find((tab) => tab.id === activeTab) ? activeTab : 'work';
+  const effectiveTab = resolveModuleTierTab(
+    activeTab,
+    PAGE_TABS.map((tab) => tab.id),
+  );
   const effectiveSubTab = OPS_SUB_TABS.find((tab) => tab.id === activeSubTab)
     ? activeSubTab
     : 'questions';

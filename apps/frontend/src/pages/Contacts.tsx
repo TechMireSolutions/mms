@@ -86,7 +86,6 @@ const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
   fields: "contacts.setup.fields",
   preferences: "contacts.setup.preferences",
   sync: "contacts.setup.sync",
-  uistrings: "contacts.setup.uiStrings",
 };
 
 // ── Settings sub-panel ────────────────────────────────────────────────────────
@@ -97,7 +96,7 @@ function SettingsPanel({ contacts, onImport, canWrite }: SettingsPanelProps) {
     const tabsFromConfig = fieldConfig.settingsSubTabs || [];
     const sorted = [...tabsFromConfig]
       .sort((a, b) => a.order - b.order)
-      .filter((tab) => tab.enabled);
+      .filter((tab) => tab.enabled && tab.key !== "uistrings");
 
     return sorted.map((tab) => ({
       key: tab.key,
@@ -119,9 +118,6 @@ function SettingsPanel({ contacts, onImport, canWrite }: SettingsPanelProps) {
         )}
         {sub === "preferences" && (
           <ContactsSettingsPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="preferences" />
-        )}
-        {sub === "uistrings" && (
-          <ContactsSettingsPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="uistrings" />
         )}
         {sub === "sync" && (
           <ContactSyncPanel contacts={contacts} onImport={onImport as (contacts: object[]) => void} canWrite={canWrite} />
@@ -548,7 +544,7 @@ function ContactsInner() {
               </div>
             </ErrorBoundary>
           </motion.div>
-        ) : (
+        ) : activeTab === "setup" ? (
           <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
             <ErrorBoundary>
               <SettingsPanel
@@ -561,7 +557,7 @@ function ContactsInner() {
               />
             </ErrorBoundary>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
       </ResponsiveAccordionTabs>
 

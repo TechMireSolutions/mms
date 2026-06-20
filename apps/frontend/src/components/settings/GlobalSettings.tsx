@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Bell, Lock, Languages } from 'lucide-react';
 import {
   APP_LANGUAGES,
@@ -26,7 +26,6 @@ import SectionCard from '@/components/ui/SectionCard';
 import SettingsFormActions from '@/components/ui/SettingsFormActions';
 import DateFormatSelect from '@/components/settings/DateFormatSelect';
 import EmailIntegrationPanel from '@/components/settings/EmailIntegrationPanel';
-import SettingsConfirmResetModal from '@/components/settings/SettingsConfirmResetModal';
 import TimezoneSelect from '@/components/settings/TimezoneSelect';
 import {
   SettingsCallout,
@@ -42,8 +41,6 @@ import {
  */
 export default function GlobalSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
-  const [resetting, setResetting] = useState(false);
 
   const {
     data,
@@ -52,7 +49,6 @@ export default function GlobalSettings(): React.JSX.Element {
     saving,
     upd,
     handleSaveGlobal,
-    handleResetGlobal,
   } = useSettingsGlobalDraft();
 
   const notificationChannel = useMemo(
@@ -69,16 +65,6 @@ export default function GlobalSettings(): React.JSX.Element {
     strong: 'global.passwordPolicyStrong',
   };
 
-  const confirmReset = async (): Promise<void> => {
-    setResetting(true);
-    try {
-      const ok = await handleResetGlobal();
-      if (ok) setConfirmResetOpen(false);
-    } finally {
-      setResetting(false);
-    }
-  };
-
   return (
     <SettingsPanel
       width="narrow"
@@ -87,10 +73,8 @@ export default function GlobalSettings(): React.JSX.Element {
       saved={saved}
       footer={
         <SettingsFormActions
-          resetLabel={t('global.resetToDefaults')}
           saveLabel={t('global.saveSettings')}
           savingLabel={t('global.saving')}
-          onReset={() => setConfirmResetOpen(true)}
           onSave={() => void handleSaveGlobal()}
           dirty={isGlobalDirty}
           saving={saving}
@@ -239,16 +223,6 @@ export default function GlobalSettings(): React.JSX.Element {
           </SettingsFieldGroup>
         </div>
       </SectionCard>
-
-      <SettingsConfirmResetModal
-        open={confirmResetOpen}
-        onClose={() => setConfirmResetOpen(false)}
-        onConfirm={confirmReset}
-        titleKey="global.confirmResetTitle"
-        descKey="global.confirmResetDesc"
-        warningKey="global.resetWarning"
-        loading={resetting}
-      />
     </SettingsPanel>
   );
 }

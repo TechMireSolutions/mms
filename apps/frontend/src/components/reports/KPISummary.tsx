@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, UserCheck, DollarSign, TrendingUp, Star, 
   AlertCircle, GraduationCap, BarChart2, LucideIcon, 
-  Target, Zap, Activity, SlidersHorizontal, RefreshCw,
+  Target, Zap, Activity, SlidersHorizontal,
   Plus, Trash2, ShieldCheck, Receipt, CalendarCheck
 } from "lucide-react";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
@@ -776,16 +776,6 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     });
   };
 
-  const handleReset = () => {
-    const defaults = possibleCards.filter(a => a.isAvailable).map(a => a.label);
-    setSelectedLabels(defaults);
-    localStorage.setItem(`kpi_config_${category}_${role || "all"}`, JSON.stringify(defaults));
-    
-    // Also delete all custom cards on reset to match defaults
-    setCustomCards([]);
-    localStorage.removeItem(`kpi_custom_cards_${category}`);
-  };
-
   // Automatically select newly added custom cards so they are visible immediately
   useEffect(() => {
     const prevTitlesStr = localStorage.getItem(`prev_kpi_titles_${category}`) || "[]";
@@ -881,12 +871,6 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold border border-primary/20">
                   Data Volume: {primaryVolume} Records
                 </span>
-                <button
-                  onClick={handleReset}
-                  className="text-[11px] text-primary hover:underline font-bold flex items-center gap-1 cursor-pointer bg-transparent border-0"
-                >
-                  <RefreshCw className="w-3 h-3" /> Reset to Defaults
-                </button>
               </div>
             </div>
 
@@ -906,14 +890,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
               {/* Settings Checklist Column (1/3 width) */}
               <div className="rounded-2xl border border-border/50 bg-card/25 p-5 shadow-inner space-y-4 text-left flex flex-col justify-between">
                 <div>
-                  <div className="flex justify-between items-center pb-2 border-b border-border">
+                  <div className="pb-2 border-b border-border">
                     <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">Card Visibility</h4>
-                    <button
-                      onClick={handleReset}
-                      className="text-[10px] text-primary hover:underline font-bold flex items-center gap-1 cursor-pointer bg-transparent border-0"
-                    >
-                      <RefreshCw className="w-2.5 h-2.5" /> Reset All
-                    </button>
                   </div>
 
                   <p className="text-[10px] text-muted-foreground mt-1.5 font-sans">

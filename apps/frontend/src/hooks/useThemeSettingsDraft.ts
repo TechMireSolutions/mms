@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import {
-  DEFAULT_GLOBAL_SETTINGS,
   formatBrandingFooterDefault,
   formatThemeDisplayModeSummary,
   mergeGlobalSettings,
   normalizeThemeMode,
-  resetBrandingAppearance,
   resolveBrandingThemeMode,
   type BrandingSettings,
   type ThemeMode,
@@ -14,7 +12,6 @@ import {
 import {
   getEffectiveGlobalSettings,
   getGlobalSettings,
-  saveBrandingSettings,
   saveGlobalSettingsAsync,
 } from '@/lib/db';
 import { clearGlobalSettingsPreview, previewGlobalSettings } from '@/lib/settingsPreview';
@@ -34,7 +31,6 @@ export interface UseThemeSettingsDraftResult {
   saved: boolean;
   upd: ReturnType<typeof useSettingsBrandingDraft>['upd'];
   handleSave: () => Promise<void>;
-  handleReset: () => Promise<boolean>;
   defaultFooterPreview: string;
 }
 
@@ -156,41 +152,6 @@ export function useThemeSettingsDraft(
     t,
   ]);
 
-  const handleReset = useCallback(async (): Promise<boolean> => {
-    const appearanceReset = resetBrandingAppearance(branding.data, language);
-    const defaultMode = DEFAULT_GLOBAL_SETTINGS.theme;
-
-    try {
-      const brandingResult = await saveBrandingSettings(appearanceReset);
-      if (!brandingResult.ok) {
-        notify.error(t('settings.serverSaveFailed'), {
-          description: t(serverSyncErrorKey(brandingResult.status)),
-        });
-        return false;
-      }
-
-      const current = getGlobalSettings();
-      const themeResult = await saveGlobalSettingsAsync(
-        mergeGlobalSettings({ ...current, theme: defaultMode }),
-      );
-      if (!themeResult.ok) {
-        notify.error(t('settings.serverSaveFailed'), {
-          description: t(serverSyncErrorKey(themeResult.status)),
-        });
-        return false;
-      }
-      setDisplayModeState(defaultMode);
-      setThemeBaseline(defaultMode);
-      clearGlobalSettingsPreview();
-      branding.applyPersisted(appearanceReset);
-      notify.success(t('theme.resetToast'), { description: t('theme.resetToastDesc') });
-      return true;
-    } catch {
-      notify.error(t('theme.resetError'), { description: t('theme.resetErrorDesc') });
-      return false;
-    }
-  }, [branding, language, t]);
-
   const saved = !isDirty && (branding.saved || savedFlash);
 
   return {
@@ -204,7 +165,6 @@ export function useThemeSettingsDraft(
     saved,
     upd: branding.upd,
     handleSave,
-    handleReset,
     defaultFooterPreview,
   };
 }

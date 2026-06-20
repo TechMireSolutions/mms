@@ -164,27 +164,12 @@ export default function Dashboard() {
     );
   };
 
-  const handleResetWidgetsToDefaults = () => {
-    persistWidgets(
-      customWidgets.map((w) => ({
-        ...w,
-        isPinnedToDashboard: w.id.startsWith('def-'),
-      })),
-    );
-  };
-
   const toggleCardVisibility = (cardId: string) => {
     const updated = disabledCardIds.includes(cardId)
       ? disabledCardIds.filter((id) => id !== cardId)
       : [...disabledCardIds, cardId];
     setDisabledCardIds(updated);
     saveDisabledCardIds(updated);
-    window.dispatchEvent(new Event('local-database-update'));
-  };
-
-  const handleResetToDefaults = () => {
-    setDisabledCardIds([]);
-    saveDisabledCardIds([]);
     window.dispatchEvent(new Event('local-database-update'));
   };
 
@@ -361,17 +346,10 @@ export default function Dashboard() {
                     </legend>
                     <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.metricCardsSettingsDesc')}</p>
 
-                    <div className="flex items-center justify-between text-xs border-b border-border/50 pb-3">
+                    <div className="text-xs border-b border-border/50 pb-3">
                       <p className="font-semibold text-foreground">
                         {t('dashboard.selectedCards', { count: selectedCount })}
                       </p>
-                      <button
-                        onClick={handleResetToDefaults}
-                        className="px-2.5 py-1 rounded bg-muted hover:bg-muted/80 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-                        type="button"
-                      >
-                        {t('dashboard.resetDefaults')}
-                      </button>
                     </div>
 
                     <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
@@ -403,22 +381,13 @@ export default function Dashboard() {
                     </legend>
                     <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.chartsWidgetsSettingsDesc')}</p>
 
-                    <div className="flex items-center justify-between text-xs border-b border-border/50 pb-3">
-                      <div className="space-y-0.5">
-                        <p className="font-semibold text-foreground">
-                          {t('dashboard.pinnedCharts', { count: pinnedCount })}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {t('dashboard.totalWidgets', { count: customWidgets.length })}
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleResetWidgetsToDefaults}
-                        className="px-2.5 py-1 rounded bg-muted hover:bg-muted/80 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-                        type="button"
-                      >
-                        {t('dashboard.resetDefaults')}
-                      </button>
+                    <div className="text-xs border-b border-border/50 pb-3 space-y-0.5">
+                      <p className="font-semibold text-foreground">
+                        {t('dashboard.pinnedCharts', { count: pinnedCount })}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {t('dashboard.totalWidgets', { count: customWidgets.length })}
+                      </p>
                     </div>
 
                     <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">

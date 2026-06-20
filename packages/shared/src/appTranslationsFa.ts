@@ -29,7 +29,6 @@ export const APP_TRANSLATIONS_FA = {
 
   "global.language": "زبان",
   "global.saveSettings": "ذخیره تنظیمات",
-  "global.resetToDefaults": "بازگشت به پیش‌فرض",
 
   "module.work": "کار",
   "module.reports": "گزارش‌ها",
@@ -90,9 +89,7 @@ export const APP_TRANSLATIONS_FA = {
   "questionBank.settingsIntro": "دسته‌بندی‌ها، تصحیح هوشمند و فیلدهای سفارشی بانک سوالات را پیکربندی کنید.",
   "questionBank.settingsSaved": "تنظیمات بانک سوالات ذخیره شد",
   "questionBank.settingsSavedDesc": "دسته‌بندی‌ها، تصحیح و ترجیحات فیلدها به‌روزرسانی شد.",
-  "questionBank.settingsReset": "بازنشانی",
   "questionBank.settingsSave": "ذخیره تنظیمات",
-  "questionBank.settingsResetToast": "تنظیمات بانک سوالات بازنشانی شد",
   "questionBank.settingsNote": "دسته‌بندی‌ها و تصحیح هوشمند در تولید آزمون و تحلیل‌ها در این ماژول اعمال می‌شود.",
   "questionBank.settingsPrefsTitle": "ترجیحات",
   "questionBank.aiGrading": "تصحیح با کمک هوش مصنوعی",

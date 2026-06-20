@@ -4,6 +4,7 @@ import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, FileText, PenTool, Layers } from "lucide-react";
+import { resolveModuleTierTab } from "@mms/shared";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
 import SubTabBar from "@/components/ui/SubTabBar";
@@ -61,7 +62,10 @@ export default function Examinations(): React.JSX.Element {
     ]);
   };
 
-  const effectiveTab = PAGE_TABS.find((tab) => tab.id === activeTab) ? activeTab : "work";
+  const effectiveTab = resolveModuleTierTab(
+    activeTab,
+    PAGE_TABS.map((tab) => tab.id),
+  );
   const effectiveSubTab = OPS_SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : "exams";
 
   return (
