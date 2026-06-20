@@ -4,9 +4,11 @@ import {
   isApexHost,
   buildTenantUrl,
   buildApexUrl,
+  type PublicBranding,
 } from "@mms/shared";
 import { getTenantUrlOptions } from "../config/tenantConfig";
 import { useDeploymentAppDomain } from "@/hooks/useDeploymentAppDomain";
+import { usePublicBranding } from "@/hooks/usePublicBranding";
 import {
   useWorkspaceBySubdomain,
   type PublicWorkspace,
@@ -19,6 +21,7 @@ export interface TenantContextValue {
   subdomain: string | null;
   isApex: boolean;
   workspace: PublicWorkspace | null;
+  publicBranding: PublicBranding | null;
   workspaceLoading: boolean;
   workspaceUrl: string | null;
   redirectToApex: (path?: string) => void;
@@ -40,11 +43,15 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 
   const tenantLookupEnabled = !isApex && Boolean(subdomain);
-  const { data: workspace = null, isPending, isFetching } = useWorkspaceBySubdomain(
+  const { data: workspaceLookup, isPending, isFetching } = useWorkspaceBySubdomain(
     subdomain,
     tenantLookupEnabled,
   );
   const workspaceLoading = tenantLookupEnabled && (isPending || isFetching);
+  const workspace = workspaceLookup?.workspace ?? null;
+  const needsBrandingFallback = tenantLookupEnabled && !workspaceLoading && workspace === null;
+  const { data: fallbackBranding = null } = usePublicBranding(needsBrandingFallback);
+  const publicBranding = workspaceLookup?.branding ?? fallbackBranding;
 
   const workspaceUrl = subdomain
     ? buildTenantUrl(subdomain, "/", getTenantUrlOptions())
@@ -63,6 +70,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     subdomain,
     isApex,
     workspace,
+    publicBranding,
     workspaceLoading,
     workspaceUrl,
     redirectToApex,

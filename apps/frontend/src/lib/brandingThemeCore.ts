@@ -3,12 +3,16 @@ import {
   applyDocumentLanguage,
   brandingPrimaryToThemeColor,
   buildBrandingCssVariables,
+  DEFAULT_BRANDING_SETTINGS,
+  DEFAULT_GLOBAL_SETTINGS,
+  mergeBrandingSettings,
   normalizeAppLanguage,
   normalizeBrandingCornerStyle,
   resolveBrandingCornerRadius,
   type BrandingSettings,
   type BrandingThemeMode,
   type GlobalSettings,
+  type PublicBranding,
 } from '@mms/shared';
 import { MMS_PLATFORM_BRANDING, MMS_PLATFORM_GLOBAL_SETTINGS } from '@/platform/lib/themeScope';
 import { ensureLocaleFontsLoaded } from '@/lib/localeFonts';
@@ -78,6 +82,26 @@ export function applyApexPlatformTheme(language = 'en'): void {
 
   applyDocumentLanguageWithFonts(language);
   applyBrandingFromSettings(MMS_PLATFORM_BRANDING, activeTheme);
+}
+
+/** Tenant auth entry theme — public workspace branding, English/LTR, no db reads. */
+export function applyTenantEntryTheme(branding: PublicBranding): void {
+  const settings = DEFAULT_GLOBAL_SETTINGS;
+  const root = document.documentElement;
+  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const activeTheme = settings.theme === 'system' ? systemTheme : settings.theme;
+
+  if (activeTheme === 'dark') {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
+
+  applyDocumentLanguageWithFonts('en');
+  applyBrandingFromSettings(
+    mergeBrandingSettings({ ...DEFAULT_BRANDING_SETTINGS, ...branding }),
+    activeTheme,
+  );
 }
 
 export { resolveThemeMode, syncDocumentChrome, applyDocumentLanguageWithFonts };

@@ -1,33 +1,24 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Loader2, Mail, CheckCircle2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { ROUTES } from '@/lib/config/routes';
 import useTranslation from "@/hooks/useTranslation";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { FORM_ERROR, FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 /**
- * ForgotPassword Page Component
- *
- * Renders the forgot password reset request form.
- * Captures user email, performs basic regex format validation, and simulates sending
- * a password reset link by showing a success verification state.
- *
- * @returns React element representing the forgot password page.
+ * Forgot password reset request form for tenant sign-in entry.
  */
-export default function ForgotPassword() {
+export default function ForgotPassword(): React.JSX.Element {
   const { t } = useTranslation();
-  const reducedMotion = useReducedMotion();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!email) { setError(t("auth.emailRequired")); return; }
     if (!/\S+@\S+\.\S+/.test(email)) { setError(t("auth.emailInvalid")); return; }
@@ -46,34 +37,27 @@ export default function ForgotPassword() {
     <>
       <EntryPageHead title={pageTitle} description={t("entry.meta.tenantForgot")} />
       <AuthLayout
-      title={sent ? t("auth.forgotCheckEmail") : t("auth.forgotTitle")}
-      subtitle={
-        sent
-          ? t("auth.forgotSentTo", { email })
-          : t("auth.forgotSubtitle")
-      }
-    >
-      <AnimatePresence mode="wait">
+        title={sent ? t("auth.forgotCheckEmail") : t("auth.forgotTitle")}
+        subtitle={
+          sent
+            ? t("auth.forgotSentTo", { email })
+            : t("auth.forgotSubtitle")
+        }
+      >
         {sent ? (
-          <motion.div
-            key="success"
-            initial={reducedMotion ? false : { opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={reducedMotion ? { duration: 0 } : undefined}
-            className="space-y-5"
-          >
+          <div className="space-y-5">
             <div className="flex justify-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-primary" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <CheckCircle2 className="h-8 w-8 text-primary" />
               </div>
             </div>
 
-            <div className="bg-muted/50 rounded-xl p-4 border border-border">
+            <div className="rounded-xl border border-border bg-muted/50 p-4">
               <div className="flex items-start gap-3">
-                <Mail className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{t("auth.resetLinkSent")}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {t("auth.resetLinkExpiry", { email })}
                   </p>
                 </div>
@@ -83,27 +67,19 @@ export default function ForgotPassword() {
             <button
               type="button"
               onClick={() => { setSent(false); setEmail(""); }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               {t("auth.tryDifferentEmail")}
             </button>
 
             <p className="text-center text-xs text-muted-foreground">
-              <Link to={ROUTES.login} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
-                <ArrowLeft className="w-3 h-3" /> {t("auth.backToSignIn")}
+              <Link to={ROUTES.login} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                <ArrowLeft className="h-3 w-3" /> {t("auth.backToSignIn")}
               </Link>
             </p>
-          </motion.div>
+          </div>
         ) : (
-          <motion.form
-            key="form"
-            initial={reducedMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={reducedMotion ? { duration: 0 } : undefined}
-            onSubmit={handleSubmit}
-            className="space-y-4"
-            noValidate
-          >
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
               <label className={FORM_LABEL}>
                 {t("auth.emailAddress")}
@@ -115,7 +91,7 @@ export default function ForgotPassword() {
                 placeholder="you@madrasa.app"
                 className={cn(
                   FORM_INPUT,
-                  error ? "border-destructive focus:ring-destructive/20" : "",
+                  error ? "border-destructive focus-visible:ring-destructive/20" : "",
                 )}
               />
               {error ? <p className={FORM_ERROR}>{error}</p> : null}
@@ -124,27 +100,26 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all disabled:opacity-70"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-70"
             >
               {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
                   {t("auth.sendResetLink")}
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </button>
 
             <p className="text-center text-xs text-muted-foreground">
-              <Link to={ROUTES.login} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
-                <ArrowLeft className="w-3 h-3" /> {t("auth.backToSignIn")}
+              <Link to={ROUTES.login} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                <ArrowLeft className="h-3 w-3" /> {t("auth.backToSignIn")}
               </Link>
             </p>
-          </motion.form>
+          </form>
         )}
-      </AnimatePresence>
-    </AuthLayout>
+      </AuthLayout>
     </>
   );
 }

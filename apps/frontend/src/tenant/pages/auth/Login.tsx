@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback, useId } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, AlertCircle } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
-import { getGlobalSettings } from "@/lib/db";
 import {
   clear2FAState,
   is2FAVerified,
@@ -17,7 +15,6 @@ import useTranslation from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { FORM_ERROR, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const REMEMBER_EMAIL_KEY = "mms_login_remember_email";
 
@@ -35,7 +32,6 @@ export default function Login(): React.ReactElement {
   const navigate = useNavigate();
   const location = useLocation();
   const formId = useId();
-  const reducedMotion = useReducedMotion();
   const emailFieldId = `${formId}-email`;
   const passwordFieldId = `${formId}-password`;
   const rememberFieldId = `${formId}-remember`;
@@ -66,11 +62,13 @@ export default function Login(): React.ReactElement {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const settings = getGlobalSettings();
-    const needs2FA = requiresTwoFactor(settings, user) && !is2FAVerified();
-    if (!needs2FA) {
-      navigate(redirectTo, { replace: true });
-    }
+    void import("@/lib/db").then(({ getGlobalSettings }) => {
+      const settings = getGlobalSettings();
+      const needs2FA = requiresTwoFactor(settings, user) && !is2FAVerified();
+      if (!needs2FA) {
+        navigate(redirectTo, { replace: true });
+      }
+    });
   }, [isAuthenticated, user, navigate, redirectTo]);
 
   useEffect(() => {
@@ -149,36 +147,26 @@ export default function Login(): React.ReactElement {
       <EntryPageHead title={pageTitle} description={t("entry.meta.tenantSignIn")} />
       <AuthLayout title={t("auth.signInTitle")}>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-busy={isBusy}>
-        <AnimatePresence mode="wait">
-          {(formError || handoffProcessing) && (
-            <motion.div
-              key={handoffProcessing ? "handoff" : "error"}
-              initial={reducedMotion ? false : { opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
-              transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
-            >
-              <div
-                role="alert"
-                className={cn(
-                  "flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-sm",
-                  handoffProcessing
-                    ? "border-primary/25 bg-primary/5 text-foreground"
-                    : "border-destructive/40 bg-destructive/5 text-destructive"
-                )}
-              >
-                {handoffProcessing ? (
-                  <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
-                ) : (
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                )}
-                <p className="leading-snug">
-                  {handoffProcessing ? t("auth.handoffProcessing") : formError}
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {(formError || handoffProcessing) ? (
+          <div
+            role="alert"
+            className={cn(
+              "flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-sm",
+              handoffProcessing
+                ? "border-primary/25 bg-primary/5 text-foreground"
+                : "border-destructive/40 bg-destructive/5 text-destructive",
+            )}
+          >
+            {handoffProcessing ? (
+              <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
+            ) : (
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            )}
+            <p className="leading-snug">
+              {handoffProcessing ? t("auth.handoffProcessing") : formError}
+            </p>
+          </div>
+        ) : null}
 
         <fieldset disabled={isBusy} className="m-0 min-w-0 space-y-4 border-0 p-0">
           <div className="space-y-1.5">
@@ -208,7 +196,7 @@ export default function Login(): React.ReactElement {
                 aria-describedby={fieldErrors.email ? `${emailFieldId}-error` : undefined}
                 className={cn(
                   FORM_INPUT_ICON,
-                  fieldErrors.email && "border-destructive focus:ring-destructive/25",
+                  fieldErrors.email && "border-destructive focus-visible:ring-destructive/25",
                 )}
               />
             </div>
@@ -245,7 +233,7 @@ export default function Login(): React.ReactElement {
                 className={cn(
                   FORM_INPUT_ICON,
                   "pr-11",
-                  fieldErrors.password && "border-destructive focus:ring-destructive/25",
+                  fieldErrors.password && "border-destructive focus-visible:ring-destructive/25",
                 )}
               />
               <button

@@ -23,7 +23,7 @@ import {
   resolveThemeMode,
 } from './brandingThemeCore';
 
-export { applyApexPlatformTheme } from './brandingThemeCore';
+export { applyApexPlatformTheme, applyTenantEntryTheme } from './brandingThemeCore';
 
 function resolveDocumentLanguage(storedLanguage: string, pathname: string): string {
   const isApex =

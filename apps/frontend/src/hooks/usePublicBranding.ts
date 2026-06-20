@@ -1,14 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import type { PublicBranding } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
-import { cachePublicBranding } from '@/lib/db';
 
 export const PUBLIC_BRANDING_QUERY_KEY = ['workspace', 'public-branding'] as const;
 
 async function fetchPublicBranding(): Promise<PublicBranding | null> {
   const data = await apiJson<{ branding?: PublicBranding }>('/api/workspace/public-branding');
   if (data.branding) {
-    cachePublicBranding(data.branding);
+    void import('@/lib/db').then(({ cachePublicBranding }) => cachePublicBranding(data.branding!));
     return data.branding;
   }
   return null;

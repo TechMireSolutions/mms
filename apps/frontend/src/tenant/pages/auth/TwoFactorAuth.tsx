@@ -1,14 +1,19 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2, ShieldCheck, RefreshCw } from "lucide-react";
-import { motion } from "framer-motion";
-import { maskEmail, requiresTwoFactor, resolveNotificationChannel } from "@mms/shared";
+import {
+  DEFAULT_GLOBAL_SETTINGS,
+  maskEmail,
+  mergeGlobalSettings,
+  requiresTwoFactor,
+  resolveNotificationChannel,
+  type GlobalSettings,
+} from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import useGlobalSettings from "@/hooks/useGlobalSettings";
 import { FORM_ERROR, FORM_OTP_DIGIT } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import {
@@ -25,13 +30,21 @@ const CODE_LENGTH = 6;
  */
 export default function TwoFactorAuth(): React.JSX.Element {
   const { isAuthenticated, user, checkUserAuth } = useAuth();
-  const settings = useGlobalSettings();
+  const [settings, setSettings] = useState<GlobalSettings>(() =>
+    mergeGlobalSettings(DEFAULT_GLOBAL_SETTINGS),
+  );
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const challengeId = getPendingChallengeId();
   const redirectTo =
     (location.state as { from?: string } | null)?.from ?? DEFAULT_AUTH_REDIRECT;
+
+  useEffect(() => {
+    void import("@/lib/settingsPreviewStore").then(({ getScopedGlobalSettings }) => {
+      setSettings(getScopedGlobalSettings());
+    });
+  }, []);
 
   const maskedEmail = useMemo(() => {
     const email = user?.email ?? "";
@@ -142,88 +155,81 @@ export default function TwoFactorAuth(): React.JSX.Element {
         title={t("auth.twoFactorTitle")}
         subtitle={t(twoFactorSubtitleKey)}
       >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex justify-center">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <ShieldCheck className="w-7 h-7 text-primary" />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex justify-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+              <ShieldCheck className="h-7 w-7 text-primary" />
+            </div>
           </div>
-        </div>
 
-        <div className="bg-muted/40 border border-border rounded-xl px-4 py-3 text-center">
-          <p className="text-xs text-muted-foreground">
-            {t("auth.codeSentTo")}{" "}
-            <span className="font-medium text-foreground">{maskedEmail}</span>
-          </p>
-        </div>
-
-        <div className="flex justify-center gap-2.5">
-          {code.map((digit, i) => (
-            <motion.input
-              key={i}
-              ref={(el) => { inputs.current[i] = el; }}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleChange(i, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(i, e)}
-              onPaste={handlePaste}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className={cn(
-                FORM_OTP_DIGIT,
-                digit ? "border-primary/60 bg-primary/5" : "border-border",
-                error && "border-destructive/60 bg-destructive/5",
-              )}
-              autoFocus={i === 0}
-            />
-          ))}
-        </div>
-
-        {error ? (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className={cn(FORM_ERROR, "text-center text-sm font-medium")}
-          >
-            {error}
-          </motion.p>
-        ) : null}
-
-        <button
-          type="submit"
-          disabled={loading || !isComplete}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all disabled:opacity-50"
-        >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("auth.verifySignIn")}
-        </button>
-
-        <div className="text-center">
-          {resendCountdown > 0 ? (
+          <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-center">
             <p className="text-xs text-muted-foreground">
-              {t("auth.resendCountdown", { seconds: resendCountdown })}
+              {t("auth.codeSentTo")}{" "}
+              <span className="font-medium text-foreground">{maskedEmail}</span>
             </p>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void handleResend()}
-              className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1"
-            >
-              <RefreshCw className="w-3 h-3" />
-              {t("auth.resendCode")}
-            </button>
-          )}
-        </div>
+          </div>
 
-        <p className="text-center text-xs text-muted-foreground">
-          <Link to={ROUTES.login} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
-            <ArrowLeft className="w-3 h-3" />
-            {t("auth.backToSignIn")}
-          </Link>
-        </p>
-      </form>
-    </AuthLayout>
+          <div className="flex justify-center gap-2.5">
+            {code.map((digit, i) => (
+              <input
+                key={i}
+                ref={(el) => { inputs.current[i] = el; }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleChange(i, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(i, e)}
+                onPaste={handlePaste}
+                className={cn(
+                  FORM_OTP_DIGIT,
+                  digit ? "border-primary/60 bg-primary/5" : "border-border",
+                  error && "border-destructive/60 bg-destructive/5",
+                )}
+                autoFocus={i === 0}
+              />
+            ))}
+          </div>
+
+          {error ? (
+            <p className={cn(FORM_ERROR, "text-center text-sm font-medium")}>
+              {error}
+            </p>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={loading || !isComplete}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t("auth.verifySignIn")}
+          </button>
+
+          <div className="text-center">
+            {resendCountdown > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {t("auth.resendCountdown", { seconds: resendCountdown })}
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void handleResend()}
+                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <RefreshCw className="h-3 w-3" />
+                {t("auth.resendCode")}
+              </button>
+            )}
+          </div>
+
+          <p className="text-center text-xs text-muted-foreground">
+            <Link to={ROUTES.login} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+              <ArrowLeft className="h-3 w-3" />
+              {t("auth.backToSignIn")}
+            </Link>
+          </p>
+        </form>
+      </AuthLayout>
     </>
   );
 }

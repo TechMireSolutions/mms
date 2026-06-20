@@ -1,11 +1,16 @@
-import React from "react";
-import { motion } from "framer-motion";
-import useBranding from "@/hooks/useBranding";
+import React, { useEffect, useMemo } from "react";
+import {
+  DEFAULT_BRANDING_SETTINGS,
+  type PublicBranding,
+} from "@mms/shared";
+import { useTenant } from "@/lib/contexts/TenantContext";
+import { applyTenantEntryTheme } from "@/lib/brandingThemeCore";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
-import useTenantBranding from "@/hooks/useTenantBranding";
 import useTranslation from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import useTenantBranding from "@/hooks/useTenantBranding";
 import AuthLoadingShell from "@/components/entry/AuthLoadingShell";
+import { cn } from "@/lib/utils";
 
 export interface AuthLayoutProps {
   children?: React.ReactNode;
@@ -15,7 +20,7 @@ export interface AuthLayoutProps {
 
 /**
  * Centered layout for pre-authenticated auth screens (login, 2FA, forgot password).
- * On tenant hosts, shows a skeleton shell until public branding is ready.
+ * Uses server public branding — no localStorage db reads on the entry path.
  */
 export default function AuthLayout({
   children,
@@ -24,10 +29,52 @@ export default function AuthLayout({
 }: AuthLayoutProps): React.JSX.Element {
   const { t } = useTranslation();
   const { ready: brandingReady } = useTenantBranding();
-  const branding = useBranding();
+  const { workspace, publicBranding } = useTenant();
   const reducedMotion = useReducedMotion();
-  const displayName = branding.madrasaName.trim() || t("entry.productName");
-  const displayTagline = branding.tagline.trim();
+
+  const displayName =
+    publicBranding?.madrasaName.trim() ||
+    workspace?.madrasaName.trim() ||
+    t("entry.productName");
+  const displayTagline = publicBranding?.tagline.trim() || workspace?.tagline?.trim() || "";
+  const logoUrl = publicBranding?.logoUrl.trim() || "";
+
+  const entryBranding = useMemo((): PublicBranding | null => {
+    if (publicBranding) {
+      return publicBranding;
+    }
+    if (!workspace?.madrasaName) {
+      return null;
+    }
+    return {
+      madrasaName: workspace.madrasaName,
+      tagline: workspace.tagline ?? "",
+      logoUrl: "",
+      faviconUrl: "",
+      primaryColor: DEFAULT_BRANDING_SETTINGS.primaryColor,
+      secondaryColor: DEFAULT_BRANDING_SETTINGS.secondaryColor,
+    };
+  }, [publicBranding, workspace]);
+
+  useEffect(() => {
+    if (!brandingReady || !entryBranding) {
+      return;
+    }
+    applyTenantEntryTheme(entryBranding);
+    if (displayName) {
+      document.title = `${displayName} - Madrasa MS`;
+    }
+    const favicon = entryBranding.faviconUrl || entryBranding.logoUrl;
+    if (favicon) {
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "icon";
+        document.head.appendChild(link);
+      }
+      link.href = favicon;
+    }
+  }, [brandingReady, entryBranding, displayName]);
 
   if (!brandingReady) {
     return <AuthLoadingShell />;
@@ -47,18 +94,18 @@ export default function AuthLayout({
         aria-hidden
       />
 
-      <motion.div
-        initial={reducedMotion ? false : { opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={reducedMotion ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-[420px]"
+      <div
+        className={cn(
+          "relative z-10 w-full max-w-[420px]",
+          !reducedMotion && "animate-fade-in",
+        )}
       >
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-xl shadow-black/[0.04] backdrop-blur-xl dark:shadow-black/20">
           <div className="border-b border-border/50 bg-muted/15 px-6 py-6 text-center sm:px-8">
             <div className="mb-4 flex flex-col items-center gap-2">
-              {branding.logoUrl ? (
+              {logoUrl ? (
                 <img
-                  src={branding.logoUrl}
+                  src={logoUrl}
                   alt={displayName}
                   width={64}
                   height={64}
@@ -100,7 +147,7 @@ export default function AuthLayout({
 
           <div className="px-6 py-6 sm:px-8 sm:py-7">{children}</div>
         </div>
-      </motion.div>
+      </div>
     </main>
   );
 }
