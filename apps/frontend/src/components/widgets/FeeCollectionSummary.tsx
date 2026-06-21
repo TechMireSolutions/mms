@@ -12,7 +12,7 @@ import { useLiveCollection } from "../../hooks/useLiveCollection";
  * @returns {React.ReactElement} The fee collection summary widget.
  */
 export default function FeeCollectionSummary({ title }: { title?: string }) {
-  const invoices = useLiveCollection<Invoice>("finance_invoices", INVOICES);
+  const invoices = useLiveCollection<Invoice>("finance_invoices");
 
   // Calculate overall metrics
   let totalCollected = 0;

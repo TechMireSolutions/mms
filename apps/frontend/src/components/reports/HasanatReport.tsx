@@ -70,7 +70,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
     () => [palette.primary, palette.secondary, palette.charts[2]],
     [palette],
   );
-  const distributions = useLiveCollection<Distribution>("hasanat_distributions", DISTRIBUTIONS);
+  const distributions = useLiveCollection<Distribution>("hasanat_distributions");
 
   const { distributionData, hasanatByFaculty } = useMemo(() => {
     const studentMap: Record<string, HasanatReportItem> = {};

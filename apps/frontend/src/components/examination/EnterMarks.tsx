@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Save, CheckCircle2, Users } from "lucide-react";
-import { CLASSES, Exam, ExamResult } from '@/lib/data/examinationData';
+import { Exam, ExamResult } from '@/lib/data/examinationData';
 import { useStudentsByIds } from "@/hooks/useStudents";
 import type { Student } from "@/lib/data/studentsData";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
+import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import type { Enrollment } from '@/lib/data/enrollmentData';
 import { getGrade } from "./gradeUtils";
@@ -32,7 +33,16 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
 
   const exam = exams.find((e) => e.id === selectedExam);
 
+  const sessions = useSessionsCollection();
   const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const classNamesById = useMemo(
+    () => new Map(
+      sessions.flatMap((session) =>
+        (session.classes || []).map((cls) => [cls.id, `${session.name} - ${cls.name}`] as const),
+      ),
+    ),
+    [sessions],
+  );
 
   const studentIds = useMemo(() => {
     if (!exam) return [];
@@ -129,7 +139,6 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
             </div>
             <div className="divide-y divide-border/50" role="list">
               {students.map((s, i) => {
-                const cls = CLASSES.find((c) => c.id === s.classId);
                 const val = marks[String(s.id)] ?? "";
                 const pct = exam.totalMarks > 0 && val !== "" ? Math.round((Number(val) / exam.totalMarks) * 100) : null;
                 const gr = pct !== null ? getGrade(pct) : null;
@@ -147,7 +156,7 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-semibold text-foreground">{s.name ?? "—"}</p>
-                      <p className="text-[10px] text-muted-foreground">{cls?.name} · {s.rollNo}</p>
+                      <p className="text-[10px] text-muted-foreground">{classNamesById.get(s.classId) || s.classId} · {s.rollNo}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       {gr && (

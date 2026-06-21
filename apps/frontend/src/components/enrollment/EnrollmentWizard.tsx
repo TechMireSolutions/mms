@@ -13,8 +13,9 @@ import Step5FeeCalculation from "./wizard/Step5FeeCalculation";
 import Step6Confirmation from "./wizard/Step6Confirmation";
 import { suggestClass, runFullEligibility, Enrollment, CalculatedFee } from '@/lib/data/enrollmentData';
 import { Student } from '@/lib/data/studentsData';
-import { SESSIONS_DATA, Session, Class } from '@/lib/data/sessionsData';
-import { getCollection, getObject } from "../../lib/db";
+import { Session, Class } from '@/lib/data/sessionsData';
+import { getObject } from "../../lib/db";
+import { useSessionsCollection } from "@/hooks/useSessions";
 import {
   type EnrollmentsSettings,
   DEFAULT_ENROLLMENTS_SETTINGS,
@@ -43,7 +44,7 @@ interface EnrollmentWizardProps {
  * @returns The EnrollmentWizard component.
  */
 export default function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps): React.ReactElement {
-  const [sessions] = useState<Session[]>(() => getCollection<Session>("sessions", SESSIONS_DATA));
+  const sessions = useSessionsCollection();
   const [step, setStep] = useState<number>(0);
   const [student, setStudent]       = useState<Student | null>(null);
   const [session, setSession]       = useState<Session | null>(null);

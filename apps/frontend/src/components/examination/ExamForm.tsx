@@ -3,7 +3,8 @@ import { BookOpen } from "lucide-react";
 import FormModal from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
 import { calculateModuleFieldsCompleteness } from "@/lib/formCompleteness";
-import { CLASSES, Exam } from '@/lib/data/examinationData';
+import { Exam } from '@/lib/data/examinationData';
+import { useSessionsCollection } from "@/hooks/useSessions";
 import { toTitleCase } from "@mms/shared";
 import { getObject } from "../../lib/db";
 import {
@@ -44,6 +45,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const sessions = useSessionsCollection();
 
   const settings = useMemo(() => getObject<ExaminationsSettings>("examinations_settings", DEFAULT_EXAMINATIONS_SETTINGS), []);
   const fields = settings.fields || DEFAULT_EXAMINATIONS_SETTINGS.fields || {};
@@ -111,6 +113,15 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
   };
 
   const valid = !!(data.name && data.date && data.classIds && data.classIds.length > 0);
+  const classes = useMemo(
+    () => sessions.flatMap((session) =>
+      (session.classes || []).map((cls) => ({
+        id: cls.id,
+        name: `${session.name} - ${cls.name}`,
+      })),
+    ),
+    [sessions],
+  );
 
   return (
     <FormModal
@@ -256,7 +267,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                   <div key="classIds" className="sm:col-span-2">
                     <span className={FORM_LABEL}>Assign to Classes *</span>
                     <div className="flex flex-wrap gap-2" role="group" aria-label="Assign to classes list">
-                      {CLASSES.map((cls) => {
+                      {classes.map((cls) => {
                         const active = !!(data.classIds && data.classIds.includes(cls.id));
                         return (
                           <button

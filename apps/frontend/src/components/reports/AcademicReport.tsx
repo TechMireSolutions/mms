@@ -67,7 +67,6 @@ export interface ClassRankingItem {
 export default function AcademicReport({ filters }: AcademicReportProps): React.JSX.Element {
   const examResults = useLiveCollection<ExamResult>("exam_results", EXAM_RESULTS);
   const exams = useLiveCollection<Exam>("exams", EXAMS);
-
   const studentIds = useMemo(
     () => uniqueRegistryIds(examResults.map((r) => r.studentId)),
     [examResults],

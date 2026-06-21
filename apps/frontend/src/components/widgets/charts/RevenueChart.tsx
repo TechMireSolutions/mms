@@ -36,7 +36,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
 export default function RevenueChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { revenue: COLOR_THEMES } = useBrandedDashboardChartColors();
   const [period, setPeriod] = useState<"6m" | "10m">("10m");
-  const invoices = getCollection<Invoice>("finance_invoices", INVOICES);
+  const invoices = getCollection<Invoice>("finance_invoices");
 
   const [chartType, setChartType] = useState<"bar" | "line" | "area">(() => {
     return (localStorage.getItem("db_chart_type_revenue") as "bar" | "line" | "area") || "bar";

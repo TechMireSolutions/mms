@@ -8,11 +8,14 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CLASSES, Exam } from '@/lib/data/examinationData';
+import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "../../lib/db";
 import useTranslation from "@/hooks/useTranslation";
 import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { useSessionsCollection } from "@/hooks/useSessions";
+import { useLiveCollection } from "@/hooks/useLiveCollection";
+import type { Enrollment } from "@/lib/data/enrollmentData";
 
 const STATUS_CLS: Record<string, string> = {
   upcoming: "bg-info/10 text-info border-info/20",
@@ -71,6 +74,18 @@ export default function ExamsList({
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
 
+  const sessions = useSessionsCollection();
+  const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const classes = React.useMemo(
+    () => sessions.flatMap((session) =>
+      (session.classes || []).map((cls) => ({
+        id: cls.id,
+        name: `${session.name} - ${cls.name}`,
+      })),
+    ),
+    [sessions],
+  );
+
   const statusLabels = useMemo(
     () => ({
       upcoming: t("examinations.status.upcoming"),
@@ -110,14 +125,22 @@ export default function ExamsList({
   const showClasses = isColumnVisible ? isColumnVisible("classes") : true;
 
   const renderExamMeta = (exam: Exam) => {
-    const assignedClasses = CLASSES.filter((c) => exam.classIds.includes(c.id));
-    const studentCount = assignedClasses.reduce((s, c) => s + c.students.length, 0);
+    const assignedClasses = classes.filter((c) => exam.classIds.includes(c.id));
+    const classIds = new Set(exam.classIds);
+    const studentCount = new Set(
+      enrollments
+        .filter((enrollment) =>
+          classIds.has(enrollment.classId) &&
+          enrollment.status !== "cancelled" &&
+          enrollment.status !== "completed"
+        )
+        .map((enrollment) => String(enrollment.studentId)),
+    ).size;
     const statusCls = STATUS_CLS[exam.status] || STATUS_CLS.upcoming;
     const StatusIcon = STATUS_ICONS[exam.status] || Circle;
     const statusLabel = statusLabels[exam.status as keyof typeof statusLabels] || exam.status;
     return { assignedClasses, studentCount, statusCls, StatusIcon, statusLabel };
   };
-
   return (
     <section className="space-y-4" aria-label={t("examinations.exams")}>
       <div className="flex flex-col sm:flex-row gap-3">

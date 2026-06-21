@@ -4,7 +4,7 @@ import {
   CheckCircle2, XCircle, Save, Send, Users, Search,
   WifiOff, Wifi, MapPin, Scan, UploadCloud,
 } from "lucide-react";
-import { CLASS_STUDENTS, ClassStudent, ATTENDANCE_STATUSES, STATUS_MAP, AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
+import { ClassStudent, ATTENDANCE_STATUSES, STATUS_MAP, AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useStudentsCollection } from '@/hooks/useStudents';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
@@ -161,17 +161,16 @@ function enrolledStudentsForClass(
       seen.add(studentId);
 
       const student = studentsById.get(studentId);
-      const fallback = CLASS_STUDENTS[classId]?.find((item) => item.id === studentId);
-      const name = student?.name || enrollment.studentName || fallback?.name || "Unnamed student";
+      const name = student?.name || enrollment.studentName || "Unnamed student";
       const gender = student?.gender === "female" || student?.gender === "male"
         ? student.gender
-        : fallback?.gender ?? "male";
+        : "male";
 
       return [{
         id: studentId,
         name,
         gender,
-        rollNo: fallback?.rollNo || studentRollNo(student, studentId),
+        rollNo: studentRollNo(student, studentId),
       }];
     });
 }
@@ -277,7 +276,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
   const students: ClassStudent[] = useMemo(() => {
     if (!filters.classId) return [];
     const fromEnrollments = enrolledStudentsForClass(filters.classId, enrollments, enrolledStudents);
-    return fromEnrollments.length > 0 ? fromEnrollments : (CLASS_STUDENTS[filters.classId] ?? []);
+    return fromEnrollments;
   }, [enrollments, enrolledStudents, filters.classId]);
 
   // Read settings

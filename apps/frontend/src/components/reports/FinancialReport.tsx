@@ -59,7 +59,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
     () => [palette.primary, palette.secondary, palette.charts[2], palette.charts[3], palette.charts[0]],
     [palette],
   );
-  const financeInvoices = useLiveCollection<Invoice>("finance_invoices", INVOICES);
+  const financeInvoices = useLiveCollection<Invoice>("finance_invoices");
 
   const feeCollection = useMemo(() => {
     // Generate monthly aggregation

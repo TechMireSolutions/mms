@@ -2,12 +2,11 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Search, Eye, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { ENROLLMENT_STATUSES, STATUS_MAP, Enrollment, EnrollmentStatus } from '@/lib/data/enrollmentData';
-import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
-import { getCollection } from "../../lib/db";
 import useTranslation from "@/hooks/useTranslation";
 import { useStudentsByIds } from "@/hooks/useStudents";
 import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { useSessionsCollection } from "@/hooks/useSessions";
 
 const PAGE_SIZE = 12;
 
@@ -52,7 +51,7 @@ export default function EnrollmentList({
   const [sessionFilter, setSession] = useState<string>("all");
   const [page, setPage]             = useState<number>(1);
 
-  const sessions = useMemo<Session[]>(() => getCollection<Session>("sessions", SESSIONS_DATA), []);
+  const sessions = useSessionsCollection();
 
   const filtered = useMemo<Enrollment[]>(() => {
     return enrollments.filter((e) => {

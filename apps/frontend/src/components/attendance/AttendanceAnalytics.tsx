@@ -5,11 +5,13 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import {
-  CLASS_STUDENTS, ClassStudent,
   calcClassStats, calcStudentRate, getMonthlyTrend, ATTENDANCE_STATUSES, AttendanceRecord,
   AttendanceStatus,
 } from '@/lib/data/attendanceData';
 import { useSessionsCollection } from '@/hooks/useSessions';
+import { useStudentsCollection } from '@/hooks/useStudents';
+import { useLiveCollection } from '@/hooks/useLiveCollection';
+import type { Enrollment } from '@/lib/data/enrollmentData';
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
 
 interface StatCardProps {
@@ -60,6 +62,8 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
     [primary, secondary, charts],
   );
   const sessions = useSessionsCollection();
+  const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const allStudents = useStudentsCollection();
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>
@@ -85,12 +89,24 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
     return totalAll ? Math.round((totalPresent / totalAll) * 100) : 0;
   }, [classStats]);
 
-  // Monthly trend (pick first class or all-c1 fallback)
-  const trendClassId = filters.classId || "c1";
+  // Monthly trend (pick selected class or the first available tenant class)
+  const trendClassId = filters.classId || classesToShow[0]?.id || "";
   const monthlyTrend = useMemo(() => getMonthlyTrend(trendClassId, records), [trendClassId, records]);
 
   // Student rates for first class
-  const students: ClassStudent[] = CLASS_STUDENTS[trendClassId] ?? [];
+  const students = useMemo(() => {
+    if (!trendClassId) return [];
+    const studentIds = new Set(
+      enrollments
+        .filter((enrollment) =>
+          enrollment.classId === trendClassId &&
+          enrollment.status !== "cancelled" &&
+          enrollment.status !== "completed"
+        )
+        .map((enrollment) => String(enrollment.studentId)),
+    );
+    return allStudents.filter((student) => studentIds.has(String(student.id)));
+  }, [allStudents, enrollments, trendClassId]);
 
   /** Abbreviated name + attendance rate entry for chart display. */
   interface StudentRateEntry { name: string; rate: number; }

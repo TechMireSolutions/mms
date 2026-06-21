@@ -39,7 +39,7 @@ const HasanatTooltip = ({ active = false, payload = [] }: Partial<TooltipContent
 export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { attendance: ATTENDANCE_COLORS } = useBrandedDashboardChartColors();
   const palette = useBrandPalette();
-  const records = getCollection<AttendanceRecord>("attendance_records", ATTENDANCE_RECORDS);
+  const records = getCollection<AttendanceRecord>("attendance_records");
 
   const [chartType, setChartType] = useState<"bar" | "line" | "area">(() => {
     return (localStorage.getItem("db_chart_type_attendance") as "bar" | "line" | "area") || "bar";
@@ -194,7 +194,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
  */
 export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { hasanat: HASANAT_THEMES } = useBrandedDashboardChartColors();
-  const distributions = getCollection<Distribution>("hasanat_distributions", DISTRIBUTIONS);
+  const distributions = getCollection<Distribution>("hasanat_distributions");
 
   const [chartType, setChartType] = useState<"pie" | "bar" | "radar">(() => {
     return (localStorage.getItem("db_chart_type_hasanat") as "pie" | "bar" | "radar") || "pie";

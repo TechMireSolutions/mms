@@ -1,12 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { calcAge } from '@/lib/data/studentsData';
-import { SESSIONS_DATA, Session } from '@/lib/data/sessionsData';
 import { runFullEligibility, suggestClass, CheckResult } from '@/lib/data/enrollmentData';
 import { FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
-import { getCollection } from "../../lib/db";
 import { useStudentsByIds } from "@/hooks/useStudents";
 import RegistryPersonSelect from "@/components/ui/RegistryPersonSelect";
+import { useSessionsCollection } from "@/hooks/useSessions";
 
 const ICONS: Record<string, React.ReactElement> = {
   pass: <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />,
@@ -27,7 +26,7 @@ const LABEL_COL: Record<string, string> = {
 };
 
 export default function EligibilityCheck(): React.ReactElement {
-  const [sessions] = useState<Session[]>(() => getCollection<Session>("sessions", SESSIONS_DATA));
+  const sessions = useSessionsCollection();
   const [studentId, setStudentId] = useState<string>("");
   const [sessionId, setSessionId] = useState<string>("");
 

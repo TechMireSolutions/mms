@@ -1,7 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Award } from "lucide-react";
-import { CLASSES, STUDENTS, Exam, ExamResult } from '@/lib/data/examinationData';
+import { Exam, ExamResult } from '@/lib/data/examinationData';
+import { useStudentsCollection } from "@/hooks/useStudents";
+import { useSessionsCollection } from "@/hooks/useSessions";
+import { useLiveCollection } from "@/hooks/useLiveCollection";
+import type { Enrollment } from "@/lib/data/enrollmentData";
 import { getGrade } from "./gradeUtils";
 import StudentResultCard, { StudentResultItem } from "./StudentResultCard";
 import CertificatePreview from "./CertificatePreview";
@@ -55,19 +59,43 @@ export default function ResultsView({
   const [certStudent, setCertStudent] = useState<RankedResult | null>(null);
 
   const exam = exams.find((e) => e.id === selectedExam);
+  const students = useStudentsCollection();
+  const sessions = useSessionsCollection();
+  const enrollments = useLiveCollection<Enrollment>("enrollments");
+
+  const studentsById = useMemo(
+    () => new Map(students.map((student) => [String(student.id), student])),
+    [students],
+  );
+  const classNamesById = useMemo(
+    () => new Map(
+      sessions.flatMap((session) =>
+        (session.classes || []).map((cls) => [cls.id, `${session.name} - ${cls.name}`] as const),
+      ),
+    ),
+    [sessions],
+  );
+  const classByStudentId = useMemo(() => {
+    const classIds = new Set(exam?.classIds || []);
+    return new Map(
+      enrollments
+        .filter((enrollment) => classIds.has(enrollment.classId))
+        .map((enrollment) => [String(enrollment.studentId), enrollment.classId] as const),
+    );
+  }, [enrollments, exam]);
 
   const rankedResults = useMemo<RankedResult[]>(() => {
     if (!exam) return [];
     return results
       .filter((r) => r.examId === exam.id)
       .map((r) => {
-        const student = STUDENTS.find((s) => s.id === r.studentId);
-        const cls = CLASSES.find((c) => c.id === student?.classId);
+        const student = studentsById.get(String(r.studentId));
+        const classId = classByStudentId.get(String(r.studentId));
         const pct = Math.round((r.marksObtained / exam.totalMarks) * 100);
         return {
           ...r,
-          student: student ? { name: student.name, rollNo: student.rollNo } : undefined,
-          cls: cls ? { name: cls.name } : undefined,
+          student: student ? { name: student.name || "Unnamed student", rollNo: student.grNumber || String(student.id) } : undefined,
+          cls: classId ? { name: classNamesById.get(classId) || classId } : undefined,
           pct,
           grade: getGrade(pct),
           passed: r.marksObtained >= exam.passingMarks,
@@ -75,7 +103,7 @@ export default function ResultsView({
       })
       .sort((a, b) => b.marksObtained - a.marksObtained)
       .map((r, i) => ({ ...r, rank: i + 1 }));
-  }, [exam, results]);
+  }, [classByStudentId, classNamesById, exam, results, studentsById]);
 
   useEffect(() => {
     onFilteredCountChange?.(rankedResults.length);
