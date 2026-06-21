@@ -202,6 +202,10 @@ export function resolveAppDomainForRequest(
   const host = hostname.toLowerCase().split(':')[0];
   const configured = configuredDomain?.trim();
   if (configured) {
+    if (configured === LOCAL_DEV_APP_DOMAIN || configured.endsWith(`.${LOCAL_DEV_APP_DOMAIN}`)) {
+      return resolveAppDomain(host, configured);
+    }
+
     const hint = misconfiguredAppDomainHint(host, configured);
     if (hint && host.split('.').length === configured.split('.').length + 1) {
       return host;

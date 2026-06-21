@@ -2,11 +2,15 @@ import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2, XCircle, Save, Send, Users, Search,
-  WifiOff, Wifi, MapPin, Lock, Scan, UploadCloud,
+  WifiOff, Wifi, MapPin, Scan, UploadCloud,
 } from "lucide-react";
 import { CLASS_STUDENTS, ClassStudent, ATTENDANCE_STATUSES, STATUS_MAP, AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useSessionsCollection } from '@/hooks/useSessions';
+import { useStudentsCollection } from '@/hooks/useStudents';
+import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { getObject } from "../../lib/db";
+import type { Student } from "@/lib/data/studentsData";
+import type { Enrollment } from "@/lib/data/enrollmentData";
 import usePermissions from "@/hooks/usePermissions";
 import StatusToggle from "./StatusToggle";
 import { AttendanceFilterState } from "./AttendanceFilters";
@@ -84,24 +88,6 @@ function saveQueue(q: OfflinePayload[]) {
   }
 }
 
-// ── Lock store (per classId+date) ────────────────────────────────────────────
-function isLocked(classId: string, date: string): boolean {
-  try {
-    const key = `att_lock_${classId}_${date}`;
-    return localStorage.getItem(key) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function setLocked(classId: string, date: string) {
-  try {
-    localStorage.setItem(`att_lock_${classId}_${date}`, "1");
-  } catch (err) {
-    console.error("Failed to set lock:", err);
-  }
-}
-
 // ── Audit log ─────────────────────────────────────────────────────────────────
 function addAuditEntry(classId: string, date: string, entry: AuditEntry) {
   try {
@@ -144,6 +130,50 @@ function buildDefaultRows(students: ClassStudent[], customFields: ModuleCustomFi
     });
     return row;
   });
+}
+
+function studentRollNo(student: Student | undefined, studentId: string): string {
+  const grNumber = typeof student?.grNumber === "string" ? student.grNumber.trim() : "";
+  if (grNumber) return grNumber;
+  const numeric = studentId.replace(/\D/g, "");
+  return numeric ? `STU-${numeric.padStart(3, "0")}` : studentId;
+}
+
+function enrolledStudentsForClass(
+  classId: string,
+  enrollments: Enrollment[],
+  students: Student[],
+): ClassStudent[] {
+  if (!classId) return [];
+
+  const studentsById = new Map(students.map((student) => [String(student.id), student]));
+  const seen = new Set<string>();
+
+  return enrollments
+    .filter((enrollment) =>
+      enrollment.classId === classId &&
+      enrollment.status !== "cancelled" &&
+      enrollment.status !== "completed"
+    )
+    .flatMap((enrollment) => {
+      const studentId = String(enrollment.studentId || "");
+      if (!studentId || seen.has(studentId)) return [];
+      seen.add(studentId);
+
+      const student = studentsById.get(studentId);
+      const fallback = CLASS_STUDENTS[classId]?.find((item) => item.id === studentId);
+      const name = student?.name || enrollment.studentName || fallback?.name || "Unnamed student";
+      const gender = student?.gender === "female" || student?.gender === "male"
+        ? student.gender
+        : fallback?.gender ?? "male";
+
+      return [{
+        id: studentId,
+        name,
+        gender,
+        rollNo: fallback?.rollNo || studentRollNo(student, studentId),
+      }];
+    });
 }
 
 // ── Offline Banner ────────────────────────────────────────────────────────────
@@ -233,6 +263,8 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
 export default function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
   const { can } = usePermissions();
   const sessions = useSessionsCollection();
+  const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const enrolledStudents = useStudentsCollection();
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>
@@ -242,7 +274,11 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
 
   const classInfo  = useMemo(() => allClasses.find((c) => c.id === filters.classId), [allClasses, filters.classId]);
   const sessionInfo = useMemo(() => classInfo ? sessions.find((s) => s.id === classInfo.sessionId) : null, [sessions, classInfo]);
-  const students: ClassStudent[] = filters.classId ? (CLASS_STUDENTS[filters.classId] ?? []) : [];
+  const students: ClassStudent[] = useMemo(() => {
+    if (!filters.classId) return [];
+    const fromEnrollments = enrolledStudentsForClass(filters.classId, enrollments, enrolledStudents);
+    return fromEnrollments.length > 0 ? fromEnrollments : (CLASS_STUDENTS[filters.classId] ?? []);
+  }, [enrollments, enrolledStudents, filters.classId]);
 
   // Read settings
   const settings = useMemo(() => getObject<AttendanceModuleSettings>("attendance_settings", DEFAULT_ATTENDANCE_SETTINGS), []);
@@ -274,7 +310,6 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
   const [search, setSearch]       = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [isDraft, setIsDraft]     = useState(false);
-  const [locked, setLockedState]  = useState(false);
   const [geo, setGeo]             = useState<GeoData | "loading" | null>(null);
   const [offlineQueue, setOfflineQueue] = useState<OfflinePayload[]>(loadQueue);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -291,7 +326,8 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
   }, []);
 
   // Rebuild rows when class/date changes
-  const stableKey = filters.classId + filters.date;
+  const studentRosterKey = students.map((student) => student.id).join("|");
+  const stableKey = `${filters.classId}:${filters.date}:${studentRosterKey}`;
   const [lastKey, setLastKey] = useState(stableKey);
   if (lastKey !== stableKey) {
     setLastKey(stableKey);
@@ -309,22 +345,14 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
         ...((r as any).customFields || {}),
       }));
     } else {
-      newRows = buildDefaultRows(CLASS_STUDENTS[filters.classId] ?? [], customFields);
+      newRows = buildDefaultRows(students, customFields);
     }
     setRows(newRows);
-    setSubmitted(isLocked(filters.classId, filters.date));
+    setSubmitted(false);
     setIsDraft(false);
-    setLockedState(isLocked(filters.classId, filters.date));
     setGeo(null);
     setShowFaceAI(false);
   }
-
-  // Load lock state on mount
-  useEffect(() => {
-    if (filters.classId && filters.date) {
-      setLockedState(isLocked(filters.classId, filters.date));
-    }
-  }, [filters.classId, filters.date]);
 
   const filteredRows = useMemo(() =>
     rows.filter((r) => r.name.toLowerCase().includes(search.toLowerCase())),
@@ -339,7 +367,6 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
   }), [rows]);
 
   const setRow = (studentId: string, key: string, value: any) => {
-    if (locked) return;
     const before = rows.find((r) => r.studentId === studentId);
     setRows((prev) => prev.map((r) => r.studentId === studentId ? { ...r, [key]: value } : r));
     // Audit
@@ -356,7 +383,6 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
   };
 
   const markAll = (status: AttendanceRecord["status"]) => {
-    if (locked) return;
     setRows((prev) => prev.map((r) => ({ ...r, status })));
     addAuditEntry(filters.classId, filters.date, { action: "bulk_mark", status, count: rows.length, by: role });
   };
@@ -385,6 +411,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
         classId: filters.classId,
         date: filters.date,
         studentId: row.studentId,
+        studentName: row.name,
         rollNo: row.rollNo,
         status: row.status,
         timeIn: row.status !== "absent" ? row.timeIn : "",
@@ -415,6 +442,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
         classId: filters.classId,
         date: filters.date,
         studentId: row.studentId,
+        studentName: row.name,
         rollNo: row.rollNo,
         status: row.status,
         timeIn: row.status !== "absent" ? row.timeIn : "",
@@ -438,10 +466,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
       saveQueue(q);
       setOfflineQueue(q);
       setSubmitted(true);
-      setLockedState(false); // draft-like when offline
     } else {
-      setLocked(filters.classId, filters.date);
-      setLockedState(true);
       setSubmitted(true);
     }
   };
@@ -462,6 +487,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
           classId: payload.classId,
           date: payload.date,
           studentId: row.studentId,
+          studentName: row.name,
           rollNo: row.rollNo,
           status: row.status,
           timeIn: row.status !== "absent" ? row.timeIn : "",
@@ -474,7 +500,6 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
         (r) => !(r.classId === payload.classId && r.date === payload.date)
       );
       updatedRecords.push(...newRecs);
-      setLocked(payload.classId, payload.date);
     });
     setRecords(updatedRecords);
 
@@ -494,40 +519,6 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
     );
   }
 
-  if (submitted && !isOffline) {
-    return (
-      <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center mb-4">
-          <CheckCircle2 className="w-8 h-8 text-success" aria-hidden="true" />
-        </div>
-        <h2 className="text-lg font-bold text-foreground m-0">Attendance Submitted & Locked</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {classInfo?.name} · {filters.date} · {students.length} students recorded
-        </p>
-        {typeof geo === "object" && geo !== null && (
-          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 justify-center">
-            <MapPin className="w-3 h-3" aria-hidden="true" /> Geo-tagged: {geo.lat.toFixed(5)}, {geo.lng.toFixed(5)}
-          </p>
-        )}
-        <div className="flex gap-3 mt-5 flex-wrap justify-center">
-          {ATTENDANCE_STATUSES.map((s: AttendanceStatus) => (
-            <div key={s.id} className={`px-3 py-1.5 rounded-xl ${s.bg} ${s.text} text-xs font-bold`}>
-              {s.label}: {stats[s.id as keyof typeof stats] || 0}
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-          <Lock className="w-3 h-3" aria-hidden="true" /> This session is locked for today.
-        </div>
-        <button onClick={() => { setSubmitted(false); setRows(buildDefaultRows(students, customFields)); setLockedState(false); }}
-          className="mt-5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-          Mark Another Day
-        </button>
-      </motion.div>
-    );
-  }
-
   return (
     <section className="space-y-4">
       {/* Offline Banner */}
@@ -544,9 +535,9 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-foreground m-0">{classInfo?.name}</h2>
-            {locked && (
-              <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-destructive/15 text-destructive font-bold">
-                <Lock className="w-2.5 h-2.5" aria-hidden="true" /> Locked
+            {submitted && (
+              <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-success/15 text-success font-bold">
+                <CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" /> Submitted
               </span>
             )}
             {isOffline && (
@@ -568,26 +559,16 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <Scan className="w-3 h-3" aria-hidden="true" /> Face AI
           </button>
-          {!locked && (
-            <div className="flex rounded-lg border border-border overflow-hidden text-xs font-semibold" role="group" aria-label="Bulk actions">
-              <button onClick={() => markAll("present")} className="px-3 py-1.5 bg-success/10 text-success hover:bg-success/15 transition-colors flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> All Present
-              </button>
-              <button onClick={() => markAll("absent")} className="px-3 py-1.5 bg-destructive/10 text-destructive hover:bg-destructive/15 transition-colors flex items-center gap-1">
-                <XCircle className="w-3 h-3" aria-hidden="true" /> All Absent
-              </button>
-            </div>
-          )}
+          <div className="flex rounded-lg border border-border overflow-hidden text-xs font-semibold" role="group" aria-label="Bulk actions">
+            <button onClick={() => markAll("present")} className="px-3 py-1.5 bg-success/10 text-success hover:bg-success/15 transition-colors flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> All Present
+            </button>
+            <button onClick={() => markAll("absent")} className="px-3 py-1.5 bg-destructive/10 text-destructive hover:bg-destructive/15 transition-colors flex items-center gap-1">
+              <XCircle className="w-3 h-3" aria-hidden="true" /> All Absent
+            </button>
+          </div>
         </div>
       </header>
-
-      {/* Locked notice */}
-      {locked && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm font-semibold">
-          <Lock className="w-4 h-4" aria-hidden="true" />
-          This attendance session is locked. Contact an admin to unlock.
-        </div>
-      )}
 
       {/* Stats Strip */}
       <div className="grid grid-cols-4 gap-2">
@@ -613,7 +594,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
       </div>
 
       {/* Attendance Grid */}
-      <div className={`rounded-xl border border-border overflow-hidden ${locked ? "opacity-70 pointer-events-none" : ""}`}>
+      <div className="rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/60 border-b border-border">
@@ -754,23 +735,21 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
       </div>
 
       {/* Actions */}
-      {!locked && (
-        <footer className="flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-xs text-muted-foreground">{rows.length} students · {filteredRows.length} shown</p>
-          <div className="flex gap-2">
-            <button onClick={handleSaveDraft}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-              <Save className="w-3.5 h-3.5" aria-hidden="true" /> Save Draft
-            </button>
-            <button onClick={handleSubmit}
-              disabled={!can("attendance.write")}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors">
-              <Send className="w-3.5 h-3.5" aria-hidden="true" />
-              {isOffline ? "Save Offline" : "Submit & Lock"}
-            </button>
-          </div>
-        </footer>
-      )}
+      <footer className="flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-xs text-muted-foreground">{rows.length} students · {filteredRows.length} shown</p>
+        <div className="flex gap-2">
+          <button onClick={handleSaveDraft}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+            <Save className="w-3.5 h-3.5" aria-hidden="true" /> Save Draft
+          </button>
+          <button onClick={handleSubmit}
+            disabled={!can("attendance.write")}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors">
+            <Send className="w-3.5 h-3.5" aria-hidden="true" />
+            {isOffline ? "Save Offline" : submitted ? "Update Attendance" : "Submit Attendance"}
+          </button>
+        </div>
+      </footer>
     </section>
   );
 }

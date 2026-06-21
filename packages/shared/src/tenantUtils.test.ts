@@ -98,6 +98,13 @@ describe('resolveAppDomainForRequest', () => {
       ),
     ).toBe('dar-ul-quran');
   });
+
+  it('does not self-correct localhost tenant hosts', () => {
+    expect(resolveAppDomainForRequest('najafi.localhost', 'localhost')).toBe('localhost');
+    expect(resolveAppDomainForRequest('najafi.mms.localhost', 'mms.localhost')).toBe(
+      'mms.localhost',
+    );
+  });
 });
 
 describe('isHostAllowedForAppDomain', () => {
