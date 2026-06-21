@@ -2,7 +2,9 @@ import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Save, CheckCircle2, Users } from "lucide-react";
 import { CLASSES, Exam, ExamResult } from '@/lib/data/examinationData';
-import { useStudentsCollection } from "@/hooks/useStudents";
+import { useStudentsByIds } from "@/hooks/useStudents";
+import type { Student } from "@/lib/data/studentsData";
+import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import type { Enrollment } from '@/lib/data/enrollmentData';
 import { getGrade } from "./gradeUtils";
@@ -30,10 +32,19 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
 
   const exam = exams.find((e) => e.id === selectedExam);
 
-  const allStudents = useStudentsCollection();
   const enrollments = useLiveCollection<Enrollment>("enrollments");
 
-  const students = useMemo(() => {
+  const studentIds = useMemo(() => {
+    if (!exam) return [];
+    const classIds = new Set(exam.classIds);
+    return uniqueRegistryIds(
+      enrollments.filter((e) => classIds.has(e.classId)).map((e) => e.studentId),
+    );
+  }, [exam, enrollments]);
+
+  const { data: resolvedStudents = [] } = useStudentsByIds(studentIds);
+
+  const students = useMemo((): Array<Student & { classId: string; rollNo: string }> => {
     if (!exam) return [];
     const classIds = new Set(exam.classIds);
     const enrollmentByStudent = new Map(
@@ -41,17 +52,17 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
         .filter((e) => classIds.has(e.classId))
         .map((e) => [String(e.studentId), e]),
     );
-    return allStudents
+    return resolvedStudents
       .filter((s) => enrollmentByStudent.has(String(s.id)))
       .map((s) => {
         const enrollment = enrollmentByStudent.get(String(s.id))!;
         return {
           ...s,
           classId: enrollment.classId,
-          rollNo: s.grNumber || "",
+          rollNo: s.grNumber ?? "",
         };
       });
-  }, [exam, allStudents, enrollments]);
+  }, [exam, resolvedStudents, enrollments]);
 
   // Pre-fill from existing results using useEffect to avoid state-setting side effects in render/memo
   React.useEffect(() => {
@@ -69,8 +80,8 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
     const newResults: ExamResult[] = students.map((s) => ({
       id: `er_${exam.id}_${s.id}`,
       examId: exam.id,
-      studentId: s.id,
-      marksObtained: Number(marks[s.id] || 0),
+      studentId: String(s.id),
+      marksObtained: Number(marks[String(s.id)] || 0),
     }));
     onSaveResults(exam.id, newResults);
     setSaved(true);
@@ -119,7 +130,7 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
             <div className="divide-y divide-border/50" role="list">
               {students.map((s, i) => {
                 const cls = CLASSES.find((c) => c.id === s.classId);
-                const val = marks[s.id] ?? "";
+                const val = marks[String(s.id)] ?? "";
                 const pct = exam.totalMarks > 0 && val !== "" ? Math.round((Number(val) / exam.totalMarks) * 100) : null;
                 const gr = pct !== null ? getGrade(pct) : null;
                 return (
@@ -132,10 +143,10 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
                     role="listitem"
                   >
                     <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-primary" aria-hidden="true">
-                      {s.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                      {(s.name ?? "?").split(" ").map((n) => n[0]).join("").slice(0, 2)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-foreground">{s.name}</p>
+                      <p className="text-[13px] font-semibold text-foreground">{s.name ?? "—"}</p>
                       <p className="text-[10px] text-muted-foreground">{cls?.name} · {s.rollNo}</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -150,8 +161,8 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
                           min={0}
                           max={exam.totalMarks}
                           value={val}
-                          aria-label={`Marks for ${s.name}`}
-                          onChange={(e) => { setMarks((m) => ({ ...m, [s.id]: e.target.value })); setSaved(false); }}
+                          aria-label={`Marks for ${s.name ?? "student"}`}
+                          onChange={(e) => { setMarks((m) => ({ ...m, [String(s.id)]: e.target.value })); setSaved(false); }}
                           className={FORM_INPUT_COMPACT}
                           placeholder="—"
                         />

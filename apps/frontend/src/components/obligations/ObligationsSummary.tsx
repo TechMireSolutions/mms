@@ -376,6 +376,8 @@ export default function ObligationsSummary({
           <ExportToolbar
             title="Wakala-wise Collection Summary"
             filename="wakala_summary"
+            moduleId="obligations"
+            exportLabel="Wakala summary export"
             columns={[
               { header: "Rep / Wakala", key: "repName" },
               { header: "Mujtahid", key: "mujtahidName" },
@@ -457,6 +459,8 @@ export default function ObligationsSummary({
           <ExportToolbar
             title="Rep-wise Dues Summary"
             filename="rep_dues_summary"
+            moduleId="obligations"
+            exportLabel="Rep dues summary export"
             columns={[
               { header: "Representative", key: "repName" },
               { header: "Mujtahid", key: "mujtahidName" },
@@ -537,6 +541,8 @@ export default function ObligationsSummary({
           <ExportToolbar
             title="Obligation Type Breakdown"
             filename="obligation_type_breakdown"
+            moduleId="obligations"
+            exportLabel="Obligation type breakdown export"
             columns={[
               { header: "Obligation Type", key: "name" },
               { header: "Collections", key: "count" },

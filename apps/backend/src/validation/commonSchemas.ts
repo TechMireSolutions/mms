@@ -17,3 +17,8 @@ export const challengeIdBodySchema = z.object({
 export const handoffBodySchema = z.object({
   code: z.string().min(1),
 });
+
+/** Batch resolve entity rows by id (globle2 §10). */
+export const entityResolveBodySchema = z.object({
+  ids: z.array(z.string().min(1).max(64)).max(100),
+});

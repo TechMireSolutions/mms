@@ -12,7 +12,7 @@ import Step4ClassAssignment from "./wizard/Step4ClassAssignment";
 import Step5FeeCalculation from "./wizard/Step5FeeCalculation";
 import Step6Confirmation from "./wizard/Step6Confirmation";
 import { suggestClass, runFullEligibility, Enrollment, CalculatedFee } from '@/lib/data/enrollmentData';
-import { STUDENTS, Student } from '@/lib/data/studentsData';
+import { Student } from '@/lib/data/studentsData';
 import { SESSIONS_DATA, Session, Class } from '@/lib/data/sessionsData';
 import { getCollection, getObject } from "../../lib/db";
 import {
@@ -43,7 +43,6 @@ interface EnrollmentWizardProps {
  * @returns The EnrollmentWizard component.
  */
 export default function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps): React.ReactElement {
-  const [students] = useState<Student[]>(() => getCollection<Student>("students", STUDENTS));
   const [sessions] = useState<Session[]>(() => getCollection<Session>("sessions", SESSIONS_DATA));
   const [step, setStep] = useState<number>(0);
   const [student, setStudent]       = useState<Student | null>(null);
@@ -65,7 +64,7 @@ export default function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWiz
     if (step === 0) return !!student;
     if (step === 1) return !!session;
     if (step === 2) {
-      const checks = student && session ? runFullEligibility(student, session, suggested, students) : [];
+      const checks = student && session ? runFullEligibility(student, session, suggested, []) : [];
       return checks.filter((c) => c.status === "fail").length === 0;
     }
     if (step === 3) return !!classInfo;
@@ -160,10 +159,10 @@ export default function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWiz
           exit={{ opacity: 0, x: direction * -24 }}
           transition={{ duration: 0.22 }}
         >
-          {step === 0 && <Step1SelectStudent value={student} onChange={setStudent} students={students} sessions={sessions} />}
+          {step === 0 && <Step1SelectStudent value={student} onChange={setStudent} sessions={sessions} />}
           {step === 1 && <Step2SelectSession value={session} onChange={(s) => { setSession(s); setClassInfo(null); }} sessions={sessions} />}
           {step === 2 && student && session && (
-            <Step3Eligibility student={student} session={session} suggestedClass={suggested} students={students} />
+            <Step3Eligibility student={student} session={session} suggestedClass={suggested} />
           )}
           {step === 3 && session && (
             <Step4ClassAssignment
@@ -172,7 +171,7 @@ export default function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWiz
             />
           )}
           {step === 4 && student && session && (
-            <Step5FeeCalculation student={student} session={session} feeResult={feeResult} onFeeResult={setFeeResult} students={students} />
+            <Step5FeeCalculation student={student} session={session} feeResult={feeResult} onFeeResult={setFeeResult} />
           )}
           {step === 5 && (
             <Step6Confirmation

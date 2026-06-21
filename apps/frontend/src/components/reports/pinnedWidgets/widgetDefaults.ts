@@ -1,6 +1,7 @@
 import type { CustomWidget } from "./types";
 import { DEFAULT_WIDGET_TITLE_KEYS } from "@/lib/dashboardWidgets";
 import { DASHBOARD_WIDGETS_KEY } from "@/lib/dashboardPreferences";
+import { getObject, saveObject } from "@/lib/db";
 
 function withDefaultTitleKey(widget: CustomWidget): CustomWidget {
   const titleKey = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
@@ -539,7 +540,7 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
  */
 export function getOrInitializeCustomWidgets(): CustomWidget[] {
   try {
-    const saved = localStorage.getItem(DASHBOARD_WIDGETS_KEY);
+    const saved = getObject<CustomWidget[] | null>(DASHBOARD_WIDGETS_KEY, null);
     const defaults = [
       ...getDefaultCustomWidgets("contacts"),
       ...getDefaultCustomWidgets("students"),
@@ -548,10 +549,10 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
       ...getDefaultCustomWidgets("sessions"),
     ].map(withDefaultTitleKey);
     if (!saved) {
-      localStorage.setItem(DASHBOARD_WIDGETS_KEY, JSON.stringify(defaults));
+      saveObject(DASHBOARD_WIDGETS_KEY, defaults);
       return defaults;
     }
-    const parsed = (JSON.parse(saved) as CustomWidget[]).map(withDefaultTitleKey);
+    const parsed = saved.map(withDefaultTitleKey);
     let modified = false;
     const existingIds = new Set(parsed.map((w) => w.id));
     const merged = [...parsed];
@@ -568,7 +569,7 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
       }
     }
     if (modified) {
-      localStorage.setItem(DASHBOARD_WIDGETS_KEY, JSON.stringify(merged));
+      saveObject(DASHBOARD_WIDGETS_KEY, merged);
     }
     return merged;
   } catch (e) {

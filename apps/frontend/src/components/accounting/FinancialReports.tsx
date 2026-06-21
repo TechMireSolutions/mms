@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Scale, DollarSign, Download } from "lucide-react";
 import { computeFinancials, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
+import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import SubTabBar from "../ui/SubTabBar";
 import useTranslation from "@/hooks/useTranslation";
 
@@ -135,22 +136,59 @@ export default function FinancialReports({ accounts, entries, fiscalYears, setti
   const get = (type: string) => tb.filter((r) => r.type === type);
 
   const exportCSV = () => {
-    const rows: string[][] = [["Section", "Code", "Account", "Amount"]];
+    const exportRows: Record<string, string>[] = [];
     if (view === "income") {
-      get("Revenue").forEach((r) => rows.push(["Revenue", r.code, r.name, String(r.totalCredit - r.totalDebit)]));
-      rows.push(["", "", "Total Revenue", String(revenue)]);
-      get("Expense").forEach((r) => rows.push(["Expense", r.code, r.name, String(r.totalDebit - r.totalCredit)]));
-      rows.push(["", "", "Total Expenses", String(expenses)]);
-      rows.push(["", "", "Net Surplus/Deficit", String(netSurplus)]);
+      get("Revenue").forEach((r) =>
+        exportRows.push({
+          section: "Revenue",
+          code: r.code,
+          account: r.name,
+          amount: String(r.totalCredit - r.totalDebit),
+        }),
+      );
+      exportRows.push({ section: "", code: "", account: "Total Revenue", amount: String(revenue) });
+      get("Expense").forEach((r) =>
+        exportRows.push({
+          section: "Expense",
+          code: r.code,
+          account: r.name,
+          amount: String(r.totalDebit - r.totalCredit),
+        }),
+      );
+      exportRows.push({ section: "", code: "", account: "Total Expenses", amount: String(expenses) });
+      exportRows.push({
+        section: "",
+        code: "",
+        account: "Net Surplus/Deficit",
+        amount: String(netSurplus),
+      });
     } else if (view === "balance") {
-      get("Asset").forEach((r) => rows.push(["Asset", r.code, r.name, String(r.balance)]));
-      rows.push(["", "", "Total Assets", String(assets)]);
-      get("Liability").forEach((r) => rows.push(["Liability", r.code, r.name, String(r.totalCredit - r.totalDebit)]));
-      rows.push(["", "", "Total Liabilities", String(liabilities)]);
+      get("Asset").forEach((r) =>
+        exportRows.push({ section: "Asset", code: r.code, account: r.name, amount: String(r.balance) }),
+      );
+      exportRows.push({ section: "", code: "", account: "Total Assets", amount: String(assets) });
+      get("Liability").forEach((r) =>
+        exportRows.push({
+          section: "Liability",
+          code: r.code,
+          account: r.name,
+          amount: String(r.totalCredit - r.totalDebit),
+        }),
+      );
+      exportRows.push({ section: "", code: "", account: "Total Liabilities", amount: String(liabilities) });
     }
-    const csv = rows.map((r) => r.join(",")).join("\n");
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    a.download = `${view}_report.csv`; a.click();
+    runGridCsvExportJob({
+      moduleId: "accounting",
+      label: `${view} report export`,
+      filename: `${view}_report.csv`,
+      columns: [
+        { header: "Section", key: "section" },
+        { header: "Code", key: "code" },
+        { header: "Account", key: "account" },
+        { header: "Amount", key: "amount" },
+      ],
+      rows: exportRows,
+    });
   };
 
   return (

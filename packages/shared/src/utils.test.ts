@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164 } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, mergeContacts } from "./utils.js";
+import type { Contact } from "./contactTypes.js";
 
 describe("parsePhoneNumber", () => {
   it("parses E.164 with space separator", () => {
@@ -28,5 +29,38 @@ describe("normalizeToE164", () => {
 
   it("strips leading zero from local part", () => {
     expect(normalizeToE164("+92", "03001234567")).toBe("+923001234567");
+  });
+});
+
+describe("mergeContacts", () => {
+  const base: Contact = {
+    id: "1",
+    firstName: "Ali",
+    lastName: "Khan",
+    name: "Ali Khan",
+    phones: [{ label: "Mobile", number: "3001111111", countryCode: "+92" }],
+    notes: "Primary note",
+  };
+
+  const other: Contact = {
+    id: "2",
+    firstName: "Ali",
+    lastName: "Khan",
+    name: "Ali Khan",
+    emails: [{ label: "Personal", address: "ali@example.com" }],
+    notes: "Duplicate note",
+  };
+
+  it("merges collection fields and uses default note prefix", () => {
+    const merged = mergeContacts(base, other);
+    expect(merged.emails).toHaveLength(1);
+    expect(merged.phones).toHaveLength(1);
+    expect(merged.notes).toContain("--- Merged from Duplicate ---");
+    expect(merged.notes).toContain("Duplicate note");
+  });
+
+  it("accepts a custom merged note prefix", () => {
+    const merged = mergeContacts(base, other, { mergedNotePrefix: "[merged]" });
+    expect(merged.notes).toContain("[merged]");
   });
 });

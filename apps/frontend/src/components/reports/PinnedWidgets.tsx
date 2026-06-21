@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { 
   LayoutDashboard, Pin, X, PinOff, Trash2,
   SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users, PieChart
@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, 
   ResponsiveContainer, Pie, Cell 
 } from "recharts";
-import { getCollection, saveCollection } from "../../lib/db";
+import { getCollection, saveCollection, getObject, saveObject } from "../../lib/db";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveThresholdChartHex, resolveWidgetChartHex } from "@/lib/brandingChartPalette";
 import { Session, Class } from '@/lib/data/sessionsData';
@@ -33,7 +33,14 @@ import {
   getFilteredRecords,
   computeWidgetSingleValue,
   computeWidgetChartData,
+  computeContactsCustomCardValue,
+  computeStudentsCustomCardValue,
+  computeTeachersCustomCardValue,
 } from "./pinnedWidgets/widgetDataUtils";
+import { useContactsWidgetAggregates } from "@/hooks/useContacts";
+import { useStudentsWidgetAggregates } from "@/hooks/useStudents";
+import { useTeachersWidgetAggregates } from "@/hooks/useTeachers";
+import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
 import {
   getOrInitializeCustomWidgets,
 } from "./pinnedWidgets/widgetDefaults";
@@ -352,15 +359,10 @@ function CustomWidgetRenderer({
       const key = widget.switchStateKey || "";
       if (key.startsWith("section_")) {
         const sectionKey = key.replace("section_", "");
-        try {
-          const saved = localStorage.getItem("dashboard_section_settings");
-          const settings = saved ? JSON.parse(saved) : {};
-          return !!settings[sectionKey];
-        } catch {
-          return false;
-        }
+        const settings = getObject<Record<string, boolean>>("dashboard_section_settings", {});
+        return !!settings[sectionKey];
       }
-      return localStorage.getItem(key) === "true";
+      return getObject<unknown>(key, false) === true || getObject<unknown>(key, "false") === "true";
     }
     const coll = widget.switchCollection;
     const recId = widget.switchRecordId;
@@ -374,7 +376,80 @@ function CustomWidgetRenderer({
   }, [wType, widget, collections]);
 
   if (wType === "card") {
-    const computed = computeCustomCard(widget as unknown as CustomCard, collections);
+    const card = widget as unknown as CustomCard;
+    let computed = null as ReturnType<typeof computeCustomCard> | null;
+
+    if (card.collection === "contacts") {
+      const aggregateValue = computeContactsCustomCardValue({
+        id: card.id,
+        operation: card.operation,
+        targetField: card.targetField,
+        filterField: card.filterField,
+        filterOperator: card.filterOperator,
+        filterValue: card.filterValue,
+      });
+      if (aggregateValue) {
+        computed = {
+          id: card.id,
+          title: card.title,
+          value: String(aggregateValue.finalValue),
+          sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+          icon: card.icon,
+          color: card.color,
+          trend: card.trend || 0,
+        };
+      }
+    } else if (card.collection === "students") {
+      const aggregateValue = computeStudentsCustomCardValue({
+        id: card.id,
+        operation: card.operation,
+        targetField: card.targetField,
+        filterField: card.filterField,
+        filterOperator: card.filterOperator,
+        filterValue: card.filterValue,
+      });
+      if (aggregateValue) {
+        computed = {
+          id: card.id,
+          title: card.title,
+          value: String(aggregateValue.finalValue),
+          sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+          icon: card.icon,
+          color: card.color,
+          trend: card.trend || 0,
+        };
+      }
+    } else if (card.collection === "teachers") {
+      const aggregateValue = computeTeachersCustomCardValue({
+        id: card.id,
+        operation: card.operation,
+        targetField: card.targetField,
+        filterField: card.filterField,
+        filterOperator: card.filterOperator,
+        filterValue: card.filterValue,
+      });
+      if (aggregateValue) {
+        computed = {
+          id: card.id,
+          title: card.title,
+          value: String(aggregateValue.finalValue),
+          sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+          icon: card.icon,
+          color: card.color,
+          trend: card.trend || 0,
+        };
+      }
+    }
+
+    if (!computed) {
+      computed = computeCustomCard(card, {
+        ...collections,
+        students: [],
+        teachers: [],
+        contacts: [],
+      });
+    }
+
     const Icon = ICONS_LIST[computed.icon || ""] || Users;
     const c = COLOR_MAP[computed.color || ""] || COLOR_MAP.emerald;
     const isPositive = computed.trend >= 0;
@@ -788,10 +863,9 @@ export function DashboardWidgets({
       setCollections(getWidgetCollections());
       if (widgets) return;
       try {
-        const saved = localStorage.getItem("kpi_custom_widgets");
+        const saved = getObject<CustomWidget[] | null>("kpi_custom_widgets", null);
         if (saved) {
-          const allWidgets = JSON.parse(saved) as CustomWidget[];
-          setLocalWidgets(allWidgets.filter(w => w.isPinnedToDashboard));
+          setLocalWidgets(saved.filter(w => w.isPinnedToDashboard));
         }
       } catch (e) {
         console.error("Failed to load pinned widgets on dashboard", e);
@@ -808,6 +882,24 @@ export function DashboardWidgets({
   }, [widgets]);
 
   const activeWidgets = widgets ?? localWidgets;
+  useContactsWidgetAggregates(activeWidgets);
+  useStudentsWidgetAggregates(activeWidgets);
+  useTeachersWidgetAggregates(activeWidgets);
+
+  const handleMetricClick = useCallback((widget: CustomWidget) => {
+    if (widget.collection === "contacts") {
+      applyContactsWorkDrillDown({
+        lifecycleStage:
+          widget.filterField === "lifecycleStage" && widget.filterValue
+            ? widget.filterValue
+            : undefined,
+        gender: widget.filterField === "gender" && widget.filterValue ? widget.filterValue : undefined,
+      });
+      window.location.assign("/contacts");
+      return;
+    }
+    setDrilldownWidget(widget);
+  }, []);
 
   const handleLocalUnpin = (id: string) => {
     if (onUnpin) {
@@ -815,16 +907,15 @@ export function DashboardWidgets({
       return;
     }
     try {
-      const saved = localStorage.getItem("kpi_custom_widgets");
+      const saved = getObject<CustomWidget[] | null>("kpi_custom_widgets", null);
       if (saved) {
-        const allWidgets = JSON.parse(saved) as CustomWidget[];
-        const updated = allWidgets.map(w => {
+        const updated = saved.map(w => {
           if (w.id === id) {
             return { ...w, isPinnedToDashboard: false };
           }
           return w;
         });
-        localStorage.setItem("kpi_custom_widgets", JSON.stringify(updated));
+        saveObject("kpi_custom_widgets", updated);
         setLocalWidgets(updated.filter(w => w.isPinnedToDashboard));
         window.dispatchEvent(new Event("local-database-update"));
       }
@@ -838,17 +929,12 @@ export function DashboardWidgets({
       const key = widget.switchStateKey || "";
       if (key.startsWith("section_")) {
         const sectionKey = key.replace("section_", "");
-        try {
-          const saved = localStorage.getItem("dashboard_section_settings");
-          const settings = saved ? JSON.parse(saved) : {};
-          settings[sectionKey] = !settings[sectionKey];
-          localStorage.setItem("dashboard_section_settings", JSON.stringify(settings));
-        } catch (e) {
-          console.error(e);
-        }
+        const settings = getObject<Record<string, boolean>>("dashboard_section_settings", {});
+        settings[sectionKey] = !settings[sectionKey];
+        saveObject("dashboard_section_settings", settings);
       } else {
-        const flag = localStorage.getItem(key) === "true";
-        localStorage.setItem(key, String(!flag));
+        const flag = getObject<unknown>(key, false) === true || getObject<unknown>(key, "false") === "true";
+        saveObject(key, !flag);
       }
     } else {
       const coll = widget.switchCollection;
@@ -953,7 +1039,7 @@ export function DashboardWidgets({
                 isCompact={gridMode === "compact"}
                 isEditMode={isEditMode}
                 onSwitchToggle={handleToggleSwitchState}
-                onMetricClick={setDrilldownWidget}
+                onMetricClick={handleMetricClick}
               />
               
               {/* Overlaid unpin/edit/delete action handles */}
@@ -1033,13 +1119,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
   }, []);
 
   const [sectionSettings, setSectionSettings] = useState<Record<string, boolean>>(() => {
-    try {
-      const saved = localStorage.getItem("dashboard_section_settings");
-      if (saved) return JSON.parse(saved) as Record<string, boolean>;
-    } catch (e) {
-      console.error(e);
-    }
-    return {
+    return getObject<Record<string, boolean>>("dashboard_section_settings", {
       enrollmentChart: true,
       revenueChart: true,
       attendanceChart: true,
@@ -1049,23 +1129,17 @@ export default function PinnedWidgets({ category }: { category: string }): React
       feeSummary: true,
       outstandingFees: true,
       overdueObligations: true
-    };
+    });
   });
 
   const [disabledCardIds, setDisabledCardIds] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem("mms_dashboard_disabled_cards") || localStorage.getItem("dashboard_disabled_cards");
-      if (saved) return JSON.parse(saved) as string[];
-    } catch (e) {
-      console.error(e);
-    }
-    return [];
+    return getObject<string[]>("mms_dashboard_disabled_cards", []);
   });
 
   const toggleSectionSetting = (key: string) => {
     const next = { ...sectionSettings, [key]: !sectionSettings[key] };
     setSectionSettings(next);
-    localStorage.setItem("dashboard_section_settings", JSON.stringify(next));
+    saveObject("dashboard_section_settings", next);
     window.dispatchEvent(new Event("local-database-update"));
   };
 
@@ -1077,7 +1151,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
       next = [...disabledCardIds, cardId];
     }
     setDisabledCardIds(next);
-    localStorage.setItem("mms_dashboard_disabled_cards", JSON.stringify(next));
+    saveObject("mms_dashboard_disabled_cards", next);
     window.dispatchEvent(new Event("local-database-update"));
   };
 
@@ -1098,14 +1172,14 @@ export default function PinnedWidgets({ category }: { category: string }): React
   const handleAddWidget = (newWidget: CustomWidget) => {
     const nextWidgets = [...widgets, newWidget];
     setWidgets(nextWidgets);
-    localStorage.setItem("kpi_custom_widgets", JSON.stringify(nextWidgets));
+    saveObject("kpi_custom_widgets", nextWidgets);
     window.dispatchEvent(new Event("local-database-update"));
   };
 
   const handleDeleteWidget = (id: string) => {
     const nextWidgets = widgets.filter(w => w.id !== id);
     setWidgets(nextWidgets);
-    localStorage.setItem("kpi_custom_widgets", JSON.stringify(nextWidgets));
+    saveObject("kpi_custom_widgets", nextWidgets);
     window.dispatchEvent(new Event("local-database-update"));
   };
 
@@ -1117,7 +1191,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
       return w;
     });
     setWidgets(nextWidgets);
-    localStorage.setItem("kpi_custom_widgets", JSON.stringify(nextWidgets));
+    saveObject("kpi_custom_widgets", nextWidgets);
     window.dispatchEvent(new Event("local-database-update"));
   };
 
@@ -1136,17 +1210,12 @@ export default function PinnedWidgets({ category }: { category: string }): React
       const key = w.switchStateKey || "";
       if (key.startsWith("section_")) {
         const sec = key.replace("section_", "");
-        try {
-          const saved = localStorage.getItem("dashboard_section_settings");
-          const settings = saved ? JSON.parse(saved) : {};
-          settings[sec] = !settings[sec];
-          localStorage.setItem("dashboard_section_settings", JSON.stringify(settings));
-        } catch {
-          void 0;
-        }
+        const settings = getObject<Record<string, boolean>>("dashboard_section_settings", {});
+        settings[sec] = !settings[sec];
+        saveObject("dashboard_section_settings", settings);
       } else {
-        const current = localStorage.getItem(key) === "true";
-        localStorage.setItem(key, String(!current));
+        const current = getObject<unknown>(key, false) === true || getObject<unknown>(key, "false") === "true";
+        saveObject(key, !current);
       }
     } else {
       const coll = w.switchCollection;

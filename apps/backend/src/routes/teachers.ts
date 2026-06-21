@@ -5,13 +5,25 @@ import {
   createTeacher,
   deleteTeacherById,
   loadTeachers,
+  loadTeachersPage,
+  loadTeachersByIds,
+  loadTeacherById,
+  loadTeacherLinkedContactIds,
+  computeNextTeacherEmployeeIdForSettings,
+  loadTeachersWidgetAggregates,
   updateTeacherById,
 } from '../services/teacherService.js';
 import type { User } from '@mms/shared';
+import { TEACHERS_MODULE_CONTRACT, computeTeachersCommandMetrics } from '@mms/shared';
 import { sendForbidden } from '../lib/httpErrors.js';
 import { resourceIdParamsSchema } from '../validation/commonSchemas.js';
-import { teacherRecordSchema } from '../validation/teacherSchemas.js';
+import { moduleColumnPrefsBodySchema } from '../validation/moduleColumnPrefsSchemas.js';
+import { teacherRecordSchema, teachersListQuerySchema, teachersResolveBodySchema, teachersWidgetAggregatesBodySchema, teachersNextEmployeeIdQuerySchema, teachersLinkedContactIdsQuerySchema } from '../validation/teacherSchemas.js';
 import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
+import {
+  getUserColumnPrefsForModule,
+  setUserColumnPrefsForModule,
+} from '../services/userColumnPrefsService.js';
 
 /**
  * Server-first teacher resource routes (TanStack Query on FE).
@@ -25,8 +37,20 @@ export default async function teachersRoutes(
   fastify.get('/', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
+    const queryParsed = parseRequest(teachersListQuerySchema, request.query);
+    if (!queryParsed.ok) return replyValidationError(reply, queryParsed.message);
     try {
-      return reply.send({ teachers: await loadTeachers() });
+      const q = queryParsed.data;
+      const page = await loadTeachersPage({
+        page: q.page,
+        limit: q.limit ?? TEACHERS_MODULE_CONTRACT.defaultPageSize,
+        search: q.search,
+        status: q.status,
+        specialization: q.specialization,
+        sortField: q.sortField,
+        sortDir: q.sortDir,
+      });
+      return reply.send(page);
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to list teachers' });
     }
@@ -40,6 +64,117 @@ export default async function teachersRoutes(
       return reply.send({ count: teachers.length });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to count teachers' });
+    }
+  });
+
+  fastify.get('/metrics', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
+    try {
+      const teachers = await loadTeachers();
+      return reply.send({ metrics: computeTeachersCommandMetrics(teachers) });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to load teacher metrics' });
+    }
+  });
+
+  fastify.post('/widget-aggregates', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
+    const parsed = parseRequest(teachersWidgetAggregatesBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const results = await loadTeachersWidgetAggregates(parsed.data.widgets);
+      return reply.send({ results });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to load teacher widget aggregates' });
+    }
+  });
+
+  fastify.post('/resolve', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
+    const parsed = parseRequest(teachersResolveBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      return reply.send({ teachers: await loadTeachersByIds(parsed.data.ids) });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to resolve teachers' });
+    }
+  });
+
+  fastify.get('/next-employee-id', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
+    const parsed = parseRequest(teachersNextEmployeeIdQuerySchema, request.query);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const employeeId = await computeNextTeacherEmployeeIdForSettings({
+        idPrefix: parsed.data.prefix ?? 'TCH',
+      });
+      return reply.send({ employeeId });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to compute employee id' });
+    }
+  });
+
+  fastify.get('/linked-contact-ids', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
+    const parsed = parseRequest(teachersLinkedContactIdsQuerySchema, request.query);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const contactIds = await loadTeacherLinkedContactIds(parsed.data.excludeId);
+      return reply.send({ contactIds });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to load linked contact ids' });
+    }
+  });
+
+  fastify.get('/:id', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    try {
+      const teacher = await loadTeacherById(params.data.id);
+      if (!teacher) {
+        return reply.status(404).send({ type: 'not_found', message: 'Teacher not found' });
+      }
+      return reply.send({ teacher });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to load teacher' });
+    }
+  });
+
+  fastify.get('/column-prefs', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
+    try {
+      const prefs = await getUserColumnPrefsForModule(
+        TEACHERS_MODULE_CONTRACT.columnPrefsObjectKey,
+        String(user.id),
+      );
+      return reply.send({ prefs });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
+    }
+  });
+
+  fastify.put('/column-prefs', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
+    const parsed = parseRequest(moduleColumnPrefsBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      await setUserColumnPrefsForModule(
+        TEACHERS_MODULE_CONTRACT.columnPrefsObjectKey,
+        String(user.id),
+        parsed.data.prefs,
+      );
+      return reply.send({ success: true, prefs: parsed.data.prefs });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
     }
   });
 

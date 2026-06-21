@@ -1,27 +1,33 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical, Plus, Check, Trash2, FileSpreadsheet, FileText, Settings, Database, Sliders } from "lucide-react";
-import { CONTACTS } from '@/lib/data/contactsData';
-import { STUDENTS } from '@/lib/data/studentsData';
+import { useContactsPaginated } from '@/hooks/useContacts';
+import { useStudentsPaginated } from '@/hooks/useStudents';
+import { CONTACTS_MODULE_CONTRACT, STUDENTS_MODULE_CONTRACT } from '@mms/shared';
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { INVOICES } from '@/lib/data/financeData';
 import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 import { DISTRIBUTIONS } from '@/lib/data/hasanatData';
 import { EXAM_RESULTS } from '@/lib/data/examinationData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
+import useTranslation from "@/hooks/useTranslation";
+import usePermissions from "@/hooks/usePermissions";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import type { AppTranslationKey } from "@mms/shared";
+import {
+  buildContactsReportFieldCatalog,
+  getContactReportCellValue,
+  isContactsReportFieldId,
+  resolveContactReportFieldLabel,
+  type ContactsReportFieldId,
+} from "@mms/shared";
 
 /** Data source keys available in the custom report builder. */
 type DataSource = "students" | "contacts" | "attendance" | "financial" | "academic" | "hasanat" | "sessions" | "faculty";
 
-/** Map of all selectable fields grouped by data source. */
-const ALL_FIELDS: Record<DataSource, readonly string[]> = {
+/** Map of all selectable fields grouped by data source (non-contacts legacy labels). */
+const ALL_FIELDS: Record<Exclude<DataSource, "contacts">, readonly string[]> = {
   students:   ["Name", "Gender", "Class", "Session", "City", "Age", "Status", "Registration Date", "CNIC", "Discount Type", "Discount %", "Roll No", "Blood Group"],
-  contacts:   [
-    "Full Name", "First Name", "Last Name", "Gender", "DOB", "Is Syed",
-    "Lifecycle Stage", "Rating",
-    "Phone Number", "Email Address", "Street Address", "City", "State / Province", "Country",
-    "Occupation", "Emergency Contact", "Last Activity", "Notes Count"
-  ],
   attendance: ["Student Name", "Class", "Status", "Present", "Absent", "Late", "Excused", "Total Days", "Rate %", "Last Marked"],
   financial:  ["Invoice ID", "Student Name", "Class", "Base Fee", "Discount", "Tax", "Final Amount", "Status", "Due Date", "Payment Method", "Issued Date"],
   academic:   ["Student Name", "Class", "Subject", "Marks", "Total", "Grade", "Rank", "Exam Name", "Date"],
@@ -128,16 +134,11 @@ interface CustomReportBuilderProps {
  * @returns The CustomReportBuilder component.
  */
 export default function CustomReportBuilder({ onClose, initialSource }: CustomReportBuilderProps): React.JSX.Element {
-  const contactsColl = useLiveCollection<Record<string, unknown>>("contacts", CONTACTS as unknown as Record<string, unknown>[]);
-  const studentsColl = useLiveCollection<Record<string, unknown>>("students", STUDENTS as unknown as Record<string, unknown>[]);
-  const sessionsFromQuery = useSessionsCollection();
-  const sessionsColl = sessionsFromQuery as unknown as Record<string, unknown>[];
-  const financialColl = useLiveCollection<Record<string, unknown>>("finance_invoices", INVOICES as unknown as Record<string, unknown>[]);
-  const attendanceColl = useLiveCollection<Record<string, unknown>>("attendance_records", ATTENDANCE_RECORDS as unknown as Record<string, unknown>[]);
-  const hasanatColl = useLiveCollection<Record<string, unknown>>("hasanat_distributions", DISTRIBUTIONS as unknown as Record<string, unknown>[]);
-  const academicColl = useLiveCollection<Record<string, unknown>>("exam_results", EXAM_RESULTS as unknown as Record<string, unknown>[]);
+  const { t } = useTranslation();
+  const { can, role: viewerRole } = usePermissions();
+  const { fieldConfig } = useContactConfig();
 
-  const [source, setSource]               = useState<DataSource>(() => {
+  const [source, setSource] = useState<DataSource>(() => {
     if (initialSource === "financial") return "financial";
     if (initialSource === "attendance") return "attendance";
     if (initialSource === "academic") return "academic";
@@ -148,8 +149,27 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
     return "students";
   });
 
+  const { data: contactsPreviewPage } = useContactsPaginated({
+    page: 1,
+    limit: CONTACTS_MODULE_CONTRACT.defaultPageSize,
+    enabled: source === "contacts",
+  });
+  const { data: studentsPreviewPage } = useStudentsPaginated({
+    page: 1,
+    limit: STUDENTS_MODULE_CONTRACT.defaultPageSize,
+    enabled: source === "students",
+  });
+  const contactsColl = (contactsPreviewPage?.contacts ?? []) as unknown as Record<string, unknown>[];
+  const studentsColl = (studentsPreviewPage?.students ?? []) as unknown as Record<string, unknown>[];
+  const sessionsFromQuery = useSessionsCollection();
+  const sessionsColl = sessionsFromQuery as unknown as Record<string, unknown>[];
+  const financialColl = useLiveCollection<Record<string, unknown>>("finance_invoices", INVOICES as unknown as Record<string, unknown>[]);
+  const attendanceColl = useLiveCollection<Record<string, unknown>>("attendance_records", ATTENDANCE_RECORDS as unknown as Record<string, unknown>[]);
+  const hasanatColl = useLiveCollection<Record<string, unknown>>("hasanat_distributions", DISTRIBUTIONS as unknown as Record<string, unknown>[]);
+  const academicColl = useLiveCollection<Record<string, unknown>>("exam_results", EXAM_RESULTS as unknown as Record<string, unknown>[]);
+
   const [selectedFields, setSelectedFields] = useState<string[]>(() => {
-    if (initialSource === "contacts") return ["Full Name", "Lifecycle Stage", "City"];
+    if (initialSource === "contacts") return ["fullName", "lifecycleStage", "city"];
     if (initialSource === "financial") return ["Student Name", "Class", "Base Fee", "Discount", "Final Amount", "Status"];
     if (initialSource === "attendance") return ["Student Name", "Class", "Status", "Rate %"];
     if (initialSource === "academic") return ["Student Name", "Class", "Subject", "Marks", "Grade"];
@@ -166,9 +186,28 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
   const [reportName, setReportName]       = useState<string>("My Custom Report");
   const [previewData, setPreviewData]     = useState<PreviewRow[]>([]);
 
+  const resolveFieldLabel = (field: string): string => {
+    if (source === "contacts") {
+      return resolveContactReportFieldLabel(field, fieldConfig.fields, (key) => t(key as AppTranslationKey));
+    }
+    return field;
+  };
+
+  const contactsFieldCatalog = useMemo(() => {
+    if (source !== "contacts" || !viewerRole) return [];
+    return buildContactsReportFieldCatalog(
+      fieldConfig.fields,
+      fieldConfig.formTabs ?? [],
+      viewerRole,
+    );
+  }, [source, fieldConfig.fields, fieldConfig.formTabs, viewerRole]);
+
   const available = useMemo(() => {
+    if (source === "contacts") {
+      return contactsFieldCatalog.map((f) => f.id).filter((id) => !selectedFields.includes(id));
+    }
     return ALL_FIELDS[source].filter((f) => !selectedFields.includes(f));
-  }, [source, selectedFields]);
+  }, [source, selectedFields, contactsFieldCatalog]);
 
   // Sync group-by selection to make sure it's valid if columns change
   useEffect(() => {
@@ -237,69 +276,38 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
 
     let processed = raw.map((item) => {
       const row: PreviewRow = {};
+      const cellLabels = { yes: t("common.yes"), no: t("common.no") };
       selectedFields.forEach((field) => {
+        const label = resolveFieldLabel(field);
+        if (source === "contacts" && isContactsReportFieldId(field)) {
+          row[label] = getContactReportCellValue(item, field as ContactsReportFieldId, cellLabels);
+          return;
+        }
         const camel = toCamelCase(field);
-        if (source === "contacts") {
-          if (field === "Full Name") row[field] = String(item.name || `${item.firstName || ""} ${item.lastName || ""}`).trim();
-          else if (field === "First Name") row[field] = String(item.firstName || "—");
-          else if (field === "Last Name") row[field] = String(item.lastName || "—");
-          else if (field === "Is Syed") row[field] = item.isSyed ? "Yes" : "No";
-          else if (field === "Lifecycle Stage") row[field] = String(item.lifecycleStage || "Lead");
-          else if (field === "Phone Number") {
-            const phones = item.phones as { number: string }[] | undefined;
-            row[field] = (phones && phones[0]?.number) || String(item.phone || "—");
-          }
-          else if (field === "Email Address") {
-            const emails = item.emails as { address: string }[] | undefined;
-            row[field] = (emails && emails[0]?.address) || String(item.email || "—");
-          }
-          else if (field === "Street Address") {
-            const addresses = item.addresses as { line1: string }[] | undefined;
-            row[field] = (addresses && addresses[0]?.line1) || "—";
-          }
-          else if (field === "Emergency Contact") {
-            const emergencies = item.emergencyContacts as { name: string }[] | undefined;
-            row[field] = (emergencies && emergencies[0]?.name) || "—";
-          }
-          else if (field === "Last Activity") {
-            const activities = item.activities as { date: string }[] | undefined;
-            row[field] = (activities && activities[0]?.date) || "—";
-          }
-          else if (field === "Notes Count") {
-            const notes = item.notes as unknown[] | undefined;
-            const activities = item.activities as { type: string }[] | undefined;
-            row[field] = (notes?.length ? 1 : 0) + (activities?.filter((a) => a.type === "note").length || 0);
-          }
-          else {
-            const rawVal = item[camel] !== undefined ? item[camel] : item[field.toLowerCase().replace(/ /g, "")];
-            row[field] = rawVal !== undefined ? String(rawVal) : "—";
-          }
-        } else {
-          if (field === "Name" || field === "Student Name" || field === "Faculty Name" || field === "Faculty") {
-            row[field] = String(item.name || item.studentName || item.facultyName || item.faculty || "—");
-          }
-          else if (field === "Status") row[field] = String(item.status || "—");
-          else if (field === "Class") row[field] = String(item.class || item.className || (item.classes as { name: string }[] | undefined)?.[0]?.name || "—");
-          else if (field === "Session") row[field] = String(item.session || "—");
-          else if (field === "Teacher") row[field] = String(item.teacher || item.teacherName || "—");
-          else if (field === "Room") row[field] = String(item.room || "—");
-          else if (field === "Time") row[field] = String(item.time || "—");
-          else if (field === "Days") row[field] = Array.isArray(item.days) ? item.days.join(", ") : String(item.days || "—");
-          else if (field === "Discount Type") row[field] = String(item.discountType || "None");
-          else if (field === "Discount %" || field === "Discount") {
-            row[field] = item.discountPct !== undefined ? `${item.discountPct}%` : (item.discountAmt ? `PKR ${item.discountAmt}` : "0");
-          }
-          else if (field === "Final Amount") row[field] = item.finalAmt ? `PKR ${item.finalAmt}` : "0";
-          else if (field === "Utilisation %" || field === "Rate %") {
-            row[field] = (Number(item.capacity || 0) > 0 ? `${Math.round((Number(item.enrolled || 0) / Number(item.capacity || 1)) * 100)}%` : (item.rate ? `${item.rate}%` : "100%"));
-          }
-          else if (field === "Registration Date" || field === "Issued Date" || field === "Due Date" || field === "Date" || field === "Last Marked" || field === "Last Awarded") {
-            row[field] = String(item.registeredDate || item.issuedDate || item.dueDate || item.date || item.lastMarked || item.lastAwarded || "—");
-          }
-          else {
-            const rawVal = item[camel] !== undefined ? item[camel] : item[field.toLowerCase().replace(/ /g, "")];
-            row[field] = rawVal !== undefined ? String(rawVal) : "—";
-          }
+        if (field === "Name" || field === "Student Name" || field === "Faculty Name" || field === "Faculty") {
+          row[label] = String(item.name || item.studentName || item.facultyName || item.faculty || "—");
+        }
+        else if (field === "Status") row[label] = String(item.status || "—");
+        else if (field === "Class") row[label] = String(item.class || item.className || (item.classes as { name: string }[] | undefined)?.[0]?.name || "—");
+        else if (field === "Session") row[label] = String(item.session || "—");
+        else if (field === "Teacher") row[label] = String(item.teacher || item.teacherName || "—");
+        else if (field === "Room") row[label] = String(item.room || "—");
+        else if (field === "Time") row[label] = String(item.time || "—");
+        else if (field === "Days") row[label] = Array.isArray(item.days) ? item.days.join(", ") : String(item.days || "—");
+        else if (field === "Discount Type") row[label] = String(item.discountType || "None");
+        else if (field === "Discount %" || field === "Discount") {
+          row[label] = item.discountPct !== undefined ? `${item.discountPct}%` : (item.discountAmt ? `PKR ${item.discountAmt}` : "0");
+        }
+        else if (field === "Final Amount") row[label] = item.finalAmt ? `PKR ${item.finalAmt}` : "0";
+        else if (field === "Utilisation %" || field === "Rate %") {
+          row[label] = (Number(item.capacity || 0) > 0 ? `${Math.round((Number(item.enrolled || 0) / Number(item.capacity || 1)) * 100)}%` : (item.rate ? `${item.rate}%` : "100%"));
+        }
+        else if (field === "Registration Date" || field === "Issued Date" || field === "Due Date" || field === "Date" || field === "Last Marked" || field === "Last Awarded") {
+          row[label] = String(item.registeredDate || item.issuedDate || item.dueDate || item.date || item.lastMarked || item.lastAwarded || "—");
+        }
+        else {
+          const rawVal = item[camel] !== undefined ? item[camel] : item[field.toLowerCase().replace(/ /g, "")];
+          row[label] = rawVal !== undefined ? String(rawVal) : "—";
         }
       });
       return row;
@@ -307,41 +315,43 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
 
     // Apply Aggregations & Grouping
     if (groupBy && aggregate !== "None") {
+      const groupByLabel = resolveFieldLabel(groupBy);
       const groups: Record<string, PreviewRow[]> = {};
       processed.forEach((row) => {
-        const groupVal = String(row[groupBy] || "Unspecified");
+        const groupVal = String(row[groupByLabel] || "Unspecified");
         if (!groups[groupVal]) groups[groupVal] = [];
         groups[groupVal].push(row);
       });
 
       processed = Object.entries(groups).map(([groupName, rows]) => {
-        const summaryRow: PreviewRow = { [groupBy]: groupName };
+        const summaryRow: PreviewRow = { [groupByLabel]: groupName };
         selectedFields.forEach((f) => {
           if (f === groupBy) return;
+          const fLabel = resolveFieldLabel(f);
           const values = rows
-            .map((r) => Number(String(r[f]).replace(/[^0-9.-]/g, "")))
+            .map((r) => Number(String(r[fLabel]).replace(/[^0-9.-]/g, "")))
             .filter((v) => !isNaN(v));
 
           if (aggregate === "Count") {
-            summaryRow[f] = rows.length;
+            summaryRow[fLabel] = rows.length;
           } else if (values.length === 0) {
-            summaryRow[f] = "—";
+            summaryRow[fLabel] = "—";
           } else {
             switch (aggregate) {
               case "Sum":
-                summaryRow[f] = values.reduce((sum, v) => sum + v, 0);
+                summaryRow[fLabel] = values.reduce((sum, v) => sum + v, 0);
                 break;
               case "Average":
-                summaryRow[f] = Math.round(values.reduce((sum, v) => sum + v, 0) / values.length);
+                summaryRow[fLabel] = Math.round(values.reduce((sum, v) => sum + v, 0) / values.length);
                 break;
               case "Max":
-                summaryRow[f] = Math.max(...values);
+                summaryRow[fLabel] = Math.max(...values);
                 break;
               case "Min":
-                summaryRow[f] = Math.min(...values);
+                summaryRow[fLabel] = Math.min(...values);
                 break;
               default:
-                summaryRow[f] = "—";
+                summaryRow[fLabel] = "—";
             }
           }
         });
@@ -350,7 +360,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
     }
 
     setPreviewData(processed.slice(0, 20));
-  }, [source, selectedFields, aggregate, groupBy, contactsColl, studentsColl, sessionsColl, financialColl, attendanceColl, hasanatColl, academicColl]);
+  }, [source, selectedFields, aggregate, groupBy, contactsColl, studentsColl, sessionsColl, financialColl, attendanceColl, hasanatColl, academicColl, t]);
 
   /** Appends a field to the selected columns list. */
   const addField = (f: string): void => {
@@ -467,7 +477,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 const newSource = e.target.value as DataSource;
                 setSource(newSource);
                 // Preselect default fields for new source to keep reactive preview hydrated
-                if (newSource === "contacts") setSelectedFields(["Full Name", "Lifecycle Stage"]);
+                if (newSource === "contacts") setSelectedFields(["fullName", "lifecycleStage", "city"]);
                 else if (newSource === "financial") setSelectedFields(["Student Name", "Class", "Base Fee", "Final Amount"]);
                 else if (newSource === "attendance") setSelectedFields(["Student Name", "Class", "Status", "Rate %"]);
                 else if (newSource === "academic") setSelectedFields(["Student Name", "Class", "Subject", "Marks", "Grade"]);
@@ -479,7 +489,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-foreground"
             >
               <option value="students">Students Database</option>
-              <option value="contacts">CRM Contacts Registry</option>
+              <option value="contacts">{t("contacts.reportBuilder.sourceLabel")}</option>
               <option value="attendance">Attendance Ledger</option>
               <option value="financial">Financial Invoices</option>
               <option value="academic">Academic Examinations</option>
@@ -512,7 +522,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                     type="button"
                   >
                     <Plus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="truncate">{f}</span>
+                    <span className="truncate">{resolveFieldLabel(f)}</span>
                   </button>
                 ))
               )}
@@ -544,7 +554,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <option value="">No Grouping</option>
-                {selectedFields.map((f) => <option key={f} value={f}>{f}</option>)}
+                {selectedFields.map((f) => <option key={f} value={f}>{resolveFieldLabel(f)}</option>)}
               </select>
             </div>
           </div>
@@ -622,7 +632,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                     {selectedFields.map((f, i) => (
                       <DraggableField
                         key={f}
-                        field={f}
+                        field={resolveFieldLabel(f)}
                         onRemove={() => removeField(f)}
                         onMoveUp={() => moveUp(i)}
                         onMoveDown={() => moveDown(i)}

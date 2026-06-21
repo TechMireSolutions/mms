@@ -68,17 +68,41 @@ jobs:
           JWT_SECRET: ci-test-secret
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mms
           NODE_ENV: test
+          PLATFORM_ALLOW_ENV_BOOTSTRAP: 'true'
+          PLATFORM_ADMIN_EMAIL: platform@test.com
+          PLATFORM_ADMIN_PASSWORD: password123
         run: |
           cd apps/backend
           node dist/index.js &
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:3000/health >/dev/null; then
               echo "Backend ready"
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3000/health >/dev/null || exit 1
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Start frontend
+        run: |
+          cd apps/frontend
+          pnpm exec vite --host 127.0.0.1 --port 5173 &
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:5173/health >/dev/null; then
+              echo "Frontend ready"
               exit 0
             fi
             sleep 1
           done
-          echo "Backend failed to start"
+          echo "Frontend failed to start"
           exit 1
 
-      - run: pnpm exec playwright test --project=api
+      - run: pnpm exec playwright test --project=api --project=ui
+        env:
+          E2E_API_URL: http://127.0.0.1:3000
+          E2E_BASE_URL: http://127.0.0.1:5173
+          E2E_PLATFORM_EMAIL: platform@test.com
+          E2E_PLATFORM_PASSWORD: password123

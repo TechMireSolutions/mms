@@ -22,13 +22,27 @@ import StudentList from "../components/students/StudentList";
 import StudentForm from "../components/students/StudentForm";
 import StudentsSettingsPanel from "../components/students/StudentsSettings";
 import { Student } from '@/lib/data/studentsData';
-import { type StudentsSettings, DEFAULT_STUDENTS_SETTINGS } from "@mms/shared";
+import { type StudentsSettings, DEFAULT_STUDENTS_SETTINGS, STUDENTS_MODULE_CONTRACT } from "@mms/shared";
 
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import { saveCollection, getObject } from "../lib/db";
 import useStudentCount from "@/hooks/useStudentCount";
-import { useStudents, useStudentMutations, type StudentRecord } from "@/hooks/useStudents";
+import { useStudentsPaginated, useStudentMutations, fetchAllStudentsForQuery, type StudentRecord } from "@/hooks/useStudents";
+import { useStudentColumnLayout } from "@/hooks/useStudentColumnLayout";
+import ModuleColumnCustomizer from "@/components/ui/ModuleColumnCustomizer";
+import StudentsCommandMetrics from "@/components/students/StudentsCommandMetrics";
+import StudentsListPagination from "@/components/students/StudentsListPagination";
+
+const STUDENTS_GR_MIGRATION_KEY = "mms_students_gr_migration_v1";
+
+function grMigrationAlreadyDone(): boolean {
+  try {
+    return localStorage.getItem(STUDENTS_GR_MIGRATION_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 const STUDENT_STATUS_OPTIONS = ["active", "inactive", "suspended"];
 
@@ -79,47 +93,89 @@ export default function Students() {
   const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const { data: serverCount } = useStudentCount();
-  const { data: rawStudents = [], isLoading } = useStudents();
   const { createStudent, updateStudent, deleteStudent } = useStudentMutations();
   const [activeTab, setActiveTab] = useState("work");
+  const [needsMigrationScan, setNeedsMigrationScan] = useState(() => !grMigrationAlreadyDone());
+  const [showStudentForm, setShowStudentForm] = useState(false);
+  const [listPage, setListPage] = useState(1);
 
   const settings = useMemo(
     () => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS),
     [],
   );
 
-  const { students, didMigrate } = useMemo(
-    () => applyGrNumberMigration(rawStudents, settings),
-    [rawStudents, settings],
-  );
+  const {
+    columnRegistry,
+    isColumnVisible,
+    updateUserColumnLayout,
+    customizerLabels,
+  } = useStudentColumnLayout(settings);
 
   const migrationAppliedRef = useRef(false);
   useEffect(() => {
-    if (!didMigrate || migrationAppliedRef.current) return;
-    migrationAppliedRef.current = true;
-    saveCollection("students", students);
-    for (const s of students) {
-      updateStudent.mutate({ id: String(s.id), student: s as unknown as StudentRecord });
-    }
-  }, [didMigrate, students, updateStudent]);
+    if (!needsMigrationScan || activeTab !== "work") return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const rawForMigration = await fetchAllStudentsForQuery({});
+        if (cancelled) return;
+        const { students: migratedForGr, didMigrate } = applyGrNumberMigration(rawForMigration, settings);
+        if (didMigrate && !migrationAppliedRef.current) {
+          migrationAppliedRef.current = true;
+          saveCollection("students", migratedForGr);
+          for (const s of migratedForGr) {
+            updateStudent.mutate({ id: String(s.id), student: s as unknown as StudentRecord });
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          try {
+            localStorage.setItem(STUDENTS_GR_MIGRATION_KEY, "1");
+          } catch {
+            /* ignore */
+          }
+          setNeedsMigrationScan(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [needsMigrationScan, activeTab, settings, updateStudent]);
 
   const [studentSearch, setStudentSearch] = useState("");
   const [studentFilterStatus, setStudentFilterStatus] = useState<string[]>([]);
   const [studentFilterGender, setStudentFilterGender] = useState("");
-  const [showStudentForm, setShowStudentForm] = useState(false);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [subTab, setSubTab] = useState("fields");
 
-  const filteredStudents = useMemo(() => {
-    return students.filter((s) => {
-      const q = studentSearch.toLowerCase();
-      return (
-        (!q || s.name.toLowerCase().includes(q) || s.cnic?.includes(q) || s.fatherName?.toLowerCase().includes(q) || s.guardianName?.toLowerCase().includes(q)) &&
-        (studentFilterStatus.length === 0 || studentFilterStatus.includes(s.status)) &&
-        (!studentFilterGender || s.gender === studentFilterGender)
-      );
-    });
-  }, [students, studentSearch, studentFilterStatus, studentFilterGender]);
+  const useServerWork = activeTab === "work";
+  const isListView = settings.defaultViewLayout === "list";
+  const workLimit = isListView
+    ? STUDENTS_MODULE_CONTRACT.defaultPageSize
+    : STUDENTS_MODULE_CONTRACT.maxPageSize;
+
+  const { data: workPageData, isFetching: isWorkPageFetching, isLoading: isWorkPageLoading } = useStudentsPaginated({
+    page: isListView ? listPage : 1,
+    limit: workLimit,
+    search: studentSearch,
+    status: studentFilterStatus.length > 0 ? studentFilterStatus.join(",") : undefined,
+    gender: studentFilterGender || undefined,
+    enabled: useServerWork,
+  });
+
+  useEffect(() => {
+    setListPage(1);
+  }, [studentSearch, studentFilterStatus, studentFilterGender, settings.defaultViewLayout]);
+
+  const workStudents = useMemo(
+    () => (workPageData?.students ?? []) as unknown as Student[],
+    [workPageData],
+  );
+  const shownCount = workPageData?.total ?? 0;
+  const workTruncated = useServerWork && !isListView && Boolean(workPageData?.hasMore);
+
+  const filteredStudents = workStudents;
 
   const handleSaveStudent = (data: Student) => {
     if (editStudent) {
@@ -173,6 +229,8 @@ export default function Students() {
           </ActionButton>
         }
       />
+
+      <StudentsCommandMetrics total={serverCount ?? shownCount} shown={shownCount} />
 
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
@@ -259,6 +317,12 @@ export default function Students() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <ModuleColumnCustomizer
+                columnRegistry={columnRegistry}
+                updateUserColumnLayout={updateUserColumnLayout}
+                labels={customizerLabels}
+              />
             </div>
 
             <FilterChips
@@ -269,25 +333,59 @@ export default function Students() {
               }}
             />
 
+            {workTruncated && (
+              <p className="text-xs text-muted-foreground px-1">
+                {t("students.workTruncated", {
+                  limit: workLimit,
+                  total: shownCount,
+                })}
+              </p>
+            )}
+
             <ErrorBoundary>
-              {isLoading ? (
-                <p className="text-sm text-muted-foreground px-1">Loading students…</p>
+              {isWorkPageLoading ? (
+                <p className="text-sm text-muted-foreground px-1">{t("common.loading")}</p>
               ) : (
-                <StudentList
-                  students={filteredStudents}
-                  layout={settings.defaultViewLayout}
-                  onEdit={(s: Student) => { setEditStudent(s); setShowStudentForm(true); }}
-                  onDelete={(id: string) => deleteStudent.mutate(String(id))}
-                  onBulkDelete={(ids) => ids.forEach((id) => deleteStudent.mutate(String(id)))}
-                  onBulkStatusChange={(ids, status) => {
-                    for (const id of ids) {
-                      const student = students.find((s) => s.id === id);
-                      if (student) {
-                        updateStudent.mutate({ id: String(id), student: { ...student, status } as unknown as StudentRecord });
-                      }
+                <>
+                  <StudentList
+                    students={filteredStudents}
+                    layout={settings.defaultViewLayout}
+                    isColumnVisible={isColumnVisible}
+                    serverPagination={
+                      isListView && workPageData
+                        ? {
+                            total: workPageData.total,
+                            page: workPageData.page,
+                            limit: workPageData.limit,
+                            hasMore: workPageData.hasMore,
+                          }
+                        : undefined
                     }
-                  }}
-                />
+                    onEdit={(s: Student) => { setEditStudent(s); setShowStudentForm(true); }}
+                    onDelete={(id: string) => deleteStudent.mutate(String(id))}
+                    onBulkDelete={(ids) => ids.forEach((id) => deleteStudent.mutate(String(id)))}
+                    onBulkStatusChange={(ids, status) => {
+                      for (const id of ids) {
+                        const student = workStudents.find((s) => s.id === id);
+                        if (student) {
+                          updateStudent.mutate({ id: String(id), student: { ...student, status } as unknown as StudentRecord });
+                        }
+                      }
+                    }}
+                  />
+                  {useServerWork && isListView && workPageData && (
+                    <StudentsListPagination
+                      page={workPageData.page}
+                      total={workPageData.total}
+                      limit={workPageData.limit}
+                      hasMore={workPageData.hasMore}
+                      onPageChange={setListPage}
+                    />
+                  )}
+                  {useServerWork && isWorkPageFetching && (
+                    <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
+                  )}
+                </>
               )}
             </ErrorBoundary>
           </motion.div>
@@ -334,7 +432,6 @@ export default function Students() {
         {showStudentForm && (
           <StudentForm
             student={editStudent ?? undefined}
-            students={students}
             onClose={() => { setShowStudentForm(false); setEditStudent(null); }}
             onSave={handleSaveStudent as (data: object) => void}
           />

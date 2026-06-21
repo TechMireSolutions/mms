@@ -5,8 +5,8 @@ import {
   Tooltip, ResponsiveContainer, TooltipContentProps
 } from "recharts";
 import { enrollmentData as defaultEnrollmentData, EnrollmentPoint } from '@/lib/data/dashboardData';
-import { getCollection } from "../../../lib/db";
-import { STUDENTS, Student } from '@/lib/data/studentsData';
+import { useLiveCollection } from "@/hooks/useLiveCollection";
+import type { Enrollment } from '@/lib/data/enrollmentData';
 import { TrendingUp } from "lucide-react";
 
 /**
@@ -30,7 +30,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
  */
 export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { enrollment: COLOR_MAP } = useBrandedDashboardChartColors();
-  const students = getCollection<Student>("students", STUDENTS);
+  const enrollments = useLiveCollection<Enrollment>("enrollments");
 
   const [chartType, setChartType] = useState<"area" | "bar" | "line">(() => {
     return (localStorage.getItem("db_chart_type_enrollment") as "area" | "bar" | "line") || "area";
@@ -58,10 +58,9 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
   const activeMonths = months.slice(-monthsCount);
 
   const enrollmentData: EnrollmentPoint[] = activeMonths.map((m, idx) => {
-    // Count how many students were registered on or before the end of this month
-    const count = students.filter(s => {
-      if (!s || !s.registeredDate) return false;
-      return s.registeredDate <= `${m.key}-31`;
+    const count = enrollments.filter((e) => {
+      if (!e?.enrolledDate) return false;
+      return e.enrolledDate <= `${m.key}-31`;
     }).length;
 
     const baselineIdx = months.findIndex(item => item.key === m.key);

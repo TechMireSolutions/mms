@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { School } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -29,48 +29,42 @@ import {
   type TeacherFormValues,
   TEACHER_SPECIALIZATION_OPTIONS,
 } from '@/lib/forms/teacherSchemas';
-import { useContactsCollection } from '@/hooks/useContacts';
 import { calculateKeyedUnitsCompleteness } from '@/lib/formCompleteness';
+import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from '@/hooks/useTeachers';
 
 export interface TeacherFormProps {
   teacher?: Teacher;
-  teachers: Teacher[];
   onClose: () => void;
   onSave: (data: Teacher) => void;
 }
 
-function generateEmployeeId(teachersList: Teacher[], settings: TeachersSettings): string {
-  const prefix = settings.idPrefix || 'TCH';
-  const nextSeq = teachersList.length + 1;
-  return `${prefix}-${String(nextSeq).padStart(4, '0')}`;
-}
-
 export default function TeacherForm({
   teacher,
-  teachers,
   onClose,
   onSave,
 }: TeacherFormProps): React.JSX.Element {
   const { t } = useTranslation();
-  const contacts = useContactsCollection();
   const settings = useMemo(
     () => getObject<TeachersSettings>('teachers_settings', DEFAULT_TEACHERS_SETTINGS),
     [],
   );
 
-  const usedContactIds = useMemo(
-    () => teachers
-      .filter((row) => !teacher || String(row.id) !== String(teacher.id))
-      .map((row) => row.contactId)
-      .filter((id) => id != null && id !== ''),
-    [teachers, teacher],
+  const autoGenerateId = settings.autoGenerateId && !teacher;
+  const { data: linkedTeacherContactIds = [] } = useTeacherLinkedContactIds(
+    teacher?.id ? String(teacher.id) : undefined,
   );
+  const { data: nextEmployeeId } = useTeacherNextEmployeeId({
+    prefix: settings.idPrefix,
+    enabled: autoGenerateId,
+  });
+
+  const usedContactIds = linkedTeacherContactIds;
 
   const form = useForm<TeacherFormValues>({
     resolver: zodResolver(teacherFormSchema),
     defaultValues: {
       contactId: teacher?.contactId as TeacherFormValues['contactId'],
-      employeeId: teacher?.employeeId ?? (settings.autoGenerateId ? generateEmployeeId(teachers, settings) : ''),
+      employeeId: teacher?.employeeId ?? '',
       specialization: teacher?.specialization ?? settings.defaultSpecialization ?? 'General',
       status: teacher?.status ?? 'active',
       joinDate: teacher?.joinDate ?? new Date().toISOString().split('T')[0],
@@ -78,6 +72,13 @@ export default function TeacherForm({
       notes: teacher?.notes ?? '',
     },
   });
+
+  useEffect(() => {
+    if (!autoGenerateId || !nextEmployeeId) return;
+    if (!form.getValues('employeeId')) {
+      form.setValue('employeeId', nextEmployeeId);
+    }
+  }, [autoGenerateId, nextEmployeeId, form]);
 
   const contactId = form.watch('contactId');
   const watched = form.watch();
@@ -101,7 +102,7 @@ export default function TeacherForm({
     onSave({
       id,
       contactId: values.contactId,
-      employeeId: values.employeeId || (settings.autoGenerateId ? generateEmployeeId(teachers, settings) : undefined),
+      employeeId: values.employeeId || (autoGenerateId ? nextEmployeeId : undefined),
       specialization: values.specialization,
       status: values.status,
       joinDate: values.joinDate,
@@ -138,7 +139,6 @@ export default function TeacherForm({
                     label={t('teachers.field.contact')}
                     value={field.value ?? null}
                     onChange={(id) => field.onChange(id ?? '')}
-                    contacts={contacts}
                     excludeIds={usedContactIds}
                     searchPlaceholder={t('teachers.form.searchContact')}
                     emptyTitle={t('teachers.form.noContacts')}
@@ -158,7 +158,7 @@ export default function TeacherForm({
                 <FormItem>
                   <FormLabel>{t('teachers.field.employeeId')}</FormLabel>
                   <FormControl>
-                    <Input {...field} readOnly={settings.autoGenerateId && !teacher} />
+                    <Input {...field} readOnly={autoGenerateId} />
                   </FormControl>
                 </FormItem>
               )}

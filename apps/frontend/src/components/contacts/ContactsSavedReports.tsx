@@ -1,0 +1,335 @@
+import React, { useCallback, useMemo, useState } from "react";
+import { Bookmark, Trash2, Play, Plus, Clock, User, AlertTriangle, Users } from "lucide-react";
+import type { ContactsSavedReport, ContactsSavedReportShareScope, ContactsWorkDrillDown } from "@mms/shared";
+import { formatDate, validateContactsSavedReportDrillDown } from "@mms/shared";
+import EmptyState from "@/components/ui/EmptyState";
+import FormModal from "@/components/ui/FormModal";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import useTranslation from "@/hooks/useTranslation";
+import useGlobalSettings from "@/hooks/useGlobalSettings";
+import usePermissions from "@/hooks/usePermissions";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import {
+  useContactsSavedReportMutations,
+  useContactsSavedReports,
+} from "@/hooks/useContacts";
+import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
+import { notify } from "@/lib/notify";
+import ContactsSavedReportUserPicker from "@/components/contacts/ContactsSavedReportUserPicker";
+
+interface ContactsSavedReportsProps {
+  suggestedDrillDown?: ContactsWorkDrillDown;
+}
+
+function formatDrillDownSummary(
+  drillDown: ContactsWorkDrillDown,
+  stageLabel: string,
+  searchLabel: string,
+): string {
+  const parts: string[] = [];
+  if (drillDown.lifecycleStage) parts.push(`${stageLabel}: ${drillDown.lifecycleStage}`);
+  if (drillDown.gender) parts.push(drillDown.gender);
+  if (drillDown.search?.trim()) parts.push(`${searchLabel}: ${drillDown.search.trim()}`);
+  return parts.join(" · ") || "—";
+}
+
+const SHARE_SCOPES: ContactsSavedReportShareScope[] = ["private", "roles", "users", "global"];
+
+/** Contacts module saved reports — logic presets re-run against live data (globle1 §4.4). */
+export default function ContactsSavedReports({
+  suggestedDrillDown = {},
+}: ContactsSavedReportsProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const settings = useGlobalSettings();
+  const { user } = useAuth();
+  const { role } = usePermissions();
+  const { lifecycleStages, genders } = useContactConfig();
+  const { data: reports = [], isLoading } = useContactsSavedReports();
+  const { createSavedReport, deleteSavedReport, runSavedReport } = useContactsSavedReportMutations();
+
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [stage, setStage] = useState(suggestedDrillDown.lifecycleStage ?? "");
+  const [search, setSearch] = useState(suggestedDrillDown.search ?? "");
+  const [shareScope, setShareScope] = useState<ContactsSavedReportShareScope>("private");
+  const [sharedWithUserIds, setSharedWithUserIds] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const stageLabel = t("contacts.savedReports.stageLabel");
+  const searchLabel = t("contacts.savedReports.searchLabel");
+
+  const shareScopeOptions = useMemo(() => {
+    const scopes = [...SHARE_SCOPES];
+    if (role !== "admin") return scopes.filter((s) => s !== "global");
+    return scopes;
+  }, [role]);
+
+  const openSaveDialog = useCallback(() => {
+    setName("");
+    setStage(suggestedDrillDown.lifecycleStage ?? "");
+    setSearch(suggestedDrillDown.search ?? "");
+    setShareScope("private");
+    setSharedWithUserIds([]);
+    setSaveOpen(true);
+  }, [suggestedDrillDown.lifecycleStage, suggestedDrillDown.search]);
+
+  const handleSave = useCallback(async () => {
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+    if (shareScope === "users" && sharedWithUserIds.length === 0) {
+      notify.error(t("contacts.savedReports.usersRequired"));
+      return;
+    }
+    const drillDown: ContactsWorkDrillDown = {
+      ...(stage ? { lifecycleStage: stage } : {}),
+      ...(search.trim() ? { search: search.trim() } : {}),
+    };
+    setSaving(true);
+    try {
+      await createSavedReport.mutateAsync({
+        name: trimmedName,
+        drillDown,
+        shareScope,
+        ...(shareScope === "roles" && role ? { sharedWithRoles: [role] } : {}),
+        ...(shareScope === "users" ? { sharedWithUserIds } : {}),
+      });
+      notify.success(t("contacts.savedReports.saveSuccess"));
+      setSaveOpen(false);
+    } catch {
+      notify.error(t("settings.serverSaveFailed"));
+    } finally {
+      setSaving(false);
+    }
+  }, [name, stage, search, shareScope, sharedWithUserIds, role, createSavedReport, t]);
+
+  const handleRun = useCallback(
+    async (report: ContactsSavedReport) => {
+      const issues = validateContactsSavedReportDrillDown(report.drillDown, {
+        lifecycleStages,
+        genders: genders,
+      });
+      if (issues.length > 0) {
+        notify.error(t("contacts.savedReports.staleWarningTitle"), {
+          description: t("contacts.savedReports.staleWarningDesc", {
+            field: issues[0]?.value ?? "",
+          }),
+        });
+      }
+      try {
+        await runSavedReport.mutateAsync(report.id);
+        applyContactsWorkDrillDown(report.drillDown);
+        notify.info(t("contacts.savedReports.runSuccess"), { description: report.name });
+      } catch {
+        notify.error(t("settings.serverSaveFailed"));
+      }
+    },
+    [runSavedReport, t, lifecycleStages, genders],
+  );
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        await deleteSavedReport.mutateAsync(id);
+        notify.info(t("contacts.savedReports.deleteSuccess"));
+      } catch {
+        notify.error(t("settings.serverSaveFailed"));
+      }
+    },
+    [deleteSavedReport, t],
+  );
+
+  const formatLastRun = useMemo(
+    () => (iso?: string) => {
+      if (!iso) return t("contacts.savedReports.neverRun");
+      return formatDate(iso, settings.dateFormat);
+    },
+    [settings.dateFormat, t],
+  );
+
+  const shareLabel = (scope: ContactsSavedReportShareScope | undefined): string => {
+    const key = scope ?? "private";
+    return t(`contacts.savedReports.shareScope.${key}` as "contacts.savedReports.shareScope.private");
+  };
+
+  const canSave = Boolean(user);
+
+  return (
+    <div className="space-y-4 border-t border-border/50 pt-6 mt-6">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="text-left">
+          <h3 className="text-sm font-semibold text-foreground">{t("contacts.savedReports.title")}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{t("contacts.savedReports.subtitle")}</p>
+        </div>
+        {canSave && (
+          <button
+            type="button"
+            onClick={openSaveDialog}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            {t("contacts.savedReports.saveCurrent")}
+          </button>
+        )}
+      </div>
+
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground">{t("common.loading")}</p>
+      ) : reports.length === 0 ? (
+        <EmptyState
+          icon={Bookmark}
+          title={t("contacts.savedReports.emptyTitle")}
+          description={t("contacts.savedReports.emptyDescription")}
+        />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {reports.map((r) => {
+            const issues = validateContactsSavedReportDrillDown(r.drillDown, {
+              lifecycleStages,
+              genders: genders,
+            });
+            return (
+              <div
+                key={r.id}
+                className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm flex flex-col gap-3 text-left"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground">{r.name}</h4>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {formatDrillDownSummary(r.drillDown, stageLabel, searchLabel)}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                        <Users className="w-3 h-3" />
+                        {shareLabel(r.shareScope)}
+                      </span>
+                      {issues.length > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-warning/15 text-warning">
+                          <AlertTriangle className="w-3 h-3" />
+                          {t("contacts.savedReports.staleBadge")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <Bookmark className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                </div>
+                <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {formatLastRun(r.lastRunAt)}
+                  </span>
+                  {(r.createdByName || r.createdBy) && (
+                    <span className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {r.createdByName || r.createdBy}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 pt-1 border-t border-border">
+                  <button
+                    type="button"
+                    onClick={() => void handleRun(r)}
+                    className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    <Play className="w-3 h-3" />
+                    {t("contacts.savedReports.run")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleDelete(r.id)}
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    {t("contacts.savedReports.delete")}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <FormModal
+        open={saveOpen}
+        onClose={() => setSaveOpen(false)}
+        title={t("contacts.savedReports.saveDialogTitle")}
+        size="sm"
+        cancelLabel={t("common.cancel")}
+        saveLabel={t("contacts.savedReports.save")}
+        onSave={() => void handleSave()}
+        saving={saving}
+        saveDisabled={!name.trim() || (shareScope === "users" && sharedWithUserIds.length === 0)}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="saved-report-name">{t("contacts.savedReports.nameLabel")}</Label>
+            <Input
+              id="saved-report-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t("contacts.savedReports.namePlaceholder")}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{stageLabel}</Label>
+            <Select value={stage || "__any__"} onValueChange={(v) => setStage(v === "__any__" ? "" : v)}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("contacts.savedReports.stageAny")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__any__">{t("contacts.savedReports.stageAny")}</SelectItem>
+                {lifecycleStages.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="saved-report-search">{searchLabel}</Label>
+            <Input
+              id="saved-report-search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("contacts.savedReports.searchPlaceholder")}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t("contacts.savedReports.shareScopeLabel")}</Label>
+            <Select
+              value={shareScope}
+              onValueChange={(v) => {
+                setShareScope(v as ContactsSavedReportShareScope);
+                if (v !== "users") setSharedWithUserIds([]);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {shareScopeOptions.map((scope) => (
+                  <SelectItem key={scope} value={scope}>
+                    {shareLabel(scope)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {shareScope === "users" && (
+            <ContactsSavedReportUserPicker value={sharedWithUserIds} onChange={setSharedWithUserIds} />
+          )}
+        </div>
+      </FormModal>
+    </div>
+  );
+}

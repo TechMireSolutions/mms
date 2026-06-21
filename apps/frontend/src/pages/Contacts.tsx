@@ -1,19 +1,17 @@
-import React, { useState, useMemo, useCallback, lazy, Suspense } from "react";
+import React, { useMemo, useState, lazy, Suspense, useCallback, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2 } from "lucide-react";
+import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2, Trash2, RotateCcw } from "lucide-react";
+import ConfirmAlertDialog from "@/components/ui/ConfirmAlertDialog";
+import { getPrimaryPhone, hasWhatsApp, Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab } from "@mms/shared";
 import type { AppTranslationKey } from "@mms/shared";
-import {
-  parsePhoneNumber,
-  getPrimaryPhone,
-  hasWhatsApp,
-  Contact,
-  PhoneNumber,
-} from "@mms/shared";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import useTranslation from "@/hooks/useTranslation";
+import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import usePermissions from "@/hooks/usePermissions";
-import { useContacts, useContactsCollection } from "@/hooks/useContacts";
+import { useContacts, useContactsCollection, useContactsPaginated, useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/hooks/useContacts";
+import { useContactsSyncOutbox } from "@/hooks/useContactsSyncOutbox";
 import { useContactsPageActions } from "@/hooks/useContactsPageActions";
+import { useContactsPageState } from "@/hooks/useContactsPageState";
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
@@ -22,8 +20,24 @@ import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
 import SubTabBar from "@/components/ui/SubTabBar";
 import ActionButton from "../components/ui/ActionButton";
 import ContactsTable from "../components/contacts/ContactsTable";
+import ContactCards from "../components/contacts/ContactCards";
 import ContactsToolbar from "../components/contacts/ContactsToolbar";
+import ContactsCommandMetrics from "../components/contacts/ContactsCommandMetrics";
+import ContactsDataBanner from "../components/contacts/ContactsDataBanner";
+import ContactsSyncConflictPanel from "../components/contacts/ContactsSyncConflictPanel";
+import ContactsListPagination from "../components/contacts/ContactsListPagination";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
+import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
+import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
+import { notify } from "@/lib/notify";
+import {
+  clearGoogleContactsOAuthUrlParams,
+  readGoogleContactsOAuthCodeFromUrl,
+  relayGoogleContactsOAuthPopup,
+  stashGoogleContactsOAuthCode,
+  GOOGLE_CONTACTS_OAUTH_MESSAGE,
+  shouldOpenContactsSyncSetup,
+} from "@/lib/contacts/googleContactsOAuth";
 
 const ContactForm = lazy(() => import("../components/contacts/ContactForm"));
 const DuplicateDetection = lazy(() => import("../components/contacts/DuplicateDetection"));
@@ -33,9 +47,11 @@ const ContactsSettingsPanel = lazy(() => import("../components/contacts/Contacts
 const ContactSyncPanel = lazy(() => import("../components/contacts/ContactSyncPanel"));
 
 function LazyFallback(): React.JSX.Element {
+  const { t } = useTranslation();
   return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+    <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
+      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-hidden="true" />
+      <span className="sr-only">{t("common.loading")}</span>
     </div>
   );
 }
@@ -81,22 +97,29 @@ const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
   sync: "contacts.setup.sync",
 };
 
-function SettingsPanel({ contacts, onImport, canWrite }: SettingsPanelProps) {
+function SettingsPanel({ contacts, onImport, canWrite, canEditSetup }: SettingsPanelProps & { canEditSetup: boolean }) {
   const { t } = useTranslation();
   const { fieldConfig, updateConfig } = useContactConfig();
   const settingsSubTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.settingsSubTabs || [];
-    const sorted = [...tabsFromConfig]
-      .sort((a, b) => a.order - b.order)
-      .filter((tab) => tab.enabled && tab.key !== "uistrings");
-
-    return sorted.map((tab) => ({
-      key: tab.key,
-      label: SETUP_TAB_LABEL_KEYS[tab.key] ? t(SETUP_TAB_LABEL_KEYS[tab.key]) : tab.label,
-    }));
+    return CONTACTS_MODULE_CONTRACT.setupSubTabs
+      .map((key, index) => {
+        const cfg = tabsFromConfig.find((tab) => tab.key === key);
+        return {
+          key,
+          label: SETUP_TAB_LABEL_KEYS[key] ? t(SETUP_TAB_LABEL_KEYS[key]) : cfg?.label ?? key,
+          order: cfg?.order ?? index,
+          enabled: cfg?.enabled ?? true,
+        };
+      })
+      .filter((tab) => tab.enabled)
+      .sort((a, b) => a.order - b.order);
   }, [fieldConfig.settingsSubTabs, t]);
 
-  const [sub, setSub] = useState(() => settingsSubTabs[0]?.key || "fields");
+  const [sub, setSub] = useState(() => {
+    if (shouldOpenContactsSyncSetup()) return 'sync';
+    return settingsSubTabs[0]?.key || "fields";
+  });
   return (
     <div className="space-y-4">
       <SubTabBar
@@ -105,10 +128,15 @@ function SettingsPanel({ contacts, onImport, canWrite }: SettingsPanelProps) {
         onChange={setSub}
       />
       <Suspense fallback={<LazyFallback />}>
-        {sub === "fields" && (
+        {(sub === "fields" || sub === "preferences") && !canEditSetup ? (
+          <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
+            {t("contacts.setupReadOnly")}
+          </p>
+        ) : null}
+        {sub === "fields" && canEditSetup && (
           <ContactsSettingsPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="fields" />
         )}
-        {sub === "preferences" && (
+        {sub === "preferences" && canEditSetup && (
           <ContactsSettingsPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="preferences" />
         )}
         {sub === "sync" && (
@@ -120,174 +148,223 @@ function SettingsPanel({ contacts, onImport, canWrite }: SettingsPanelProps) {
 }
 
 function ContactsInner() {
-  const PAGE_TABS = useModuleTierTabs();
-  const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const { can } = usePermissions();
-  const canWrite = can("contacts.write");
-  const { prefs, countryCodesMap, lifecycleStages, defaultContactRating, uiStrings } = useContactConfig();
+  const perms = CONTACTS_MODULE_CONTRACT.permissions;
+  const bulkActions = CONTACTS_MODULE_CONTRACT.work.bulkActions;
+  const canWrite = can(perms.write);
+  const canDelete = can(perms.delete);
+  const canExport = can(perms.export);
+  const canViewReports = can(perms.reports);
+  const canViewSetup = can(perms.setupView);
+  const canEditSetup = can(perms.setupWrite);
+  const { fieldConfig, prefs, countryCodesMap, lifecycleStages, defaultContactRating, updatePrefs } = useContactConfig();
   const tableColumns = useContactColumns();
-  const { isLoading: isContactsLoading } = useContacts();
-  const { saveContact, removeContact, mergeContacts, importContacts, updateContact } =
-    useContactsPageActions();
-
-  const rawContacts = useContactsCollection();
-
-  const contacts = useMemo(() => {
-    const country = prefs?.defaultCountry || "";
-    const defaultCode = countryCodesMap[country] || "";
-    return rawContacts.map((c) => {
-      const base = {
-        lifecycleStage: lifecycleStages[0] || "",
-        rating: defaultContactRating,
-        relationships: [],
-        activities: [],
-        ...c,
-      } as Contact;
-      if (base.phones && Array.isArray(base.phones)) {
-        return {
-          ...base,
-          phones: base.phones.map((p: PhoneNumber) => {
-            if (p.countryCode) return p;
-            const parsed = parsePhoneNumber(p.number, defaultCode);
-            return {
-              ...p,
-              countryCode: parsed.countryCode,
-              number: parsed.number,
-            };
-          }),
-        };
-      }
-      return base;
-    });
-  }, [rawContacts, prefs?.defaultCountry, countryCodesMap, lifecycleStages, defaultContactRating]);
-
-  const [search,          setSearch]          = useState("");
-  const [filterGender,    setFilterGender]    = useState("");
-  const [sortField,       setSortField]       = useState("name");
-  const [sortDir,         setSortDir]         = useState<"asc" | "desc">("asc");
-  const [selected,        setSelected]        = useState<(string | number)[]>([]);
-  const [showForm,        setShowForm]        = useState(false);
-  const [editContact,     setEditContact]     = useState<Contact | null>(null);
-  const [showDuplicates,  setShowDuplicates]  = useState(false);
-  const [whatsappTargets, setWhatsappTargets] = useState<Contact[] | null>(null);
-  const [smsTargets, setSmsTargets] = useState<Contact[] | null>(null);
-  const [activeTab,       setActiveTab]       = useState("work");
-
-  const defaultCountry  = prefs.defaultCountry  || "";
-  const defaultCity     = prefs.defaultCity     || "";
-  const defaultProvince = prefs.defaultProvince || "";
-
-  const genderLabel = useCallback(
-    (gender: string) => {
-      const key = `contacts.gender.${gender.toLowerCase()}` as AppTranslationKey;
-      const translated = t(key);
-      return translated === key ? gender.charAt(0).toUpperCase() + gender.slice(1) : translated;
-    },
-    [t],
+  const [showDeletedArchives, setShowDeletedArchives] = useState(false);
+  const [listPage, setListPage] = useState(1);
+  const [conflictPanelOpen, setConflictPanelOpen] = useState(false);
+  const workDirectoryRowsRef = useRef<Contact[] | undefined>(undefined);
+  const { conflictCount } = useContactsSyncOutbox();
+  const prevConflictCount = useRef(conflictCount);
+  const openConflictReview = useCallback(() => setConflictPanelOpen(true), []);
+  const PAGE_TABS = useModuleTierTabs();
+  const [fetchGateTab, setFetchGateTab] = useState("work");
+  const visibleTopTabIds = useMemo(
+    () =>
+      PAGE_TABS.filter((tab) => {
+        if (tab.id === "setup") return canViewSetup;
+        if (tab.id === "reports") return canViewReports;
+        return true;
+      }).map((tab) => tab.id),
+    [PAGE_TABS, canViewSetup, canViewReports],
   );
+  const fetchGateEffectiveTab = resolveModuleTierTab(fetchGateTab, visibleTopTabIds);
+  const needsFullContactsList = showDeletedArchives || fetchGateEffectiveTab === "setup";
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    const list = contacts.filter((c) => {
-      if (q) {
-        const phone = getPrimaryPhone(c) || "";
-        const email = (c.emails || [])[0]?.address || (c.email as string) || "";
-        const city = (c.city as string) || "";
-        const match =
-          c.name?.toLowerCase().includes(q) ||
-          email.toLowerCase().includes(q) ||
-          phone.includes(q) ||
-          city.toLowerCase().includes(q);
-        if (!match) return false;
+  const { isLoading: isContactsLoading } = useContacts({
+    enabled: needsFullContactsList,
+    includeDeleted: showDeletedArchives && canDelete,
+  });
+  const pageActions = useContactsPageActions();
+  const rawContacts = useContactsCollection({
+    enabled: needsFullContactsList,
+    includeDeleted: showDeletedArchives && canDelete,
+  });
+
+  const state = useContactsPageState({
+    rawContacts,
+    prefs,
+    countryCodesMap,
+    lifecycleStages,
+    defaultContactRating,
+    tableColumns,
+    canWrite,
+    canDelete,
+    canExport,
+    canViewReports,
+    canViewSetup,
+    canEditSetup,
+    pageActions,
+    updatePrefs,
+    showDeletedArchives,
+    directoryRowsRef: workDirectoryRowsRef,
+  });
+
+  const {
+    t,
+    visibleTopTabs,
+    effectiveTab,
+    activeTab,
+    setActiveTab,
+    contacts,
+    filtered,
+    search,
+    setSearch,
+    filterGender,
+    setFilterGender,
+    filterLifecycleStage,
+    setFilterLifecycleStage,
+    sortField,
+    sortDir,
+    selected,
+    setSelected,
+    showForm,
+    setShowForm,
+    editContact,
+    setEditContact,
+    showDuplicates,
+    setShowDuplicates,
+    whatsappTargets,
+    setWhatsappTargets,
+    smsTargets,
+    setSmsTargets,
+    hasActiveFilters,
+    activeFilterCount,
+    defaultCountry,
+    defaultCity,
+    defaultProvince,
+    genderLabel,
+    handleSort,
+    handleSelect,
+    handleSelectAll,
+    handleEdit,
+    handleNew,
+    handleSave,
+    handleDelete,
+    confirmSingleDelete,
+    deleteTarget,
+    setDeleteTarget,
+    handleUpdateContact,
+    handleExportCSV,
+    handleBulkExport,
+    requestBulkDelete,
+    confirmBulkDelete,
+    bulkDeleteOpen,
+    setBulkDeleteOpen,
+    requestBulkRestore,
+    confirmBulkRestore,
+    bulkRestoreOpen,
+    setBulkRestoreOpen,
+    clearFilters,
+    handleImport,
+    handleMerge,
+    handleRestore,
+    showDeletedArchives: viewingDeleted,
+  } = state;
+
+  useEffect(() => {
+    setFetchGateTab(activeTab);
+  }, [activeTab]);
+
+  const useServerWork = !viewingDeleted && effectiveTab === "work";
+  const isListView = true;
+  const workLimit = CONTACTS_MODULE_CONTRACT.defaultPageSize;
+
+  const { data: workPageData, isFetching: isWorkPageFetching } = useContactsPaginated({
+    page: isListView ? listPage : 1,
+    limit: workLimit,
+    search,
+    lifecycleStage: filterLifecycleStage,
+    gender: filterGender,
+    sortField,
+    sortDir,
+    enabled: useServerWork,
+  });
+
+  React.useEffect(() => {
+    setListPage(1);
+  }, [search, filterGender, filterLifecycleStage, sortField, sortDir, showDeletedArchives]);
+
+  useEffect(() => {
+    if (prevConflictCount.current === 0 && conflictCount > 0) {
+      setConflictPanelOpen(true);
+    }
+    prevConflictCount.current = conflictCount;
+  }, [conflictCount]);
+
+  useEffect(() => {
+    const code = readGoogleContactsOAuthCodeFromUrl();
+    if (code) {
+      clearGoogleContactsOAuthUrlParams();
+      if (!relayGoogleContactsOAuthPopup(code)) {
+        stashGoogleContactsOAuthCode(code);
+        setActiveTab('setup');
       }
-      if (filterGender && c.gender !== filterGender) return false;
-      return true;
-    });
-    return [...list].sort((a, b) => {
-      let av: string | number = "";
-      let bv: string | number = "";
+    }
 
-      av = typeof a[sortField] === "number" ? (a[sortField] as number) : String(a[sortField] || "").toLowerCase();
-      bv = typeof b[sortField] === "number" ? (b[sortField] as number) : String(b[sortField] || "").toLowerCase();
+    const onOAuthMessage = (event: MessageEvent): void => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type !== GOOGLE_CONTACTS_OAUTH_MESSAGE || typeof event.data.code !== 'string') return;
+      stashGoogleContactsOAuthCode(event.data.code);
+      setActiveTab('setup');
+    };
+    window.addEventListener('message', onOAuthMessage);
+    return () => window.removeEventListener('message', onOAuthMessage);
+  }, [setActiveTab]);
 
-      if (typeof av === "number" && typeof bv === "number") {
-        return sortDir === "asc" ? av - bv : bv - av;
+  const workContacts = useServerWork ? (workPageData?.contacts ?? []) : filtered;
+  workDirectoryRowsRef.current = useServerWork ? workContacts : undefined;
+  const shownCount = useServerWork && workPageData ? workPageData.total : filtered.length;
+  const workTruncated = useServerWork && !isListView && Boolean(workPageData?.hasMore);
+
+  const linkSourceContacts = useMemo(() => {
+    const rows = [...workContacts];
+    if (editContact) rows.push(editContact);
+    return rows;
+  }, [workContacts, editContact]);
+  const linkedContactIds = useMemo(
+    () => collectLinkedContactIds(linkSourceContacts),
+    [linkSourceContacts],
+  );
+  const { data: resolvedLinkContacts = [] } = useContactsByIds(
+    needsFullContactsList ? [] : linkedContactIds,
+  );
+  const allContactsForLinks = useMemo(() => {
+    if (needsFullContactsList) return contacts;
+    return mergeContactLinkDirectory(linkSourceContacts, resolvedLinkContacts);
+  }, [needsFullContactsList, contacts, linkSourceContacts, resolvedLinkContacts]);
+
+  const [openingDuplicates, setOpeningDuplicates] = useState(false);
+
+  const handleOpenDuplicates = useCallback(async () => {
+    if (openingDuplicates) return;
+    const needsAsyncScan = shownCount >= CONTACTS_MODULE_CONTRACT.duplicateScanAsyncMinContacts;
+    if (needsAsyncScan) {
+      setOpeningDuplicates(true);
+      try {
+        const job = await startContactsDuplicateScan(t("contacts.jobs.duplicateScanLabel"));
+        await queryClient.invalidateQueries({ queryKey: CONTACTS_DUPLICATES_QUERY_KEY });
+        const pairCount = job.progress?.current ?? 0;
+        notify.success(t("contacts.duplicates.scanComplete", { count: pairCount }));
+      } catch {
+        notify.error(t("contacts.duplicates.scanFailed"));
+        return;
+      } finally {
+        setOpeningDuplicates(false);
       }
-      return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-    });
-  }, [contacts, search, filterGender, sortField, sortDir]);
-
-  const hasActiveFilters  = !!(filterGender || search);
-  const activeFilterCount = filterGender ? 1 : 0;
-
-  const handleSort = useCallback((field: string) => {
-    if (sortField === field) setSortDir((d) => d === "asc" ? "desc" : "asc");
-    else { setSortField(field); setSortDir("asc"); }
-  }, [sortField]);
-
-  const handleSelect    = useCallback((id: string | number) => setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]), []);
-  const handleSelectAll = useCallback(() => setSelected((s) => s.length === filtered.length ? [] : filtered.map((c) => c.id)), [filtered]);
-
-  const handleEdit = useCallback((c: Contact) => {
-    if (!canWrite) return;
-    setEditContact(c);
-    setShowForm(true);
-  }, [canWrite]);
-  const handleNew = useCallback(() => {
-    if (!canWrite) return;
-    setEditContact(null);
-    setShowForm(true);
-  }, [canWrite]);
-
-  const handleSave = useCallback((data: Contact) => {
-    if (!canWrite) return;
-    const isNew = !editContact;
-    const payload = editContact
-      ? { ...editContact, ...data }
-      : { ...data, id: data.id ?? Date.now() };
-    void saveContact(payload, isNew).then(() => {
-      setShowForm(false);
-      setEditContact(null);
-    }).catch(() => {});
-  }, [editContact, saveContact, canWrite]);
-
-  const handleDelete = useCallback((id: string | number) => {
-    if (!canWrite) return;
-    const c = contacts.find((x) => x.id === id);
-    void removeContact(id, c?.name);
-  }, [contacts, removeContact, canWrite]);
-
-  const handleUpdateContact = useCallback((updated: Contact) => {
-    if (!canWrite) return;
-    void updateContact.mutateAsync({ id: String(updated.id), contact: updated }).catch(() => {});
-  }, [canWrite, updateContact]);
-
-  const handleExportCSV = () => {
-    const headers = tableColumns.map((c) => c.label);
-    const rows = [headers];
-    filtered.forEach((c) => {
-      const row = tableColumns.map(({ id }) => {
-        if (id === "name") return c.name || "";
-        if (id === "phone") return getPrimaryPhone(c) || "";
-        if (id === "email") return (c.emails || [])[0]?.address || (c.email as string) || "";
-        if (id === "whatsapp") return hasWhatsApp(c) ? "Yes" : "No";
-        if (id === "city") return (c.addresses || [])[0]?.city || (c.city as string) || "";
-        if (id === "state") return (c.addresses || [])[0]?.state || (c.state as string) || "";
-        if (id === "country") return (c.addresses || [])[0]?.country || (c.country as string) || "";
-        const val = c[id];
-        if (val === undefined || val === null) return "";
-        return String(val);
-      });
-      rows.push(row);
-    });
-    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    a.download = uiStrings.exportFilename || "contacts.csv";
-    a.click();
-  };
-
-  const clearFilters = useCallback(() => { setFilterGender(""); setSearch(""); }, []);
+    }
+    setShowDuplicates(true);
+  }, [openingDuplicates, shownCount, queryClient, t, setShowDuplicates]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-4">
@@ -296,13 +373,22 @@ function ContactsInner() {
       <PageHeader
         icon={Users}
         title={t("nav.contacts")}
-        subtitle={t("contacts.subtitleCount", { total: contacts.length, shown: filtered.length })}
+        subtitle={t("page.contacts.subtitle")}
         actions={
           <>
-            <ActionButton variant="ghost" icon={AlertTriangle} onClick={() => setShowDuplicates(true)}>{t("contacts.duplicates")}</ActionButton>
+            <ActionButton
+              variant="ghost"
+              icon={openingDuplicates ? Loader2 : AlertTriangle}
+              onClick={() => void handleOpenDuplicates()}
+              disabled={openingDuplicates}
+            >
+              {t("contacts.duplicates")}
+            </ActionButton>
+            {canExport && (
             <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
               <Download className="w-3.5 h-3.5" /> {t("common.export")}
             </button>
+            )}
             {canWrite && (
               <ActionButton variant="primary" icon={UserPlus} onClick={handleNew}>{t("contacts.addContact")}</ActionButton>
             )}
@@ -310,32 +396,74 @@ function ContactsInner() {
         }
       />
 
+      <ContactsCommandMetrics
+        total={contacts.length}
+        shown={shownCount}
+        onOpenDuplicates={() => void handleOpenDuplicates()}
+        onReviewConflicts={openConflictReview}
+      />
+
+      <ContactsDataBanner onReviewConflicts={openConflictReview} listFetchEnabled={needsFullContactsList} />
+
+      <ContactsSyncConflictPanel
+        open={conflictPanelOpen}
+        onClose={() => setConflictPanelOpen(false)}
+      />
+
       <ResponsiveAccordionTabs
-        tabs={PAGE_TABS}
-        activeTab={activeTab}
+        tabs={visibleTopTabs}
+        activeTab={effectiveTab}
         onTabChange={setActiveTab}
         panelIdPrefix="contacts-tab"
       >
       <AnimatePresence mode="wait">
-        {activeTab === "work" ? (
+        {effectiveTab === "work" ? (
           <motion.div key="work" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
             <ErrorBoundary>
               <ContactsToolbar
                 search={search}             onSearchChange={setSearch}
                 filterGender={filterGender} onGenderChange={setFilterGender}
+                filterLifecycleStage={filterLifecycleStage}
+                onLifecycleStageChange={setFilterLifecycleStage}
                 sortField={sortField}       onSort={handleSort}
                 hasActiveFilters={hasActiveFilters}
                 activeFilterCount={activeFilterCount}
                 onClearFilters={clearFilters}
+                showDeletedArchives={viewingDeleted}
+                onShowDeletedChange={(next) => {
+                  setShowDeletedArchives(next);
+                  setSelected([]);
+                }}
+                canViewDeleted={canDelete}
               />
             </ErrorBoundary>
 
+            {workTruncated && (
+              <div
+                className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs text-warning"
+                role="status"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                {t("contacts.workTruncated", {
+                  limit: CONTACTS_MODULE_CONTRACT.maxPageSize,
+                  total: shownCount,
+                })}
+              </div>
+            )}
+
             <AnimatePresence>
-              {filterGender && (
+              {(filterGender || filterLifecycleStage) && (
                 <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="flex flex-wrap gap-1.5">
+                  {filterGender && (
                   <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-                    {uiStrings.genderFilterLabel || "Gender"}: {genderLabel(filterGender)} <button onClick={() => setFilterGender("")} className="hover:opacity-70"><X className="w-3 h-3" /></button>
+                    {t("contacts.genderFilter")}: {genderLabel(filterGender)} <button type="button" onClick={() => setFilterGender("")} className="hover:opacity-70" aria-label={t("contacts.clearFilters")}><X className="w-3 h-3" /></button>
                   </span>
+                  )}
+                  {filterLifecycleStage && (
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
+                    {t("contacts.lifecycleFilter")}: {filterLifecycleStage} <button type="button" onClick={() => setFilterLifecycleStage("")} className="hover:opacity-70" aria-label={t("contacts.clearFilters")}><X className="w-3 h-3" /></button>
+                  </span>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -350,32 +478,67 @@ function ContactsInner() {
                   </div>
                   <div className="flex items-center gap-2">
                     {(() => {
-                      const targets = contacts.filter((c) => selected.includes(c.id));
+                      const targets = workContacts.filter((c) => selected.includes(c.id));
                       const waTargets = targets.filter((c) => hasWhatsApp(c));
                       const smsReady = targets.filter((c) => Boolean(getPrimaryPhone(c)));
                       const waClickable = waTargets.length > 0;
                       const smsClickable = smsReady.length > 0;
                       return (
                         <>
+                          {bulkActions.includes("whatsapp") && !viewingDeleted && (
                           <button
+                            type="button"
                             disabled={!waClickable}
                             onClick={() => setWhatsappTargets(waTargets)}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold text-white transition-all ${
+                            aria-label={t("contacts.whatsappBulk", { count: waTargets.length })}
+                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold text-primary-foreground bg-success transition-all ${
                               waClickable ? "hover:scale-[1.02] active:scale-[0.98]" : "opacity-40 cursor-not-allowed"
                             }`}
-                            style={{ background: uiStrings.whatsappColor || "#075E54" }}
                           >
-                            <MessageCircle className="w-3.5 h-3.5" /> WhatsApp ({waTargets.length})
+                            <MessageCircle className="w-3.5 h-3.5" /> {t("contacts.whatsappBulk", { count: waTargets.length })}
                           </button>
+                          )}
+                          {bulkActions.includes("sms") && !viewingDeleted && (
                           <button
+                            type="button"
                             disabled={!smsClickable}
                             onClick={() => setSmsTargets(smsReady)}
+                            aria-label={t("contacts.smsBulk", { count: smsReady.length })}
                             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-primary/40 bg-primary/10 text-sm font-semibold text-primary transition-all dark:border-primary/40 dark:bg-primary/20 dark:text-primary ${
                               smsClickable ? "hover:scale-[1.02] active:scale-[0.98]" : "opacity-40 cursor-not-allowed"
                             }`}
                           >
-                            <MessageSquare className="w-3.5 h-3.5" /> {uiStrings.sms || "SMS"} ({smsReady.length})
+                            <MessageSquare className="w-3.5 h-3.5" /> {t("contacts.smsBulk", { count: smsReady.length })}
                           </button>
+                          )}
+                          {bulkActions.includes("export") && (
+                          <button
+                            type="button"
+                            onClick={handleBulkExport}
+                            disabled={!canExport}
+                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-all ${!canExport ? "opacity-40 cursor-not-allowed" : ""}`}
+                          >
+                            <Download className="w-3.5 h-3.5" /> {t("contacts.bulkExport")}
+                          </button>
+                          )}
+                          {bulkActions.includes("delete") && canDelete && !viewingDeleted && (
+                            <button
+                              type="button"
+                              onClick={requestBulkDelete}
+                              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-destructive/30 bg-destructive/10 text-sm font-semibold text-destructive hover:bg-destructive/15 transition-all"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> {t("contacts.bulkDelete")}
+                            </button>
+                          )}
+                          {viewingDeleted && canDelete && (
+                            <button
+                              type="button"
+                              onClick={requestBulkRestore}
+                              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-primary/30 bg-primary/10 text-sm font-semibold text-primary hover:bg-primary/15 transition-all"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" /> {t("contacts.bulkRestore")}
+                            </button>
+                          )}
                         </>
                       );
                     })()}
@@ -393,32 +556,81 @@ function ContactsInner() {
                   <TableSkeleton rows={6} cols={tableColumns.length} />
                 </motion.div>
               ) : (
-                <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-                  {filtered.length === 0 ? (
+                <motion.div key="list-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+                  {workContacts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 rounded-xl border-2 border-dashed border-border text-muted-foreground gap-3">
                       <UserX className="w-8 h-8 opacity-30" />
-                      <p className="text-sm font-semibold">{hasActiveFilters ? t("contacts.noContactsMatchFilters") : t("contacts.noContactsYet")}</p>
-                      <p className="text-xs text-center max-w-xs">{hasActiveFilters ? t("contacts.tryAdjustingFilters") : t("contacts.clickAddContact")}</p>
+                      <p className="text-sm font-semibold">
+                        {hasActiveFilters
+                          ? t("contacts.noContactsMatchFilters")
+                          : viewingDeleted
+                            ? t("contacts.noDeletedContacts")
+                            : t("contacts.noContactsYet")}
+                      </p>
+                      <p className="text-xs text-center max-w-xs">
+                        {hasActiveFilters
+                          ? t("contacts.tryAdjustingFilters")
+                          : viewingDeleted
+                            ? t("contacts.showActive")
+                            : t("contacts.clickAddContact")}
+                      </p>
                       {hasActiveFilters && (
-                        <button onClick={clearFilters} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors">
-                          <RefreshCw className="w-3 h-3" /> {uiStrings.clearFiltersBtn || "Clear Filters"}
+                        <button type="button" onClick={clearFilters} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors">
+                          <RefreshCw className="w-3 h-3" /> {t("contacts.clearFilters")}
                         </button>
                       )}
                     </div>
                   ) : (
                     <ErrorBoundary>
-                      <ContactsTable
-                        contacts={filtered} selected={selected}
-                        onSelect={handleSelect} onSelectAll={handleSelectAll}
-                        onEdit={handleEdit as (contact: object) => void} onDelete={handleDelete}
-                        onWhatsApp={(targets) => setWhatsappTargets(targets as Contact[])}
-                        onSms={(targets) => setSmsTargets(targets as Contact[])}
-                        sortField={sortField} sortDir={sortDir} onSort={handleSort}
-                        columns={tableColumns}
-                        allContacts={contacts}
-                        onUpdateContact={handleUpdateContact}
-                        canWrite={canWrite}
-                      />
+                      <div className="lg:hidden">
+                        <ContactCards
+                          contacts={workContacts}
+                          selected={selected}
+                          onSelect={handleSelect}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onRestore={handleRestore}
+                          showArchived={viewingDeleted}
+                          onWhatsApp={(targets) => setWhatsappTargets(targets)}
+                          onSms={(targets) => setSmsTargets(targets)}
+                          allContacts={allContactsForLinks}
+                          canWrite={canWrite}
+                          canDelete={canDelete}
+                          columns={tableColumns}
+                          onSelectAll={handleSelectAll}
+                          allSelected={workContacts.length > 0 && selected.length === workContacts.length}
+                        />
+                      </div>
+                      <div className="hidden lg:block space-y-2">
+                        <ContactsTable
+                          contacts={workContacts} selected={selected}
+                          onSelect={handleSelect} onSelectAll={handleSelectAll}
+                          onEdit={handleEdit as (contact: object) => void} onDelete={handleDelete}
+                          onRestore={handleRestore}
+                          showArchived={viewingDeleted}
+                          onWhatsApp={(targets) => setWhatsappTargets(targets as Contact[])}
+                          onSms={(targets) => setSmsTargets(targets as Contact[])}
+                          onSort={handleSort}
+                          sortField={sortField} sortDir={sortDir}
+                          columns={tableColumns}
+                          allContacts={allContactsForLinks}
+                          onUpdateContact={handleUpdateContact}
+                          canWrite={canWrite}
+                          canDelete={canDelete}
+                        />
+                      </div>
+                      {useServerWork && workPageData && (
+                        <ContactsListPagination
+                          page={workPageData.page}
+                          total={workPageData.total}
+                          limit={workPageData.limit}
+                          hasMore={workPageData.hasMore}
+                          onPageChange={setListPage}
+                        />
+                      )}
+                      {useServerWork && isWorkPageFetching && (
+                        <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
+                      )}
                     </ErrorBoundary>
                   )}
                 </motion.div>
@@ -426,7 +638,7 @@ function ContactsInner() {
             </AnimatePresence>
           </motion.div>
 
-        ) : activeTab === "reports" ? (
+        ) : effectiveTab === "reports" ? (
           <motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
             <ErrorBoundary>
               <div className="space-y-4">
@@ -435,16 +647,14 @@ function ContactsInner() {
               </div>
             </ErrorBoundary>
           </motion.div>
-        ) : activeTab === "setup" ? (
+        ) : effectiveTab === "setup" ? (
           <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
             <ErrorBoundary>
               <SettingsPanel
                 contacts={contacts}
                 canWrite={canWrite}
-                onImport={(list: Contact[]) => {
-                  if (!canWrite) return;
-                  void importContacts(list);
-                }}
+                canEditSetup={canEditSetup}
+                onImport={handleImport}
               />
             </ErrorBoundary>
           </motion.div>
@@ -458,7 +668,6 @@ function ContactsInner() {
               open={showForm}
               key={editContact?.id || "new"}
               contact={editContact ?? undefined}
-              allContacts={contacts}
               defaultCountry={defaultCountry}
               defaultCity={defaultCity}
               defaultProvince={defaultProvince}
@@ -467,18 +676,56 @@ function ContactsInner() {
             />
           {showDuplicates && (
             <DuplicateDetection
-              contacts={contacts}
               onClose={() => setShowDuplicates(false)}
-              onMerge={(keepId, deleteId, mergedData) => {
-                if (!canWrite) return;
-                void mergeContacts(keepId, deleteId, mergedData as Contact);
-              }}
+              onMerge={handleMerge}
+              canWrite={canWrite}
             />
           )}
           {whatsappTargets && <WhatsAppPanel contacts={whatsappTargets} onClose={() => setWhatsappTargets(null)} />}
           {smsTargets && <SmsPanel contacts={smsTargets} onClose={() => setSmsTargets(null)} />}
         </AnimatePresence>
       </Suspense>
+
+      <ConfirmAlertDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={t("contacts.bulkDelete")}
+        description={t("contacts.bulkDeleteConfirm", { count: selected.length })}
+        confirmLabel={t("common.delete")}
+        onConfirm={confirmBulkDelete}
+        destructive
+        optionalReason={{
+          label: t("contacts.deletionReasonLabel"),
+          placeholder: t("contacts.deletionReasonPlaceholder"),
+        }}
+      />
+      <ConfirmAlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={t("contacts.deleteConfirmTitle")}
+        description={
+          deleteTarget?.name
+            ? t("contacts.deleteConfirmDescription", { name: deleteTarget.name })
+            : t("contacts.deleteConfirmDescriptionDefault")
+        }
+        confirmLabel={t("common.delete")}
+        onConfirm={confirmSingleDelete}
+        destructive
+        optionalReason={{
+          label: t("contacts.deletionReasonLabel"),
+          placeholder: t("contacts.deletionReasonPlaceholder"),
+        }}
+      />
+      <ConfirmAlertDialog
+        open={bulkRestoreOpen}
+        onOpenChange={setBulkRestoreOpen}
+        title={t("contacts.bulkRestore")}
+        description={t("contacts.bulkRestoreConfirm", { count: selected.length })}
+        confirmLabel={t("contacts.restoreContact")}
+        onConfirm={confirmBulkRestore}
+      />
     </div>
   );
 }

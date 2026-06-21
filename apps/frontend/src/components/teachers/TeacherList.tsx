@@ -8,7 +8,8 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import EmptyState from '@/components/ui/EmptyState';
 import useTranslation from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
-import { formatDate } from '@/lib/db';
+import { formatDate, getObject } from '@/lib/db';
+import { DEFAULT_TEACHERS_SETTINGS, type TeachersSettings } from '@mms/shared';
 import type { Teacher } from '@/lib/data/teachersData';
 
 const AVATAR_COLORS = [
@@ -35,6 +36,7 @@ export interface TeacherListProps {
   onEdit: (teacher: Teacher) => void;
   onDelete: (id: string) => void;
   canWrite?: boolean;
+  isColumnVisible?: (key: string) => boolean;
 }
 
 export default function TeacherList({
@@ -42,14 +44,40 @@ export default function TeacherList({
   onEdit,
   onDelete,
   canWrite = true,
+  isColumnVisible,
 }: TeacherListProps): React.JSX.Element {
   const { t } = useTranslation();
+  const settings = useMemo(
+    () => getObject<TeachersSettings>('teachers_settings', DEFAULT_TEACHERS_SETTINGS),
+    [],
+  );
+  const customFields = settings.customFields ?? [];
+  const sortedCustomFields = useMemo(() => {
+    const order = settings.fieldOrder ?? DEFAULT_TEACHERS_SETTINGS.fieldOrder ?? [];
+    const orderMap = Object.fromEntries(order.map((id, index) => [id, index]));
+    return [...customFields].sort((a, b) => {
+      const ai = orderMap[a.id] ?? 9999;
+      const bi = orderMap[b.id] ?? 9999;
+      return ai - bi;
+    });
+  }, [customFields, settings.fieldOrder]);
+
+  const showSpecialization = isColumnVisible ? isColumnVisible('specialization') : true;
+  const showQualification = isColumnVisible ? isColumnVisible('qualification') : true;
+  const showJoinDate = isColumnVisible ? isColumnVisible('joinDate') : true;
+  const showStatus = isColumnVisible ? isColumnVisible('status') : true;
+  const visibleCustomFields = sortedCustomFields.filter((field) =>
+    isColumnVisible ? isColumnVisible(`custom:${field.id}`) : true,
+  );
+
   const statusConfig = useMemo(() => ({
     active: { label: t('teachers.status.active'), cls: SEMANTIC_BADGE.success },
     inactive: { label: t('teachers.status.inactive'), cls: SEMANTIC_BADGE.muted },
     on_leave: { label: t('teachers.status.on_leave'), cls: SEMANTIC_BADGE.warning },
   }), [t]);
-  const [sortField, setSortField] = useState<'name' | 'specialization' | 'status' | 'joinDate'>('name');
+  const [sortField, setSortField] = useState<
+    'name' | 'specialization' | 'qualification' | 'status' | 'joinDate'
+  >('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const sorted = useMemo(() => {
@@ -104,21 +132,41 @@ export default function TeacherList({
                   {t('teachers.field.name')} {renderSortIcon('name')}
                 </button>
               </th>
-              <th className="px-4 py-3 text-start hidden sm:table-cell">
-                <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('specialization')}>
-                  {t('teachers.field.specialization')} {renderSortIcon('specialization')}
-                </button>
-              </th>
-              <th className="px-4 py-3 text-start hidden md:table-cell">
-                <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('joinDate')}>
-                  {t('teachers.field.joinDate')} {renderSortIcon('joinDate')}
-                </button>
-              </th>
-              <th className="px-4 py-3 text-start">
-                <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('status')}>
-                  {t('teachers.field.status')} {renderSortIcon('status')}
-                </button>
-              </th>
+              {showSpecialization && (
+                <th className="px-4 py-3 text-start hidden sm:table-cell">
+                  <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('specialization')}>
+                    {t('teachers.field.specialization')} {renderSortIcon('specialization')}
+                  </button>
+                </th>
+              )}
+              {showQualification && (
+                <th className="px-4 py-3 text-start hidden md:table-cell">
+                  <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('qualification')}>
+                    {t('teachers.field.qualification')} {renderSortIcon('qualification')}
+                  </button>
+                </th>
+              )}
+              {showJoinDate && (
+                <th className="px-4 py-3 text-start hidden md:table-cell">
+                  <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('joinDate')}>
+                    {t('teachers.field.joinDate')} {renderSortIcon('joinDate')}
+                  </button>
+                </th>
+              )}
+              {showStatus && (
+                <th className="px-4 py-3 text-start">
+                  <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('status')}>
+                    {t('teachers.field.status')} {renderSortIcon('status')}
+                  </button>
+                </th>
+              )}
+              {visibleCustomFields.map((field) => (
+                <th key={field.id} className="px-4 py-3 text-start hidden lg:table-cell">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {field.label ?? field.id}
+                  </span>
+                </th>
+              ))}
               {canWrite && <th className="px-4 py-3 w-10" scope="col"><span className="sr-only">{t('common.actions')}</span></th>}
             </tr>
           </thead>
@@ -138,13 +186,34 @@ export default function TeacherList({
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{teacher.specialization ?? '—'}</td>
-                <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
-                  {teacher.joinDate ? formatDate(teacher.joinDate) : '—'}
-                </td>
-                <td className="px-4 py-3">
-                  <StatusBadge status={teacher.status} config={statusConfig} />
-                </td>
+                {showSpecialization && (
+                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{teacher.specialization ?? '—'}</td>
+                )}
+                {showQualification && (
+                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{teacher.qualification ?? '—'}</td>
+                )}
+                {showJoinDate && (
+                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                    {teacher.joinDate ? formatDate(teacher.joinDate) : '—'}
+                  </td>
+                )}
+                {showStatus && (
+                  <td className="px-4 py-3">
+                    <StatusBadge status={teacher.status} config={statusConfig} />
+                  </td>
+                )}
+                {visibleCustomFields.map((field) => {
+                  const val = (teacher as unknown as Record<string, unknown>)[field.id];
+                  let displayVal = '—';
+                  if (val !== undefined && val !== null && val !== '') {
+                    displayVal = typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val);
+                  }
+                  return (
+                    <td key={field.id} className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                      {displayVal}
+                    </td>
+                  );
+                })}
                 {canWrite && (
                   <td className="px-4 py-3">
                     <DropdownMenu>

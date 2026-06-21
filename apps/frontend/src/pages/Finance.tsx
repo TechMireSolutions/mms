@@ -19,6 +19,9 @@ import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { Invoice, Payment } from '@/lib/data/financeData';
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
+import { useFinanceInvoiceColumnLayout } from "@/hooks/useFinanceInvoiceColumnLayout";
+import { useFinancePaymentColumnLayout } from "@/hooks/useFinancePaymentColumnLayout";
+import FinanceCommandMetrics from "@/components/finance/FinanceCommandMetrics";
 
 /**
  * Finance — invoices and payments. Work | Reports | Setup.
@@ -44,6 +47,9 @@ export default function Finance() {
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const [recordInvoice, setRecordInvoice] = useState<Invoice | null>(null);
 
+  const invoiceColumnLayout = useFinanceInvoiceColumnLayout();
+  const paymentColumnLayout = useFinancePaymentColumnLayout();
+
   const handleRecordPayment = (paymentData: Payment) => {
     saveCollection("finance_payments", [...payments, paymentData]);
     saveCollection("finance_invoices", invoices.map((inv) => {
@@ -66,6 +72,8 @@ export default function Finance() {
           <ActionButton variant="primary" icon={Plus}>{t("finance.newInvoice")}</ActionButton>
         }
       />
+
+      <FinanceCommandMetrics invoiceTotal={invoices.length} />
 
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
@@ -101,8 +109,30 @@ export default function Finance() {
               </div>
             )}
 
-            {activeTab === "work" && activeSubTab === "invoices" && <InvoiceList invoices={invoices} onView={setViewInvoice} onRecord={setRecordInvoice} />}
-            {activeTab === "work" && activeSubTab === "payments" && <PaymentTracker payments={payments} />}
+            {activeTab === "work" && activeSubTab === "invoices" && (
+              <InvoiceList
+                invoices={invoices}
+                onView={setViewInvoice}
+                onRecord={setRecordInvoice}
+                isColumnVisible={invoiceColumnLayout.isColumnVisible}
+                columnCustomizer={{
+                  columnRegistry: invoiceColumnLayout.columnRegistry,
+                  updateUserColumnLayout: invoiceColumnLayout.updateUserColumnLayout,
+                  labels: invoiceColumnLayout.customizerLabels,
+                }}
+              />
+            )}
+            {activeTab === "work" && activeSubTab === "payments" && (
+              <PaymentTracker
+                payments={payments}
+                isColumnVisible={paymentColumnLayout.isColumnVisible}
+                columnCustomizer={{
+                  columnRegistry: paymentColumnLayout.columnRegistry,
+                  updateUserColumnLayout: paymentColumnLayout.updateUserColumnLayout,
+                  labels: paymentColumnLayout.customizerLabels,
+                }}
+              />
+            )}
             </ErrorBoundary>
           </motion.div>
         </AnimatePresence>

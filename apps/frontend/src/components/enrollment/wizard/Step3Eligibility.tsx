@@ -26,23 +26,12 @@ interface Step3EligibilityProps {
   student: Student;
   session: Session;
   suggestedClass: Class | null;
-  students?: Student[];
 }
 
-/**
- * Step 3 component for verifying enrollment eligibility checks.
- *
- * @param props - Component props.
- * @param props.student - Selected student object.
- * @param props.session - Selected session object.
- * @param props.suggestedClass - Suggested class for the student.
- * @param props.students - Dynamic list of registered students.
- * @returns The Step3Eligibility component.
- */
-export default function Step3Eligibility({ student, session, suggestedClass, students = [] }: Step3EligibilityProps): React.ReactElement {
+export default function Step3Eligibility({ student, session, suggestedClass }: Step3EligibilityProps): React.ReactElement {
   const checks = useMemo<CheckResult[]>(() =>
-    runFullEligibility(student, session, suggestedClass, students),
-    [student, session, suggestedClass, students]
+    runFullEligibility(student, session, suggestedClass, []),
+    [student, session, suggestedClass]
   );
 
   const passCount = checks.filter((c) => c.status === "pass").length;

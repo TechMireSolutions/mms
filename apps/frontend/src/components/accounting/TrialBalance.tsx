@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { CheckCircle2, AlertCircle, Download } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeTrialBalance, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
+import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 
 interface TrialBalanceProps {
   accounts: Account[];
@@ -35,14 +36,33 @@ export default function TrialBalance({ accounts, entries, fiscalYears, fmt }: Tr
   const fmtN = (n: number) => n > 0 ? n.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—";
 
   const exportCSV = () => {
-    const r = [["Code", "Account Name", "Type", "Debit", "Credit"]];
-    rows.forEach((row) => r.push([row.code, row.name, row.type, row.totalDebit.toString(), row.totalCredit.toString()]));
-    r.push(["", "Grand Total", "", grandDebit.toString(), grandCredit.toString()]);
-    const csv = r.map((x) => x.join(",")).join("\n");
-    const a = document.createElement("a"); 
-    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    a.download = "trial_balance.csv"; 
-    a.click();
+    const exportRows = rows.map((row) => ({
+      code: row.code,
+      name: row.name,
+      type: row.type,
+      debit: row.totalDebit.toString(),
+      credit: row.totalCredit.toString(),
+    }));
+    exportRows.push({
+      code: "",
+      name: "Grand Total",
+      type: "",
+      debit: grandDebit.toString(),
+      credit: grandCredit.toString(),
+    });
+    runGridCsvExportJob({
+      moduleId: "accounting",
+      label: "Trial balance export",
+      filename: "trial_balance.csv",
+      columns: [
+        { header: "Code", key: "code" },
+        { header: "Account Name", key: "name" },
+        { header: "Type", key: "type" },
+        { header: "Debit", key: "debit" },
+        { header: "Credit", key: "credit" },
+      ],
+      rows: exportRows,
+    });
   };
 
   return (

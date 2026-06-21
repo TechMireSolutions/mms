@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import {
   DEFAULT_STUDENTS_SETTINGS,
@@ -6,42 +6,25 @@ import {
   normalizeStoredStudent,
   type StudentFieldDef,
   type StudentsSettings,
+  type StudentDuplicateReason,
+  type AppTranslationKey,
 } from "@mms/shared";
 import type { Student } from "@/lib/data/studentsData";
-import type { Contact } from "@/lib/contactFields";
+import type { Contact } from "@mms/shared";
 import { toTitleCase } from "@/lib/utils";
-import { getObject, saveCollection } from "@/lib/db";
-import { useContactsCollection } from "@/hooks/useContacts";
+import { getObject } from "@/lib/db";
+import { useContactMutations, useContactById } from "@/hooks/useContacts";
+import {
+  checkStudentRegistrationDuplicate,
+  useStudentLinkedContactIds,
+  useStudentNextGrNumber,
+} from "@/hooks/useStudents";
 import useTranslation from "@/hooks/useTranslation";
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import ContactPicker from "../contactLink/ContactPicker";
 import { calculateKeyedUnitsCompleteness } from "@/lib/formCompleteness";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "../ui/formStyles";
-
-function generateGrNumber(studentsList: Student[], regDate: string): string {
-  const settings = getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS);
-  const template = settings.grNumberTemplate || "{seq}-{year}";
-  const digits = settings.grNumberDigits || 4;
-  const restartAnnually = settings.grNumberRestartAnnually !== false;
-  const year = regDate ? new Date(regDate).getFullYear() : new Date().getFullYear();
-
-  let nextSeq = 1;
-  if (restartAnnually) {
-    const yearlyStudents = studentsList.filter((s) => {
-      const sDate = s.registeredDate || "";
-      if (sDate.startsWith(String(year))) return true;
-      if (s.grNumber && s.grNumber.includes(String(year))) return true;
-      return false;
-    });
-    nextSeq = yearlyStudents.length + 1;
-  } else {
-    nextSeq = studentsList.length + 1;
-  }
-
-  const seqStr = String(nextSeq).padStart(digits, "0");
-  return template.replace("{seq}", seqStr).replace("{year}", String(year));
-}
 
 interface StudentFormData {
   contactId: string | number | null;
@@ -169,19 +152,23 @@ function CustomFieldInput({
 
 export interface StudentFormProps {
   student?: Partial<Student> | null;
-  students: Student[];
   onClose: () => void;
   onSave: (data: Student) => void;
 }
 
+const DUPLICATE_ERROR_KEYS: Record<StudentDuplicateReason, AppTranslationKey> = {
+  contact: "students.form.contactAlreadyStudent",
+  email: "students.form.duplicateEmail",
+  nameDob: "students.form.duplicateNameDob",
+};
+
 export default function StudentForm({
   student,
-  students,
   onClose,
   onSave,
 }: StudentFormProps): React.JSX.Element {
   const { t } = useTranslation();
-  const contacts = useContactsCollection();
+  const { updateContact } = useContactMutations();
 
   const settings = useMemo(
     () => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS),
@@ -209,15 +196,31 @@ export default function StudentForm({
   );
   const showRegisteredDate = fields.registeredDate?.enabled !== false;
 
-  const [data, setData] = useState<StudentFormData>(() => {
-    const base = buildInitialData(student);
-    if (!student?.id && !base.grNumber) {
-      base.grNumber = generateGrNumber(students, base.registeredDate);
-    }
-    return base;
-  });
+  const [data, setData] = useState<StudentFormData>(() => buildInitialData(student));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const regDate = data.registeredDate || new Date().toISOString().split("T")[0];
+  const { data: nextGrNumber } = useStudentNextGrNumber({
+    registeredDate: regDate,
+    template: settings.grNumberTemplate,
+    digits: settings.grNumberDigits,
+    restartAnnually: settings.grNumberRestartAnnually,
+    enabled: !student?.id,
+  });
+  const { data: linkedStudentContactIds = [] } = useStudentLinkedContactIds(
+    student?.id ? String(student.id) : undefined,
+  );
+
+  useEffect(() => {
+    if (student?.id || !nextGrNumber) return;
+    setData((d) => (d.grNumber ? d : { ...d, grNumber: nextGrNumber }));
+  }, [nextGrNumber, student?.id]);
+
+  const { data: linkedContact } = useContactById(
+    data.contactId != null ? String(data.contactId) : undefined,
+    data.contactId != null,
+  );
 
   const completeness = useMemo(() => {
     const units: { key: string; enabled?: boolean }[] = [{ key: "contactId" }];
@@ -232,31 +235,10 @@ export default function StudentForm({
     return calculateKeyedUnitsCompleteness(data, units);
   }, [data, registrationFields, fields]);
 
-  const linkedContact = useMemo(
-    () => contacts.find((c) => data.contactId != null && String(c.id) === String(data.contactId)),
-    [contacts, data.contactId],
-  );
-
   const linkedGender = linkedContact?.gender?.trim() || "";
   const linkedDob = linkedContact?.dob?.trim() || "";
 
-  const fatherContacts = useMemo(
-    () => contacts.filter((c) => c.gender?.toLowerCase() === "male"),
-    [contacts],
-  );
-  const motherContacts = useMemo(
-    () => contacts.filter((c) => c.gender?.toLowerCase() === "female"),
-    [contacts],
-  );
-
-  const alreadyRegisteredContactIds = useMemo(
-    () =>
-      students
-        .filter((s) => !student || s.id !== student.id)
-        .map((s) => s.contactId)
-        .filter(Boolean),
-    [students, student],
-  );
+  const alreadyRegisteredContactIds = linkedStudentContactIds;
 
   const studentExcludeIds = useMemo(() => {
     const linkedIds = [data.fatherContactId, data.motherContactId, data.guardianContactId].filter(Boolean);
@@ -268,43 +250,37 @@ export default function StudentForm({
       if (!id) {
         return { ...d, contactId: null, grNumber: "" };
       }
-      const autoGr =
-        !student && !d.grNumber
-          ? generateGrNumber(students, d.registeredDate || new Date().toISOString().split("T")[0])
-          : d.grNumber;
+      const autoGr = !student && !d.grNumber && nextGrNumber ? nextGrNumber : d.grNumber;
       return { ...d, contactId: id, grNumber: autoGr };
     });
   };
 
   const handleStudentAvatarChange = (avatarUrl: string): void => {
-    if (!data.contactId) return;
-    const updatedContacts = contacts.map((c) =>
-      String(c.id) === String(data.contactId) ? { ...c, avatar: avatarUrl } : c,
-    );
-    saveCollection("contacts", updatedContacts);
+    if (!data.contactId || !linkedContact) return;
+    void updateContact.mutateAsync({
+      id: String(data.contactId),
+      contact: { ...linkedContact, avatar: avatarUrl },
+    });
   };
 
   const handleRegisteredDateChange = (newDate: string): void => {
     setData((d) => ({
       ...d,
       registeredDate: newDate,
-      grNumber: !student ? generateGrNumber(students, newDate) : d.grNumber,
+      grNumber: !student ? "" : d.grNumber,
     }));
   };
 
-  const handleFatherSelect = (id: string | number | null): void => {
-    const c = contacts.find((x) => String(x.id) === String(id));
-    setData((d) => ({ ...d, fatherContactId: id, fatherName: c ? c.name : "" }));
+  const handleFatherSelect = (id: string | number | null, contact?: Contact | null): void => {
+    setData((d) => ({ ...d, fatherContactId: id, fatherName: contact?.name ?? "" }));
   };
 
-  const handleMotherSelect = (id: string | number | null): void => {
-    const c = contacts.find((x) => String(x.id) === String(id));
-    setData((d) => ({ ...d, motherContactId: id, motherName: c ? c.name : "" }));
+  const handleMotherSelect = (id: string | number | null, contact?: Contact | null): void => {
+    setData((d) => ({ ...d, motherContactId: id, motherName: contact?.name ?? "" }));
   };
 
-  const handleGuardianSelect = (id: string | number | null): void => {
-    const c = contacts.find((x) => String(x.id) === String(id));
-    setData((d) => ({ ...d, guardianContactId: id, guardianName: c ? c.name : "" }));
+  const handleGuardianSelect = (id: string | number | null, contact?: Contact | null): void => {
+    setData((d) => ({ ...d, guardianContactId: id, guardianName: contact?.name ?? "" }));
   };
 
   const handleSave = async (): Promise<void> => {
@@ -360,32 +336,17 @@ export default function StudentForm({
 
     setSaving(true);
 
-    for (const s of students) {
-      if (student && s.id === student.id) continue;
-
-      if (data.contactId && s.contactId && String(data.contactId) === String(s.contactId)) {
-        setError(t("students.form.contactAlreadyStudent"));
-        setSaving(false);
-        return;
-      }
-
-      const email = contactEmail(linkedContact);
-      if (email && s.email && email === s.email.trim().toLowerCase()) {
-        setError(t("students.form.duplicateEmail"));
-        setSaving(false);
-        return;
-      }
-
-      if (linkedContact?.name && linkedDob && s.name && s.dob) {
-        if (
-          linkedContact.name.trim().toLowerCase() === s.name.trim().toLowerCase() &&
-          linkedDob === s.dob
-        ) {
-          setError(t("students.form.duplicateNameDob"));
-          setSaving(false);
-          return;
-        }
-      }
+    const duplicateReason = await checkStudentRegistrationDuplicate({
+      excludeId: student?.id ? String(student.id) : undefined,
+      contactId: data.contactId ?? undefined,
+      email: contactEmail(linkedContact),
+      name: linkedContact?.name,
+      dob: linkedDob || undefined,
+    });
+    if (duplicateReason) {
+      setError(t(DUPLICATE_ERROR_KEYS[duplicateReason]));
+      setSaving(false);
+      return;
     }
 
     const saved = { ...data };
@@ -416,7 +377,7 @@ export default function StudentForm({
             label={`${t("students.form.fatherLink")}${field.required ? " *" : ""}`}
             value={data.fatherContactId}
             onChange={handleFatherSelect}
-            contacts={fatherContacts}
+            filterGender="male"
             excludeIds={[data.contactId, data.motherContactId, data.guardianContactId].filter(Boolean)}
             createDefaults={{ gender: "male", lockGender: true }}
             searchPlaceholder={t("teachers.form.searchContact")}
@@ -434,7 +395,7 @@ export default function StudentForm({
             label={`${t("students.form.motherLink")}${field.required ? " *" : ""}`}
             value={data.motherContactId}
             onChange={handleMotherSelect}
-            contacts={motherContacts}
+            filterGender="female"
             excludeIds={[data.contactId, data.fatherContactId, data.guardianContactId].filter(Boolean)}
             createDefaults={{ gender: "female", lockGender: true }}
             searchPlaceholder={t("teachers.form.searchContact")}
@@ -452,7 +413,6 @@ export default function StudentForm({
             label={`${t("students.form.guardianLink")}${field.required ? " *" : ""}`}
             value={data.guardianContactId}
             onChange={handleGuardianSelect}
-            contacts={contacts}
             excludeIds={[data.contactId, data.fatherContactId, data.motherContactId].filter(Boolean)}
             searchPlaceholder={t("teachers.form.searchContact")}
             emptyTitle={t("teachers.form.noContacts")}
@@ -537,7 +497,6 @@ export default function StudentForm({
               label={t("students.form.contactLabel")}
               value={data.contactId}
               onChange={handleContactSelect}
-              contacts={contacts}
               excludeIds={studentExcludeIds}
               onAvatarChange={handleStudentAvatarChange}
               searchPlaceholder={t("teachers.form.searchContact")}

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Download } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeLedger, Account, JournalEntry, AccountType } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
+import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 
 interface GeneralLedgerProps {
   accounts: Account[];
@@ -48,11 +49,29 @@ export default function GeneralLedger({ accounts, entries, fmt }: GeneralLedgerP
 
   const exportCSV = () => {
     if (!activeAccount) return;
-    const rows = [["Date", "Ref", "Description", "Line Note", "Debit", "Credit", "Running Balance"]];
-    linesWithRunning.forEach((l) => rows.push([l.date, l.ref, l.description, l.lineDesc || "", String(l.debit) || "", String(l.credit) || "", String(l.running)]));
-    const csv = rows.map((r) => r.join(",")).join("\n");
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    a.download = `ledger_${activeAccount.code}.csv`; a.click();
+    runGridCsvExportJob({
+      moduleId: "accounting",
+      label: `Ledger export (${activeAccount.code})`,
+      filename: `ledger_${activeAccount.code}.csv`,
+      columns: [
+        { header: "Date", key: "date" },
+        { header: "Ref", key: "ref" },
+        { header: "Description", key: "description" },
+        { header: "Line Note", key: "lineDesc" },
+        { header: "Debit", key: "debit" },
+        { header: "Credit", key: "credit" },
+        { header: "Running Balance", key: "running" },
+      ],
+      rows: linesWithRunning.map((l) => ({
+        date: l.date,
+        ref: l.ref,
+        description: l.description,
+        lineDesc: l.lineDesc || "",
+        debit: String(l.debit) || "",
+        credit: String(l.credit) || "",
+        running: String(l.running),
+      })),
+    });
   };
 
   return (

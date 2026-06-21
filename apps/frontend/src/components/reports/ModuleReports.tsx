@@ -4,12 +4,14 @@ import {
   BarChart2, GitCompare, Wrench, LayoutDashboard, Sparkles, CreditCard 
 } from "lucide-react";
 
+import useTranslation from "@/hooks/useTranslation";
 import ReportFilters from "./ReportFilters";
 import ComparisonMode from "./ComparisonMode";
 import CustomReportBuilder from "./CustomReportBuilder";
 import PinnedWidgets from "./PinnedWidgets";
 import DynamicChartVisualizer from "./DynamicChartVisualizer";
 import DynamicCardBuilder from "./DynamicCardBuilder";
+import { getObject, saveObject } from "@/lib/db";
 
 import StudentReport from "./StudentReport";
 import ContactReport from "./ContactReport";
@@ -25,7 +27,6 @@ import { VisualizerConfig } from "./reportMetadata";
 
 interface ModuleReportsProps {
   category: "students" | "teachers" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";
-  role?: string;
 }
 
 const DEFAULT_FILTERS = {
@@ -43,7 +44,8 @@ const DEFAULT_FILTERS = {
  * @param {ModuleReportsProps} props - Component props.
  * @returns {React.JSX.Element}
  */
-export default function ModuleReports({ category, role = "admin" }: ModuleReportsProps) {
+export default function ModuleReports({ category }: ModuleReportsProps) {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [showComparison, setShowComparison] = useState(false);
   const [showBuilder, setShowBuilder] = useState(false);
@@ -101,8 +103,8 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
             <BarChart2 className="w-5 h-5" />
           </div>
           <div>
-             <h3 className="text-sm font-black text-foreground leading-none tracking-tight">Module Intelligence</h3>
-             <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-[0.2em]">2026 Analytical Engine</p>
+             <h3 className="text-sm font-black text-foreground leading-none tracking-tight">{t("reports.moduleTools.title")}</h3>
+             <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-[0.2em]">{t("reports.moduleTools.subtitle")}</p>
           </div>
         </div>
 
@@ -113,7 +115,7 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
             type="button"
           >
             <GitCompare className="w-3.5 h-3.5" />
-            Compare
+            {t("reports.moduleTools.compare")}
           </button>
           <button
             onClick={() => { setShowBuilder((o) => !o); setShowComparison(false); setShowWidgets(false); setShowVisualizer(false); setShowCardBuilder(false); }}
@@ -121,7 +123,7 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
             type="button"
           >
             <Wrench className="w-3.5 h-3.5" />
-            Report Builder
+            {t("reports.moduleTools.reportBuilder")}
           </button>
           <button
             onClick={() => { setShowWidgets((o) => !o); setShowComparison(false); setShowBuilder(false); setShowVisualizer(false); setShowCardBuilder(false); }}
@@ -129,7 +131,7 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
             type="button"
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
-            Widget Builder
+            {t("reports.moduleTools.widgetBuilder")}
           </button>
           <button
             onClick={() => { 
@@ -144,7 +146,7 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
             type="button"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            Visualizer Builder
+            {t("reports.moduleTools.visualizerBuilder")}
           </button>
           <button
             onClick={() => { setShowCardBuilder((o) => !o); setShowComparison(false); setShowBuilder(false); setShowWidgets(false); setShowVisualizer(false); }}
@@ -152,7 +154,7 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
             type="button"
           >
             <CreditCard className="w-3.5 h-3.5" />
-            Card Builder
+            {t("reports.moduleTools.cardBuilder")}
           </button>
         </div>
       </div>
@@ -181,10 +183,9 @@ export default function ModuleReports({ category, role = "admin" }: ModuleReport
                  initialConfig={visualizerEditConfig}
                  onSave={(updatedConfig) => {
                    try {
-                     const saved = localStorage.getItem("report_custom_visuals");
-                     const customVisuals = saved ? JSON.parse(saved) : {};
+                     const customVisuals = getObject<Record<string, VisualizerConfig>>("report_custom_visuals", {});
                      customVisuals[updatedConfig.id] = updatedConfig;
-                     localStorage.setItem("report_custom_visuals", JSON.stringify(customVisuals));
+                     saveObject("report_custom_visuals", customVisuals);
                    } catch (e) {
                      console.error("Failed to save custom visual configuration", e);
                    }

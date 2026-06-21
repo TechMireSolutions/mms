@@ -70,3 +70,16 @@ export function canDownloadBulkSync(user: User): boolean {
 export function canResetTenantData(user: User): boolean {
   return canBulkSync(user);
 }
+
+/** Contacts REST — aligned with `@mms/shared` permission matrix. */
+export function canReadContacts(user: User): boolean {
+  return roleHasPermission(user.role, 'contacts.read');
+}
+
+export function canWriteContacts(user: User): boolean {
+  return roleHasPermission(user.role, 'contacts.write');
+}
+
+export function canDeleteContacts(user: User): boolean {
+  return roleHasPermission(user.role, 'contacts.delete');
+}

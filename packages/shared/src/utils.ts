@@ -6,6 +6,12 @@ import type {
   SocialLink as ContactSocial, 
   EmergencyContact 
 } from "./contactTypes.js";
+import { CONTACTS_MODULE_CONTRACT } from "./contactsModuleContract.js";
+
+export interface MergeContactsOptions {
+  /** Separator line inserted between merged note blocks. Defaults to module contract constant. */
+  mergedNotePrefix?: string;
+}
 
 const LOWERCASE_WORDS = new Set([
   "a", "an", "the", "and", "but", "or", "for", "nor", "on", "at", "to", "by", "in", "of", "up", "as", "so", "yet"
@@ -354,8 +360,14 @@ export const cleanName = (name: unknown, prefixesToIgnore?: string[]): string =>
 
 // ── Merging Logic ──────────────────────────────────────────────────────────
 
-export const mergeContacts = (keep: Contact, other: Contact, uiStrings: Record<string, string>): Contact => {
+export const mergeContacts = (
+  keep: Contact,
+  other: Contact,
+  options: MergeContactsOptions = {},
+): Contact => {
   const merged: Contact = { ...keep };
+  const mergedNotePrefix =
+    options.mergedNotePrefix ?? CONTACTS_MODULE_CONTRACT.mergedNotePrefix;
 
   // Merge all basic properties dynamically
   Object.keys(other).forEach((key) => {
@@ -385,7 +397,7 @@ export const mergeContacts = (keep: Contact, other: Contact, uiStrings: Record<s
 
   // Concatenate notes
   if (keep.notes && other.notes && keep.notes !== other.notes) {
-    merged.notes = `${keep.notes}\n${uiStrings.mergedNotePrefix || "--- Merged from Duplicate ---"}\n${other.notes}`;
+    merged.notes = `${keep.notes}\n${mergedNotePrefix}\n${other.notes}`;
   } else if (other.notes) {
     merged.notes = other.notes;
   }

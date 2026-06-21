@@ -2,7 +2,6 @@ import type { AppTranslationKey } from '@mms/shared';
 import type { DashboardPersona } from '@/lib/dashboardPersona';
 import type { Invoice } from '@/lib/data/financeData';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
-import type { Student } from '@/lib/data/studentsData';
 
 export interface DashboardNotificationItem {
   id: string;
@@ -49,7 +48,7 @@ export function buildDashboardNotifications(
   data: {
     invoices: Invoice[];
     attendanceRecords: AttendanceRecord[];
-    students: Student[];
+    inactiveStudents: number;
   },
   t: Translate,
 ): DashboardNotificationItem[] {
@@ -72,12 +71,11 @@ export function buildDashboardNotifications(
   }
 
   if (persona === 'admin') {
-    const inactiveStudents = data.students.filter((s) => s.status === 'inactive').length;
-    if (inactiveStudents > 0) {
+    if (data.inactiveStudents > 0) {
       items.push({
         id: 'inactive-students',
         type: 'student',
-        title: t('notifications.inactiveStudentsTitle', { count: inactiveStudents }),
+        title: t('notifications.inactiveStudentsTitle', { count: data.inactiveStudents }),
         desc: t('notifications.inactiveStudentsDesc'),
         time: t('notifications.timeToday'),
         urgent: false,

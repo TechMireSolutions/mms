@@ -2,10 +2,11 @@ import { useMemo } from 'react';
 import type { ReportCollection } from '@/components/reports/reportMetadata';
 import type { CustomWidget } from '@/components/reports/pinnedWidgets/types';
 import type { DashboardPersona } from '@/lib/dashboardPersona';
+import { widgetMatchesPersona } from '@/lib/dashboardPersona';
 import { getRequiredDashboardCollections } from '@/lib/dashboardCollections';
-import { useStudentsCollection } from '@/hooks/useStudents';
-import { useTeachersCollection } from '@/hooks/useTeachers';
-import { useContactsCollection } from '@/hooks/useContacts';
+import { useStudentsMetrics, useStudentsWidgetAggregates } from '@/hooks/useStudents';
+import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/hooks/useTeachers';
+import { useContactsMetrics, useContactsWidgetAggregates } from '@/hooks/useContacts';
 import { useAttendanceRecordsCollection } from '@/hooks/useAttendance';
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
@@ -22,17 +23,21 @@ import type { AttendanceRecord } from '@/lib/data/attendanceData';
 
 export interface DashboardCollectionData {
   students: Student[];
+  studentsTotal: number;
   teachers: Teacher[];
+  teachersTotal: number;
   sessions: Session[];
   invoices: Invoice[];
   attendanceRecords: AttendanceRecord[];
   hasanatDistributions: Distribution[];
   contacts: Contact[];
+  contactsTotal: number;
   questions: QuestionBankQuestion[];
   tests: QuestionBankTest[];
   assessmentResults: QuestionBankResult[];
   revenueExpenses: { revenue: number; expenses: number }[];
   dataVolume: number;
+  studentMetricsInactive: number;
 }
 
 function needsRevenueExpenses(widgets: CustomWidget[]): boolean {
@@ -51,9 +56,48 @@ export function useDashboardData(
 
   const needs = (collection: ReportCollection): boolean => required.has(collection);
   const loadRevenueExpenses = needsRevenueExpenses(widgets);
+  const needsContacts = needs('contacts');
+  const needsStudents = needs('students');
+  const needsTeachers = needs('teachers');
 
-  const students = useStudentsCollection({ enabled: needs('students') });
-  const teachers = useTeachersCollection({ enabled: needs('teachers') });
+  const contactWidgets = useMemo(
+    () =>
+      widgets.filter(
+        (widget) =>
+          widget.collection === 'contacts' &&
+          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesPersona(widget.role, persona))),
+      ),
+    [widgets, persona],
+  );
+  const studentWidgets = useMemo(
+    () =>
+      widgets.filter(
+        (widget) =>
+          widget.collection === 'students' &&
+          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesPersona(widget.role, persona))),
+      ),
+    [widgets, persona],
+  );
+  const teacherWidgets = useMemo(
+    () =>
+      widgets.filter(
+        (widget) =>
+          widget.collection === 'teachers' &&
+          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesPersona(widget.role, persona))),
+      ),
+    [widgets, persona],
+  );
+
+  useContactsWidgetAggregates(contactWidgets, { enabled: needsContacts });
+  useStudentsWidgetAggregates(studentWidgets, { enabled: needsStudents });
+  useTeachersWidgetAggregates(teacherWidgets, { enabled: needsTeachers });
+
+  const { data: studentMetrics } = useStudentsMetrics({ enabled: needsStudents });
+  const studentsTotal = studentMetrics?.total ?? 0;
+  const studentMetricsInactive = studentMetrics?.inactive ?? 0;
+
+  const { data: teacherMetrics } = useTeachersMetrics({ enabled: needsTeachers });
+  const teachersTotal = teacherMetrics?.total ?? 0;
   const sessions = useSessionsCollection({ enabled: needs('sessions') });
   const invoices = useLiveCollection<Invoice>('finance_invoices', INVOICES, {
     enabled: needs('finance_invoices'),
@@ -64,9 +108,10 @@ export function useDashboardData(
   const hasanatDistributions = useLiveCollection<Distribution>(
     'hasanat_distributions',
     DISTRIBUTIONS,
-    { enabled: needs('hasanat_distributions') },
-  );
-  const contacts = useContactsCollection({ enabled: needs('contacts') });
+    { enabled: needs('hasanat_distributions'),
+  });
+  const { data: contactMetrics } = useContactsMetrics({ enabled: needsContacts });
+  const contactsTotal = contactMetrics?.total ?? 0;
   const questions = useLiveCollection<QuestionBankQuestion>('questions', QUESTIONS, {
     enabled: needs('questions'),
   });
@@ -82,23 +127,28 @@ export function useDashboardData(
 
   const dataVolume = useMemo(
     () =>
-      students.length +
+      studentsTotal +
+      teachersTotal +
       sessions.length +
       invoices.length +
       attendanceRecords.length +
       hasanatDistributions.length +
-      contacts.length,
-    [students, sessions, invoices, attendanceRecords, hasanatDistributions, contacts],
+      contactsTotal,
+    [studentsTotal, teachersTotal, sessions, invoices, attendanceRecords, hasanatDistributions, contactsTotal],
   );
 
   return {
-    students,
-    teachers,
+    students: [] as Student[],
+    studentsTotal,
+    studentMetricsInactive,
+    teachers: [] as Teacher[],
+    teachersTotal,
     sessions,
     invoices,
     attendanceRecords,
     hasanatDistributions,
-    contacts,
+    contacts: [] as Contact[],
+    contactsTotal,
     questions,
     tests,
     assessmentResults,

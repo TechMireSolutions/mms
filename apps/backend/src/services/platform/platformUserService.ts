@@ -5,7 +5,6 @@ import {
   findPlatformUserRowByEmail,
   findPlatformUserRowById,
   insertPlatformUser,
-  listPlatformUsers,
   updatePlatformUserRow,
 } from '../../db/repositories/platformUserRepository.js';
 import { hashPassword, verifyPassword } from '../auth/passwordService.js';
@@ -101,12 +100,6 @@ export async function verifyPlatformUserPassword(userId: string, password: strin
   return verifyPassword(password, stored.passwordHash);
 }
 
-export async function getPublicPlatformUserById(id: string): Promise<PlatformUser | null> {
-  const user = await findPlatformUserRowById(id);
-  if (!user) return null;
-  return { id: user.id, email: user.email, name: user.name };
-}
-
 export async function validatePlatformCredentials(
   email: string,
   password: string,
@@ -150,21 +143,4 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
   };
   await insertPlatformUser(user);
   console.log(`Platform super-user seeded from env for ${user.email}`);
-}
-
-/** Used by data migration — reads legacy object store if present. */
-export async function importLegacyPlatformUsers(users: StoredPlatformUser[]): Promise<number> {
-  let imported = 0;
-  for (const user of users) {
-    const existing = await findPlatformUserRowByEmail(user.email);
-    if (existing) continue;
-    await insertPlatformUser(user);
-    imported += 1;
-  }
-  return imported;
-}
-
-/** @internal test helper */
-export async function listAllPlatformUsersForMigration(): Promise<StoredPlatformUser[]> {
-  return listPlatformUsers();
 }

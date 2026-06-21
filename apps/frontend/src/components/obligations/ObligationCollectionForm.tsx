@@ -4,7 +4,8 @@ import {
   MOCK_CURRENCIES, PAYMENT_MODES, generateReceiptNo,
   ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
-import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
+import ContactPicker from '@/components/contactLink/ContactPicker';
+import { useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import FormModal from "@/components/ui/FormModal";
 import useTranslation from "@/hooks/useTranslation";
 import { DatePicker } from "../ui/DatePicker";
@@ -57,7 +58,6 @@ export interface ObligationCollectionFormProps {
  */
 export default function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
   const { t } = useTranslation();
-  const contacts = useMergedObligationContacts();
   const users = useMergedObligationUsers();
 
   const [form, setForm] = useState<FormState>({ ...EMPTY, receipt_no: generateReceiptNo(existingCollections) });
@@ -177,16 +177,21 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
 
         <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
           {field("sender_id", "Sender (Contact)", true,
-            <select value={form.sender_id} onChange={(e) => setForm({ ...form, sender_id: e.target.value })} className={FORM_SELECT}>
-              <option value="">Select sender…</option>
-              {contacts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <ContactPicker
+              label="Sender (Contact)"
+              value={form.sender_id || null}
+              onChange={(id) => setForm({ ...form, sender_id: id != null ? String(id) : "" })}
+              searchPlaceholder="Search contacts…"
+            />
           )}
           {field("reference_id", "Reference Contact", false,
-            <select value={form.reference_id} onChange={(e) => setForm({ ...form, reference_id: e.target.value })} className={FORM_SELECT}>
-              <option value="">None (optional)</option>
-              {contacts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <ContactPicker
+              label="Reference Contact"
+              value={form.reference_id || null}
+              onChange={(id) => setForm({ ...form, reference_id: id != null ? String(id) : "" })}
+              allowCreate={false}
+              searchPlaceholder="Search contacts…"
+            />
           )}
         </fieldset>
 

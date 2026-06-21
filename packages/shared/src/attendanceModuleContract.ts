@@ -1,0 +1,29 @@
+import type { Permission } from './permissions.js';
+
+/** Attendance module contract — aligns with globle1 universal module architecture. */
+export const ATTENDANCE_MODULE_CONTRACT = {
+  moduleId: 'attendance',
+  entityType: 'AttendanceRecord',
+  collectionKey: 'attendance_records',
+  settingsObjectKey: 'attendance_settings',
+  columnPrefsObjectKey: 'attendance_user_column_prefs',
+  restBasePath: '/api/attendance',
+  analyticsCategory: 'attendance',
+  tiers: ['work', 'reports', 'setup'] as const,
+  permissions: {
+    read: 'analytics.view',
+    write: 'attendance.write',
+    delete: 'users.manage',
+    setupView: 'settings.global.write',
+    setupWrite: 'settings.global.write',
+    export: 'analytics.view',
+    reports: 'analytics.view',
+  } satisfies Record<string, Permission>,
+  work: {
+    directoryViews: ['mark', 'records', 'audit'] as const,
+    bulkActions: [] as const,
+  },
+  defaultPageSize: 15,
+} as const;
+
+export type AttendanceModuleTier = (typeof ATTENDANCE_MODULE_CONTRACT.tiers)[number];

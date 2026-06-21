@@ -19,7 +19,7 @@ import {
 } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
 import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
-import { getCollection } from "../../lib/db";
+import { getCollection, getObject, saveObject } from "../../lib/db";
 import { METADATA_FIELDS, VisualizerConfig, type ReportCollection } from "./reportMetadata";
 
 interface CollectionMeta {
@@ -104,12 +104,7 @@ export default function DynamicChartVisualizer({
 
   // Pinned widgets checking state
   const [dashboardWidgets, setDashboardWidgets] = useState<CustomWidget[]>(() => {
-    try {
-      const saved = localStorage.getItem("kpi_custom_widgets");
-      return saved ? JSON.parse(saved) as CustomWidget[] : [];
-    } catch {
-      return [];
-    }
+    return getObject<CustomWidget[]>("kpi_custom_widgets", []);
   });
 
   // Responsive scaling container observer
@@ -376,7 +371,7 @@ export default function DynamicChartVisualizer({
     }
 
     setDashboardWidgets(nextWidgets);
-    localStorage.setItem("kpi_custom_widgets", JSON.stringify(nextWidgets));
+    saveObject("kpi_custom_widgets", nextWidgets);
     window.dispatchEvent(new Event("local-database-update"));
   };
 

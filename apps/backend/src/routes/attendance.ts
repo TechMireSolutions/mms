@@ -9,13 +9,19 @@ import {
   updateAttendanceRecordById,
 } from '../services/attendanceService.js';
 import type { User } from '@mms/shared';
+import { computeAttendanceCommandMetrics, ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../lib/httpErrors.js';
 import { resourceIdParamsSchema } from '../validation/commonSchemas.js';
+import { moduleColumnPrefsBodySchema } from '../validation/moduleColumnPrefsSchemas.js';
 import {
   attendanceBulkSchema,
   attendanceRecordSchema,
 } from '../validation/attendanceSchemas.js';
 import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
+import {
+  getUserColumnPrefsForModule,
+  setUserColumnPrefsForModule,
+} from '../services/userColumnPrefsService.js';
 
 const COLLECTION = 'attendance_records';
 
@@ -35,6 +41,55 @@ export default async function attendanceRoutes(
       return reply.send({ records: await loadAttendanceRecords() });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to list attendance records' });
+    }
+  });
+
+  fastify.get('/metrics', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
+    const dateParam = (request.query as { date?: string }).date;
+    const selectedDate =
+      typeof dateParam === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
+        ? dateParam
+        : undefined;
+    try {
+      const records = await loadAttendanceRecords();
+      return reply.send({
+        metrics: computeAttendanceCommandMetrics(records, { selectedDate }),
+      });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to load attendance metrics' });
+    }
+  });
+
+  fastify.get('/column-prefs', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
+    try {
+      const prefs = await getUserColumnPrefsForModule(
+        ATTENDANCE_MODULE_CONTRACT.columnPrefsObjectKey,
+        String(user.id),
+      );
+      return reply.send({ prefs });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
+    }
+  });
+
+  fastify.put('/column-prefs', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(moduleColumnPrefsBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      await setUserColumnPrefsForModule(
+        ATTENDANCE_MODULE_CONTRACT.columnPrefsObjectKey,
+        String(user.id),
+        parsed.data.prefs,
+      );
+      return reply.send({ success: true, prefs: parsed.data.prefs });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
     }
   });
 

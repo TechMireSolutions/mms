@@ -5,7 +5,7 @@ import { getIntlLocaleForLanguage } from '@mms/shared';
 import type { AppTranslationKey } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useSessionsCollection } from '@/hooks/useSessions';
-import { useStudentsCollection } from '@/hooks/useStudents';
+import { useStudentsMetrics } from '@/hooks/useStudents';
 import useTranslation from '@/hooks/useTranslation';
 import { BANNER_FROST_CHIP } from '@/lib/semanticTone';
 import type { DashboardPersona } from '@/lib/dashboardPersona';
@@ -31,7 +31,7 @@ export default function WelcomeBanner({ persona }: WelcomeBannerProps): React.JS
   const { t, language } = useTranslation();
   const { user } = useAuth();
   const sessions = useSessionsCollection({ enabled: true });
-  const students = useStudentsCollection({ enabled: persona === 'admin' });
+  const { data: studentMetrics } = useStudentsMetrics({ enabled: persona === 'admin' });
 
   const today = useMemo(
     () =>
@@ -62,7 +62,7 @@ export default function WelcomeBanner({ persona }: WelcomeBannerProps): React.JS
         ? t('dashboard.sessionsTodayOne')
         : t('dashboard.sessionsToday', { count: teacherSessionsCount });
   } else if (persona === 'admin') {
-    const activeCount = students.filter((s) => s.status === 'active').length;
+    const activeCount = studentMetrics?.active ?? 0;
     if (activeCount > 0) {
       subtitle = t('dashboard.overviewActiveStudents', { count: activeCount });
     }

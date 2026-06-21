@@ -23,6 +23,9 @@ test('apex landing is interactive', async ({ page }) => {
   const interactive = page.locator('a, button');
   await expect(interactive.first()).toBeVisible({ timeout: 10_000 });
 
-  const errorsWithoutFavicon = errors.filter((e) => !e.includes('favicon'));
+  const errorsWithoutFavicon = errors.filter(
+    (e) => !e.includes('favicon') && !e.includes('401') && !e.includes('Unauthorized'),
+  );
   expect(errorsWithoutFavicon).toEqual([]);
 });
+

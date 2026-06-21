@@ -5,77 +5,238 @@
     {
       "name": "antigravity-workspace",
       "path": "skills/antigravity-workspace",
-      "keywords": ["antigravity", "workspace", "setup", "orientation", "agents", "rules"]
+      "keywords": [
+        "antigravity",
+        "workspace",
+        "setup",
+        "orientation",
+        "agents",
+        "rules"
+      ]
     },
     {
       "name": "mms-dev-setup",
       "path": "skills/mms-dev-setup",
-      "keywords": ["install", "pnpm", "dev server", "env", "postgresql", "typecheck", "lint"]
+      "keywords": [
+        "install",
+        "pnpm",
+        "dev server",
+        "env",
+        "postgresql",
+        "typecheck",
+        "lint"
+      ]
     },
     {
       "name": "mms-frontend",
       "path": "skills/mms-frontend",
-      "keywords": ["frontend", "react", "vite", "apiClient", "tanstack query", "hooks", "pages", "components", "playwright", "contacts"]
+      "keywords": [
+        "frontend",
+        "react",
+        "vite",
+        "apiClient",
+        "tanstack query",
+        "hooks",
+        "pages",
+        "components",
+        "playwright",
+        "contacts"
+      ]
     },
     {
       "name": "mms-module-page",
       "path": "skills/mms-module-page",
-      "keywords": ["module page", "operations", "analytics", "configuration", "new module"]
+      "keywords": [
+        "module page",
+        "work",
+        "reports",
+        "setup",
+        "globle1",
+        "globle2",
+        "globlestructure",
+        "command centre",
+        "new module",
+        "universal architecture"
+      ]
+    },
+    {
+      "name": "mms-module-work",
+      "path": "skills/mms-module-work",
+      "keywords": [
+        "work tab",
+        "command centre",
+        "module metrics",
+        "directory",
+        "bulk actions",
+        "detail drawer",
+        "column prefs",
+        "globle1"
+      ]
+    },
+    {
+      "name": "mms-module-setup",
+      "path": "skills/mms-module-setup",
+      "keywords": [
+        "setup",
+        "fields",
+        "preferences",
+        "globle2",
+        "CustomFieldsBuilder",
+        "setup audit",
+        "field dependencies"
+      ]
+    },
+    {
+      "name": "mms-background-jobs",
+      "path": "skills/mms-background-jobs",
+      "keywords": [
+        "background jobs",
+        "queued processing",
+        "large export",
+        "bulk operations",
+        "dedup scan",
+        "progress",
+        "download artifact",
+        "globle2"
+      ]
     },
     {
       "name": "mms-contacts",
       "path": "skills/mms-contacts",
-      "keywords": ["contacts", "crm", "whatsapp", "phone", "kanban", "avatar"]
+      "keywords": [
+        "contacts",
+        "crm",
+        "whatsapp",
+        "phone",
+        "kanban",
+        "avatar",
+        "globle1",
+        "sync outbox"
+      ]
     },
     {
       "name": "mms-fields-registry",
       "path": "skills/mms-fields-registry",
-      "keywords": ["custom field", "tab registry", "CustomFieldsBuilder", "DraggableFieldList"]
+      "keywords": [
+        "custom field",
+        "tab registry",
+        "CustomFieldsBuilder",
+        "DraggableFieldList"
+      ]
     },
     {
       "name": "mms-data-sync",
       "path": "skills/mms-data-sync",
-      "keywords": ["db.ts", "localStorage", "sync", "useLiveCollection", "collections", "admin sync", "students api"]
+      "keywords": [
+        "db.ts",
+        "localStorage",
+        "sync",
+        "useLiveCollection",
+        "collections",
+        "admin sync",
+        "students api"
+      ]
     },
     {
       "name": "mms-auth-users",
       "path": "skills/mms-auth-users",
-      "keywords": ["auth", "login", "cookies", "2fa", "refresh token", "auth artifacts", "authenticateTenant", "users", "rbac"]
+      "keywords": [
+        "auth",
+        "login",
+        "cookies",
+        "2fa",
+        "refresh token",
+        "auth artifacts",
+        "authenticateTenant",
+        "users",
+        "rbac"
+      ]
     },
     {
       "name": "mms-shared-package",
       "path": "skills/mms-shared-package",
-      "keywords": ["@mms/shared", "shared package", "contactTypes", "settingsTypes"]
+      "keywords": [
+        "@mms/shared",
+        "shared package",
+        "contactTypes",
+        "settingsTypes"
+      ]
     },
     {
       "name": "mms-backend-api",
       "path": "skills/mms-backend-api",
-      "keywords": ["fastify", "backend", "api route", "authenticateTenant", "zod", "drizzle migration", "students", "whatsapp"]
+      "keywords": [
+        "fastify",
+        "backend",
+        "api route",
+        "authenticateTenant",
+        "zod",
+        "drizzle migration",
+        "students",
+        "whatsapp"
+      ]
     },
     {
       "name": "mms-backend-security",
       "path": "skills/mms-backend-security",
-      "keywords": ["security", "authenticateTenant", "tenant isolation", "rbac", "cookies", "rate limit", "auth artifacts"]
+      "keywords": [
+        "security",
+        "authenticateTenant",
+        "tenant isolation",
+        "rbac",
+        "cookies",
+        "rate limit",
+        "auth artifacts"
+      ]
     },
     {
       "name": "mms-reports-export",
       "path": "skills/mms-reports-export",
-      "keywords": ["reports", "analytics", "recharts", "pdf", "excel", "export"]
+      "keywords": [
+        "reports",
+        "analytics",
+        "recharts",
+        "pdf",
+        "excel",
+        "export"
+      ]
     },
     {
       "name": "mms-migration-fixes",
       "path": "skills/mms-migration-fixes",
-      "keywords": ["migration", "tech debt", "security debt", "contacts rbac", "rest migration"]
+      "keywords": [
+        "migration",
+        "tech debt",
+        "security debt",
+        "contacts rbac",
+        "rest migration"
+      ]
     },
     {
       "name": "mms-code-review",
       "path": "skills/mms-code-review",
-      "keywords": ["code review", "pr review", "compliance", "audit", "backend security", "authenticateTenant"]
+      "keywords": [
+        "code review",
+        "pr review",
+        "compliance",
+        "audit",
+        "backend security",
+        "authenticateTenant"
+      ]
     },
     {
       "name": "mms-ops-deploy",
       "path": "skills/mms-ops-deploy",
-      "keywords": ["production", "hetzner", "deploy", "apache", "port 5002", "MMS_APP_DOMAIN", "github actions", "pm2"]
+      "keywords": [
+        "production",
+        "hetzner",
+        "deploy",
+        "apache",
+        "port 5002",
+        "MMS_APP_DOMAIN",
+        "github actions",
+        "pm2"
+      ]
     }
   ],
   "rules": {

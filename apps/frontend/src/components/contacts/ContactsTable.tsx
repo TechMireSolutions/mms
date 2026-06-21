@@ -3,15 +3,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal, MessageCircle, MessageSquare,
   Edit2, Trash2, ChevronUp, ChevronDown,
-  Copy, Eye, MapPin, Mars, Venus, User
+  Copy, Eye, MapPin, Mars, Venus, User, RotateCcw,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, Contact } from "@mms/shared";
-import { formatDate } from "@mms/shared";
+import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, Contact, formatDate, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
+import useTranslation from "@/hooks/useTranslation";
+import { formatContactCellValue } from '@/lib/contacts/contactI18n';
 
 function GenderIcon({ gender }: { gender?: string }): React.JSX.Element | null {
   if (!gender) return null;
@@ -26,13 +27,10 @@ import ContactAvatar from "./ContactAvatar";
 
 interface CopyBtnProps {
   text: string;
-  uiStrings: Record<string, string>;
 }
 
-/**
- * Copy button component copying text to clipboard.
- */
-function CopyBtn({ text, uiStrings }: CopyBtnProps): React.JSX.Element {
+function CopyBtn({ text }: CopyBtnProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState<boolean>(false);
   const copy = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
@@ -48,7 +46,7 @@ function CopyBtn({ text, uiStrings }: CopyBtnProps): React.JSX.Element {
   return (
     <button
       onClick={copy}
-      title={copied ? uiStrings.copied : uiStrings.copy}
+      title={copied ? t('contacts.table.copied') : t('contacts.table.copy')}
       className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground"
       type="button"
     >
@@ -57,23 +55,6 @@ function CopyBtn({ text, uiStrings }: CopyBtnProps): React.JSX.Element {
   );
 }
 
-/**
- * Formats basic cell values for tabular display.
- */
-function formatCellValue(val: unknown, uiStrings: Record<string, string>): string {
-  if (val === null || val === undefined || val === "") return uiStrings.emptyDash;
-  if (typeof val === "boolean") return val ? uiStrings.yes : uiStrings.no;
-  if (Array.isArray(val)) return val.join(", ") || uiStrings.emptyDash;
-  if (typeof val === "object") {
-    try {
-      return JSON.stringify(val);
-    } catch (err: unknown) {
-      console.error("Failed to stringify cell value:", err);
-      return uiStrings.emptyDash;
-    }
-  }
-  return String(val);
-}
 
 interface ColumnConfig {
   id: string;
@@ -88,6 +69,8 @@ interface ContactsTableProps {
   onSelectAll: () => void;
   onEdit: (contact: Contact) => void;
   onDelete: (id: number | string) => void;
+  onRestore?: (id: number | string) => void;
+  showArchived?: boolean;
   onWhatsApp: (contacts: Contact[]) => void;
   onSms: (contacts: Contact[]) => void;
   sortField: string;
@@ -97,6 +80,7 @@ interface ContactsTableProps {
   allContacts?: Contact[];
   onUpdateContact?: (contact: Contact) => void;
   canWrite?: boolean;
+  canDelete?: boolean;
 }
 
 /**
@@ -125,6 +109,8 @@ export default function ContactsTable({
   onSelectAll,
   onEdit,
   onDelete,
+  onRestore,
+  showArchived = false,
   onWhatsApp,
   onSms,
   sortField,
@@ -133,9 +119,15 @@ export default function ContactsTable({
   columns = [],
   allContacts = [],
   onUpdateContact,
-  canWrite = true,
+  canWrite = false,
+  canDelete = false,
 }: ContactsTableProps): React.JSX.Element {
-  const { lifecycleColors, uiStrings } = useContactConfig();
+  const { lifecycleColors, visibleColumns } = useContactConfig();
+  const { t } = useTranslation();
+  const visibleColumnIds = React.useMemo(
+    () => new Set(visibleColumns.map((col) => col.id)),
+    [visibleColumns],
+  );
   const [viewContact, setViewContact] = useState<Contact | null>(null);
 
   const allSelected  = contacts.length > 0 && selected.length === contacts.length;
@@ -163,7 +155,7 @@ export default function ContactsTable({
         return (
           <td key="name" className="px-4 py-3">
             <div className="flex items-center gap-3">
-              <ContactAvatar contact={c} uiStrings={uiStrings} />
+              <ContactAvatar contact={c} />
               <div>
                 <button
                   onClick={() => setViewContact(c)}
@@ -174,8 +166,13 @@ export default function ContactsTable({
                 </button>
                 <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                   <GenderIcon gender={c.gender} />
-                  {c.dob && <span>{uiStrings.dobLabel} {formatDate(c.dob)}</span>}
+                  {c.dob && <span>{t('contacts.table.dobLabel')} {formatDate(c.dob)}</span>}
                 </p>
+                {showArchived && c.deletionReason && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
+                    {t('contacts.deletionReasonLabel')}: {c.deletionReason}
+                  </p>
+                )}
               </div>
             </div>
           </td>
@@ -192,14 +189,14 @@ export default function ContactsTable({
                   </span>
                 </div>
               )}
-              <CopyBtn text={getPrimaryPhone(c) || ""} uiStrings={uiStrings} />
+              <CopyBtn text={getPrimaryPhone(c) || ""} />
               <button
                 disabled={!hasWhatsApp(c)}
                 onClick={(e) => {
                   e.stopPropagation();
                   onWhatsApp([c]);
                 }}
-                title={hasWhatsApp(c) ? uiStrings.whatsapp : uiStrings.notRegisteredWhatsApp}
+                title={hasWhatsApp(c) ? t('contacts.whatsapp') : t('contacts.table.notRegisteredWhatsApp')}
                 className={`min-w-[44px] min-h-[44px] flex items-center justify-center transition-all ${
                   hasWhatsApp(c)
                     ? "opacity-0 group-hover/phone:opacity-100 text-success hover:text-success/80 cursor-pointer"
@@ -217,19 +214,19 @@ export default function ContactsTable({
           <td key="email" className="px-4 py-3">
             <div className="flex items-center gap-1 group/email">
               <span className="text-[13px] text-muted-foreground">{getPrimaryEmail(c)}</span>
-              <CopyBtn text={getPrimaryEmail(c) || ""} uiStrings={uiStrings} />
+              <CopyBtn text={getPrimaryEmail(c) || ""} />
             </div>
           </td>
         );
       case "line1":
-        return <td key="line1" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.addresses?.[0]?.line1 || (c.line1 as string) || uiStrings.emptyDash}</span></td>;
+        return <td key="line1" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.addresses?.[0]?.line1 || (c.line1 as string) || t('contacts.table.emptyDash')}</span></td>;
       case "city": {
         const cityVal = c.addresses?.[0]?.city || (c.city as string);
         return (
           <td key="city" className="px-4 py-3">
             <div className="flex items-center gap-1">
               <MapPin className="w-3 h-3 text-muted-foreground" />
-              <span className="text-[13px] text-muted-foreground">{cityVal || uiStrings.emptyDash}</span>
+              <span className="text-[13px] text-muted-foreground">{cityVal || t('contacts.table.emptyDash')}</span>
             </div>
           </td>
         );
@@ -244,44 +241,44 @@ export default function ContactsTable({
           </td>
         );
       case "dob":
-        return <td key="dob" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.dob ? formatDate(c.dob) : uiStrings.emptyDash}</span></td>;
+        return <td key="dob" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.dob ? formatDate(c.dob) : t('contacts.table.emptyDash')}</span></td>;
       case "state":
-        return <td key="state" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.addresses?.[0]?.state || (c.state as string) || (c.province as string) || uiStrings.emptyDash}</span></td>;
+        return <td key="state" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.addresses?.[0]?.state || (c.state as string) || (c.province as string) || t('contacts.table.emptyDash')}</span></td>;
       case "country":
-        return <td key="country" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.addresses?.[0]?.country || (c.country as string) || uiStrings.emptyDash}</span></td>;
+        return <td key="country" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.addresses?.[0]?.country || (c.country as string) || t('contacts.table.emptyDash')}</span></td>;
       case "isSyed":
         return (
           <td key="isSyed" className="px-4 py-3">
-            {c.isSyed ? <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success border border-success/30">{uiStrings.yesSyed}</span> : <span className="text-muted-foreground/40">{uiStrings.emptyDash}</span>}
+            {c.isSyed ? <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success border border-success/30">{t('contacts.table.yesSyed')}</span> : <span className="text-muted-foreground/40">{t('contacts.table.emptyDash')}</span>}
           </td>
         );
       case "whatsapp":
-        return <td key="whatsapp" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{hasWhatsApp(c) ? uiStrings.yes : uiStrings.no}</span></td>;
+        return <td key="whatsapp" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{hasWhatsApp(c) ? t('common.yes') : t('common.no')}</span></td>;
       case "socials_platform": {
         const platforms = (c.socials || []).map((s) => s.platform).filter(Boolean);
-        return <td key="socials_platform" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{platforms.join(", ") || uiStrings.emptyDash}</span></td>;
+        return <td key="socials_platform" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{platforms.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "socials_url": {
         const urls = (c.socials || []).map((s) => s.url).filter(Boolean);
-        return <td key="socials_url" className="px-4 py-3"><span className="text-[13px] text-muted-foreground truncate max-w-[150px] block" title={urls.join(", ")}>{urls.join(", ") || uiStrings.emptyDash}</span></td>;
+        return <td key="socials_url" className="px-4 py-3"><span className="text-[13px] text-muted-foreground truncate max-w-[150px] block" title={urls.join(", ")}>{urls.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "emergency_contact": {
         const ecNames = (c.emergencyContacts || []).map((ec) => {
           if (ec.name) return ec.name;
           if (ec.contactId) {
             const linked = allContacts.find((x) => String(x.id) === String(ec.contactId));
-            return linked ? linked.name : `${uiStrings.contactIdPrefix}${ec.contactId}`;
+            return linked ? linked.name : `${t('contacts.table.contactIdPrefix')}${ec.contactId}`;
           }
           return null;
         }).filter(Boolean);
-        return <td key="emergency_contact" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{ecNames.join(", ") || uiStrings.emptyDash}</span></td>;
+        return <td key="emergency_contact" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{ecNames.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "emergency_relationship": {
         const relationships = (c.emergencyContacts || []).map((ec) => ec.relationship).filter(Boolean);
-        return <td key="emergency_relationship" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{relationships.join(", ") || uiStrings.emptyDash}</span></td>;
+        return <td key="emergency_relationship" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{relationships.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "lifecycleStage": {
-        const stage = c.lifecycleStage || uiStrings.defaultLifecycleStage;
+        const stage = c.lifecycleStage || CONTACTS_MODULE_CONTRACT.defaultLifecycleStage;
         const colors = lifecycleColors[stage] || { bg: "bg-muted text-muted-foreground border-border", text: "text-muted-foreground" };
         return (
           <td key="lifecycleStage" className="px-4 py-3">
@@ -299,7 +296,7 @@ export default function ContactsTable({
               {Array.from({ length: 5 }).map((_, i) => (
                 <span
                   key={i}
-                  className={`text-xs ${i < r ? (uiStrings.ratingActiveText || "text-warning font-bold") : (uiStrings.ratingInactiveText || "text-muted-foreground/30 font-light")}`}
+                  className={`text-xs ${i < r ? "text-warning font-bold" : "text-muted-foreground/30 font-light"}`}
                 >
                   ★
                 </span>
@@ -309,7 +306,7 @@ export default function ContactsTable({
         );
       }
       default:
-        return <td key={col.id} className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{formatCellValue(c[col.id], uiStrings)}</span></td>;
+        return <td key={col.id} className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{formatContactCellValue(c[col.id], t)}</span></td>;
     }
   };
   const COL_SORT_FIELD: Record<string, string> = {
@@ -370,27 +367,35 @@ export default function ContactsTable({
                     <td className="px-4 py-3">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" type="button" aria-label={uiStrings.actions}>
+                          <button className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" type="button" aria-label={t('contacts.table.actions')}>
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
                           <DropdownMenuItem onClick={() => setViewContact(c)}>
-                            <Eye className="w-3.5 h-3.5 mr-2" /> {uiStrings.viewProfile}
+                            <Eye className="w-3.5 h-3.5 mr-2" /> {t('contacts.table.viewProfile')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onEdit(c)} disabled={!canWrite}>
-                            <Edit2 className="w-3.5 h-3.5 mr-2" /> {uiStrings.edit}
+                          <DropdownMenuItem onClick={() => onEdit(c)} disabled={!canWrite || showArchived}>
+                            <Edit2 className="w-3.5 h-3.5 mr-2" /> {t('contacts.table.edit')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem disabled={!hasWhatsApp(c)} onClick={() => onWhatsApp([c])}>
-                            <MessageCircle className={`w-3.5 h-3.5 mr-2 ${hasWhatsApp(c) ? "text-success" : "text-muted-foreground"}`} /> {uiStrings.whatsapp}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem disabled={!getPrimaryPhone(c)} onClick={() => onSms([c])}>
-                            <MessageSquare className="w-3.5 h-3.5 mr-2 text-primary" /> {uiStrings.sms}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onDelete(c.id)} disabled={!canWrite} className="text-destructive focus:text-destructive">
-                            <Trash2 className="w-3.5 h-3.5 mr-2" /> {uiStrings.deleteContact}
-                          </DropdownMenuItem>
+                          {!showArchived ? (
+                            <>
+                              <DropdownMenuItem disabled={!hasWhatsApp(c)} onClick={() => onWhatsApp([c])}>
+                                <MessageCircle className={`w-3.5 h-3.5 mr-2 ${hasWhatsApp(c) ? "text-success" : "text-muted-foreground"}`} /> {t('contacts.whatsapp')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem disabled={!getPrimaryPhone(c)} onClick={() => onSms([c])}>
+                                <MessageSquare className="w-3.5 h-3.5 mr-2 text-primary" /> {t("contacts.sms")}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => onDelete(c.id)} disabled={!canDelete} className="text-destructive focus:text-destructive">
+                                <Trash2 className="w-3.5 h-3.5 mr-2" /> {t('contacts.table.deleteContact')}
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
+                            <DropdownMenuItem onClick={() => onRestore?.(c.id)} disabled={!canDelete}>
+                              <RotateCcw className="w-3.5 h-3.5 mr-2" /> {t("contacts.restoreContact")}
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
@@ -403,7 +408,7 @@ export default function ContactsTable({
 
         <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between bg-muted/5">
           <p className="text-xs text-muted-foreground">
-            {selected.length > 0 ? `${selected.length} / ${contacts.length} ${uiStrings.selectedCount}` : `${contacts.length} ${contacts.length !== 1 ? uiStrings.contacts : uiStrings.contact}`}
+            {selected.length > 0 ? `${selected.length} / ${contacts.length} ${t('contacts.table.selectedCount')}` : `${contacts.length} ${contacts.length !== 1 ? t('contacts.table.contacts') : t('contacts.form.contact')}`}
           </p>
         </div>
       </div>

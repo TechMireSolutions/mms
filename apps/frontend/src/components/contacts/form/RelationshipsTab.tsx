@@ -1,15 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { AlertCircle, Users, Plus, Search, X } from "lucide-react";
-import { Field, INPUT, FormEmptyState, EditableSelect, COLLECTION_CARD, CardRemoveButton } from "./FormPrimitives";
+import { AlertCircle, Users, Plus } from "lucide-react";
+import { Field, FormEmptyState, EditableSelect, COLLECTION_CARD, CardRemoveButton } from "./FormPrimitives";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
-
-interface ContactSummary {
-  id: string | number;
-  name?: string;
-  phones?: Array<{ number: string }>;
-}
+import ContactPicker from "@/components/contactLink/ContactPicker";
 
 interface RelationshipItem {
   contactId: string | number;
@@ -22,118 +17,17 @@ interface ContactFormData {
   [key: string]: unknown;
 }
 
-interface ContactSearchPickerProps {
-  available: ContactSummary[];
-  selectedId: string | number;
-  onSelect: (id: string | number) => void;
-}
-
-function ContactSearchPicker({ available, selectedId, onSelect }: ContactSearchPickerProps): React.JSX.Element {
-  const { t } = useTranslation();
-  const [query, setQuery] = useState<string>("");
-  const [open, setOpen] = useState<boolean>(false);
-
-  const selected = available.find((c) => String(c.id) === String(selectedId));
-
-  const filtered = useMemo(() => {
-    const q = query.toLowerCase().trim();
-    const list = q
-      ? available.filter(
-          (c) =>
-            c.name?.toLowerCase().includes(q) ||
-            (c.phones || []).some((p) => p.number?.includes(q))
-        )
-      : available;
-    return list.slice(0, 20);
-  }, [available, query]);
-
-  return (
-    <div className="relative">
-      {selected && !open ? (
-        <div className="flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-border bg-background text-sm">
-          <div>
-            <span className="font-medium text-foreground">{selected.name}</span>
-            {(selected.phones || [])[0]?.number && (
-              <span className="ml-2 text-muted-foreground text-xs">{selected.phones![0].number}</span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              onSelect("");
-              setOpen(true);
-            }}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground ml-2 transition-colors"
-            aria-label={t("contacts.form.clearSelectedContact")}
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      ) : (
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-          <input
-            className={`${INPUT} pl-9`}
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setOpen(true);
-            }}
-            onFocus={() => setOpen(true)}
-            placeholder={t("contacts.form.searchByName")}
-          />
-        </div>
-      )}
-
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onMouseDown={() => setOpen(false)} />
-          <div className="absolute z-50 top-full mt-1 w-full bg-card border border-border rounded-xl shadow-lg max-h-48 overflow-y-auto">
-            {filtered.length === 0 ? (
-              <p className="px-4 py-3 text-xs text-muted-foreground bg-card">{t("contacts.form.noContactsFound")}</p>
-            ) : (
-              filtered.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onMouseDown={() => {
-                    onSelect(c.id);
-                    setQuery("");
-                    setOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2.5 hover:bg-muted transition-colors flex items-center justify-between gap-2 bg-card"
-                >
-                  <span className="text-sm font-medium text-foreground truncate">{c.name}</span>
-                  <span className="text-xs text-muted-foreground">{(c.phones || [])[0]?.number || ""}</span>
-                </button>
-              ))
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
 interface RelationshipsTabProps {
   data: ContactFormData;
   onChange: (updatedData: ContactFormData) => void;
-  allContacts: ContactSummary[];
 }
 
 /**
- * RelationshipsTab Component
- *
- * Renders a form tab for configuring bidirectional relationships (e.g., Mother, Father, Referrer)
- * between the current contact and other contacts in the CRM.
- *
- * @param props - Component properties.
- * @returns React element representing the relationships configuration UI.
+ * Registry-driven relationships tab — links use server-mode ContactPicker (globle2 §10).
  */
 export default function RelationshipsTab({
   data,
   onChange,
-  allContacts,
 }: RelationshipsTabProps): React.JSX.Element {
   const { relationships, updateRelationships } = useContactConfig();
   const { t } = useTranslation();
@@ -141,7 +35,15 @@ export default function RelationshipsTab({
   const upd = (l: RelationshipItem[]): void => {
     onChange({ ...data, relationships: l });
   };
-  const available = allContacts.filter((c) => String(c.id) !== String(data.id));
+
+  const excludeIdsForRow = (rowIndex: number): (string | number)[] => {
+    const linked = list
+      .filter((_, j) => j !== rowIndex)
+      .map((row) => row.contactId)
+      .filter((id) => id != null && String(id).length > 0);
+    if (data.id != null) linked.unshift(data.id);
+    return linked;
+  };
 
   return (
     <div className="space-y-3">
@@ -168,13 +70,17 @@ export default function RelationshipsTab({
             />
           </div>
 
-          <Field label={t("contacts.form.linkContact")} required>
-            <ContactSearchPicker
-              available={available}
-              selectedId={r.contactId ?? ""}
-              onSelect={(id) => upd(list.map((x, j) => (j === i ? { ...x, contactId: id } : x)))}
-            />
-          </Field>
+          <ContactPicker
+            label={`${t("contacts.form.linkContact")} *`}
+            value={r.contactId ?? null}
+            onChange={(id) =>
+              upd(list.map((x, j) => (j === i ? { ...x, contactId: id ?? "" } : x)))
+            }
+            excludeIds={excludeIdsForRow(i)}
+            allowCreate={false}
+            searchPlaceholder={t("contacts.form.searchByName")}
+            emptyTitle={t("contacts.form.noContactsFound")}
+          />
 
           <Field label={t("contacts.form.relationshipType")} required>
             <EditableSelect

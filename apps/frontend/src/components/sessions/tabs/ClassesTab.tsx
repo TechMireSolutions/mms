@@ -4,7 +4,9 @@ import { Plus, Trash2, Edit2, Users, GraduationCap } from "lucide-react";
 import { Session, Class } from '@/lib/data/sessionsData';
 import type { Teacher, AppTranslationKey } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
-import { useTeachersCollection } from '@/hooks/useTeachers';
+import { useTeachersByIds, useTeachersPaginated } from '@/hooks/useTeachers';
+import { TEACHERS_MODULE_CONTRACT } from '@mms/shared';
+import { collectTeacherIdsFromClasses } from '@/lib/registryResolve';
 import {
   assignClassTeacher,
   teacherNameById,
@@ -94,15 +96,38 @@ function ClassCard({ cls, teachers, onEdit, onDelete }: ClassCardProps) {
 interface ClassModalProps {
   open: boolean;
   cls: Class | null;
-  teachers: Teacher[];
   onClose: () => void;
   onSave: (cls: Class) => void;
 }
 
-function ClassModal({ open, cls, teachers, onClose, onSave }: ClassModalProps) {
+function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
   const { t } = useTranslation();
   const [data, setData] = useState<Partial<Class>>(cls ? { ...cls } : { ...EMPTY_CLASS });
   const upd = <K extends keyof Class>(f: K, v: Class[K]) => setData((d) => ({ ...d, [f]: v }));
+
+  const { data: activeTeachersPage } = useTeachersPaginated({
+    page: 1,
+    limit: TEACHERS_MODULE_CONTRACT.maxPageSize,
+    status: 'active',
+    enabled: open,
+  });
+
+  const currentTeacherId = data.teacherId || cls?.teacherId;
+  const activeTeachers = (activeTeachersPage?.teachers ?? []) as Teacher[];
+  const needsCurrentResolve = Boolean(
+    currentTeacherId
+    && !activeTeachers.some((teacher) => String(teacher.id) === String(currentTeacherId)),
+  );
+  const { data: extraTeachers = [] } = useTeachersByIds(
+    needsCurrentResolve ? [String(currentTeacherId)] : [],
+  );
+
+  const teachers = useMemo(() => {
+    const map = new Map<string, Teacher>();
+    for (const teacher of activeTeachers) map.set(String(teacher.id), teacher);
+    for (const teacher of extraTeachers) map.set(String(teacher.id), teacher);
+    return [...map.values()];
+  }, [activeTeachers, extraTeachers]);
 
   const teacherOptions = useMemo(
     () => teacherOptionsForClass(teachers, data.teacherId || cls?.teacherId),
@@ -207,7 +232,11 @@ interface ClassesTabProps {
  * Renders the classes tab for a session, allowing managing individual classes.
  */
 export default function ClassesTab({ session, onUpdate }: ClassesTabProps) {
-  const teachers = useTeachersCollection();
+  const teacherIds = useMemo(
+    () => collectTeacherIdsFromClasses(session.classes),
+    [session.classes],
+  );
+  const { data: teachers = [] } = useTeachersByIds(teacherIds);
   const [showModal, setShowModal] = useState(false);
   const [editCls, setEditCls] = useState<Class | null>(null);
 
@@ -258,7 +287,6 @@ export default function ClassesTab({ session, onUpdate }: ClassesTabProps) {
       <ClassModal
         open={showModal}
         cls={editCls}
-        teachers={teachers}
         onClose={() => { setShowModal(false); setEditCls(null); }}
         onSave={handleSave}
       />

@@ -1,0 +1,71 @@
+import type { ContactsSavedReport, ContactsWorkDrillDown } from './contactsPrefsTypes.js';
+
+export type ContactsSavedReportShareScope = 'private' | 'roles' | 'users' | 'global';
+
+export interface ContactsSavedReportViewer {
+  id: string;
+  role: string;
+  isAdmin?: boolean;
+}
+
+export interface ContactsSavedReportIssue {
+  kind: 'stale_lifecycle_stage' | 'stale_gender';
+  field: keyof ContactsWorkDrillDown;
+  value: string;
+}
+
+/** Whether the viewer may see a saved report preset (globle1 §4.4). */
+export function canViewContactsSavedReport(
+  report: ContactsSavedReport,
+  viewer: ContactsSavedReportViewer,
+): boolean {
+  const scope = report.shareScope ?? 'private';
+  if (scope === 'global') return true;
+  if (report.createdBy === viewer.id) return true;
+  if (viewer.isAdmin) return true;
+  if (scope === 'private') return false;
+  if (scope === 'roles') {
+    return (report.sharedWithRoles ?? []).includes(viewer.role);
+  }
+  if (scope === 'users') {
+    return (report.sharedWithUserIds ?? []).includes(viewer.id);
+  }
+  return false;
+}
+
+/** Whether the viewer may delete a saved report preset. */
+export function canDeleteContactsSavedReport(
+  report: ContactsSavedReport,
+  viewer: ContactsSavedReportViewer,
+): boolean {
+  return report.createdBy === viewer.id || Boolean(viewer.isAdmin);
+}
+
+/** Detects drill-down values that no longer match Setup (globle1 §4.4). */
+export function validateContactsSavedReportDrillDown(
+  drillDown: ContactsWorkDrillDown,
+  options: {
+    lifecycleStages: string[];
+    genders?: string[];
+  },
+): ContactsSavedReportIssue[] {
+  const issues: ContactsSavedReportIssue[] = [];
+  if (
+    drillDown.lifecycleStage &&
+    !options.lifecycleStages.includes(drillDown.lifecycleStage)
+  ) {
+    issues.push({
+      kind: 'stale_lifecycle_stage',
+      field: 'lifecycleStage',
+      value: drillDown.lifecycleStage,
+    });
+  }
+  if (drillDown.gender && options.genders?.length && !options.genders.includes(drillDown.gender)) {
+    issues.push({
+      kind: 'stale_gender',
+      field: 'gender',
+      value: drillDown.gender,
+    });
+  }
+  return issues;
+}

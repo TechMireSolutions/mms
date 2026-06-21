@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { Share2, Plus } from "lucide-react";
 
 import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
-import { useSortedFields } from "../../../hooks/useSortedFields";
+import { FieldDefinition } from "@mms/shared";
+import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
 
@@ -34,11 +35,6 @@ interface SocialTabProps {
   data: ContactFormData;
   onChange: (updatedData: ContactFormData) => void;
   required?: boolean;
-  tabFieldCfg?: {
-    enabled?: string[];
-    required?: string[];
-  };
-  customFields?: unknown;
 }
 
 /**
@@ -51,15 +47,16 @@ export default function SocialTab({
   onChange,
   required = false,
 }: SocialTabProps): React.JSX.Element {
-  const { socialPlatforms, updateSocialPlatforms, uiStrings } = useContactConfig();
+  const { socialPlatforms, updateSocialPlatforms } = useContactConfig();
   const { t } = useTranslation();
-  const enabledFields = useSortedFields("socials").filter((f) => f.enabled);
+  const defaultSocialPlatform = socialPlatforms[0] || t('contacts.detail.facebookLabel');
+  const enabledFields = useVisibleContactFields("socials");
 
   const createNewSocial = (): ContactSocial => {
     const item: Record<string, unknown> = {};
     enabledFields.forEach((f) => {
       if (f.key === "platform") {
-        item[f.key] = (socialPlatforms && socialPlatforms[0]) || uiStrings.facebookLabel;
+        item[f.key] = defaultSocialPlatform;
       } else {
         item[f.key] = f.defaultValue !== undefined ? f.defaultValue : "";
       }
@@ -127,7 +124,7 @@ export default function SocialTab({
               {bodyFields.map((field) => (
                 <Field key={field.key} label={field.label} required={field.required} hint={field.description}>
                   <CustomFieldInput
-                    field={{ ...field, placeholder: getPlaceholder(field, s.platform || uiStrings.facebookLabel) }}
+                    field={{ ...field, placeholder: getPlaceholder(field, s.platform || defaultSocialPlatform) }}
                     value={s[field.key]}
                     onChange={(val) => updateSocial(i, { [field.key]: val })}
                   />
@@ -149,6 +146,4 @@ export default function SocialTab({
     </div>
   );
 }
-
-import { FieldDefinition } from "@mms/shared";
 

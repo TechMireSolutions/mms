@@ -1,11 +1,11 @@
-import { CONTACTS } from '@/lib/data/contactsData';
+import { type Contact } from "@mms/shared";
+import { getObject } from "@/lib/db";
 import { STUDENTS, type Student } from '@/lib/data/studentsData';
 import { TEACHERS, type Teacher } from '@/lib/data/teachersData';
 import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
 import { INVOICES, type Invoice } from '@/lib/data/financeData';
 import { ATTENDANCE_RECORDS, type AttendanceRecord } from '@/lib/data/attendanceData';
 import { DISTRIBUTIONS, type Distribution } from '@/lib/data/hasanatData';
-import { type Contact } from "../../lib/contactFields";
 import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
 
 export type ReportCollection =
@@ -158,7 +158,7 @@ export const METADATA_FIELDS = {
   contacts: {
     name: "Contacts",
     dbKey: "contacts",
-    defaultData: CONTACTS,
+    defaultData: [] as Contact[],
     fields: [
       { value: "lifecycleStage", label: "Lifecycle Stage (Lead/Employee/Student/Parent...)" },
       { value: "gender", label: "Gender (male/female)" },
@@ -567,10 +567,9 @@ export const DEFAULT_VISUALS: Record<string, VisualizerConfig> = {
  */
 export function getReportVisual(id: string): VisualizerConfig {
   try {
-    const saved = localStorage.getItem("report_custom_visuals");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed[id]) return parsed[id] as VisualizerConfig;
+    const saved = getObject<Record<string, VisualizerConfig>>("report_custom_visuals", {});
+    if (saved && saved[id]) {
+      return saved[id];
     }
   } catch (e) {
     console.error("Failed to load custom report visual configuration", e);

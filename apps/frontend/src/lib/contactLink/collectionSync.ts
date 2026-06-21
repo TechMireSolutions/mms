@@ -30,10 +30,6 @@ import {
 
 type Row = Record<string, unknown>;
 
-function readContacts(contacts: ContactLike[]): ContactLike[] {
-  return contacts;
-}
-
 function asNamed(rows: Row[]): NamedEntity[] {
   return rows.map((row) => ({
     id: row.id as string | number,
@@ -110,7 +106,7 @@ export function hydrateCollectionRows(
     distributions: Row[];
   },
 ): Row[] {
-  const contacts = readContacts(context.contacts);
+  const contacts = context.contacts;
   const students = asNamed(context.students);
   const teachers = asNamed(context.teachers);
   const users = asNamed(context.users);

@@ -1,79 +1,136 @@
 ---
 name: mms-contacts
-description: Implements Contact module features — forms, Kanban, WhatsApp status, field registry, ContactConfigContext, backend /api/contacts REST. Use when editing contacts, CRM, phone numbers, avatars, duplicate detection, or contact settings.
+description: Implements Contact module — globle1.md reference implementation. Forms, Kanban, cards, dedup/merge, soft delete, field RBAC, sync outbox, ContactConfigContext, /api/contacts REST. Use when editing contacts, CRM, duplicates, exports, or contact Setup.
 ---
 
 # MMS Contacts Workflow
+
+Contacts is the **reference module** for [`globle1.md`](../../globle1.md) / `mms-module-architecture.mdc`. Copy patterns to new modules before inventing structure.
+
+## Module contract
+
+`packages/shared/src/contactsModuleContract.ts` → `CONTACTS_MODULE_CONTRACT`
+
+Import tier ids, REST path, bulk actions, soft-delete policy, searchable keys, export thresholds, and setup sub-tabs from the contract in hooks and pages.
 
 ## Key files
 
 | Area | Path |
 |------|------|
-| Page | `apps/frontend/src/pages/Contacts.tsx` |
-| Query hooks | `apps/frontend/src/hooks/useContacts.ts` |
-| Types | `packages/shared/src/contactTypes.ts` |
-| Config context | `apps/frontend/src/lib/ContactConfigContext.tsx` |
-| Field store | `apps/frontend/src/lib/contactFieldsStore.ts` |
-| Form primitives | `apps/frontend/src/components/contacts/form/FormPrimitives.tsx` |
-| Backend REST | `apps/backend/src/routes/contacts.ts` |
-| Zod validation | `apps/backend/src/validation/contactSchemas.ts` |
-| WhatsApp | `apps/backend/src/services/whatsApp*.ts` |
+| Page | `apps/frontend/src/pages/Contacts.tsx` (thin orchestrator) |
+| State / actions | `hooks/useContactsPageState.ts`, `hooks/useContactsPageActions.ts` |
+| Query / mutations | `hooks/useContacts.ts` |
+| Sync outbox | `hooks/useContactsSyncOutbox.ts`, `lib/contacts/contactsSyncOutbox.ts` |
+| Field RBAC | `hooks/useVisibleContactFields.ts` |
+| Command centre | `components/contacts/ContactsCommandMetrics.tsx` |
+| Offline banner | `components/contacts/ContactsDataBanner.tsx` |
+| Work | `ContactsTable`, `ContactKanban`, `ContactCards` |
+| Detail | `ContactDetailDrawer.tsx` |
+| Dedup | `DuplicateDetection.tsx` |
+| Export | `lib/contacts/exportContactsCsv.ts` (inline + chunked) |
+| Saved reports | `components/contacts/ContactsSavedReports.tsx` |
+| Search / drill-down | `contactsSearchUtils.ts`, `lib/contacts/contactsWorkDrillDown.ts` |
+| Report fields | `contactsReportFields.ts` (CustomReportBuilder) |
+| Field dependencies | `contactFieldDependencies.ts` |
+| Shared RBAC / soft delete | `contactFieldAccess.ts`, `contactColumnAccess.ts`, `contactSoftDelete.ts`, `contactDuplicateUtils.ts` |
+| Merge | `mergeContacts()` in `utils.ts` |
+| Config | `lib/contexts/ContactConfigContext.tsx`, `lib/contactConfig/*` |
+| Field store | `lib/contactFieldsStore.ts` (no persisted `uiStrings`) |
+| Column prefs | `lib/contacts/columnPrefsStorage.ts` + REST column-prefs |
+| Setup | `ContactsSettingsPanel.tsx`, `ContactSyncPanel.tsx` |
+| Backend | `routes/contacts.ts`, `services/contactService.ts`, `contactPrefsService.ts` |
+| WhatsApp | `services/whatsApp*.ts` |
 
 ## Backend API (`/api/contacts`)
 
-All routes require `authenticateTenant`. Mutations require `canWriteCollection(user, 'contacts')`.
+All routes require `authenticateTenant`. Mutations use permission-matrix helpers.
 
-| Route | Auth | Notes |
-|-------|------|-------|
-| `GET /` | Tenant JWT | List contacts |
-| `GET /count` | Tenant JWT | Count |
-| `POST /` | Write RBAC | E.164 normalize, title-case, persist, WhatsApp enqueue |
-| `PUT /:id` | Write RBAC | Update + WhatsApp side effects |
-| `DELETE /:id` | Write RBAC | Remove from collection |
-| `GET /:id/whatsapp-status` | Tenant JWT | Status + UI indicator metadata |
+| Route | Notes |
+|-------|-------|
+| `GET /` | List; `?includeDeleted=true` requires `contacts.delete` |
+| `POST /`, `PUT /:id` | E.164, title-case, audit, WhatsApp enqueue |
+| `DELETE /:id` | **Soft delete** + audit |
+| `POST /bulk-delete`, `POST /bulk-restore` | Bulk soft delete/restore |
+| `POST /export-audit`, `POST /merge-audit`, `POST /setup-audit` | Client-triggered audit |
+| `GET/PUT /column-prefs` | Per-user Work column layout |
+| `GET/POST/DELETE /saved-reports`, `POST /saved-reports/:id/run` | Saved report logic |
+| `GET /:id/whatsapp-status` | Server-side probe only |
 
-Data access: `dbSyncService.fetchCollection` / `persistCollection` (tenant-scoped automatically).
+Tests: `headers: { host: 'demo.localhost' }`. E2E: `e2e/contacts.api.spec.ts`, `e2e/contacts.ui.spec.ts`.
 
-Tests must use tenant host: `headers: { host: 'demo.localhost' }`.
-
-## Workflow: add form field
-
-1. Add to field registry in `@mms/shared` or `contact_field_config` object
-2. Render via `FormPrimitives` + `useSortedFields` — not new `DynamicField`
-3. If new tab needed: tab registry entry + `*Tab.tsx` content component
-4. Persist custom field values on `Contact` JSON document
-
-## Workflow: phone / WhatsApp
-
-1. Normalize E.164 with `parsePhoneNumber` (`@mms/shared`) on save
-2. Backend `POST` / `PUT /api/contacts` triggers verification via `handleContactSaveOrUpdate`
-3. UI reads `GET /api/contacts/:id/whatsapp-status`
-4. **Never** add manual WhatsApp toggle in `PhoneTab`
-
-## Provider rule
-
-`ContactConfigProvider` mounts **only** in `App.tsx`. Remove nesting from Contacts/Settings when touching those files.
-
-## Frontend data layer
+## Data layer
 
 | Read | Write |
 |------|-------|
-| `useContactsCollection()` or `useContacts()` | `useContactMutations()` (`upsertContact`, `updateContact`, `deleteContact`) |
+| `useContactsCollection()` / `useContacts()` | `useContactMutations()` |
 
-`fetchContacts` syncs to localStorage via `saveCollection` for dashboard KPI widgets. Do not add parallel `saveCollection` writes in page handlers.
+- Do not add parallel `saveCollection` writes in page handlers — **no `contactsData.ts` mock**
+- Offline: mutations enqueue to `contactsSyncOutbox`; flush via `useContactsSyncOutbox`
+- Dashboard widgets: Query cache preferred (`widgetDataUtils`)
 
-## i18n debt
+## RBAC layers
 
-New copy → `t('contacts.*')` in `appTranslations`. Legacy `uiStrings` (~24 files) — do not add new keys; migrate when touching.
+1. Module: `can('contacts.read' \| 'contacts.write' \| 'contacts.delete')`
+2. Tabs: `canViewContactTab`
+3. Fields: `canViewContactField` / `canEditContactField`
+4. Columns: `canViewContactColumn`
+5. API: `canWriteContacts` / `canDeleteContacts` / `canReadContacts`
+
+## globle1.md feature map (Contacts)
+
+| § | Feature | Status |
+|---|---------|--------|
+| 1.1 | Module contract | Shipped |
+| 1.2 | RBAC (module/field/column) | Shipped |
+| 1.3 | Audit on REST + export/merge/setup | Partial (Setup prefs save audited via route) |
+| 1.4 | Offline banner + sync outbox | Partial (no conflict merge UI) |
+| 1.5 | Soft delete + restore | Shipped |
+| 2.1 | Command metrics | Shipped |
+| 2.2 | Dedup + user-confirmed merge | Shipped |
+| 2.3 | Export controller | Shipped (chunked > 500 rows) |
+| 3.3 | Mobile cards | Shipped |
+| 3.4 | Server column prefs | Shipped |
+| 4.3 | Report drill-down | Shipped |
+| 4.4 | Saved reports re-run | Shipped |
+| 6.6 | Field delete dependency checks | Shipped |
+| 8 | Background export | Partial (chunked, not job queue) |
+| 7 / Sync | Google OAuth | Gap — localStorage credentials |
+
+## Dedup & merge (§2.2)
+
+1. `findContactDuplicatePairs(contacts, prefs)` — shared engine
+2. UI: `DuplicateDetection.tsx` — user picks keeper, confirms merge
+3. `mergeContacts(keep, other, { mergedNotePrefix: t(...) })` — **never pass `uiStrings`**
+4. Optional duplicate warning on save in `ContactForm`
+
+## Setup field removal (§6.6)
+
+Before deleting a custom field in `ContactsSettingsPanel`:
+
+```typescript
+getContactFieldRemovalIssues({ fieldKey, columnRegistry, prefs, contacts })
+```
+
+Blocks when: seed field, enabled column, duplicate-detection field, or contact data exists.
+
+## i18n
+
+- All contact UI: `t('contacts.*')` via `appTranslations`
+- **Do not** add or persist `uiStrings`
+- Report builder contacts fields: `contactsReportFields.ts` label keys
+
+## Provider rule
+
+`ContactConfigProvider` mounts **only** in `App.tsx`.
 
 ## Do not reintroduce
 
-`DynamicField.tsx`, `TabCustomFields.tsx`, second `DraggableFieldList` under `contacts/settings/`
+`contactsData.ts`, `DynamicField.tsx`, nested provider, hard DELETE, `mergeContacts(..., uiStrings)`, Setup uiStrings editor, fake WhatsApp bulk send delay
 
 ## Rules
 
-`.cursor/rules/mms-contacts.mdc`, `mms-backend.mdc`, `mms-rbac.mdc`
+`mms-contacts.mdc`, `mms-module-architecture.mdc`, `mms-contact-link.mdc`, `mms-backend.mdc`, `mms-rbac.mdc`
 
 ## Related skills
 
-`mms-backend-api`, `mms-data-sync`
+`mms-module-page`, `mms-backend-api`, `mms-data-sync`, `mms-fields-registry`, `mms-reports-export`

@@ -10,7 +10,6 @@ export function getRequiredDashboardCollections(
   persona: DashboardPersona,
 ): Set<ReportCollection> {
   const required = new Set<ReportCollection>([
-    'students',
     'sessions',
     'finance_invoices',
     'attendance_records',

@@ -112,23 +112,15 @@ RootErrorBoundary → AuthProvider → QueryClientProvider → Router → Brandi
 
 | Module / area | Data pattern |
 |---------------|--------------|
-| Students | Query (`useStudents`, `useStudentMutations`) |
-| Contacts | Query + hybrid (`useContacts`, `useContactsCollection`) |
+| Students | Query paginated (`useStudentsPaginated`, `useStudentMutations`, `useStudentsByIds`, metrics/aggregates) |
+| Teachers | Query paginated (`useTeachersPaginated`, `useTeacherMutations`, `useTeachersByIds`, metrics/aggregates) |
+| Contacts | Query paginated (`useContactsPaginated`, `useContactMutations`, `useContactsByIds`) |
 | Workspace registry (apex) | Query (`useWorkspaceRegistry`) |
-| Dashboard | Hybrid students/contacts + many `useLiveCollection` |
+| Dashboard | Server metrics/aggregates for students/teachers/contacts + `useLiveCollection` for other modules |
 | Finance, Accounting, Obligations, Hasanat, Sessions, Users, Attendance, Enrollments, Examinations, QuestionBank | `useLiveCollection` only |
 | Auth / tenant branding | `useEffect` + `apiJson` — migrate to Query when touched |
 
-**Hybrid pattern:** Query is source of truth; `saveCollection` on fetch keeps KPI/report widgets on localStorage in sync until those views migrate:
-
-```ts
-// hooks/useStudents.ts / useContacts.ts pattern
-export function useStudentsCollection() {
-  const { data: fromQuery = [] } = useStudents();
-  const fromLocal = useLiveCollection<Student>('students');
-  return fromQuery.length > 0 ? fromQuery : fromLocal;
-}
-```
+**Query-first modules:** paginated list + resolve-by-id + metrics/aggregates — no full-collection fetch on module mount (`globle2 §10`).
 
 Avoid bare `fetch` in `useEffect` for server state.
 

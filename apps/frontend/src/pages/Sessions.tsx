@@ -27,6 +27,9 @@ import KPISummary from "../components/reports/KPISummary";
 import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
 import { formatDate, getObject } from "../lib/db";
 import { useSessionsCollection, useSessionMutations } from "@/hooks/useSessions";
+import { useSessionColumnLayout } from "@/hooks/useSessionColumnLayout";
+import SessionsCommandMetrics from "@/components/sessions/SessionsCommandMetrics";
+import ModuleColumnCustomizer from "@/components/ui/ModuleColumnCustomizer";
 import { SessionsSettings as SessionsSettingsData, DEFAULT_SESSIONS_SETTINGS } from "@mms/shared";
 
 type SessionStatus = "active" | "upcoming" | "completed" | "cancelled";
@@ -130,6 +133,14 @@ export default function Sessions() {
   const sessions = useSessionsCollection();
   const { createSession, updateSession } = useSessionMutations();
   const settings = getObject<SessionsSettingsData>("sessions_settings", DEFAULT_SESSIONS_SETTINGS);
+  const columnLayout = useSessionColumnLayout();
+  const listLayout = (settings.defaultViewLayout || "cards") === "list";
+  const showName = columnLayout.isColumnVisible("name");
+  const showType = columnLayout.isColumnVisible("type");
+  const showDuration = columnLayout.isColumnVisible("duration");
+  const showFee = columnLayout.isColumnVisible("fee");
+  const showEnrolled = columnLayout.isColumnVisible("enrolled");
+  const showStatus = columnLayout.isColumnVisible("status");
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<SessionStatus[]>([]);
   const [filterType, setFilterType] = useState<SessionType[]>([]);
@@ -201,6 +212,8 @@ export default function Sessions() {
         }
       />
 
+      <SessionsCommandMetrics total={sessions.length} shown={filtered.length} />
+
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
         activeTab={activeTab}
@@ -255,6 +268,14 @@ export default function Sessions() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {listLayout && (
+                <ModuleColumnCustomizer
+                  columnRegistry={columnLayout.columnRegistry}
+                  updateUserColumnLayout={columnLayout.updateUserColumnLayout}
+                  labels={columnLayout.customizerLabels}
+                />
+              )}
             </div>
 
             <FilterChips
@@ -273,18 +294,42 @@ export default function Sessions() {
                 description="Try adjusting your filters or create a new session."
                 action={<ActionButton variant="primary" icon={Plus} onClick={() => setShowForm(true)}>New Session</ActionButton>}
               />
-            ) : (settings.defaultViewLayout || "cards") === "list" ? (
+            ) : listLayout ? (
               <div className="rounded-2xl border border-border bg-card/45 backdrop-blur-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border/50 bg-muted/20">
-                        <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Session Name</th>
-                        <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Type</th>
-                        <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Duration</th>
-                        <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Fee</th>
-                        <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Enrolled</th>
-                        <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Status</th>
+                        {showName && (
+                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                            {t("sessions.columns.name")}
+                          </th>
+                        )}
+                        {showType && (
+                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                            {t("sessions.columns.type")}
+                          </th>
+                        )}
+                        {showDuration && (
+                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                            {t("sessions.columns.duration")}
+                          </th>
+                        )}
+                        {showFee && (
+                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                            {t("sessions.columns.fee")}
+                          </th>
+                        )}
+                        {showEnrolled && (
+                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                            {t("sessions.columns.enrolled")}
+                          </th>
+                        )}
+                        {showStatus && (
+                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                            {t("sessions.columns.status")}
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
@@ -295,26 +340,38 @@ export default function Sessions() {
                         const statusCls = STATUS_CLS[statusKey] ?? STATUS_CLS.active;
                         return (
                           <tr key={s.id} onClick={() => setDetailSession(s)} className="hover:bg-muted/20 cursor-pointer transition-colors group">
-                            <td className="px-4 py-3 font-semibold text-foreground group-hover:text-primary transition-colors">{s.name}</td>
-                            <td className="px-4 py-3">
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[s.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
-                                {s.type}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-xs text-muted-foreground">
-                              {formatDate(s.startDate, true)} — {formatDate(s.endDate, true)}
-                            </td>
-                            <td className="px-4 py-3 text-xs font-medium">
-                              {s.currency} {Number(s.baseFee).toLocaleString()}
-                            </td>
-                            <td className="px-4 py-3 text-xs text-muted-foreground">
-                              {totalEnrolled}/{totalCapacity || "—"}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusCls}`}>
-                                {statusLabels[statusKey] ?? statusLabels.active}
-                              </span>
-                            </td>
+                            {showName && (
+                              <td className="px-4 py-3 font-semibold text-foreground group-hover:text-primary transition-colors">{s.name}</td>
+                            )}
+                            {showType && (
+                              <td className="px-4 py-3">
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[s.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
+                                  {s.type}
+                                </span>
+                              </td>
+                            )}
+                            {showDuration && (
+                              <td className="px-4 py-3 text-xs text-muted-foreground">
+                                {formatDate(s.startDate, true)} — {formatDate(s.endDate, true)}
+                              </td>
+                            )}
+                            {showFee && (
+                              <td className="px-4 py-3 text-xs font-medium">
+                                {s.currency} {Number(s.baseFee).toLocaleString()}
+                              </td>
+                            )}
+                            {showEnrolled && (
+                              <td className="px-4 py-3 text-xs text-muted-foreground">
+                                {totalEnrolled}/{totalCapacity || "—"}
+                              </td>
+                            )}
+                            {showStatus && (
+                              <td className="px-4 py-3">
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusCls}`}>
+                                  {statusLabels[statusKey] ?? statusLabels.active}
+                                </span>
+                              </td>
+                            )}
                           </tr>
                         );
                       })}

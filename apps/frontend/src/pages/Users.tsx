@@ -222,7 +222,7 @@ export default function Users(): React.JSX.Element {
               className="space-y-4"
             >
               {effectiveTab === 'reports' && (
-                <ModuleReports category="faculty" role={viewerRole} />
+                <ModuleReports category="faculty" />
               )}
               {effectiveTab === 'setup' && (
                 <div className="space-y-4">

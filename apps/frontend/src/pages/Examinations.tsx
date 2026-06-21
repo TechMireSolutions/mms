@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import useConfigSubTabs from "@/hooks/useConfigSubTabs";
 import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, FileText, PenTool, Layers } from "lucide-react";
-import { resolveModuleTierTab } from "@mms/shared";
+import { resolveModuleTierTab, DEFAULT_EXAMINATIONS_SETTINGS, type ExaminationsSettings as ExaminationsSettingsData } from "@mms/shared";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
 import SubTabBar from "@/components/ui/SubTabBar";
@@ -15,11 +15,14 @@ import ExamForm from "../components/examination/ExamForm";
 import EnterMarks from "../components/examination/EnterMarks";
 import ResultsView from "../components/examination/ResultsView";
 import ExaminationsSettings from "../components/examination/ExaminationsSettings";
+import ExaminationsCommandMetrics from "../components/examination/ExaminationsCommandMetrics";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import { Exam, ExamResult } from '@/lib/data/examinationData';
-import { saveCollection } from "../lib/db";
+import { saveCollection, getObject } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
+import { useExaminationExamColumnLayout } from "@/hooks/useExaminationExamColumnLayout";
+import { useExaminationResultsColumnLayout } from "@/hooks/useExaminationResultsColumnLayout";
 
 /**
  * Examinations — formal exams, marking, and results. Work | Reports | Setup.
@@ -41,9 +44,15 @@ export default function Examinations(): React.JSX.Element {
 
   const exams = useLiveCollection("exams");
   const examResults = useLiveCollection("exam_results");
+  const settings = getObject<ExaminationsSettingsData>("examinations_settings", DEFAULT_EXAMINATIONS_SETTINGS);
+  const examColumnLayout = useExaminationExamColumnLayout();
+  const resultsColumnLayout = useExaminationResultsColumnLayout();
+  const listLayout = (settings.defaultViewLayout || "cards") === "list";
+
   const [showExamForm, setShowExamForm] = useState(false);
   const [showMarksModal, setShowMarksModal] = useState(false);
   const [editExam, setEditExam] = useState<Exam | null>(null);
+  const [filteredCount, setFilteredCount] = useState(0);
 
   const handleSaveExam = (exam: Exam): void => {
     const exists = exams.find((e) => e.id === exam.id);
@@ -68,6 +77,11 @@ export default function Examinations(): React.JSX.Element {
   );
   const effectiveSubTab = OPS_SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : "exams";
 
+  useEffect(() => {
+    if (effectiveSubTab === "exams" || effectiveSubTab === "results") return;
+    setFilteredCount(exams.length);
+  }, [effectiveSubTab, exams.length]);
+
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <title>MMS - {t("nav.examinations")}</title>
@@ -87,6 +101,8 @@ export default function Examinations(): React.JSX.Element {
           </button>
         }
       />
+
+      <ExaminationsCommandMetrics total={exams.length} shown={filteredCount} />
 
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
@@ -133,6 +149,7 @@ export default function Examinations(): React.JSX.Element {
               {effectiveTab === "work" && effectiveSubTab === "exams" && (
                 <ExamsList
                   exams={exams}
+                  listLayout={listLayout}
                   onNew={() => {
                     setEditExam(null);
                     setShowExamForm(true);
@@ -141,10 +158,27 @@ export default function Examinations(): React.JSX.Element {
                     setEditExam(e);
                     setShowExamForm(true);
                   }}
+                  onFilteredCountChange={setFilteredCount}
+                  isColumnVisible={examColumnLayout.isColumnVisible}
+                  columnCustomizer={{
+                    columnRegistry: examColumnLayout.columnRegistry,
+                    updateUserColumnLayout: examColumnLayout.updateUserColumnLayout,
+                    labels: examColumnLayout.customizerLabels,
+                  }}
                 />
               )}
               {effectiveTab === "work" && effectiveSubTab === "results" && (
-                <ResultsView exams={exams} results={examResults} />
+                <ResultsView
+                  exams={exams}
+                  results={examResults}
+                  onFilteredCountChange={setFilteredCount}
+                  isColumnVisible={resultsColumnLayout.isColumnVisible}
+                  columnCustomizer={{
+                    columnRegistry: resultsColumnLayout.columnRegistry,
+                    updateUserColumnLayout: resultsColumnLayout.updateUserColumnLayout,
+                    labels: resultsColumnLayout.customizerLabels,
+                  }}
+                />
               )}
             </motion.div>
           </AnimatePresence>

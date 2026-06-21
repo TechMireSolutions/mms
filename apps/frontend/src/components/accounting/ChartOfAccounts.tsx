@@ -1,12 +1,32 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Pencil, Search, Download, EyeOff, Eye } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
 import AccountModal from "./AccountModal";
+import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
+import useTranslation from "@/hooks/useTranslation";
+import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import type { ModuleColumnRegistryEntry } from "@mms/shared";
+
+interface ColumnCustomizerProps {
+  columnRegistry: ModuleColumnRegistryEntry[];
+  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  labels: {
+    trigger: string;
+    title: string;
+    visibleAndOrder: string;
+    hidden: string;
+    fixed: string;
+    hideColumn: (label: string) => string;
+  };
+}
 
 interface ChartOfAccountsProps {
   accounts: Account[];
   onChange: (accounts: Account[]) => void;
+  onFilteredCountChange?: (count: number) => void;
+  isColumnVisible?: (key: string) => boolean;
+  columnCustomizer?: ColumnCustomizerProps;
 }
 
 /**
@@ -17,7 +37,14 @@ interface ChartOfAccountsProps {
  * @param {ChartOfAccountsProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function ChartOfAccounts({ accounts, onChange }: ChartOfAccountsProps) {
+export default function ChartOfAccounts({
+  accounts,
+  onChange,
+  onFilteredCountChange,
+  isColumnVisible,
+  columnCustomizer,
+}: ChartOfAccountsProps) {
+  const { t } = useTranslation();
   const [search,      setSearch]     = useState("");
   const [typeFilter,  setTypeFilter] = useState<AccountType | "all">("all");
   const [showInactive, setShowInactive] = useState(false);
@@ -29,6 +56,16 @@ export default function ChartOfAccounts({ accounts, onChange }: ChartOfAccountsP
     .filter((a) => !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.code.includes(search))
     .sort((a, b) => a.code.localeCompare(b.code)),
   [accounts, search, typeFilter, showInactive]);
+
+  useEffect(() => {
+    onFilteredCountChange?.(filtered.length);
+  }, [filtered.length, onFilteredCountChange]);
+
+  const showCode = isColumnVisible ? isColumnVisible("code") : true;
+  const showName = isColumnVisible ? isColumnVisible("name") : true;
+  const showSubtype = isColumnVisible ? isColumnVisible("subtype") : true;
+  const showDescription = isColumnVisible ? isColumnVisible("description") : true;
+  const showNormalBalance = isColumnVisible ? isColumnVisible("normalBalance") : true;
 
   const handleSave = (acc: Account) => {
     if (acc.id && accounts.find((a) => a.id === acc.id)) onChange(accounts.map((a) => a.id === acc.id ? acc : a));
@@ -47,11 +84,29 @@ export default function ChartOfAccounts({ accounts, onChange }: ChartOfAccountsP
   const existingCodes = accounts.map((a) => a.code);
 
   const exportCSV = () => {
-    const rows = [["Code", "Name", "Type", "Subtype", "Normal Balance", "Description", "Active"]];
-    filtered.forEach((a) => rows.push([a.code, a.name, a.type, a.subtype || "", ACCOUNT_TYPE_META[a.type]?.normalBalance || "", a.description || "", a.isActive !== false ? "Yes" : "No"]));
-    const csv = rows.map((r) => r.join(",")).join("\n");
-    const el = document.createElement("a"); el.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    el.download = "chart_of_accounts.csv"; el.click();
+    runGridCsvExportJob({
+      moduleId: "accounting",
+      label: "Chart of accounts export",
+      filename: "chart_of_accounts.csv",
+      columns: [
+        { header: "Code", key: "code" },
+        { header: "Name", key: "name" },
+        { header: "Type", key: "type" },
+        { header: "Subtype", key: "subtype" },
+        { header: "Normal Balance", key: "normalBalance" },
+        { header: "Description", key: "description" },
+        { header: "Active", key: "active" },
+      ],
+      rows: filtered.map((a) => ({
+        code: a.code,
+        name: a.name,
+        type: a.type,
+        subtype: a.subtype || "",
+        normalBalance: ACCOUNT_TYPE_META[a.type]?.normalBalance || "",
+        description: a.description || "",
+        active: a.isActive !== false ? "Yes" : "No",
+      })),
+    });
   };
 
   return (
@@ -94,6 +149,13 @@ export default function ChartOfAccounts({ accounts, onChange }: ChartOfAccountsP
         >
           <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export
         </button>
+        {columnCustomizer && (
+          <ModuleColumnCustomizer
+            columnRegistry={columnCustomizer.columnRegistry}
+            updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
+            labels={columnCustomizer.labels}
+          />
+        )}
         <button 
           type="button"
           onClick={() => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true })}
@@ -135,29 +197,61 @@ export default function ChartOfAccounts({ accounts, onChange }: ChartOfAccountsP
                 <caption className="sr-only">{type} Accounts</caption>
                 <thead className="bg-muted/40 border-b border-border">
                   <tr>
-                    <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase w-16">Code</th>
-                    <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">Name</th>
-                    <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden md:table-cell">Subtype</th>
-                    <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden lg:table-cell">Description</th>
-                    <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">Balance</th>
-                    <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">Actions</th>
+                    {showCode && (
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase w-16">
+                        {t("accounting.columns.account.code")}
+                      </th>
+                    )}
+                    {showName && (
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                        {t("accounting.columns.account.name")}
+                      </th>
+                    )}
+                    {showSubtype && (
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden md:table-cell">
+                        {t("accounting.columns.account.subtype")}
+                      </th>
+                    )}
+                    {showDescription && (
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden lg:table-cell">
+                        {t("accounting.columns.account.description")}
+                      </th>
+                    )}
+                    {showNormalBalance && (
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                        {t("accounting.columns.account.normalBalance")}
+                      </th>
+                    )}
+                    <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                      {t("accounting.columns.actions")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {group.map((a) => (
                     <tr key={a.id} className={`hover:bg-muted/20 transition-colors ${a.isActive === false ? "opacity-50" : ""}`}>
-                      <td className="px-4 py-2.5 font-mono text-xs font-bold text-muted-foreground">{a.code}</td>
-                      <td className="px-4 py-2.5">
-                        <span className="font-semibold text-foreground">{a.name}</span>
-                        {a.isActive === false && <span className="ml-2 text-[10px] text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">Inactive</span>}
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{a.subtype || "—"}</td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground hidden lg:table-cell max-w-[200px] truncate">{a.description || "—"}</td>
-                      <td className="px-4 py-2.5">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ACCOUNT_TYPE_META[a.type]?.normalBalance === "debit" ? "bg-info/15 text-info" : "bg-success/15 text-success"}`}>
-                          {ACCOUNT_TYPE_META[a.type]?.normalBalance?.toUpperCase()}
-                        </span>
-                      </td>
+                      {showCode && (
+                        <td className="px-4 py-2.5 font-mono text-xs font-bold text-muted-foreground">{a.code}</td>
+                      )}
+                      {showName && (
+                        <td className="px-4 py-2.5">
+                          <span className="font-semibold text-foreground">{a.name}</span>
+                          {a.isActive === false && <span className="ml-2 text-[10px] text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">Inactive</span>}
+                        </td>
+                      )}
+                      {showSubtype && (
+                        <td className="px-4 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{a.subtype || "—"}</td>
+                      )}
+                      {showDescription && (
+                        <td className="px-4 py-2.5 text-xs text-muted-foreground hidden lg:table-cell max-w-[200px] truncate">{a.description || "—"}</td>
+                      )}
+                      {showNormalBalance && (
+                        <td className="px-4 py-2.5">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ACCOUNT_TYPE_META[a.type]?.normalBalance === "debit" ? "bg-info/15 text-info" : "bg-success/15 text-success"}`}>
+                            {ACCOUNT_TYPE_META[a.type]?.normalBalance?.toUpperCase()}
+                          </span>
+                        </td>
+                      )}
                       <td className="px-4 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button type="button" aria-label={`Edit ${a.name}`} onClick={() => setModal({ ...a })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">

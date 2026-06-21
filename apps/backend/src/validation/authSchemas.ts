@@ -20,6 +20,3 @@ export const onboardBodySchema = z.object({
   website: z.string().optional(),
   footerText: z.string().optional(),
 });
-
-export type LoginBody = z.infer<typeof loginBodySchema>;
-export type OnboardBody = z.infer<typeof onboardBodySchema>;

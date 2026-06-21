@@ -3,8 +3,10 @@ import { BookOpen, Trophy, TrendingUp, Star } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { EXAM_RESULTS, EXAMS, STUDENTS, ExamResult, Exam, ExamStudent } from '@/lib/data/examinationData';
+import { EXAM_RESULTS, EXAMS, ExamResult, Exam } from '@/lib/data/examinationData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useStudentsByIds } from "@/hooks/useStudents";
+import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { getGrade } from '@mms/shared';
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
@@ -65,14 +67,19 @@ export interface ClassRankingItem {
 export default function AcademicReport({ filters }: AcademicReportProps): React.JSX.Element {
   const examResults = useLiveCollection<ExamResult>("exam_results", EXAM_RESULTS);
   const exams = useLiveCollection<Exam>("exams", EXAMS);
-  const students = useLiveCollection<ExamStudent>("exam_students", STUDENTS);
+
+  const studentIds = useMemo(
+    () => uniqueRegistryIds(examResults.map((r) => r.studentId)),
+    [examResults],
+  );
+  const { data: students = [] } = useStudentsByIds(studentIds);
 
   const results = useMemo<AcademicResultItem[]>(() => {
     let list: AcademicResultItem[] = [];
 
     examResults.forEach(r => {
       const exam = exams.find(e => e.id === r.examId);
-      const student = students.find(s => s.id === r.studentId);
+      const student = students.find((s) => String(s.id) === String(r.studentId));
       if (!exam || !student) return;
 
       const pct = Math.round((r.marksObtained / exam.totalMarks) * 100);
@@ -109,7 +116,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
     const grouped: Record<string, { class: string; studentName: string; marks: number }[]> = {};
     const baseResults = examResults.map(r => {
       const exam = exams.find(e => e.id === r.examId);
-      const student = students.find(s => s.id === r.studentId);
+      const student = students.find((s) => String(s.id) === String(r.studentId));
       if (!exam || !student) return null;
       return {
         class: exam.name,

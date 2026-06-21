@@ -38,7 +38,11 @@ export default function PrintInvoiceModal({
   const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
   const printRef = useRef<HTMLDivElement>(null);
 
-  const liveContacts = useMergedObligationContacts();
+  const contactIds = useMemo(
+    () => [collection.sender_id, collection.reference_id],
+    [collection.sender_id, collection.reference_id],
+  );
+  const liveContacts = useMergedObligationContacts(contactIds);
   const liveUsers = useMergedObligationUsers();
 
   const lookups = useMemo(() => ({

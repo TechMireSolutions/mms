@@ -215,6 +215,12 @@ export async function saveObject(key: string, data: unknown): Promise<void> {
   }
 }
 
+/** Deletes a tenant-scoped object by logical key. */
+export async function deleteObject(key: string): Promise<void> {
+  const storageKey = resolveObjectStorageKey(key);
+  await deleteObjectByStorageKey(storageKey);
+}
+
 /**
  * Retrieves all collections and objects for bulk synchronization.
  *

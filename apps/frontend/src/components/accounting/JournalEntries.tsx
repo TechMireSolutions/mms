@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Plus, Eye, Pencil, Trash2, Search, CheckCircle2,
   RotateCcw, Filter, Download, BookOpen,
@@ -13,10 +13,13 @@ import SimpleTransactionWizard from "./SimpleTransactionWizard";
 import CashbookView from "./CashbookView";
 import { createReversalEntry, JOURNAL_TAGS, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
+import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import SubTabBar from "../ui/SubTabBar";
 import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import useTranslation from "@/hooks/useTranslation";
+import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import type { ModuleColumnRegistryEntry } from "@mms/shared";
 
 interface QuickActionType {
   id: string;
@@ -50,6 +53,19 @@ function parseNaturalLanguage(text: string): QuickActionType | null {
   return null;
 }
 
+interface ColumnCustomizerProps {
+  columnRegistry: ModuleColumnRegistryEntry[];
+  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  labels: {
+    trigger: string;
+    title: string;
+    visibleAndOrder: string;
+    hidden: string;
+    fixed: string;
+    hideColumn: (label: string) => string;
+  };
+}
+
 interface JournalEntriesProps {
   entries: JournalEntry[];
   accounts: Account[];
@@ -57,6 +73,9 @@ interface JournalEntriesProps {
   fiscalYears: FiscalYear[];
   onChange: (entries: JournalEntry[]) => void;
   fmt: (n: number) => string;
+  onFilteredCountChange?: (count: number) => void;
+  isColumnVisible?: (key: string) => boolean;
+  columnCustomizer?: ColumnCustomizerProps;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
@@ -69,7 +88,17 @@ interface JournalEntriesProps {
  * @param {JournalEntriesProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function JournalEntries({ entries, accounts, settings, fiscalYears, onChange, fmt }: JournalEntriesProps) {
+export default function JournalEntries({
+  entries,
+  accounts,
+  settings,
+  fiscalYears,
+  onChange,
+  fmt,
+  onFilteredCountChange,
+  isColumnVisible,
+  columnCustomizer,
+}: JournalEntriesProps) {
   const { t } = useTranslation();
   const journalStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(
     () => ({
@@ -114,6 +143,18 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
     .sort((a, b) => b.date.localeCompare(a.date)),
   [entries, search, statusFilter, tagFilter, dateFrom, dateTo]);
 
+  useEffect(() => {
+    onFilteredCountChange?.(filtered.length);
+  }, [filtered.length, onFilteredCountChange]);
+
+  const showRef = isColumnVisible ? isColumnVisible("ref") : true;
+  const showDate = isColumnVisible ? isColumnVisible("date") : true;
+  const showDescription = isColumnVisible ? isColumnVisible("description") : true;
+  const showTags = isColumnVisible ? isColumnVisible("tags") : true;
+  const showDebit = isColumnVisible ? isColumnVisible("debit") : true;
+  const showCredit = isColumnVisible ? isColumnVisible("credit") : true;
+  const showStatus = isColumnVisible ? isColumnVisible("status") : true;
+
   const handleSave = (entry: JournalEntry) => {
     if (entries.find((e) => e.id === entry.id)) onChange(entries.map((e) => e.id === entry.id ? entry : e));
     else onChange([...entries, entry]);
@@ -133,15 +174,34 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
   };
 
   const exportCSV = () => {
-    const rows = [["Ref", "Date", "Description", "Tags", "Status", "Debit", "Credit"]];
-    filtered.forEach((e) => {
+    const rows = filtered.map((e) => {
       const d = e.lines.reduce((s, l) => s + l.debit, 0);
       const c = e.lines.reduce((s, l) => s + l.credit, 0);
-      rows.push([e.ref, e.date, e.description, (e.tags || []).join(";"), e.status, String(d), String(c)]);
+      return {
+        ref: e.ref,
+        date: e.date,
+        description: e.description,
+        tags: (e.tags || []).join(";"),
+        status: e.status,
+        debit: String(d),
+        credit: String(c),
+      };
     });
-    const csv = rows.map((r) => r.join(",")).join("\n");
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    a.download = "journal_entries.csv"; a.click();
+    runGridCsvExportJob({
+      moduleId: "accounting",
+      label: "Journal entries export",
+      filename: "journal_entries.csv",
+      columns: [
+        { header: "Ref", key: "ref" },
+        { header: "Date", key: "date" },
+        { header: "Description", key: "description" },
+        { header: "Tags", key: "tags" },
+        { header: "Status", key: "status" },
+        { header: "Debit", key: "debit" },
+        { header: "Credit", key: "credit" },
+      ],
+      rows,
+    });
   };
 
   const handleNlSubmit = (e: React.FormEvent) => {
@@ -361,6 +421,13 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
         >
           <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export
         </button>
+        {columnCustomizer && (
+          <ModuleColumnCustomizer
+            columnRegistry={columnCustomizer.columnRegistry}
+            updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
+            labels={columnCustomizer.labels}
+          />
+        )}
         <button 
           type="button"
           onClick={() => { setSelected(null); setModal("new"); }}
@@ -412,14 +479,44 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
               <caption className="sr-only">Journal Entries</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Ref</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Date</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Description</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden lg:table-cell">Tags</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">Debit</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">Credit</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Status</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">Actions</th>
+                  {showRef && (
+                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      {t("accounting.columns.journal.ref")}
+                    </th>
+                  )}
+                  {showDate && (
+                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      {t("accounting.columns.journal.date")}
+                    </th>
+                  )}
+                  {showDescription && (
+                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      {t("accounting.columns.journal.description")}
+                    </th>
+                  )}
+                  {showTags && (
+                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden lg:table-cell">
+                      {t("accounting.columns.journal.tags")}
+                    </th>
+                  )}
+                  {showDebit && (
+                    <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                      {t("accounting.columns.journal.debit")}
+                    </th>
+                  )}
+                  {showCredit && (
+                    <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                      {t("accounting.columns.journal.credit")}
+                    </th>
+                  )}
+                  {showStatus && (
+                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      {t("accounting.columns.journal.status")}
+                    </th>
+                  )}
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                    {t("accounting.columns.actions")}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -428,30 +525,44 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
                   const totalC = entry.lines.reduce((s, l) => s + l.credit, 0);
                   return (
                     <tr key={entry.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="px-3 py-2.5">
-                        <span className="font-mono text-xs font-bold text-primary">{entry.ref}</span>
-                        {entry.reversed_ref && <p className="text-[10px] text-warning font-semibold m-0">↩ Rev. of {entry.reversed_ref}</p>}
-                        {entry.simple_mode && <span className="text-[10px] text-primary/60 font-semibold m-0">Simple</span>}
-                      </td>
-                      <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(entry.date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}
-                      </td>
-                      <td className="px-3 py-2.5 text-foreground max-w-[200px] truncate">{entry.description}</td>
-                      <td className="px-3 py-2.5 hidden lg:table-cell">
-                        <div className="flex flex-wrap gap-1">
-                          {(entry.tags || []).slice(0, 2).map((t) => (
-                            <span key={t} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">{t}</span>
-                          ))}
-                          {(entry.tags || []).length > 2 && <span className="text-[10px] text-muted-foreground">+{entry.tags.length - 2}</span>}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-info">
-                        {totalD.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-success">
-                        {totalC.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-3 py-2.5"><StatusBadge status={entry.status} config={journalStatusConfig} size="sm" /></td>
+                      {showRef && (
+                        <td className="px-3 py-2.5">
+                          <span className="font-mono text-xs font-bold text-primary">{entry.ref}</span>
+                          {entry.reversed_ref && <p className="text-[10px] text-warning font-semibold m-0">↩ Rev. of {entry.reversed_ref}</p>}
+                          {entry.simple_mode && <span className="text-[10px] text-primary/60 font-semibold m-0">Simple</span>}
+                        </td>
+                      )}
+                      {showDate && (
+                        <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                          {new Date(entry.date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}
+                        </td>
+                      )}
+                      {showDescription && (
+                        <td className="px-3 py-2.5 text-foreground max-w-[200px] truncate">{entry.description}</td>
+                      )}
+                      {showTags && (
+                        <td className="px-3 py-2.5 hidden lg:table-cell">
+                          <div className="flex flex-wrap gap-1">
+                            {(entry.tags || []).slice(0, 2).map((tag) => (
+                              <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">{tag}</span>
+                            ))}
+                            {(entry.tags || []).length > 2 && <span className="text-[10px] text-muted-foreground">+{entry.tags.length - 2}</span>}
+                          </div>
+                        </td>
+                      )}
+                      {showDebit && (
+                        <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-info">
+                          {totalD.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                      )}
+                      {showCredit && (
+                        <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-success">
+                          {totalC.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                      )}
+                      {showStatus && (
+                        <td className="px-3 py-2.5"><StatusBadge status={entry.status} config={journalStatusConfig} size="sm" /></td>
+                      )}
                       <td className="px-3 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button type="button" aria-label={`View entry ${entry.ref}`} onClick={() => { setSelected(entry); setModal("view"); }}
@@ -488,16 +599,20 @@ export default function JournalEntries({ entries, accounts, settings, fiscalYear
               </tbody>
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
-                  <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">
+                  <td colSpan={(showRef ? 1 : 0) + (showDate ? 1 : 0) + (showDescription ? 1 : 0) + (showTags ? 1 : 0) || 1} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">
                     {filtered.length} {filtered.length !== 1 ? "entries" : "entry"}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-info text-xs">
-                    {grandDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">
-                    {grandCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </td>
-                  <td colSpan={2} className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">
+                  {showDebit && (
+                    <td className="px-3 py-2 text-right font-mono font-bold text-info text-xs">
+                      {grandDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                  )}
+                  {showCredit && (
+                    <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">
+                      {grandCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                  )}
+                  <td colSpan={(showStatus ? 1 : 0) + 1} className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">
                     {Math.abs(grandDebit - grandCredit) < 0.01
                       ? <span className="text-success">✓ Balanced</span>
                       : <span className="text-destructive">Diff: {fmt(Math.abs(grandDebit - grandCredit))}</span>

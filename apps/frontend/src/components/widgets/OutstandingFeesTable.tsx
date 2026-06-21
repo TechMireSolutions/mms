@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Phone, Send } from "lucide-react";
 import { INVOICES, Invoice } from '@/lib/data/financeData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import { useStudentsCollection } from "../../hooks/useStudents";
+import { useStudentsByIds } from "../../hooks/useStudents";
+import { uniqueRegistryIds } from "@/lib/registryResolve";
 
 /**
  * OutstandingFeesTable Component
@@ -15,12 +16,19 @@ import { useStudentsCollection } from "../../hooks/useStudents";
  */
 export default function OutstandingFeesTable({ title }: { title?: string }) {
   const invoices = useLiveCollection<Invoice>("finance_invoices", INVOICES);
-  const students = useStudentsCollection();
+  const unpaidInvoices = useMemo(
+    () => invoices.filter((inv) => inv.status !== "paid" && inv.status !== "cancelled"),
+    [invoices],
+  );
+  const studentIds = useMemo(
+    () => uniqueRegistryIds(unpaidInvoices.map((inv) => inv.studentId)),
+    [unpaidInvoices],
+  );
+  const { data: students = [] } = useStudentsByIds(studentIds);
 
-  const list = invoices
-    .filter((inv) => inv.status !== "paid" && inv.status !== "cancelled")
+  const list = unpaidInvoices
     .map((inv) => {
-      const student = students.find((s) => s.id === inv.studentId);
+      const student = students.find((s) => String(s.id) === String(inv.studentId));
       const contact = student?.phone || "+92 300 1234567";
       const amount = inv.status === "partial" ? (inv.finalAmt - (inv.paidAmt || 0)) : inv.finalAmt;
 
@@ -39,7 +47,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
     })
     .slice(0, 5);
     
-  const totalUnpaid = invoices.filter((inv) => inv.status !== "paid" && inv.status !== "cancelled").length;
+  const totalUnpaid = unpaidInvoices.length;
 
   return (
     <section aria-labelledby="outstanding-fees-heading" className="bg-card rounded-xl border border-border">

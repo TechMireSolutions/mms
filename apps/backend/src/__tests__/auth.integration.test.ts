@@ -46,7 +46,6 @@ vi.mock('../services/platform/platformUserService.js', () => ({
   validatePlatformCredentials: (...args: unknown[]) => mockValidatePlatformCredentials(...args),
   ensurePlatformSuperUserFromEnv: vi.fn().mockResolvedValue(undefined),
   findPlatformUserByEmail: (...args: unknown[]) => mockFindPlatformUserByEmail(...args),
-  getPublicPlatformUserById: vi.fn(),
   getStoredPlatformUserById: (...args: unknown[]) => mockGetStoredPlatformUserById(...args),
   hasPlatformUsers: (...args: unknown[]) => mockHasPlatformUsers(...args),
   countPlatformUsers: vi.fn(),

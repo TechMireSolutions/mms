@@ -23,7 +23,7 @@ paths:
 | `@mms/shared` | permissions, utils |
 | `mms-backend` | rbac, health/ready, security, auth integration, twoFactor (~25+ tests) |
 | `mms-frontend` | `apiClient` credentials, hooks (~5 tests) |
-| `e2e/` | Playwright smoke + interactive specs (`pnpm exec playwright test`) |
+| `e2e/` | Playwright smoke + contacts API lifecycle + interactive UI (`pnpm exec playwright test`) |
 
 Expand Playwright for login/onboard/save flows when touching auth or critical paths.
 

@@ -11,8 +11,11 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [antigravity-workspace](antigravity-workspace/SKILL.md) | Antigravity orientation, rules/skills sync |
 | [mms-dev-setup](mms-dev-setup/SKILL.md) | Install, run servers, env, typecheck |
 | [mms-frontend](mms-frontend/SKILL.md) | Frontend pages, hooks, apiClient, Vite, FE tests |
-| [mms-module-page](mms-module-page/SKILL.md) | New module or three-tier page layout |
-| [mms-contacts](mms-contacts/SKILL.md) | Contact CRM, forms, WhatsApp |
+| [mms-module-page](mms-module-page/SKILL.md) | New module or three-tier page — `globle1.md` + `globle2.md` |
+| [mms-module-work](mms-module-work/SKILL.md) | Command centre and Work tier — metrics, directory, drawer, bulk actions (`globle1.md` §2–§3) |
+| [mms-module-setup](mms-module-setup/SKILL.md) | Module Setup tier — Fields, Preferences, audit, field guards (`globle2.md` §5–§7) |
+| [mms-background-jobs](mms-background-jobs/SKILL.md) | Queued processing — large exports, imports, bulk ops, dedup scans, progress, artifacts (`globle2.md` §8) |
+| [mms-contacts](mms-contacts/SKILL.md) | Contact CRM — **globle1 reference module** (contract, dedup, soft delete, RBAC, sync outbox) |
 | [mms-fields-registry](mms-fields-registry/SKILL.md) | Custom fields, tabs, column registry |
 | [mms-data-sync](mms-data-sync/SKILL.md) | db.ts, sync API (admin GET), REST vs collections, Query cache |
 | [mms-auth-users](mms-auth-users/SKILL.md) | Cookies, auth artifacts, 2FA, `authenticateTenant`, users |

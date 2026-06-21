@@ -1,16 +1,20 @@
 import { z } from "zod";
 import {
-  DEFAULT_UI_STRINGS,
+  translateApp,
+  type AppTranslationKey,
   type FieldConfig,
   type FieldDefinition,
 } from "@mms/shared";
 
-const EMAIL_RE = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+const REQUIRED_TAB_I18N: Partial<Record<string, AppTranslationKey>> = {
+  phones: "contacts.form.atLeastOnePhoneRequired",
+  emails: "contacts.form.atLeastOneEmailRequired",
+  addresses: "contacts.form.atLeastOneAddressRequired",
+  socials: "contacts.form.atLeastOneSocialRequired",
+  emergency: "contacts.form.atLeastOneEmergencyContactRequired",
+};
 
-function isTabFieldRequired(config: FieldConfig, tabId: string, fieldId: string): boolean {
-  const field = (config.fields?.[tabId] || []).find((f) => f.key === fieldId);
-  return field?.required ?? false;
-}
+const EMAIL_RE = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
 
 /**
  * Compiles a dynamic custom field validation schema based on custom field configuration parameters.
@@ -167,10 +171,11 @@ export function buildCustomFieldSchema(cf: FieldDefinition): z.ZodTypeAny {
  * @returns {z.ZodTypeAny} The compiled contact validation schema.
  */
 export function buildDynamicContactSchema(
-  config: FieldConfig,
+  _config: FieldConfig,
   enabledTabIds: Set<string>,
   requiredTabIds: Set<string>,
-  fields: Record<string, FieldDefinition[]>
+  fields: Record<string, FieldDefinition[]>,
+  language = "en",
 ): z.ZodTypeAny {
   const schemaObject: Record<string, z.ZodTypeAny> = {};
 
@@ -214,18 +219,12 @@ export function buildDynamicContactSchema(
     emergency: "emergencyContacts",
   };
 
-  const uiStrings = {
-    ...DEFAULT_UI_STRINGS,
-    ...(config.uiStrings || {}),
-  };
-
   Object.entries(listTabsMapping).forEach(([tabId, propKey]) => {
     if (!enabledTabIds.has(tabId)) {
       return;
     }
     const tabFields = (fields[tabId] || []).filter((f) => f.enabled);
     
-    // Build Zod object schema for the items in the list dynamically
     const itemSchemaObject: Record<string, z.ZodTypeAny> = {};
     tabFields.forEach((field) => {
       itemSchemaObject[field.key] = buildCustomFieldSchema(field);
@@ -235,7 +234,8 @@ export function buildDynamicContactSchema(
     
     let arraySchema: z.ZodTypeAny = z.array(itemSchema).optional().nullable();
     if (requiredTabIds.has(tabId)) {
-      const label = uiStrings[`atLeastOne${tabId.charAt(0).toUpperCase() + tabId.slice(1)}Required`] || `At least one entry is required.`;
+      const i18nKey = REQUIRED_TAB_I18N[tabId];
+      const label = i18nKey ? translateApp(i18nKey, language) : "At least one entry is required.";
       arraySchema = z.array(itemSchema).min(1, label);
     }
     schemaObject[propKey] = arraySchema;

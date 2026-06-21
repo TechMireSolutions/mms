@@ -15,6 +15,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   ReactNode,
 } from "react";
 import { loadFieldConfig, saveFieldConfig } from "../contactFieldsStore";
@@ -31,18 +32,29 @@ import {
   WhatsAppTemplate,
   DEFAULT_LIFECYCLE_COLORS,
   DEFAULT_WHATSAPP_TEMPLATES,
-  getContactUiStrings,
+  translateApp,
   ColumnRegistryEntry,
+  canViewContactColumn,
+  canViewContactTab,
 } from "@mms/shared";
 import { getCollection, saveCollection, getObject, saveObject } from "../db";
 import useGlobalSettings from "@/hooks/useGlobalSettings";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import {
+  applyUserColumnOverlay,
+  loadUserColumnPrefs,
+  saveUserColumnPrefs,
+  saveUserColumnPrefList,
+  type UserColumnPref,
+} from "@/lib/contacts/columnPrefsStorage";
+import { useContactColumnPrefs, useContactColumnPrefsMutation } from "@/hooks/useContacts";
 import {
   CONFIG_KEY,
   DEFAULT_PREFS,
   loadPrefs,
   PREFS_KEY,
+  savePrefs,
   syncOptionsInConfig,
-  VISIBLE_COLUMNS_KEY,
 } from "../contactConfig/prefsStorage";
 import {
   buildDynamicContactSchema,
@@ -70,7 +82,6 @@ export interface ContactConfigContextType {
   fields: Record<string, FieldDefinition[]>;
   isTabFieldEnabled: (tabId: string, fieldId: string) => boolean;
   isTabFieldRequired: (tabId: string, fieldId: string) => boolean;
-  defaultValueFor: (tabId: string, fieldId: string) => unknown;
 
   // Dynamic Collections
   genders: string[];
@@ -103,12 +114,10 @@ export interface ContactConfigContextType {
   updateEmailLabels: (val: string[]) => void;
   updateAddressLabels: (val: string[]) => void;
   updateCountryCodes: (val: Array<{ country: string; code: string }>) => void;
-  updateVisibleColumns: (cols: Array<{ id: string } | string>) => void;
   updateColumnRegistry: (cols: ColumnRegistryEntry[]) => void;
-  updateUiStrings: (strings: Record<string, string>) => void;
+  updateUserColumnLayout: (cols: ColumnRegistryEntry[]) => void;
   systemSortOptions: Array<{ field: string; label: string }>;
   defaultContactRating: number;
-  uiStrings: Record<string, string>;
 }
 
 const ContactConfigContext = createContext<ContactConfigContextType | null>(null);
@@ -123,7 +132,12 @@ const ContactConfigContext = createContext<ContactConfigContextType | null>(null
  */
 export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const settings = useGlobalSettings();
+  const { user } = useAuth();
+  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useContactColumnPrefs();
+  const { mutate: saveColumnPrefs } = useContactColumnPrefsMutation();
+  const migratedLocalColumnPrefs = useRef(false);
   const [fieldConfig, setFieldConfigState] = useState<FieldConfig>(() => loadFieldConfig());
+  const [userColumnOverlay, setUserColumnOverlay] = useState<UserColumnPref[] | null>(null);
   const [prefs, setPrefsState] = useState<ContactPreferences>(() => ({
     ...DEFAULT_PREFS,
     ...loadPrefs(),
@@ -161,27 +175,33 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     getCollection("countryCodes", COUNTRY_CODES)
   );
 
-  // ── Dynamic Columns ─────────────────────────────────────────────────────────
-  const [visibleColumnIds, setVisibleColumnIds] = useState<string[]>(() => {
-    try {
-      let raw = localStorage.getItem(VISIBLE_COLUMNS_KEY);
-      if (!raw) {
-        const legacy = localStorage.getItem("madrasa_visible_columns_v1");
-        if (legacy) {
-          raw = legacy;
-          localStorage.setItem(VISIBLE_COLUMNS_KEY, legacy);
-          try {
-            localStorage.removeItem("madrasa_visible_columns_v1");
-          } catch (err) {
-            console.warn("[ContactConfigContext] Failed to remove legacy visible columns key:", err);
-          }
-        }
-      }
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
+  useEffect(() => {
+    if (!user?.id) {
+      setUserColumnOverlay(null);
+      migratedLocalColumnPrefs.current = false;
+      return;
     }
-  });
+    const userId = String(user.id);
+    if (!columnPrefsLoaded) {
+      setUserColumnOverlay(loadUserColumnPrefs(userId));
+      return;
+    }
+    if (serverColumnPrefs && serverColumnPrefs.length > 0) {
+      setUserColumnOverlay(serverColumnPrefs);
+      saveUserColumnPrefList(userId, serverColumnPrefs);
+      return;
+    }
+    const local = loadUserColumnPrefs(userId);
+    if (local?.length) {
+      setUserColumnOverlay(local);
+      if (!migratedLocalColumnPrefs.current) {
+        migratedLocalColumnPrefs.current = true;
+        saveColumnPrefs(local);
+      }
+      return;
+    }
+    setUserColumnOverlay(null);
+  }, [user?.id, columnPrefsLoaded, serverColumnPrefs, saveColumnPrefs]);
 
   // ── Cross-tab sync via storage events ────────────────────────────────────
   useEffect(() => {
@@ -227,11 +247,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
           };
           COLLECTION_SETTERS[subKey]?.(parsed);
         }
-      } else if (e.key === VISIBLE_COLUMNS_KEY) {
-        const parsed = safeParseEvent(e, "visibleColumnIds");
-        if (Array.isArray(parsed)) {
-          setVisibleColumnIds(parsed as string[]);
-        }
       }
     };
     window.addEventListener("storage", handler);
@@ -247,7 +262,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const updatePrefs = useCallback((newPrefs: Partial<ContactPreferences>) => {
     setPrefsState((prev) => {
       const merged = { ...prev, ...newPrefs };
-      localStorage.setItem(PREFS_KEY, JSON.stringify(merged));
+      savePrefs(merged);
       return merged;
     });
   }, []);
@@ -328,30 +343,31 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     setCountryCodesState(val);
   }, []);
 
-  const updateVisibleColumns = useCallback((cols: Array<{ id: string } | string>) => {
-    const ids = cols.map((c) => (typeof c === "string" ? c : c.id));
-    setVisibleColumnIds(ids);
-    try {
-      localStorage.setItem(VISIBLE_COLUMNS_KEY, JSON.stringify(ids));
-    } catch (err) {
-      console.error("[ContactConfigContext] Failed to save visible columns to localStorage:", err);
-    }
-  }, []);
-
   const updateColumnRegistry = useCallback((cols: ColumnRegistryEntry[]) => {
     updateConfig({ ...fieldConfig, columnRegistry: cols });
   }, [fieldConfig, updateConfig]);
 
-  const updateUiStrings = useCallback((strings: Record<string, string>) => {
-    updateConfig({ ...fieldConfig, uiStrings: strings });
-  }, [fieldConfig, updateConfig]);
+  const updateUserColumnLayout = useCallback((cols: ColumnRegistryEntry[]) => {
+    const userId = user?.id ? String(user.id) : "";
+    if (!userId) return;
+    saveUserColumnPrefs(userId, cols);
+    const prefs: UserColumnPref[] = cols.map(({ key, enabled, order }) => ({ key, enabled, order }));
+    setUserColumnOverlay(prefs);
+    saveColumnPrefs(prefs);
+  }, [user?.id, saveColumnPrefs]);
+
+  const viewerRole = user?.role ?? '';
 
   const enabledTabIds = useMemo(() => {
     if (fieldConfig.formTabs) {
-      return new Set(fieldConfig.formTabs.filter(t => t.enabled).map(t => t.key));
+      return new Set(
+        fieldConfig.formTabs
+          .filter((t) => canViewContactTab(viewerRole, t))
+          .map((t) => t.key),
+      );
     }
     return new Set(fieldConfig.enabledTabs || ["phones", "emails", "addresses", "socials", "emergency"]);
-  }, [fieldConfig]);
+  }, [fieldConfig, viewerRole]);
 
   const requiredTabIds = useMemo(() => {
     return new Set(fieldConfig.requiredTabs || []);
@@ -368,10 +384,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     });
     return map;
   }, [countryCodes]);
-
-  const uiStrings = useMemo(() => {
-    return getContactUiStrings(settings.language, fieldConfig.uiStrings);
-  }, [settings.language, fieldConfig.uiStrings]);
 
   /**
    * Returns true if a specific field inside a tab is enabled.
@@ -403,12 +415,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     [fields]
   );
 
-  const defaultValueFor = useCallback((tabId: string, fieldId: string) => {
-    const field = (fields[tabId] || []).find((f) => f.key === fieldId);
-    return field?.defaultValue;
-  }, [fields]);
-
-  const columnRegistry = useMemo(() => {
+  const tenantColumnRegistry = useMemo(() => {
     const registry = [...(fieldConfig.columnRegistry || [])];
     
     // Find all active fields across all enabled tabs in the registry
@@ -503,8 +510,15 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return filteredRegistry;
-  }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled]);
+    const viewerRole = user?.role ?? '';
+    const columnCtx = { fields, enabledTabIds, isTabFieldEnabled };
+    return filteredRegistry.filter((c) => canViewContactColumn(viewerRole, c.key, columnCtx));
+  }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled, user?.role]);
+
+  const columnRegistry = useMemo(
+    () => applyUserColumnOverlay(tenantColumnRegistry, userColumnOverlay),
+    [tenantColumnRegistry, userColumnOverlay],
+  );
 
   const availableColumns = useMemo(() => {
     return columnRegistry.map(c => ({ id: c.key, label: c.label, sortField: c.sortField }));
@@ -518,9 +532,9 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   }, [columnRegistry]);
 
   const systemSortOptions = useMemo<Array<{ field: string; label: string }>>(() => [
-    { field: "createdAt", label: uiStrings.dateAdded || "Date Added" },
-    { field: "updatedAt", label: uiStrings.lastUpdated || "Last Updated" },
-  ], [uiStrings]);
+    { field: "createdAt", label: translateApp("contacts.table.dateAdded", settings.language) },
+    { field: "updatedAt", label: translateApp("contacts.table.lastUpdated", settings.language) },
+  ], [settings.language]);
 
   const defaultContactRating = fieldConfig.defaultRating ?? 3;
 
@@ -539,7 +553,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         fields,
         isTabFieldEnabled,
         isTabFieldRequired,
-        defaultValueFor,
 
         // Dynamic Collections
         genders,
@@ -572,12 +585,10 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         updateEmailLabels,
         updateAddressLabels,
         updateCountryCodes,
-        updateVisibleColumns,
         updateColumnRegistry,
-        updateUiStrings,
+        updateUserColumnLayout,
         systemSortOptions,
         defaultContactRating,
-        uiStrings,
       }}
     >
       {children}
@@ -612,17 +623,24 @@ export function useContactColumns(): Array<{ id: string; label: string; sortFiel
  */
 export function useContactValidation() {
   const { fieldConfig, enabledTabIds, requiredTabIds, fields } = useContactConfig();
+  const settings = useGlobalSettings();
 
   return useCallback(
     (data: unknown): ValidationError[] => {
-      const schema = buildDynamicContactSchema(fieldConfig, enabledTabIds, requiredTabIds, fields);
+      const schema = buildDynamicContactSchema(
+        fieldConfig,
+        enabledTabIds,
+        requiredTabIds,
+        fields,
+        settings.language,
+      );
       const result = schema.safeParse(data);
       if (result.success) {
         return [];
       }
       return formatZodIssues(result.error, data, fields);
     },
-    [fieldConfig, enabledTabIds, requiredTabIds, fields],
+    [fieldConfig, enabledTabIds, requiredTabIds, fields, settings.language],
   );
 }
 

@@ -16,6 +16,7 @@ import {
   getOrInitializeCustomWidgets,
 } from '@/components/reports/PinnedWidgets';
 import { computeCustomCard as computeCustomCardShared, type ReportCollection } from '@/components/reports/reportMetadata';
+import { computeContactsCustomCardValue, computeStudentsCustomCardValue, computeTeachersCustomCardValue } from '@/components/reports/pinnedWidgets/widgetDataUtils';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import useGlobalSettings from '@/hooks/useGlobalSettings';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
@@ -91,13 +92,14 @@ export default function Dashboard() {
   const [widgetBuilderType, setWidgetBuilderType] = useState<CustomWidget['widgetType']>('card');
 
   const {
-    students,
-    teachers,
+    studentsTotal,
+    studentMetricsInactive,
+    teachersTotal,
     sessions,
     invoices,
     attendanceRecords,
     hasanatDistributions,
-    contacts,
+    contactsTotal,
     questions,
     tests,
     assessmentResults,
@@ -204,6 +206,72 @@ export default function Dashboard() {
     });
 
     return enabledCardWidgets.map((w) => {
+      if (w.collection === 'contacts') {
+        const aggregateValue = computeContactsCustomCardValue({
+          id: w.id,
+          operation: w.operation || 'count',
+          targetField: w.targetField,
+          filterField: w.filterField,
+          filterOperator: w.filterOperator,
+          filterValue: w.filterValue,
+        });
+        if (aggregateValue) {
+          return {
+            id: w.id,
+            title: resolveWidgetTitle(w, t),
+            value: String(aggregateValue.finalValue),
+            sub: w.fixedSubText || `${contactsTotal} total`,
+            icon: w.icon || 'Users',
+            color: w.color || 'blue',
+            trend: w.trend || 0,
+          };
+        }
+      }
+
+      if (w.collection === 'students') {
+        const aggregateValue = computeStudentsCustomCardValue({
+          id: w.id,
+          operation: w.operation || 'count',
+          targetField: w.targetField,
+          filterField: w.filterField,
+          filterOperator: w.filterOperator,
+          filterValue: w.filterValue,
+        });
+        if (aggregateValue) {
+          return {
+            id: w.id,
+            title: resolveWidgetTitle(w, t),
+            value: String(aggregateValue.finalValue),
+            sub: w.fixedSubText || `${studentsTotal} total`,
+            icon: w.icon || 'GraduationCap',
+            color: w.color || 'emerald',
+            trend: w.trend || 0,
+          };
+        }
+      }
+
+      if (w.collection === 'teachers') {
+        const aggregateValue = computeTeachersCustomCardValue({
+          id: w.id,
+          operation: w.operation || 'count',
+          targetField: w.targetField,
+          filterField: w.filterField,
+          filterOperator: w.filterOperator,
+          filterValue: w.filterValue,
+        });
+        if (aggregateValue) {
+          return {
+            id: w.id,
+            title: resolveWidgetTitle(w, t),
+            value: String(aggregateValue.finalValue),
+            sub: w.fixedSubText || `${teachersTotal} total`,
+            icon: w.icon || 'School',
+            color: w.color || 'blue',
+            trend: w.trend || 0,
+          };
+        }
+      }
+
       const result = computeCustomCardShared(
         {
           id: w.id,
@@ -223,13 +291,13 @@ export default function Dashboard() {
           trendType: w.trendType,
         },
         {
-          students,
-          teachers,
+          students: [],
+          teachers: [],
           sessions,
           finance_invoices: invoices,
           attendance_records: attendanceRecords,
           hasanat_distributions: hasanatDistributions,
-          contacts,
+          contacts: [],
           questions,
           tests,
           assessment_results: assessmentResults,
@@ -250,13 +318,13 @@ export default function Dashboard() {
     dashboardPersona,
     enabledModules,
     customWidgets,
-    students,
-    teachers,
+    studentsTotal,
+    teachersTotal,
     sessions,
     invoices,
     attendanceRecords,
     hasanatDistributions,
-    contacts,
+    contactsTotal,
     questions,
     tests,
     assessmentResults,
@@ -276,8 +344,13 @@ export default function Dashboard() {
   const pinnedCount = customWidgets.filter((w) => w.isPinnedToDashboard).length;
 
   const notifications = useMemo(
-    () => buildDashboardNotifications(dashboardPersona, { invoices, attendanceRecords, students }, t),
-    [dashboardPersona, invoices, attendanceRecords, students, t],
+    () =>
+      buildDashboardNotifications(
+        dashboardPersona,
+        { invoices, attendanceRecords, inactiveStudents: studentMetricsInactive },
+        t,
+      ),
+    [dashboardPersona, invoices, attendanceRecords, studentMetricsInactive, t],
   );
 
   return (

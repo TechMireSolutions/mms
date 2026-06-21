@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   Upload, Download, CheckCircle2, FileText,
   RefreshCw, Info, Smartphone, Globe, Link2, Unlink,
@@ -6,9 +6,20 @@ import {
   Users, Loader2,
 } from "lucide-react";
 
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import { normalizeToE164, parsePhoneNumber, Contact } from "@mms/shared";
+import {
+  GOOGLE_CONTACTS_OAUTH_MESSAGE,
+  takeGoogleContactsOAuthCode,
+} from '@/lib/contacts/googleContactsOAuth';
+import {
+  useContactGoogleSyncConfig,
+  useContactGoogleSyncMutations,
+} from '@/hooks/useContacts';
+import useTranslation from "@/hooks/useTranslation";
+import { Contact, normalizeToE164, parsePhoneNumber } from "@mms/shared";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { isApiError } from "@/lib/apiClient";
+import { queryClientInstance } from "@/lib/query-client";
+import { CONTACTS_GOOGLE_SYNC_QUERY_KEY } from "@/hooks/useContacts";
 
 /**
  * Parses a raw vCard (.vcf) formatted string into an array of normalized contact objects.
@@ -93,41 +104,30 @@ const GOOGLE_STORAGE_KEY = "mms_google_contacts_config";
 interface GoogleOauthConfig {
   clientId?: string;
   clientSecret?: string;
+}
+
+interface LegacyGoogleOauthConfig extends GoogleOauthConfig {
   accessToken?: string;
   refreshToken?: string;
 }
 
-/**
- * Loads the stored Google OAuth config from localStorage.
- * @returns The parsed Google OAuth config object.
- */
-function loadGoogleConfig(): GoogleOauthConfig {
+function readLegacyGoogleConfig(): LegacyGoogleOauthConfig {
   try {
     let raw = localStorage.getItem(GOOGLE_STORAGE_KEY);
-    if (!raw) {
-      const legacy = localStorage.getItem("madrasa_google_contacts_config");
-      if (legacy) {
-        raw = legacy;
-        localStorage.setItem(GOOGLE_STORAGE_KEY, legacy);
-        try {
-          localStorage.removeItem("madrasa_google_contacts_config");
-        } catch (err) {
-          console.warn("[ContactSyncPanel] Failed to remove legacy Google config key:", err);
-        }
-      }
-    }
-    return JSON.parse(raw || "{}") as GoogleOauthConfig;
+    if (!raw) raw = localStorage.getItem("madrasa_google_contacts_config");
+    return raw ? (JSON.parse(raw) as LegacyGoogleOauthConfig) : {};
   } catch {
     return {};
   }
 }
 
-/**
- * Saves the Google OAuth config to localStorage.
- * @param cfg The Google OAuth config object.
- */
-function saveGoogleConfig(cfg: GoogleOauthConfig): void {
-  localStorage.setItem(GOOGLE_STORAGE_KEY, JSON.stringify(cfg));
+function clearLegacyGoogleConfig(): void {
+  try {
+    localStorage.removeItem(GOOGLE_STORAGE_KEY);
+    localStorage.removeItem("madrasa_google_contacts_config");
+  } catch {
+    /* ignore */
+  }
 }
 
 interface GoogleContactsPanelProps {
@@ -136,37 +136,36 @@ interface GoogleContactsPanelProps {
   canWrite?: boolean;
 }
 
-interface GoogleTokenResponse {
-  access_token?: string;
-  refresh_token?: string;
-  error?: string;
-  error_description?: string;
-}
-
-interface GoogleConnection {
-  names?: Array<{ displayName?: string; givenName?: string; familyName?: string }>;
-  phoneNumbers?: Array<{ value?: string }>;
-  emailAddresses?: Array<{ value?: string }>;
-  organizations?: Array<{ name?: string; title?: string }>;
-  birthdays?: Array<{ date?: { year?: number; month?: number; day?: number } }>;
-  biographies?: Array<{ value?: string }>;
-  addresses?: Array<{ streetAddress?: string; city?: string; region?: string; country?: string }>;
-}
-
-interface GooglePeopleResponse {
-  connections?: GoogleConnection[];
-  nextPageToken?: string;
-  error?: {
-    message?: string;
-  };
-}
-
 /**
  * GoogleContactsPanel component to configure and run Google Contacts synchronization.
  */
-function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleContactsPanelProps): React.JSX.Element {
-  const { uiStrings } = useContactConfig();
-  const [config, setConfig] = useState<GoogleOauthConfig>(() => loadGoogleConfig());
+function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsPanelProps, 'contacts'>): React.JSX.Element {
+  const { t } = useTranslation();
+  const { data: serverConfig, isLoading: configLoading } = useContactGoogleSyncConfig();
+  const { saveConfig, logSyncAudit, exchangeOAuth, runGoogleSync } = useContactGoogleSyncMutations();
+  const [config, setConfig] = useState<GoogleOauthConfig>({});
+  const [migrated, setMigrated] = useState(false);
+
+  React.useEffect(() => {
+    if (configLoading || migrated) return;
+    const legacy = readLegacyGoogleConfig();
+    if (legacy.clientId || legacy.accessToken) {
+      void saveConfig.mutateAsync(legacy).finally(() => {
+        clearLegacyGoogleConfig();
+        setMigrated(true);
+      });
+      return;
+    }
+    setMigrated(true);
+  }, [configLoading, migrated, saveConfig]);
+
+  React.useEffect(() => {
+    if (serverConfig) {
+      setConfig({
+        clientId: serverConfig.clientId,
+      });
+    }
+  }, [serverConfig]);
   const [showSetup, setShowSetup] = useState<boolean>(false);
   const [form, setForm] = useState({ clientId: config.clientId || "", clientSecret: config.clientSecret || "" });
   const [syncing, setSyncing] = useState<boolean>(false);
@@ -176,16 +175,18 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
   const [authCode, setAuthCode] = useState<string>("");
   const [exchanging, setExchanging] = useState<boolean>(false);
 
-  const isConfigured = !!(config.clientId && config.clientSecret);
-  const isConnected = !!config.accessToken;
+  const isConfigured = !!(config.clientId && (config.clientSecret || serverConfig?.hasClientSecret));
+  const isConnected = serverConfig?.isConnected ?? false;
   const handleSaveCredentials = (): void => {
     if (!form.clientId.trim() || !form.clientSecret.trim()) {
-      setError(uiStrings.clientIdRequiredMsg || "Both Client ID and Client Secret are required.");
+      setError(t('contacts.sync.clientIdRequired'));
       return;
     }
     const cfg: GoogleOauthConfig = { ...config, clientId: form.clientId.trim(), clientSecret: form.clientSecret.trim() };
     setConfig(cfg);
-    saveGoogleConfig(cfg);
+    void saveConfig.mutateAsync(cfg).then(() => {
+      void logSyncAudit.mutateAsync({ action: 'credentials_saved' });
+    });
     setShowSetup(false);
     setError("");
   };
@@ -198,115 +199,76 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
       redirectUri
     )}&response_type=code&scope=${scope}&access_type=offline&state=${state}&prompt=consent`;
     window.open(url, "_blank", "width=500,height=600");
-    setError(uiStrings.oauthRedirectInstruction || "After authorizing, Google will redirect to your app. Copy the 'code' parameter from the URL and paste it below.");
+    setError(t('contacts.sync.oauthRedirectHint'));
     setShowAuthCode(true);
   };
-  const handleExchangeCode = async (): Promise<void> => {
-    if (!authCode.trim() || !config.clientId || !config.clientSecret) return;
-    setExchanging(true);
-    setError("");
-    try {
-      const redirectUri = window.location.origin + "/contacts";
-      const params = new URLSearchParams({
-        code: authCode.trim(),
-        client_id: config.clientId,
-        client_secret: config.clientSecret,
-        redirect_uri: redirectUri,
-        grant_type: "authorization_code",
-      });
-      const res = await fetch("https://oauth2.googleapis.com/token", { method: "POST", body: params });
-      const data = (await res.json()) as GoogleTokenResponse;
-      if (data.error) throw new Error(data.error_description || data.error);
-      const cfg: GoogleOauthConfig = { ...config, accessToken: data.access_token, refreshToken: data.refresh_token };
-      setConfig(cfg);
-      saveGoogleConfig(cfg);
-      setShowAuthCode(false);
-      setAuthCode("");
+
+  const exchangeOAuthCode = useCallback(
+    async (code: string): Promise<void> => {
+      if (!code.trim() || !isConfigured) return;
+      setExchanging(true);
       setError("");
-    } catch (e) {
-      const err = e as Error;
-      setError((uiStrings.tokenExchangeFailed || "Token exchange failed: ") + err.message);
-    } finally {
-      setExchanging(false);
-    }
+      try {
+        const redirectUri = `${window.location.origin}/contacts`;
+        const { config: next } = await exchangeOAuth.mutateAsync({ code: code.trim(), redirectUri });
+        setConfig((prev) => ({
+          ...prev,
+          clientId: next.clientId ?? prev.clientId,
+        }));
+        setShowAuthCode(false);
+        setAuthCode("");
+        setError("");
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        setError(t('contacts.sync.tokenExchangeFailed', { message }));
+      } finally {
+        setExchanging(false);
+      }
+    },
+    [exchangeOAuth, isConfigured, t],
+  );
+
+  const handleExchangeCode = async (): Promise<void> => {
+    await exchangeOAuthCode(authCode);
   };
+
+  React.useEffect(() => {
+    const onMessage = (event: MessageEvent): void => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type !== GOOGLE_CONTACTS_OAUTH_MESSAGE || typeof event.data.code !== 'string') return;
+      setAuthCode(event.data.code);
+      setShowAuthCode(true);
+      void exchangeOAuthCode(event.data.code);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [exchangeOAuthCode]);
+
+  React.useEffect(() => {
+    if (configLoading || !isConfigured) return;
+    const pending = takeGoogleContactsOAuthCode();
+    if (!pending) return;
+    setAuthCode(pending);
+    setShowAuthCode(true);
+    void exchangeOAuthCode(pending);
+  }, [configLoading, isConfigured, exchangeOAuthCode]);
   const handleSync = async (): Promise<void> => {
-    if (!config.accessToken) return;
+    if (!isConnected) return;
     setSyncing(true);
     setSyncResult(null);
     setError("");
     try {
-      const allPeople: Contact[] = [];
-      let pageToken = "";
-      do {
-        const url = `https://people.googleapis.com/v1/people/me/connections?personFields=names,emailAddresses,phoneNumbers,organizations,birthdays,addresses,biographies&pageSize=1000${
-          pageToken ? `&pageToken=${pageToken}` : ""
-        }`;
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${config.accessToken}` } });
-        if (res.status === 401) {
-          const cfg = { ...config };
-          delete cfg.accessToken;
-          delete cfg.refreshToken;
-          setConfig(cfg);
-          saveGoogleConfig(cfg);
-          throw new Error(uiStrings.sessionExpiredMsg || "Session expired. Please reconnect your Google account.");
-        }
-        const data = (await res.json()) as GooglePeopleResponse;
-        if (data.error) throw new Error(data.error.message);
-        (data.connections || []).forEach((p) => {
-          const nameObj = p.names?.[0];
-          const name = nameObj?.displayName || "";
-          if (!name) return;
-          const phone = p.phoneNumbers?.[0]?.value || "";
-          const parsedRaw = parsePhoneNumber(phone, "+92");
-          const e164 = normalizeToE164(parsedRaw.countryCode, parsedRaw.number);
-          const parsed = parsePhoneNumber(e164, parsedRaw.countryCode);
-          const email = p.emailAddresses?.[0]?.value || "";
-          const org = p.organizations?.[0]?.name || "";
-          const title = p.organizations?.[0]?.title || "";
-          const bday = p.birthdays?.[0]?.date;
-          const note = p.biographies?.[0]?.value || "";
-          const addr = p.addresses?.[0];
-          const contact: Contact = {
-            id: Date.now() + Math.random(),
-            name,
-            firstName: nameObj?.givenName || name.split(" ")[0],
-            lastName: nameObj?.familyName || name.split(" ").slice(1).join(" "),
-            phones: phone ? [{ label: uiStrings.mobileLabel, countryCode: parsed.countryCode, number: parsed.number }] : [],
-            emails: email ? [{ label: uiStrings.personalLabel, address: email }] : [],
-            employer: org,
-            designation: title,
-            notes: note,
-            addresses: addr
-              ? [
-                  {
-                    line1: addr.streetAddress || "",
-                    city: addr.city || "",
-                    state: addr.region || "",
-                    country: addr.country || "",
-                  },
-                ]
-              : [],
-            socials: [],
-            emergencyContacts: [],
-            createdAt: new Date().toISOString().slice(0, 10),
-          };
-          if (bday?.year && bday?.month && bday?.day) {
-            contact.dob = `${bday.year}-${String(bday.month).padStart(2, "0")}-${String(bday.day).padStart(2, "0")}`;
-          }
-          allPeople.push(contact);
-        });
-        pageToken = data.nextPageToken || "";
-      } while (pageToken);
-
-      const existingNames = new Set(contacts.map((c) => c.name?.toLowerCase().trim()));
-      const fresh = allPeople.filter((c) => !existingNames.has(c.name?.toLowerCase().trim()));
-      const dups = allPeople.length - fresh.length;
-      onImport(fresh);
-      setSyncResult({ total: allPeople.length, imported: fresh.length, skipped: dups });
+      const result = await runGoogleSync.mutateAsync();
+      onImport(result.contacts);
+      setSyncResult({ total: result.total, imported: result.imported, skipped: result.skipped });
     } catch (e) {
-      const err = e as Error;
-      setError(err.message);
+      if (isApiError(e) && e.type === 'session_expired') {
+        await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
+        setError(t('contacts.sync.sessionExpired'));
+        return;
+      }
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message);
     } finally {
       setSyncing(false);
     }
@@ -315,7 +277,10 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
   const handleDisconnect = (): void => {
     const cfg: GoogleOauthConfig = { clientId: config.clientId, clientSecret: config.clientSecret };
     setConfig(cfg);
-    saveGoogleConfig(cfg);
+    void saveConfig.mutateAsync({ clientId: config.clientId, clearTokens: true }).then(() => {
+      void logSyncAudit.mutateAsync({ action: 'disconnected' });
+      void queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
+    });
     setSyncResult(null);
     setError("");
     setShowAuthCode(false);
@@ -330,10 +295,10 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
           <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
             <Globe className="w-3.5 h-3.5 text-muted-foreground" />
           </div>
-          <span className="text-sm font-bold text-foreground">{uiStrings.googleContacts}</span>
+          <span className="text-sm font-bold text-foreground">{t('contacts.sync.googleTitle')}</span>
           {isConnected && (
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-success/10 text-success border border-success/30">
-              {uiStrings.connectedLabel}
+              {t('contacts.sync.connected')}
             </span>
           )}
         </div>
@@ -343,7 +308,7 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
           className="text-xs font-medium min-h-[44px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
         >
           <Key className="w-3 h-3" />
-          <span>{isConfigured ? uiStrings.editCredentials : uiStrings.setup}</span>
+          <span>{isConfigured ? t('contacts.sync.editCredentials') : t('contacts.sync.setup')}</span>
           {showSetup ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         </button>
       </div>
@@ -354,8 +319,8 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
           <div className="flex items-start gap-3 p-3 rounded-xl bg-warning/10 border border-warning/30 text-xs text-warning">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-warning" />
             <div>
-              <p className="font-semibold mb-1">{uiStrings.oauthAppSetupMsg}</p>
-              <p className="text-warning/90">{uiStrings.googleCloudInstructions}</p>
+              <p className="font-semibold mb-1">{t('contacts.sync.oauthSetupTitle')}</p>
+              <p className="text-warning/90">{t('contacts.sync.oauthSetupDesc')}</p>
             </div>
           </div>
         )}
@@ -363,9 +328,9 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
         
         {showSetup && (
           <div className="space-y-3 p-3 rounded-xl bg-muted/30 border border-border">
-            <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">{uiStrings.googleOauthCredentialsHeader}</h4>
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">{t('contacts.sync.oauthHeader')}</h4>
             <div>
-              <label className={FORM_LABEL} htmlFor="clientId">{uiStrings.clientIdLabel}</label>
+              <label className={FORM_LABEL} htmlFor="clientId">{t('contacts.sync.clientIdLabel')}</label>
               <input
                 id="clientId"
                 className={FORM_INPUT}
@@ -375,7 +340,7 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
               />
             </div>
             <div>
-              <label className={FORM_LABEL} htmlFor="clientSecret">{uiStrings.clientSecretLabel}</label>
+              <label className={FORM_LABEL} htmlFor="clientSecret">{t('contacts.sync.clientSecretLabel')}</label>
               <input
                 id="clientSecret"
                 type="password"
@@ -396,7 +361,7 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
                 onClick={handleSaveCredentials}
                 className="px-4 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
               >
-                {uiStrings.saveCredentials}
+                {t('contacts.sync.saveCredentials')}
               </button>
               <button
                 type="button"
@@ -406,7 +371,7 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
                 }}
                 className="px-4 min-h-[44px] rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card"
               >
-                {uiStrings.cancel}
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -415,28 +380,28 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
         
         {isConfigured && !isConnected && !showSetup && (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">{uiStrings.googleCredentialsSavedMsg}</p>
+            <p className="text-sm text-muted-foreground">{t('contacts.sync.credentialsSaved')}</p>
             <button
               type="button"
               onClick={handleConnect}
               className="w-full flex items-center gap-2 px-4 min-h-[44px] rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors shadow-sm"
             >
               <Globe className="w-4 h-4 text-muted-foreground" />
-              <span>{uiStrings.connectGoogleAccountBtn}</span>
+              <span>{t('contacts.sync.connectGoogle')}</span>
               <ExternalLink className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
             </button>
 
             {showAuthCode && (
               <div className="space-y-2 p-3 rounded-xl bg-info/10 border border-info/30 text-info">
                 <label className={FORM_LABEL} htmlFor="authCode">
-                  {uiStrings.pasteAuthCodeLabel}
+                  {t('contacts.sync.pasteAuthCode')}
                 </label>
                 <input
                   id="authCode"
                   className={FORM_INPUT}
                   value={authCode}
                   onChange={(e) => setAuthCode(e.target.value)}
-                  placeholder={uiStrings.pasteAuthCodePlaceholder}
+                  placeholder={t('contacts.sync.pasteAuthCodePlaceholder')}
                 />
                 <button
                   type="button"
@@ -445,7 +410,7 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
                   className="flex items-center gap-2 px-4 min-h-[44px] rounded-lg bg-info text-info-foreground text-xs font-bold hover:bg-info/90 disabled:opacity-60 transition-colors border border-transparent"
                 >
                   {exchanging ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}
-                  <span>{uiStrings.confirmAuthBtn}</span>
+                  <span>{t('contacts.sync.confirmAuth')}</span>
                 </button>
               </div>
             )}
@@ -464,16 +429,16 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
             <div className="flex items-center gap-2 p-3 rounded-xl bg-success/10 border border-success/30 text-success">
               <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-semibold text-success">{uiStrings.googleAccountConnectedTitle}</p>
-                <p className="text-xs text-success/90">{uiStrings.googleAccountConnectedDesc}</p>
+                <p className="text-sm font-semibold text-success">{t('contacts.sync.googleConnectedTitle')}</p>
+                <p className="text-xs text-success/90">{t('contacts.sync.googleConnectedDesc')}</p>
               </div>
               <button
                 type="button"
                 onClick={handleDisconnect}
-                className={`flex items-center gap-1 text-xs transition-colors border border-border bg-card rounded-lg px-2.5 min-h-[44px] ${uiStrings?.deleteActionClass || "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"}`}
+                className="flex items-center gap-1 text-xs transition-colors border border-border bg-card rounded-lg px-2.5 min-h-[44px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
                 <Unlink className="w-3 h-3" />
-                <span>{uiStrings.disconnectBtn}</span>
+                <span>{t('contacts.sync.disconnect')}</span>
               </button>
             </div>
 
@@ -488,13 +453,13 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
                 <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold">
-                    {(uiStrings.syncCompleteTitle || "Sync complete — {total} contacts fetched")
-                      .replace("{total}", String(syncResult.total))}
+                    {t('contacts.sync.syncCompleteTitle', { total: syncResult.total })}
                   </p>
                   <p className="text-success/90 mt-0.5">
-                    {(uiStrings.syncCompleteDesc || "{imported} imported · {skipped} already existed")
-                      .replace("{imported}", String(syncResult.imported))
-                      .replace("{skipped}", String(syncResult.skipped))}
+                    {t('contacts.sync.syncCompleteDesc', {
+                      imported: syncResult.imported,
+                      skipped: syncResult.skipped,
+                    })}
                   </p>
                 </div>
               </div>
@@ -509,12 +474,12 @@ function GoogleContactsPanel({ contacts, onImport, canWrite = true }: GoogleCont
               {syncing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{uiStrings.syncing}</span>
+                  <span>{t('contacts.sync.syncing')}</span>
                 </>
               ) : (
                 <>
                   <Users className="w-4 h-4" />
-                  <span>{uiStrings.syncGoogleContactsBtn}</span>
+                  <span>{t('contacts.sync.syncGoogle')}</span>
                 </>
               )}
             </button>
@@ -535,9 +500,9 @@ interface AppleContactsPanelProps {
  * AppleContactsPanel component to import and export vCard files.
  */
 function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContactsPanelProps): React.JSX.Element {
-  const { uiStrings } = useContactConfig();
-  const mobileLabel = uiStrings.mobileLabel;
-  const personalLabel = uiStrings.personalLabel;
+  const { t } = useTranslation();
+  const mobileLabel = t('contacts.sync.mobileLabel');
+  const personalLabel = t('contacts.sync.personalLabel');
   const [previewList, setPreviewList] = useState<Contact[]>([]);
   const [importing, setImporting] = useState<boolean>(false);
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
@@ -583,18 +548,18 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
         <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
           <Smartphone className="w-3.5 h-3.5 text-muted-foreground" />
         </div>
-        <span className="text-sm font-bold text-foreground">{uiStrings.appleContacts || "Apple Contacts"}</span>
-        <span className="text-[10px] text-muted-foreground">{uiStrings.vcardLabel || "(vCard / .vcf)"}</span>
+        <span className="text-sm font-bold text-foreground">{t('contacts.sync.appleTitle')}</span>
+        <span className="text-[10px] text-muted-foreground">{t('contacts.sync.vcardLabel')}</span>
       </div>
       <div className="p-4 space-y-4 text-left">
         
         <div className="rounded-lg bg-muted/30 border border-border p-3 text-xs text-muted-foreground space-y-1">
-          <p className="font-semibold text-foreground">{uiStrings.howToExportAppleTitle || "How to export from Apple Contacts:"}</p>
+          <p className="font-semibold text-foreground">{t('contacts.sync.appleExportTitle')}</p>
           <ol className="list-decimal list-inside space-y-0.5">
-            <li>{uiStrings.appleExportStep1 || "Open Contacts app on Mac → Select All (⌘A)"}</li>
-            <li>{uiStrings.appleExportStep2 || "File → Export vCard… → save the .vcf file"}</li>
-            <li>{uiStrings.appleExportStep3 || "iPhone: Use iCloud.com → Contacts → select all → export"}</li>
-            <li>{uiStrings.appleExportStep4 || "Upload the .vcf file below"}</li>
+            <li>{t('contacts.sync.appleExportStep1')}</li>
+            <li>{t('contacts.sync.appleExportStep2')}</li>
+            <li>{t('contacts.sync.appleExportStep3')}</li>
+            <li>{t('contacts.sync.appleExportStep4')}</li>
           </ol>
         </div>
 
@@ -608,8 +573,8 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
             className="w-full flex flex-col items-center justify-center gap-2 py-7 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer bg-card disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card"
           >
             <FileText className="w-7 h-7 opacity-40" />
-            <span className="text-sm font-semibold text-foreground">{uiStrings.uploadVcfBtn || "Upload .vcf file"}</span>
-            <span className="text-xs">{uiStrings.dragDropBrowse || "Drag & drop or click to browse"}</span>
+            <span className="text-sm font-semibold text-foreground">{t('contacts.sync.uploadVcf')}</span>
+            <span className="text-xs">{t('contacts.sync.dragDropBrowse')}</span>
           </button>
         )}
 
@@ -617,14 +582,14 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-foreground">
-                {previewList.length} {uiStrings.contactsFound || "contacts found"}
+                {previewList.length} {t('contacts.sync.contactsFound')}
               </p>
               <button
                 type="button"
                 onClick={() => setPreviewList([])}
                 className="text-xs min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors bg-transparent"
               >
-                {uiStrings.clear || "Clear"}
+                {t('contacts.sync.clear')}
               </button>
             </div>
             <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-xl p-2 bg-card">
@@ -638,7 +603,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
               ))}
               {previewList.length > 50 && (
                 <p className="text-xs text-center text-muted-foreground py-1">
-                  {(uiStrings.andMore || "…and {count} more").replace("{count}", String(previewList.length - 50))}
+                  {t('contacts.sync.andMore', { count: previewList.length - 50 })}
                 </p>
               )}
             </div>
@@ -651,7 +616,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
               >
                 {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                 <span>
-                  {(uiStrings.importContactsCount || "Import {count} contacts").replace("{count}", String(previewList.length))}
+                  {t('contacts.sync.importCount', { count: previewList.length })}
                 </span>
               </button>
               <button
@@ -662,7 +627,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
                 }}
                 className="px-4 min-h-[44px] rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-card"
               >
-                {uiStrings.chooseDifferentFile || "Choose different file"}
+                {t('contacts.sync.chooseDifferentFile')}
               </button>
             </div>
           </div>
@@ -672,10 +637,10 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
           <div className="flex items-start gap-3 p-3 rounded-xl bg-success/10 border border-success/30 text-sm text-success">
             <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-success" />
             <div>
-              <p className="font-semibold">{uiStrings.importComplete || "Import complete"}</p>
+              <p className="font-semibold">{t('contacts.sync.importComplete')}</p>
               <p className="text-xs text-success/90 mt-0.5">
-                {(uiStrings.importedMsg || "{count} imported").replace("{count}", String(result.imported))}
-                {result.skipped > 0 ? ` · ${(uiStrings.skippedMsg || "{count} skipped (already exist)").replace("{count}", String(result.skipped))}` : ""}
+                {t('contacts.sync.importedCount', { count: result.imported })}
+                {result.skipped > 0 ? ` · ${t('contacts.sync.skippedCount', { count: result.skipped })}` : ""}
               </p>
             </div>
           </div>
@@ -683,7 +648,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
 
         
         <div className="border-t border-border pt-3 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">{uiStrings.exportAppleInstructions || "Export contacts to import into Apple Contacts"}</span>
+          <span className="text-xs text-muted-foreground">{t('contacts.sync.exportAppleHint')}</span>
           <button
             type="button"
             onClick={handleExport}
@@ -692,7 +657,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
           >
             <Download className="w-3.5 h-3.5" />
             <span>
-              {(uiStrings.exportVcfBtn || "Export .vcf ({count})").replace("{count}", String(contacts.length))}
+              {t('contacts.sync.exportVcf', { count: contacts.length })}
             </span>
           </button>
         </div>
@@ -710,22 +675,21 @@ interface ContactSyncPanelProps {
 /**
  * ContactSyncPanel component for managing Google and Apple Contacts synchronization.
  */
-export default function ContactSyncPanel({ contacts = [], onImport, canWrite = true }: ContactSyncPanelProps): React.JSX.Element {
-  const { uiStrings } = useContactConfig();
+export default function ContactSyncPanel({ contacts = [], onImport, canWrite = false }: ContactSyncPanelProps): React.JSX.Element {
+  const { t } = useTranslation();
   return (
     <div className="space-y-5 max-w-3xl text-left">
-      
       <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info">
         <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-info" />
         <div>
-          <h3 className="font-semibold">{uiStrings.dynamicContactSyncTitle || "Dynamic Contact Sync"}</h3>
+          <h3 className="font-semibold">{t('contacts.sync.title')}</h3>
           <p className="text-xs mt-0.5 text-info/90">
-            {uiStrings.dynamicContactSyncDesc || "Connect your Google account for live sync, or upload a vCard file from Apple Contacts. Each madrasa admin manages their own connection independently."}
+            {t('contacts.sync.description')}
           </p>
         </div>
       </div>
 
-      <GoogleContactsPanel contacts={contacts} onImport={onImport} canWrite={canWrite} />
+      <GoogleContactsPanel onImport={onImport} canWrite={canWrite} />
       <AppleContactsPanel contacts={contacts} onImport={onImport} canWrite={canWrite} />
     </div>
   );

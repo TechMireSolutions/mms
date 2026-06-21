@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import useModuleTierTabs from '@/hooks/useModuleTierTabs';
 import useConfigSubTabs from '@/hooks/useConfigSubTabs';
 import useTranslation from '@/hooks/useTranslation';
@@ -20,11 +20,16 @@ import TeacherList from '@/components/teachers/TeacherList';
 import TeacherForm from '@/components/teachers/TeacherForm';
 import TeachersSettingsPanel from '@/components/teachers/TeachersSettings';
 import type { Teacher } from '@/lib/data/teachersData';
-import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, type AppTranslationKey } from '@mms/shared';
+import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, DEFAULT_TEACHERS_SETTINGS, TEACHERS_MODULE_CONTRACT, type AppTranslationKey, type TeachersSettings } from '@mms/shared';
 import ModuleReports from '@/components/reports/ModuleReports';
 import KPISummary from '@/components/reports/KPISummary';
 import useTeacherCount from '@/hooks/useTeacherCount';
-import { useTeachers, useTeacherMutations, type TeacherRecord } from '@/hooks/useTeachers';
+import { useTeachersPaginated, useTeacherMutations, type TeacherRecord } from '@/hooks/useTeachers';
+import { useTeacherColumnLayout } from '@/hooks/useTeacherColumnLayout';
+import ModuleColumnCustomizer from '@/components/ui/ModuleColumnCustomizer';
+import TeachersCommandMetrics from '@/components/teachers/TeachersCommandMetrics';
+import TeachersListPagination from '@/components/teachers/TeachersListPagination';
+import { getObject } from '@/lib/db';
 import { notify } from '@/lib/notify';
 
 const TEACHER_STATUS_OPTIONS = [...TEACHER_STATUS_VALUES] as const;
@@ -44,35 +49,49 @@ export default function Teachers(): React.JSX.Element {
   const { can } = usePermissions();
   const canWrite = can('teachers.write');
   const { data: serverCount } = useTeacherCount();
-  const { data: rawTeachers = [], isLoading } = useTeachers();
   const { createTeacher, updateTeacher, deleteTeacher } = useTeacherMutations();
+  const [listPage, setListPage] = useState(1);
+  const [showForm, setShowForm] = useState(false);
+
+  const settings = useMemo(
+    () => getObject<TeachersSettings>('teachers_settings', DEFAULT_TEACHERS_SETTINGS),
+    [],
+  );
+  const {
+    columnRegistry,
+    isColumnVisible,
+    updateUserColumnLayout,
+    customizerLabels,
+  } = useTeacherColumnLayout(settings);
 
   const [activeTab, setActiveTab] = useState('work');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSpecialization, setFilterSpecialization] = useState('');
-  const [showForm, setShowForm] = useState(false);
   const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
   const [subTab, setSubTab] = useState('fields');
 
-  const teachers = useMemo(
-    () => rawTeachers as unknown as Teacher[],
-    [rawTeachers],
-  );
+  const useServerWork = activeTab === 'work';
+  const { data: workPageData, isFetching: isWorkPageFetching, isLoading: isWorkPageLoading } = useTeachersPaginated({
+    page: listPage,
+    limit: TEACHERS_MODULE_CONTRACT.defaultPageSize,
+    search,
+    status: filterStatus.length > 0 ? filterStatus.join(',') : undefined,
+    specialization: filterSpecialization || undefined,
+    enabled: useServerWork,
+  });
 
-  const filteredTeachers = useMemo(() => {
-    return teachers.filter((teacher) => {
-      const q = search.toLowerCase();
-      return (
-        (!q
-          || (teacher.name ?? '').toLowerCase().includes(q)
-          || teacher.employeeId?.toLowerCase().includes(q)
-          || teacher.specialization?.toLowerCase().includes(q))
-        && (filterStatus.length === 0 || filterStatus.includes(teacher.status))
-        && (!filterSpecialization || teacher.specialization === filterSpecialization)
-      );
-    });
-  }, [teachers, search, filterStatus, filterSpecialization]);
+  useEffect(() => {
+    setListPage(1);
+  }, [search, filterStatus, filterSpecialization]);
+
+  const workTeachers = useMemo(
+    () => (workPageData?.teachers ?? []) as unknown as Teacher[],
+    [workPageData],
+  );
+  const shownCount = workPageData?.total ?? 0;
+
+  const filteredTeachers = workTeachers;
 
   const toggleStatus = (s: string) =>
     setFilterStatus((st) => (st.includes(s) ? st.filter((x) => x !== s) : [...st, s]));
@@ -146,6 +165,8 @@ export default function Teachers(): React.JSX.Element {
           ) : undefined
         }
       />
+
+      <TeachersCommandMetrics total={serverCount ?? shownCount} shown={shownCount} />
 
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
@@ -239,6 +260,12 @@ export default function Teachers(): React.JSX.Element {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                <ModuleColumnCustomizer
+                  columnRegistry={columnRegistry}
+                  updateUserColumnLayout={updateUserColumnLayout}
+                  labels={customizerLabels}
+                />
               </div>
 
               <FilterChips
@@ -250,15 +277,30 @@ export default function Teachers(): React.JSX.Element {
               />
 
               <ErrorBoundary>
-                {isLoading ? (
+                {isWorkPageLoading ? (
                   <p className="text-sm text-muted-foreground px-1">{t('teachers.loading')}</p>
                 ) : (
-                  <TeacherList
-                    teachers={filteredTeachers}
-                    onEdit={(teacher) => { setEditTeacher(teacher); setShowForm(true); }}
-                    onDelete={handleDelete}
-                    canWrite={canWrite}
-                  />
+                  <>
+                    <TeacherList
+                      teachers={filteredTeachers}
+                      onEdit={(teacher) => { setEditTeacher(teacher); setShowForm(true); }}
+                      onDelete={handleDelete}
+                      canWrite={canWrite}
+                      isColumnVisible={isColumnVisible}
+                    />
+                    {useServerWork && workPageData && (
+                      <TeachersListPagination
+                        page={workPageData.page}
+                        total={workPageData.total}
+                        limit={workPageData.limit}
+                        hasMore={workPageData.hasMore}
+                        onPageChange={setListPage}
+                      />
+                    )}
+                    {useServerWork && isWorkPageFetching && (
+                      <p className="text-xs text-muted-foreground px-1">{t('common.loading')}</p>
+                    )}
+                  </>
                 )}
               </ErrorBoundary>
             </motion.div>
@@ -305,7 +347,6 @@ export default function Teachers(): React.JSX.Element {
         {showForm && canWrite && (
           <TeacherForm
             teacher={editTeacher ?? undefined}
-            teachers={teachers}
             onClose={() => { setShowForm(false); setEditTeacher(null); }}
             onSave={handleSaveTeacher}
           />

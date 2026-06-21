@@ -27,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import useTranslation from "@/hooks/useTranslation";
 import SyncStatusBadge from "./SyncStatusBadge";
+import BackgroundJobsTray from "@/components/ui/BackgroundJobsTray";
 
 interface Notification {
   id: number;
@@ -62,6 +63,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
   return (
     <div className={cn("flex shrink-0 items-center gap-1 sm:gap-2", className)}>
       <SyncStatusBadge />
+      <BackgroundJobsTray compact={compact} />
 
       <Popover>
         <PopoverTrigger asChild>

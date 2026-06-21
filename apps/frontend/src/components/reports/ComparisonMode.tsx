@@ -7,10 +7,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
-import { CONTACTS } from '@/lib/data/contactsData';
-import { Contact } from "../../lib/contactFields";
-import { useSessionsCollection } from "@/hooks/useSessions";
-import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useContactsReportAnalytics } from '@/hooks/useContacts';
+import { computeContactsStageComparison } from '@mms/shared';
+import { useSessionsCollection } from '@/hooks/useSessions';
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 
 interface ComparisonDataItem {
@@ -31,45 +30,9 @@ interface DateRange {
 }
 
 /**
- * Side-by-side comparison data generator using actual contacts collection.
+ * Comparison data generator for session-to-session metrics (non-contacts categories).
  */
-function getContactCompData(contacts: Contact[], filterA: (c: Contact) => boolean, filterB: (c: Contact) => boolean): ComparisonDataItem[] {
-  const setA = contacts.filter(filterA);
-  const setB = contacts.filter(filterB);
-
-  const calcConversion = (list: Contact[]) => {
-    if (list.length === 0) return 0;
-    const nonLeads = list.filter(c => (c.lifecycleStage || "Lead") !== "Lead").length;
-    return Math.round((nonLeads / list.length) * 100);
-  };
-
-  const calcRating = (list: Contact[]) => {
-    if (list.length === 0) return 0;
-    const withRating = list.filter(c => typeof c.rating === "number");
-    if (withRating.length === 0) return 0;
-    return parseFloat((withRating.reduce((s: number, c: Contact) => s + (c.rating || 0), 0) / withRating.length).toFixed(1));
-  };
-
-  return [
-    { metric: "Total Volume",  a: setA.length, b: setB.length },
-    { metric: "Conversion%",   a: calcConversion(setA), b: calcConversion(setB) },
-    { metric: "Engagement",    a: calcRating(setA), b: calcRating(setB) },
-    { metric: "Active Status", a: setA.filter(c => c.isActive !== false).length, b: setB.filter(c => c.isActive !== false).length },
-  ];
-}
-
-/**
- * Comparison data generator for session-to-session metrics.
- */
-function getCompData(category: string, contacts: Contact[], targetA: string, targetB: string): ComparisonDataItem[] {
-  if (category.toLowerCase() === "contacts") {
-    return getContactCompData(
-       contacts, 
-       (c) => (c.lifecycleStage || "Lead") === targetA, 
-       (c) => (c.lifecycleStage || "Lead") === targetB
-    );
-  }
-
+function getSessionCompData(targetA: string, targetB: string): ComparisonDataItem[] {
   return [
     { metric: "Enrollment",   a: targetA === "s1" ? 21 : targetA === "s2" ? 18 : 10, b: targetB === "s1" ? 21 : targetB === "s2" ? 18 : 10 },
     { metric: "Attendance%",  a: targetA === "s1" ? 88 : targetA === "s2" ? 92 : 82, b: targetB === "s1" ? 88 : targetB === "s2" ? 92 : 82 },
@@ -79,22 +42,26 @@ function getCompData(category: string, contacts: Contact[], targetA: string, tar
   ];
 }
 
-/**
- * Real comparison data generator for date range metrics.
- */
-function getDateRangeData(category: string, contacts: Contact[], rangeA: DateRange, rangeB: DateRange): DateRangeDataItem[] {
-  if (category.toLowerCase() === "contacts") {
-     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-     return months.slice(0, 6).map((m, i) => {
-       const monthStr = String(i + 1).padStart(2, "0");
-       return {
-         month: m,
-         a: contacts.filter(c => c.createdAt?.includes(`-${monthStr}-`) && c.createdAt?.startsWith(rangeA.from.slice(0, 4))).length,
-         b: contacts.filter(c => c.createdAt?.includes(`-${monthStr}-`) && c.createdAt?.startsWith(rangeB.from.slice(0, 4))).length,
-       };
-     });
-  }
+function buildContactsDateRangeComparison(
+  monthlyByYear: Array<{ year: number; months: { month: string; count: number }[] }> | undefined,
+  rangeA: DateRange,
+  rangeB: DateRange,
+): DateRangeDataItem[] {
+  const yearA = rangeA.from.slice(0, 4);
+  const yearB = rangeB.from.slice(0, 4);
+  const seriesA = monthlyByYear?.find((entry) => String(entry.year) === yearA)?.months ?? [];
+  const seriesB = monthlyByYear?.find((entry) => String(entry.year) === yearB)?.months ?? [];
+  return seriesA.map((entry, index) => ({
+    month: entry.month,
+    a: entry.count,
+    b: seriesB[index]?.count ?? 0,
+  }));
+}
 
+/**
+ * Mock comparison data for non-contacts date ranges.
+ */
+function getMockDateRangeData(): DateRangeDataItem[] {
   return [
     { month: "Jan", a: 18000, b: 15000 },
     { month: "Feb", a: 22000, b: 19000 },
@@ -119,7 +86,24 @@ interface ComparisonModeProps {
 export default function ComparisonMode({ category, onClose }: ComparisonModeProps): React.JSX.Element {
   const { primary, secondary } = useBrandPalette();
   const { fieldConfig } = useContactConfig();
-  const contacts = useLiveCollection<Contact>("contacts", CONTACTS);
+  const isContacts = category.toLowerCase() === "contacts";
+  const [mode, setMode] = useState<"sessions" | "daterange">("sessions");
+  const [valA, setValA] = useState<string>(isContacts ? "Lead" : "s1");
+  const [valB, setValB] = useState<string>(isContacts ? "Active Student" : "s2");
+  const [rangeA, setRangeA] = useState<DateRange>({ from: "2025-01-01", to: "2025-03-31" });
+  const [rangeB, setRangeB] = useState<DateRange>({ from: "2026-01-01", to: "2026-03-31" });
+
+  const compareYears = useMemo(() => {
+    if (!isContacts || mode !== "daterange") return undefined;
+    const yearA = Number.parseInt(rangeA.from.slice(0, 4), 10);
+    const yearB = Number.parseInt(rangeB.from.slice(0, 4), 10);
+    return [yearA, yearB].filter((y) => Number.isFinite(y));
+  }, [isContacts, mode, rangeA.from, rangeB.from]);
+
+  const { data: reportData } = useContactsReportAnalytics({
+    enabled: isContacts,
+    compareYears,
+  });
   const sessions = useSessionsCollection();
   const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(() => sessions.filter((s) => s.id !== "all").map(s => ({ id: s.id, name: s.name })), [sessions]);
 
@@ -129,32 +113,33 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     return opts.map(opt => ({ id: opt, name: opt }));
   }, [fieldConfig]);
 
-  const isContacts = category.toLowerCase() === "contacts";
-
-  const [mode, setMode] = useState<"sessions" | "daterange">("sessions");
-  const [valA, setValA] = useState<string>(isContacts ? "Lead" : "s1");
-  const [valB, setValB] = useState<string>(isContacts ? "Active Student" : "s2");
-
   // Sync targets when category changes
   useEffect(() => {
-    if (category.toLowerCase() === "contacts") {
+    if (isContacts) {
       setValA("Lead");
       setValB("Active Student");
     } else {
       setValA("s1");
       setValB("s2");
     }
-  }, [category]);
-  const [rangeA, setRangeA] = useState<DateRange>({ from: "2025-01-01", to: "2025-03-31" });
-  const [rangeB, setRangeB] = useState<DateRange>({ from: "2026-01-01", to: "2026-03-31" });
+  }, [category, isContacts]);
 
   const options = isContacts ? LIFECYCLE_OPTIONS : SESSIONS_OPTIONS;
   const labelA = mode === "sessions" ? options.find((s) => s.id === valA)?.name : `${rangeA.from} → ${rangeA.to}`;
   const labelB = mode === "sessions" ? options.find((s) => s.id === valB)?.name : `${rangeB.from} → ${rangeB.to}`;
 
-  const data = mode === "sessions"
-    ? getCompData(category, contacts, valA, valB)
-    : (getDateRangeData(category, contacts, rangeA, rangeB) as Array<ComparisonDataItem | DateRangeDataItem>);
+  const data = useMemo(() => {
+    if (mode === "sessions") {
+      if (isContacts && reportData?.analytics) {
+        return computeContactsStageComparison(reportData.analytics, valA, valB);
+      }
+      return getSessionCompData(valA, valB);
+    }
+    if (isContacts) {
+      return buildContactsDateRangeComparison(reportData?.monthlyByYear, rangeA, rangeB);
+    }
+    return getMockDateRangeData();
+  }, [mode, isContacts, reportData, valA, valB, rangeA, rangeB]);
 
   return (
     <motion.div
@@ -230,7 +215,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
           </p>
           <div className="h-[220px] w-full">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
-              <BarChart data={data} barSize={22}>
+              <BarChart data={data as Array<ComparisonDataItem | DateRangeDataItem>} barSize={22}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey={mode === "sessions" ? "metric" : "month"} tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />

@@ -19,7 +19,6 @@ import {
   FieldConfig,
   FieldDefinition,
   TAB_REGISTRY,
-  DEFAULT_UI_STRINGS,
   INITIAL_FIELD_SEED,
   DEFAULT_PAGE_TABS,
   DEFAULT_FORM_TABS,
@@ -29,7 +28,8 @@ import {
   REMOVED_FORM_FIELD_KEYS,
   refreshModuleTierTabLabels,
   refreshModuleTierTabKeys,
-} from "./contactFields";
+} from "@mms/shared";
+import { getObject, saveObject } from "./db";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -52,7 +52,6 @@ function getHardcodedDefaults(): FieldConfig {
     detailTabs: [...DEFAULT_DETAIL_TABS],
     settingsSubTabs: [...DEFAULT_SETTINGS_SUB_TABS],
     columnRegistry: [...DEFAULT_COLUMN_REGISTRY],
-    uiStrings: { ...DEFAULT_UI_STRINGS }
   };
 }
 
@@ -99,8 +98,8 @@ function migrateConfig(config: unknown): FieldConfig {
   cfg.detailTabs = normalizeTabs(cfg.detailTabs) ?? defaults.detailTabs;
   cfg.settingsSubTabs = normalizeTabs(cfg.settingsSubTabs) ?? defaults.settingsSubTabs;
   cfg.columnRegistry = cfg.columnRegistry ?? defaults.columnRegistry;
-  cfg.uiStrings = cfg.uiStrings ?? defaults.uiStrings;
   cfg.fields = cfg.fields ?? defaults.fields;
+  delete (cfg as Record<string, unknown>).uiStrings;
 
   return cfg as FieldConfig;
 }
@@ -122,6 +121,7 @@ export function sanitizeConfig(config: FieldConfig): FieldConfig {
   }
 
   const cfg = { ...config };
+  delete (cfg as Record<string, unknown>).uiStrings;
 
   // Strip fields retired from the form registry from any persisted config.
   if (REMOVED_FORM_FIELD_KEYS.length > 0 && cfg.fields && typeof cfg.fields === "object") {
@@ -158,10 +158,6 @@ export function sanitizeConfig(config: FieldConfig): FieldConfig {
   return cfg;
 }
 
-
-
-import { getObject, saveObject } from "./db";
-
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
@@ -181,10 +177,6 @@ export function loadFieldConfig(): FieldConfig {
     enabledTabs: migrated.enabledTabs ?? fallback.enabledTabs,
     requiredTabs: migrated.requiredTabs ?? fallback.requiredTabs,
     fields: migrated.fields ?? fallback.fields,
-    uiStrings: {
-      ...fallback.uiStrings,
-      ...migrated.uiStrings,
-    },
   };
   return sanitizeConfig(merged);
 }
@@ -192,6 +184,7 @@ export function loadFieldConfig(): FieldConfig {
 /**
  * Persists the active field config.
  * Always stamps the current CONFIG_VERSION before saving.
+ * Server sync via `saveObject` is audited when persisted through `/api/db` (`contact_field_config`).
  *
  * @param {FieldConfig} config - Configuration object to save.
  */

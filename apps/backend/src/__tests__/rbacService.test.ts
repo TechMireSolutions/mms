@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { User } from "@mms/shared";
-import { canBulkSync, canReadCollection, canReadObject, canResetTenantData, canWriteCollection, canWriteObject } from "../services/rbacService.js";
+import {
+  canBulkSync,
+  canDeleteContacts,
+  canReadCollection,
+  canReadContacts,
+  canReadObject,
+  canResetTenantData,
+  canWriteCollection,
+  canWriteContacts,
+  canWriteObject,
+} from "../services/rbacService.js";
 
 const admin: User = { id: "1", email: "a@test.com", name: "Admin", role: "admin", workspaceSubdomain: "demo" };
 const teacher: User = { id: "2", email: "t@test.com", name: "Teacher", role: "teacher", workspaceSubdomain: "demo" };
@@ -50,5 +60,25 @@ describe("rbacService", () => {
   it("restricts tenant reset to admin", () => {
     expect(canResetTenantData(admin)).toBe(true);
     expect(canResetTenantData(teacher)).toBe(false);
+  });
+
+  it("aligns contacts write with contacts.write permission", () => {
+    expect(canWriteContacts(admin)).toBe(true);
+    expect(canWriteContacts(teacher)).toBe(true);
+    expect(canWriteContacts(accountant)).toBe(false);
+    expect(canWriteContacts(viewer)).toBe(false);
+  });
+
+  it("aligns contacts delete with contacts.delete permission", () => {
+    expect(canDeleteContacts(admin)).toBe(true);
+    expect(canDeleteContacts(teacher)).toBe(false);
+    expect(canDeleteContacts(accountant)).toBe(false);
+  });
+
+  it("aligns contacts read with contacts.read permission", () => {
+    expect(canReadContacts(admin)).toBe(true);
+    expect(canReadContacts(teacher)).toBe(true);
+    expect(canReadContacts(accountant)).toBe(true);
+    expect(canReadContacts(viewer)).toBe(false);
   });
 });

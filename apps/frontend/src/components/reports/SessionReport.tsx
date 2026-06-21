@@ -4,9 +4,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line,
 } from "recharts";
-import { STUDENTS, Student } from '@/lib/data/studentsData';
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
+import type { Enrollment } from '@/lib/data/enrollmentData';
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
 import EmptyState from "../ui/EmptyState";
@@ -69,7 +69,7 @@ function utilisationColour(rate: number): string {
  */
 export default function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
   const sessions = useSessionsCollection();
-  const students = useLiveCollection<Student>("students", STUDENTS);
+  const enrollments = useLiveCollection<Enrollment>("enrollments");
 
   const sessionCapacity = useMemo<SessionCapacityItem[]>(() => {
     const list: SessionCapacityItem[] = [];
@@ -89,34 +89,29 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
   }, [sessions]);
 
   const enrollmentTrends = useMemo<EnrollmentTrendItem[]>(() => {
-    // Generate simple monthly trend from student registration dates
     const counts: Record<string, number> = {};
-    students.forEach(s => {
-      if (s.registeredDate) {
-         // Using YYYY-MM prefix or just month name, here we map to short month to match UI mock format
-         const d = new Date(s.registeredDate);
-         if (!isNaN(d.getTime())) {
-           const monthStr = d.toLocaleDateString("en-US", { month: "short" });
-           counts[monthStr] = (counts[monthStr] || 0) + 1;
-         }
+    enrollments.forEach((e) => {
+      if (e.enrolledDate) {
+        const d = new Date(e.enrolledDate);
+        if (!isNaN(d.getTime())) {
+          const monthStr = d.toLocaleDateString("en-US", { month: "short" });
+          counts[monthStr] = (counts[monthStr] || 0) + 1;
+        }
       }
     });
 
     const orderedMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const trends: EnrollmentTrendItem[] = [];
-    let cumulative = 0;
-    orderedMonths.forEach(m => {
+    orderedMonths.forEach((m) => {
       if (counts[m] !== undefined) {
-         cumulative += counts[m]; // Show cumulative growth or just monthly joins. Let's do monthly joins to match standard trend lines
-         trends.push({ month: m, students: counts[m] });
+        trends.push({ month: m, students: counts[m] });
       }
     });
-    // Fallback if no dates parse correctly
     if (trends.length === 0) {
-      return [{ month: "Jan", students: students.length }];
+      return [{ month: "Jan", students: enrollments.length }];
     }
     return trends;
-  }, [students]);
+  }, [enrollments]);
 
   const capacityData = useMemo<SessionCapacityItem[]>(() => {
     let list = sessionCapacity;

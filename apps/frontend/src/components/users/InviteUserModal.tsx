@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { USER_STATUS_VALUES, toTitleCase, type SystemUser } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
-import { useContactsCollection } from '@/hooks/useContacts';
+import { useContactById } from '@/hooks/useContacts';
 import FormModal from '@/components/ui/FormModal';
 import ContactPicker from '@/components/contactLink/ContactPicker';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,6 @@ export default function InviteUserModal({
 }: InviteUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const workspaceRoles = useWorkspaceRoles();
-  const contacts = useContactsCollection();
 
   const excludeIds = useMemo(
     () => existingContactIds.map(String),
@@ -51,8 +50,14 @@ export default function InviteUserModal({
     },
   });
 
+  const watchedContactId = form.watch('contactId');
+  const { data: selectedContact } = useContactById(
+    watchedContactId ? String(watchedContactId) : undefined,
+    Boolean(watchedContactId),
+  );
+
   const handleSave = form.handleSubmit((values) => {
-    const contact = contacts.find((c) => String(c.id) === String(values.contactId));
+    const contact = selectedContact;
     if (!contact) return;
     const name = toTitleCase(contact.name.trim()) as string;
     const email = ((contact.email as string | undefined) || contact.emails?.[0]?.address || '').trim().toLowerCase();
@@ -98,7 +103,6 @@ export default function InviteUserModal({
                 <ContactPicker
                   label={t('users.fieldContact')}
                   value={field.value || null}
-                  contacts={contacts}
                   excludeIds={excludeIds}
                   onChange={(id) => field.onChange(id ?? '')}
                   searchPlaceholder={t('users.contactSearch')}

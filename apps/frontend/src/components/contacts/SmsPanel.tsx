@@ -7,7 +7,7 @@ import { notify } from '@/lib/notify';
 import FormModal from '@/components/ui/FormModal';
 import { FormSelect } from './form/FormPrimitives';
 import { FORM_LABEL, FORM_TEXTAREA } from '@/components/ui/formStyles';
-import { useContactCopy } from '@/hooks/useContactCopy';
+import useTranslation from '@/hooks/useTranslation';
 
 interface SmsPanelProps {
   contacts: Contact[];
@@ -18,7 +18,7 @@ interface SmsPanelProps {
  * Opens the device SMS app with a chosen message — user sends manually.
  */
 export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JSX.Element {
-  const c = useContactCopy();
+  const { t } = useTranslation();
   const { whatsappTemplates } = useContactConfig();
 
   const isBulk = contacts.length > 1;
@@ -35,28 +35,28 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
   const openForContact = (contact: Contact): void => {
     const phone = getPrimaryPhone(contact);
     if (!phone) {
-      notify.error(c('smsNoPhone'));
+      notify.error(t('contacts.smsNoPhone'));
       return;
     }
     if (!message.trim()) {
-      notify.error(c('smsMessageRequired'));
+      notify.error(t('contacts.smsMessageRequired'));
       return;
     }
     const opened = openDeviceSmsComposer(phone, message);
     if (!opened) {
-      notify.error(c('smsOpenFailed'));
+      notify.error(t('contacts.smsOpenFailed'));
       return;
     }
     if (!isBulk) onClose();
   };
 
   const title = isBulk
-    ? c('bulkSmsMessage')
-    : `${c('sms')} – ${contacts[0]?.name}`;
+    ? t('contacts.bulkSmsMessage')
+    : `${t('contacts.sms')} – ${contacts[0]?.name}`;
 
   const subtitle = isBulk
-    ? `${smsContacts.length} ${c('of')} ${contacts.length} ${c('contactsHavePhone')}`
-    : getPrimaryPhone(contacts[0]) || '';
+    ? `${smsContacts.length} ${t('contacts.of')} ${contacts.length} ${t('contacts.contactsHavePhone')}`
+    : undefined;
 
   return (
     <FormModal
@@ -65,23 +65,21 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
       title={title}
       subtitle={subtitle}
       icon={MessageSquare}
-      size="md"
-      cancelLabel={c('cancel')}
-      saveLabel={c('openSmsApp')}
+      cancelLabel={t('common.cancel')}
+      saveLabel={t('contacts.openSmsApp')}
       onSave={() => {
-        if (!isBulk) openForContact(contacts[0]);
+        if (isBulk) smsContacts.forEach(openForContact);
+        else if (contacts[0]) openForContact(contacts[0]);
       }}
-      saveDisabled={isBulk || !getPrimaryPhone(contacts[0]) || !message.trim()}
     >
       <div className="space-y-4">
-        <p className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-          {c('smsManualSendNote')}
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {t('contacts.smsManualSendNote')}
         </p>
-
-        {whatsappTemplates.length > 0 ? (
+        {whatsappTemplates.length > 0 && (
           <div>
             <label className={FORM_LABEL} htmlFor="smsTemplate">
-              {c('messageTemplate')}
+              {t('contacts.messageTemplate')}
             </label>
             <FormSelect
               id="smsTemplate"
@@ -90,49 +88,40 @@ export default function SmsPanel({ contacts, onClose }: SmsPanelProps): React.JS
               options={whatsappTemplates.map((tpl) => ({ value: tpl.id, label: tpl.label }))}
             />
           </div>
-        ) : null}
-
-        <div className="space-y-1.5">
-          <label className={FORM_LABEL} htmlFor="smsMessage">{c('messageBody')}</label>
+        )}
+        <div>
+          <label className={FORM_LABEL} htmlFor="smsMessage">{t('contacts.messageBody')}</label>
           <textarea
             id="smsMessage"
+            className={FORM_TEXTAREA}
+            rows={4}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            rows={4}
-            className={FORM_TEXTAREA}
-            placeholder={c('smsMessagePlaceholder')}
+            placeholder={t('contacts.smsMessagePlaceholder')}
           />
         </div>
-
-        {isBulk ? (
-          <ul className="max-h-48 space-y-2 overflow-y-auto">
+        {isBulk && smsContacts.length > 0 && (
+          <ul className="space-y-1 max-h-32 overflow-y-auto">
             {smsContacts.map((contact) => (
-              <li
-                key={contact.id}
-                className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{contact.name}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{getPrimaryPhone(contact)}</p>
-                </div>
+              <li key={contact.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                <User className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">{contact.name || contact.firstName}</span>
                 <button
                   type="button"
+                  className="ml-auto text-primary font-semibold hover:underline flex-shrink-0"
                   onClick={() => openForContact(contact)}
-                  className="shrink-0 rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90"
                 >
-                  {c('openSmsApp')}
+                  {t('contacts.openSmsApp')}
                 </button>
               </li>
             ))}
           </ul>
-        ) : null}
-
-        {isBulk && smsContacts.length === 0 ? (
-          <p className="text-center text-xs text-muted-foreground">
-            <User className="mx-auto mb-1 h-4 w-4 opacity-50" aria-hidden />
-            {c('smsNoEligibleContacts')}
+        )}
+        {isBulk && smsContacts.length === 0 && (
+          <p className="text-xs text-destructive font-medium">
+            {t('contacts.smsNoEligibleContacts')}
           </p>
-        ) : null}
+        )}
       </div>
     </FormModal>
   );

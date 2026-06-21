@@ -1,7 +1,7 @@
 import React from "react";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { Field, CustomFieldInput } from "./FormPrimitives";
-import { useSortedFields } from "../../../hooks/useSortedFields";
+import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
 import useTranslation from "@/hooks/useTranslation";
 
 interface ContactFormData {
@@ -33,9 +33,9 @@ export default function BasicTab({
   tabId = "basic",
   readOnlyFieldKeys = [],
 }: BasicTabProps): React.JSX.Element {
-  const { isTabFieldEnabled, isTabFieldRequired } = useContactConfig();
+  const { isTabFieldRequired } = useContactConfig();
   const { t } = useTranslation();
-  const sortedFields = useSortedFields(tabId);
+  const visibleFields = useVisibleContactFields(tabId);
 
   const upd = (f: string, v: unknown): void => {
     const updated = { ...data, [f]: v };
@@ -47,7 +47,7 @@ export default function BasicTab({
     onChange(updated);
   };
 
-  const enabledFields = sortedFields.filter((f) => isTabFieldEnabled(tabId, f.key));
+  const enabledFields = visibleFields;
 
   return (
     <div className="space-y-5">

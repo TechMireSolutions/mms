@@ -2,6 +2,8 @@
 
 Project rules for the Madrasa Management System. Cursor loads `.mdc` files from this directory automatically.
 
+**Architecture docs (repo root):** [`globle1.md`](../globle1.md) — foundation, Work, Reports (§1–§4). [`globle2.md`](../globle2.md) — Setup + cross-cutting (§5–§14). Rules: `mms-module-architecture.mdc`, `mms-module-work.mdc`, `mms-module-setup.mdc`, `mms-module-crosscutting.mdc`, `mms-background-jobs.mdc`.
+
 ## Always applied (6)
 
 | Rule | Purpose |
@@ -19,6 +21,11 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 |-------|------------|------------------|
 | Three-tier tab **shell** (accordion, PageHeader, sub-tabs) | `mms-ui-tabs.mdc` | `mms-core`, `mms-settings-navigation` |
 | Three-tier tab **content scope** (what goes in each tier) | `mms-module-isolation.mdc` | `mms-ui-tabs`, `mms-core`, `mms-reports` |
+| **Universal module architecture** (contract, command centre, Work/Reports) | `mms-module-architecture.mdc` (source: `globle1.md`) | `mms-module-isolation`, `mms-ui-tabs` |
+| **Module command centre + Work tier** (metrics, directory, drawer, bulk) | `mms-module-work.mdc` (source: `globle1.md` §2–§3) | `mms-module-architecture` (summary only) |
+| **Module Setup tab** (fields, prefs, audit, §6–§7) | `mms-module-setup.mdc` (source: `globle2.md`) | `mms-fields`, `mms-config` (detail only) |
+| **Module cross-cutting** (jobs, errors, perf, §8–§14) | `mms-module-crosscutting.mdc` (source: `globle2.md`) | `mms-module-architecture` (summary only) |
+| **Background jobs / queued work** | `mms-background-jobs.mdc` (source: `globle2.md` §8) | `mms-module-crosscutting` (summary only) |
 | `/settings` vs module Configuration | `mms-settings-navigation.mdc` | `mms-config` (pointer only) |
 | Settings hierarchy, live preview, theme scope | `mms-config.mdc` | `mms-settings-navigation` |
 | Reports, exports, builders | `mms-reports.mdc` | `mms-module-isolation` (category table stays in isolation) |
@@ -50,7 +57,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | Logging, health, error boundaries | `mms-observability.mdc` | `mms-backend`, `mms-ui-rendering` |
 | Accessibility (WCAG baseline) | `mms-a11y.mdc` | `mms-ui-rendering`, `mms-i18n` |
 
-## File-scoped (auto-attach by glob) — 31 rules
+## File-scoped (auto-attach by glob) — 36 rules
 
 | Rule | Focus |
 |------|-------|
@@ -68,6 +75,11 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-fields.mdc` | Field/tab registry |
 | `mms-ui-tabs.mdc` | Tab navigation shell, PageHeader |
 | `mms-module-isolation.mdc` | Per-tier content scope + analytics categories |
+| `mms-module-architecture.mdc` | Universal module contract, command centre, Work/Reports (`globle1.md`) |
+| `mms-module-work.mdc` | Command centre + Work tier directory behaviour (`globle1.md` §2–§3) |
+| `mms-module-setup.mdc` | Setup tier — fields, prefs, change mgmt (`globle2.md` §5–§7) |
+| `mms-module-crosscutting.mdc` | Jobs, errors, performance, a11y, security (`globle2.md` §8–§14) |
+| `mms-background-jobs.mdc` | Queued processing, progress UI, artifacts (`globle2.md` §8) |
 | `mms-i18n.mdc` | Translation keys — en, ar, ur, fa |
 | `mms-tenant.mdc` | Multi-tenant routing and storage scope |
 | `mms-rbac.mdc` | Permissions — backend + `can()` hook |
@@ -111,7 +123,7 @@ bash .agents/scripts/sync-all.sh
 - [ ] `pnpm typecheck` && `pnpm test`
 - [ ] Frontend lint if touched: `cd apps/frontend && pnpm lint`
 - [ ] No new hardcoded labels/colours — see `mms-i18n.mdc` (en/ar/ur/fa) + registries
-- [ ] Module tiers respect `mms-module-isolation.mdc`
+- [ ] Module tiers respect `mms-module-isolation.mdc` + `mms-module-architecture.mdc`
 - [ ] Shared logic in `@mms/shared` if cross-app or 2+ modules
 - [ ] No commit unless user requested
 - [ ] Update **all mirrors** when changing standards: `bash .agents/scripts/sync-all.sh`
@@ -129,4 +141,4 @@ bash .agents/scripts/sync-all.sh
 
 ## Verify in Cursor
 
-**Settings → Rules** — five always-apply rules + 31 file-scoped rules when matching paths are open (**36 total**).
+**Settings → Rules** — six always-apply rules + 36 file-scoped rules when matching paths are open (**42 total**).

@@ -9,15 +9,17 @@ import ContactCreateModal, {
   type ContactCreateDefaults,
 } from '@/components/contacts/ContactCreateModal';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import useDebounce from '@/hooks/useDebounce';
+import { useContactById, useContactsPaginated } from '@/hooks/useContacts';
 
 export interface ContactPickerProps {
   label: string;
   value: string | number | null;
-  onChange: (id: string | number | null) => void;
+  onChange: (id: string | number | null, contact?: Contact | null) => void;
+  /** Client-side list; omit to use server search (globle2 §10). */
   contacts?: Contact[];
   excludeIds?: (string | number | null)[];
-  /** @deprecated Use built-in ContactCreateModal (default). Custom handlers are no longer needed. */
-  onCreateContact?: (query: string) => void;
+  filterGender?: string;
   /** Show "Create contact" in the search dropdown. Default true. */
   allowCreate?: boolean;
   /** Prefill / lock fields when opening the shared contact form (e.g. father = male). */
@@ -34,9 +36,9 @@ export default function ContactPicker({
   label,
   value,
   onChange,
-  contacts = [],
+  contacts,
   excludeIds = [],
-  onCreateContact,
+  filterGender,
   allowCreate = true,
   createDefaults,
   onAvatarChange,
@@ -51,19 +53,37 @@ export default function ContactPicker({
   const [createOpen, setCreateOpen] = useState(false);
   const [createQuery, setCreateQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const serverMode = contacts === undefined;
+
+  const debouncedQuery = useDebounce(query, 250);
+  const { data: searchPage, isFetching: isSearching } = useContactsPaginated({
+    page: 1,
+    limit: 8,
+    search: debouncedQuery,
+    gender: filterGender,
+    enabled: serverMode && open,
+  });
+  const { data: selectedFromServer } = useContactById(
+    value != null ? String(value) : undefined,
+    serverMode && value != null,
+  );
 
   const normalizedExcludeIds = useMemo(() => excludeIds.map(String), [excludeIds]);
-  const canCreate = allowCreate && !onCreateContact;
 
-  const matches = contacts.filter((c) => {
+  const directory = serverMode ? (searchPage?.contacts ?? []) : contacts;
+
+  const matches = directory.filter((c) => {
     const cPhone = (c.phone as string | undefined) || c.phones?.[0]?.number || '';
+    if (normalizedExcludeIds.includes(String(c.id))) return false;
+    if (serverMode) return true;
     return (
-      !normalizedExcludeIds.includes(String(c.id))
-      && (c.name.toLowerCase().includes(query.toLowerCase()) || cPhone.includes(query))
+      c.name.toLowerCase().includes(query.toLowerCase()) || cPhone.includes(query)
     );
-  }).slice(0, 6);
+  }).slice(0, 8);
 
-  const selected = contacts.find((c) => String(c.id) === String(value));
+  const selected =
+    (serverMode ? selectedFromServer : contacts.find((c) => String(c.id) === String(value))) ??
+    directory.find((c) => String(c.id) === String(value));
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -78,10 +98,6 @@ export default function ContactPicker({
   };
 
   const openCreateFlow = (searchText: string): void => {
-    if (onCreateContact) {
-      onCreateContact(searchText);
-      return;
-    }
     setCreateQuery(searchText);
     setCreateOpen(true);
   };
@@ -183,7 +199,7 @@ export default function ContactPicker({
           </button>
         )}
         <AnimatePresence>
-          {open && (matches.length > 0 || canCreate || onCreateContact) && (
+          {open && (matches.length > 0 || allowCreate || (serverMode && isSearching)) && (
             <motion.div
               initial={{ opacity: 0, y: 8, scale: 0.99 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -191,7 +207,7 @@ export default function ContactPicker({
               transition={{ duration: 0.15 }}
               className="absolute z-20 left-0 right-0 top-full mt-1.5 bg-card border border-border rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-border/60"
             >
-              {matches.length === 0 && (
+              {matches.length === 0 && !isSearching && (
                 <div className="px-4.5 py-4 text-xs text-muted-foreground flex flex-col items-center justify-center gap-1.5 text-center bg-muted/5">
                   <User className="w-5 h-5 text-muted-foreground/45" />
                   <p className="font-semibold text-foreground/80">{emptyTitle}</p>
@@ -209,7 +225,7 @@ export default function ContactPicker({
                   <button
                     key={c.id}
                     type="button"
-                    onMouseDown={() => { onChange(c.id); setQuery(''); setOpen(false); }}
+                    onMouseDown={() => { onChange(c.id, c); setQuery(''); setOpen(false); }}
                     className="w-full flex items-center gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-left focus:outline-none"
                   >
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${cGradient} flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white shadow-sm`}>
@@ -226,7 +242,7 @@ export default function ContactPicker({
                   </button>
                 );
               })}
-              {(canCreate || onCreateContact) && (
+              {allowCreate && (
                 <button
                   type="button"
                   onMouseDown={(e) => {
@@ -248,15 +264,14 @@ export default function ContactPicker({
         </AnimatePresence>
       </div>
 
-      {canCreate ? (
+      {allowCreate ? (
         <ContactCreateModal
           open={createOpen}
           onClose={() => setCreateOpen(false)}
-          allContacts={contacts}
           initialName={createQuery}
           createDefaults={createDefaults}
           onCreated={(contact) => {
-            onChange(contact.id);
+            onChange(contact.id, contact);
             setCreateOpen(false);
           }}
         />

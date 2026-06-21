@@ -14,6 +14,8 @@ import { calcAge, type Student } from '@/lib/data/studentsData';
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { formatDate, getObject } from "../../lib/db";
 import { type StudentsSettings, DEFAULT_STUDENTS_SETTINGS } from "@mms/shared";
+import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
+import useTranslation from '@/hooks/useTranslation';
 import StudentDetail from "./StudentDetail";
 
 const GENDER_ICON = { male: "♂", female: "♀", other: "⚧" } as const;
@@ -36,6 +38,13 @@ function StudentAvatar({ student }: { student: Student }): JSX.Element {
   );
 }
 
+export interface StudentListServerPagination {
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
 export interface StudentListProps {
   students: Student[];
   onEdit: (student: Student) => void;
@@ -43,6 +52,8 @@ export interface StudentListProps {
   onBulkDelete?: (ids: string[]) => void;
   onBulkStatusChange?: (ids: string[], status: "active" | "inactive") => void;
   layout?: string;
+  isColumnVisible?: (key: string) => boolean;
+  serverPagination?: StudentListServerPagination;
 }
 
 /**
@@ -54,8 +65,11 @@ export default function StudentList({
   onDelete,
   onBulkDelete,
   onBulkStatusChange,
-  layout = "list"
+  layout = "list",
+  isColumnVisible,
+  serverPagination,
 }: StudentListProps): JSX.Element {
+  const { t } = useTranslation();
   const sessions = useSessionsCollection();
 
   const settings = useMemo(() => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS), []);
@@ -71,10 +85,27 @@ export default function StudentList({
     });
   }, [customFields, settings.fieldOrder]);
 
-  const colSpanCount = 5 + 
-    (fields.dob?.enabled !== false ? 1 : 0) + 
-    (fields.fatherLink?.enabled !== false || fields.motherLink?.enabled !== false || fields.guardianLink?.enabled !== false ? 1 : 0) +
-    sortedCustomFields.length;
+  const showDob = isColumnVisible
+    ? isColumnVisible("dob")
+    : fields.dob?.enabled !== false;
+  const showParents = isColumnVisible
+    ? isColumnVisible("parents")
+    : fields.fatherLink?.enabled !== false ||
+      fields.motherLink?.enabled !== false ||
+      fields.guardianLink?.enabled !== false;
+  const showSessions = isColumnVisible ? isColumnVisible("sessions") : true;
+  const showStatus = isColumnVisible ? isColumnVisible("status") : true;
+  const visibleCustomFields = sortedCustomFields.filter((field) =>
+    isColumnVisible ? isColumnVisible(`custom:${field.id}`) : true,
+  );
+
+  const colSpanCount = 2 +
+    1 +
+    (showDob ? 1 : 0) +
+    (showParents ? 1 : 0) +
+    (showSessions ? 1 : 0) +
+    visibleCustomFields.length +
+    (showStatus ? 1 : 0);
 
   // Sorting State
   const [sortField, setSortField] = useState<"name" | "age" | "fatherName" | "status" | "grNumber" | null>("grNumber");
@@ -152,9 +183,10 @@ export default function StudentList({
   // Paginated data
   const totalPages = Math.max(Math.ceil(sortedStudents.length / pageSize), 1);
   const paginatedStudents = useMemo(() => {
+    if (serverPagination) return sortedStudents;
     const start = (currentPage - 1) * pageSize;
     return sortedStudents.slice(start, start + pageSize);
-  }, [sortedStudents, currentPage, pageSize]);
+  }, [sortedStudents, currentPage, pageSize, serverPagination]);
 
   // Select handlers
   const handleSelectAll = () => {
@@ -291,7 +323,7 @@ export default function StudentList({
         )}
 
         {/* Footer with pagination */}
-        {students.length > 0 && (
+        {students.length > 0 && !serverPagination && (
           <div className="px-5 py-3 border border-border bg-muted/10 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
             <div>
               Showing {Math.min(students.length, (currentPage - 1) * pageSize + 1)}-
@@ -379,7 +411,7 @@ export default function StudentList({
                     Student {renderSortIcon("name")}
                   </div>
                 </th>
-                {fields.dob?.enabled !== false && (
+                {showDob && (
                   <th
                     onClick={() => handleSort("age")}
                     className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
@@ -389,7 +421,7 @@ export default function StudentList({
                     </div>
                   </th>
                 )}
-                {(fields.fatherLink?.enabled !== false || fields.motherLink?.enabled !== false || fields.guardianLink?.enabled !== false) && (
+                {showParents && (
                   <th
                     onClick={() => handleSort("fatherName")}
                     className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden md:table-cell"
@@ -399,14 +431,17 @@ export default function StudentList({
                     </div>
                   </th>
                 )}
+                {showSessions && (
                 <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
                   Sessions
                 </th>
-                {sortedCustomFields.map((field) => (
+                )}
+                {visibleCustomFields.map((field) => (
                   <th key={field.id} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">
                     {field.label}
                   </th>
                 ))}
+                {showStatus && (
                 <th
                   onClick={() => handleSort("status")}
                   className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
@@ -415,6 +450,7 @@ export default function StudentList({
                     Status {renderSortIcon("status")}
                   </div>
                 </th>
+                )}
                 <th className="px-4 py-3 w-12" />
               </tr>
             </thead>
@@ -477,7 +513,7 @@ export default function StudentList({
                             </div>
                           </div>
                         </td>
-                        {fields.dob?.enabled !== false && (
+                        {showDob && (
                           <td className="px-4 py-3 hidden sm:table-cell">
                             <p className="text-[13px] font-medium text-foreground">
                               {age ? `${age} yrs` : "—"}
@@ -487,7 +523,7 @@ export default function StudentList({
                             </p>
                           </td>
                         )}
-                        {(fields.fatherLink?.enabled !== false || fields.motherLink?.enabled !== false || fields.guardianLink?.enabled !== false) && (
+                        {showParents && (
                           <td className="px-4 py-3 hidden md:table-cell">
                             {fields.fatherLink?.enabled !== false && (
                               <p className="text-[13px] text-foreground">
@@ -506,6 +542,7 @@ export default function StudentList({
                             )}
                           </td>
                         )}
+                        {showSessions && (
                         <td className="px-4 py-3 hidden lg:table-cell">
                           <div className="flex flex-wrap gap-1">
                             {sessionNames.length === 0 ? (
@@ -524,7 +561,8 @@ export default function StudentList({
                             )}
                           </div>
                         </td>
-                        {sortedCustomFields.map((field) => {
+                        )}
+                        {visibleCustomFields.map((field) => {
                           const val = (st as unknown as Record<string, unknown>)[field.id];
                           let displayVal = "—";
                           if (val !== undefined && val !== null && val !== "") {
@@ -540,9 +578,11 @@ export default function StudentList({
                             </td>
                           );
                         })}
+                        {showStatus && (
                         <td className="px-4 py-3 hidden sm:table-cell">
                           <StatusBadge status={st.status} />
                         </td>
+                        )}
                         <td className="px-4 py-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -577,7 +617,7 @@ export default function StudentList({
         </div>
 
         {/* Footer with pagination */}
-        {students.length > 0 && (
+        {students.length > 0 && !serverPagination && (
           <div className="px-5 py-3 border-t border-border/50 bg-muted/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
             <div>
               Showing {Math.min(students.length, (currentPage - 1) * pageSize + 1)}-
@@ -691,16 +731,12 @@ export default function StudentList({
                   s.status,
                   s.registeredDate,
                 ]);
-                const csvContent =
-                  "data:text/csv;charset=utf-8," +
-                  [headers.join(","), ...rows.map((e) => e.map((val) => `"${val}"`).join(","))].join("\n");
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", `mms_students_export_${Date.now()}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                runCsvDownloadJob({
+                  moduleId: 'students',
+                  label: t('backgroundJobs.exportStudents', { count: selectedStudents.length }),
+                  filename: `mms_students_export_${Date.now()}.csv`,
+                  rows: [headers, ...rows],
+                });
               }}
               className="px-3 py-1.5 rounded-lg border border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors"
             >

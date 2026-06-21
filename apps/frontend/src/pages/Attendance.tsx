@@ -17,6 +17,7 @@ import AttendanceRecords from "../components/attendance/AttendanceRecords";
 import AttendanceAnalytics from "../components/attendance/AttendanceAnalytics";
 import AttendanceSettings from "../components/attendance/AttendanceSettings";
 import AuditLog from "../components/attendance/AuditLog";
+import AttendanceCommandMetrics from "../components/attendance/AttendanceCommandMetrics";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
@@ -27,6 +28,7 @@ import {
   useAttendanceMutations,
   ATTENDANCE_QUERY_KEY,
 } from '@/hooks/useAttendance';
+import { useAttendanceColumnLayout } from '@/hooks/useAttendanceColumnLayout';
 import { useQueryClient } from '@tanstack/react-query';
 import { useViewerRole } from "@/hooks/useViewerRole";
 import usePermissions from "@/hooks/usePermissions";
@@ -58,6 +60,15 @@ export default function Attendance() {
   const { replaceAll } = useAttendanceMutations();
   const [settings, setSettings] = useState(() => getObject("attendance_settings", DEFAULT_ATT_SETTINGS));
   const [subTab, setSubTab] = useState("fields");
+  const columnLayout = useAttendanceColumnLayout();
+
+  const pageFilteredCount = useMemo(() => {
+    return records.filter((record) => {
+      if (filters.classId && record.classId !== filters.classId) return false;
+      if (filters.date && record.date !== filters.date) return false;
+      return true;
+    }).length;
+  }, [records, filters.classId, filters.date]);
 
   const setRecords = useCallback((updater: React.SetStateAction<AttendanceRecord[]>) => {
     const next = typeof updater === "function" ? updater(records) : updater;
@@ -131,7 +142,7 @@ export default function Attendance() {
           {effectiveAnalyticsTab === "charts" ? (
             <AttendanceAnalytics filters={filters} records={records} />
           ) : (
-            <ModuleReports category="attendance" role={role} />
+            <ModuleReports category="attendance" />
           )}
         </div>
       );
@@ -151,7 +162,20 @@ export default function Attendance() {
         {(() => {
           switch (effectiveOpsTab) {
             case "mark":    return <MarkAttendance filters={filters} role={role} records={records} setRecords={setRecords} />;
-            case "records": return <AttendanceRecords filters={filters} role={role} records={records} setRecords={setRecords} />;
+            case "records": return (
+              <AttendanceRecords
+                filters={filters}
+                role={role}
+                records={records}
+                setRecords={setRecords}
+                isColumnVisible={columnLayout.isColumnVisible}
+                columnCustomizer={{
+                  columnRegistry: columnLayout.columnRegistry,
+                  updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+                  labels: columnLayout.customizerLabels,
+                }}
+              />
+            );
             case "audit":   return <AuditLog filters={filters} />;
             default:        return null;
           }
@@ -168,6 +192,12 @@ export default function Attendance() {
         icon={UserCheck}
         title={t("nav.attendance")}
         subtitle={t("page.attendance.subtitle")}
+      />
+
+      <AttendanceCommandMetrics
+        total={records.length}
+        shown={pageFilteredCount}
+        selectedDate={filters.date}
       />
 
       <ResponsiveAccordionTabs

@@ -16,7 +16,7 @@ bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
 .agent/              → symlink to .agents/ (Antigravity standard path)
 .agents/
   rules/             # behavioural rules (always_on + model_decision)
-  skills/            # 15 capability modules (SKILL.md per folder)
+  skills/            # 16 capability modules (SKILL.md per folder)
   workflows/         # multi-step procedures
   skills-manifest.json
 ```
@@ -51,18 +51,22 @@ CLAUDE.md            # Session entry (points here + sync commands)
 | `rules/mms-migration-status.md` | `rules/mms-migration-status.mdc` |
 | `rules/mms-dependencies.md` | `rules/mms-dependencies.mdc` |
 | `rules/mms-dry.md` | `rules/mms-dry.mdc` |
+| `rules/mms-completion-review.md` | `rules/mms-completion-review.mdc` |
 
 Engineering layout & naming (file-scoped): `mms-structure.md`, `mms-naming.md`.
 
-## Skills (15)
+## Skills (18)
 
 | Skill | Purpose |
 |-------|---------|
 | `antigravity-workspace` | Where rules/skills live; sync policy |
 | `mms-dev-setup` | Install, run, env verify |
 | `mms-frontend` | React app shell, apiClient, Query vs localStorage, FE tests |
-| `mms-module-page` | Three-tier module pages |
-| `mms-contacts` | Contact CRM module |
+| `mms-module-page` | Three-tier module pages per `globle1.md` / `globle2.md` |
+| `mms-module-work` | Command centre and Work tab — metrics, directory, drawer, bulk actions |
+| `mms-module-setup` | Module Setup tier — Fields, Preferences, audit (`globle2.md` §5–§7) |
+| `mms-background-jobs` | Queued processing — exports, imports, dedup scans, progress, artifacts |
+| `mms-contacts` | Contact CRM — globle1 reference module |
 | `mms-fields-registry` | Fields & tabs |
 | `mms-data-sync` | db.ts & API sync |
 | `mms-auth-users` | Auth & users |
@@ -106,7 +110,7 @@ bash .agents/scripts/sync-all.sh
 
 Individual targets: `sync-rules.sh` (→ Antigravity), `sync-skills.sh` (→ Cursor), `sync-claude.sh` (→ Claude).
 
-**37 rules** (6 always-on + 31 scoped): product (`mms-ui-*`, `mms-fields`, `mms-structure`, `mms-naming`, …), platform (`mms-dependencies`, `mms-dry`, `mms-security`, `mms-completion-review`, …). Index: `.cursor/rules/README.md`.
+**42 rules** (6 always-on + 36 scoped): product (`mms-ui-*`, `mms-fields`, `mms-module-architecture`, `mms-module-work`, `mms-module-setup`, `mms-module-crosscutting`, `mms-background-jobs`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-security`, …). Index: `.cursor/rules/README.md`.
 
 **Rule index:** [.cursor/rules/README.md](.cursor/rules/README.md) — canonical owner per topic (avoids duplicating tier/isolation/i18n prose).
 

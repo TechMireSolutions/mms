@@ -9,7 +9,6 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Area | Current state | Target (rules) |
 |------|---------------|----------------|
 | Hardcoded labels/colours | Widespread in modules | Config/registry + `t()` — `mms-i18n.md` |
-| Contact `uiStrings` map | Contacts module toasts/labels | New copy → `appTranslations` + `t()`; no new `uiStrings` keys |
 | TanStack Query | Students + contacts + workspace registry + auth; most modules still localStorage | New REST resources Query-first — `mms-query.md` |
 | `can()` permissions hook | Shipped; Enrollments + Attendance wired; registry partial | Full registry-driven matrix — `mms-rbac.md` |
 | Inline `role ===` checks | Dashboard widget filtering uses `resolveDashboardPersona(can)`; `useViewerRole` derives from `can()` | Full registry-driven matrix — `mms-rbac.md` |
@@ -19,18 +18,43 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | `category="academic"` in reports/KPI | Removed from module pages | Module-specific categories only (`mms-module-isolation.md`) |
 | Legacy entity forms | ObligationModal, some detail drawers | `FormModal` — `mms-ui-forms.md` |
 | Status colours inline | Residual in chart color maps | `StatusBadge` + semantic tokens — `mms-ui-visual.md` |
-| Automated tests | Shared + backend (auth, rbac, health, security); frontend apiClient + hooks; Playwright smoke in CI `e2e/` | Expand Playwright for login/onboard — `mms-testing.md` |
+| Automated tests | Shared + backend (auth, rbac, health, security); frontend apiClient + hooks; Playwright API + Contacts UI in CI `e2e/` | Expand Playwright for login/onboard — `mms-testing.md` |
 | Server-first data | Students + contacts Query-first; most modules localStorage primary | Query + API authoritative for new modules — `mms-data-layer.md` |
 | Per-entity REST API | `/api/students` + `/api/contacts` CRUD; generic `/api/db` for rest | Resource routes + validation per domain — `mms-backend.md` |
 | Internal `fetch('/api/...')` | External OAuth only | All MMS API via `apiClient` — `mms-frontend.md` |
 | JWT in localStorage | Removed — httpOnly cookies only; `apiClient` has no token reads | — resolved |
 | Client error reporting | Console/toasts only | Sentry or equivalent — `mms-observability.md` |
 | Global a11y pass | Partial (dropdowns only) | WCAG baseline on new UI — `mms-a11y.md` |
+| Universal module architecture | All modules have `{Module}ModuleContract` + command centre metric strips | Report drill-down on remaining modules |
+| Module command centre metrics | All modules — server `/metrics` + Work metric strips | — resolved |
+| Soft deletion | Contacts REST soft delete + restore + bulk; most modules hard DELETE | `deletedAt` per module; restore API where needed |
+| Offline/sync UX | Contacts: per-field merge + server fetch at conflict | — resolved |
+| Report drill-down | Contacts chart → Work filters wired | Same pattern on other module reports |
+| Saved reports re-run | Contacts `ContactsSavedReports` + REST; generic `SavedReports` empty | Per-module saved logic presets |
+| Per-user column prefs | Shared `userColumnPrefsService`; all modules REST + Work customizer | — resolved |
+| Background job queue | Async off-request workers; Contacts CSV export + duplicate scan; artifact download API; accounting/obligations tray exports | Dedicated job queue infra (Redis/worker process) for multi-instance deploy |
+| Google sync OAuth | Server per-user config + `POST /google-sync/audit` lifecycle events | — resolved |
 
 ## Recently resolved
 
 | Area | Resolution |
 |------|------------|
+| Contacts REST RBAC | `canWriteContacts` / `canDeleteContacts` / `canReadContacts` on `/api/contacts`; `includeDeleted` requires `contacts.delete` |
+| Contacts soft-delete UX | Restore + bulk-restore API; archive Work view; export audit; localStorage cache excludes deleted rows |
+| Background job server exports | `POST /api/contacts/export/csv` + artifact download; accounting/obligations wired to global tray |
+| Async background job workers | Off-request `enqueueBackgroundJob` + poll; duplicate scan cache + `POST /api/contacts/duplicates/scan` |
+| Students module contract + column prefs | `STUDENTS_MODULE_CONTRACT`; `GET/PUT /api/students/column-prefs`; `ModuleColumnCustomizer` on Work |
+| Teachers module contract + column prefs | `TEACHERS_MODULE_CONTRACT`; `GET/PUT /api/teachers/column-prefs`; `ModuleColumnCustomizer` on Work |
+| Finance module contract + column prefs | `FINANCE_MODULE_CONTRACT`; invoice/payment column-prefs REST; `ModuleColumnCustomizer` on Work sub-tabs |
+| Module command centre metrics (Students/Teachers/Finance) | `moduleCommandMetrics.ts`; `GET /api/{students,teachers,finance}/metrics`; `ModuleCommandMetricCard` |
+| Attendance module contract + metrics + column prefs | `ATTENDANCE_MODULE_CONTRACT`; `/api/attendance/metrics` + column-prefs; Records customizer |
+| Sessions module contract + metrics + column prefs | `SESSIONS_MODULE_CONTRACT`; `/api/sessions/metrics` + column-prefs; list Work customizer + metric strip |
+| Enrollments module contract + metrics + column prefs | `ENROLLMENTS_MODULE_CONTRACT`; `/api/enrollments/metrics` + column-prefs; `EnrollmentList` customizer + metric strip |
+| Obligations module contract + metrics + column prefs | `OBLIGATIONS_MODULE_CONTRACT`; `/api/obligations/metrics` + column-prefs; collections customizer + metric strip |
+| Accounting module contract + metrics + column prefs | `ACCOUNTING_MODULE_CONTRACT`; `/api/accounting/metrics` + journal/account column-prefs; Work customizers |
+| Hasanat module contract + metrics + column prefs | `HASANAT_MODULE_CONTRACT`; `/api/hasanat/metrics` + distribution/redemption column-prefs; Work customizers + metric strip |
+| Examinations module contract + metrics + column prefs | `EXAMINATIONS_MODULE_CONTRACT`; `/api/examinations/metrics` + exam/results column-prefs; Work customizers + metric strip |
+| Question Bank module contract + metrics + column prefs | `QUESTION_BANK_MODULE_CONTRACT`; `/api/question-bank/metrics` + column-prefs; Work list customizer + metric strip |
 | Contact-first person policy | `mms-contact-link.md`; `LINK_MANAGED_COLLECTIONS` + pickers (`ContactPicker`, `RegistryPersonSelect`, `UserActorSelect`); migrations 006–007 |
 | Auth seeds | `getDefaultCollectionsForSeed()` normalizes `roles[]` → `role` + `passwordHash` on DB seed |
 | RBAC | `rbacService` on `/api/db/*` writes, bulk sync, reset |
@@ -86,6 +110,8 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Playwright smoke | `e2e/smoke.spec.ts`, `e2e/interactive.spec.ts` |
 | Playwright in CI | API smoke job with Postgres + backend boot |
 | Contacts REST API | `/api/contacts` CRUD + Zod + `useContacts` Query hooks |
+| Contacts column prefs REST | `GET/PUT /api/contacts/column-prefs`; `useContactColumnPrefs`; localStorage offline cache |
+| Contacts saved reports | `ContactsSavedReports` + CRUD/run REST; re-run drill-down against live data |
 | Attendance REST API | `/api/attendance` CRUD + bulk PUT + Zod + `useAttendance` Query hooks |
 | Sessions REST API | `/api/sessions` CRUD + Zod + `useSessions` Query hooks |
 | Platform / tenant user tables | `platform_users` + `tenant_users` relational tables; auth services use tables (legacy JSON migrated on startup) |
@@ -106,11 +132,68 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | shadcn `ui/` strict TypeScript | All Radix primitives typed; `src/components/ui` in `tsc` |
 | ESLint + TypeScript | `typescript-eslint` on app `.ts/.tsx` (components, pages, hooks, lib, providers) |
 | User modals RHF + Zod | `EditUserModal`, `InviteUserModal` on `FormModal` + `lib/forms/` |
-| Contacts i18n bridge | `useContactCopy()` — `t()` with `uiStrings` fallback; SMS panel migrated |
+| Contacts i18n bridge | Removed — `useContactCopy` deleted; Work UI uses `t('contacts.*')` directly | — resolved |
+| Contacts setup UI strings tab | Removed `uistrings` sub-tab and editor; copy uses `appTranslations` + `t()` |
 | Vite `@` alias | `path.resolve('./src')` aligned with Vitest + tsconfig |
 | Module tier tab ids | `work` / `reports` / `setup` — ids match UI names; legacy `operations` / `analytics` / `configuration` normalized on read |
 | Settings page refactor | `useBackupRestore`, `ModuleSettingsNavGrid`, `settingsSectionComponents`, `settingsNavConfig`, `settingsGlobalDraft` / `settingsModulesDraft`, `useSavedFlash`, `useApplyLogoColors`; backup UI in `components/settings/backup/`; removed `SettingsShared.tsx` |
 | Accessible branding theme | `logoBrandColors.ts`, `brandingTheme.ts` WCAG AA on primary/accent/muted tokens; `BrandColorPanel` previews derived tokens |
 | SettingsFormActions i18n | No hardcoded English save-state defaults — callers pass `savingLabel` / `savedLabel` or fall back to `saveLabel` |
+| Contacts module contract | `CONTACTS_MODULE_CONTRACT` in `@mms/shared`; hooks/page aligned | — resolved |
+| Contacts globle1 reference | Command centre, Work (list/cards), dedup/merge, soft delete, field/tab/column RBAC, drill-down, export, Setup fields/prefs/sync without uiStrings editor | — resolved |
+| Contacts module-local jobs banner | Removed `ContactsBackgroundJobsBanner` + `useContactsBackgroundJobs`; global `BackgroundJobsTray` only | — resolved |
+| Contacts i18n (Work UI) | `components/contacts/` uses `t('contacts.*')` only — no raw `uiStrings` | — resolved |
+| Contacts merge API | `mergeContacts(keep, other, { mergedNotePrefix })` — no `uiStrings` param | — resolved |
+| Contacts soft delete API | `DELETE` + `POST /bulk-delete` set `deletedAt`/`deletedBy`; audit on writes | — resolved |
+| Contacts page orchestration | `useContactsPageState` + `useContactsPageActions` extracted from page | — resolved |
+| Contacts per-user columns | `columnPrefsStorage.ts` overlay on registry | — resolved |
+| Contacts mobile directory | `ContactCards.tsx` card layout below `md` breakpoint | — resolved |
+| Contacts report drill-down | `contactsWorkDrillDown.ts` + `ContactReport` segment → Work filters | — resolved |
+| Contacts setup widget i18n | `ContactDraggableFieldList` uses `t('contacts.setup.*')` | — resolved |
+| Contact `uiStrings` runtime bridge | Removed from `ContactConfigContext`; validation uses `translateApp`; store strips persisted `uiStrings`; `contactTranslations.ts` / `DEFAULT_UI_STRINGS` deleted | — resolved |
+| Contacts deletion reason | Optional `deletionReason` on single/bulk soft delete; confirm dialog collects it | — resolved |
+| Playwright E2E for Contacts Work flow | `e2e/contacts.api.spec.ts` — onboard, CRUD, soft delete, restore, column-prefs, saved-reports via REST | — resolved |
+| Contacts mock seed removed | Deleted `contactsData.ts`; all reads via `useContactsCollection()` / Query | — resolved |
+| Contacts prefs object sync | `contact_prefs` tenant object + `savePrefs` / `loadPrefs`; Setup audit `POST /setup-audit` | — resolved |
+| Contacts sync outbox | `contactsSyncOutbox.ts`, `useContactsSyncOutbox`, offline mutation enqueue, banner pending/conflict state (globle1 §1.4 partial) | — resolved |
+| Contacts field delete guards | `contactFieldDependencies.ts` + `ContactsSettingsPanel` blocks removal when dependencies exist (globle1 §6.6) | — resolved |
+| Contacts chunked export | `exportInlineMaxRows` on contract; `downloadContactsCsvChunked` with progress (globle1 §8 partial) | — resolved |
+| Contacts report field i18n | `contactsReportFields.ts`; `CustomReportBuilder` contacts source uses `t()` labels (globle1 §4.1) | — resolved |
+| Generic SavedReports mock | Removed hardcoded `SAVED_REPORTS` seed — empty until per-module REST wired | — resolved |
+| Widget contacts Query cache | `widgetDataUtils` reads `CONTACTS_QUERY_KEY` before localStorage | — resolved |
+| Contacts sync conflict review UI | `ContactsSyncConflictPanel` + requeue on retry (globle1 §1.4) | — resolved |
+| Contacts saved reports sharing | `shareScope` on presets + visibility filter (§4.4) | — resolved |
+| Contacts saved reports stale warnings | `validateContactsSavedReportDrillDown` + UI badges | — resolved |
+| Custom report builder registry fields | `buildContactsReportFieldCatalog` + custom `custom:*` ids (§4.1) | — resolved |
+| API field-level RBAC on contacts | `sanitizeContactForViewer` on list/write responses | — resolved |
+| Contact update audit diffs | `summarizeContactFieldChanges` on PUT | — resolved |
+| Contacts server pagination | `GET /api/contacts?page=` + list/cards Work directory (cards cap at `maxPageSize`) | — resolved |
+| Google sync server storage | `GET/PUT/DELETE /api/contacts/google-sync` + legacy localStorage migrate | — resolved |
+| Contacts sync conflict field diff | `contactSyncDiff` + expandable compare in `ContactsSyncConflictPanel` | — resolved |
+| Contacts saved report user sharing | `shareScope: users` + `ContactsSavedReportUserPicker` + backend validation | — resolved |
+| Contacts server command metrics | `GET /api/contacts/metrics` + `computeContactsCommandMetrics` + `useContactsMetrics` | — resolved |
+| Contacts export server fetch | `fetchAllContactsForQuery` pages all filtered rows before CSV | — resolved |
+| Contacts sync merge UI | `mergeContactForSync` + per-field picks + `GET /api/contacts/:id` at review | — resolved |
+| Contact profile completeness shared | `contactProfileCompleteness.ts` in `@mms/shared` | — resolved |
+| Contacts chunked export | `exportInlineMaxRows` on contract; `downloadContactsCsvChunked` with progress (globle1 §8 partial) | — resolved |
+| Contacts server duplicate pairs | `GET /api/contacts/duplicates` + `useContactsDuplicatePairs` | — resolved |
+| Global background jobs tray | `backgroundJobStore` + `BackgroundJobsTray` in `TopBarActions` | — resolved |
+| Google sync OAuth server exchange | `POST /api/contacts/google-sync/exchange` — client secret stays on backend | — resolved |
+| Google sync server-side fetch | `POST /api/contacts/google-sync/run` + refresh token on 401; tokens not exposed to client | — resolved |
+| Server background jobs API | `GET/PUT/DELETE /api/background-jobs` per-user persistence + Query sync | — resolved |
+| Contacts duplicate indexed scan | Phone/email/name index in `findContactDuplicatePairs` + paginated UI load-more | — resolved |
+| Students export job tray | `runCsvDownloadJob` + Students bulk CSV in global tray | — resolved |
+| Contacts globle2 reference | Setup audit, field deps, conflict merge UI, server Google sync/run, background jobs tray | — resolved |
+| Contacts globle2 §10 cross-module | `POST /api/contacts/resolve` + server-mode `ContactPicker`; reports/widgets aggregates; students/teachers/users/obligations resolve-by-id | — resolved |
+| Students globle2 §10 dashboard/reports | `POST /api/students/widget-aggregates` + `useStudentsWidgetAggregates`; Dashboard/KPI/PinnedWidgets off full `useStudentsCollection` | — resolved |
+| Students server pagination | `GET /api/students?page=` + Work directory list/cards (cards cap at `maxPageSize`) | — resolved |
+| Teachers globle2 §10 | `POST /api/teachers/widget-aggregates` + `GET /api/teachers?page=`; Dashboard/KPI/PinnedWidgets/RegistryPersonSelect off full list | — resolved |
+| Students/teachers batch resolve | `POST /api/students/resolve` + `POST /api/teachers/resolve`; Sessions/Attendance/Finance/Exams/Enrollments cross-module | — resolved |
+| Enrollments globle2 §10 | Wizard Step1 paginated search; EligibilityCheck `RegistryPersonSelect` + resolve; EnrollmentDetail/List resolve-by-id; sibling check no full list | — resolved |
+| KPI Summary globle2 §10 | `useStudentsMetrics` / `useTeachersMetrics` for cross-category counts; `useContactsReportAnalytics` for growth/contacts KPIs — no live full collections | — resolved |
+| Enrollment chart globle2 §10 | Dashboard `EnrollmentChart` uses `enrollments` collection not full students list | — resolved |
+| Students/Teachers form globle2 §10 | `StudentForm`/`TeacherForm` use server next-id, linked-contact-ids, duplicate-check; no `useStudents()`/`useTeachers()` on form open | — resolved |
+| Students/Teachers legacy full list | Removed `useStudents()`/`useTeachers()` FE hooks; `GET /api/students|teachers` requires `page`; reports use paginated/metrics/resolve | — resolved |
+| Contacts Reports tab §10 | Full list fetch gated to Setup + deleted archives only; Reports uses server analytics; paginated Work bulk select/export fixed | — resolved |
 
 Do not reintroduce resolved violations.

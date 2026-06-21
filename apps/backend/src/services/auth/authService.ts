@@ -2,7 +2,7 @@ import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
 import { requiresTwoFactor } from '@mms/shared';
 import { validateCredentials, createUser, type PublicUser } from './userService.js';
-import { createWorkspace, assertWorkspaceActive, getWorkspaceBySubdomain } from '../workspaceService.js';
+import { createWorkspace, assertWorkspaceActive } from '../workspaceService.js';
 import { createAuthHandoff } from './authHandoffService.js';
 import { saveObject } from '../../db/database.js';
 import type { Workspace } from '@mms/shared';
@@ -161,8 +161,4 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
   const handoffCode = await createAuthHandoff({ user });
 
   return { user, workspace, handoffCode };
-}
-
-export async function resolvePublicWorkspace(subdomain: string): Promise<Workspace | null> {
-  return getWorkspaceBySubdomain(subdomain);
 }

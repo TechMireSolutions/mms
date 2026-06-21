@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Mail, Plus } from "lucide-react";
 
 import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
-import { useSortedFields } from "../../../hooks/useSortedFields";
+import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
 
@@ -22,11 +22,6 @@ interface EmailTabProps {
   data: ContactFormData;
   onChange: (updatedData: ContactFormData) => void;
   required?: boolean;
-  tabFieldCfg?: {
-    enabled?: string[];
-    required?: string[];
-  };
-  customFields?: unknown;
 }
 
 /**
@@ -39,15 +34,16 @@ export default function EmailTab({
   onChange,
   required = false,
 }: EmailTabProps): React.JSX.Element {
-  const { emailLabels, updateEmailLabels, uiStrings } = useContactConfig();
+  const { emailLabels, updateEmailLabels } = useContactConfig();
   const { t } = useTranslation();
-  const enabledFields = useSortedFields("emails").filter((f) => f.enabled);
+  const defaultEmailLabel = emailLabels[0] || t('contacts.detail.personalLabel');
+  const enabledFields = useVisibleContactFields("emails");
 
   const createNewEmail = (): ContactEmail => {
     const item: Record<string, unknown> = {};
     enabledFields.forEach((f) => {
       if (f.key === "label") {
-        item[f.key] = emailLabels[0] || uiStrings.personalLabel;
+        item[f.key] = defaultEmailLabel;
       } else {
         item[f.key] = f.defaultValue !== undefined ? f.defaultValue : "";
       }

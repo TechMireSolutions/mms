@@ -4,7 +4,6 @@ import { DatePicker } from "../../ui/DatePicker";
 import { Popover, PopoverTrigger, PopoverContent } from "../../ui/popover";
 import { FieldDefinition } from "@mms/shared";
 import { uploadUserImage } from "@/lib/imageUpload";
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { cn } from "../../../lib/utils";
 import AvatarCropper from "../AvatarCropper";
 import FormSelect from "../../ui/FormSelect";
@@ -36,12 +35,11 @@ interface CardRemoveButtonProps {
  * Consistent 44×44 remove button for repeatable collection cards.
  */
 export function CardRemoveButton({ onClick, label }: CardRemoveButtonProps): React.JSX.Element {
-  const { uiStrings } = useContactConfig();
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${uiStrings?.deleteActionClass || REMOVE_BTN}`}
+      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${REMOVE_BTN}`}
       aria-label={label}
     >
       <Trash2 className="w-4 h-4" />
@@ -55,7 +53,8 @@ interface EditableSelectProps {
   options: string[];
   value: string;
   onChange: (val: string) => void;
-  onUpdateOptions: (opts: string[]) => void;
+  /** When omitted, options are read-only (Setup-only editing — globle2 §5). */
+  onUpdateOptions?: (opts: string[]) => void;
   placeholder?: string;
   className?: string;
 }
@@ -65,15 +64,18 @@ export function EditableSelect({
   value,
   onChange,
   onUpdateOptions,
-  placeholder = "Select...",
+  placeholder,
   className = "w-28",
 }: EditableSelectProps): React.JSX.Element {
   const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("contacts.form.selectOption");
+  const canEditOptions = Boolean(onUpdateOptions);
   const [open, setOpen] = useState(false);
   const [customVal, setCustomVal] = useState("");
   const [highlight, setHighlight] = useState(-1);
 
   const handleAdd = () => {
+    if (!onUpdateOptions) return;
     const text = customVal.trim();
     if (text && !options.includes(text)) {
       const next = [...options, text];
@@ -84,6 +86,7 @@ export function EditableSelect({
   };
 
   const handleRemove = (opt: string, e: React.MouseEvent) => {
+    if (!onUpdateOptions) return;
     e.stopPropagation();
     const next = options.filter((o) => o !== opt);
     onUpdateOptions(next);
@@ -116,13 +119,13 @@ export function EditableSelect({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={placeholder}
+          aria-label={resolvedPlaceholder}
           className={cn(
             "min-h-[44px] flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-left",
             className
           )}
         >
-          <span className="truncate">{value || placeholder}</span>
+          <span className="truncate">{value || resolvedPlaceholder}</span>
           <ChevronDown className={`w-4 h-4 flex-shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
       </PopoverTrigger>
@@ -168,14 +171,16 @@ export function EditableSelect({
                   <Check className={`w-3.5 h-3.5 flex-shrink-0 ${isSel ? "opacity-100" : "opacity-0"}`} />
                   <span className="truncate">{opt}</span>
                 </span>
-                <button
-                  type="button"
-                  onClick={(e) => handleRemove(opt, e)}
-                  className={`min-w-[28px] min-h-[28px] flex items-center justify-center rounded transition-colors ${REMOVE_BTN}`}
-                  title={t("contacts.form.removeOption", { option: opt })}
-                >
-                  <X className="w-3 h-3" />
-                </button>
+                {canEditOptions ? (
+                  <button
+                    type="button"
+                    onClick={(e) => handleRemove(opt, e)}
+                    className={`min-w-[28px] min-h-[28px] flex items-center justify-center rounded transition-colors ${REMOVE_BTN}`}
+                    title={t("contacts.form.removeOption", { option: opt })}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                ) : null}
               </div>
             );
           })}
@@ -183,6 +188,7 @@ export function EditableSelect({
             <div className="px-3 py-2 text-sm text-muted-foreground italic">{t("contacts.form.noOptions")}</div>
           )}
         </div>
+        {canEditOptions ? (
         <div className="p-2 flex gap-1.5 bg-muted/20 flex-shrink-0">
           <input
             type="text"
@@ -206,6 +212,7 @@ export function EditableSelect({
             {t("common.add")}
           </button>
         </div>
+        ) : null}
       </PopoverContent>
     </Popover>
   );
@@ -396,7 +403,6 @@ interface CustomFieldInputProps {
  * @returns React element.
  */
 export function CustomFieldInput({ field, value, onChange, disabled = false }: CustomFieldInputProps): React.JSX.Element {
-  const { uiStrings } = useContactConfig();
   const { t } = useTranslation();
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const displayValue = value ?? "";
@@ -523,7 +529,6 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
                 setCropSrc(null);
               }}
               onCancel={() => setCropSrc(null)}
-              uiStrings={uiStrings}
             />
           )}
           <div className="relative flex-shrink-0">

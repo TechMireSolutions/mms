@@ -4,6 +4,7 @@
  */
 import React, { useState } from "react";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
+import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 
 export interface ExportColumn {
   header: string;
@@ -15,6 +16,9 @@ export interface ExportToolbarProps {
   columns: ExportColumn[];
   rows: Record<string, unknown>[];
   filename: string;
+  /** When set, Excel export registers in the global background jobs tray. */
+  moduleId?: string;
+  exportLabel?: string;
 }
 
 function toCSV(columns: ExportColumn[], rows: Record<string, unknown>[]): string {
@@ -103,12 +107,32 @@ async function downloadPDF(columns: ExportColumn[], rows: Record<string, unknown
  * @param {ExportToolbarProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function ExportToolbar({ title, columns, rows, filename }: ExportToolbarProps) {
+export default function ExportToolbar({
+  title,
+  columns,
+  rows,
+  filename,
+  moduleId,
+  exportLabel,
+}: ExportToolbarProps) {
   const [format, setFormat] = useState<"excel" | "pdf">("excel");
 
   const handleExport = () => {
-    if (format === "excel") downloadExcel(columns, rows, filename);
-    else downloadPDF(columns, rows, filename, title);
+    if (format === "excel") {
+      if (moduleId) {
+        runGridCsvExportJob({
+          moduleId,
+          label: exportLabel ?? title,
+          filename,
+          columns,
+          rows,
+        });
+        return;
+      }
+      downloadExcel(columns, rows, filename);
+    } else {
+      void downloadPDF(columns, rows, filename, title);
+    }
   };
 
   return (

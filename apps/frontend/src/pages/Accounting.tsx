@@ -19,6 +19,9 @@ import AccountingSettings from "../components/accounting/AccountingSettings";
 import AccountingDashboard from "../components/accounting/AccountingDashboard";
 import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
+import AccountingCommandMetrics from "../components/accounting/AccountingCommandMetrics";
+import { useAccountingJournalColumnLayout } from "@/hooks/useAccountingJournalColumnLayout";
+import { useAccountingAccountColumnLayout } from "@/hooks/useAccountingAccountColumnLayout";
 import {
   DEFAULT_SETTINGS, CURRENCIES,
 } from '@/lib/data/accountingData';
@@ -68,6 +71,9 @@ export default function Accounting() {
   const entries = useLiveCollection("accounting_entries");
   const fiscalYears = useLiveCollection("accounting_fiscal_years");
   const [settings,   setSettings]    = useState(() => getObject("accounting_settings", DEFAULT_SETTINGS));
+  const [filteredCount, setFilteredCount] = useState(0);
+  const journalColumnLayout = useAccountingJournalColumnLayout();
+  const accountColumnLayout = useAccountingAccountColumnLayout();
 
   const setAccounts = useCallback((updater: typeof accounts | ((prev: typeof accounts) => typeof accounts)) => {
     const next = typeof updater === "function" ? updater(accounts) : updater;
@@ -88,16 +94,14 @@ export default function Accounting() {
     saveObject("accounting_settings", settings);
   }, [settings]);
 
+  useEffect(() => {
+    if (activeSubTab === 'journal' || activeSubTab === 'coa') return;
+    setFilteredCount(entries.length);
+  }, [activeSubTab, entries.length]);
+
   const activeFY = fiscalYears.find((f) => f.status === "active");
   const cur = CURRENCIES.find((c) => c.code === settings.currency) || CURRENCIES[0];
   const fmt = (n: number) => `${cur.symbol} ${n.toLocaleString(undefined, { minimumFractionDigits: settings.decimalPlaces })}`;
-
-  const posted = entries.filter((e) => e.status === "posted").length;
-  const drafts = entries.filter((e) => e.status === "draft").length;
-  const totalPostedDebit = entries
-    .filter((e) => e.status === "posted")
-    .flatMap((e) => e.lines)
-    .reduce((s, l) => s + l.debit, 0);
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
@@ -115,6 +119,8 @@ export default function Accounting() {
           )
         }
       />
+
+      <AccountingCommandMetrics entryTotal={entries.length} shown={filteredCount} />
 
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
@@ -157,7 +163,21 @@ export default function Accounting() {
           )}
 
           {activeTab === "work" && activeSubTab === "journal" && (
-            <JournalEntries entries={entries} accounts={accounts} settings={settings} fiscalYears={fiscalYears} onChange={setEntries} fmt={fmt} />
+            <JournalEntries
+              entries={entries}
+              accounts={accounts}
+              settings={settings}
+              fiscalYears={fiscalYears}
+              onChange={setEntries}
+              fmt={fmt}
+              onFilteredCountChange={setFilteredCount}
+              isColumnVisible={journalColumnLayout.isColumnVisible}
+              columnCustomizer={{
+                columnRegistry: journalColumnLayout.columnRegistry,
+                updateUserColumnLayout: journalColumnLayout.updateUserColumnLayout,
+                labels: journalColumnLayout.customizerLabels,
+              }}
+            />
           )}
           {activeTab === "work" && activeSubTab === "ledger" && (
             <GeneralLedger accounts={accounts} entries={entries} fmt={fmt} />
@@ -166,7 +186,17 @@ export default function Accounting() {
             <TrialBalance accounts={accounts} entries={entries} fiscalYears={fiscalYears} fmt={fmt} />
           )}
           {activeTab === "work" && activeSubTab === "coa" && (
-            <ChartOfAccounts accounts={accounts} onChange={setAccounts} />
+            <ChartOfAccounts
+              accounts={accounts}
+              onChange={setAccounts}
+              onFilteredCountChange={setFilteredCount}
+              isColumnVisible={accountColumnLayout.isColumnVisible}
+              columnCustomizer={{
+                columnRegistry: accountColumnLayout.columnRegistry,
+                updateUserColumnLayout: accountColumnLayout.updateUserColumnLayout,
+                labels: accountColumnLayout.customizerLabels,
+              }}
+            />
           )}
           {activeTab === "setup" && (
             <div className="space-y-4">

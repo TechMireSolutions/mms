@@ -4,9 +4,12 @@ trigger: model_decision
 
 # MMS Module Isolation
 
+Full universal module spec: **`mms-module-architecture.md`** (source: `globle1.md`). This rule owns **tier content boundaries** only.
+
 Every feature module page uses **exactly three top-level tabs** from `useModuleTierTabs()`:
 
 ```
+PageHeader (command centre — always visible)
 work | reports | setup
               └─ Fields | Preferences (and module-specific setup sub-tabs)
 ```
@@ -15,7 +18,7 @@ work | reports | setup
 
 | Tier id | Allowed content | Banned |
 |---------|-----------------|--------|
-| **work** | CRUD, lists, wizards, mark/record flows, module dashboards scoped to that domain | KPI rows, `ModuleReports`, cross-module widgets, report builders, other modules' summaries |
+| **work** | Directory (search/filter/sort), detail drawer, bulk action bar, CRUD, wizards, mark/record flows | KPI rows, `ModuleReports`, cross-module widgets, report builders, other modules' summaries |
 | **reports** | `KPISummary` (module category only), `ModuleReports` / module report panels, charts derived from this module's collections | Foreign-module KPIs, invoice widgets on Obligations, Hasanat payouts on Finance, enrollment reports under Work |
 | **setup** | `{module}_settings`, field registries, preferences, RBAC matrix (Users) | Live data tables, analytics, global institution settings (those live under `/settings`) |
 

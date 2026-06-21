@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Star, Package, Send, Gift, Layers, RotateCcw, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Star, Package, Send, Gift } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
@@ -17,6 +17,9 @@ import HasanatSettings from "../components/hasanat/HasanatSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
+import HasanatCommandMetrics from "../components/hasanat/HasanatCommandMetrics";
+import { useHasanatDistributionColumnLayout } from "@/hooks/useHasanatDistributionColumnLayout";
+import { useHasanatRedemptionColumnLayout } from "@/hooks/useHasanatRedemptionColumnLayout";
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 
@@ -51,31 +54,20 @@ export default function HasanatCards() {
   const denoms = useLiveCollection("hasanat_denoms");
   const batches = useLiveCollection("hasanat_batches");
   const distributions = useLiveCollection("hasanat_distributions");
-
-  const totalStock = batches.reduce((s, b) => s + b.quantity, 0);
-  const totalRemaining = batches.reduce((s, b) => s + b.remaining, 0);
-  const totalDistributed = distributions.reduce((s, d) => s + d.quantity, 0);
-  const totalRedeemed = distributions.filter((d) => d.status === "redeemed").reduce((s, d) => s + d.quantity, 0);
-  const totalReturned = distributions.filter((d) => d.status === "returned").reduce((s, d) => d.quantity + s, 0);
-  const totalActive = distributions.filter((d) => d.status === "active").reduce((s, d) => d.quantity + s, 0);
-
-  const stats = useMemo(
-    () => [
-      { label: t("hasanat.stats.totalStock"), value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10" },
-      { label: t("hasanat.stats.available"), value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20" },
-      { label: t("hasanat.stats.distributed"), value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
-      { label: t("hasanat.stats.redeemed"), value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20" },
-      { label: t("hasanat.stats.active"), value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20" },
-      { label: t("hasanat.stats.returned"), value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
-    ],
-    [t, totalStock, totalRemaining, totalDistributed, totalRedeemed, totalActive, totalReturned],
-  );
+  const [filteredCount, setFilteredCount] = useState(0);
+  const distributionColumnLayout = useHasanatDistributionColumnLayout();
+  const redemptionColumnLayout = useHasanatRedemptionColumnLayout();
 
   const effectiveTab = resolveModuleTierTab(
     activeTab,
     PAGE_TABS.map((tab) => tab.id),
   );
-  const effectiveSubTab = SUB_TABS.find((t) => t.id === activeSubTab) ? activeSubTab : "overview";
+  const effectiveSubTab = SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : "overview";
+
+  useEffect(() => {
+    if (effectiveSubTab === 'distribute' || effectiveSubTab === 'redemptions') return;
+    setFilteredCount(distributions.length);
+  }, [effectiveSubTab, distributions.length]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
@@ -86,6 +78,8 @@ export default function HasanatCards() {
         title={t("nav.hasanatCards")}
         subtitle={t("page.hasanat.subtitle")}
       />
+
+      <HasanatCommandMetrics shown={filteredCount} />
 
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
@@ -134,8 +128,34 @@ export default function HasanatCards() {
           
           {effectiveTab === "work" && effectiveSubTab === "overview"     && <HasanatDashboard />}
           {effectiveTab === "work" && effectiveSubTab === "stock"         && <StockManager batches={batches} denoms={denoms} onUpdate={(b) => saveCollection("hasanat_batches", b)} />}
-          {effectiveTab === "work" && effectiveSubTab === "distribute"    && <DistributionManager distributions={distributions} denoms={denoms} batches={batches} onUpdate={(d) => saveCollection("hasanat_distributions", d)} />}
-          {effectiveTab === "work" && effectiveSubTab === "redemptions"   && <RedemptionTracker distributions={distributions} onUpdateDistributions={(d) => saveCollection("hasanat_distributions", d)} />}
+          {effectiveTab === "work" && effectiveSubTab === "distribute"    && (
+            <DistributionManager
+              distributions={distributions}
+              denoms={denoms}
+              batches={batches}
+              onUpdate={(d) => saveCollection("hasanat_distributions", d)}
+              onFilteredCountChange={setFilteredCount}
+              isColumnVisible={distributionColumnLayout.isColumnVisible}
+              columnCustomizer={{
+                columnRegistry: distributionColumnLayout.columnRegistry,
+                updateUserColumnLayout: distributionColumnLayout.updateUserColumnLayout,
+                labels: distributionColumnLayout.customizerLabels,
+              }}
+            />
+          )}
+          {effectiveTab === "work" && effectiveSubTab === "redemptions"   && (
+            <RedemptionTracker
+              distributions={distributions}
+              onUpdateDistributions={(d) => saveCollection("hasanat_distributions", d)}
+              onFilteredCountChange={setFilteredCount}
+              isColumnVisible={redemptionColumnLayout.isColumnVisible}
+              columnCustomizer={{
+                columnRegistry: redemptionColumnLayout.columnRegistry,
+                updateUserColumnLayout: redemptionColumnLayout.updateUserColumnLayout,
+                labels: redemptionColumnLayout.customizerLabels,
+              }}
+            />
+          )}
           </ErrorBoundary>
         </motion.div>
       </AnimatePresence>

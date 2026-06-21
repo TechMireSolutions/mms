@@ -1,35 +1,64 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Teacher } from '@mms/shared';
-import { normalizeStoredTeacher } from '@mms/shared';
-import { TEACHERS } from '@/lib/data/teachersData';
+import { useMemo } from 'react';
+import type { Teacher, ModuleColumnPref, TeachersCommandMetricsSnapshot, TeachersListPageResult, TeachersWidgetAggregateResult } from '@mms/shared';
+import { normalizeStoredTeacher, TEACHERS_MODULE_CONTRACT, teachersWidgetQueryFromWidget } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { TEACHER_COUNT_QUERY_KEY } from './useTeacherCount';
+import { uniqueRegistryIds } from '@/lib/registryResolve';
 
 export const TEACHERS_QUERY_KEY = ['teachers', 'list'] as const;
+export const TEACHERS_METRICS_QUERY_KEY = ['teachers', 'metrics'] as const;
+export const TEACHERS_WIDGET_AGGREGATES_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'widget-aggregates'] as const;
+export const TEACHER_COLUMN_PREFS_QUERY_KEY = [
+  TEACHERS_MODULE_CONTRACT.collectionKey,
+  'column-prefs',
+] as const;
+
+const TEACHERS_API = TEACHERS_MODULE_CONTRACT.restBasePath;
+
+export interface TeachersPaginatedParams {
+  page: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  specialization?: string;
+  sortField?: string;
+  sortDir?: 'asc' | 'desc';
+  enabled?: boolean;
+}
+
+function buildTeachersPageUrl(params: TeachersPaginatedParams): string {
+  const q = new URLSearchParams();
+  q.set('page', String(params.page));
+  q.set('limit', String(params.limit ?? TEACHERS_MODULE_CONTRACT.defaultPageSize));
+  if (params.search?.trim()) q.set('search', params.search.trim());
+  if (params.status?.trim()) q.set('status', params.status.trim());
+  if (params.specialization) q.set('specialization', params.specialization);
+  if (params.sortField) q.set('sortField', params.sortField);
+  if (params.sortDir) q.set('sortDir', params.sortDir);
+  return `${TEACHERS_API}?${q.toString()}`;
+}
+
+export function teachersPaginatedQueryKey(params: TeachersPaginatedParams) {
+  return [...TEACHERS_QUERY_KEY, 'page', params] as const;
+}
+
+export function useTeachersPaginated(params: TeachersPaginatedParams) {
+  const { isAuthenticated } = useAuth();
+  const enabled = params.enabled ?? true;
+  return useQuery({
+    queryKey: teachersPaginatedQueryKey(params),
+    queryFn: async () => apiJson<TeachersListPageResult>(buildTeachersPageUrl(params)),
+    enabled: isAuthenticated && enabled,
+    staleTime: 15_000,
+    placeholderData: (prev) => prev,
+  });
+}
 
 export interface TeacherRecord {
   id: string | number;
   [key: string]: unknown;
-}
-
-async function fetchTeachers(): Promise<TeacherRecord[]> {
-  const body = await apiJson<{ teachers: TeacherRecord[] }>('/api/teachers');
-  saveCollection('teachers', body.teachers);
-  return getCollection<TeacherRecord>('teachers', []);
-}
-
-export function useTeachers(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: TEACHERS_QUERY_KEY,
-    queryFn: fetchTeachers,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
 }
 
 export function useTeacherMutations() {
@@ -38,6 +67,8 @@ export function useTeacherMutations() {
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: TEACHERS_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: TEACHER_COUNT_QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: TEACHERS_METRICS_QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: TEACHERS_WIDGET_AGGREGATES_QUERY_KEY });
   };
 
   const createTeacher = useMutation({
@@ -71,14 +102,152 @@ export function useTeacherMutations() {
   return { createTeacher, updateTeacher, deleteTeacher };
 }
 
-/** Query-first teachers for analytics; falls back to localStorage cache (hydrated). */
-export function useTeachersCollection(options?: { enabled?: boolean }): Teacher[] {
+export function useTeacherById(teacherId: string | undefined, enabled = true) {
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: [...TEACHERS_QUERY_KEY, 'by-id', teacherId] as const,
+    queryFn: async () => {
+      const body = await apiJson<{ teacher: TeacherRecord }>(`${TEACHERS_API}/${teacherId}`);
+      return body.teacher as unknown as Teacher;
+    },
+    enabled: isAuthenticated && enabled && Boolean(teacherId),
+    staleTime: 30_000,
+  });
+}
+
+export function useTeacherLinkedContactIds(excludeTeacherId?: string) {
+  const { isAuthenticated } = useAuth();
+  const q = excludeTeacherId ? `?excludeId=${encodeURIComponent(excludeTeacherId)}` : '';
+  return useQuery({
+    queryKey: [...TEACHERS_QUERY_KEY, 'linked-contact-ids', excludeTeacherId ?? ''] as const,
+    queryFn: async () => {
+      const body = await apiJson<{ contactIds: Array<string | number> }>(`${TEACHERS_API}/linked-contact-ids${q}`);
+      return body.contactIds;
+    },
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
+}
+
+export interface TeacherNextEmployeeIdParams {
+  prefix?: string;
+  enabled?: boolean;
+}
+
+export function useTeacherNextEmployeeId(params: TeacherNextEmployeeIdParams = {}) {
+  const { isAuthenticated } = useAuth();
+  const enabled = params.enabled ?? true;
+  const q = new URLSearchParams();
+  if (params.prefix) q.set('prefix', params.prefix);
+
+  return useQuery({
+    queryKey: [...TEACHERS_QUERY_KEY, 'next-employee-id', params] as const,
+    queryFn: async () => {
+      const suffix = q.toString() ? `?${q.toString()}` : '';
+      const body = await apiJson<{ employeeId: string }>(`${TEACHERS_API}/next-employee-id${suffix}`);
+      return body.employeeId;
+    },
+    enabled: isAuthenticated && enabled,
+    staleTime: 15_000,
+  });
+}
+
+export function useTeachersMetrics(options?: { enabled?: boolean }) {
+  const queryEnabled = options?.enabled ?? true;
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: TEACHERS_METRICS_QUERY_KEY,
+    queryFn: async () => {
+      const body = await apiJson<{ metrics: TeachersCommandMetricsSnapshot }>(`${TEACHERS_API}/metrics`);
+      return body.metrics;
+    },
+    enabled: isAuthenticated && queryEnabled,
+    staleTime: 30_000,
+  });
+}
+
+/** Batch-resolve teacher rows by id (globle2 §10 — cross-module labels). */
+export function useTeachersByIds(ids: (string | number | null | undefined)[]) {
+  const { isAuthenticated } = useAuth();
+  const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
+  const signature = normalized.join(',');
+
+  return useQuery({
+    queryKey: [...TEACHERS_QUERY_KEY, 'resolve', signature] as const,
+    queryFn: async () => {
+      const body = await apiJson<{ teachers: TeacherRecord[] }>(`${TEACHERS_API}/resolve`, {
+        method: 'POST',
+        body: JSON.stringify({ ids: normalized }),
+      });
+      return body.teachers as unknown as Teacher[];
+    },
+    enabled: isAuthenticated && normalized.length > 0,
+    staleTime: 30_000,
+  });
+}
+
+export interface TeachersWidgetAggregateWidgetInput {
+  id: string;
+  collection: string;
+  operation: 'count' | 'sum' | 'avg' | 'percentage';
+  targetField?: string;
+  filterField?: string;
+  filterOperator?: 'equals' | 'contains' | 'gt' | 'lt';
+  filterValue?: string;
+  xAxisField?: string;
+}
+
+export function useTeachersWidgetAggregates(
+  widgets: TeachersWidgetAggregateWidgetInput[],
+  options?: { enabled?: boolean },
+) {
+  const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useTeachers({ enabled });
-  const fromLocal = useLiveCollection<Teacher>('teachers', TEACHERS, { enabled });
-  if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery as unknown as Teacher[];
-  }
-  return fromLocal;
+  const teacherQueries = widgets
+    .filter((widget) => widget.collection === 'teachers')
+    .map((widget) => teachersWidgetQueryFromWidget(widget));
+  const querySignature = teacherQueries.map((query) => query.id).sort().join(',');
+
+  return useQuery({
+    queryKey: [...TEACHERS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
+    queryFn: async () => {
+      const body = await apiJson<{ results: Record<string, TeachersWidgetAggregateResult> }>(
+        `${TEACHERS_API}/widget-aggregates`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ widgets: teacherQueries }),
+        },
+      );
+      return body.results;
+    },
+    enabled: isAuthenticated && enabled && teacherQueries.length > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useTeacherColumnPrefs() {
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: TEACHER_COLUMN_PREFS_QUERY_KEY,
+    queryFn: async () => {
+      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${TEACHERS_API}/column-prefs`);
+      return body.prefs;
+    },
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
+}
+
+export function useTeacherColumnPrefsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (prefs: ModuleColumnPref[]) =>
+      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${TEACHERS_API}/column-prefs`, {
+        method: 'PUT',
+        body: JSON.stringify({ prefs }),
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(TEACHER_COLUMN_PREFS_QUERY_KEY, data.prefs);
+    },
+  });
 }

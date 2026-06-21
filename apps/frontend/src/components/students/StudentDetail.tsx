@@ -5,16 +5,14 @@ import {
   Calendar, User, Clock, BookOpen, GraduationCap, Sparkles
 } from "lucide-react";
 import { formatDate, getObject } from "../../lib/db";
-import { useLiveCollection } from "../../hooks/useLiveCollection";
 import {
   type StudentsSettings,
   DEFAULT_STUDENTS_SETTINGS,
   getSortedStudentFields
 } from "@mms/shared";
 import { useSessionsCollection } from '@/hooks/useSessions';
-import { CONTACTS } from '@/lib/data/contactsData';
+import { useContactsByIds } from '@/hooks/useContacts';
 import { calcAge, type Student } from '@/lib/data/studentsData';
-import type { Contact } from "../../lib/contactFields";
 import StatusBadge from "../ui/StatusBadge";
 import { AVATAR_GRADIENT_ROTATION } from "@/lib/semanticTone";
 
@@ -35,7 +33,12 @@ const DETAIL_TABS = [
 export default function StudentDetail({ student, onClose, onEdit }: StudentDetailProps): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const sessions = useSessionsCollection();
-  const contacts = useLiveCollection<Contact>("contacts", CONTACTS);
+  const linkedIds = useMemo(
+    () => [student.contactId, student.fatherContactId, student.motherContactId, student.guardianContactId],
+    [student.contactId, student.fatherContactId, student.motherContactId, student.guardianContactId],
+  );
+  const contacts = useContactsByIds(linkedIds);
+  const contactList = contacts.data ?? [];
 
   const settings = useMemo(() => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS), []);
   const fields = settings.fields || DEFAULT_STUDENTS_SETTINGS.fields || {};
@@ -45,10 +48,10 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
     return getSortedStudentFields(fieldOrder, fields, customFields);
   }, [fieldOrder, fields, customFields]);
 
-  const studentContact = contacts.find(c => String(c.id) === String(student.contactId));
-  const fatherContact = contacts.find(c => String(c.id) === String(student.fatherContactId));
-  const motherContact = contacts.find(c => String(c.id) === String(student.motherContactId));
-  const guardianContact = contacts.find(c => String(c.id) === String(student.guardianContactId));
+  const studentContact = contactList.find(c => String(c.id) === String(student.contactId));
+  const fatherContact = contactList.find(c => String(c.id) === String(student.fatherContactId));
+  const motherContact = contactList.find(c => String(c.id) === String(student.motherContactId));
+  const guardianContact = contactList.find(c => String(c.id) === String(student.guardianContactId));
 
   const age = calcAge(student.dob);
   const enrolledSessionDetails = sessions.filter(s => student.enrolledSessions?.includes(s.id));

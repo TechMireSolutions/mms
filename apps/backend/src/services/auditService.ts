@@ -37,5 +37,5 @@ export async function recordAudit(input: RecordAuditInput): Promise<void> {
 }
 
 /** Keys and collections that trigger audit on write. */
-export const AUDITED_OBJECTS = new Set(['global_settings', 'branding']);
-export const AUDITED_COLLECTIONS = new Set(['users']);
+export const AUDITED_OBJECTS = new Set(['global_settings', 'branding', 'contact_field_config']);
+export const AUDITED_COLLECTIONS = new Set(['users', 'contacts']);

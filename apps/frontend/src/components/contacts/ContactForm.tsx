@@ -1,15 +1,29 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
 import { Phone, Mail, MapPin, Share2, User, Heart, LucideIcon } from "lucide-react";
 import { notify } from "@/lib/notify";
 import FormModal from "@/components/ui/FormModal";
 import { useContactConfig, useContactValidation, calculateProfileCompleteness, ValidationError } from '@/lib/contexts/ContactConfigContext';
-import { toTitleCase, applyTitleCaseToContact, normalizeToE164, parsePhoneNumber, Contact } from "@mms/shared";
+import {
+  toTitleCase,
+  applyTitleCaseToContact,
+  normalizeToE164,
+  parsePhoneNumber,
+  Contact,
+  canViewContactTab,
+  CONTACTS_MODULE_CONTRACT,
+} from "@mms/shared";
+import useTranslation from "@/hooks/useTranslation";
+import usePermissions from '@/hooks/usePermissions';
+import { apiJson } from "@/lib/apiClient";
+import { useReadOnlyContactFieldKeys } from '@/hooks/useVisibleContactFields';
 import BasicTab     from "./form/BasicTab";
 import PhoneTab     from "./form/PhoneTab";
 import EmailTab     from "./form/EmailTab";
 import AddressTab   from "./form/AddressTab";
 import SocialTab    from "./form/SocialTab";
 import EmergencyTab from "./form/EmergencyTab";
+import RelationshipsTab from "./form/RelationshipsTab";
+import ConfirmAlertDialog from "@/components/ui/ConfirmAlertDialog";
 const ICON_MAP: Record<string, LucideIcon> = {
   User, Phone, Mail, MapPin, Share2, Heart
 };
@@ -20,6 +34,7 @@ const TAB_DATA_KEY: Record<string, string> = {
   addresses: "addresses",
   socials: "socials",
   emergency: "emergencyContacts",
+  relationships: "relationships",
 };
 interface TabRenderProps {
   data: Partial<Contact>;
@@ -28,7 +43,6 @@ interface TabRenderProps {
   defaultCountry: string;
   defaultCity: string;
   defaultProvince: string;
-  allContacts: Contact[];
   readOnlyFieldKeys?: string[];
 }
 
@@ -71,12 +85,17 @@ const SYSTEM_TAB_RENDERS: Record<
       required={requiredTabIds.has("socials")}
     />
   ),
-  emergency: ({ data, onChange, requiredTabIds, allContacts }) => (
+  emergency: ({ data, onChange, requiredTabIds }) => (
     <EmergencyTab
       data={data as unknown as Parameters<typeof EmergencyTab>[0]["data"]}
       onChange={onChange as unknown as Parameters<typeof EmergencyTab>[0]["onChange"]}
       required={requiredTabIds.has("emergency")}
-      allContacts={allContacts}
+    />
+  ),
+  relationships: ({ data, onChange }) => (
+    <RelationshipsTab
+      data={data as unknown as Parameters<typeof RelationshipsTab>[0]["data"]}
+      onChange={onChange as unknown as Parameters<typeof RelationshipsTab>[0]["onChange"]}
     />
   ),
 };
@@ -84,7 +103,6 @@ const SYSTEM_TAB_RENDERS: Record<
 interface ContactFormProps {
   open?: boolean;
   contact?: Contact;
-  allContacts?: Contact[];
   onClose: () => void;
   onSave: (contact: Contact) => void;
   defaultCountry?: string;
@@ -100,7 +118,6 @@ interface ContactFormProps {
  *
  * @param props - Component props.
  * @param props.contact - The contact object to edit, or undefined for a new contact.
- * @param props.allContacts - The complete list of system contacts.
  * @param props.onClose - Callback to close the form dialog.
  * @param props.onSave - Callback to save/create the contact.
  * @param props.defaultCountry - Default fallback country.
@@ -111,7 +128,6 @@ interface ContactFormProps {
 export default function ContactForm({
   open = true,
   contact,
-  allContacts = [],
   onClose,
   onSave,
   defaultCountry: defaultCountryProp = "",
@@ -120,7 +136,10 @@ export default function ContactForm({
   initialDraft,
   lockGender = false,
 }: ContactFormProps): React.JSX.Element {
-  const { fieldConfig, prefs, enabledTabIds, requiredTabIds, fields, countryCodesMap, lifecycleStages, defaultContactRating, defaultValueFor, uiStrings } = useContactConfig();
+  const { fieldConfig, prefs, enabledTabIds, requiredTabIds, fields, countryCodesMap, lifecycleStages, defaultContactRating } = useContactConfig();
+  const { t } = useTranslation();
+  const { role } = usePermissions();
+  const viewerRole = role ?? '';
   const validate = useContactValidation();
 
   const [tab,         setTab]         = useState<string>("basic");
@@ -135,7 +154,7 @@ export default function ContactForm({
       relationships: [],
       activities: [],
     };
-    Object.entries(fields).forEach(([_, tabFields]) => {
+    Object.values(fields).forEach((tabFields) => {
       (tabFields || []).forEach((f) => {
         if (f.enabled) {
           initial[f.key] = f.defaultValue !== undefined ? f.defaultValue : "";
@@ -178,6 +197,9 @@ export default function ContactForm({
   });
 
   const [saving,      setSaving]      = useState<boolean>(false);
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
+  const [duplicateCount, setDuplicateCount] = useState(0);
+  const pendingSaveRef = useRef<Contact | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [errors,      setErrors]      = useState<ValidationError[]>([]);
 
@@ -190,14 +212,19 @@ export default function ContactForm({
     const tabsFromConfig = fieldConfig.formTabs || [];
     const sorted = [...tabsFromConfig]
       .sort((a, b) => a.order - b.order)
-      .filter((t) => t.enabled && (t.key === "basic" || enabledTabIds.has(t.key)));
+      .filter((tabDef) => {
+        if (!tabDef.enabled) return false;
+        if (tabDef.key === "basic") return true;
+        if (!enabledTabIds.has(tabDef.key)) return false;
+        return canViewContactTab(viewerRole, tabDef);
+      });
 
     return sorted.map((t) => ({
       key: t.key,
       label: t.label,
       icon: t.icon && ICON_MAP[t.icon] ? ICON_MAP[t.icon] : User,
     }));
-  }, [fieldConfig.formTabs, enabledTabIds]);
+  }, [fieldConfig.formTabs, enabledTabIds, viewerRole]);
 
   const tabCount = (tabKey: string): number => {
     const key = TAB_DATA_KEY[tabKey];
@@ -223,12 +250,27 @@ export default function ContactForm({
     setData(d);
   }, []);
 
+  const commitSave = useCallback(
+    (contactToSave: Contact) => {
+      onSave(contactToSave);
+      setSaveSuccess(true);
+      notify.success(contact ? t('contacts.form.contactUpdated') : t('contacts.form.contactCreated'), {
+        description: `${data.name || data.firstName || t('contacts.form.contact')} ${t('contacts.form.contactSavedSuccess')}`,
+      });
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setSaving(false);
+      }, 600);
+    },
+    [onSave, contact, data.name, data.firstName, t],
+  );
+
   const handleSave = useCallback(async () => {
     const validationErrors = validate(data);
 
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
-      notify.error(uiStrings.pleaseFixErrors, { description: validationErrors[0].message });
+      notify.error(t('contacts.form.pleaseFixErrors'), { description: validationErrors[0].message });
       if (validationErrors[0].tabId) {
         setTab(validationErrors[0].tabId);
       }
@@ -265,20 +307,40 @@ export default function ContactForm({
 
     const contactToSave = applyTitleCaseToContact(contactToSaveRaw) as Contact;
 
-    onSave(contactToSave);
-    setSaveSuccess(true);
-    notify.success(contact ? uiStrings.contactUpdated : uiStrings.contactCreated, {
-      description: `${data.name || data.firstName || uiStrings.contact} ${uiStrings.contactSavedSuccess}`,
-    });
-    setTimeout(() => {
-      setSaveSuccess(false);
+    try {
+      const { matchCount } = await apiJson<{ matchCount: number }>(
+        `${CONTACTS_MODULE_CONTRACT.restBasePath}/duplicate-check`,
+        { method: 'POST', body: JSON.stringify({ contact: contactToSave }) },
+      );
+      if (matchCount > 0) {
+        pendingSaveRef.current = contactToSave;
+        setDuplicateCount(matchCount);
+        setDuplicateConfirmOpen(true);
+        setSaving(false);
+        return;
+      }
+    } catch {
+      notify.error(t('settings.serverSaveFailed'));
       setSaving(false);
-    }, 600);
-  }, [data, onSave, contact, validate]);
+      return;
+    }
 
+    commitSave(contactToSave);
+  }, [data, commitSave, validate, countryCodesMap, defaultCountryProp, t]);
+
+  const confirmDuplicateSave = useCallback(() => {
+    if (pendingSaveRef.current) {
+      setSaving(true);
+      commitSave(pendingSaveRef.current);
+      pendingSaveRef.current = null;
+    }
+    setDuplicateConfirmOpen(false);
+  }, [commitSave]);
+
+  const tabReadOnlyKeys = useReadOnlyContactFieldKeys(tab);
   const readOnlyFieldKeys = useMemo(
-    () => (lockGender ? ["gender"] : []),
-    [lockGender],
+    () => [...new Set([...tabReadOnlyKeys, ...(lockGender ? ["gender"] : [])])],
+    [tabReadOnlyKeys, lockGender],
   );
 
   const renderTab = () => {
@@ -291,7 +353,6 @@ export default function ContactForm({
         defaultCountry,
         defaultCity,
         defaultProvince,
-        allContacts,
         readOnlyFieldKeys,
       });
     }
@@ -310,41 +371,51 @@ export default function ContactForm({
       <span className="font-semibold text-foreground">{data.name || data.firstName}</span>
       <div className="flex items-center gap-2 border-l border-border pl-3">
         <span>
-          {data.phones?.length || 0} {uiStrings.phones}
+          {data.phones?.length || 0} {t('contacts.form.phonesLabel')}
         </span>
         <span className="border-l border-border pl-2">
-          {data.emails?.length || 0} {uiStrings.emails}
+          {data.emails?.length || 0} {t('contacts.form.emailsLabel')}
         </span>
       </div>
     </div>
   ) : (
-    <span className="text-xs text-destructive">{uiStrings.first_name_required_to_save}</span>
+    <span className="text-xs text-destructive">{t('contacts.form.firstNameRequired')}</span>
   );
 
   return (
-    <FormModal
-      open={open}
-      onClose={onClose}
-      title={contact ? uiStrings.editContactHeader : uiStrings.addNewContactHeader}
-      icon={User}
-      tall
-      progress={completeness}
-      progressLabel={uiStrings.progress}
-      tabs={formTabs}
-      activeTab={tab}
-      onTabChange={setTab}
-      tabPanelIdPrefix="contact-form-tab"
-      error={errors.map((e) => e.message)}
-      cancelLabel={uiStrings.cancel}
-      saveLabel={uiStrings.saveContact}
-      savedLabel={uiStrings.saved}
-      onSave={() => void handleSave()}
-      saving={saving}
-      saved={saveSuccess}
-      saveDisabled={!data.firstName?.trim()}
-      footerStart={footerStart}
-    >
-      {renderTab()}
-    </FormModal>
+    <>
+      <FormModal
+        open={open}
+        onClose={onClose}
+        title={contact ? t('contacts.form.editTitle') : t('contacts.form.addTitle')}
+        icon={User}
+        tall
+        progress={completeness}
+        progressLabel={t('contacts.form.progress')}
+        tabs={formTabs}
+        activeTab={tab}
+        onTabChange={setTab}
+        tabPanelIdPrefix="contact-form-tab"
+        error={errors.map((e) => e.message)}
+        cancelLabel={t('common.cancel')}
+        saveLabel={t('contacts.form.saveContact')}
+        savedLabel={t('contacts.form.saved')}
+        onSave={() => void handleSave()}
+        saving={saving}
+        saved={saveSuccess}
+        saveDisabled={!data.firstName?.trim()}
+        footerStart={footerStart}
+      >
+        {renderTab()}
+      </FormModal>
+      <ConfirmAlertDialog
+        open={duplicateConfirmOpen}
+        onOpenChange={setDuplicateConfirmOpen}
+        title={t('contacts.form.saveContact')}
+        description={t("contacts.duplicateSaveWarning", { count: duplicateCount })}
+        confirmLabel={t("common.yes")}
+        onConfirm={confirmDuplicateSave}
+      />
+    </>
   );
 }

@@ -15,11 +15,24 @@ paths:
   - "apps/frontend/src/lib/backup/**"
   - "apps/frontend/src/lib/ContactConfigContext.tsx"
   - "apps/frontend/src/lib/contactFieldsStore.ts"
+  - "apps/frontend/src/lib/contactConfig/**"
+  - "globle2.md"
 ---
 
 # MMS Configuration
 
-See also: **`mms-settings-navigation.md`** for `/settings` scope, nav grouping, and `SYSTEM_MODULE_NAV`.
+See also: **`mms-settings-navigation.md`** for `/settings` scope · **`mms-module-setup.md`** for module Setup Preferences (globle2.md §7).
+
+## globle2.md §7 — module preferences (Setup tier)
+
+| § | Requirement | Contacts |
+|---|-------------|----------|
+| 7.1 Smart defaults | Field `defaultValue` + module prefs; consistent on create/import | `prefsStorage.ts`, registry defaults |
+| 7.2 Visual categorisation | Status/stage colours on directory, drawer, reports, mobile; text + colour | Lifecycle colours in prefs, `StatusBadge` |
+| 7.3 Workflow rules | Valid statuses, transitions, permissions | `lifecycleStage` REST updates |
+| 7.4 Notification rules | Event-triggered notify respecting RBAC | Partial — export/sync/merge toasts |
+
+Module prefs persist via contract `prefsObjectKey` (e.g. `contact_prefs`). App-wide config stays on `/settings`.
 
 ## Hierarchy (merge order)
 

@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, UserPlus, ChevronRight, ChevronLeft, Check,
   Eye, EyeOff, Info, Mail, Lock, User, Phone,
-  ShieldCheck, AlertCircle, Loader2, CalendarClock, Search
+  ShieldCheck, AlertCircle, Loader2, CalendarClock
 } from "lucide-react";
 import {
   USER_STATUS_VALUES,
@@ -20,15 +20,14 @@ import useGlobalSettings from "@/hooks/useGlobalSettings";
 import { useWorkspaceRoles } from "@/hooks/useWorkspaceRoles";
 import Modal from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
+import type { Contact } from "@mms/shared";
 import {
   getPasswordPolicyHintKey,
   toTitleCase,
   translateApp,
   validatePasswordPolicy,
 } from "@mms/shared";
-import { CONTACTS } from '@/lib/data/contactsData';
-import type { Contact } from "../../lib/contactFields";
+import ContactPicker from '@/components/contactLink/ContactPicker';
 import { getGlobalSettings, getObject } from "../../lib/db";
 import {
   DEFAULT_USERS_SETTINGS,
@@ -233,129 +232,57 @@ interface Step1Props {
  * @param props - Sub-form state.
  * @returns Contact selector section.
  */
-function Step1({ form, setForm, errors, existingEmails }: Step1Props): JSX.Element {
+function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
   const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(false);
 
-  const contacts = useLiveCollection<Contact>('contacts', CONTACTS);
-
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return contacts.filter((c) => {
-      const emailVal = (c.email as string | undefined) || c.emails?.[0]?.address || "";
-      const phoneVal = (c.phone as string | undefined) || c.phones?.[0]?.number || "";
-      return (
-        c.name.toLowerCase().includes(q) ||
-        emailVal.toLowerCase().includes(q) ||
-        phoneVal.includes(q)
-      );
-    }).slice(0, 8);
-  }, [search, contacts]);
-
-  const selected = form.contactId ? contacts.find((c) => String(c.id) === String(form.contactId)) : null;
-
-  const selectContact = (c: Contact) => {
-    const primaryEmail = c.emails?.[0]?.address || (c.email as string | undefined) || "";
-    const primaryPhone = c.phones?.[0]?.number || (c.phone as string | undefined) || "";
+  const handleContactChange = (id: string | number | null, contact?: Contact | null): void => {
+    if (!id || !contact) {
+      setForm((f) => ({ ...f, contactId: null, name: "", email: "", phone: "" }));
+      return;
+    }
+    const primaryEmail = contact.emails?.[0]?.address || (contact.email as string | undefined) || "";
+    const primaryPhone = contact.phones?.[0]?.number || (contact.phone as string | undefined) || "";
     setForm((f) => ({
       ...f,
-      contactId: c.id,
-      name: c.name,
+      contactId: contact.id,
+      name: contact.name,
       email: primaryEmail,
       phone: primaryPhone,
     }));
-    setSearch("");
-    setOpen(false);
-  };
-
-  const clear = () => {
-    setForm((f) => ({ ...f, contactId: null, name: "", email: "", phone: "" }));
-    setSearch("");
   };
 
   return (
     <div className="space-y-4">
       <div>
-        <Label required>{t("users.addSearchContact")}</Label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-          <input
-            value={selected ? selected.name : search}
-            onChange={(e) => { setSearch(e.target.value); setOpen(true); if (selected) clear(); }}
-            onFocus={() => setOpen(true)}
-            placeholder={t("users.addSearchPlaceholder")}
-            className={FORM_INPUT_ICON}
-          />
-          {selected && (
-            <button type="button" onClick={clear}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+        <ContactPicker
+          label={t("users.addSearchContact")}
+          value={form.contactId}
+          onChange={handleContactChange}
+          searchPlaceholder={t("users.addSearchPlaceholder")}
+          emptyTitle={t("users.addNoContacts")}
+        />
         <FieldError msg={errors.contactId} />
-
-        <AnimatePresence>
-          {open && !selected && (
-            <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-              className="mt-1 rounded-xl border border-border bg-background shadow-lg overflow-hidden z-10 relative">
-              {filtered.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-muted-foreground">{t("users.addNoContacts")}</p>
-              ) : (
-                <ul className="max-h-48 overflow-y-auto divide-y divide-border">
-                  {filtered.map((c) => {
-                    const email = c.emails?.[0]?.address || (c.email as string | undefined) || "";
-                    const phone = c.phones?.[0]?.number || (c.phone as string | undefined) || "";
-                    const alreadyUser = existingEmails.includes(email.toLowerCase());
-                    const avatarInitials = c.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-                    const tagVal = c.tag as string | undefined;
-                    return (
-                      <li key={c.id}>
-                        <button type="button" disabled={alreadyUser}
-                          onClick={() => selectContact(c)}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${alreadyUser ? "opacity-40 cursor-not-allowed" : "hover:bg-muted"}`}>
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-bold text-primary">{avatarInitials}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-foreground truncate">{c.name}</p>
-                            <p className="text-[11px] text-muted-foreground truncate">{email || phone}</p>
-                          </div>
-                          {tagVal && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border whitespace-nowrap">{tagVal}</span>}
-                          {alreadyUser && <span className="text-[10px] text-muted-foreground">{t("users.addAlreadyUser")}</span>}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      {/* Selected contact preview */}
-      {selected && (
+      {form.contactId && form.name ? (
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
           className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-bold text-primary">{selected.name.split(" ").map((w) => w[0]).join("").slice(0,2).toUpperCase()}</span>
+              <span className="text-sm font-bold text-primary">{form.name.split(" ").map((w) => w[0]).join("").slice(0,2).toUpperCase()}</span>
             </div>
             <div>
-              <p className="text-sm font-bold text-foreground">{selected.name}</p>
+              <p className="text-sm font-bold text-foreground">{form.name}</p>
               <p className="text-[11px] text-muted-foreground">{form.email}</p>
             </div>
-            {(selected.tag as string | undefined) && <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">{selected.tag as string}</span>}
           </div>
-          {form.phone && (
+          {form.phone ? (
             <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5" /> {form.phone}
             </p>
-          )}
+          ) : null}
         </motion.div>
-      )}
+      ) : null}
 
       <div>
         <Label>{t("users.fieldStatus")}</Label>

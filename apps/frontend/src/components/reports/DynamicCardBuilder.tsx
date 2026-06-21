@@ -1,6 +1,7 @@
 import React from "react";
 import { WidgetBuilder, CustomWidget } from "./PinnedWidgets";
 import { CustomCard } from "./reportMetadata";
+import { getObject, saveObject } from "../../lib/db";
 
 interface DynamicCardBuilderProps {
   initialCollection?: CustomCard["collection"];
@@ -60,25 +61,24 @@ export default function DynamicCardBuilder({
     };
 
     if (mode === "kpi") {
-      const activeList = JSON.parse(localStorage.getItem(`kpi_custom_cards_${category}`) || "[]") as CustomCard[];
+      const activeList = getObject<CustomCard[]>(`kpi_custom_cards_${category}`, []);
       let updated: CustomCard[];
       if (editCardConfig) {
         updated = activeList.map((c) => c.id === editCardConfig.id ? newCard : c);
       } else {
         updated = [...activeList, newCard];
       }
-      localStorage.setItem(`kpi_custom_cards_${category}`, JSON.stringify(updated));
+      saveObject(`kpi_custom_cards_${category}`, updated);
     } else {
       // Save directly to the unified kpi_custom_widgets local storage
-      const saved = localStorage.getItem("kpi_custom_widgets");
-      const allWidgets = saved ? JSON.parse(saved) as CustomWidget[] : [];
+      const allWidgets = getObject<CustomWidget[]>("kpi_custom_widgets", []);
       let updated: CustomWidget[];
       if (editCardConfig) {
         updated = allWidgets.map((w: CustomWidget) => w.id === editCardConfig.id ? savedWidget : w);
       } else {
         updated = [...allWidgets, savedWidget];
       }
-      localStorage.setItem("kpi_custom_widgets", JSON.stringify(updated));
+      saveObject("kpi_custom_widgets", updated);
     }
 
     if (onCancelEdit) {

@@ -26,7 +26,6 @@ export interface ContactCreateModalProps {
   open: boolean;
   onClose: () => void;
   onCreated: (contact: Contact) => void;
-  allContacts: Contact[];
   initialName?: string;
   createDefaults?: ContactCreateDefaults;
 }
@@ -39,7 +38,6 @@ export default function ContactCreateModal({
   open,
   onClose,
   onCreated,
-  allContacts,
   initialName = "",
   createDefaults,
 }: ContactCreateModalProps): React.JSX.Element | null {
@@ -74,7 +72,6 @@ export default function ContactCreateModal({
       <ContactForm
         key={`create-${initialName}-${createDefaults?.gender ?? ""}`}
         open
-        allContacts={allContacts}
         initialDraft={initialDraft}
         lockGender={createDefaults?.lockGender === true}
         onClose={onClose}

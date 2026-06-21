@@ -33,4 +33,31 @@ describe('apiClient', () => {
     }
     globalThis.fetch = original;
   });
+
+  it('intercepts and sanitizes column preferences payload', async () => {
+    const original = globalThis.fetch;
+    let seenBody: string | undefined;
+    globalThis.fetch = async (_input, init) => {
+      seenBody = init?.body as string;
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    };
+    const { apiFetch } = await import('../lib/apiClient');
+    await apiFetch('/api/contacts/column-prefs', {
+      method: 'PUT',
+      body: JSON.stringify({
+        prefs: [
+          { key: 'name', enabled: 'true', order: 1.5 },
+          { key: 'email', enabled: false, order: '2' },
+          { key: '  ', enabled: true, order: 0 },
+        ],
+      }),
+    });
+    expect(seenBody).toBeDefined();
+    const parsed = JSON.parse(seenBody!);
+    expect(parsed.prefs).toEqual([
+      { key: 'name', enabled: true, order: 1 },
+      { key: 'email', enabled: false, order: 2 },
+    ]);
+    globalThis.fetch = original;
+  });
 });

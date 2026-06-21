@@ -8,8 +8,8 @@ import { toast } from "@/components/ui/use-toast";
  * `toast()` directly from feature code.
  *
  * @example
- * notify.success(uiStrings.contactCreated, { description: `${name} saved.` });
- * notify.error(uiStrings.pleaseFixErrors, { description: firstError.message });
+ * notify.success(t('contacts.form.contactCreated'), { description: `${name} saved.` });
+ * notify.error(t('contacts.form.pleaseFixErrors'), { description: firstError.message });
  */
 
 /** Standard auto-dismiss durations (ms). */

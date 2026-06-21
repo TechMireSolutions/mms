@@ -1,7 +1,7 @@
 import { fetchCollection, persistCollection, fetchObject } from '../dbSyncService.js';
 import { whatsAppQueue, Task } from './whatsAppQueue.js';
 import { PuppeteerWhatsAppProvider } from './whatsAppProvider.js';
-import { Contact, ContactPhone, WhatsAppPreferences, WhatsAppVerificationResult } from './whatsAppTypes.js';
+import type { Contact, PhoneNumber, WhatsAppPreferences, WhatsAppVerificationResult } from '@mms/shared';
 
 const provider = new PuppeteerWhatsAppProvider();
 
@@ -35,7 +35,7 @@ export async function getWhatsAppPreferences(): Promise<WhatsAppPreferences> {
 /**
  * Normalizes and returns the complete international phone number digits (code + local number).
  */
-export function getFullPhoneDigits(phone: ContactPhone | undefined): string | null {
+export function getFullPhoneDigits(phone: PhoneNumber | undefined): string | null {
   if (!phone) return null;
   const code = phone.countryCode ? phone.countryCode.replace(/\D/g, '') : '';
   let num = phone.number ? phone.number.replace(/\D/g, '') : '';

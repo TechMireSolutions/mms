@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { MapPin, Plus } from "lucide-react";
 
 import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
-import { useSortedFields } from "../../../hooks/useSortedFields";
+import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
 
@@ -25,14 +25,9 @@ interface AddressTabProps {
   data: ContactFormData;
   onChange: (updatedData: ContactFormData) => void;
   required?: boolean;
-  tabFieldCfg?: {
-    enabled?: string[];
-    required?: string[];
-  };
   defaultCountry: string;
   defaultCity: string;
   defaultProvince: string;
-  customFields?: unknown;
 }
 
 /**
@@ -48,15 +43,16 @@ export default function AddressTab({
   defaultCity,
   defaultProvince,
 }: AddressTabProps): React.JSX.Element {
-  const { addressLabels, updateAddressLabels, uiStrings } = useContactConfig();
+  const { addressLabels, updateAddressLabels } = useContactConfig();
   const { t } = useTranslation();
-  const enabledFields = useSortedFields("addresses").filter((f) => f.enabled);
+  const defaultAddressLabel = addressLabels[0] || t('contacts.detail.homeLabel');
+  const enabledFields = useVisibleContactFields("addresses");
 
   const createNewAddress = (): ContactAddress => {
     const item: Record<string, unknown> = {};
     enabledFields.forEach((f) => {
       if (f.key === "label") {
-        item[f.key] = addressLabels[0] || uiStrings.homeLabel;
+        item[f.key] = defaultAddressLabel;
       } else if (f.key === "city") {
         item[f.key] = defaultCity;
       } else if (f.key === "state") {
@@ -102,7 +98,7 @@ export default function AddressTab({
                 <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
                 <EditableSelect
                   options={addressLabels || []}
-                  value={a.label || uiStrings.homeLabel}
+                  value={a.label || defaultAddressLabel}
                   onChange={(val) => updateAddress(i, { label: val })}
                   onUpdateOptions={updateAddressLabels}
                   placeholder={t("contacts.form.selectLabel")}

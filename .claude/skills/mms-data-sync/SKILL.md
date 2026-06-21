@@ -20,9 +20,24 @@ saveCollection('collection_key', updated);
 import { useLiveCollection } from '../hooks/useLiveCollection';
 const items = useLiveCollection<MyType>('collection_key');
 
-// REST modules (students, contacts)
-import { useStudents, useStudentMutations, useStudentsCollection } from '@/hooks/useStudents';
-import { useContacts, useContactMutations, useContactsCollection } from '@/hooks/useContacts';
+// REST modules (students, contacts, teachers)
+import {
+  useStudentsPaginated,
+  useStudentMutations,
+  useStudentsByIds,
+  useStudentsMetrics,
+} from '@/hooks/useStudents';
+import {
+  useContactsPaginated,
+  useContactMutations,
+  useContactsByIds,
+  useContactsMetrics,
+} from '@/hooks/useContacts';
+import {
+  useTeachersPaginated,
+  useTeacherMutations,
+  useTeachersByIds,
+} from '@/hooks/useTeachers';
 ```
 
 `local-database-update` event — dispatched by saves; `useLiveCollection` subscribes. Do not duplicate listeners.
@@ -32,9 +47,9 @@ import { useContacts, useContactMutations, useContactsCollection } from '@/hooks
 | Pattern | Use when |
 |---------|----------|
 | `useLiveCollection` + `saveCollection` | Legacy module CRUD via `/api/db/collections/*` |
-| TanStack Query + `apiJson` | Dedicated REST (`/api/students`, `/api/contacts`, workspace) |
-| Hybrid cache | Query `queryFn` calls `saveCollection` so KPI/report widgets on localStorage stay in sync |
-| `useXxxCollection()` | Page reads: Query when non-empty, else localStorage fallback (offline boot) |
+| TanStack Query + `apiJson` | Dedicated REST (`/api/students`, `/api/contacts`, `/api/teachers`, workspace) |
+| Paginated Work + resolve | `useStudentsPaginated`, `useContactsPaginated`, `useXxxByIds` — no full-list fetch (globle2 §10) |
+| Metrics / aggregates | KPI, dashboard, reports — `useStudentsMetrics`, `useContactsReportAnalytics`, widget-aggregates |
 
 **Writes on REST modules:** use `useXxxMutations()` only — mutations invalidate Query; do not also `saveCollection` in the page for the same entity.
 

@@ -4,14 +4,12 @@ import useTranslation from "@/hooks/useTranslation";
 
 interface ContactAvatarProps {
   contact: Contact;
-  uiStrings?: Record<string, string>;
   className?: string;
 }
 
-export default function ContactAvatar({ contact, uiStrings, className = "w-8 h-8 rounded-full text-xs" }: ContactAvatarProps): React.JSX.Element {
+export default function ContactAvatar({ contact, className = "w-8 h-8 rounded-full text-xs" }: ContactAvatarProps): React.JSX.Element {
   const { t } = useTranslation();
-  const unknownInitial = uiStrings?.unknownInitial || "?";
-  const initials = getInitials(contact.name || contact.firstName, 2) || unknownInitial;
+  const initials = getInitials(contact.name || contact.firstName, 2) || "?";
   const colorClass = getAvatarColor(contact.id);
   
   if (contact.avatar) {

@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, SlidersHorizontal, RefreshCw, X } from "lucide-react";
+import { Search, SlidersHorizontal, RefreshCw, X, Archive } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -8,21 +8,21 @@ import ColumnCustomizer from "./ColumnCustomizer";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import useTranslation from "@/hooks/useTranslation";
 
-interface SortOption {
-  field: string;
-  label: string;
-}
-
 interface ContactsToolbarProps {
   search: string;
   onSearchChange: (val: string) => void;
   filterGender: string;
   onGenderChange: (gender: string) => void;
+  filterLifecycleStage?: string;
+  onLifecycleStageChange?: (stage: string) => void;
   sortField: string;
   onSort: (field: string) => void;
   hasActiveFilters: boolean;
   activeFilterCount: number;
   onClearFilters: () => void;
+   showDeletedArchives?: boolean;
+  onShowDeletedChange?: (show: boolean) => void;
+  canViewDeleted?: boolean;
 }
 
 /**
@@ -36,13 +36,18 @@ export default function ContactsToolbar({
   onSearchChange,
   filterGender,
   onGenderChange,
+  filterLifecycleStage = "",
+  onLifecycleStageChange,
   sortField,
   onSort,
   hasActiveFilters,
   activeFilterCount,
   onClearFilters,
+  showDeletedArchives = false,
+  onShowDeletedChange,
+  canViewDeleted = false,
 }: ContactsToolbarProps): React.JSX.Element {
-  const { availableColumns, genders, systemSortOptions } = useContactConfig();
+  const { availableColumns, genders, systemSortOptions, lifecycleStages } = useContactConfig();
   const { t } = useTranslation();
  
   const sortOptions = React.useMemo(() => {
@@ -119,6 +124,22 @@ export default function ContactsToolbar({
                 {g ? g.charAt(0).toUpperCase() + g.slice(1) : t("contacts.allGenders")}
               </DropdownMenuCheckboxItem>
             ))}
+            {onLifecycleStageChange && lifecycleStages.length > 0 && (
+              <>
+                <DropdownMenuSeparator className="bg-border" />
+                <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.lifecycleFilter")}</DropdownMenuLabel>
+                {["", ...lifecycleStages].map((stage) => (
+                  <DropdownMenuCheckboxItem
+                    key={stage || "all"}
+                    checked={filterLifecycleStage === stage}
+                    onCheckedChange={() => onLifecycleStageChange(stage)}
+                    className="text-sm"
+                  >
+                    {stage || t("contacts.allLifecycleStages")}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </>
+            )}
             <DropdownMenuSeparator className="bg-border" />
             <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.sortBy")}</DropdownMenuLabel>
             {sortOptions.map((s) => (
@@ -143,6 +164,22 @@ export default function ContactsToolbar({
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>{t("contacts.clearFilters")}</span>
+          </button>
+        )}
+
+        {canViewDeleted && onShowDeletedChange && (
+          <button
+            type="button"
+            onClick={() => onShowDeletedChange(!showDeletedArchives)}
+            aria-pressed={showDeletedArchives}
+            className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${
+              showDeletedArchives
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <Archive className="w-3.5 h-3.5" />
+            <span>{showDeletedArchives ? t("contacts.showActive") : t("contacts.showDeleted")}</span>
           </button>
         )}
 

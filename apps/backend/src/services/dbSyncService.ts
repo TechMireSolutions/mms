@@ -99,3 +99,9 @@ export async function fetchObject(key: string): Promise<unknown | null> {
 export async function persistObject(key: string, data: unknown): Promise<void> {
   await dbSaveObject(key, data);
 }
+
+/** Removes a tenant-scoped object by logical key. */
+export async function deletePersistedObject(key: string): Promise<void> {
+  const { deleteObject } = await import('../db/database.js');
+  await deleteObject(key);
+}

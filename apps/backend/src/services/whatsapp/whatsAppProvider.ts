@@ -1,4 +1,4 @@
-import { WhatsAppProvider, WhatsAppVerificationResult } from './whatsAppTypes.js';
+import type { WhatsAppProvider, WhatsAppVerificationResult } from '@mms/shared';
 import pkg from 'whatsapp-web.js';
 // @ts-expect-error qrcode-terminal ships without TypeScript declarations
 import qrcode from 'qrcode-terminal';
@@ -9,31 +9,6 @@ interface WhatsAppWebClient {
   on(event: string, listener: (...args: unknown[]) => void): void;
   initialize(): Promise<void>;
   getNumberId(number: string): Promise<{ id: unknown } | null>;
-}
-
-/**
- * Mock provider for local development, testing, and simulation.
- */
-export class MockWhatsAppProvider implements WhatsAppProvider {
-  async verifyPhoneNumber(phoneNumber: string): Promise<WhatsAppVerificationResult> {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    const digits = phoneNumber.replace(/\D/g, '');
-    if (digits.length < 8) {
-      return {
-        status: 'FAILED',
-        checkedAt: new Date().toISOString(),
-        error: 'Invalid phone number format or length'
-      };
-    }
-
-    const isRegistered = digits.endsWith('99') || digits.endsWith('88') || digits.endsWith('77') || digits.endsWith('00');
-
-    return {
-      status: isRegistered ? 'REGISTERED' : 'NOT_REGISTERED',
-      checkedAt: new Date().toISOString()
-    };
-  }
 }
 
 /**

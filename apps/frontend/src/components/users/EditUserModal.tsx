@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { USER_STATUS_VALUES, toTitleCase, type SystemUser } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
-import { useContactsCollection } from '@/hooks/useContacts';
+import { useContactById } from '@/hooks/useContacts';
 import FormModal from '@/components/ui/FormModal';
 import ContactPicker from '@/components/contactLink/ContactPicker';
 import { Button } from '@/components/ui/button';
@@ -27,20 +27,14 @@ export interface EditUserModalProps {
   onSave: (user: SystemUser) => void;
 }
 
-function resolveContactId(user: SystemUser, contacts: ReturnType<typeof useContactsCollection>): string | number | null {
-  if (user.contactId) return user.contactId;
-  const match = contacts.find((c) => {
-    const email = (c.email as string | undefined) || c.emails?.[0]?.address || '';
-    return email.toLowerCase() === user.email.toLowerCase();
-  });
-  return match?.id ?? null;
+function resolveContactId(user: SystemUser): string | number | null {
+  return user.contactId ?? null;
 }
 
 export default function EditUserModal({ user, onClose, onSave }: EditUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const workspaceRoles = useWorkspaceRoles();
-  const contacts = useContactsCollection();
-  const initialContactId = useMemo(() => resolveContactId(user, contacts), [user, contacts]);
+  const initialContactId = useMemo(() => resolveContactId(user), [user]);
 
   const form = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
@@ -52,12 +46,14 @@ export default function EditUserModal({ user, onClose, onSave }: EditUserModalPr
     },
   });
 
-  const selectedContact = contacts.find(
-    (c) => String(c.id) === String(form.watch('contactId')),
+  const watchedContactId = form.watch('contactId');
+  const { data: selectedContact } = useContactById(
+    watchedContactId ? String(watchedContactId) : undefined,
+    Boolean(watchedContactId),
   );
 
   const handleSave = form.handleSubmit((values) => {
-    const contact = contacts.find((c) => String(c.id) === String(values.contactId));
+    const contact = selectedContact;
     if (!contact) return;
     const name = toTitleCase(contact.name.trim()) as string;
     const email = ((contact.email as string | undefined) || contact.emails?.[0]?.address || '').trim().toLowerCase();
@@ -98,7 +94,6 @@ export default function EditUserModal({ user, onClose, onSave }: EditUserModalPr
                 <ContactPicker
                   label={t('users.fieldContact')}
                   value={field.value || null}
-                  contacts={contacts}
                   onChange={(id) => field.onChange(id ?? '')}
                   searchPlaceholder={t('users.contactSearch')}
                   emptyTitle={t('users.contactEmptyTitle')}

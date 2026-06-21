@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState, lazy, Suspense, useMemo } from "react";
 import { Receipt, Printer } from "lucide-react";
 import { MOCK_CURRENCIES, ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
@@ -49,7 +49,11 @@ export default function ObligationCollectionDetail({ collection, obligationTypes
   const [showPrint, setShowPrint] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
 
-  const contacts = useMergedObligationContacts();
+  const contactIds = useMemo(
+    () => [collection.sender_id, collection.reference_id],
+    [collection.sender_id, collection.reference_id],
+  );
+  const contacts = useMergedObligationContacts(contactIds);
   const users = useMergedObligationUsers();
 
   const getContact = (id?: string | number | null) => contacts.find((c) => String(c.id) === String(id));

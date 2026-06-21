@@ -1,4 +1,10 @@
-import { COLOR_PALETTES, type ContactPreferences, type FieldConfig } from "@mms/shared";
+import {
+  COLOR_PALETTES,
+  CONTACTS_MODULE_CONTRACT,
+  type ContactPreferences,
+  type FieldConfig,
+} from "@mms/shared";
+import { getObject, saveObject } from "../db";
 
 function syncOptionsInConfig(cfg: FieldConfig, tabId: string, fieldKey: string, options: string[]): FieldConfig {
   const nextConfig = { ...cfg };
@@ -13,19 +19,11 @@ function syncOptionsInConfig(cfg: FieldConfig, tabId: string, fieldKey: string, 
   return nextConfig;
 }
 
-// ── Storage keys ─────────────────────────────────────────────────────────────
 const PREFS_KEY = "mms_contact_prefs";
 const CONFIG_KEY = "mms_contact_field_config";
-const VISIBLE_COLUMNS_KEY = "mms_visible_columns_v1";
+const PREFS_OBJECT_KEY = CONTACTS_MODULE_CONTRACT.prefsObjectKey;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/**
- * Loads the contact preferences from localStorage, falling back to empty object.
- *
- * @returns {Partial<ContactPreferences>} The parsed preferences.
- */
-function loadPrefs(): Partial<ContactPreferences> {
+function parseLocalPrefs(): Partial<ContactPreferences> {
   try {
     let raw = localStorage.getItem(PREFS_KEY);
     if (!raw) {
@@ -36,14 +34,30 @@ function loadPrefs(): Partial<ContactPreferences> {
         try {
           localStorage.removeItem("madrasa_contact_prefs");
         } catch (err) {
-          console.warn("[ContactConfigContext] Failed to remove legacy contact prefs key:", err);
+          console.warn("[prefsStorage] Failed to remove legacy contact prefs key:", err);
         }
       }
     }
-    return raw ? JSON.parse(raw) : {};
+    return raw ? (JSON.parse(raw) as Partial<ContactPreferences>) : {};
   } catch {
     return {};
   }
+}
+
+/** Loads contact prefs — tenant object authoritative, localStorage offline cache. */
+function loadPrefs(): Partial<ContactPreferences> {
+  const fromObject = getObject(PREFS_OBJECT_KEY, null) as Partial<ContactPreferences> | null;
+  const fromLocal = parseLocalPrefs();
+  if (fromObject && typeof fromObject === "object") {
+    return { ...fromLocal, ...fromObject };
+  }
+  return fromLocal;
+}
+
+/** Persists contact prefs to tenant object + localStorage cache. */
+function savePrefs(prefs: ContactPreferences): void {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  saveObject(PREFS_OBJECT_KEY, prefs);
 }
 
 const DEFAULT_PREFS: ContactPreferences = {
@@ -74,8 +88,8 @@ const DEFAULT_PREFS: ContactPreferences = {
 export {
   syncOptionsInConfig,
   loadPrefs,
+  savePrefs,
   DEFAULT_PREFS,
   PREFS_KEY,
   CONFIG_KEY,
-  VISIBLE_COLUMNS_KEY,
 };

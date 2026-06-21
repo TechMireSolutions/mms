@@ -4,6 +4,8 @@ trigger: model_decision
 
 # MMS Fields & Tabs Registry
 
+Setup **Fields** tier behaviour: **`mms-module-setup.md`** (globle2.md §6) · persistence: below · workflow: skills `mms-fields-registry`, `mms-module-setup`.
+
 ## Universal schemas (in `@mms/shared`)
 
 **Field:** `{ key, label, labelKey?, type, enabled, order, options, permissions, defaultValue }`
@@ -15,6 +17,19 @@ trigger: model_decision
 
 - One schema for default + custom — no parallel contacts-only types.
 - `isSystem` = origin metadata only — **never branch behaviour on it**.
+
+## globle2.md §6 — fields and tabs (summary)
+
+| § | Rule | Contacts |
+|---|------|----------|
+| 6.1 | Predefined fields — hide OK, permanent delete banned | `isContactSeedFieldKey()` |
+| 6.2 | Custom fields need label, type, tab, visibility, permissions, validation | `CustomFieldsBuilder` |
+| 6.3 | Visibility cascade across form, drawer, reports, export, filter, search, mobile | `useVisibleContactFields`, column registry |
+| 6.4 | Field belongs to one tab; move without data loss | `DraggableFieldList` reorder |
+| 6.5 | Required enforced on create/edit/import/bulk; guide to tab on error | Zod + `ContactForm` |
+| 6.6 | Archive preferred; delete only after dependency check | `getContactFieldRemovalIssues()` |
+
+Full detail: **`mms-module-setup.md`**.
 
 ## Configuration/Fields tab
 
@@ -48,7 +63,7 @@ Drag-drop reorder · Lucide icon picker · user colour · per-role `permissions`
 |--------|---------------------------|
 | Custom field | Column + registry entry + form/table binding |
 | Custom tab | Table + Drizzle migration + registry + CRUD routes + tab view |
-| Delete field | Drop column + registry + all UI references |
+| Delete field | Dependency check + registry + UI references — **Contacts:** `contactFieldDependencies.ts` |
 | Delete tab | Cascade table, data, routes, config |
 | Disable | Hide UI only — preserve data |
 

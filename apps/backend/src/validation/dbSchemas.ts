@@ -18,5 +18,3 @@ export function normalizeCollectionSaveBody(
   if (Array.isArray(body)) return body;
   return body.data;
 }
-
-export type SyncPayloadInput = z.infer<typeof syncPayloadSchema>;

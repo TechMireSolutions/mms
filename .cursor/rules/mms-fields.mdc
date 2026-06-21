@@ -1,10 +1,12 @@
 ---
 description: Field/tab registry, Configuration/Fields, custom field provisioning target
-globs: apps/frontend/src/lib/contactFieldsStore.ts,apps/frontend/src/hooks/useSortedFields.ts,apps/frontend/src/components/ui/CustomFieldsBuilder.tsx,apps/frontend/src/components/ui/DraggableFieldList.tsx,apps/frontend/src/components/**/form/**,apps/frontend/src/components/**/settings/**,packages/shared/src/contactTypes.ts
+globs: apps/frontend/src/lib/contactFieldsStore.ts,apps/frontend/src/hooks/useSortedFields.ts,apps/frontend/src/components/ui/CustomFieldsBuilder.tsx,apps/frontend/src/components/ui/DraggableFieldList.tsx,apps/frontend/src/components/**/form/**,apps/frontend/src/components/**/settings/**,packages/shared/src/contactTypes.ts,packages/shared/src/contactFieldDependencies.ts,globle2.md
 alwaysApply: false
 ---
 
 # MMS Fields & Tabs Registry
+
+Setup **Fields** tier behaviour: **`mms-module-setup.mdc`** (globle2.md §6) · persistence: below · workflow: skills `mms-fields-registry`, `mms-module-setup`.
 
 ## Universal schemas (in `@mms/shared`)
 
@@ -17,6 +19,19 @@ alwaysApply: false
 
 - One schema for default + custom — no parallel contacts-only types.
 - `isSystem` = origin metadata only — **never branch behaviour on it**.
+
+## globle2.md §6 — fields and tabs (summary)
+
+| § | Rule | Contacts |
+|---|------|----------|
+| 6.1 | Predefined fields — hide OK, permanent delete banned | `isContactSeedFieldKey()` |
+| 6.2 | Custom fields need label, type, tab, visibility, permissions, validation | `CustomFieldsBuilder` |
+| 6.3 | Visibility cascade across form, drawer, reports, export, filter, search, mobile | `useVisibleContactFields`, column registry |
+| 6.4 | Field belongs to one tab; move without data loss | `DraggableFieldList` reorder |
+| 6.5 | Required enforced on create/edit/import/bulk; guide to tab on error | Zod + `ContactForm` |
+| 6.6 | Archive preferred; delete only after dependency check | `getContactFieldRemovalIssues()` |
+
+Full detail: **`mms-module-setup.mdc`**.
 
 ## Configuration/Fields tab
 
@@ -50,7 +65,7 @@ Drag-drop reorder · Lucide icon picker · user colour · per-role `permissions`
 |--------|---------------------------|
 | Custom field | Column + registry entry + form/table binding |
 | Custom tab | Table + Drizzle migration + registry + CRUD routes + tab view |
-| Delete field | Drop column + registry + all UI references |
+| Delete field | Dependency check + registry + UI references — **Contacts:** `contactFieldDependencies.ts` |
 | Delete tab | Cascade table, data, routes, config |
 | Disable | Hide UI only — preserve data |
 

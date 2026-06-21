@@ -9,27 +9,14 @@ interface Step5FeeCalculationProps {
   session: Session | null | undefined;
   feeResult: CalculatedFee | null | undefined;
   onFeeResult: (fee: CalculatedFee) => void;
-  students?: Student[];
 }
 
-/**
- * Step 5 component for calculating the final fee and applying sibling/session discounts.
- *
- * @param props - Component props.
- * @param props.student - Selected student object.
- * @param props.session - Selected session object.
- * @param props.feeResult - Calculated fee result.
- * @param props.onFeeResult - Callback to update the parent with calculated fee.
- * @param props.students - Dynamic list of registered students.
- * @returns The Step5FeeCalculation component.
- */
-export default function Step5FeeCalculation({ student, session, feeResult, onFeeResult, students = [] }: Step5FeeCalculationProps): React.ReactElement {
+export default function Step5FeeCalculation({ student, session, feeResult, onFeeResult }: Step5FeeCalculationProps): React.ReactElement {
   const baseFee = session?.baseFee || 0;
-  
-  // Calculate on render using fallback object if details missing
+
   const fee = React.useMemo<CalculatedFee>(() => {
-    return calcFee(baseFee, student || {}, students, session?.discounts || []);
-  }, [baseFee, student, students, session?.discounts]);
+    return calcFee(baseFee, student || {}, [], session?.discounts || []);
+  }, [baseFee, student, session?.discounts]);
 
   // Notify parent
   React.useEffect(() => {

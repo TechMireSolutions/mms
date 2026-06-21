@@ -6,7 +6,6 @@ import {
 import {
   createArtifactId,
   deleteRefreshTokensForUser,
-  getAuthArtifact,
   putAuthArtifact,
   takeAuthArtifact,
 } from './authArtifactService.js';
@@ -130,26 +129,4 @@ export async function confirmLoginEmailChange(
   } finally {
     await setPendingLoginEmail(entry.payload.userId, undefined);
   }
-}
-
-export async function resendLoginEmailChangeCode(
-  challengeId: string,
-): Promise<{ devCode?: string }> {
-  const entry = await getAuthArtifact<LoginEmailChangePayload>(
-    challengeId,
-    'login_email_change',
-  );
-  if (!entry) {
-    throw new LoginEmailChangeError('not_found', 'Challenge not found or expired');
-  }
-  const code = generateOtpCode();
-  entry.payload.codeHash = hashOtpCode(code);
-  await putAuthArtifact(
-    'login_email_change',
-    entry.payload,
-    CHANGE_TTL_MS,
-    challengeId,
-  );
-  const dispatch = await dispatchChangeCode(entry.payload.newLoginEmail, code);
-  return { devCode: dispatch.devCode };
 }

@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { X, Check, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { uploadCanvasImage } from "@/lib/imageUpload";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
+import useTranslation from "@/hooks/useTranslation";
 
 interface AvatarCropperProps {
   src: string;
   onCrop: (dataUrl: string) => void;
   onCancel: () => void;
-  uiStrings?: Record<string, string>;
 }
 
 interface DragCoordinate {
@@ -18,11 +18,10 @@ interface DragCoordinate {
 
 /**
  * AvatarCropper component that displays a modal circular crop UI.
- * @param props Component properties.
- * @returns React element.
  */
-export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }: AvatarCropperProps): React.JSX.Element {
+export default function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): React.JSX.Element {
   useBodyScrollLock();
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [scale, setScale] = useState<number>(1);
   const [rotation, setRotation] = useState<number>(0);
@@ -32,7 +31,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
   const [imgEl, setImgEl] = useState<HTMLImageElement | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const SIZE = 280; // canvas display size (px)
+  const SIZE = 280;
   const RADIUS = SIZE / 2;
   useEffect(() => {
     const img = new Image();
@@ -83,25 +82,25 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
       if (!dragging || !dragStart) return;
       setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
     },
-    [dragging, dragStart]
+    [dragging, dragStart],
   );
 
   const onMouseUp = (): void => {
     setDragging(false);
   };
   const onTouchStart = (e: React.TouchEvent<HTMLCanvasElement>): void => {
-    const t = e.touches[0];
+    const touch = e.touches[0];
     setDragging(true);
-    setDragStart({ x: t.clientX - offset.x, y: t.clientY - offset.y });
+    setDragStart({ x: touch.clientX - offset.x, y: touch.clientY - offset.y });
   };
 
   const onTouchMove = useCallback(
     (e: React.TouchEvent<HTMLCanvasElement>): void => {
       if (!dragging || !dragStart) return;
-      const t = e.touches[0];
-      setOffset({ x: t.clientX - dragStart.x, y: t.clientY - dragStart.y });
+      const touch = e.touches[0];
+      setOffset({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y });
     },
-    [dragging, dragStart]
+    [dragging, dragStart],
   );
 
   const handleCrop = (): void => {
@@ -142,23 +141,21 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
         exit={{ opacity: 0, scale: 0.95 }}
         className="relative bg-card rounded-2xl border border-border shadow-2xl z-10 w-full max-w-sm overflow-hidden"
       >
-        
         <div className="flex items-center justify-between px-5 py-4 border-b border-border text-left">
           <div>
-            <h3 className="text-sm font-bold text-foreground">{uiStrings?.cropProfilePhoto || "Crop Profile Photo"}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">{uiStrings?.cropperInstructions || "Drag to reposition · scroll to zoom"}</p>
+            <h3 className="text-sm font-bold text-foreground">{t("contacts.form.cropProfilePhoto")}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("contacts.form.cropperInstructions")}</p>
           </div>
           <button
             type="button"
             onClick={onCancel}
             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"
-            aria-label={uiStrings.closeCropper || "Close cropper"}
+            aria-label={t("contacts.form.closeCropper")}
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        
         <div className="flex items-center justify-center bg-neutral-900 py-6">
           <canvas
             ref={canvasRef}
@@ -168,7 +165,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
               width: SIZE,
               height: SIZE,
               cursor: dragging ? "grabbing" : "grab",
-              borderRadius: "50%"
+              borderRadius: "50%",
             }}
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
@@ -184,9 +181,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
           />
         </div>
 
-        
         <div className="px-5 py-3 border-t border-border space-y-3">
-          
           <div className="flex items-center gap-3">
             <ZoomOut className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             <input
@@ -197,11 +192,11 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
               value={scale}
               onChange={(e) => setScale(parseFloat(e.target.value))}
               className="flex-1 accent-primary h-1.5 rounded-full bg-border"
-              aria-label={uiStrings.zoomScale || "Zoom scale"}
+              aria-label={t("contacts.form.zoomScale")}
             />
             <ZoomIn className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -209,7 +204,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
               className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-foreground"
             >
               <RotateCw className="w-3.5 h-3.5 scale-x-[-1]" />
-              <span>{uiStrings?.rotate || "Rotate"}</span>
+              <span>{t("contacts.form.rotate")}</span>
             </button>
             <button
               type="button"
@@ -220,7 +215,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
               }}
               className="px-3 min-h-[44px] rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-muted-foreground"
             >
-              {uiStrings?.reset || "Reset"}
+              {t("contacts.form.reset")}
             </button>
             <button
               type="button"
@@ -228,7 +223,7 @@ export default function AvatarCropper({ src, onCrop, onCancel, uiStrings = {} }:
               className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
             >
               <Check className="w-4 h-4" />
-              <span>{uiStrings?.applyPhoto || "Apply Photo"}</span>
+              <span>{t("contacts.form.applyPhoto")}</span>
             </button>
           </div>
         </div>

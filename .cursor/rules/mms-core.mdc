@@ -107,5 +107,6 @@ Contacts legacy `uiStrings` is migration debt — new copy uses `appTranslations
 
 Three tiers only — details split by concern:
 
-- **Shell:** `mms-ui-tabs.mdc` (`useModuleTierTabs`, `ResponsiveAccordionTabs`, PageHeader)
+- **Shell & universal behaviour:** `mms-module-architecture.mdc` (`globle1.md`) · Setup: `mms-module-setup.mdc` (`globle2.md`)
+- **Shell components:** `mms-ui-tabs.mdc` (`useModuleTierTabs`, `ResponsiveAccordionTabs`, PageHeader)
 - **Content scope:** `mms-module-isolation.mdc` (what belongs in `work` / `reports` / `setup`)

@@ -2,8 +2,7 @@ import React from "react";
 import { X, User, BookOpen, Layers, DollarSign, Clock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { STATUS_MAP, Enrollment } from '@/lib/data/enrollmentData';
-import { getCollection } from "../../lib/db";
-import { STUDENTS, Student } from '@/lib/data/studentsData';
+import { useStudentsByIds } from "@/hooks/useStudents";
 
 interface SectionProps {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
@@ -58,7 +57,7 @@ interface EnrollmentDetailProps {
   enrollment: Enrollment | null | undefined;
   onClose: () => void;
   onStatusChange: (id: string, newStatus: Enrollment["status"]) => void;
-  role: string;
+  canWrite: boolean;
 }
 
 /**
@@ -68,15 +67,12 @@ interface EnrollmentDetailProps {
  * @param props.enrollment - The enrollment record to display.
  * @param props.onClose - Action to close the modal.
  * @param props.onStatusChange - Handler to alter state status.
- * @param props.role - Logged in user permission role.
+ * @param props.canWrite - Whether the viewer may change enrollment status.
  * @returns The EnrollmentDetail component.
  */
-export default function EnrollmentDetail({ enrollment, onClose, onStatusChange, role }: EnrollmentDetailProps): React.ReactElement | null {
-  const students = React.useMemo(() => getCollection<Student>("students", STUDENTS), []);
-  const student = React.useMemo(() => {
-    if (!enrollment) return undefined;
-    return students.find((st) => String(st.id) === String(enrollment.studentId));
-  }, [enrollment, students]);
+export default function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite }: EnrollmentDetailProps): React.ReactElement | null {
+  const { data: resolvedStudents = [] } = useStudentsByIds(enrollment ? [enrollment.studentId] : []);
+  const student = resolvedStudents[0];
 
   if (!enrollment) return null;
   const s = STATUS_MAP[enrollment.status] || { label: enrollment.status, color: "bg-muted text-muted-foreground border-border" };
@@ -186,7 +182,7 @@ export default function EnrollmentDetail({ enrollment, onClose, onStatusChange, 
         )}
 
         {/* Status actions */}
-        {role !== "accountant" && nextStatuses.length > 0 && (
+        {canWrite && nextStatuses.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap pt-1">
             <p className="text-xs font-semibold text-muted-foreground">Move to:</p>
             {nextStatuses.map((ns) => {

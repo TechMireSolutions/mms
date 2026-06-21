@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { AttendanceCommandMetricsSnapshot, ModuleColumnPref } from '@mms/shared';
+import { ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
@@ -7,9 +9,16 @@ import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 
 export const ATTENDANCE_QUERY_KEY = ['attendance', 'list'] as const;
+export const ATTENDANCE_METRICS_QUERY_KEY = ['attendance', 'metrics'] as const;
+export const ATTENDANCE_COLUMN_PREFS_QUERY_KEY = [
+  ATTENDANCE_MODULE_CONTRACT.collectionKey,
+  'column-prefs',
+] as const;
+
+const ATTENDANCE_API = ATTENDANCE_MODULE_CONTRACT.restBasePath;
 
 async function fetchAttendanceRecords(): Promise<AttendanceRecord[]> {
-  const body = await apiJson<{ records: AttendanceRecord[] }>('/api/attendance');
+  const body = await apiJson<{ records: AttendanceRecord[] }>(ATTENDANCE_API);
   saveCollection('attendance_records', body.records);
   return getCollection<AttendanceRecord>('attendance_records', []);
 }
@@ -30,11 +39,12 @@ export function useAttendanceMutations() {
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ATTENDANCE_QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: ATTENDANCE_METRICS_QUERY_KEY });
   };
 
   const replaceAll = useMutation({
     mutationFn: async (records: AttendanceRecord[]) =>
-      apiJson<{ records: AttendanceRecord[] }>('/api/attendance/bulk', {
+      apiJson<{ records: AttendanceRecord[] }>(`${ATTENDANCE_API}/bulk`, {
         method: 'PUT',
         body: JSON.stringify({ records }),
       }),
@@ -46,7 +56,7 @@ export function useAttendanceMutations() {
 
   const createRecord = useMutation({
     mutationFn: async (record: AttendanceRecord) =>
-      apiJson<{ record: AttendanceRecord }>('/api/attendance', {
+      apiJson<{ record: AttendanceRecord }>(ATTENDANCE_API, {
         method: 'POST',
         body: JSON.stringify(record),
       }),
@@ -55,7 +65,7 @@ export function useAttendanceMutations() {
 
   const updateRecord = useMutation({
     mutationFn: async ({ id, record }: { id: string; record: AttendanceRecord }) =>
-      apiJson<{ record: AttendanceRecord }>(`/api/attendance/${id}`, {
+      apiJson<{ record: AttendanceRecord }>(`${ATTENDANCE_API}/${id}`, {
         method: 'PUT',
         body: JSON.stringify(record),
       }),
@@ -63,7 +73,7 @@ export function useAttendanceMutations() {
   });
 
   const deleteRecord = useMutation({
-    mutationFn: async (id: string) => apiFetch(`/api/attendance/${id}`, { method: 'DELETE' }),
+    mutationFn: async (id: string) => apiFetch(`${ATTENDANCE_API}/${id}`, { method: 'DELETE' }),
     onSuccess: invalidate,
   });
 
@@ -80,4 +90,47 @@ export function useAttendanceRecordsCollection(options?: { enabled?: boolean }):
     return fromQuery;
   }
   return fromLocal;
+}
+
+export function useAttendanceMetrics(selectedDate: string) {
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: [...ATTENDANCE_METRICS_QUERY_KEY, selectedDate] as const,
+    queryFn: async () => {
+      const qs = selectedDate ? `?date=${encodeURIComponent(selectedDate)}` : '';
+      const body = await apiJson<{ metrics: AttendanceCommandMetricsSnapshot }>(
+        `${ATTENDANCE_API}/metrics${qs}`,
+      );
+      return body.metrics;
+    },
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
+}
+
+export function useAttendanceColumnPrefs() {
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: ATTENDANCE_COLUMN_PREFS_QUERY_KEY,
+    queryFn: async () => {
+      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${ATTENDANCE_API}/column-prefs`);
+      return body.prefs;
+    },
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
+}
+
+export function useAttendanceColumnPrefsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (prefs: ModuleColumnPref[]) =>
+      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${ATTENDANCE_API}/column-prefs`, {
+        method: 'PUT',
+        body: JSON.stringify({ prefs }),
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(ATTENDANCE_COLUMN_PREFS_QUERY_KEY, data.prefs);
+    },
+  });
 }

@@ -9,8 +9,16 @@ import platformWorkspaceRoutes from './platformWorkspaces.js';
 import publicRoutes from './public.js';
 import studentsRoutes from './students.js';
 import teachersRoutes from './teachers.js';
+import financeRoutes from './finance.js';
+import enrollmentsRoutes from './enrollments.js';
+import obligationsRoutes from './obligations.js';
+import accountingRoutes from './accounting.js';
+import hasanatRoutes from './hasanat.js';
+import examinationsRoutes from './examinations.js';
+import questionBankRoutes from './questionBank.js';
 import attendanceRoutes from './attendance.js';
 import sessionsRoutes from './sessions.js';
+import backgroundJobRoutes from './backgroundJobs.js';
 import uploadRoutes from './uploads.js';
 import workspaceRoutes from './workspace.js';
 
@@ -27,6 +35,14 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(emailRoutes, { prefix: '/api/email' });
   await app.register(studentsRoutes, { prefix: '/api/students' });
   await app.register(teachersRoutes, { prefix: '/api/teachers' });
+  await app.register(financeRoutes, { prefix: '/api/finance' });
+  await app.register(enrollmentsRoutes, { prefix: '/api/enrollments' });
+  await app.register(obligationsRoutes, { prefix: '/api/obligations' });
+  await app.register(accountingRoutes, { prefix: '/api/accounting' });
+  await app.register(hasanatRoutes, { prefix: '/api/hasanat' });
+  await app.register(examinationsRoutes, { prefix: '/api/examinations' });
+  await app.register(questionBankRoutes, { prefix: '/api/question-bank' });
   await app.register(attendanceRoutes, { prefix: '/api/attendance' });
   await app.register(sessionsRoutes, { prefix: '/api/sessions' });
+  await app.register(backgroundJobRoutes, { prefix: '/api/background-jobs' });
 }

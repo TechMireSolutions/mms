@@ -35,14 +35,28 @@ Persisted state and contact `pageTabs` keys use the same ids. Legacy ids are nor
 
 **What goes inside each tier** → `mms-module-isolation.mdc` (canonical; do not duplicate here).
 
-## PageHeader CTAs
+## PageHeader — module command centre
+
+`PageHeader` sits **above** `ResponsiveAccordionTabs` and stays visible on all tiers (`mms-module-architecture.mdc` §2).
 
 ```tsx
-<PageHeader title="Contacts" actions={<ActionButton onClick={onAdd}>…</ActionButton>} />
+<PageHeader
+  title={t('nav.contacts')}
+  subtitle={t('page.contacts.subtitle')}
+  actions={<><ExportBtn /><DuplicatesBtn /><ActionButton onClick={onAdd}>…</ActionButton></>}
+/>
+<ContactsCommandMetrics total={total} shown={filteredCount} />
 ```
 
-- Primary page actions live in `PageHeader.actions` — not hidden behind `activeTab`.
-- Tab-specific actions stay inside that tab’s content.
+| Element | Rule |
+|---------|------|
+| Title | `t('nav.*')` or module page key |
+| Subtitle / metrics | Permission-scoped counts (total, filtered, pending) — not foreign-module stats |
+| Primary create | Always in `actions` — not gated on `activeTab` |
+| Export / integrity | Module-scoped tools in `actions` (e.g. export, duplicates) |
+| Tier-only actions | Inside tier content (toolbar, report filters) |
+
+Reference: `Contacts.tsx`.
 
 ## Session persistence
 

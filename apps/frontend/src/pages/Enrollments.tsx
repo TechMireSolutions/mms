@@ -10,6 +10,7 @@ import SubTabBar from "@/components/ui/SubTabBar";
 import usePermissions from "@/hooks/usePermissions";
 import EnrollmentWizard from "../components/enrollment/EnrollmentWizard";
 import EnrollmentList from "../components/enrollment/EnrollmentList";
+import EnrollmentsCommandMetrics from "../components/enrollment/EnrollmentsCommandMetrics";
 import EnrollmentDetail from "../components/enrollment/EnrollmentDetail";
 import EligibilityCheck from "../components/enrollment/EligibilityCheck";
 import EnrollmentReports from "../components/enrollment/EnrollmentReports";
@@ -20,8 +21,11 @@ import Modal from "../components/ui/Modal";
 import { Enrollment } from '@/lib/data/enrollmentData';
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
-import { useStudentsCollection } from "../hooks/useStudents";
+import { useStudentMutations, type StudentRecord } from "../hooks/useStudents";
+import { apiJson } from "@/lib/apiClient";
+import { STUDENTS_MODULE_CONTRACT } from "@mms/shared";
 import { useEnrollmentViewerRole } from "@/hooks/useViewerRole";
+import { useEnrollmentColumnLayout } from "@/hooks/useEnrollmentColumnLayout";
 
 /**
  * Enrollments management — Work | Reports | Setup.
@@ -45,10 +49,12 @@ export default function Enrollments() {
   const { can } = usePermissions();
   const canWriteEnrollments = can("enrollments.write");
   const enrollments = useLiveCollection("enrollments");
-  const students = useStudentsCollection();
+  const { updateStudent } = useStudentMutations();
   const [viewing, setViewing]         = useState<Enrollment | null>(null);
   const [subTab, setSubTab]           = useState("fields");
   const [showWizard, setShowWizard]   = useState(false);
+  const [filteredCount, setFilteredCount] = useState(0);
+  const columnLayout = useEnrollmentColumnLayout();
 
   const saveEnrollments = useCallback((updater: Enrollment[] | ((prev: Enrollment[]) => Enrollment[])) => {
     const next = typeof updater === "function" ? updater(enrollments) : updater;
@@ -62,20 +68,30 @@ export default function Enrollments() {
     }
   }, [canWriteEnrollments, activeSubTab]);
 
-  const handleComplete = (enrollment: Enrollment) => {
+  const handleComplete = async (enrollment: Enrollment) => {
     saveEnrollments((prev) => [enrollment, ...prev]);
-    
-    // Update student's enrolledSessions in localStorage
-    const updatedStudents = students.map((s) => {
-      if (s.id === enrollment.studentId) {
-        const enrolled = s.enrolledSessions || [];
+
+    try {
+      const body = await apiJson<{ students: StudentRecord[] }>(
+        `${STUDENTS_MODULE_CONTRACT.restBasePath}/resolve`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ ids: [String(enrollment.studentId)] }),
+        },
+      );
+      const student = body.students[0];
+      if (student) {
+        const enrolled = (student.enrolledSessions as string[] | undefined) ?? [];
         if (!enrolled.includes(enrollment.sessionId)) {
-          return { ...s, enrolledSessions: [...enrolled, enrollment.sessionId] };
+          updateStudent.mutate({
+            id: String(student.id),
+            student: { ...student, enrolledSessions: [...enrolled, enrollment.sessionId] },
+          });
         }
       }
-      return s;
-    });
-    saveCollection("students", updatedStudents);
+    } catch (err) {
+      console.error('Failed to update student enrolled sessions', err);
+    }
 
     setShowWizard(false);
     setActiveSubTab("list");
@@ -98,11 +114,10 @@ export default function Enrollments() {
     if (viewing?.id === id) setViewing((v) => v ? { ...v, status: newStatus } : v);
   };
 
-  // Stats bar
-  const total     = enrollments.length;
-  const confirmed = enrollments.filter((e) => e.status === "confirmed").length;
-  const pending   = enrollments.filter((e) => e.status === "pending").length;
-  const revenue   = enrollments.filter((e) => e.status !== "cancelled").reduce((s, e) => s + (e.finalFee || 0), 0);
+  // Stats bar — server metrics via EnrollmentsCommandMetrics; filtered count from list
+  useEffect(() => {
+    setFilteredCount(enrollments.length);
+  }, [enrollments.length]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
@@ -123,6 +138,8 @@ export default function Enrollments() {
           </div>
         }
       />
+
+      <EnrollmentsCommandMetrics total={enrollments.length} shown={filteredCount} />
 
       <ResponsiveAccordionTabs
         tabs={TABS}
@@ -160,9 +177,16 @@ export default function Enrollments() {
             <ErrorBoundary>
               <EnrollmentList
                 enrollments={enrollments}
-                role={role}
+                canWrite={canWriteEnrollments}
                 onView={(enr: Enrollment) => setViewing(enr)}
                 onCancel={handleCancel}
+                onFilteredCountChange={setFilteredCount}
+                isColumnVisible={columnLayout.isColumnVisible}
+                columnCustomizer={{
+                  columnRegistry: columnLayout.columnRegistry,
+                  updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+                  labels: columnLayout.customizerLabels,
+                }}
               />
             </ErrorBoundary>
           )}
@@ -195,7 +219,7 @@ export default function Enrollments() {
           <ErrorBoundary>
             <EnrollmentDetail
               enrollment={viewing}
-              role={role}
+              canWrite={canWriteEnrollments}
               onClose={() => setViewing(null)}
               onStatusChange={handleStatusChange}
             />

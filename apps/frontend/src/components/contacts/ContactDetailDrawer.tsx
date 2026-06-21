@@ -6,12 +6,16 @@ import {
   Star, Send, LucideIcon,
   LayoutDashboard, History, Users as UsersIcon, FileText, BrainCircuit, ShieldCheck, Search, Zap
 } from "lucide-react";
-import { Contact, ContactActivity } from "@mms/shared";
+import { Contact, ContactActivity, canViewContactField, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, calcAge } from "@mms/shared";
 import { formatDate } from "@mms/shared";
 import { useAuth } from '@/lib/contexts/AuthContext';
+import usePermissions from '@/hooks/usePermissions';
+import useTranslation from '@/hooks/useTranslation';
+import { ACTIVITY_TYPE_I18N } from '@/lib/contacts/contactI18n';
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
+import { apiJson } from "@/lib/apiClient";
 
 const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
   overview: LayoutDashboard,
@@ -35,6 +39,28 @@ const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
 };
 
 import ContactAvatar from "./ContactAvatar";
+
+const DETAIL_STYLES = {
+  whatsappActive: "bg-success/10 text-success border-success/30 hover:bg-success/20",
+  whatsappDisabled: "opacity-40 cursor-not-allowed bg-muted/50 text-muted-foreground",
+  syedBadge: "bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
+  starActive: "text-amber-500 fill-amber-500",
+  starInactive: "text-muted-foreground/30 fill-transparent",
+  smsAction: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/20 dark:text-violet-400 dark:border-violet-900/50 hover:bg-violet-100",
+  callAction: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50 hover:bg-blue-100",
+  emailAction: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-900/50 hover:bg-indigo-100",
+  emergencyBadge: "bg-destructive/10 text-destructive border-destructive/30",
+  networkHeader: "bg-success/10 border-success/30",
+  networkIcon: "bg-success/10 text-success",
+  networkTitle: "text-success",
+  networkSubtitle: "text-emerald-600/80 dark:text-emerald-400/80",
+  networkItemCard: "border-border hover:border-emerald-200 hover:bg-emerald-50/[0.02]",
+  networkItemIcon: "bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
+  networkItemAction: "hover:bg-muted text-muted-foreground hover:text-foreground",
+  networkRelType: "text-emerald-650 dark:text-emerald-400",
+  liveIntelIndicator: "bg-emerald-500",
+  liveIntelText: "text-emerald-650 dark:text-emerald-400",
+} as const;
 
 interface ContactDetailDrawerProps {
   contact: Contact;
@@ -60,8 +86,11 @@ export default function ContactDetailDrawer({
   allContacts = [],
   onUpdateContact,
 }: ContactDetailDrawerProps): React.JSX.Element {
-  const { enabledTabIds, isTabFieldEnabled, fieldConfig, lifecycleColors, uiStrings, fields } = useContactConfig();
+  const { enabledTabIds, isTabFieldEnabled, fieldConfig, lifecycleColors, fields, phoneLabels, emailLabels, addressLabels, socialPlatforms } = useContactConfig();
   const { user } = useAuth();
+  const { role } = usePermissions();
+  const viewerRole = role ?? '';
+  const { t } = useTranslation();
   useBodyScrollLock();
   const [c, setC] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
@@ -83,8 +112,10 @@ export default function ContactDetailDrawer({
     return detailTabs[0]?.key || "";
   });
 
-  const heroFieldsStr = uiStrings?.heroFields || "";
-  const heroFields = useMemo(() => heroFieldsStr.split(",").map(s => s.trim()), [heroFieldsStr]);
+  const heroFieldSet = useMemo(
+    () => new Set<string>(CONTACTS_MODULE_CONTRACT.heroFieldKeys),
+    [],
+  );
 
   useEffect(() => {
     setC(initialContact);
@@ -96,26 +127,39 @@ export default function ContactDetailDrawer({
 
   const allFields = useMemo(() => {
     return Object.entries(fields).flatMap(([tabId, tabFields]) =>
-      (tabFields || []).map((f) => ({
+      (tabFields || [])
+        .filter((f) => canViewContactField(viewerRole, f))
+        .map((f) => ({
         key: f.key,
         label: f.label,
         type: f.type,
         tab: tabId,
-        group: f.group || uiStrings?.extendedProfiles || uiStrings?.otherGroup,
+        group: f.group || t('contacts.detail.extendedProfiles'),
         description: f.description || "",
       }))
     );
-  }, [fields, uiStrings]);
+  }, [fields, t, viewerRole]);
+
+  const visibleCollectionFields = useMemo(
+    () => ({
+      phones: (fields.phones || []).filter((f) => f.enabled && canViewContactField(viewerRole, f)),
+      emails: (fields.emails || []).filter((f) => f.enabled && canViewContactField(viewerRole, f)),
+      addresses: (fields.addresses || []).filter((f) => f.enabled && canViewContactField(viewerRole, f)),
+      socials: (fields.socials || []).filter((f) => f.enabled && canViewContactField(viewerRole, f)),
+      emergency: (fields.emergency || []).filter((f) => f.enabled && canViewContactField(viewerRole, f)),
+    }),
+    [fields, viewerRole],
+  );
 
   const fieldsToRender = allFields.filter(
     (f) =>
-      !heroFields.includes(f.key) &&
+      !heroFieldSet.has(f.key) &&
       isTabFieldEnabled(f.tab, f.key) &&
       c[f.key] !== undefined && c[f.key] !== null && c[f.key] !== "" && c[f.key] !== false &&
       !(Array.isArray(c[f.key]) && (c[f.key] as unknown[]).length === 0)
   );
   const grouped = fieldsToRender.reduce<Record<string, typeof fieldsToRender>>((acc, f) => {
-    const g = f.group || uiStrings?.otherGroup;
+    const g = f.group || t('contacts.detail.otherGroup');
     if (!acc[g]) acc[g] = [];
     acc[g].push(f);
     return acc;
@@ -127,7 +171,7 @@ export default function ContactDetailDrawer({
     if (Array.isArray(val)) return val.length ? val.join(", ") : null;
     if (field.key === "dob") {
       try {
-        const yrsLabel = uiStrings?.yearsOld;
+        const yrsLabel = t('contacts.detail.yearsOld');
         return `${formatDate(val as string, true)}${age ? ` (${age} ${yrsLabel})` : ""}`;
       } catch (err) {
         console.error("Failed parsing DOB value:", val, err);
@@ -149,7 +193,7 @@ export default function ContactDetailDrawer({
       type: "note",
       content: noteText.trim(),
       date: new Date().toISOString().slice(0, 10),
-      by: user?.name || uiStrings?.systemUser
+      by: user?.name || t('contacts.detail.systemUser')
     };
 
     const updatedContact = {
@@ -165,14 +209,18 @@ export default function ContactDetailDrawer({
     }
   };
 
-  const handleNavigateToContact = (targetId: string | number) => {
+  const handleNavigateToContact = (targetId: string | number): void => {
     const target = allContacts.find((x) => String(x.id) === String(targetId));
     if (target) {
       setC(target);
+      return;
     }
+    void apiJson<{ contact: Contact }>(`${CONTACTS_MODULE_CONTRACT.restBasePath}/${targetId}`)
+      .then((body) => setC(body.contact))
+      .catch(() => undefined);
   };
 
-  const stage = c.lifecycleStage || uiStrings.defaultLifecycleStage;
+  const stage = c.lifecycleStage || CONTACTS_MODULE_CONTRACT.defaultLifecycleStage;
   const stageColors = lifecycleColors[stage] || { bg: "bg-muted text-muted-foreground border-border", text: "text-muted-foreground", border: "border-border" };
 
   return (
@@ -184,24 +232,24 @@ export default function ContactDetailDrawer({
         exit={{ x: "100%", opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 260 }}
         className="relative w-full max-w-sm h-full bg-card border-l border-border shadow-2xl flex flex-col z-10"
-        aria-label={uiStrings.contactDetails}
+        aria-label={t('contacts.detail.title')}
       >
         
         <div className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 px-5 pt-4 border-b border-border space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-[13px] font-bold text-foreground leading-tight">{uiStrings.contactDetails}</h2>
+            <h2 className="text-[13px] font-bold text-foreground leading-tight">{t('contacts.detail.title')}</h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onEdit(c)}
                 className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                title={uiStrings.editProfile}
+                title={t('contacts.detail.editProfile')}
               >
                 <Edit2 className="w-4 h-4" />
               </button>
               <button
                 onClick={onClose}
                 className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"
-                aria-label={uiStrings.closeDetails}
+                aria-label={t('contacts.detail.close')}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -243,7 +291,7 @@ export default function ContactDetailDrawer({
                 <>
                   
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50">
-                    <ContactAvatar contact={c} uiStrings={uiStrings} className="w-16 h-16 rounded-2xl text-2xl" />
+                    <ContactAvatar contact={c} className="w-16 h-16 rounded-2xl text-2xl" />
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-bold text-foreground truncate leading-tight">{getDisplayName(c)}</h3>
                       <div className="flex flex-wrap gap-1.5 mt-2 items-center">
@@ -251,8 +299,8 @@ export default function ContactDetailDrawer({
                           {stage}
                         </span>
                         {c.isSyed && (
-                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider ${uiStrings?.syedBadgeClass}`}>
-                            {uiStrings.yesSyed}
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider ${DETAIL_STYLES.syedBadge}`}>
+                            {t('contacts.table.yesSyed')}
                           </span>
                         )}
                       </div>
@@ -261,7 +309,7 @@ export default function ContactDetailDrawer({
                           {Array.from({ length: 5 }).map((_, idx) => (
                             <Star
                               key={idx}
-                              className={`w-3 h-3 ${idx < rating ? uiStrings?.starActiveClass : uiStrings?.starInactiveClass}`}
+                              className={`w-3 h-3 ${idx < rating ? DETAIL_STYLES.starActive : DETAIL_STYLES.starInactive}`}
                             />
                           ))}
                         </div>
@@ -273,10 +321,10 @@ export default function ContactDetailDrawer({
                   <div className="space-y-2">
                     <div className="flex items-center gap-1.5 text-primary">
                        <BrainCircuit className="w-3.5 h-3.5" />
-                       <span className="text-[10px] font-bold uppercase tracking-widest">{uiStrings.aiIntelligence}</span>
+                       <span className="text-[10px] font-bold uppercase tracking-widest">{t('contacts.detail.aiIntelligence')}</span>
                     </div>
                     <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 text-[12px] text-foreground leading-relaxed italic">
-                      {c.aiSummary || uiStrings.defaultAiSummary}
+                      {c.aiSummary || t('contacts.detail.defaultAiSummary')}
                     </div>
                   </div>
 
@@ -287,47 +335,47 @@ export default function ContactDetailDrawer({
                         disabled={!hasWhatsApp(c)}
                         onClick={() => onWhatsApp([c])}
                         className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${
-                          hasWhatsApp(c) ? uiStrings?.whatsappActiveClass : uiStrings?.whatsappDisabledClass
+                          hasWhatsApp(c) ? DETAIL_STYLES.whatsappActive : DETAIL_STYLES.whatsappDisabled
                         }`}
                         type="button"
                       >
                         <MessageCircle className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">{uiStrings.whatsapp}</span>
+                        <span className="text-[10px] font-bold">{t('contacts.whatsapp')}</span>
                       </button>
                     )}
                     {primaryPhone && (
                       <button
                         onClick={() => onSms([c])}
-                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${uiStrings?.smsActionClass}`}
+                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${DETAIL_STYLES.smsAction}`}
                         type="button"
                       >
                         <MessageSquare className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">{uiStrings.sms}</span>
+                        <span className="text-[10px] font-bold">{t('contacts.sms')}</span>
                       </button>
                     )}
                     {primaryPhone && (
                       <a
                         href={`tel:${primaryPhone.replace(/[^\d+]/g, "")}`}
-                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${uiStrings?.callActionClass}`}
+                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${DETAIL_STYLES.callAction}`}
                       >
                         <Phone className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">{uiStrings.call}</span>
+                        <span className="text-[10px] font-bold">{t('contacts.detail.call')}</span>
                       </a>
                     )}
                     {primaryEmail && (
                       <a
                         href={`mailto:${primaryEmail}`}
-                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${uiStrings?.emailActionClass}`}
+                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${DETAIL_STYLES.emailAction}`}
                       >
                         <Mail className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">{uiStrings.email}</span>
+                        <span className="text-[10px] font-bold">{t('contacts.detail.emailAction')}</span>
                       </a>
                     )}
                   </div>
 
                   
                   <div className="space-y-4">
-                    {Object.entries(grouped).filter(([_, fields]) => fields.some(f => f.tab === "basic" || !["timeline", "network", "files"].includes(f.tab))).map(([group, fields]) => (
+                    {Object.entries(grouped).filter(([, fields]) => fields.some(f => f.tab === "basic" || !["timeline", "network", "files"].includes(f.tab))).map(([group, fields]) => (
                       <div key={group} className="space-y-2">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">{group}</h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
@@ -352,26 +400,26 @@ export default function ContactDetailDrawer({
                     ))}
 
                     
-                    {enabledTabIds.has("phones") && c.phones && c.phones.length > 0 && (
+                    {enabledTabIds.has("phones") && visibleCollectionFields.phones.length > 0 && c.phones && c.phones.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
-                          {uiStrings.phones}
+                          {t('contacts.form.phonesLabel')}
                         </h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
                           {c.phones.map((p, idx) => {
-                            const tabFields = (fields.phones || []).filter(f => f.enabled && f.key !== "label");
+                            const tabFields = visibleCollectionFields.phones.filter(f => f.key !== "label");
                             return (
                               <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                    {p.label || uiStrings.mobileLabel}
+                                    {p.label || phoneLabels[0] || t('contacts.detail.mobileLabel')}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                                   {tabFields.map(f => {
                                     const val = (p as unknown as Record<string, unknown>)[f.key];
                                     if (val === undefined || val === null || val === "" || val === false) return null;
-                                    const displayVal = typeof val === "boolean" ? (val ? uiStrings.yes : uiStrings.no) : String(val);
+                                    const displayVal = typeof val === "boolean" ? (val ? t('common.yes') : t('common.no')) : String(val);
                                     return (
                                       <div key={f.key} className={f.type === "textarea" ? "col-span-2" : ""}>
                                         <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{f.label}</span>
@@ -387,19 +435,19 @@ export default function ContactDetailDrawer({
                       </div>
                     )}
 
-                    {enabledTabIds.has("emails") && c.emails && c.emails.length > 0 && (
+                    {enabledTabIds.has("emails") && visibleCollectionFields.emails.length > 0 && c.emails && c.emails.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
-                          {uiStrings.emails}
+                          {t('contacts.form.emailsLabel')}
                         </h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
                           {c.emails.map((e, idx) => {
-                            const tabFields = (fields.emails || []).filter(f => f.enabled && f.key !== "label");
+                            const tabFields = visibleCollectionFields.emails.filter(f => f.key !== "label");
                             return (
                               <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                    {e.label || uiStrings.personalLabel}
+                                    {e.label || emailLabels[0] || t('contacts.detail.personalLabel')}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
@@ -421,19 +469,19 @@ export default function ContactDetailDrawer({
                       </div>
                     )}
 
-                    {enabledTabIds.has("addresses") && c.addresses && c.addresses.length > 0 && (
+                    {enabledTabIds.has("addresses") && visibleCollectionFields.addresses.length > 0 && c.addresses && c.addresses.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
-                          {uiStrings.addresses}
+                          {t('contacts.detail.addresses')}
                         </h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
                           {c.addresses.map((a, idx) => {
-                            const tabFields = (fields.addresses || []).filter(f => f.enabled && f.key !== "label");
+                            const tabFields = visibleCollectionFields.addresses.filter(f => f.key !== "label");
                             return (
                               <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                    {a.label || uiStrings.homeLabel}
+                                    {a.label || addressLabels[0] || t('contacts.detail.homeLabel')}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
@@ -455,19 +503,19 @@ export default function ContactDetailDrawer({
                       </div>
                     )}
 
-                    {enabledTabIds.has("socials") && c.socials && c.socials.length > 0 && (
+                    {enabledTabIds.has("socials") && visibleCollectionFields.socials.length > 0 && c.socials && c.socials.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
-                          {uiStrings.socials}
+                          {t('contacts.detail.socials')}
                         </h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
                           {c.socials.map((s, idx) => {
-                            const tabFields = (fields.socials || []).filter(f => f.enabled && f.key !== "platform");
+                            const tabFields = visibleCollectionFields.socials.filter(f => f.key !== "platform");
                             return (
                               <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                    {s.platform || uiStrings.facebookLabel}
+                                    {s.platform || socialPlatforms[0] || t('contacts.detail.facebookLabel')}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
@@ -500,20 +548,20 @@ export default function ContactDetailDrawer({
                       </div>
                     )}
 
-                    {enabledTabIds.has("emergency") && c.emergencyContacts && c.emergencyContacts.length > 0 && (
+                    {enabledTabIds.has("emergency") && visibleCollectionFields.emergency.length > 0 && c.emergencyContacts && c.emergencyContacts.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
-                          {uiStrings.emergency}
+                          {t('contacts.detail.emergency')}
                         </h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
                           {c.emergencyContacts.map((ec, idx) => {
-                            const tabFields = (fields.emergency || []).filter(f => f.enabled);
+                            const tabFields = visibleCollectionFields.emergency;
                             const target = allContacts.find(x => String(x.id) === String(ec.contactId));
                             return (
                               <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${uiStrings?.emergencyBadgeClass || "bg-destructive/10 text-destructive border-destructive/30"}`}>
-                                    {uiStrings.emergencyContact}
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${DETAIL_STYLES.emergencyBadge}`}>
+                                    {t('contacts.detail.emergencyContact')}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
@@ -562,7 +610,7 @@ export default function ContactDetailDrawer({
                      <form onSubmit={handleAddNote} className="flex gap-2">
                         <input
                           type="text"
-                          placeholder={uiStrings.logEventOrNote}
+                          placeholder={t('contacts.detail.logEventOrNote')}
                           value={noteText}
                           onChange={(e) => setNoteText(e.target.value)}
                           className="flex-1 px-4 py-3 rounded-2xl border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
@@ -581,7 +629,7 @@ export default function ContactDetailDrawer({
                      {(!c.activities || c.activities.length === 0) ? (
                         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground opacity-30">
                            <History className="w-12 h-12 mb-2" />
-                           <p className="text-xs font-bold uppercase tracking-widest">{uiStrings.quietTimeline}</p>
+                           <p className="text-xs font-bold uppercase tracking-widest">{t('contacts.detail.quietTimeline')}</p>
                         </div>
                      ) : (
                        c.activities.map((act) => {
@@ -593,7 +641,9 @@ export default function ContactDetailDrawer({
                                </div>
                                <div className="bg-card rounded-2xl border border-border/50 p-4 shadow-sm group-hover:border-primary/20 transition-all">
                                   <div className="flex items-center justify-between mb-2">
-                                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{uiStrings[act.type]}</span>
+                                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                       {ACTIVITY_TYPE_I18N[act.type] ? t(ACTIVITY_TYPE_I18N[act.type]) : act.type}
+                                     </span>
                                      <span className="text-[10px] font-bold text-muted-foreground/60">{formatDate(act.date)}</span>
                                   </div>
                                   <p className="text-xs text-foreground font-medium leading-relaxed">{act.content}</p>
@@ -609,13 +659,13 @@ export default function ContactDetailDrawer({
 
               {activeTab === "network" && (
                 <div className="space-y-6">
-                   <div className={`p-4 rounded-2xl border flex items-center gap-3 ${uiStrings?.networkHeaderClass}`}>
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${uiStrings?.networkIconContainerClass}`}>
+                   <div className={`p-4 rounded-2xl border flex items-center gap-3 ${DETAIL_STYLES.networkHeader}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${DETAIL_STYLES.networkIcon}`}>
                          <UsersIcon className="w-5 h-5" />
                       </div>
                       <div>
-                         <h4 className={`text-sm font-bold leading-none ${uiStrings?.networkTitleClass}`}>{c.relationships?.length || 0} {uiStrings.relationships}</h4>
-                         <p className={`text-[10px] font-medium mt-1 uppercase tracking-tight ${uiStrings?.networkSubtitleClass}`}>{uiStrings.activeSocialGraph}</p>
+                         <h4 className={`text-sm font-bold leading-none ${DETAIL_STYLES.networkTitle}`}>{c.relationships?.length || 0} {t('contacts.detail.relationships')}</h4>
+                         <p className={`text-[10px] font-medium mt-1 uppercase tracking-tight ${DETAIL_STYLES.networkSubtitle}`}>{t('contacts.detail.activeSocialGraph')}</p>
                       </div>
                    </div>
 
@@ -623,25 +673,25 @@ export default function ContactDetailDrawer({
                      {(!c.relationships || c.relationships.length === 0) ? (
                         <div className="text-center py-20">
                            <UsersIcon className="w-12 h-12 mx-auto text-muted-foreground/20" />
-                           <p className="text-xs font-bold text-muted-foreground mt-2 uppercase tracking-widest">{uiStrings.noConnectionsMapped}</p>
-                           <button className="mt-4 px-4 min-h-[44px] rounded-xl border border-border text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all" type="button">{uiStrings.addRelationship}</button>
+                           <p className="text-xs font-bold text-muted-foreground mt-2 uppercase tracking-widest">{t('contacts.detail.noConnectionsMapped')}</p>
+                           <button className="mt-4 px-4 min-h-[44px] rounded-xl border border-border text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all" type="button">{t('contacts.detail.addRelationship')}</button>
                         </div>
                      ) : (
                         c.relationships.map((rel, i) => {
                           const target = allContacts.find(x => String(x.id) === String(rel.contactId));
                           return (
-                            <div key={i} className={`group flex items-center justify-between gap-3 p-4 rounded-2xl border bg-card transition-all ${uiStrings?.networkItemCardClass}`}>
+                            <div key={i} className={`group flex items-center justify-between gap-3 p-4 rounded-2xl border bg-card transition-all ${DETAIL_STYLES.networkItemCard}`}>
                                <div className="flex items-center gap-3 min-w-0">
-                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${uiStrings?.networkItemIconClass}`}>
-                                     {target ? target.name.charAt(0) : uiStrings?.unknownInitial}
+                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${DETAIL_STYLES.networkItemIcon}`}>
+                                     {target ? target.name.charAt(0) : "?"}
                                   </div>
                                   <div className="min-w-0">
-                                     <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${uiStrings?.networkRelTypeClass}`}>{uiStrings[rel.type]}</span>
-                                     <h5 className="text-sm font-bold text-foreground truncate">{target ? target.name : `${uiStrings.contactIdPrefix}${rel.contactId}`}</h5>
+                                     <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{rel.type}</span>
+                                     <h5 className="text-sm font-bold text-foreground truncate">{target ? target.name : `${t('contacts.table.contactIdPrefix')}${rel.contactId}`}</h5>
                                   </div>
                                </div>
                                {target && (
-                                   <button onClick={() => handleNavigateToContact(rel.contactId)} className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all ${uiStrings?.networkItemActionClass}`} type="button">
+                                   <button onClick={() => handleNavigateToContact(rel.contactId)} className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all ${DETAIL_STYLES.networkItemAction}`} type="button">
                                      <Search className="w-4 h-4" />
                                   </button>
                                 )}
@@ -660,16 +710,16 @@ export default function ContactDetailDrawer({
                          <FileText className="w-6 h-6" />
                       </div>
                       <div>
-                         <h4 className="text-sm font-bold text-foreground">{uiStrings.cloudStorageRepository}</h4>
-                         <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">{uiStrings.dragDropDocuments}</p>
+                         <h4 className="text-sm font-bold text-foreground">{t('contacts.detail.cloudStorageRepository')}</h4>
+                         <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">{t('contacts.detail.dragDropDocuments')}</p>
                       </div>
-                      <button className="mt-2 px-6 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all" type="button">{uiStrings.browseFiles}</button>
+                      <button className="mt-2 px-6 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all" type="button">{t('contacts.detail.browseFiles')}</button>
                    </div>
 
                    <div className="space-y-3">
                       {(!c.attachments || c.attachments.length === 0) ? (
                          <div className="py-10 text-center">
-                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{uiStrings.repositoryEmpty}</p>
+                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{t('contacts.detail.repositoryEmpty')}</p>
                           </div>
                       ) : (
                          c.attachments.map((file) => (
@@ -680,7 +730,7 @@ export default function ContactDetailDrawer({
                                   </div>
                                   <div className="min-w-0">
                                      <h5 className="text-xs font-bold text-foreground truncate">{file.name}</h5>
-                                     <p className="text-[9px] text-muted-foreground mt-1">{(file.size / 1024).toFixed(1)} {uiStrings.kbLabel} · {formatDate(file.date)}</p>
+                                     <p className="text-[9px] text-muted-foreground mt-1">{(file.size / 1024).toFixed(1)} {t('contacts.detail.kbLabel')} · {formatDate(file.date)}</p>
                                   </div>
                                </div>
                                <a href={file.url} download={file.name} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-all">
@@ -697,7 +747,7 @@ export default function ContactDetailDrawer({
               {!["overview", "timeline", "network", "files"].includes(activeTab) && (
                  <div className="space-y-4">
                     {Object.entries(grouped)
-                       .filter(([_, fields]) => fields.some(f => f.tab === activeTab))
+                       .filter(([, fields]) => fields.some(f => f.tab === activeTab))
                        .map(([group, fields]) => (
                        <div key={group} className="space-y-2">
                          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">{group}</h4>
@@ -732,12 +782,12 @@ export default function ContactDetailDrawer({
            <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
               <Clock className="w-3 h-3" />
               {(c.updatedAt || c.createdAt) && (
-                <span>{uiStrings.updatedLabel} {formatDate((c.updatedAt || c.createdAt) as string)}</span>
+                <span>{t('contacts.detail.updatedLabel')} {formatDate((c.updatedAt || c.createdAt) as string)}</span>
               )}
            </div>
            <div className="flex items-center gap-1.5">
-              <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${uiStrings?.liveIntelIndicatorClass}`} />
-              <span className={`text-[9px] font-bold uppercase ${uiStrings?.liveIntelTextClass}`}>{uiStrings.liveIntel}</span>
+              <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${DETAIL_STYLES.liveIntelIndicator}`} />
+              <span className={`text-[9px] font-bold uppercase ${DETAIL_STYLES.liveIntelText}`}>{t('contacts.detail.liveIntel')}</span>
            </div>
          </div>
       </motion.aside>

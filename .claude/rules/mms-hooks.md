@@ -16,11 +16,12 @@ Colocate in `apps/frontend/src/hooks/`. Pure logic used in 2+ modules → extrac
 | Hook | Purpose |
 |------|---------|
 | `useWorkspaceRegistry()` | Apex workspace list |
-| `useStudents()` / `useStudentMutations()` | Student REST CRUD |
-| `useStudentsCollection()` | Query-first students + localStorage fallback |
+| `useStudentsPaginated()` / `useStudentMutations()` | Paginated Work directory + CRUD |
+| `useStudentsByIds()` / `useStudentById()` | Batch/single resolve (§10 cross-module) |
+| `useStudentsMetrics()` / `useStudentsWidgetAggregates()` | Command centre + dashboard aggregates |
 | `useStudentCount()` | `GET /api/students/count` |
 | `useContacts()` / `useContactMutations()` | Contact REST CRUD |
-| `useContactsCollection()` | Query-first contacts + localStorage fallback |
+| `useContactsPaginated()` / `useContactsByIds()` | Paginated directory + resolve |
 
 Pattern: `enabled: isAuthenticated`, export `QUERY_KEY` constant, use `apiJson` in `queryFn`, `saveCollection` in fetch when hybrid (`mms-query.md`).
 
@@ -74,7 +75,7 @@ One-shot reads outside React: `getGlobalSettings()`, `getBrandingSettings()`.
 | `useContactConfig()` | `ContactConfigContext.tsx` |
 | `useContactColumns()` | same |
 | `useContactValidation()` | same |
-| `calculateProfileHealth`, schema builders | `lib/contactConfig/*` (re-exported from context) |
+| `calculateProfileCompleteness`, schema builders | `lib/contactConfig/*` (re-exported from context) |
 
 Provider at `App.tsx` root only — never nest on child pages.
 

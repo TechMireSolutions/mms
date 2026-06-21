@@ -7,11 +7,14 @@ import {
   Plus, Trash2, ShieldCheck, Receipt, CalendarCheck
 } from "lucide-react";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import { useStudentsCollection } from "../../hooks/useStudents";
-import { useTeachersCollection } from "../../hooks/useTeachers";
+import { getObject, saveObject } from "../../lib/db";
+import { useContactsReportAnalytics, useContactsWidgetAggregates } from "@/hooks/useContacts";
+import { computeContactsCustomCardValue, computeStudentsCustomCardValue, computeTeachersCustomCardValue } from "@/components/reports/pinnedWidgets/widgetDataUtils";
+import { useStudentsMetrics, useStudentsWidgetAggregates } from "../../hooks/useStudents";
+import { useTeachersMetrics, useTeachersWidgetAggregates } from "../../hooks/useTeachers";
 import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
 import { useSessionsCollection } from "@/hooks/useSessions";
-import { type Contact } from "../../lib/contactFields";
+import { type Contact } from "@mms/shared";
 import { type AttendanceRecord } from '@/lib/data/attendanceData';
 import { type Invoice } from '@/lib/data/financeData';
 import { type Student } from '@/lib/data/studentsData';
@@ -22,6 +25,7 @@ import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from 
 import { computeCustomCard as computeCustomCardShared, CustomCard } from "./reportMetadata";
 import DynamicCardBuilder from "./DynamicCardBuilder";
 import usePermissions from "@/hooks/usePermissions";
+import useTranslation from "@/hooks/useTranslation";
 
 interface KPIItem {
   icon: LucideIcon;
@@ -256,11 +260,23 @@ function getDefaultCardConfig(category: string, label: string): CustomCard {
 
 export default function KPISummary({ category, role }: KPISummaryProps): React.JSX.Element {
   const { can } = usePermissions();
-  const contacts = useLiveCollection("contacts");
+  const { t } = useTranslation();
+  const isContactsCategory = category === "contacts";
+  const isStudentsCategory = category === "students";
+  const isTeachersCategory = category === "teachers" || category === "faculty";
+  const needsContactAnalytics = isContactsCategory || category === "students" || category === "sessions";
+  const { data: contactsReportData } = useContactsReportAnalytics({ enabled: needsContactAnalytics });
+  const { data: studentMetrics } = useStudentsMetrics({ enabled: isStudentsCategory || category === "enrollments" });
+  const { data: teacherMetrics } = useTeachersMetrics({ enabled: isTeachersCategory || category === "enrollments" });
+  const { data: crossStudentMetrics } = useStudentsMetrics({
+    enabled: !isStudentsCategory && !isContactsCategory && !isTeachersCategory && category !== "enrollments",
+  });
+  const { data: crossTeacherMetrics } = useTeachersMetrics({ enabled: !isTeachersCategory && category !== "enrollments" });
+  const contactAnalytics = contactsReportData?.analytics;
+  const auxiliaryStudentMetrics = category === "enrollments" ? studentMetrics : crossStudentMetrics;
+  const auxiliaryTeacherMetrics = category === "enrollments" ? teacherMetrics : crossTeacherMetrics;
   const records = useAttendanceRecordsCollection();
   const invoices = useLiveCollection("finance_invoices");
-  const students = useStudentsCollection();
-  const teachers = useTeachersCollection();
   const exams = useLiveCollection("exams");
   const examResults = useLiveCollection("exam_results");
   const sessions = useSessionsCollection();
@@ -276,24 +292,26 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     let totalStudentsTrend: "up" | "down" | "flat" = "flat";
     let totalStudentsVelocity = undefined;
 
-    if (category === "contacts") {
-      const total = contacts.length;
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const sixtyDaysAgo = new Date();
-      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-
-      const recent = contacts.filter(c => c.createdAt && new Date(c.createdAt) >= thirtyDaysAgo).length;
-      const older  = contacts.filter(c => c.createdAt && new Date(c.createdAt) >= sixtyDaysAgo && new Date(c.createdAt) < thirtyDaysAgo).length;
-      
-      totalStudentsVal = String(total);
-      totalStudentsSub = `${recent} new recently`;
-      totalStudentsTrend = recent >= older ? "up" : "down";
-      totalStudentsVelocity = older > 0 ? `${Math.round(((recent - older) / older) * 100)}%` : `+${recent}`;
+    if (category === "contacts" && contactAnalytics) {
+      totalStudentsVal = String(contactAnalytics.total);
+      totalStudentsSub = `${contactAnalytics.newLast30Days} new recently`;
+      totalStudentsTrend = contactAnalytics.newLast30Days >= contactAnalytics.newPrior30Days ? "up" : "down";
+      totalStudentsVelocity =
+        contactAnalytics.newPrior30Days > 0
+          ? `${Math.round(((contactAnalytics.newLast30Days - contactAnalytics.newPrior30Days) / contactAnalytics.newPrior30Days) * 100)}%`
+          : `+${contactAnalytics.newLast30Days}`;
+    } else if (category === "contacts") {
+      totalStudentsVal = "0";
+      totalStudentsSub = "No contacts";
+    } else if (isStudentsCategory && studentMetrics) {
+      totalStudentsVal = String(studentMetrics.total);
+      totalStudentsSub = `${studentMetrics.active} active now`;
+      totalStudentsTrend = studentMetrics.newThisPeriod > 0 ? "up" : "flat";
     } else {
-      totalStudentsVal = String(students.length);
-      totalStudentsSub = `${students.filter(s => s.status === "active").length} active now`;
-      totalStudentsTrend = "up";
+      const metrics = category === "enrollments" ? studentMetrics : crossStudentMetrics;
+      totalStudentsVal = String(metrics?.total ?? 0);
+      totalStudentsSub = `${metrics?.active ?? 0} active now`;
+      totalStudentsTrend = (metrics?.newThisPeriod ?? 0) > 0 ? "up" : "flat";
     }
 
     // 2. Avg Attendance
@@ -369,31 +387,12 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     const capacitySub = `Across ${classesList.length} classes`;
 
     // 8. Growth Rate
-    const signupDates = contacts
-      .map(c => c.createdAt ? new Date(c.createdAt).getTime() : 0)
-      .filter(t => t > 0)
-      .sort((a, b) => a - b);
     let growthVal = "+0%";
     let growthTrend: "up" | "down" | "flat" = "flat";
     let growthSub = "No signup dates";
-    if (signupDates.length > 0) {
-      const maxDate = new Date(signupDates[signupDates.length - 1]);
-      const t0 = maxDate.getTime();
-      const t30 = t0 - 30 * 24 * 60 * 60 * 1000;
-      const t60 = t0 - 60 * 24 * 60 * 60 * 1000;
-      
-      const recentSignups = contacts.filter(c => {
-        if (!c.createdAt) return false;
-        const t = new Date(c.createdAt).getTime();
-        return t >= t30 && t <= t0;
-      }).length;
-      
-      const priorSignups = contacts.filter(c => {
-        if (!c.createdAt) return false;
-        const t = new Date(c.createdAt).getTime();
-        return t >= t60 && t < t30;
-      }).length;
-      
+    if (needsContactAnalytics && contactAnalytics?.hasSignupDates) {
+      const recentSignups = contactAnalytics.growthRecentSignups30d;
+      const priorSignups = contactAnalytics.growthPriorSignups30d;
       if (priorSignups === 0) {
         growthVal = recentSignups > 0 ? `+${recentSignups * 100}%` : "0%";
         growthTrend = recentSignups > 0 ? "up" : "flat";
@@ -404,35 +403,26 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         growthTrend = pct > 0 ? "up" : (pct < 0 ? "down" : "flat");
         growthSub = `${recentSignups} vs ${priorSignups} (prev 30d)`;
       }
+    } else if (needsContactAnalytics && contactAnalytics) {
+      growthSub = "No signup dates";
     }
 
     // 9. Lead Conversion
-    const totalContactsCount = contacts.length;
-    const leadsCount = contacts.filter(c => (c.lifecycleStage || "Lead") === "Lead").length;
-    const conversionRate = totalContactsCount > 0 ? Math.round(((totalContactsCount - leadsCount) / totalContactsCount) * 100) : 0;
-    const conversionVal = `${conversionRate}%`;
+    const conversionVal =
+      contactAnalytics
+        ? `${contactAnalytics.conversionRate}%`
+        : "0%";
 
     // 10. Active Enquiries
-    const enquiriesCount = contacts.filter(c => (c.lifecycleStage || "Lead") === "Lead").length;
-    let recentEnquiries = 0;
-    if (signupDates.length > 0) {
-      const maxDate = new Date(signupDates[signupDates.length - 1]);
-      const sevenDaysAgo = new Date(maxDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-      recentEnquiries = contacts.filter(c => {
-        const isLead = (c.lifecycleStage || "Lead") === "Lead";
-        if (!isLead) return false;
-        if (!c.createdAt) return false;
-        return new Date(c.createdAt) >= sevenDaysAgo;
-      }).length;
-    }
-    const enquiriesVal = String(enquiriesCount);
-    const enquiriesSub = `${recentEnquiries} new in 7 days`;
+    const enquiriesVal = contactAnalytics
+      ? String(contactAnalytics.enquiriesCount)
+      : "0";
+    const recentEnquiries = contactAnalytics?.recentEnquiries7d ?? 0;
+    const enquiriesSub = t("reports.contacts.kpi.activeEnquiriesSub", { count: recentEnquiries });
 
     // 11. Engagement Index
-    const ratedContactsList = contacts.filter(c => typeof c.rating === "number" && c.rating > 0);
-    const avgRatingVal = ratedContactsList.length > 0 ? ratedContactsList.reduce((sum, c) => sum + (c.rating || 0), 0) / ratedContactsList.length : 4.2;
-    const engagementIndex = (avgRatingVal * 2).toFixed(1);
-    const engagementVal = engagementIndex;
+    const engagementVal = contactAnalytics?.engagementIndex ?? "0.0";
+    const contactsRecent30 = contactAnalytics?.newThisPeriod ?? 0;
 
     const items: (KPIItem & { categories: string[] })[] = [
       {
@@ -444,7 +434,11 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         trend: totalStudentsTrend,
         velocity: totalStudentsVelocity,
         categories: ["students", "enrollments"],
-        isAvailable: category === "contacts" ? contacts.length > 0 : students.length > 0
+        isAvailable: category === "contacts"
+          ? (contactAnalytics?.total ?? 0) > 0
+          : isStudentsCategory
+            ? (studentMetrics?.total ?? 0) > 0
+            : (auxiliaryStudentMetrics?.total ?? 0) > 0
       },
       {
         icon: UserCheck,
@@ -514,37 +508,47 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         color: "green",
         trend: growthTrend,
         categories: ["students", "sessions"],
-        isAvailable: contacts.some(c => !!c.createdAt)
+        isAvailable: needsContactAnalytics ? Boolean(contactAnalytics?.hasSignupDates) : false
       },
       {
         icon: Target,
-        label: "Lead Conversion",
+        label: t("reports.contacts.kpi.leadConversion"),
         value: conversionVal,
-        sub: "Lead → Active",
+        sub: t("reports.contacts.kpi.leadConversionSub"),
         color: "violet",
         trend: "up",
         categories: ["contacts"],
-        isAvailable: contacts.length > 0
+        isAvailable: (contactAnalytics?.total ?? 0) > 0
       },
       {
         icon: Zap,
-        label: "Active Enquiries",
+        label: t("reports.contacts.kpi.activeEnquiries"),
         value: enquiriesVal,
         sub: enquiriesSub,
         color: "amber",
         trend: "up",
         categories: ["contacts"],
-        isAvailable: contacts.some(c => (c.lifecycleStage || "Lead") === "Lead")
+        isAvailable: (contactAnalytics?.enquiriesCount ?? 0) > 0
       },
       {
         icon: Activity,
-        label: "Engagement Index",
+        label: t("reports.contacts.kpi.engagementIndex"),
         value: engagementVal,
-        sub: "/10 score",
+        sub: t("reports.contacts.kpi.engagementSub"),
         color: "green",
         trend: "flat",
         categories: ["contacts"],
-        isAvailable: contacts.some(c => typeof c.rating === "number" && c.rating > 0)
+        isAvailable: (contactAnalytics?.ratedCount ?? 0) > 0
+      },
+      {
+        icon: Users,
+        label: t("reports.contacts.kpi.totalContacts"),
+        value: contactAnalytics ? String(contactAnalytics.total) : "0",
+        sub: t("reports.contacts.kpi.newRecently", { count: contactsRecent30 }),
+        color: "primary",
+        trend: contactsRecent30 > 0 ? "up" : "flat",
+        categories: ["contacts"],
+        isAvailable: (contactAnalytics?.total ?? 0) > 0
       },
       {
         icon: BarChart2,
@@ -589,27 +593,31 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       {
         icon: GraduationCap,
         label: "Total Faculty",
-        value: String(teachers.length),
-        sub: `${teachers.filter((t) => t.status === "active").length} active`,
+        value: String(isTeachersCategory ? (teacherMetrics?.total ?? 0) : (auxiliaryTeacherMetrics?.total ?? 0)),
+        sub: `${isTeachersCategory ? (teacherMetrics?.active ?? 0) : (auxiliaryTeacherMetrics?.active ?? 0)} active`,
         color: "primary",
         trend: "flat",
         categories: ["teachers", "faculty"],
-        isAvailable: teachers.length > 0,
+        isAvailable: isTeachersCategory
+          ? (teacherMetrics?.total ?? 0) > 0
+          : (auxiliaryTeacherMetrics?.total ?? 0) > 0,
       },
       {
         icon: Activity,
         label: "On Leave",
-        value: String(teachers.filter((t) => t.status === "on_leave").length),
+        value: String(isTeachersCategory ? (teacherMetrics?.onLeave ?? 0) : (auxiliaryTeacherMetrics?.onLeave ?? 0)),
         sub: "Faculty currently on leave",
         color: "amber",
         trend: "flat",
         categories: ["teachers", "faculty"],
-        isAvailable: teachers.some((t) => t.status === "on_leave"),
+        isAvailable: isTeachersCategory
+          ? (teacherMetrics?.onLeave ?? 0) > 0
+          : (auxiliaryTeacherMetrics?.onLeave ?? 0) > 0,
       },
     ];
 
     return items;
-  }, [contacts, records, invoices, students, teachers, exams, examResults, sessions, distributions, qbQuestions, qbTests, qbResults, category]);
+  }, [contactAnalytics, records, invoices, exams, examResults, sessions, distributions, qbQuestions, qbTests, qbResults, category, studentMetrics, isStudentsCategory, teacherMetrics, isTeachersCategory, auxiliaryStudentMetrics, auxiliaryTeacherMetrics, needsContactAnalytics, t]);
 
   // Determine standard possible cards for this category and user role
   const standardPossibleCards = useMemo(() => {
@@ -629,16 +637,47 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
 
   // Load custom cards for this category
   const [customCards, setCustomCards] = useState<CustomCard[]>(() => {
-    try {
-      const saved = localStorage.getItem(`kpi_custom_cards_${category}`);
-      if (saved) {
-        return JSON.parse(saved) as CustomCard[];
-      }
-    } catch (e) {
-      console.error("Failed to load custom KPI cards", e);
-    }
-    return [];
+    return getObject<CustomCard[]>(`kpi_custom_cards_${category}`, []);
   });
+
+  useContactsWidgetAggregates(
+    customCards.map((card) => ({
+      id: card.id,
+      collection: card.collection,
+      operation: card.operation,
+      targetField: card.targetField,
+      filterField: card.filterField,
+      filterOperator: card.filterOperator,
+      filterValue: card.filterValue,
+    })),
+    { enabled: isContactsCategory && customCards.some((card) => card.collection === "contacts") },
+  );
+
+  useStudentsWidgetAggregates(
+    customCards.map((card) => ({
+      id: card.id,
+      collection: card.collection,
+      operation: card.operation,
+      targetField: card.targetField,
+      filterField: card.filterField,
+      filterOperator: card.filterOperator,
+      filterValue: card.filterValue,
+    })),
+    { enabled: isStudentsCategory && customCards.some((card) => card.collection === "students") },
+  );
+
+  useTeachersWidgetAggregates(
+    customCards.map((card) => ({
+      id: card.id,
+      collection: card.collection,
+      operation: card.operation,
+      targetField: card.targetField,
+      filterField: card.filterField,
+      filterOperator: card.filterOperator,
+      filterValue: card.filterValue,
+    })),
+    { enabled: isTeachersCategory && customCards.some((card) => card.collection === "teachers") },
+  );
 
   const defaultCollection = useMemo<CustomCard["collection"]>(() => {
     if (category === "students") return "students";
@@ -659,12 +698,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   // Sync custom cards from localStorage when updated elsewhere
   useEffect(() => {
     const handleUpdate = () => {
-      try {
-        const saved = localStorage.getItem(`kpi_custom_cards_${category}`);
-        setCustomCards(saved ? JSON.parse(saved) as CustomCard[] : []);
-      } catch (e) {
-        console.error("Failed to load custom KPI cards on storage sync", e);
-      }
+      setCustomCards(getObject<CustomCard[]>(`kpi_custom_cards_${category}`, []));
     };
     window.addEventListener("local-database-update", handleUpdate);
     return () => window.removeEventListener("local-database-update", handleUpdate);
@@ -678,20 +712,65 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   // Compute custom KPI items
   const computedCustomKPIs = useMemo(() => {
     return customCards.map((card) => {
+      if (card.collection === "contacts") {
+        const aggregateValue = computeContactsCustomCardValue(card);
+        if (aggregateValue) {
+          return {
+            label: card.title,
+            value: String(aggregateValue.finalValue),
+            sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+            icon: (ICONS[card.icon] || Users) as LucideIcon,
+            color: (card.color === "emerald" ? "green" : card.color) as KPIItem["color"],
+            trend: "flat" as const,
+            isAvailable: aggregateValue.totalCount > 0,
+            categories: [category],
+          };
+        }
+      }
+      if (card.collection === "students") {
+        const aggregateValue = computeStudentsCustomCardValue(card);
+        if (aggregateValue) {
+          return {
+            label: card.title,
+            value: String(aggregateValue.finalValue),
+            sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+            icon: (ICONS[card.icon] || Users) as LucideIcon,
+            color: (card.color === "emerald" ? "green" : card.color) as KPIItem["color"],
+            trend: "flat" as const,
+            isAvailable: aggregateValue.totalCount > 0,
+            categories: [category],
+          };
+        }
+      }
+      if (card.collection === "teachers") {
+        const aggregateValue = computeTeachersCustomCardValue(card);
+        if (aggregateValue) {
+          return {
+            label: card.title,
+            value: String(aggregateValue.finalValue),
+            sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+            icon: (ICONS[card.icon] || Users) as LucideIcon,
+            color: (card.color === "emerald" ? "green" : card.color) as KPIItem["color"],
+            trend: "flat" as const,
+            isAvailable: aggregateValue.totalCount > 0,
+            categories: [category],
+          };
+        }
+      }
       return computeCustomCard(card, {
-        students,
-        teachers,
+        students: [],
+        teachers: [],
         sessions,
         finance_invoices: invoices,
         attendance_records: records,
         hasanat_distributions: distributions,
-        contacts,
+        contacts: [],
         questions: qbQuestions,
         tests: qbTests,
         assessment_results: qbResults,
       });
     });
-  }, [customCards, students, teachers, sessions, invoices, records, distributions, contacts, qbQuestions, qbTests, qbResults]);
+  }, [customCards, category, sessions, invoices, records, distributions, qbQuestions, qbTests, qbResults]);
 
   // Merge standard and custom possible cards, preventing duplicates if standard label is overridden
   const possibleCards = useMemo(() => {
@@ -703,8 +782,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   // Primary volume counts for the dynamic limit formula
   const primaryVolume = useMemo(() => {
     switch (category) {
-      case "students": return students.length;
-      case "contacts": return contacts.length;
+      case "students": return studentMetrics?.total ?? 0;
+      case "contacts": return contactAnalytics?.total ?? 0;
       case "attendance": return records.length;
       case "financial":
       case "accounting":
@@ -716,26 +795,18 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       case "questionBank":
         return qbQuestions.length + qbTests.length + qbResults.length;
       case "enrollments":
-        return students.length + sessions.length;
+        return (studentMetrics?.total ?? 0) + sessions.length;
       case "teachers":
       case "faculty":
-        return teachers.length;
+        return teacherMetrics?.total ?? 0;
       default:
         return 0;
     }
-  }, [category, students, teachers, contacts, records, invoices, distributions, examResults, sessions, qbQuestions, qbTests, qbResults]);
+  }, [category, contactAnalytics, studentMetrics, teacherMetrics, records, invoices, distributions, examResults, exams, sessions, qbQuestions, qbTests, qbResults]);
 
   // User-configurable active visibility controls state
   const [selectedLabels, setSelectedLabels] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem(`kpi_config_${category}_${role || "all"}`);
-      if (saved) {
-        return JSON.parse(saved) as string[];
-      }
-    } catch (e) {
-      console.error("Failed to load KPI configs", e);
-    }
-    return [];
+    return getObject<string[]>(`kpi_config_${category}_${role || "all"}`, []);
   });
 
   const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -755,11 +826,10 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       updated = possibleCards.filter(p => p.isAvailable).map(a => a.label);
     }
 
-    const currentSaved = localStorage.getItem(`kpi_config_${category}_${role || "all"}`);
-    const nextSaved = JSON.stringify(updated);
-    if (currentSaved !== nextSaved) {
+    const currentSaved = getObject<string[]>(`kpi_config_${category}_${role || "all"}`, []);
+    if (JSON.stringify(currentSaved) !== JSON.stringify(updated)) {
       setSelectedLabels(updated);
-      localStorage.setItem(`kpi_config_${category}_${role || "all"}`, nextSaved);
+      saveObject(`kpi_config_${category}_${role || "all"}`, updated);
     }
   }, [possibleCards, category, role]);
 
@@ -771,40 +841,34 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       } else {
         next = [...prev, label];
       }
-      localStorage.setItem(`kpi_config_${category}_${role || "all"}`, JSON.stringify(next));
+      saveObject(`kpi_config_${category}_${role || "all"}`, next);
       return next;
     });
   };
 
   // Automatically select newly added custom cards so they are visible immediately
   useEffect(() => {
-    const prevTitlesStr = localStorage.getItem(`prev_kpi_titles_${category}`) || "[]";
-    let prevTitles: string[] = [];
-    try {
-      prevTitles = JSON.parse(prevTitlesStr) as string[];
-    } catch {
-      prevTitles = [];
-    }
+    const prevTitles = getObject<string[]>(`prev_kpi_titles_${category}`, []);
     const currentTitles = customCards.map((c) => c.title);
     
     const newlyAdded = currentTitles.filter((t) => !prevTitles.includes(t));
     if (newlyAdded.length > 0) {
       const nextSelected = [...new Set([...selectedLabels, ...newlyAdded])];
       setSelectedLabels(nextSelected);
-      localStorage.setItem(`kpi_config_${category}_${role || "all"}`, JSON.stringify(nextSelected));
+      saveObject(`kpi_config_${category}_${role || "all"}`, nextSelected);
     }
     
-    localStorage.setItem(`prev_kpi_titles_${category}`, JSON.stringify(currentTitles));
+    saveObject(`prev_kpi_titles_${category}`, currentTitles);
   }, [customCards, category, role, selectedLabels]);
 
   const handleDeleteCustomCard = (label: string) => {
     const updatedCards = customCards.filter((c) => c.title !== label);
     setCustomCards(updatedCards);
-    localStorage.setItem(`kpi_custom_cards_${category}`, JSON.stringify(updatedCards));
+    saveObject(`kpi_custom_cards_${category}`, updatedCards);
     
     const nextSelected = selectedLabels.filter((l) => l !== label);
     setSelectedLabels(nextSelected);
-    localStorage.setItem(`kpi_config_${category}_${role || "all"}`, JSON.stringify(nextSelected));
+    saveObject(`kpi_config_${category}_${role || "all"}`, nextSelected);
 
     if (editingCardConfig && editingCardConfig.title === label) {
       setEditingCardConfig(null);
@@ -831,19 +895,21 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
 
   const visible = possibleCards.filter(kpi => selectedLabels.includes(kpi.label));
 
+  const moduleLabel = category === "contacts" ? t("nav.contacts") : (CATEGORY_NAMES[category] || category);
+
   return (
     <div className="space-y-3 w-full">
       {/* Configuration Header Bar */}
       <div className="flex justify-between items-center text-xs">
         <span className="font-bold text-muted-foreground uppercase tracking-widest leading-none">
-          {(CATEGORY_NAMES[category] || category) + " Metrics"}
+          {t("reports.kpiSectionTitle", { module: moduleLabel })}
         </span>
         <button
           onClick={() => setIsConfigOpen(!isConfigOpen)}
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card/60 backdrop-blur-md hover:bg-card hover:text-primary transition-all text-muted-foreground font-semibold shadow-sm cursor-pointer"
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
-          Customize Dashboard
+          {t("reports.kpiCustomize")}
         </button>
       </div>
 

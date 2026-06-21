@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus, Search, X, Star, User, Users2, Filter, ChevronDown, Eye } from "lucide-react";
 import {
@@ -19,12 +19,27 @@ import RegistryPersonSelect from "@/components/ui/RegistryPersonSelect";
 import UserActorSelect from "@/components/ui/UserActorSelect";
 import useTranslation from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import type { ModuleColumnRegistryEntry } from "@mms/shared";
 
-const STATUS_CFG: Record<string, { label: string, cls: string }> = {
-  active:   { label: "Active",   cls: "bg-info/10 text-info border-info/20" },
-  redeemed: { label: "Redeemed", cls: "bg-primary/10 text-primary border-primary/20" },
-  returned: { label: "Returned", cls: "bg-muted text-muted-foreground border-border" },
+const STATUS_CLS: Record<string, string> = {
+  active: "bg-info/10 text-info border-info/20",
+  redeemed: "bg-primary/10 text-primary border-primary/20",
+  returned: "bg-muted text-muted-foreground border-border",
 };
+
+interface ColumnCustomizerProps {
+  columnRegistry: ModuleColumnRegistryEntry[];
+  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  labels: {
+    trigger: string;
+    title: string;
+    visibleAndOrder: string;
+    hidden: string;
+    fixed: string;
+    hideColumn: (label: string) => string;
+  };
+}
 
 const EMPTY_DIST: Partial<Distribution> = {
   denominationId: "",
@@ -365,6 +380,9 @@ export interface DistributionManagerProps {
   denoms: Denomination[];
   batches: StockBatch[];
   onUpdate: (dists: Distribution[]) => void;
+  onFilteredCountChange?: (count: number) => void;
+  isColumnVisible?: (key: string) => boolean;
+  columnCustomizer?: ColumnCustomizerProps;
 }
 
 /**
@@ -377,7 +395,24 @@ export interface DistributionManagerProps {
  * @param props - Component properties.
  * @returns React element representing the card distribution manager UI.
  */
-export default function DistributionManager({ distributions, denoms, batches, onUpdate }: DistributionManagerProps) {
+export default function DistributionManager({
+  distributions,
+  denoms,
+  batches,
+  onUpdate,
+  onFilteredCountChange,
+  isColumnVisible,
+  columnCustomizer,
+}: DistributionManagerProps) {
+  const { t } = useTranslation();
+  const statusLabels = useMemo(
+    () => ({
+      active: t('hasanat.status.active'),
+      redeemed: t('hasanat.status.redeemed'),
+      returned: t('hasanat.status.returned'),
+    }),
+    [t],
+  );
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
@@ -393,6 +428,19 @@ export default function DistributionManager({ distributions, denoms, batches, on
       return matchSearch && matchStatus;
     });
   }, [distributions, search, filterStatus]);
+
+  useEffect(() => {
+    onFilteredCountChange?.(filtered.length);
+  }, [filtered.length, onFilteredCountChange]);
+
+  const showCard = isColumnVisible ? isColumnVisible("card") : true;
+  const showRecipient = isColumnVisible ? isColumnVisible("recipient") : true;
+  const showRecipientClass = isColumnVisible ? isColumnVisible("recipientClass") : true;
+  const showQuantity = isColumnVisible ? isColumnVisible("quantity") : true;
+  const showReason = isColumnVisible ? isColumnVisible("reason") : true;
+  const showIssuedDate = isColumnVisible ? isColumnVisible("issuedDate") : true;
+  const showIssuedBy = isColumnVisible ? isColumnVisible("issuedBy") : true;
+  const showStatus = isColumnVisible ? isColumnVisible("status") : true;
 
   const toggleStatus = (s: string) => setFilterStatus((l) => l.includes(s) ? l.filter((x) => x !== s) : [...l, s]);
 
@@ -411,7 +459,7 @@ export default function DistributionManager({ distributions, denoms, batches, on
         <div className="relative flex-1">
           <label htmlFor="search-dist" className="sr-only">Search distributions</label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <input id="search-dist" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search distributions…" className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+          <input id="search-dist" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("hasanat.searchDistributions")} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
           {search && <button type="button" aria-label="Clear search" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="w-3.5 h-3.5" aria-hidden="true" /></button>}
         </div>
         <DropdownMenu>
@@ -421,15 +469,24 @@ export default function DistributionManager({ distributions, denoms, batches, on
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuLabel className="text-xs">Status</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs">{t("hasanat.filter.status")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {Object.entries(STATUS_CFG).map(([k, v]) => (
-              <DropdownMenuCheckboxItem key={k} checked={filterStatus.includes(k)} onCheckedChange={() => toggleStatus(k)}>{v.label}</DropdownMenuCheckboxItem>
+            {Object.keys(STATUS_CLS).map((k) => (
+              <DropdownMenuCheckboxItem key={k} checked={filterStatus.includes(k)} onCheckedChange={() => toggleStatus(k)}>
+                {statusLabels[k as keyof typeof statusLabels]}
+              </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        {columnCustomizer && (
+          <ModuleColumnCustomizer
+            columnRegistry={columnCustomizer.columnRegistry}
+            updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
+            labels={columnCustomizer.labels}
+          />
+        )}
         <button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap">
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Distribute Cards
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.distributeCards")}
         </button>
       </header>
 
@@ -439,49 +496,104 @@ export default function DistributionManager({ distributions, denoms, batches, on
             <caption className="sr-only">Distributions</caption>
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                {["Card", "Recipient", "Class", "Qty", "Reason", "Issued", "By", "Status", ""].map((h) => (
-                  <th scope="col" key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                    {h === "" ? <span className="sr-only">Actions</span> : h}
+                {showCard && (
+                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    {t("hasanat.columns.distribution.card")}
                   </th>
-                ))}
+                )}
+                {showRecipient && (
+                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    {t("hasanat.columns.distribution.recipient")}
+                  </th>
+                )}
+                {showRecipientClass && (
+                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    {t("hasanat.columns.distribution.recipientClass")}
+                  </th>
+                )}
+                {showQuantity && (
+                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    {t("hasanat.columns.distribution.quantity")}
+                  </th>
+                )}
+                {showReason && (
+                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    {t("hasanat.columns.distribution.reason")}
+                  </th>
+                )}
+                {showIssuedDate && (
+                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    {t("hasanat.columns.distribution.issuedDate")}
+                  </th>
+                )}
+                {showIssuedBy && (
+                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    {t("hasanat.columns.distribution.issuedBy")}
+                  </th>
+                )}
+                {showStatus && (
+                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    {t("hasanat.columns.distribution.status")}
+                  </th>
+                )}
+                <th scope="col" className="px-4 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <span className="sr-only">{t("hasanat.columns.actions")}</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
               {filtered.length === 0 ? (
-                <tr><td colSpan={9} className="py-10 text-center text-sm text-muted-foreground">No distributions found</td></tr>
+                <tr><td colSpan={9} className="py-10 text-center text-sm text-muted-foreground">{t("hasanat.empty.distributions")}</td></tr>
               ) : (
                 filtered.map((d, i) => {
                   const den = getDen(d.denominationId);
-                  const sCfg = STATUS_CFG[d.status] || STATUS_CFG.active;
+                  const statusCls = STATUS_CLS[d.status] || STATUS_CLS.active;
+                  const statusLabel = statusLabels[d.status as keyof typeof statusLabels] || d.status;
                   return (
                     <motion.tr key={d.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="hover:bg-muted/20 transition-colors group">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-base" aria-hidden="true">{den?.icon || "⭐"}</span>
-                          <div>
-                            <p className="text-[12px] font-semibold text-foreground whitespace-nowrap m-0">{d.denominationName}</p>
-                            {den && <p className="text-[10px] font-bold m-0" style={{ color: den.color }}>{den.points} pts</p>}
+                      {showCard && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base" aria-hidden="true">{den?.icon || "⭐"}</span>
+                            <div>
+                              <p className="text-[12px] font-semibold text-foreground whitespace-nowrap m-0">{d.denominationName}</p>
+                              {den && <p className="text-[10px] font-bold m-0" style={{ color: den.color }}>{den.points} pts</p>}
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          {d.recipientType === "faculty" ? <Users2 className="w-3 h-3 text-muted-foreground" aria-hidden="true" /> : <User className="w-3 h-3 text-muted-foreground" aria-hidden="true" />}
-                          <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">{d.recipientName}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground">{d.recipientClass || "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className="text-[13px] font-bold text-foreground">{d.quantity}</span>
-                      </td>
-                      <td className="px-4 py-3 max-w-[160px]">
-                        <p className="text-[12px] text-muted-foreground truncate m-0">{d.reason}</p>
-                      </td>
-                      <td className="px-4 py-3 text-[11px] text-muted-foreground whitespace-nowrap">{d.issuedDate}</td>
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{d.issuedBy || "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${sCfg.cls}`}>{sCfg.label}</span>
-                      </td>
+                        </td>
+                      )}
+                      {showRecipient && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            {d.recipientType === "faculty" ? <Users2 className="w-3 h-3 text-muted-foreground" aria-hidden="true" /> : <User className="w-3 h-3 text-muted-foreground" aria-hidden="true" />}
+                            <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">{d.recipientName}</span>
+                          </div>
+                        </td>
+                      )}
+                      {showRecipientClass && (
+                        <td className="px-4 py-3 text-[12px] text-muted-foreground">{d.recipientClass || "—"}</td>
+                      )}
+                      {showQuantity && (
+                        <td className="px-4 py-3">
+                          <span className="text-[13px] font-bold text-foreground">{d.quantity}</span>
+                        </td>
+                      )}
+                      {showReason && (
+                        <td className="px-4 py-3 max-w-[160px]">
+                          <p className="text-[12px] text-muted-foreground truncate m-0">{d.reason}</p>
+                        </td>
+                      )}
+                      {showIssuedDate && (
+                        <td className="px-4 py-3 text-[11px] text-muted-foreground whitespace-nowrap">{d.issuedDate}</td>
+                      )}
+                      {showIssuedBy && (
+                        <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{d.issuedBy || "—"}</td>
+                      )}
+                      {showStatus && (
+                        <td className="px-4 py-3">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusCls}`}>{statusLabel}</span>
+                        </td>
+                      )}
                       <td className="px-4 py-3">
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <DropdownMenu>
@@ -491,10 +603,12 @@ export default function DistributionManager({ distributions, denoms, batches, on
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-36">
-                              <DropdownMenuLabel className="text-xs">Change Status</DropdownMenuLabel>
+                              <DropdownMenuLabel className="text-xs">{t("hasanat.changeStatus")}</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              {Object.entries(STATUS_CFG).map(([k, v]) => (
-                                <DropdownMenuCheckboxItem key={k} checked={d.status === k} onCheckedChange={() => changeStatus(d.id, k as "active" | "redeemed" | "returned")}>{v.label}</DropdownMenuCheckboxItem>
+                              {Object.keys(STATUS_CLS).map((k) => (
+                                <DropdownMenuCheckboxItem key={k} checked={d.status === k} onCheckedChange={() => changeStatus(d.id, k as "active" | "redeemed" | "returned")}>
+                                  {statusLabels[k as keyof typeof statusLabels]}
+                                </DropdownMenuCheckboxItem>
                               ))}
                             </DropdownMenuContent>
                           </DropdownMenu>

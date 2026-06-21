@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Phone, Plus } from "lucide-react";
 import { normalizeToE164, parsePhoneNumber } from "@mms/shared";
 import { INPUT, LABEL, Field, FormEmptyState, RequiredBanner, CustomFieldInput, CustomFieldConfig, EditableSelect, COLLECTION_CARD, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
-import { useSortedFields } from "../../../hooks/useSortedFields";
+import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
 
@@ -22,12 +22,7 @@ interface PhoneTabProps {
   data: ContactFormData;
   onChange: (updatedData: ContactFormData) => void;
   required?: boolean;
-  tabFieldCfg?: {
-    enabled?: string[];
-    required?: string[];
-  };
   defaultCountry: string;
-  customFields?: unknown;
 }
 
 /**
@@ -39,16 +34,15 @@ export default function PhoneTab({
   data,
   onChange,
   required = false,
-  tabFieldCfg,
   defaultCountry,
-  customFields
 }: PhoneTabProps): React.JSX.Element {
-  const fields = useSortedFields("phones");
+  const fields = useVisibleContactFields("phones");
   const standardKeys = ["label", "number", "countryCode"];
   const sortedCustomFields = fields.filter((f) => !standardKeys.includes(f.key) && f.enabled !== false);
-  const { phoneLabels, countryCodesMap, updatePhoneLabels, uiStrings } = useContactConfig();
+  const { phoneLabels, countryCodesMap, updatePhoneLabels } = useContactConfig();
   const { t } = useTranslation();
-  const phones = data.phones && data.phones.length > 0 ? data.phones : [{ label: uiStrings.mobileLabel, number: "", countryCode: countryCodesMap[defaultCountry] || "+92" }];
+  const defaultPhoneLabel = phoneLabels[0] || t('contacts.detail.mobileLabel');
+  const phones = data.phones && data.phones.length > 0 ? data.phones : [{ label: defaultPhoneLabel, number: "", countryCode: countryCodesMap[defaultCountry] || "+92" }];
 
   const upd = (list: ContactPhone[]): void => {
     onChange({ ...data, phones: list });
@@ -61,8 +55,8 @@ export default function PhoneTab({
   const labelField = fields.find((f) => f.key === "label");
   const numberField = fields.find((f) => f.key === "number");
 
-  const showLabel = tabFieldCfg?.enabled ? tabFieldCfg.enabled.includes("label") : (labelField?.enabled !== false);
-  const reqNumber = tabFieldCfg?.required ? tabFieldCfg.required.includes("number") : (numberField?.required === true);
+  const showLabel = labelField?.enabled !== false;
+  const reqNumber = numberField?.required === true;
   const defaultCode = countryCodesMap[defaultCountry] || "+92";
 
   const updatePhone = (i: number, patch: Partial<ContactPhone>): void => {
@@ -145,7 +139,7 @@ export default function PhoneTab({
         onClick={() =>
           upd([
             ...phones,
-            { label: phoneLabels[0] || uiStrings.mobileLabel, number: "", countryCode: defaultCode }
+            { label: phoneLabels[0] || defaultPhoneLabel, number: "", countryCode: defaultCode }
           ])
         }
         className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"

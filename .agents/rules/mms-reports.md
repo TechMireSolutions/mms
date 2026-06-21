@@ -4,7 +4,7 @@ trigger: model_decision
 
 # MMS Reports & Analytics
 
-**Placement & per-module categories** → `mms-module-isolation.md`. This file covers report **implementation** only.
+**Placement & per-module categories** → `mms-module-isolation.md`. Universal reporting behaviour → **`mms-module-architecture.md` §4**. This file covers report **implementation** only.
 
 ## Data
 
@@ -42,3 +42,17 @@ Hide irrelevant filters per module context — do not show finance filters on at
 
 - CSV/Excel exports: escape formula-prefix cells (`=`, `+`, `-`, `@`) to prevent spreadsheet injection
 - Large exports: stream or chunk — avoid blocking main thread; keep dynamic `import()` for `xlsx`/`jspdf` (`mms-frontend.md`)
+
+## Permissions & export policy
+
+Exports must respect active filters, search, field visibility, soft-deletion policy (when shipped), and `can()` — same boundary as Work tab (`mms-module-architecture.md` §2.3, §4).
+
+Audit large or sensitive exports (target — `mms-security.md`).
+
+## Drill-down (target)
+
+Selecting a chart segment or summary row should open the **Work** directory with equivalent filters applied — preserving RBAC. Not fully wired; implement when touching report components.
+
+## Saved reports
+
+Save **report logic** (filters, columns, aggregates), not a data snapshot. Re-run against current authorised data on open. If a saved field/tab is archived, show an explicit error — do not fail silently (`SavedReports`, `CustomReportBuilder`).

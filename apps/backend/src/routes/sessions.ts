@@ -8,10 +8,16 @@ import {
   updateSessionById,
 } from '../services/sessionService.js';
 import type { User } from '@mms/shared';
+import { computeSessionsCommandMetrics, SESSIONS_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../lib/httpErrors.js';
 import { resourceIdParamsSchema } from '../validation/commonSchemas.js';
+import { moduleColumnPrefsBodySchema } from '../validation/moduleColumnPrefsSchemas.js';
 import { sessionRecordSchema } from '../validation/sessionSchemas.js';
 import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
+import {
+  getUserColumnPrefsForModule,
+  setUserColumnPrefsForModule,
+} from '../services/userColumnPrefsService.js';
 
 const COLLECTION = 'sessions';
 
@@ -31,6 +37,48 @@ export default async function sessionsRoutes(
       return reply.send({ sessions: await loadSessions() });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to list sessions' });
+    }
+  });
+
+  fastify.get('/metrics', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
+    try {
+      const sessions = await loadSessions();
+      return reply.send({ metrics: computeSessionsCommandMetrics(sessions) });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to load session metrics' });
+    }
+  });
+
+  fastify.get('/column-prefs', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
+    try {
+      const prefs = await getUserColumnPrefsForModule(
+        SESSIONS_MODULE_CONTRACT.columnPrefsObjectKey,
+        String(user.id),
+      );
+      return reply.send({ prefs });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
+    }
+  });
+
+  fastify.put('/column-prefs', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(moduleColumnPrefsBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      await setUserColumnPrefsForModule(
+        SESSIONS_MODULE_CONTRACT.columnPrefsObjectKey,
+        String(user.id),
+        parsed.data.prefs,
+      );
+      return reply.send({ success: true, prefs: parsed.data.prefs });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
     }
   });
 

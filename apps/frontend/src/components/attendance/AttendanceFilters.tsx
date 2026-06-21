@@ -3,7 +3,8 @@ import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
 import { useSessionsCollection } from '@/hooks/useSessions';
-import { useTeachersCollection } from '@/hooks/useTeachers';
+import { useTeachersPaginated } from '@/hooks/useTeachers';
+import { TEACHERS_MODULE_CONTRACT } from '@mms/shared';
 import { activeTeachersForAssignment } from '@/lib/teachers/teacherAssignment';
 import useTranslation from '@/hooks/useTranslation';
 
@@ -45,8 +46,15 @@ export default function AttendanceFilters({ filters, onChange }: AttendanceFilte
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   const sessions = useSessionsCollection();
-  const teachers = useTeachersCollection();
-  const assignableTeachers = useMemo(() => activeTeachersForAssignment(teachers), [teachers]);
+  const { data: activeTeachersPage } = useTeachersPaginated({
+    page: 1,
+    limit: TEACHERS_MODULE_CONTRACT.maxPageSize,
+    status: 'active',
+  });
+  const assignableTeachers = useMemo(
+    () => activeTeachersForAssignment((activeTeachersPage?.teachers ?? []) as import('@mms/shared').Teacher[]),
+    [activeTeachersPage],
+  );
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

@@ -36,7 +36,8 @@ function fmt(ts?: string | number): string {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " · " + d.toLocaleDateString();
 }
 
-import { useStudentsCollection } from "@/hooks/useStudents";
+import { useStudentsByIds } from "@/hooks/useStudents";
+import { uniqueRegistryIds } from "@/lib/registryResolve";
 
 function describeEntry(e: AuditEntry, studentNameFor: (id?: string) => string): string {
   if (e.action === "edit") {
@@ -60,7 +61,9 @@ function describeEntry(e: AuditEntry, studentNameFor: (id?: string) => string): 
  */
 export default function AuditLog({ filters }: AuditLogProps) {
   const sessions = useSessionsCollection();
-  const students = useStudentsCollection();
+  const [log, setLog] = useState<AuditEntry[]>([]);
+  const studentIds = useMemo(() => uniqueRegistryIds(log.map((entry) => entry.studentId)), [log]);
+  const { data: students = [] } = useStudentsByIds(studentIds);
 
   const studentNameFor = (id?: string): string => {
     if (!id) return "";
@@ -73,7 +76,6 @@ export default function AuditLog({ filters }: AuditLogProps) {
     );
   }, [sessions]);
 
-  const [log, setLog] = useState<AuditEntry[]>([]);
   const [classId, setClassId] = useState(filters.classId || "");
   const [date, setDate] = useState(filters.date || new Date().toISOString().slice(0, 10));
 

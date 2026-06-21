@@ -21,7 +21,7 @@ import { loadContacts, updateContactById } from '../contactService.js';
 import { assertPasswordMeetsPolicy } from '../globalSettingsService.js';
 
 /** Auth-capable user with credentials resolved for login and session. */
-export interface StoredUser {
+interface StoredUser {
   id: string;
   email: string;
   name: string;

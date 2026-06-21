@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,6 +23,8 @@ import { ObligationCollection
 import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
+import ObligationsCommandMetrics from "../components/obligations/ObligationsCommandMetrics";
+import { useObligationColumnLayout } from "@/hooks/useObligationColumnLayout";
 
 /**
  * Obligations — Khums, Zakat, and collections. Work | Reports | Setup.
@@ -60,8 +62,12 @@ export default function Obligations() {
 
   const [showForm, setShowForm] = useState(false);
   const [viewCollection, setViewCollection] = useState<ObligationCollection | null>(null);
+  const [filteredCount, setFilteredCount] = useState(0);
+  const columnLayout = useObligationColumnLayout();
 
-  const totalAmount = collections.reduce((s, c) => s + Number(c.amount || 0), 0);
+  useEffect(() => {
+    setFilteredCount(collections.length);
+  }, [collections.length]);
 
   const handleSaveCollection = (data: ObligationCollection) => {
     const exists = collections.find((c) => c.id === data.id);
@@ -97,6 +103,8 @@ export default function Obligations() {
           </ActionButton>
         }
       />
+
+      <ObligationsCommandMetrics total={collections.length} shown={filteredCount} />
 
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
@@ -160,6 +168,13 @@ export default function Obligations() {
                 mujtahids={mujtahids}
                 onAddNew={() => setShowForm(true)}
                 onView={setViewCollection}
+                onFilteredCountChange={setFilteredCount}
+                isColumnVisible={columnLayout.isColumnVisible}
+                columnCustomizer={{
+                  columnRegistry: columnLayout.columnRegistry,
+                  updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+                  labels: columnLayout.customizerLabels,
+                }}
               />
             </div>
           )}

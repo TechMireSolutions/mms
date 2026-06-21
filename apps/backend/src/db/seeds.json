@@ -32660,8 +32660,7 @@
           "sortable": true,
           "width": 80
         }
-      ],
-      "uiStrings": {}
+      ]
     },
     "contact_field_config_default": {
       "version": 2,
@@ -33159,8 +33158,7 @@
           "sortable": true,
           "width": 80
         }
-      ],
-      "uiStrings": {}
+      ]
     },
     "branding": {
       "madrasaName": "MMS",

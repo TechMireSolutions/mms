@@ -1,36 +1,52 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Search, User, Calendar } from "lucide-react";
+import { STUDENTS_MODULE_CONTRACT } from "@mms/shared";
 import { calcAge, Student } from '@/lib/data/studentsData';
 import { FORM_INPUT_ICON } from "@/components/ui/formStyles";
 import { Session } from '@/lib/data/sessionsData';
 import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
+import { useStudentsByIds, useStudentsPaginated } from "@/hooks/useStudents";
+import useTranslation from "@/hooks/useTranslation";
 
 interface Step1SelectStudentProps {
   value: Student | null | undefined;
   onChange: (student: Student) => void;
-  students?: Student[];
   sessions?: Session[];
 }
 
 /**
  * Step 1 component for selecting a student to enroll.
- *
- * @param props - Component props.
- * @param props.value - Selected student object.
- * @param props.onChange - Callback when student selection changes.
- * @param props.students - Dynamic list of registered students.
- * @param props.sessions - Dynamic list of sessions.
- * @returns The Step1SelectStudent component.
  */
-export default function Step1SelectStudent({ value, onChange, students = [], sessions = [] }: Step1SelectStudentProps): React.ReactElement {
+export default function Step1SelectStudent({ value, onChange, sessions = [] }: Step1SelectStudentProps): React.ReactElement {
+  const { t } = useTranslation();
   const [search, setSearch] = useState<string>("");
 
-  const filtered = useMemo<Student[]>(() =>
-    students.filter((s) => s.name.toLowerCase().includes(search.toLowerCase())),
-    [search, students]
+  const { data: studentPage, isFetching } = useStudentsPaginated({
+    page: 1,
+    limit: STUDENTS_MODULE_CONTRACT.maxPageSize,
+    search,
+    status: "active",
+  });
+
+  const selectedId = value?.id ? String(value.id) : "";
+  const valueInPage = (studentPage?.students ?? []).some((s) => String(s.id) === selectedId);
+  const { data: resolvedSelected = [] } = useStudentsByIds(
+    selectedId && !valueInPage ? [selectedId] : [],
   );
 
+  const students = useMemo(() => {
+    const rows = (studentPage?.students ?? []) as unknown as Student[];
+    if (value && !rows.some((s) => String(s.id) === String(value.id))) {
+      return [value, ...rows];
+    }
+    if (resolvedSelected.length > 0 && !rows.some((s) => String(s.id) === String(resolvedSelected[0].id))) {
+      return [resolvedSelected[0], ...rows];
+    }
+    return rows;
+  }, [studentPage, value, resolvedSelected]);
+
   const sessionName = (sid: string): string => sessions.find((s) => s.id === sid)?.name || sid;
+  const hasMore = Boolean(studentPage?.hasMore);
 
   return (
     <section className="space-y-4" aria-labelledby="step1-title">
@@ -39,7 +55,6 @@ export default function Step1SelectStudent({ value, onChange, students = [], ses
         <p className="text-sm text-muted-foreground mt-0.5">Choose a registered student to enroll.</p>
       </div>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
         <input
@@ -52,12 +67,11 @@ export default function Step1SelectStudent({ value, onChange, students = [], ses
         />
       </div>
 
-      {/* Student Cards */}
       <div className="space-y-2 max-h-80 overflow-y-auto pr-1" role="radiogroup" aria-label="Students list">
-        {filtered.length === 0 && (
+        {!isFetching && students.length === 0 && (
           <div className="text-center py-10 text-muted-foreground text-sm" role="status">No students found</div>
         )}
-        {filtered.map((st) => {
+        {students.map((st) => {
           const age = calcAge(st.dob);
           const selected = value?.id === st.id;
           return (
@@ -96,7 +110,7 @@ export default function Step1SelectStudent({ value, onChange, students = [], ses
                 </div>
                 {st.enrolledSessions && st.enrolledSessions.length > 0 && (
                   <div className="mt-1.5 flex flex-wrap gap-1">
-                    {st.enrolledSessions.map((sid) => (
+                    {st.enrolledSessions.map((sid: string) => (
                       <span key={sid} className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
                         {sessionName(sid)}
                       </span>
@@ -113,6 +127,9 @@ export default function Step1SelectStudent({ value, onChange, students = [], ses
           );
         })}
       </div>
+      {hasMore && (
+        <p className="text-[10px] text-muted-foreground">{t("registryPerson.refineSearch")}</p>
+      )}
     </section>
   );
 }

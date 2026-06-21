@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import useConfigSubTabs from '@/hooks/useConfigSubTabs';
 import useTranslation from '@/hooks/useTranslation';
 import useModuleTierTabs from '@/hooks/useModuleTierTabs';
@@ -6,7 +6,7 @@ import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useQuestionBankConfig } from '@/hooks/useQuestionBankConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, ClipboardList, Sparkles, Plus } from 'lucide-react';
-import { resolveModuleTierTab } from '@mms/shared';
+import { resolveModuleTierTab, DEFAULT_QUESTION_BANK_SETTINGS, type QuestionBankSettings as QuestionBankSettingsData } from '@mms/shared';
 import PageHeader from '../components/ui/PageHeader';
 import ResponsiveAccordionTabs from '@/components/ui/ResponsiveAccordionTabs';
 import SubTabBar from '@/components/ui/SubTabBar';
@@ -18,11 +18,13 @@ import GenerateTest from '../components/questionBank/GenerateTest';
 import PerformanceAnalytics from '../components/questionBank/PerformanceAnalytics';
 import AutoGrading from '../components/questionBank/AutoGrading';
 import QuestionBankSettings from '../components/questionBank/QuestionBankSettings';
+import QuestionBankCommandMetrics from '../components/questionBank/QuestionBankCommandMetrics';
 import ModuleReports from '../components/reports/ModuleReports';
 import KPISummary from '../components/reports/KPISummary';
 import type { QuestionBankQuestion, QuestionBankTest } from '@mms/shared';
-import { saveCollection } from '../lib/db';
+import { saveCollection, getObject } from '../lib/db';
 import { useLiveCollection } from '../hooks/useLiveCollection';
+import { useQuestionBankColumnLayout } from '@/hooks/useQuestionBankColumnLayout';
 
 /**
  * Question Bank — Work | Reports | Setup.
@@ -50,6 +52,10 @@ export default function QuestionBankPage(): React.JSX.Element {
   );
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [editQuestion, setEditQuestion] = useState<QuestionBankQuestion | null>(null);
+  const [filteredCount, setFilteredCount] = useState(0);
+  const settings = getObject<QuestionBankSettingsData>('question_bank_settings', DEFAULT_QUESTION_BANK_SETTINGS);
+  const columnLayout = useQuestionBankColumnLayout();
+  const listLayout = (settings.defaultViewLayout || 'list') === 'list';
 
   const setQuestions = useCallback(
     (updater: typeof questions | ((prev: typeof questions) => typeof questions)) => {
@@ -93,6 +99,11 @@ export default function QuestionBankPage(): React.JSX.Element {
       ? configSubTab
       : 'fields';
 
+  useEffect(() => {
+    if (effectiveTab === 'work' && effectiveSubTab === 'questions') return;
+    setFilteredCount(questions.length);
+  }, [effectiveTab, effectiveSubTab, questions.length]);
+
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <title>MMS - {t('page.questionBank.title')}</title>
@@ -108,6 +119,8 @@ export default function QuestionBankPage(): React.JSX.Element {
           </Button>
         }
       />
+
+      <QuestionBankCommandMetrics total={questions.length} shown={filteredCount} />
 
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
@@ -169,6 +182,14 @@ export default function QuestionBankPage(): React.JSX.Element {
                   onModalOpenChange={setShowQuestionModal}
                   onEditQuestionChange={setEditQuestion}
                   hideToolbarAdd
+                  listLayout={listLayout}
+                  onFilteredCountChange={setFilteredCount}
+                  isColumnVisible={columnLayout.isColumnVisible}
+                  columnCustomizer={{
+                    columnRegistry: columnLayout.columnRegistry,
+                    updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+                    labels: columnLayout.customizerLabels,
+                  }}
                 />
               )}
 

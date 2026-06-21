@@ -1,80 +1,69 @@
-import React, { useMemo } from "react";
-import { Users, UserCheck, Target, TrendingUp } from "lucide-react";
+import React, { useMemo, useCallback, useState } from "react";
+import { Users, UserCheck, Target, MessageCircle, Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useLiveCollection } from "../../hooks/useLiveCollection";
+import type { ContactsWorkDrillDown } from "@mms/shared";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
+import { useContactsReportAnalytics } from "@/hooks/useContacts";
+import useTranslation from "@/hooks/useTranslation";
+import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
+import ContactsSavedReports from "@/components/contacts/ContactsSavedReports";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
 
-import { CONTACTS } from '@/lib/data/contactsData';
-import { Contact } from "../../lib/contactFields";
-import { STUDENTS, Student } from '@/lib/data/studentsData';
-
-export interface ContactStageItem {
-  stage: string;
-  count: number;
+interface ContactReportProps {
+  onEditVisual?: (config: unknown) => void;
 }
 
-export interface LifecycleStageItem {
-  stage: string;
-  count: number;
-  conversionRate: number;
-}
+/** CRM analytics for the Contacts module (globle2 §10 — server aggregates). */
+export default function ContactReport(props: ContactReportProps = {}) {
+  void props.onEditVisual;
 
-/**
- * ContactReport component provides CRM-specific analytics.
- * Visualizes lifecycle stage distribution, lifecycle stages, and conversion metrics.
- */
-export default function ContactReport(_props: { onEditVisual?: (config: unknown) => void } = {}) {
-  const contacts = useLiveCollection<Contact>("contacts", CONTACTS);
+  const { t } = useTranslation();
+  const { data, isLoading } = useContactsReportAnalytics();
+  const analytics = data?.analytics;
+  const [lastDrillDown, setLastDrillDown] = useState<ContactsWorkDrillDown>({});
   const { primary, secondary, charts } = useBrandPalette();
   const COLORS = useMemo(() => [primary, charts[3], secondary, charts[4], charts[2], charts[1]], [primary, secondary, charts]);
-  
-  const students = useLiveCollection<Student>("students", STUDENTS);
 
-  const stageDistribution = useMemo<ContactStageItem[]>(() => {
-    const counts: Record<string, number> = {};
-    contacts.forEach(c => {
-      const s = c.lifecycleStage || "Lead";
-      counts[s] = (counts[s] || 0) + 1;
-    });
-    return Object.entries(counts).map(([stage, count]) => ({ stage, count }));
-  }, [contacts]);
+  const drillToStage = useCallback((stage: string) => {
+    const filter = { lifecycleStage: stage };
+    setLastDrillDown(filter);
+    applyContactsWorkDrillDown(filter);
+  }, []);
 
-  const stages = useMemo<LifecycleStageItem[]>(() => {
-    const counts: Record<string, number> = {};
-    contacts.forEach(c => {
-      const s = c.lifecycleStage || "Lead";
-      counts[s] = (counts[s] || 0) + 1;
-    });
-    return Object.entries(counts).map(([stage, count]) => ({
-      stage,
-      count,
-      conversionRate: Math.min(100, Math.round((count / contacts.length) * 200))
-    }));
-  }, [contacts]);
+  const stageDistribution = analytics?.stageDistribution ?? [];
+  const stages = analytics?.stageMetrics ?? [];
 
-  const totalContacts = contacts.length;
-  const activeContacts = contacts.filter((c) => c.isActive !== false).length;
+  const totalContacts = analytics?.total ?? 0;
+  const activeContacts = analytics?.activeCount ?? 0;
+  const conversionRate = analytics?.conversionRate ?? 0;
+  const whatsappRate = analytics?.whatsappRate ?? 0;
 
-  const leads = contacts.filter((c) => (c.lifecycleStage || "Lead") === "Lead").length;
-  const conversionRate = totalContacts > 0 ? Math.round(((totalContacts - leads) / totalContacts) * 100) : 0;
+  const stageColumn = t("contacts.report.stageColumn");
+  const countColumn = t("contacts.report.countColumn");
 
-  const activeStudents = students.filter((s) => s.status === "active").length;
-  const retentionRate = students.length > 0 ? Math.round((activeStudents / students.length) * 100) : 100;
+  if (isLoading && !analytics) {
+    return (
+      <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin" />
+        <span className="text-sm">{t("common.loading")}</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 text-left p-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <ReportSummaryCard icon={Users} label="Total CRM Identity" value={totalContacts} color="primary" />
-        <ReportSummaryCard icon={UserCheck} label="Active Contacts" value={activeContacts} color="green" />
-        <ReportSummaryCard icon={Target} label="Lead Conversion" value={`${conversionRate}%`} color="violet" />
-        <ReportSummaryCard icon={TrendingUp} label="Retention Rate" value={`${retentionRate}%`} color="amber" />
+        <ReportSummaryCard icon={Users} label={t("contacts.report.totalContacts")} value={totalContacts} color="primary" />
+        <ReportSummaryCard icon={UserCheck} label={t("contacts.report.activeContacts")} value={activeContacts} color="green" />
+        <ReportSummaryCard icon={Target} label={t("contacts.report.leadConversion")} value={`${conversionRate}%`} color="violet" />
+        <ReportSummaryCard icon={MessageCircle} label={t("contacts.report.whatsappVerified")} value={`${whatsappRate}%`} color="amber" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-4 shadow-sm">
-          <h3 className="text-sm font-bold text-foreground">Lifecycle Stage Distribution</h3>
+          <h3 className="text-sm font-bold text-foreground">{t("contacts.report.lifecycleDistribution")}</h3>
+          <p className="text-xs text-muted-foreground">{t("contacts.report.drillDownHint")}</p>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
               <PieChart>
@@ -87,9 +76,14 @@ export default function ContactReport(_props: { onEditVisual?: (config: unknown)
                   paddingAngle={5}
                   dataKey="count"
                   nameKey="stage"
+                  cursor="pointer"
+                  onClick={(_, index) => {
+                    const item = stageDistribution[index];
+                    if (item?.stage) drillToStage(item.stage);
+                  }}
                 >
                   {stageDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${entry.stage}-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -100,39 +94,51 @@ export default function ContactReport(_props: { onEditVisual?: (config: unknown)
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-4 shadow-sm">
-          <h3 className="text-sm font-bold text-foreground">Lifecycle Stage Conversion</h3>
+          <h3 className="text-sm font-bold text-foreground">{t("contacts.report.lifecycleConversion")}</h3>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
               <BarChart data={stages} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
                 <XAxis type="number" domain={[0, 100]} unit="%" hide />
                 <YAxis dataKey="stage" type="category" width={100} tick={{ fontSize: 11, fontWeight: 600 }} />
-                <Tooltip formatter={(v) => v !== undefined ? `${v}% Conversion` : ""} />
-                <Bar dataKey="conversionRate" fill={charts[4]} radius={[0, 4, 4, 0]} barSize={24} />
+                <Tooltip formatter={(v) => (v !== undefined ? `${v}%` : "")} />
+                <Bar
+                  dataKey="conversionRate"
+                  fill={charts[4]}
+                  radius={[0, 4, 4, 0]}
+                  barSize={24}
+                  cursor="pointer"
+                  onClick={(data) => {
+                    const stage = (data as { stage?: string })?.stage;
+                    if (stage) drillToStage(stage);
+                  }}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
+      <ContactsSavedReports suggestedDrillDown={lastDrillDown} />
+
       <div className="space-y-4">
-        <ReportExportBar 
-          title="Stage Distribution Report" 
+        <ReportExportBar
+          title={t("contacts.report.stageDistributionExport")}
           data={stageDistribution}
-          headers={["Stage", "Count"]}
+          headers={[stageColumn, countColumn]}
         />
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 border-b border-border/50">
               <tr>
-                {["Stage", "Count"].map((h) => (
+                {[stageColumn, countColumn].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50 bg-transparent">
               {stageDistribution.map((p) => (
-                <tr key={p.stage} className="hover:bg-muted/30 transition-colors">
+                <tr key={p.stage} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => drillToStage(p.stage)}>
                   <td className="px-4 py-4 font-bold text-foreground">{p.stage}</td>
                   <td className="px-4 py-4 text-muted-foreground font-medium">{p.count}</td>
                 </tr>

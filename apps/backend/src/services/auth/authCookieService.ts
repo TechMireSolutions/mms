@@ -1,6 +1,5 @@
 import { createHmac, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import type { User } from '@mms/shared';
 import { secureCookieBase } from '../../lib/cookieOptions.js';
 
 const ACCESS_COOKIE = 'mms_access';
@@ -9,13 +8,7 @@ const REFRESH_COOKIE = 'mms_refresh';
 const ACCESS_TTL_SEC = 15 * 60;
 const REFRESH_TTL_SEC = 7 * 24 * 60 * 60;
 
-export interface JwtUserClaims extends User {
-  twoFactorVerified: boolean;
-  tokenType: 'access' | 'refresh';
-  jti?: string;
-}
-
-export function extractBearerToken(request: FastifyRequest): string | null {
+function extractBearerToken(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
   if (header?.startsWith('Bearer ')) {
     return header.slice(7).trim() || null;
@@ -74,4 +67,4 @@ export function createRefreshTokenValue(): string {
   return randomBytes(32).toString('hex');
 }
 
-export { ACCESS_COOKIE, REFRESH_COOKIE, ACCESS_TTL_SEC, REFRESH_TTL_SEC };
+export { ACCESS_COOKIE, REFRESH_COOKIE };

@@ -4,7 +4,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { useSessionsCollection } from "@/hooks/useSessions";
-import { useTeachersCollection } from '@/hooks/useTeachers';
+import { useTeachersByIds } from '@/hooks/useTeachers';
+import { collectTeacherIdsFromSessions } from '@/lib/registryResolve';
 import { teacherNameById } from '@/lib/teachers/teacherAssignment';
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
@@ -39,7 +40,8 @@ interface FacultyReportProps {
  */
 export default function FacultyReport({ filters: _filters }: FacultyReportProps): React.JSX.Element {
   const sessions = useSessionsCollection();
-  const teachers = useTeachersCollection();
+  const teacherIds = useMemo(() => collectTeacherIdsFromSessions(sessions), [sessions]);
+  const { data: teachers = [] } = useTeachersByIds(teacherIds);
 
   const resolveClassTeacher = (teacherId: string, teacherName: string): string => {
     const fromRegistry = teacherNameById(teachers, teacherId);

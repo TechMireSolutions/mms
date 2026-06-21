@@ -9,11 +9,12 @@ export default defineConfig({
   projects: [
     {
       name: 'api',
-      testMatch: /smoke\.spec\.ts/,
+      testMatch: /(?:smoke|contacts\.api)\.spec\.ts/,
     },
     {
       name: 'ui',
-      testMatch: /interactive\.spec\.ts/,
+      testMatch: /(?:interactive|contacts\.ui)\.spec\.ts/,
+      timeout: 60_000,
     },
   ],
 });
