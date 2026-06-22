@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import type { BackgroundJobRecord, Contact, User, WhatsAppStatus } from '@mms/shared';
+import type { BackgroundJobRecord, Contact, User } from '@mms/shared';
 import {
   CONTACTS_MODULE_CONTRACT,
   roleHasPermission,
