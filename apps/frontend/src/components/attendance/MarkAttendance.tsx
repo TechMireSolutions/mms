@@ -335,14 +335,14 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
     return () => { window.removeEventListener("online", onOn); window.removeEventListener("offline", onOff); };
   }, []);
 
-  // Rebuild rows when class/date changes
+  // Rebuild rows when class/date/roster changes — must be in useEffect, never in render body
   const studentRosterKey = students.map((student) => student.id).join("|");
   const stableKey = `${filters.classId}:${filters.date}:${studentRosterKey}`;
-  const [lastKey, setLastKey] = useState(stableKey);
-  if (lastKey !== stableKey) {
-    setLastKey(stableKey);
+
+  useEffect(() => {
+    if (!filters.classId || !filters.date) return;
     const existing = records.filter((r) => r.classId === filters.classId && r.date === filters.date);
-    let newRows: AttendanceRow[] = [];
+    let newRows: AttendanceRow[];
     if (existing.length > 0) {
       newRows = existing.map((r) => ({
         studentId: r.studentId || "",
@@ -362,7 +362,9 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
     setIsDraft(false);
     setGeo(null);
     setShowFaceAI(false);
-  }
+  // stableKey encodes classId + date + roster — safe single dep
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stableKey]);
 
   const filteredRows = useMemo(() =>
     rows.filter((r) => r.name.toLowerCase().includes(search.toLowerCase())),

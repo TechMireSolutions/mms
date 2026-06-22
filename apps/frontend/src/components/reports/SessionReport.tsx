@@ -1,9 +1,10 @@
 import React, { useMemo } from "react";
 import { CalendarCheck, Users, TrendingUp, BarChart2 } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   LineChart, Line,
 } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import type { Enrollment } from '@/lib/data/enrollmentData';
@@ -151,7 +152,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Capacity Utilisation by Class</p>
-          <ResponsiveContainer width="100%" height={180}>
+          <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={barData} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="class" tick={{ fontSize: 11 }} />
@@ -160,12 +161,12 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
               <Bar dataKey="enrolled"  fill="hsl(var(--primary))" stackId="a" name="Enrolled"  radius={[0, 0, 0, 0]} />
               <Bar dataKey="available" fill="hsl(var(--muted))"   stackId="a" name="Available" radius={[4, 4, 0, 0]} />
             </BarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Enrollment Trend</p>
-          <ResponsiveContainer width="100%" height={180}>
+          <SafeResponsiveContainer width="100%" height={180}>
             <LineChart data={enrollmentTrends}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
@@ -173,7 +174,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
               <Tooltip />
               <Line type="monotone" dataKey="students" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} name="Students" />
             </LineChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
       </div>
 

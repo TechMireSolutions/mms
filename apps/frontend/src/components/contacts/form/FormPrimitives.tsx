@@ -116,18 +116,16 @@ export function EditableSelect({
         setHighlight(o ? Math.max(0, options.indexOf(value)) : -1);
       }}
     >
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={resolvedPlaceholder}
-          className={cn(
-            "min-h-[44px] flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-left",
-            className
-          )}
-        >
-          <span className="truncate">{value || resolvedPlaceholder}</span>
-          <ChevronDown className={`w-4 h-4 flex-shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-        </button>
+      <PopoverTrigger
+        type="button"
+        aria-label={resolvedPlaceholder}
+        className={cn(
+          "min-h-[44px] flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-left",
+          className
+        )}
+      >
+        <span className="truncate">{value || resolvedPlaceholder}</span>
+        <ChevronDown className={`w-4 h-4 flex-shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </PopoverTrigger>
 
       <PopoverContent

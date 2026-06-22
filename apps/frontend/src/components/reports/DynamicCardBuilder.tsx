@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { WidgetBuilder, CustomWidget } from "./PinnedWidgets";
 import { CustomCard } from "./reportMetadata";
 import { getObject, saveObject } from "../../lib/db";
@@ -19,28 +19,32 @@ export default function DynamicCardBuilder({
   onCancelEdit
 }: DynamicCardBuilderProps): React.JSX.Element {
   // Convert CustomCard to CustomWidget
-  const editWidgetConfig = editCardConfig ? {
-    id: editCardConfig.id,
-    title: editCardConfig.title,
-    category: category,
-    collection: editCardConfig.collection,
-    widgetType: "card" as const,
-    operation: editCardConfig.operation,
-    targetField: editCardConfig.targetField,
-    filterField: editCardConfig.filterField,
-    filterOperator: editCardConfig.filterOperator,
-    filterValue: editCardConfig.filterValue,
-    color: editCardConfig.color,
-    isPinnedToDashboard: false,
-    icon: editCardConfig.icon,
-    subTextType: editCardConfig.subTextType,
-    fixedSubText: editCardConfig.fixedSubText,
-    trend: editCardConfig.trend,
-    trendType: editCardConfig.trendType,
-    role: editCardConfig.role
-  } as CustomWidget : null;
+  const editWidgetConfig = useMemo<CustomWidget | null>(() => {
+    if (!editCardConfig) return null;
 
-  const handleSaveWidget = (savedWidget: CustomWidget) => {
+    return {
+      id: editCardConfig.id,
+      title: editCardConfig.title,
+      category,
+      collection: editCardConfig.collection,
+      widgetType: "card",
+      operation: editCardConfig.operation,
+      targetField: editCardConfig.targetField,
+      filterField: editCardConfig.filterField,
+      filterOperator: editCardConfig.filterOperator,
+      filterValue: editCardConfig.filterValue,
+      color: editCardConfig.color,
+      isPinnedToDashboard: false,
+      icon: editCardConfig.icon,
+      subTextType: editCardConfig.subTextType,
+      fixedSubText: editCardConfig.fixedSubText,
+      trend: editCardConfig.trend,
+      trendType: editCardConfig.trendType,
+      role: editCardConfig.role
+    };
+  }, [category, editCardConfig]);
+
+  const handleSaveWidget = useCallback((savedWidget: CustomWidget) => {
     // Convert CustomWidget to CustomCard
     const newCard: CustomCard = {
       id: savedWidget.id,
@@ -85,13 +89,17 @@ export default function DynamicCardBuilder({
       onCancelEdit();
     }
     window.dispatchEvent(new Event("local-database-update"));
-  };
+  }, [category, editCardConfig, mode, onCancelEdit]);
+
+  const handleCancelEdit = useCallback(() => {
+    onCancelEdit?.();
+  }, [onCancelEdit]);
 
   return (
     <WidgetBuilder
       initialCollection={initialCollection || "contacts"}
       editWidgetConfig={editWidgetConfig}
-      onCancelEdit={onCancelEdit || (() => {})}
+      onCancelEdit={handleCancelEdit}
       onSaveWidget={handleSaveWidget}
       category={category}
       mode={mode}

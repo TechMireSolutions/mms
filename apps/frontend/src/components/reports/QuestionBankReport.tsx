@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { BarChart2, ClipboardList, FileCheck2, Target, Users } from "lucide-react";
 import type {
   QuestionBankQuestion,
@@ -97,7 +98,7 @@ export default function QuestionBankReport(): React.JSX.Element {
           </h3>
           {difficultyData.some((item) => item.questions > 0 || item.tests > 0) ? (
             <div className="h-[180px]" aria-hidden>
-              <ResponsiveContainer width="100%" height={180}>
+              <SafeResponsiveContainer width="100%" height={180}>
                 <BarChart data={difficultyData} barSize={28}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} />
@@ -106,7 +107,7 @@ export default function QuestionBankReport(): React.JSX.Element {
                   <Bar dataKey="questions" name={t("questionBank.questions")} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="tests" name={t("questionBank.report.generatedTests")} fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
                 </BarChart>
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
             </div>
           ) : (
             <EmptyState icon={BarChart2} title={t("questionBank.report.noDifficultyData")} compact />
@@ -122,7 +123,7 @@ export default function QuestionBankReport(): React.JSX.Element {
           </h3>
           {categoryData.some((item) => item.questions > 0) ? (
             <div className="h-[180px]" aria-hidden>
-              <ResponsiveContainer width="100%" height={180}>
+              <SafeResponsiveContainer width="100%" height={180}>
                 <BarChart data={categoryData} barSize={28} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                   <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
@@ -130,7 +131,7 @@ export default function QuestionBankReport(): React.JSX.Element {
                   <Tooltip />
                   <Bar dataKey="questions" name={t("questionBank.questions")} fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                 </BarChart>
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
             </div>
           ) : (
             <EmptyState icon={BarChart2} title={t("questionBank.report.noCategoryData")} compact />

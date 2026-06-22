@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
 import { GraduationCap, BookOpen, Users, Clock } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useTeachersByIds } from '@/hooks/useTeachers';
 import { collectTeacherIdsFromSessions } from '@/lib/registryResolve';
@@ -90,7 +91,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
       {/* Chart */}
       <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
         <p className="text-sm font-semibold text-foreground mb-3">Faculty Workload Overview</p>
-        <ResponsiveContainer width="100%" height={200}>
+        <SafeResponsiveContainer width="100%" height={200}>
           <BarChart data={facultyWorkload} barSize={28} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis type="number" tick={{ fontSize: 11 }} />
@@ -99,7 +100,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
             <Bar dataKey="totalStudents" fill="hsl(var(--primary))"  name="Students"   radius={[0, 4, 4, 0]} />
             <Bar dataKey="hoursPerWeek"  fill="hsl(var(--chart-2))"  name="Hours/Week" radius={[0, 4, 4, 0]} />
           </BarChart>
-        </ResponsiveContainer>
+        </SafeResponsiveContainer>
       </div>
 
       {/* Table */}

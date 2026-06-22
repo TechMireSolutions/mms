@@ -4,9 +4,9 @@ import { GitCompare, X } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
 import { motion } from "framer-motion";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { useContactsReportAnalytics } from '@/hooks/useContacts';
 import { computeContactsStageComparison } from '@mms/shared';
 import { useSessionsCollection } from '@/hooks/useSessions';
@@ -531,7 +531,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
             Comparing: <span className="font-semibold text-primary">{labelA}</span> vs <span className="font-semibold text-warning">{labelB}</span>
           </p>
           <div className="h-[220px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
               <BarChart data={data as Array<ComparisonDataItem | DateRangeDataItem>} barSize={22}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey={mode === "sessions" ? "metric" : "month"} tick={{ fontSize: 11 }} />
@@ -541,7 +541,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
                 <Bar dataKey="a" name={labelA} fill={primary} radius={[4, 4, 0, 0]} />
                 <Bar dataKey="b" name={labelB} fill={secondary} radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </div>
         </div>
 

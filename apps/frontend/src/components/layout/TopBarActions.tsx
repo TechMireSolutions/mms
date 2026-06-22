@@ -66,15 +66,13 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
       <BackgroundJobsTray compact={compact} />
 
       <Popover>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative rounded-lg p-2 hover:bg-muted transition-colors"
-          >
-            <Bell className="h-[18px] w-[18px] text-muted-foreground" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
-          </button>
+        <PopoverTrigger
+          type="button"
+          aria-label="Notifications"
+          className="relative rounded-lg p-2 hover:bg-muted transition-colors"
+        >
+          <Bell className="h-[18px] w-[18px] text-muted-foreground" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
         </PopoverTrigger>
         <PopoverContent align="end" className="w-80 p-0">
           <div className="border-b border-border px-4 py-3">
@@ -117,29 +115,27 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
       {!compact ? <div className="mx-1 hidden h-6 w-px bg-border sm:block" /> : null}
 
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label="Account menu"
-            className={cn(
-              "flex items-center rounded-lg transition-colors hover:bg-muted",
-              compact ? "gap-1 p-1.5" : "gap-2.5 py-1.5 pl-2 pr-3",
-            )}
-          >
-            <Avatar className={compact ? "h-7 w-7" : "h-8 w-8"}>
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            {!compact ? (
-              <>
-                <div className="hidden text-left sm:block">
-                  <p className="text-sm font-medium leading-none">{user?.name ?? "User"}</p>
-                </div>
-                <ChevronDown className="hidden h-3 w-3 text-muted-foreground sm:block" />
-              </>
-            ) : null}
-          </button>
+        <DropdownMenuTrigger
+          type="button"
+          aria-label="Account menu"
+          className={cn(
+            "flex items-center rounded-lg transition-colors hover:bg-muted",
+            compact ? "gap-1 p-1.5" : "gap-2.5 py-1.5 pl-2 pr-3",
+          )}
+        >
+          <Avatar className={compact ? "h-7 w-7" : "h-8 w-8"}>
+            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          {!compact ? (
+            <>
+              <div className="hidden text-left sm:block">
+                <p className="text-sm font-medium leading-none">{user?.name ?? "User"}</p>
+              </div>
+              <ChevronDown className="hidden h-3 w-3 text-muted-foreground sm:block" />
+            </>
+          ) : null}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>

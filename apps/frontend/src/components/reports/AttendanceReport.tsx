@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
 import { useSessionsCollection } from "@/hooks/useSessions";
 import ReportSummaryCard from "./ReportSummaryCard";
@@ -158,7 +159,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
       {summary.length > 0 && (
         <div className="rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Attendance Rate by Class</p>
-          <ResponsiveContainer width="100%" height={180}>
+          <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={summary} barSize={36}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="class" tick={{ fontSize: 12 }} />
@@ -166,7 +167,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
               <Tooltip formatter={(v) => v !== undefined ? `${v}%` : ""} />
               <Bar dataKey="avgRate" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
             </BarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
       )}
 

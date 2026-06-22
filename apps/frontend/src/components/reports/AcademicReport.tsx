@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
 import { BookOpen, Trophy, TrendingUp, Star } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { EXAM_RESULTS, EXAMS, ExamResult, Exam } from '@/lib/data/examinationData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useStudentsByIds } from "@/hooks/useStudents";
@@ -169,7 +170,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Marks Distribution</p>
-          <ResponsiveContainer width="100%" height={180}>
+          <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={results} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="studentName" tick={{ fontSize: 10 }} angle={-25} textAnchor="end" height={40} />
@@ -177,13 +178,13 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
               <Tooltip formatter={(v) => v !== undefined ? `${v} / 100` : ""} />
               <Bar dataKey="marks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Marks" />
             </BarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Class Performance Comparison</p>
           {classRankings.length > 0 ? (
-            <ResponsiveContainer width="100%" height={180}>
+            <SafeResponsiveContainer width="100%" height={180}>
               <BarChart data={classRankings} barSize={32} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
@@ -192,7 +193,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                 <Bar dataKey="avgMarks" fill="hsl(var(--primary))"  radius={[0, 4, 4, 0]} name="Avg Marks" />
                 <Bar dataKey="topMarks" fill="hsl(var(--chart-2))"  radius={[0, 4, 4, 0]} name="Top Marks" />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           ) : (
             <EmptyState icon={BookOpen} title="No class data" compact />
           )}

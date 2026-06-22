@@ -88,14 +88,12 @@ export default function ModuleColumnCustomizer({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        >
-          <Settings2 className="w-3.5 h-3.5" />
-          <span>{labels.trigger}</span>
-        </button>
+      <PopoverTrigger
+        type="button"
+        className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      >
+        <Settings2 className="w-3.5 h-3.5" />
+        <span>{labels.trigger}</span>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64 p-3 space-y-3">
         <div className="flex items-center justify-between">

@@ -4,9 +4,9 @@ import {
   SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users, PieChart
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, 
-  ResponsiveContainer, Pie, Cell 
+import { BarChart, Bar, XAxis, YAxis, Pie, Cell 
 } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { getCollection, saveCollection, getObject, saveObject } from "../../lib/db";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveThresholdChartHex, resolveWidgetChartHex } from "@/lib/brandingChartPalette";
@@ -800,7 +800,7 @@ function CustomWidgetChartFallback({
   if (widget.chartType === "pie") {
     const colors = THEME_PALETTES[widget.color] || THEME_PALETTES.emerald;
     return (
-      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+      <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
         <PieChart>
           <Pie
             data={data}
@@ -816,18 +816,18 @@ function CustomWidgetChartFallback({
             ))}
           </Pie>
         </PieChart>
-      </ResponsiveContainer>
+      </SafeResponsiveContainer>
     );
   }
 
   return (
-    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+    <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
       <BarChart data={data} barSize={8} margin={{ top: 2, right: 2, left: -25, bottom: 2 }}>
         <XAxis dataKey="name" tick={false} axisLine={false} tickLine={false} />
         <YAxis tick={{ fontSize: 6 }} axisLine={false} tickLine={false} />
         <Bar dataKey="value" fill={colorHex} radius={[2, 2, 0, 0]} />
       </BarChart>
-    </ResponsiveContainer>
+    </SafeResponsiveContainer>
   );
 }
 

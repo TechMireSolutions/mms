@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
+import SafeResponsiveContainer from "../reports/SafeResponsiveContainer";
 import { Users, DollarSign, TrendingUp, BookOpen } from "lucide-react";
 import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
 
@@ -100,7 +101,7 @@ export default function EnrollmentReports({ enrollments }: EnrollmentReportsProp
         <section className="rounded-xl border border-border bg-card p-4" aria-label="Enrollment by Status Chart">
           <h3 className="text-sm font-bold text-foreground mb-3">Enrollment by Status</h3>
           <div className="h-[200px]" aria-hidden="true">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
               <PieChart>
                 <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} paddingAngle={3}>
                   {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -108,7 +109,7 @@ export default function EnrollmentReports({ enrollments }: EnrollmentReportsProp
                 <Tooltip formatter={(val) => [`${val} enrollments`]} />
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px" }} />
               </PieChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </div>
         </section>
 
@@ -119,14 +120,14 @@ export default function EnrollmentReports({ enrollments }: EnrollmentReportsProp
             <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm" role="status">No data</div>
           ) : (
             <div className="h-[200px]" aria-hidden="true">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+              <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
                 <BarChart data={sessionData} barSize={20}>
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} />
                   <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                   <Tooltip formatter={(val) => [`${val}`]} />
                   <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
             </div>
           )}
         </section>

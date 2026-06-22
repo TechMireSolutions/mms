@@ -2,9 +2,9 @@ import React, { useMemo } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { DollarSign, TrendingUp, AlertCircle, Tag } from "lucide-react";
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, Legend,
 } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { Invoice } from '@/lib/data/financeData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
@@ -144,7 +144,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       {/* Revenue trend */}
       <div className="rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
         <p className="text-sm font-semibold text-foreground mb-3">Monthly Collection vs Outstanding</p>
-        <ResponsiveContainer width="100%" height={200}>
+        <SafeResponsiveContainer width="100%" height={200}>
           <AreaChart data={feeCollection}>
             <defs>
               <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
@@ -159,7 +159,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
             <Area type="monotone" dataKey="collected"   stroke="hsl(var(--primary))" fill="url(#colorCollected)" strokeWidth={2} name="Collected"   />
             <Area type="monotone" dataKey="outstanding" stroke={palette.charts[0]} fill="transparent" strokeWidth={2} strokeDasharray="4 2" name="Outstanding" />
           </AreaChart>
-        </ResponsiveContainer>
+        </SafeResponsiveContainer>
       </div>
 
       {/* Two-column: collection table + discount pie */}
@@ -181,7 +181,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
 
         <div className="rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Discount Distribution</p>
-          <ResponsiveContainer width="100%" height={180}>
+          <SafeResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie
                 data={discountUsage}
@@ -200,7 +200,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
               <Tooltip formatter={(v) => v !== undefined ? PKR(Number(v)) : ""} />
               <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
             </PieChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
       </div>
 

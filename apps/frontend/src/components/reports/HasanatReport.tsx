@@ -2,9 +2,10 @@ import React, { useMemo } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { Star, Gift, TrendingDown, Users } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell,
 } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { Distribution } from '@/lib/data/hasanatData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
@@ -171,7 +172,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Distribution by Faculty</p>
-          <ResponsiveContainer width="100%" height={180}>
+          <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={facultyData} barSize={22}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="faculty" tick={{ fontSize: 11 }} />
@@ -180,13 +181,13 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
               <Bar dataKey="distributed" fill="hsl(var(--primary))"  name="Distributed" radius={[4, 4, 0, 0]} />
               <Bar dataKey="redeemed"    fill="hsl(var(--chart-2))"  name="Redeemed"    radius={[4, 4, 0, 0]} />
             </BarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Redeemed vs Balance</p>
           <div className="flex items-center gap-4">
-            <ResponsiveContainer width="60%" height={160}>
+            <SafeResponsiveContainer width="60%" height={160}>
               <PieChart>
                 <Pie
                   data={pieData}
@@ -202,7 +203,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                 </Pie>
                 <Tooltip formatter={(v) => v !== undefined ? Number(v).toLocaleString() : ""} />
               </PieChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
             <div className="space-y-3">
               {pieData.map((d, i) => (
                 <div key={d.name} className="flex items-center gap-2">

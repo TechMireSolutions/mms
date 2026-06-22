@@ -186,15 +186,13 @@ export function DatePicker({
       <div className="h-4 w-px bg-border mx-1.5" />
 
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            disabled={disabled}
-            className="p-1 hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-            aria-label="Open calendar popup"
-          >
-            <CalendarIcon className="h-4 w-4 opacity-70" />
-          </button>
+        <PopoverTrigger
+          type="button"
+          disabled={disabled}
+          className="p-1 hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          aria-label="Open calendar popup"
+        >
+          <CalendarIcon className="h-4 w-4 opacity-70" />
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0 border border-border/80 shadow-xl bg-background/90 backdrop-blur-xl rounded-xl" align="end">
           <Calendar

@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, useState } from "react";
 import { Users, UserCheck, Target, MessageCircle, Loader2 } from "lucide-react";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import type { ContactsWorkDrillDown } from "@mms/shared";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { useContactsReportAnalytics } from "@/hooks/useContacts";
@@ -65,7 +66,7 @@ export default function ContactReport(props: ContactReportProps = {}) {
           <h3 className="text-sm font-bold text-foreground">{t("contacts.report.lifecycleDistribution")}</h3>
           <p className="text-xs text-muted-foreground">{t("contacts.report.drillDownHint")}</p>
           <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
               <PieChart>
                 <Pie
                   data={stageDistribution}
@@ -89,14 +90,14 @@ export default function ContactReport(props: ContactReportProps = {}) {
                 <Tooltip />
                 <Legend verticalAlign="bottom" align="center" iconType="circle" />
               </PieChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </div>
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-4 shadow-sm">
           <h3 className="text-sm font-bold text-foreground">{t("contacts.report.lifecycleConversion")}</h3>
           <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
               <BarChart data={stages} layout="vertical" margin={{ left: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
                 <XAxis type="number" domain={[0, 100]} unit="%" hide />
@@ -114,7 +115,7 @@ export default function ContactReport(props: ContactReportProps = {}) {
                   }}
                 />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </div>
         </div>
       </div>

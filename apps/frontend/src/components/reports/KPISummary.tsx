@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, UserCheck, DollarSign, TrendingUp, Star, 
@@ -9,7 +9,6 @@ import {
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { getObject, saveObject } from "../../lib/db";
 import { useContactsReportAnalytics, useContactsWidgetAggregates } from "@/hooks/useContacts";
-import { computeContactsCustomCardValue, computeStudentsCustomCardValue, computeTeachersCustomCardValue } from "@/components/reports/pinnedWidgets/widgetDataUtils";
 import { useStudentsMetrics, useStudentsWidgetAggregates } from "../../hooks/useStudents";
 import { useTeachersMetrics, useTeachersWidgetAggregates } from "../../hooks/useTeachers";
 import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
@@ -38,6 +37,24 @@ interface KPIItem {
   isAvailable: boolean;
 }
 
+function areStringListsEqual(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function areCustomCardsEqual(left: CustomCard[], right: CustomCard[]): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function formatAggregateCardValue(
+  card: CustomCard,
+  aggregate: { value: number; totalCount: number },
+): { finalValue: string | number; totalCount: number } {
+  return {
+    finalValue: card.operation === "percentage" ? `${aggregate.value}%` : aggregate.value,
+    totalCount: aggregate.totalCount,
+  };
+}
+
 interface ColorScheme {
   bg: string;
   text: string;
@@ -63,6 +80,29 @@ const TREND: Record<string, TrendScheme> = {
   down: { cls: "text-destructive",     arrow: "↓" },
   flat: { cls: "text-muted-foreground", arrow: "→" },
 };
+
+// ---------------------------------------------------------------------------
+// SubtextDisplay: defined outside KPISummary to prevent per-render recreation
+// (inline component definitions inside .map() cause React to remount on every
+// render, which triggers Radix ref callbacks → setState → infinite loop).
+// ---------------------------------------------------------------------------
+function SubtextDisplay({ text }: { text: string }): React.JSX.Element {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = text.length > 30;
+  if (!isLong) return <span className="truncate block font-semibold">{text}</span>;
+  return (
+    <span className="block leading-normal font-semibold whitespace-normal break-words">
+      {expanded ? text : `${text.slice(0, 30)}...`}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+        className="ml-1 text-primary hover:underline font-extrabold inline-block cursor-pointer bg-transparent border-0 p-0 text-[9px]"
+      >
+        {expanded ? "Show less" : "Read more"}
+      </button>
+    </span>
+  );
+}
 
 const CATEGORY_NAMES: Record<string, string> = {
   contacts: "Contacts",
@@ -640,8 +680,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     return getObject<CustomCard[]>(`kpi_custom_cards_${category}`, []);
   });
 
-  useContactsWidgetAggregates(
-    customCards.map((card) => ({
+  const customCardWidgetInputs = useMemo(() => {
+    return customCards.map((card) => ({
       id: card.id,
       collection: card.collection,
       operation: card.operation,
@@ -649,34 +689,26 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       filterField: card.filterField,
       filterOperator: card.filterOperator,
       filterValue: card.filterValue,
-    })),
-    { enabled: isContactsCategory && customCards.some((card) => card.collection === "contacts") },
+    }));
+  }, [customCards]);
+
+  const hasContactCustomCards = customCards.some((card) => card.collection === "contacts");
+  const hasStudentCustomCards = customCards.some((card) => card.collection === "students");
+  const hasTeacherCustomCards = customCards.some((card) => card.collection === "teachers");
+
+  const { data: contactWidgetAggregates } = useContactsWidgetAggregates(
+    customCardWidgetInputs,
+    { enabled: isContactsCategory && hasContactCustomCards },
   );
 
-  useStudentsWidgetAggregates(
-    customCards.map((card) => ({
-      id: card.id,
-      collection: card.collection,
-      operation: card.operation,
-      targetField: card.targetField,
-      filterField: card.filterField,
-      filterOperator: card.filterOperator,
-      filterValue: card.filterValue,
-    })),
-    { enabled: isStudentsCategory && customCards.some((card) => card.collection === "students") },
+  const { data: studentWidgetAggregates } = useStudentsWidgetAggregates(
+    customCardWidgetInputs,
+    { enabled: isStudentsCategory && hasStudentCustomCards },
   );
 
-  useTeachersWidgetAggregates(
-    customCards.map((card) => ({
-      id: card.id,
-      collection: card.collection,
-      operation: card.operation,
-      targetField: card.targetField,
-      filterField: card.filterField,
-      filterOperator: card.filterOperator,
-      filterValue: card.filterValue,
-    })),
-    { enabled: isTeachersCategory && customCards.some((card) => card.collection === "teachers") },
+  const { data: teacherWidgetAggregates } = useTeachersWidgetAggregates(
+    customCardWidgetInputs,
+    { enabled: isTeachersCategory && hasTeacherCustomCards },
   );
 
   const defaultCollection = useMemo<CustomCard["collection"]>(() => {
@@ -698,7 +730,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   // Sync custom cards from localStorage when updated elsewhere
   useEffect(() => {
     const handleUpdate = () => {
-      setCustomCards(getObject<CustomCard[]>(`kpi_custom_cards_${category}`, []));
+      const nextCards = getObject<CustomCard[]>(`kpi_custom_cards_${category}`, []);
+      setCustomCards((prev) => areCustomCardsEqual(prev, nextCards) ? prev : nextCards);
     };
     window.addEventListener("local-database-update", handleUpdate);
     return () => window.removeEventListener("local-database-update", handleUpdate);
@@ -713,8 +746,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   const computedCustomKPIs = useMemo(() => {
     return customCards.map((card) => {
       if (card.collection === "contacts") {
-        const aggregateValue = computeContactsCustomCardValue(card);
-        if (aggregateValue) {
+        const aggregate = contactWidgetAggregates?.[card.id];
+        if (aggregate) {
+          const aggregateValue = formatAggregateCardValue(card, aggregate);
           return {
             label: card.title,
             value: String(aggregateValue.finalValue),
@@ -728,8 +762,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         }
       }
       if (card.collection === "students") {
-        const aggregateValue = computeStudentsCustomCardValue(card);
-        if (aggregateValue) {
+        const aggregate = studentWidgetAggregates?.[card.id];
+        if (aggregate) {
+          const aggregateValue = formatAggregateCardValue(card, aggregate);
           return {
             label: card.title,
             value: String(aggregateValue.finalValue),
@@ -743,8 +778,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         }
       }
       if (card.collection === "teachers") {
-        const aggregateValue = computeTeachersCustomCardValue(card);
-        if (aggregateValue) {
+        const aggregate = teacherWidgetAggregates?.[card.id];
+        if (aggregate) {
+          const aggregateValue = formatAggregateCardValue(card, aggregate);
           return {
             label: card.title,
             value: String(aggregateValue.finalValue),
@@ -770,7 +806,20 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         assessment_results: qbResults,
       });
     });
-  }, [customCards, category, sessions, invoices, records, distributions, qbQuestions, qbTests, qbResults]);
+  }, [
+    customCards,
+    category,
+    contactWidgetAggregates,
+    studentWidgetAggregates,
+    teacherWidgetAggregates,
+    sessions,
+    invoices,
+    records,
+    distributions,
+    qbQuestions,
+    qbTests,
+    qbResults,
+  ]);
 
   // Merge standard and custom possible cards, preventing duplicates if standard label is overridden
   const possibleCards = useMemo(() => {
@@ -778,6 +827,13 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     const uniqueStandard = standardPossibleCards.filter(s => !customLabels.includes(s.label));
     return [...uniqueStandard, ...computedCustomKPIs];
   }, [standardPossibleCards, computedCustomKPIs]);
+
+  const availableCardLabelsKey = useMemo(() => {
+    return possibleCards
+      .filter((card) => card.isAvailable)
+      .map((card) => card.label)
+      .join("\u0000");
+  }, [possibleCards]);
 
   // Primary volume counts for the dynamic limit formula
   const primaryVolume = useMemo(() => {
@@ -813,25 +869,19 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
 
   // Validate user selections reactively against database changes
   useEffect(() => {
-    let updated = [...selectedLabels];
-    
-    // Filter out invalid/unavailable options
-    updated = updated.filter(label => 
-      possibleCards.some(p => p.label === label) && 
-      possibleCards.find(p => p.label === label)?.isAvailable
-    );
+    const availableLabels = availableCardLabelsKey ? availableCardLabelsKey.split("\u0000") : [];
+    let updated = selectedLabels.filter((label) => availableLabels.includes(label));
 
     // Default to all available cards if no active selection is stored
-    if (updated.length === 0 && possibleCards.filter(p => p.isAvailable).length > 0) {
-      updated = possibleCards.filter(p => p.isAvailable).map(a => a.label);
+    if (updated.length === 0 && availableLabels.length > 0) {
+      updated = availableLabels;
     }
 
-    const currentSaved = getObject<string[]>(`kpi_config_${category}_${role || "all"}`, []);
-    if (JSON.stringify(currentSaved) !== JSON.stringify(updated)) {
-      setSelectedLabels(updated);
-      saveObject(`kpi_config_${category}_${role || "all"}`, updated);
-    }
-  }, [possibleCards, category, role]);
+    if (areStringListsEqual(selectedLabels, updated)) return;
+
+    saveObject(`kpi_config_${category}_${role || "all"}`, updated);
+    setSelectedLabels(updated);
+  }, [availableCardLabelsKey, category, role, selectedLabels]);
 
   const handleToggleCard = (label: string) => {
     setSelectedLabels((prev) => {
@@ -847,18 +897,26 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   };
 
   // Automatically select newly added custom cards so they are visible immediately
+  const prevCustomTitlesRef = useRef<string[]>(getObject<string[]>(`prev_kpi_titles_${category}`, []));
+  const prevCustomTitlesCategoryRef = useRef(category);
   useEffect(() => {
-    const prevTitles = getObject<string[]>(`prev_kpi_titles_${category}`, []);
-    const currentTitles = customCards.map((c) => c.title);
-    
-    const newlyAdded = currentTitles.filter((t) => !prevTitles.includes(t));
-    if (newlyAdded.length > 0) {
-      const nextSelected = [...new Set([...selectedLabels, ...newlyAdded])];
-      setSelectedLabels(nextSelected);
-      saveObject(`kpi_config_${category}_${role || "all"}`, nextSelected);
+    if (prevCustomTitlesCategoryRef.current !== category) {
+      prevCustomTitlesCategoryRef.current = category;
+      prevCustomTitlesRef.current = getObject<string[]>(`prev_kpi_titles_${category}`, []);
     }
-    
+
+    const currentTitles = customCards.map((c) => c.title);
+    const prevTitles = prevCustomTitlesRef.current;
+    const newlyAdded = currentTitles.filter((t) => !prevTitles.includes(t));
+    prevCustomTitlesRef.current = currentTitles;
     saveObject(`prev_kpi_titles_${category}`, currentTitles);
+    if (newlyAdded.length > 0) {
+      const next = [...new Set([...selectedLabels, ...newlyAdded])];
+      if (areStringListsEqual(selectedLabels, next)) return;
+
+      saveObject(`kpi_config_${category}_${role || "all"}`, next);
+      setSelectedLabels(next);
+    }
   }, [customCards, category, role, selectedLabels]);
 
   const handleDeleteCustomCard = (label: string) => {
@@ -1041,28 +1099,6 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
           const c = COLOR[kpi.color] || COLOR.primary;
           const t = TREND[kpi.trend] || TREND.flat;
           const Icon = kpi.icon;
-
-          // Inner subtext handler with ellipsis / Read More trigger
-          const SubtextDisplay = ({ text }: { text: string }) => {
-            const [expanded, setExpanded] = React.useState(false);
-            const isLong = text.length > 30;
-            if (!isLong) return <span className="truncate block font-semibold">{text}</span>;
-            return (
-              <span className="block leading-normal font-semibold whitespace-normal break-words">
-                {expanded ? text : `${text.slice(0, 30)}...`}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setExpanded(!expanded);
-                  }}
-                  className="ml-1 text-primary hover:underline font-extrabold inline-block cursor-pointer bg-transparent border-0 p-0 text-[9px]"
-                >
-                  {expanded ? "Show less" : "Read more"}
-                </button>
-              </span>
-            );
-          };
 
           return (
             <motion.article

@@ -6,11 +6,12 @@ import { Info,
   Table, Sparkles, Printer, FileSpreadsheet, Settings
 } from "lucide-react";
 import {
-  ResponsiveContainer, BarChart, Bar, LineChart, Line, 
+  BarChart, Bar, LineChart, Line, 
   AreaChart, Area, PieChart, Pie, Cell, RadarChart, 
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, 
   Legend, Tooltip, XAxis, YAxis, CartesianGrid
 } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import {
   CHART_PALETTE_DEFS,
   DEFAULT_CHART_PALETTE_ID,
@@ -543,7 +544,7 @@ export default function DynamicChartVisualizer({
     switch (chartType) {
       case "bar":
         return (
-          <ResponsiveContainer width="100%" height={260}>
+          <SafeResponsiveContainer width="100%" height={260}>
             <BarChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />}
               <XAxis dataKey="name" tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval="preserveEnd" minTickGap={tickGap} />
@@ -556,12 +557,12 @@ export default function DynamicChartVisualizer({
                 ))}
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         );
 
       case "line":
         return (
-          <ResponsiveContainer width="100%" height={260}>
+          <SafeResponsiveContainer width="100%" height={260}>
             <LineChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />}
               <XAxis dataKey="name" tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval="preserveEnd" minTickGap={tickGap} />
@@ -570,12 +571,12 @@ export default function DynamicChartVisualizer({
               {showLegend && <Legend wrapperStyle={{ fontSize: `${legendFontSize}px`, paddingTop: "12px" }} />}
               <Line type="monotone" dataKey="value" name={operation.toUpperCase() + " Value"} stroke={firstColor} strokeWidth={3} dot={{ r: 4, strokeWidth: 1 }} activeDot={{ r: 6 }} />
             </LineChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         );
 
       case "area":
         return (
-          <ResponsiveContainer width="100%" height={260}>
+          <SafeResponsiveContainer width="100%" height={260}>
             <AreaChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="visGrad" x1="0" y1="0" x2="0" y2="1">
@@ -590,12 +591,12 @@ export default function DynamicChartVisualizer({
               {showLegend && <Legend wrapperStyle={{ fontSize: `${legendFontSize}px`, paddingTop: "12px" }} />}
               <Area type="monotone" dataKey="value" name={operation.toUpperCase() + " Value"} stroke={firstColor} fill="url(#visGrad)" strokeWidth={2.5} />
             </AreaChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         );
 
       case "pie":
         return (
-          <ResponsiveContainer width="100%" height={260}>
+          <SafeResponsiveContainer width="100%" height={260}>
             <PieChart>
               {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
               {showLegend && (
@@ -623,12 +624,12 @@ export default function DynamicChartVisualizer({
                 ))}
               </Pie>
             </PieChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         );
 
       case "radar":
         return (
-          <ResponsiveContainer width="100%" height={260}>
+          <SafeResponsiveContainer width="100%" height={260}>
             <RadarChart cx="50%" cy="50%" outerRadius="75%" data={processedData}>
               <PolarGrid stroke="hsl(var(--border))" />
               <PolarAngleAxis dataKey="name" tick={{ fontSize: Math.max(8, axisFontSize - 1) }} />
@@ -636,7 +637,7 @@ export default function DynamicChartVisualizer({
               <Radar name={operation.toUpperCase() + " Value"} dataKey="value" stroke={firstColor} fill={firstColor} fillOpacity={0.25} />
               {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
             </RadarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         );
 
       default:
