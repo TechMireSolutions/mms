@@ -14,14 +14,25 @@ export async function seedTenantDefaults(): Promise<void> {
     ? await getDefaultCollectionsForSeed()
     : await getMinimalCollectionsForSeed();
 
-  for (const [name, data] of Object.entries(collections)) {
+  const subdomain = getRequestTenant();
+
+  for (const [name, rawData] of Object.entries(collections)) {
     if (name === WORKSPACES_COLLECTION) continue;
     const existing = await getCollection(name);
     if (Array.isArray(existing) && existing.length > 0) continue;
+
+    let data = rawData;
+    if (subdomain && Array.isArray(data)) {
+      let serialized = JSON.stringify(data);
+      for (let i = 1; i <= 6; i++) {
+        serialized = serialized.replaceAll(`"u${i}"`, `"${subdomain}_u${i}"`);
+      }
+      data = JSON.parse(serialized) as unknown[];
+    }
+
     await saveCollection(name, data as unknown[]);
 
     if (isDev && name === 'users' && Array.isArray(data) && data.length > 0) {
-      const subdomain = getRequestTenant();
       if (subdomain) {
         const { replaceTenantUsersForWorkspace } = await import('../db/repositories/tenantUserRepository.js');
         await replaceTenantUsersForWorkspace(subdomain, data as any[]);

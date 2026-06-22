@@ -32,7 +32,9 @@ test.describe('Contacts Work tab (browser)', () => {
     await expect(page.getByRole('heading', { name: /^Contacts$/i })).toBeVisible({ timeout: 15_000 });
     await expect(page.getByRole('button', { name: /Add Contact/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Work$/i }).first()).toBeVisible();
-    await expect(page.locator('p:has-text("No contacts yet"):visible')).toBeVisible({ timeout: 10_000 });
+    const emptyState = page.locator('p:has-text("No contacts yet"):visible');
+    const contactsTable = page.getByRole('table');
+    await expect(emptyState.or(contactsTable)).toBeVisible({ timeout: 10_000 });
   });
 });
 

@@ -14,7 +14,8 @@ export interface E2ETenantSession {
 
 /** Provisions a fresh tenant via platform onboard (apex host). */
 export async function provisionE2ETenant(request: APIRequestContext): Promise<E2ETenantSession> {
-  const subdomain = `e2e${Date.now().toString(36)}`;
+  const randomSuffix = Math.random().toString(36).substring(2, 7);
+  const subdomain = `e2e${Date.now().toString(36)}${randomSuffix}`;
   const adminEmail = `admin-${subdomain}@e2e.test`;
   const adminPassword = 'E2eTestPass1!';
   const tenantHost = `${subdomain}.localhost`;
