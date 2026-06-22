@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sync .cursor/rules/*.mdc → .agents/rules/*.md (body-identical; frontmatter differs).
+# Sync .cursor/rules/*.mdc → .agent/rules/*.md (body-identical; frontmatter differs).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
@@ -9,7 +9,7 @@ const fs = require("fs");
 const path = require("path");
 
 const cursorDir = ".cursor/rules";
-const agentsDir = ".agents/rules";
+const agentsDir = ".agent/rules";
 
 for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) {
   const base = file.replace(/\.mdc$/, "");

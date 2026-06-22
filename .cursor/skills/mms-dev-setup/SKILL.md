@@ -22,7 +22,7 @@ pnpm install
 ## Verify environment
 
 ```bash
-bash .cursor/skills/mms-dev-setup/scripts/verify-env.sh
+bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 curl http://localhost:3000/health
 curl http://localhost:3000/ready    # 503 if PostgreSQL down
 ```

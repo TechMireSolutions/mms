@@ -4,7 +4,7 @@ trigger: model_decision
 
 # MMS Background Jobs
 
-Human-readable source: [`globle2.md`](../../globle2.md) section 8. Cross-cutting summary: `mms-module-crosscutting.md`.
+Human-readable source: [`globle.md`](../../globle.md) section 8. Cross-cutting summary: `mms-module-crosscutting.md`.
 
 Use this rule for large exports, imports, bulk messaging, bulk updates, dedup scans, heavy reports, and sync recovery.
 

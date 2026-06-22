@@ -1,13 +1,13 @@
 ---
 name: mms-module-page
-description: Creates or modifies MMS module pages per globle1.md — Work, Reports, Setup tiers, module contract, PageHeader command centre, and settings panels. Use when adding a module, three-tier page, or aligning an existing module to universal architecture.
+description: Creates or modifies MMS module pages per globle.md — Work, Reports, Setup tiers, module contract, PageHeader command centre, and settings panels. Use when adding a module, three-tier page, or aligning an existing module to universal architecture.
 ---
 
 # MMS Module Page Pattern
 
-**Source:** [`globle1.md`](../../globle1.md) (§1–§4) · [`globle2.md`](../../globle2.md) (§5–§14) · Rule: `mms-module-architecture.mdc`
+**Source:** [`globle.md`](../../globle.md) (§1–§14) · Rule: `mms-module-architecture.mdc`
 
-## globle1.md section map (foundation + Work + Reports)
+## globle.md section map
 
 | § | Topic | MMS rule / skill |
 |---|--------|------------------|
@@ -15,14 +15,6 @@ description: Creates or modifies MMS module pages per globle1.md — Work, Repor
 | 2 | Command centre (metrics, dedup, export, create) | `mms-ui-tabs.mdc` PageHeader, `mms-contacts.mdc` |
 | 3 | Work directory | `mms-module-isolation.mdc`, `mms-ui-rendering.mdc` |
 | 4 | Reports analytics | `mms-reports.mdc`, skill `mms-reports-export` |
-
-| [`globle1.md`](../../globle1.md) | §1–§4 foundation + Work + Reports |
-| [`globle2.md`](../../globle2.md) | §5–§7 Setup + §8–§14 cross-cutting |
-
-## globle2.md section map (Setup & cross-cutting)
-
-| § | Topic | Rule / skill |
-|---|--------|--------------|
 | 5–7 | Setup tab | `mms-module-setup.mdc`, skill **`mms-module-setup`** |
 | 6 | Fields/tabs | `mms-fields.mdc`, skill `mms-fields-registry` |
 | 7 | Preferences | `mms-config.mdc` |
@@ -164,7 +156,7 @@ Each tier is **module-scoped only** (`mms-module-isolation.mdc`):
 - Duplicate data paths (Query mutations + parallel `saveCollection` for same entity)
 - Nest `ContactConfigProvider` on module pages
 - Hard-delete when contract specifies soft delete
-- Reference removed `globlestructure.md` — use `globle1.md`
+- Reference removed `globlestructure.md` — use `globle.md`
 
 ## Rules
 

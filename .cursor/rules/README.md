@@ -2,7 +2,7 @@
 
 Project rules for the Madrasa Management System. Cursor loads `.mdc` files from this directory automatically.
 
-**Architecture docs (repo root):** [`globle1.md`](../globle1.md) — foundation, Work, Reports (§1–§4). [`globle2.md`](../globle2.md) — Setup + cross-cutting (§5–§14). Rules: `mms-module-architecture.mdc`, `mms-module-work.mdc`, `mms-module-setup.mdc`, `mms-module-crosscutting.mdc`, `mms-background-jobs.mdc`.
+**Architecture docs (repo root):** [`globle.md`](../globle.md) — Universal Module Architecture & Logic Schema (§1–§14). Rules: `mms-module-architecture.mdc`, `mms-module-work.mdc`, `mms-module-setup.mdc`, `mms-module-crosscutting.mdc`, `mms-background-jobs.mdc`.
 
 ## Always applied (6)
 
@@ -21,11 +21,11 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 |-------|------------|------------------|
 | Three-tier tab **shell** (accordion, PageHeader, sub-tabs) | `mms-ui-tabs.mdc` | `mms-core`, `mms-settings-navigation` |
 | Three-tier tab **content scope** (what goes in each tier) | `mms-module-isolation.mdc` | `mms-ui-tabs`, `mms-core`, `mms-reports` |
-| **Universal module architecture** (contract, command centre, Work/Reports) | `mms-module-architecture.mdc` (source: `globle1.md`) | `mms-module-isolation`, `mms-ui-tabs` |
-| **Module command centre + Work tier** (metrics, directory, drawer, bulk) | `mms-module-work.mdc` (source: `globle1.md` §2–§3) | `mms-module-architecture` (summary only) |
-| **Module Setup tab** (fields, prefs, audit, §6–§7) | `mms-module-setup.mdc` (source: `globle2.md`) | `mms-fields`, `mms-config` (detail only) |
-| **Module cross-cutting** (jobs, errors, perf, §8–§14) | `mms-module-crosscutting.mdc` (source: `globle2.md`) | `mms-module-architecture` (summary only) |
-| **Background jobs / queued work** | `mms-background-jobs.mdc` (source: `globle2.md` §8) | `mms-module-crosscutting` (summary only) |
+| **Universal module architecture** (contract, command centre, Work/Reports) | `mms-module-architecture.mdc` (source: `globle.md`) | `mms-module-isolation`, `mms-ui-tabs` |
+| **Module command centre + Work tier** (metrics, directory, drawer, bulk) | `mms-module-work.mdc` (source: `globle.md` §2–§3) | `mms-module-architecture` (summary only) |
+| **Module Setup tab** (fields, prefs, audit, §6–§7) | `mms-module-setup.mdc` (source: `globle.md`) | `mms-fields`, `mms-config` (detail only) |
+| **Module cross-cutting** (jobs, errors, perf, §8–§14) | `mms-module-crosscutting.mdc` (source: `globle.md`) | `mms-module-architecture` (summary only) |
+| **Background jobs / queued work** | `mms-background-jobs.mdc` (source: `globle.md` §8) | `mms-module-crosscutting` (summary only) |
 | `/settings` vs module Configuration | `mms-settings-navigation.mdc` | `mms-config` (pointer only) |
 | Settings hierarchy, live preview, theme scope | `mms-config.mdc` | `mms-settings-navigation` |
 | Reports, exports, builders | `mms-reports.mdc` | `mms-module-isolation` (category table stays in isolation) |
@@ -75,11 +75,11 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-fields.mdc` | Field/tab registry |
 | `mms-ui-tabs.mdc` | Tab navigation shell, PageHeader |
 | `mms-module-isolation.mdc` | Per-tier content scope + analytics categories |
-| `mms-module-architecture.mdc` | Universal module contract, command centre, Work/Reports (`globle1.md`) |
-| `mms-module-work.mdc` | Command centre + Work tier directory behaviour (`globle1.md` §2–§3) |
-| `mms-module-setup.mdc` | Setup tier — fields, prefs, change mgmt (`globle2.md` §5–§7) |
-| `mms-module-crosscutting.mdc` | Jobs, errors, performance, a11y, security (`globle2.md` §8–§14) |
-| `mms-background-jobs.mdc` | Queued processing, progress UI, artifacts (`globle2.md` §8) |
+| `mms-module-architecture.mdc` | Universal module contract, command centre, Work/Reports (`globle.md`) |
+| `mms-module-work.mdc` | Command centre + Work tier directory behaviour (`globle.md` §2–§3) |
+| `mms-module-setup.mdc` | Setup tier — fields, prefs, change mgmt (`globle.md` §5–§7) |
+| `mms-module-crosscutting.mdc` | Jobs, errors, performance, a11y, security (`globle.md` §8–§14) |
+| `mms-background-jobs.mdc` | Queued processing, progress UI, artifacts (`globle.md` §8) |
 | `mms-i18n.mdc` | Translation keys — en, ar, ur, fa |
 | `mms-tenant.mdc` | Multi-tenant routing and storage scope |
 | `mms-rbac.mdc` | Permissions — backend + `can()` hook |
@@ -106,7 +106,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 
 | Tool | Rules | Skills |
 |------|-------|--------|
-| **Antigravity** | `.agents/rules/*.md` (`.agent/` symlink) | `.agents/skills/` |
+| **Antigravity** | `.agent/rules/*.md` | `.agent/skills/` |
 | **Claude Code** | `.claude/rules/*.md` | `.claude/skills/` |
 | **Cursor** | `.cursor/rules/*.mdc` (canonical for rule bodies) | `.cursor/skills/` |
 
@@ -115,7 +115,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 After editing standards:
 
 ```bash
-bash .agents/scripts/sync-all.sh
+bash .agent/scripts/sync-all.sh
 ```
 
 ## PR / change checklist
@@ -126,7 +126,7 @@ bash .agents/scripts/sync-all.sh
 - [ ] Module tiers respect `mms-module-isolation.mdc` + `mms-module-architecture.mdc`
 - [ ] Shared logic in `@mms/shared` if cross-app or 2+ modules
 - [ ] No commit unless user requested
-- [ ] Update **all mirrors** when changing standards: `bash .agents/scripts/sync-all.sh`
+- [ ] Update **all mirrors** when changing standards: `bash .agent/scripts/sync-all.sh`
 - [ ] Auth/write routes: `mms-security.mdc` + `mms-rbac.mdc`
 - [ ] New UI: `mms-a11y.mdc` keyboard + labels
 - [ ] New `@mms/shared` pure helpers: unit test per `mms-testing.mdc`

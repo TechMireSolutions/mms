@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Sync .agents/skills/ → .cursor/skills/ (canonical Antigravity → Cursor).
+# Sync .agent/skills/ → .cursor/skills/ (canonical Antigravity → Cursor).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
-SRC=".agents/skills"
+SRC=".agent/skills"
 DEST=".cursor/skills"
 
 for dir in "$SRC"/*/; do

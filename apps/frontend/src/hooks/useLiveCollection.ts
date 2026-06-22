@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { getCollection } from "../lib/db";
+import { getCollection, hasCollectionInCache, saveCollectionCacheOnly } from "../lib/db";
+import { apiFetch } from "../lib/apiClient";
 
 /**
  * A custom React hook that reads a local database collection and subscribes to
@@ -35,6 +36,23 @@ export function useLiveCollection<T = any>(
     };
 
     handleUpdate();
+
+    const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
+    if (isAuth && !hasCollectionInCache(dbKey)) {
+      apiFetch(`/api/db/collections/${dbKey}`)
+        .then(async (res) => {
+          if (res.ok) {
+            const fetched = await res.json() as T[];
+            saveCollectionCacheOnly(dbKey, fetched);
+          } else {
+            console.warn(`Failed to fetch collection "${dbKey}" on-demand (status: ${res.status})`);
+          }
+        })
+        .catch((err) => {
+          console.error(`Error fetching collection "${dbKey}" on-demand:`, err);
+        });
+    }
+
     window.addEventListener("local-database-update", handleUpdate);
     return () => {
       window.removeEventListener("local-database-update", handleUpdate);

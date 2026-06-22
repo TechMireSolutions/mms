@@ -4,7 +4,7 @@ Project rules for the Madrasa Management System. Antigravity loads `.md` files f
 
 Mirrors: `.cursor/rules/*.mdc` (Cursor) · `.claude/rules/*.md` (Claude Code)
 
-**Sync:** `bash .agents/scripts/sync-all.sh` after editing `.cursor/rules/*.mdc`
+**Sync:** `bash .agent/scripts/sync-all.sh` after editing `.cursor/rules/*.mdc`
 
 ## Always on (`trigger: always_on`) — 6
 
@@ -26,7 +26,7 @@ Highlights: `mms-module-architecture`, `mms-module-work`, `mms-module-setup`, `m
 
 ## Skills (18)
 
-`.agents/skills/` — mirrored to `.cursor/skills/` and `.claude/skills/`. Index: [../skills/README.md](../skills/README.md). Overview: [../../AGENTS.md](../../AGENTS.md).
+`.agent/skills/` — mirrored to `.cursor/skills/` and `.claude/skills/`. Index: [../skills/README.md](../skills/README.md). Overview: [../../AGENTS.md](../../AGENTS.md).
 
 ## Workflows
 
@@ -40,7 +40,7 @@ Highlights: `mms-module-architecture`, `mms-module-work`, `mms-module-setup`, `m
 - [ ] Module tiers respect `mms-module-isolation.md` + `mms-module-architecture.md`
 - [ ] Shared logic in `@mms/shared` if cross-app or 2+ modules
 - [ ] No commit unless user requested
-- [ ] Run `bash .agents/scripts/sync-all.sh` when changing standards
+- [ ] Run `bash .agent/scripts/sync-all.sh` when changing standards
 - [ ] Auth/write routes: `mms-security.md` + `mms-rbac.md`
 - [ ] New UI: `mms-a11y.md` keyboard + labels
 - [ ] New `@mms/shared` pure helpers: unit test per `mms-testing.md`

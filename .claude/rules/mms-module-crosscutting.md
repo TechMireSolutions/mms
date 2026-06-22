@@ -1,16 +1,16 @@
 ---
-description: Module cross-cutting behaviour — jobs, errors, performance, a11y, security, consistency (source globle2.md §8–§14)
+description: Module cross-cutting behaviour — jobs, errors, performance, a11y, security, consistency (source globle.md §8–§14)
 paths:
-  - "globle2.md"
+  - "globle.md"
   - "apps/frontend/src/hooks/use*PageActions.ts"
   - "apps/frontend/src/lib/contacts/exportContactsCsv.ts"
   - "apps/frontend/src/lib/contacts/contactsSyncOutbox.ts"
   - "apps/frontend/src/components/contacts/ContactsDataBanner.tsx"
 ---
 
-# MMS Module Cross-Cutting (globle2.md)
+# MMS Module Cross-Cutting (globle.md)
 
-Human-readable source: [`globle2.md`](../../globle2.md) §8–§14. Foundation (§1–§4): [`globle1.md`](../../globle1.md). Setup (§5–§7): `mms-module-setup.md`.
+Human-readable source: [`globle.md`](../../globle.md) (Universal Module Architecture & Logic Schema). Setup (§5–§7): `mms-module-setup.md`.
 
 Summary index in `mms-module-architecture.md` — this rule owns **implementation detail** for post-Setup behaviour.
 

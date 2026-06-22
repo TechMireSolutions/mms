@@ -76,10 +76,9 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       if (inv.status === "paid") {
         months[monthStr].collected += inv.finalAmt;
       } else if (inv.status === "partial") {
-        // Mock partial payment assumption: 50% paid
-        const half = Math.round(inv.finalAmt / 2);
-        months[monthStr].collected += half;
-        months[monthStr].outstanding += (inv.finalAmt - half);
+        const paid = inv.paidAmt !== undefined ? inv.paidAmt : Math.round(inv.finalAmt / 2);
+        months[monthStr].collected += paid;
+        months[monthStr].outstanding += (inv.finalAmt - paid);
       } else if (inv.status !== "cancelled") {
         months[monthStr].outstanding += inv.finalAmt;
       }

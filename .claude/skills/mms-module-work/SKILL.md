@@ -1,11 +1,11 @@
 ---
 name: mms-module-work
-description: Implements or reviews MMS module command centres and Work tabs from globle1.md sections 2-3: metrics, create/export actions, search/filter/sort directories, detail drawers, mobile views, column prefs, templates, and bulk actions.
+description: Implements or reviews MMS module command centres and Work tabs from globle.md sections 2-3: metrics, create/export actions, search/filter/sort directories, detail drawers, mobile views, column prefs, templates, and bulk actions.
 ---
 
 # MMS Module Work Workflow
 
-Source: `globle1.md` sections 2-3. Rules: `mms-module-work.mdc`, `mms-module-architecture.mdc`, `mms-module-isolation.mdc`, `mms-rbac.mdc`, `mms-query.mdc`.
+Source: `globle.md` sections 2-3. Rules: `mms-module-work.mdc`, `mms-module-architecture.mdc`, `mms-module-isolation.mdc`, `mms-rbac.mdc`, `mms-query.mdc`.
 
 Use this skill when changing a module command centre, Work tab, directory, row actions, bulk actions, filters, detail drawer, mobile cards, or column preferences.
 

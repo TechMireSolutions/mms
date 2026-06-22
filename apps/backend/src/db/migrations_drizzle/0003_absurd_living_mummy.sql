@@ -1,0 +1,1 @@
+-- Aligned Drizzle schema indexes and unique constraints metadata snapshot with migrations 0001 and 0002 (No-op).

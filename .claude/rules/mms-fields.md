@@ -9,12 +9,12 @@ paths:
   - "apps/frontend/src/components/**/settings/**"
   - "packages/shared/src/contactTypes.ts"
   - "packages/shared/src/contactFieldDependencies.ts"
-  - "globle2.md"
+  - "globle.md"
 ---
 
 # MMS Fields & Tabs Registry
 
-Setup **Fields** tier behaviour: **`mms-module-setup.md`** (globle2.md §6) · persistence: below · workflow: skills `mms-fields-registry`, `mms-module-setup`.
+Setup **Fields** tier behaviour: **`mms-module-setup.md`** (globle.md §6) · persistence: below · workflow: skills `mms-fields-registry`, `mms-module-setup`.
 
 ## Universal schemas (in `@mms/shared`)
 
@@ -28,7 +28,7 @@ Setup **Fields** tier behaviour: **`mms-module-setup.md`** (globle2.md §6) · p
 - One schema for default + custom — no parallel contacts-only types.
 - `isSystem` = origin metadata only — **never branch behaviour on it**.
 
-## globle2.md §6 — fields and tabs (summary)
+## globle.md §6 — fields and tabs (summary)
 
 | § | Rule | Contacts |
 |---|------|----------|

@@ -73,10 +73,15 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
     });
 
     const defaultPt = defaultRevenueData[idx];
+    const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
     const scaleFactor = invoices.length > 0 ? (invoices.length / INVOICES.length) : 1;
     let expenses = defaultPt ? Math.round(defaultPt.expenses * scaleFactor) : Math.round(revenue * 0.6);
 
-    if (revenue === 0 && defaultPt) {
+    if (isAuth) {
+      expenses = invoices.length > 0 ? Math.round(revenue * 0.6) : 0;
+    }
+
+    if (revenue === 0 && defaultPt && !isAuth) {
       revenue = defaultPt.revenue;
       expenses = defaultPt.expenses;
     }

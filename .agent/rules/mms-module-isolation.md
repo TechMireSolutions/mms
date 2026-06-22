@@ -4,7 +4,7 @@ trigger: model_decision
 
 # MMS Module Isolation
 
-Full universal module spec: **`mms-module-architecture.md`** (source: `globle1.md`). This rule owns **tier content boundaries** only.
+Full universal module spec: **`mms-module-architecture.md`** (source: `globle.md`). This rule owns **tier content boundaries** only.
 
 Every feature module page uses **exactly three top-level tabs** from `useModuleTierTabs()`:
 

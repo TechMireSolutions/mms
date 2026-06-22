@@ -1,11 +1,11 @@
 ---
 name: mms-fields-registry
-description: Adds or changes field/tab registries, CustomFieldsBuilder, DraggableFieldList, and Setup Fields UI per globle2.md §6. Use when working with custom fields, system tabs, field types, column registries, field delete guards, or useSortedFields.
+description: Adds or changes field/tab registries, CustomFieldsBuilder, DraggableFieldList, and Setup Fields UI per globle.md §6. Use when working with custom fields, system tabs, field types, column registries, field delete guards, or useSortedFields.
 ---
 
 # MMS Field & Tab Registry
 
-**Source:** [`globle2.md`](../../globle2.md) §6 · Rules: `mms-fields.mdc`, `mms-module-setup.mdc` · Skill: `mms-module-setup` for full Setup workflow.
+**Source:** [`globle.md`](../../globle.md) §6 · Rules: `mms-fields.mdc`, `mms-module-setup.mdc` · Skill: `mms-module-setup` for full Setup workflow.
 
 ## Schemas (`@mms/shared/contactTypes.ts`)
 
@@ -15,7 +15,7 @@ description: Adds or changes field/tab registries, CustomFieldsBuilder, Draggabl
 
 `isSystem` = metadata only. Never branch behaviour on it.
 
-## globle2 §6 checklist
+## globle.md §6 checklist
 
 | § | Action |
 |---|--------|

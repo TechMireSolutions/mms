@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sync .cursor/rules/*.mdc → .claude/rules/*.md (Claude Code paths frontmatter).
-# Sync .agents/skills/ → .claude/skills/
+# Sync .agent/skills/ → .claude/skills/
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
@@ -11,7 +11,7 @@ const path = require("path");
 
 const cursorDir = ".cursor/rules";
 const claudeRulesDir = ".claude/rules";
-const agentsSkillsDir = ".agents/skills";
+const agentsSkillsDir = ".agent/skills";
 const claudeSkillsDir = ".claude/skills";
 
 fs.mkdirSync(claudeRulesDir, { recursive: true });
@@ -46,7 +46,7 @@ for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) 
 }
 SCRIPT
 
-for dir in "$ROOT/.agents/skills"/*/; do
+for dir in "$ROOT/.agent/skills"/*/; do
   name="$(basename "$dir")"
   mkdir -p "$ROOT/.claude/skills/$name"
   if [[ -f "$dir/SKILL.md" ]]; then
@@ -60,9 +60,9 @@ for dir in "$ROOT/.agents/skills"/*/; do
   fi
 done
 
-cp "$ROOT/.agents/skills/README.md" "$ROOT/.claude/skills/README.md"
+cp "$ROOT/.agent/skills/README.md" "$ROOT/.claude/skills/README.md"
 
 mkdir -p "$ROOT/.claude/docs/workflows"
-cp "$ROOT/.agents/workflows/"*.md "$ROOT/.claude/docs/workflows/" 2>/dev/null || true
+cp "$ROOT/.agent/workflows/"*.md "$ROOT/.claude/docs/workflows/" 2>/dev/null || true
 
 echo "Done. Claude mirror: .claude/rules/ + .claude/skills/"

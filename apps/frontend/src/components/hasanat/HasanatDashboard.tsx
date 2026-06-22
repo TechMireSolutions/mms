@@ -5,6 +5,12 @@ import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { DENOMINATIONS, STOCK_BATCHES, DISTRIBUTIONS, Denomination, StockBatch, Distribution } from '@/lib/data/hasanatData';
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 
+interface HasanatDashboardProps {
+  denoms?: Denomination[];
+  batches?: StockBatch[];
+  distributions?: Distribution[];
+}
+
 /**
  * HasanatDashboard Component
  *
@@ -15,15 +21,19 @@ import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
  *
  * @returns React element representing the Hasanat points dashboard.
  */
-export default function HasanatDashboard() {
+export default function HasanatDashboard({
+  denoms = DENOMINATIONS,
+  batches = STOCK_BATCHES,
+  distributions = DISTRIBUTIONS,
+}: HasanatDashboardProps) {
   const palette = useBrandPalette();
 
-  const totalStock = STOCK_BATCHES.reduce((s: number, b: StockBatch) => s + b.quantity, 0);
-  const totalRemaining = STOCK_BATCHES.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
-  const totalDistributed = DISTRIBUTIONS.reduce((s: number, d: Distribution) => s + d.quantity, 0);
-  const totalRedeemed = DISTRIBUTIONS.filter((d: Distribution) => d.status === "redeemed").reduce((s: number, d: Distribution) => s + d.quantity, 0);
-  const totalReturned = DISTRIBUTIONS.filter((d: Distribution) => d.status === "returned").reduce((s: number, d: Distribution) => s + d.quantity, 0);
-  const totalActive = DISTRIBUTIONS.filter((d: Distribution) => d.status === "active").reduce((s: number, d: Distribution) => s + d.quantity, 0);
+  const totalStock = batches.reduce((s: number, b: StockBatch) => s + b.quantity, 0);
+  const totalRemaining = batches.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
+  const totalDistributed = distributions.reduce((s: number, d: Distribution) => s + d.quantity, 0);
+  const totalRedeemed = distributions.filter((d: Distribution) => d.status === "redeemed").reduce((s: number, d: Distribution) => s + d.quantity, 0);
+  const totalReturned = distributions.filter((d: Distribution) => d.status === "returned").reduce((s: number, d: Distribution) => s + d.quantity, 0);
+  const totalActive = distributions.filter((d: Distribution) => d.status === "active").reduce((s: number, d: Distribution) => s + d.quantity, 0);
   const usedPct = totalStock > 0 ? Math.round(((totalStock - totalRemaining) / totalStock) * 100) : 0;
 
   const pieData = useMemo(
@@ -51,10 +61,10 @@ export default function HasanatDashboard() {
     remaining: number;
     used: number;
   }
-  const denStock = DENOMINATIONS.map((den: Denomination): DenStockEntry => {
-    const batches = STOCK_BATCHES.filter((b: StockBatch) => b.denominationId === den.id);
-    const total = batches.reduce((s: number, b: StockBatch) => s + b.quantity, 0);
-    const remaining = batches.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
+  const denStock = denoms.map((den: Denomination): DenStockEntry => {
+    const denBatches = batches.filter((b: StockBatch) => b.denominationId === den.id);
+    const total = denBatches.reduce((s: number, b: StockBatch) => s + b.quantity, 0);
+    const remaining = denBatches.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
     return { ...den, total, remaining, used: total - remaining };
   }).filter((d: DenStockEntry) => d.total > 0);
 

@@ -19,7 +19,7 @@ apps/backend/      # Fastify API
 packages/shared/   # @mms/shared — types, pure utils, defaults
 scripts/           # deploy, Apache, server helpers (not app logic)
 e2e/               # Playwright
-.cursor/rules/     # Cursor standards (.agents/rules/ mirror)
+.cursor/rules/     # Cursor standards (.agent/rules/ mirror)
 ```
 
 No new top-level app folders without explicit approval. No business logic in `scripts/`.

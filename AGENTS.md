@@ -1,20 +1,19 @@
 # MMS — Agent Guide
 
-Madrasa Management System monorepo. For **Cursor**, **Antigravity**, **Claude Code**, and any agent reading `.agents/`.
+Madrasa Management System monorepo. For **Cursor**, **Antigravity**, **Claude Code**, and any agent reading `.agent/`.
 
 ## Quick commands
 
 ```bash
 pnpm install && pnpm typecheck
 pnpm install && ./restart_servers.sh   # local dev (screen)
-bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
+bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 ```
 
-## Antigravity layout
+## Agent layout
 
 ```
-.agent/              → symlink to .agents/ (Antigravity standard path)
-.agents/
+.agent/
   rules/             # behavioural rules (always_on + model_decision)
   skills/            # 16 capability modules (SKILL.md per folder)
   workflows/         # multi-step procedures
@@ -28,7 +27,7 @@ Start here in Antigravity: **skill `antigravity-workspace`**
 ```
 .cursor/
   rules/             # .mdc rules (alwaysApply + globs)
-  skills/            # same skills as .agents/skills/
+  skills/            # same skills as .agent/skills/
 ```
 
 ## Claude Code layout
@@ -37,9 +36,9 @@ Start here in Antigravity: **skill `antigravity-workspace`**
 CLAUDE.md            # Session entry (points here + sync commands)
 .claude/
   rules/             # path-scoped .md rules (synced from .cursor/rules)
-  skills/            # same skills as .agents/skills/
+  skills/            # same skills as .agent/skills/
   settings.json      # permissions template (team defaults)
-  docs/workflows/    # reference copies of .agents/workflows/
+  docs/workflows/    # reference copies of .agent/workflows/
 ```
 
 ## Always-on rules (both tools)
@@ -62,11 +61,11 @@ Engineering layout & naming (file-scoped): `mms-structure.md`, `mms-naming.md`.
 | `antigravity-workspace` | Where rules/skills live; sync policy |
 | `mms-dev-setup` | Install, run, env verify |
 | `mms-frontend` | React app shell, apiClient, Query vs localStorage, FE tests |
-| `mms-module-page` | Three-tier module pages per `globle1.md` / `globle2.md` |
+| `mms-module-page` | Three-tier module pages per `globle.md` |
 | `mms-module-work` | Command centre and Work tab — metrics, directory, drawer, bulk actions |
-| `mms-module-setup` | Module Setup tier — Fields, Preferences, audit (`globle2.md` §5–§7) |
+| `mms-module-setup` | Module Setup tier — Fields, Preferences, audit (`globle.md` §5–§7) |
 | `mms-background-jobs` | Queued processing — exports, imports, dedup scans, progress, artifacts |
-| `mms-contacts` | Contact CRM — globle1 reference module |
+| `mms-contacts` | Contact CRM — `globle.md` reference module |
 | `mms-fields-registry` | Fields & tabs |
 | `mms-data-sync` | db.ts & API sync |
 | `mms-auth-users` | Auth & users |
@@ -78,21 +77,21 @@ Engineering layout & naming (file-scoped): `mms-structure.md`, `mms-naming.md`.
 | `mms-migration-fixes` | Tech debt fixes |
 | `mms-code-review` | PR review |
 
-Index: [.agents/skills/README.md](.agents/skills/README.md)
+Index: [.agent/skills/README.md](.agent/skills/README.md)
 
 ## Workflows (Antigravity)
 
-[.agents/workflows/](.agents/workflows/) — `dev-setup`, `feature-module`, `code-review`, `fix-migration-debt`
+[.agent/workflows/](.agent/workflows/) — `dev-setup`, `feature-module`, `code-review`, `fix-migration-debt`
 
 ## Sync policy
 
 When editing standards, update **both**:
 
-1. `.cursor/rules/` and `.cursor/skills/` (or edit skills in `.agents/skills/` first)
-2. `.agents/rules/` and `.agents/skills/` (Antigravity)
+1. `.cursor/rules/` and `.cursor/skills/` (or edit skills in `.agent/skills/` first)
+2. `.agent/rules/` and `.agent/skills/` (Antigravity)
 3. `.claude/rules/` and `.claude/skills/` (Claude Code)
 
-Rule **bodies** must stay identical between `.cursor/rules/*.mdc`, `.agents/rules/*.md`, and `.claude/rules/*.md`. Only frontmatter differs:
+Rule **bodies** must stay identical between `.cursor/rules/*.mdc`, `.agent/rules/*.md`, and `.claude/rules/*.md`. Only frontmatter differs:
 
 | Tool | Frontmatter |
 |------|-------------|
@@ -105,7 +104,7 @@ Cross-references use `.mdc` in Cursor, `.md` in Antigravity and Claude.
 **One command after rule/skill edits:**
 
 ```bash
-bash .agents/scripts/sync-all.sh
+bash .agent/scripts/sync-all.sh
 ```
 
 Individual targets: `sync-rules.sh` (→ Antigravity), `sync-skills.sh` (→ Cursor), `sync-claude.sh` (→ Claude).

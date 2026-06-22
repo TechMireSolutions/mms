@@ -8,132 +8,49 @@ paths:
   - "apps/frontend/src/components/ui/StatusBadge.tsx"
 ---
 
-# MMS UI Rendering
+# MMS UI Rendering Standards
 
-## Forms
+## 1. Forms & Field Sizing
 
-- Built from field registry via `FormPrimitives` / `CustomFieldsBuilder` + `useSortedFields`.
-- Render **enabled** fields in **order**.
+- **Form Layout**: Fields should render full-width in a single column flow (`COLLECTION_BODY`) to maintain consistent line alignment, structured using `space-y-3` containers.
+- **Input Dimensions**: All form inputs, selects, and textareas must share a standard sizing of `min-h-[44px]` (via the `INPUT` constant). Avoid inline padding overrides.
+- **Form Primitives**: Reuse `COLLECTION_CARD` (chrome), `CardTypeLabel` (type heading), and `CardRemoveButton` (44×44px delete touch target) for repeatable entities.
 
-## Field & card sizing (consistent widths/heights)
+---
 
-All form inputs share one size system — never fork per tab:
+## 2. Select Dropdowns & Popovers
 
-- Text inputs/selects/textareas use the `INPUT` constant (full-width, `min-h-[44px]`). Don't hand-roll padding/height per field.
-- Body fields render **full-width, single column** (`COLLECTION_BODY`) so every text box is the same width — no `grid-cols-2` that leaves a lone field half-width.
-- Repeatable (collection) cards use the shared primitives in `FormPrimitives`: `COLLECTION_CARD` (chrome), `CardTypeLabel` (the "Type" caption), `CardRemoveButton` (44×44, `deleteActionClass`), and `TYPE_SELECT_WIDTH` for the header dropdown. Don't re-inline card padding, labels, or remove buttons.
-- Tab containers use `space-y-3`. Keep card padding uniform (`p-3`).
+- **Banned Custom Elements**: Never hand-roll a raw `<select>` element. Use `FormSelect` (fixed options) or `EditableSelect` (user-extendable) from `form/FormPrimitives`.
+- **Radix Popovers**: Dropdown option panels must use Radix `Popover` to ensure correct portaling, flip-above triggers, and scroll bounds checking:
+  - Width must map to the trigger element: `w-[var(--radix-popover-trigger-width)]`.
+  - Height must be clamped to the viewport: `max-h-[var(--radix-popover-content-available-height)]`.
+  - Panel layout: `flex flex-col` containing a scrollable `overflow-y-auto overscroll-contain role="listbox"` body.
+  - Implement full keyboard accessibility (`ArrowUp`/`ArrowDown`/`Enter`) and `aria-selected` tracking.
 
-## Dropdowns / selects (one pattern each)
+---
 
-Two — and only two — dropdown primitives, both in `contacts/form/FormPrimitives.tsx`:
+## 3. Notifications & Feedback
 
-| Use case | Primitive |
-|----------|-----------|
-| Fixed option list (gender, country, custom `select` field) | `FormSelect` |
-| User-extendable list (add/remove options inline, e.g. phone/email/relationship type) | `EditableSelect` |
+- **Unified API**: All system notifications must call the `notify` helper from `lib/notify.ts` (e.g. `notify.success()`, `notify.error()`, `notify.warning()`). Direct calls to `toast()` are forbidden.
+- **Localization**: Titles and descriptions must load translation keys via `t()`. Hardcoded English string values are prohibited.
+- **Theme Variables**: Visual states must resolve to CSS variables (`--success`, `--warning`, `--info`, `--destructive`). Do not hardcode specific hex codes or Tailwind color maps.
 
-- **Never** hand-roll a bare `<select>` in a form. A raw `<select>` shows the OS arrow and breaks visual consistency. Use `FormSelect`, or if a native select is unavoidable, replicate its pattern: `appearance-none cursor-pointer pr-9` + absolutely-positioned Lucide `ChevronDown` overlay.
-- Both primitives share the `INPUT` sizing (`text-sm`, `min-h-[44px]`, `rounded-lg`, primary focus ring). Don't fork sizes/typography per call site.
-- Chevrons are **Lucide `ChevronDown`** only — never a unicode glyph (`▼`) or emoji. Rotate 180° on open.
-- Selected state: primary tint + Lucide `Check`. Destructive affordances use `text-destructive` / `hover:bg-destructive/10` — never hardcoded `red-500`/`red-50`.
-- Custom (non-native) dropdown panels **must be portaled with collision detection** — build on Radix `Popover` (`ui/popover`), not an `absolute` panel inside the form. An `absolute` panel is clipped by the dialog's `overflow-y-auto` body and runs off-screen when the trigger sits near the bottom. The popover handles flip-above-trigger, viewport shifting, outside-click, and `Escape` for free.
-  - Match the trigger width with `w-[var(--radix-popover-trigger-width)]` (+ a sensible `min-w`).
-  - Clamp height to `max-h-[var(--radix-popover-content-available-height)]` and make the panel a `flex flex-col`: scrollable `role="listbox"` body (`flex-1 min-h-0 overflow-y-auto overscroll-contain`) + any fixed footer (e.g. add-option row) as `flex-shrink-0`. This guarantees options never spill below the viewport.
-  - `role="listbox"` + `role="option"` + `aria-selected`; support `ArrowUp`/`ArrowDown` + `Enter` keyboard navigation.
-- Options always come from config/registry (`field.options`, config lists) — no inline option literals.
+---
 
-```tsx
-// Fixed options
-<FormSelect value={v} onChange={setV} options={field.options} placeholder="— Select —" />
+## 4. Overlay & Dialog Containment
 
-// Extendable options
-<EditableSelect options={types} value={v} onChange={setV} onUpdateOptions={save} />
-```
+- **Stable Heights**: Tabbed modal forms must not shift height dynamically. Enforce fixed boundaries with `FormModal(tall)` (`h-[88vh] max-h-[700px]` total, with a scrollable body `flex-1 overflow-y-auto`).
+- **Body Scroll Locks**: Background scrolling must be blocked when overlays are active. Use the reference-counted `useBodyScrollLock()` hook.
+- **Overscroll Containment**: Apply `overscroll-contain` to scrollable modal bodies to prevent scroll chaining to the host window.
 
-## Notifications / toasts (one DRY API)
+---
 
-All user feedback goes through **`notify`** from `lib/notify.ts` — never call the low-level `toast()` or hand-build `toast({ title, description, variant })` in feature code.
+## 5. Shared Primitives Directory
 
-| Method | Use for | Variant / duration |
-|--------|---------|--------------------|
-| `notify.success(title, { description? })` | create / update / import / merge confirmations | `success` · 5s |
-| `notify.error(title, { description? })` | failures, validation errors | `destructive` · 8s |
-| `notify.warning(title, …)` | non-blocking cautions | `warning` · 8s |
-| `notify.info(title, …)` | neutral events (deletions, background) | `info` · 5s |
-| `notify.message(title, …)` | plain, theme-neutral | `default` · 5s |
-
-- Titles/descriptions from **`t()`** (`mms-i18n.md`) — **no hardcoded user-facing strings**.
-- Contacts legacy may pass existing `uiStrings.*` until migrated; **do not add new `uiStrings` keys** outside Contacts.
-- Toasts **auto-dismiss** (timer in `use-toast`) and the close button works; don't add per-call timers — pass `duration` (or `Infinity` for sticky) only when overriding.
-- Toast colours are **theme tokens** (`--success`/`--warning`/`--info`/`--destructive`), defined in `index.css` `@theme inline`. Never hardcode `green-*`/`red-*` in toast styling. `sonner` is not used — there is one toast system (`use-toast` + `Toaster`).
-
-```tsx
-import { notify } from "@/lib/notify";
-import { useTranslation } from "@/hooks/useTranslation";
-
-const { t } = useTranslation();
-notify.success(t("contacts.created"), { description: t("contacts.saved", { name }) });
-notify.error(t("common.fixErrors"), { description: firstError.message });
-```
-
-## Entity forms (`FormModal`)
-
-Add/edit modals use **`FormModal`** — see `mms-ui-forms.md` for the full contract.
-
-- Tabbed forms: `tall` prop + `SubTabBar` (pill style); no custom overlay/tab chrome.
-- Single-panel forms: `FormModal` without `tabs`.
-- Shared field tokens: `FORM_LABEL`, `FORM_INPUT` from `formStyles.ts`.
-
-## Dialogs & tabbed forms (stable height)
-
-Tabbed/multi-step dialog forms must not resize when switching tabs.
-
-- Use `FormModal` with `tall` — fixed `h-[88vh] max-h-[700px]` on the panel.
-- Layout regions: header, tab bar, error banner, and footer are `flex-shrink-0`; the body is the **only** scroll area: `flex-1 overflow-y-auto min-h-0`.
-- Animate tab content (opacity/x) inside the fixed body — never animate height.
-
-## Overlay scroll containment
-
-Scrolling inside a modal/overlay must **never** scroll the page behind it.
-
-- Lock background scroll with `useBodyScrollLock()` (`apps/frontend/src/hooks`) while the overlay is mounted — it is reference-counted and compensates for scrollbar width (no layout shift). The shared `Modal` already calls it; custom overlays must call it too.
-- Add `overscroll-contain` to the scroll body so reaching the top/bottom does not chain to the page:
-
-```tsx
-<div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5">
-```
-
-- Do not manually set `document.body.style.overflow` in components — use the hook.
-
-## Tables
-
-Column registry: `{ key, label, enabled, order, sortable, width }`.
-
-- Visible columns from config/prefs — not static column arrays in page files.
-- `ColumnCustomizer` writes back to prefs store.
-
-## Title Case on save
-
-User-typed names/labels → `toTitleCase` from `@mms/shared` (frontend save + backend `POST /api/contacts`).
-
-## Shared primitives (use before inventing new)
-
-| Need | Component |
-|------|-----------|
-| Page shell | `PageHeader` |
-| Grid | `DataTable` |
-| Add/edit entity form | `FormModal` |
-| Simple dialog | `Modal` |
-| Loading | `LoadingState` |
-| Status | `StatusBadge` |
-| Search | `SearchBar` |
-| Field admin | `CustomFieldsBuilder`, `DraggableFieldList` |
-| Errors | `ErrorBoundary` on heavy sections (`mms-observability.md`) |
-| Accessibility | `mms-a11y.md` — icon `aria-label`, form labels, keyboard |
-
-React components live in `apps/frontend/src/components/ui/` — **not** in `@mms/shared` unless architecture changes.
-
-## Extensibility
-
-Add field/column via registry config first — avoid new hardcoded form variants per module.
+Verify and use existing UI components under `components/ui/` before creating custom layouts:
+- `PageHeader`: Title, command centre metrics, and primary actions.
+- `DataTable` & `SearchBar`: Directory sorting and search utilities.
+- `FormModal` & `Modal`: Forms and standard dialog frames.
+- `StatusBadge` & `LoadingState`: Dynamic badge formatting and indicators.
+- `CustomFieldsBuilder` & `DraggableFieldList`: Setup registry field reordering.
+- `ErrorBoundary`: Local crash wrap around complex page regions.

@@ -1,12 +1,12 @@
 ---
 description: Field/tab registry, Configuration/Fields, custom field provisioning target
-globs: apps/frontend/src/lib/contactFieldsStore.ts,apps/frontend/src/hooks/useSortedFields.ts,apps/frontend/src/components/ui/CustomFieldsBuilder.tsx,apps/frontend/src/components/ui/DraggableFieldList.tsx,apps/frontend/src/components/**/form/**,apps/frontend/src/components/**/settings/**,packages/shared/src/contactTypes.ts,packages/shared/src/contactFieldDependencies.ts,globle2.md
+globs: apps/frontend/src/lib/contactFieldsStore.ts,apps/frontend/src/hooks/useSortedFields.ts,apps/frontend/src/components/ui/CustomFieldsBuilder.tsx,apps/frontend/src/components/ui/DraggableFieldList.tsx,apps/frontend/src/components/**/form/**,apps/frontend/src/components/**/settings/**,packages/shared/src/contactTypes.ts,packages/shared/src/contactFieldDependencies.ts,globle.md
 alwaysApply: false
 ---
 
 # MMS Fields & Tabs Registry
 
-Setup **Fields** tier behaviour: **`mms-module-setup.mdc`** (globle2.md §6) · persistence: below · workflow: skills `mms-fields-registry`, `mms-module-setup`.
+Setup **Fields** tier behaviour: **`mms-module-setup.mdc`** (globle.md §6) · persistence: below · workflow: skills `mms-fields-registry`, `mms-module-setup`.
 
 ## Universal schemas (in `@mms/shared`)
 
@@ -20,7 +20,7 @@ Setup **Fields** tier behaviour: **`mms-module-setup.mdc`** (globle2.md §6) · 
 - One schema for default + custom — no parallel contacts-only types.
 - `isSystem` = origin metadata only — **never branch behaviour on it**.
 
-## globle2.md §6 — fields and tabs (summary)
+## globle.md §6 — fields and tabs (summary)
 
 | § | Rule | Contacts |
 |---|------|----------|

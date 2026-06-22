@@ -10,16 +10,21 @@ export {
   QUESTION_DIFFICULTY_BADGE_CLASSES,
   QUESTION_TYPE_IDS,
   QUESTION_TYPE_ICONS,
-  DEFAULT_QUESTION_BANK_QUESTIONS as QUESTIONS,
-  DEFAULT_QUESTION_BANK_TESTS as TESTS,
-  DEFAULT_QUESTION_BANK_RESULTS as RESULTS,
-  DEFAULT_QUESTION_CATEGORIES as CATEGORIES,
 } from '@mms/shared';
 
 import {
   QUESTION_DIFFICULTY_BADGE_CLASSES,
   QUESTION_TYPE_ICONS,
+  type QuestionBankQuestion,
+  type QuestionBankTest,
+  type QuestionBankResult,
+  type QuestionCategory
 } from '@mms/shared';
+
+export const QUESTIONS: QuestionBankQuestion[] = [];
+export const TESTS: QuestionBankTest[] = [];
+export const RESULTS: QuestionBankResult[] = [];
+export const CATEGORIES: QuestionCategory[] = [];
 
 /** @deprecated Use `QUESTION_DIFFICULTY_BADGE_CLASSES` from `@mms/shared`. */
 export const DIFFICULTY_STYLES: Record<string, { cls: string }> = Object.fromEntries(

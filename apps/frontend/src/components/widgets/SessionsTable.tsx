@@ -3,6 +3,15 @@ import { Users, MapPin, Radio } from "lucide-react";
 import { upcomingSessions as defaultSessions, UpcomingSessionItem } from '@/lib/data/dashboardData';
 import { motion } from "framer-motion";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { type Session } from "../../lib/data/sessionsData";
+
+function hashStringToId(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+}
 
 /**
  * SessionsTable Component
@@ -12,7 +21,45 @@ import { useLiveCollection } from "../../hooks/useLiveCollection";
  * @returns {React.ReactElement} The sessions table widget.
  */
 export default function SessionsTable({ title }: { title?: string }) {
-  const sessions = useLiveCollection<UpcomingSessionItem>("upcoming_sessions", defaultSessions);
+  const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
+  const dbSessions = useLiveCollection<Session>("sessions");
+  const fallbackSessions = useLiveCollection<UpcomingSessionItem>("upcoming_sessions", []);
+
+  let sessions: UpcomingSessionItem[] = [];
+
+  if (isAuth) {
+    dbSessions.forEach((s) => {
+      if (s.status !== "active") return;
+
+      const classesList = s.classes || [];
+      classesList.forEach((cls, idx) => {
+        const timetable = s.timetable || [];
+        const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const todayName = weekdayNames[new Date().getDay()];
+
+        const classTimetable = timetable.filter(
+          (t) => t.location === cls.room && t.day === todayName
+        );
+
+        const timeStr = classTimetable[0]
+          ? `${classTimetable[0].startTime} - ${classTimetable[0].endTime}`
+          : "09:00 - 11:00";
+        const isLive = classTimetable.length > 0;
+
+        sessions.push({
+          id: hashStringToId(`${s.id}-${cls.id}-${idx}`),
+          name: `${s.name} – ${cls.name}`,
+          teacher: cls.teacherName || "Unassigned",
+          time: timeStr,
+          room: cls.room || "N/A",
+          students: cls.enrolled || 0,
+          status: isLive ? "live" : "upcoming",
+        });
+      });
+    });
+  } else {
+    sessions = fallbackSessions;
+  }
 
   return (
     <section aria-labelledby="sessions-table-heading" className="bg-card rounded-xl border border-border">

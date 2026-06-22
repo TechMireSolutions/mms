@@ -246,6 +246,77 @@ export async function exportTenantBackup(): Promise<string> {
   return buildWorkspaceBackupEnvelope(keys, { subdomain, dataSource: "server" });
 }
 
+const BUSINESS_COLLECTIONS = new Set([
+  "contacts",
+  "students",
+  "teachers",
+  "enrollments",
+  "attendance_records",
+  "finance_invoices",
+  "finance_payments",
+  "sessions",
+  "users",
+  "user_activity_logs",
+  "hasanat_distributions",
+  "hasanat_redemptions",
+  "hasanat_denoms",
+  "hasanat_batches",
+  "hasanat_payouts",
+  "assessment_results",
+  "exam_results",
+  "exams",
+  "questions",
+  "tests",
+  "obligation_collections",
+  "obligation_distributions",
+  "obligation_types",
+  "mujtahids",
+  "mujtahid_reps",
+  "wakala_types",
+  "accounting_accounts",
+  "accounting_entries",
+  "accounting_fiscal_years",
+]);
+
+/**
+ * Checks if a collection key exists in local storage.
+ *
+ * @param {string} key - The collection key.
+ * @returns {boolean} True if the collection exists in cache.
+ */
+export function hasCollectionInCache(key: string): boolean {
+  try {
+    return localStorage.getItem(scopedStorageKey(key)) !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Saves a collection ONLY to local storage (does not sync to server).
+ * Used when caching data that was fetched from the server.
+ *
+ * @template T
+ * @param {string} key - Unique key for storage.
+ * @param {T[]} data - Collection data to save.
+ * @returns {void}
+ */
+export function saveCollectionCacheOnly<T>(key: string, data: T[]): void {
+  try {
+    let dataToSave = data;
+    if (key === "sessions") {
+      dataToSave = validateSessions(data) as unknown as T[];
+    }
+    dataToSave = normalizeLinkedCollection(key, dataToSave);
+    localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("local-database-update"));
+    }
+  } catch (error) {
+    console.error(`Error saving collection "${key}" to local cache:`, error);
+  }
+}
+
 /**
  * Retrieves a collection from localStorage. If not found, seeds it with the provided default data.
  *
@@ -267,6 +338,10 @@ export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]
         collection = hydrateLinkedCollection(key, collection);
         return collection;
       }
+    }
+    const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
+    if (isAuth && BUSINESS_COLLECTIONS.has(key)) {
+      return [] as T[];
     }
     if (defaultData.length === 0) {
       return [];
@@ -337,10 +412,6 @@ export function getObject<T>(key: string, defaultData: T): T {
       return JSON.parse(saved) as T;
     }
     localStorage.setItem(scopedStorageKey(key), JSON.stringify(defaultData));
-
-    queueMicrotask(() => {
-      void syncToServer(`/api/db/objects/${key}`, defaultData);
-    });
 
     return defaultData;
   } catch (error) {

@@ -1,5 +1,5 @@
 ---
-description: Background jobs and queued processing rules from globle2.md section 8
+description: Background jobs and queued processing rules from globle.md section 8
 paths:
   - "apps/backend/src/services/backgroundJob*.ts"
   - "apps/backend/src/routes/backgroundJobs.ts"
@@ -7,12 +7,12 @@ paths:
   - "apps/frontend/src/lib/backgroundJobs/**"
   - "apps/frontend/src/hooks/useBackgroundJobs.ts"
   - "apps/frontend/src/components/ui/BackgroundJobsTray.tsx"
-  - "globle2.md"
+  - "globle.md"
 ---
 
 # MMS Background Jobs
 
-Human-readable source: [`globle2.md`](../../globle2.md) section 8. Cross-cutting summary: `mms-module-crosscutting.md`.
+Human-readable source: [`globle.md`](../../globle.md) section 8. Cross-cutting summary: `mms-module-crosscutting.md`.
 
 Use this rule for large exports, imports, bulk messaging, bulk updates, dedup scans, heavy reports, and sync recovery.
 

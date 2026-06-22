@@ -1,6 +1,6 @@
 ---
 name: antigravity-workspace
-description: Orients Antigravity agents to the MMS workspace layout — .agents rules, skills, workflows, and parity with Cursor. Use when starting work in Antigravity, loading project context, or unsure where rules and skills live.
+description: Orients Antigravity agents to the MMS workspace layout — .agent rules, skills, workflows, and parity with Cursor. Use when starting work in Antigravity, loading project context, or unsure where rules and skills live.
 ---
 
 # Antigravity Workspace — MMS
@@ -8,8 +8,7 @@ description: Orients Antigravity agents to the MMS workspace layout — .agents 
 ## Directory layout
 
 ```
-.agent/  → symlink to .agents/   (Antigravity standard path)
-.agents/
+.agent/
   rules/       # always_on | model_decision triggers
   skills/      # capability modules (this folder)
   workflows/   # slash-command style procedures
@@ -18,7 +17,7 @@ description: Orients Antigravity agents to the MMS workspace layout — .agents 
 Cursor equivalent: `.cursor/rules/` + `.cursor/skills/`  
 Claude Code equivalent: `.claude/rules/` + `.claude/skills/` + root `CLAUDE.md`
 
-Keep in sync when editing: `bash .agents/scripts/sync-all.sh`
+Keep in sync when editing: `bash .agent/scripts/sync-all.sh`
 
 ## Always-on rules
 
@@ -38,7 +37,7 @@ See `skills/README.md`. Invoke by task keywords or `@skill-name` if your client 
 
 ```bash
 pnpm install && pnpm typecheck
-bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
+bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 ./restart_servers.sh   # local dev (screen)
 ```
 
@@ -46,16 +45,16 @@ bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
 
 When changing standards:
 
-1. Update `.cursor/rules/*.mdc` (Cursor) or `.agents/skills/*/SKILL.md` (skills)
-2. Run `bash .agents/scripts/sync-all.sh` to mirror **Antigravity**, **Cursor**, and **Claude Code**
+1. Update `.cursor/rules/*.mdc` (Cursor) or `.agent/skills/*/SKILL.md` (skills)
+2. Run `bash .agent/scripts/sync-all.sh` to mirror **Antigravity**, **Cursor**, and **Claude Code**
 
 | Target | Path | Frontmatter |
 |--------|------|-------------|
 | Cursor | `.cursor/rules/*.mdc` | `globs` + `alwaysApply` |
-| Antigravity | `.agents/rules/*.md` | `trigger: always_on \| model_decision` |
+| Antigravity | `.agent/rules/*.md` | `trigger: always_on \| model_decision` |
 | Claude Code | `.claude/rules/*.md` | `paths:` (scoped) or none (always-on) |
 
-Skills canonical in `.agents/skills/` → mirrored to `.cursor/skills/` and `.claude/skills/`.
+Skills canonical in `.agent/skills/` → mirrored to `.cursor/skills/` and `.claude/skills/`.
 
 ## Project root guide
 

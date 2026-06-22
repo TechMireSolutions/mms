@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
-bash .agents/scripts/sync-rules.sh
-bash .agents/scripts/sync-skills.sh
-bash .agents/scripts/sync-claude.sh
+bash .agent/scripts/sync-rules.sh
+bash .agent/scripts/sync-skills.sh
+bash .agent/scripts/sync-claude.sh
 
-echo "All agent mirrors synced (.agents, .cursor, .claude)."
+echo "All agent mirrors synced (.agent, .cursor, .claude)."

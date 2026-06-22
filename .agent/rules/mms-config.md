@@ -4,9 +4,9 @@ trigger: model_decision
 
 # MMS Configuration
 
-See also: **`mms-settings-navigation.md`** for `/settings` scope · **`mms-module-setup.md`** for module Setup Preferences (globle2.md §7).
+See also: **`mms-settings-navigation.md`** for `/settings` scope · **`mms-module-setup.md`** for module Setup Preferences (globle.md §7).
 
-## globle2.md §7 — module preferences (Setup tier)
+## globle.md §7 — module preferences (Setup tier)
 
 | § | Requirement | Contacts |
 |---|-------------|----------|

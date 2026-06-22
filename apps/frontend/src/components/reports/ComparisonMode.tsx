@@ -11,6 +11,9 @@ import { useContactsReportAnalytics } from '@/hooks/useContacts';
 import { computeContactsStageComparison } from '@mms/shared';
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
+import { useLiveCollection } from "@/hooks/useLiveCollection";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import type { Session } from "@/lib/data/sessionsData";
 
 interface ComparisonDataItem {
   metric: string;
@@ -40,6 +43,262 @@ function getSessionCompData(targetA: string, targetB: string): ComparisonDataIte
     { metric: "Pass Rate%",   a: targetA === "s1" ? 100 : targetA === "s2" ? 100 : 90, b: targetB === "s1" ? 100 : targetB === "s2" ? 100 : 90 },
     { metric: "Hasanat",      a: targetA === "s1" ? 1140 : targetA === "s2" ? 930 : 500, b: targetB === "s1" ? 1140 : targetB === "s2" ? 930 : 500 },
   ];
+}
+
+function computeDynamicSessionComparison(
+  sessions: Session[],
+  enrollments: any[],
+  attendanceRecords: any[],
+  financeInvoices: any[],
+  hasanatDistributions: any[],
+  examResults: any[],
+  exams: any[],
+  denoms: any[],
+  targetA: string,
+  targetB: string,
+): ComparisonDataItem[] {
+  const sessA = sessions.find(s => s.id === targetA);
+  const sessB = sessions.find(s => s.id === targetB);
+
+  const getMetrics = (session: Session | undefined) => {
+    if (!session) {
+      return { enrollment: 0, attendancePct: 0, feeCollected: 0, passRatePct: 0, hasanat: 0 };
+    }
+
+    const sessId = session.id;
+    const sessName = session.name;
+
+    const sessionEnrollments = enrollments.filter(e => e.sessionId === sessId && e.status !== "cancelled");
+    const enrollment = sessionEnrollments.length;
+
+    const classIds = new Set(session.classes?.map(c => c.id) || []);
+    const sessionAttendance = attendanceRecords.filter(r => classIds.has(r.classId));
+    const presentCount = sessionAttendance.filter(r => r.status === "present" || r.status === "late").length;
+    const attendancePct = sessionAttendance.length > 0 
+      ? Math.round((presentCount / sessionAttendance.length) * 100) 
+      : 0;
+
+    const sessionInvoices = financeInvoices.filter(inv => inv.session === sessId || inv.session === sessName);
+    let feeCollected = 0;
+    sessionInvoices.forEach(inv => {
+      if (inv.status === "paid") {
+        feeCollected += inv.finalAmt;
+      } else if (inv.status === "partial") {
+        feeCollected += inv.paidAmt !== undefined ? inv.paidAmt : Math.round(inv.finalAmt / 2);
+      }
+    });
+
+    const sessionExams = exams.filter(ex => ex.classIds && ex.classIds.some((cid: string) => classIds.has(cid)));
+    const sessionExamIds = new Set(sessionExams.map(ex => ex.id));
+    const sessionResults = examResults.filter(r => sessionExamIds.has(r.examId));
+    let passCount = 0;
+    sessionResults.forEach(r => {
+      const exam = sessionExams.find(ex => ex.id === r.examId);
+      if (exam && r.marksObtained >= exam.passingMarks) {
+        passCount++;
+      }
+    });
+    const passRatePct = sessionResults.length > 0
+      ? Math.round((passCount / sessionResults.length) * 100)
+      : 0;
+
+    const studentIds = new Set(sessionEnrollments.map(e => e.studentId));
+    const pointsMap = new Map<string, number>();
+    denoms.forEach(d => pointsMap.set(d.id, d.points));
+    const getDenomPoints = (denomId: string) => {
+      if (pointsMap.has(denomId)) return pointsMap.get(denomId)!;
+      if (denomId === "den1") return 50;
+      if (denomId === "den2") return 150;
+      if (denomId === "den3") return 500;
+      if (denomId === "den4") return 1000;
+      if (denomId === "den5") return 2500;
+      return 0;
+    };
+    let hasanat = 0;
+    hasanatDistributions.forEach(d => {
+      if (d.recipientStudentId && studentIds.has(d.recipientStudentId)) {
+        hasanat += (d.quantity || 1) * getDenomPoints(d.denominationId);
+      }
+    });
+
+    return { enrollment, attendancePct, feeCollected, passRatePct, hasanat };
+  };
+
+  const metricsA = getMetrics(sessA);
+  const metricsB = getMetrics(sessB);
+
+  return [
+    { metric: "Enrollment",   a: metricsA.enrollment,     b: metricsB.enrollment },
+    { metric: "Attendance%",  a: metricsA.attendancePct,  b: metricsB.attendancePct },
+    { metric: "Fee Collected",a: metricsA.feeCollected,   b: metricsB.feeCollected },
+    { metric: "Pass Rate%",   a: metricsA.passRatePct,    b: metricsB.passRatePct },
+    { metric: "Hasanat",      a: metricsA.hasanat,        b: metricsB.hasanat },
+  ];
+}
+
+function computeDynamicDateRangeComparison(
+  category: string,
+  enrollments: any[],
+  attendanceRecords: any[],
+  financeInvoices: any[],
+  hasanatDistributions: any[],
+  examResults: any[],
+  exams: any[],
+  denoms: any[],
+  rangeA: DateRange,
+  rangeB: DateRange,
+): DateRangeDataItem[] {
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const inRange = (dateStr: string, start: string, end: string) => {
+    if (!dateStr) return false;
+    return dateStr >= start && dateStr <= end;
+  };
+
+  const getMonthIndex = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? -1 : d.getMonth();
+  };
+
+  const bucketA = new Array(12).fill(0);
+  const bucketB = new Array(12).fill(0);
+  const countA = new Array(12).fill(0);
+  const countB = new Array(12).fill(0);
+
+  const lowerCat = category.toLowerCase();
+
+  if (lowerCat === "financial") {
+    financeInvoices.forEach(inv => {
+      let paid = 0;
+      if (inv.status === "paid") {
+        paid = inv.finalAmt;
+      } else if (inv.status === "partial") {
+        paid = inv.paidAmt !== undefined ? inv.paidAmt : Math.round(inv.finalAmt / 2);
+      }
+
+      if (inRange(inv.dueDate, rangeA.from, rangeA.to)) {
+        const m = getMonthIndex(inv.dueDate);
+        if (m >= 0) bucketA[m] += paid;
+      }
+      if (inRange(inv.dueDate, rangeB.from, rangeB.to)) {
+        const m = getMonthIndex(inv.dueDate);
+        if (m >= 0) bucketB[m] += paid;
+      }
+    });
+  } else if (lowerCat === "attendance") {
+    attendanceRecords.forEach(rec => {
+      const isPresent = rec.status === "present" || rec.status === "late";
+      const val = isPresent ? 1 : 0;
+      if (inRange(rec.date, rangeA.from, rangeA.to)) {
+        const m = getMonthIndex(rec.date);
+        if (m >= 0) {
+          bucketA[m] += val;
+          countA[m] += 1;
+        }
+      }
+      if (inRange(rec.date, rangeB.from, rangeB.to)) {
+        const m = getMonthIndex(rec.date);
+        if (m >= 0) {
+          bucketB[m] += val;
+          countB[m] += 1;
+        }
+      }
+    });
+  } else if (lowerCat === "hasanat") {
+    const pointsMap = new Map<string, number>();
+    denoms.forEach(d => pointsMap.set(d.id, d.points));
+    const getDenomPoints = (denomId: string) => {
+      if (pointsMap.has(denomId)) return pointsMap.get(denomId)!;
+      if (denomId === "den1") return 50;
+      if (denomId === "den2") return 150;
+      if (denomId === "den3") return 500;
+      if (denomId === "den4") return 1000;
+      if (denomId === "den5") return 2500;
+      return 0;
+    };
+
+    hasanatDistributions.forEach(d => {
+      const pts = (d.quantity || 1) * getDenomPoints(d.denominationId);
+      if (inRange(d.issuedDate, rangeA.from, rangeA.to)) {
+        const m = getMonthIndex(d.issuedDate);
+        if (m >= 0) bucketA[m] += pts;
+      }
+      if (inRange(d.issuedDate, rangeB.from, rangeB.to)) {
+        const m = getMonthIndex(d.issuedDate);
+        if (m >= 0) bucketB[m] += pts;
+      }
+    });
+  } else if (lowerCat === "students" || lowerCat === "enrollments") {
+    enrollments.forEach(e => {
+      const date = e.enrolledDate || e.createdDate || rangeA.from;
+      if (inRange(date, rangeA.from, rangeA.to)) {
+        const m = getMonthIndex(date);
+        if (m >= 0) bucketA[m] += 1;
+      }
+      if (inRange(date, rangeB.from, rangeB.to)) {
+        const m = getMonthIndex(date);
+        if (m >= 0) bucketB[m] += 1;
+      }
+    });
+  } else if (lowerCat === "examinations" || lowerCat === "academic") {
+    const examMap = new Map<string, any>();
+    exams.forEach(ex => examMap.set(ex.id, ex));
+
+    examResults.forEach(r => {
+      const ex = examMap.get(r.examId);
+      if (!ex) return;
+      const isPass = r.marksObtained >= ex.passingMarks;
+      const val = isPass ? 1 : 0;
+      if (inRange(ex.date, rangeA.from, rangeA.to)) {
+        const m = getMonthIndex(ex.date);
+        if (m >= 0) {
+          bucketA[m] += val;
+          countA[m] += 1;
+        }
+      }
+      if (inRange(ex.date, rangeB.from, rangeB.to)) {
+        const m = getMonthIndex(ex.date);
+        if (m >= 0) {
+          bucketB[m] += val;
+          countB[m] += 1;
+        }
+      }
+    });
+  } else {
+    return getMockDateRangeData();
+  }
+
+  const result: DateRangeDataItem[] = [];
+  for (let i = 0; i < 12; i++) {
+    const hasData = countA[i] > 0 || countB[i] > 0 || bucketA[i] > 0 || bucketB[i] > 0;
+    if (hasData) {
+      let valA = bucketA[i];
+      let valB = bucketB[i];
+
+      if (lowerCat === "attendance" || lowerCat === "examinations" || lowerCat === "academic") {
+        valA = countA[i] > 0 ? Math.round((bucketA[i] / countA[i]) * 100) : 0;
+        valB = countB[i] > 0 ? Math.round((bucketB[i] / countB[i]) * 100) : 0;
+      }
+
+      result.push({
+        month: monthNames[i],
+        a: valA,
+        b: valB
+      });
+    }
+  }
+
+  if (result.length === 0) {
+    const startM = getMonthIndex(rangeA.from);
+    const endM = getMonthIndex(rangeA.to);
+    const s = startM >= 0 ? startM : 0;
+    const e = endM >= 0 ? endM : 2;
+    for (let i = s; i <= e; i++) {
+      result.push({ month: monthNames[i], a: 0, b: 0 });
+    }
+  }
+
+  return result;
 }
 
 function buildContactsDateRangeComparison(
@@ -100,12 +359,21 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     return [yearA, yearB].filter((y) => Number.isFinite(y));
   }, [isContacts, mode, rangeA.from, rangeB.from]);
 
+  const { isAuthenticated } = useAuth();
   const { data: reportData } = useContactsReportAnalytics({
     enabled: isContacts,
     compareYears,
   });
   const sessions = useSessionsCollection();
   const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(() => sessions.filter((s) => s.id !== "all").map(s => ({ id: s.id, name: s.name })), [sessions]);
+
+  const enrollments = useLiveCollection("enrollments");
+  const attendanceRecords = useLiveCollection("attendance_records");
+  const financeInvoices = useLiveCollection("finance_invoices");
+  const hasanatDistributions = useLiveCollection("hasanat_distributions");
+  const examResults = useLiveCollection("exam_results");
+  const exams = useLiveCollection("exams");
+  const denoms = useLiveCollection("hasanat_denoms");
 
   const LIFECYCLE_OPTIONS = useMemo(() => {
     const field = (fieldConfig.fields?.basic || []).find((f) => f.key === "lifecycleStage");
@@ -130,16 +398,65 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
 
   const data = useMemo(() => {
     if (mode === "sessions") {
-      if (isContacts && reportData?.analytics) {
-        return computeContactsStageComparison(reportData.analytics, valA, valB);
+      if (isContacts) {
+        if (reportData?.analytics) {
+          return computeContactsStageComparison(reportData.analytics, valA, valB);
+        }
+        return [];
+      }
+      if (isAuthenticated) {
+        return computeDynamicSessionComparison(
+          sessions,
+          enrollments,
+          attendanceRecords,
+          financeInvoices,
+          hasanatDistributions,
+          examResults,
+          exams,
+          denoms,
+          valA,
+          valB,
+        );
       }
       return getSessionCompData(valA, valB);
     }
     if (isContacts) {
       return buildContactsDateRangeComparison(reportData?.monthlyByYear, rangeA, rangeB);
     }
+    if (isAuthenticated) {
+      return computeDynamicDateRangeComparison(
+        category,
+        enrollments,
+        attendanceRecords,
+        financeInvoices,
+        hasanatDistributions,
+        examResults,
+        exams,
+        denoms,
+        rangeA,
+        rangeB,
+      );
+    }
     return getMockDateRangeData();
-  }, [mode, isContacts, reportData, valA, valB, rangeA, rangeB]);
+  }, [
+    mode,
+    isContacts,
+    reportData,
+    valA,
+    valB,
+    rangeA,
+    rangeB,
+    isAuthenticated,
+    sessions,
+    enrollments,
+    attendanceRecords,
+    financeInvoices,
+    hasanatDistributions,
+    examResults,
+    exams,
+    denoms,
+    category,
+  ]);
 
   return (
     <motion.div

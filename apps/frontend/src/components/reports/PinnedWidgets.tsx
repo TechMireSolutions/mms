@@ -1455,7 +1455,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                 next = [...widgets, savedWidget];
               }
               setWidgets(next);
-              localStorage.setItem("kpi_custom_widgets", JSON.stringify(next));
+              saveObject("kpi_custom_widgets", next);
               setIsBuilderOpen(false);
               setEditingWidgetId(null);
               window.dispatchEvent(new Event("local-database-update"));

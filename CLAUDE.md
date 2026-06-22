@@ -7,7 +7,7 @@ Madrasa Management System monorepo. Full agent guide: [AGENTS.md](AGENTS.md).
 ```bash
 pnpm install && pnpm typecheck
 pnpm install && ./restart_servers.sh   # local dev (screen)
-bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
+bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 ```
 
 ## Where standards live
@@ -16,12 +16,12 @@ bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
 |------|-------|--------|
 | **Claude Code** (this) | `.claude/rules/*.md` | `.claude/skills/*/SKILL.md` |
 | **Cursor** | `.cursor/rules/*.mdc` | `.cursor/skills/` |
-| **Antigravity** | `.agents/rules/*.md` (`.agent/` symlink) | `.agents/skills/` |
+| **Antigravity** | `.agent/rules/*.md` | `.agent/skills/` |
 
-**Canonical edit flow:** change `.cursor/rules/*.mdc` or `.agents/skills/*/SKILL.md`, then:
+**Canonical edit flow:** change `.cursor/rules/*.mdc` or `.agent/skills/*/SKILL.md`, then:
 
 ```bash
-bash .agents/scripts/sync-all.sh
+bash .agent/scripts/sync-all.sh
 ```
 
 ## Always-on rules (no `paths` — load every session)

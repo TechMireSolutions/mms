@@ -1,8 +1,8 @@
 # MMS Project Skills
 
-Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover these from `description` frontmatter; Antigravity reads `.agent/skills/` (symlink → `.agents/skills/`).
+Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover these from `description` frontmatter; Antigravity reads `.agent/skills/`.
 
-**Antigravity:** start with [antigravity-workspace](antigravity-workspace/SKILL.md). Manifest: [.agents/skills-manifest.json](../.agents/skills-manifest.json)
+**Antigravity:** start with [antigravity-workspace](antigravity-workspace/SKILL.md). Manifest: [.agent/skills-manifest.json](../skills-manifest.json)
 
 ## Skills index
 
@@ -11,11 +11,11 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [antigravity-workspace](antigravity-workspace/SKILL.md) | Antigravity orientation, rules/skills sync |
 | [mms-dev-setup](mms-dev-setup/SKILL.md) | Install, run servers, env, typecheck |
 | [mms-frontend](mms-frontend/SKILL.md) | Frontend pages, hooks, apiClient, Vite, FE tests |
-| [mms-module-page](mms-module-page/SKILL.md) | New module or three-tier page — `globle1.md` + `globle2.md` |
-| [mms-module-work](mms-module-work/SKILL.md) | Command centre and Work tier — metrics, directory, drawer, bulk actions (`globle1.md` §2–§3) |
-| [mms-module-setup](mms-module-setup/SKILL.md) | Module Setup tier — Fields, Preferences, audit, field guards (`globle2.md` §5–§7) |
-| [mms-background-jobs](mms-background-jobs/SKILL.md) | Queued processing — large exports, imports, bulk ops, dedup scans, progress, artifacts (`globle2.md` §8) |
-| [mms-contacts](mms-contacts/SKILL.md) | Contact CRM — **globle1 reference module** (contract, dedup, soft delete, RBAC, sync outbox) |
+| [mms-module-page](mms-module-page/SKILL.md) | New module or three-tier page — `globle.md` |
+| [mms-module-work](mms-module-work/SKILL.md) | Command centre and Work tier — metrics, directory, drawer, bulk actions (`globle.md` §2–§3) |
+| [mms-module-setup](mms-module-setup/SKILL.md) | Module Setup tier — Fields, Preferences, audit, field guards (`globle.md` §5–§7) |
+| [mms-background-jobs](mms-background-jobs/SKILL.md) | Queued processing — large exports, imports, bulk ops, dedup scans, progress, artifacts (`globle.md` §8) |
+| [mms-contacts](mms-contacts/SKILL.md) | Contact CRM — **globle.md reference module** (contract, dedup, soft delete, RBAC, sync outbox) |
 | [mms-fields-registry](mms-fields-registry/SKILL.md) | Custom fields, tabs, column registry |
 | [mms-data-sync](mms-data-sync/SKILL.md) | db.ts, sync API (admin GET), REST vs collections, Query cache |
 | [mms-auth-users](mms-auth-users/SKILL.md) | Cookies, auth artifacts, 2FA, `authenticateTenant`, users |
@@ -41,7 +41,7 @@ Frontend work: rules `mms-frontend`, `mms-query`, `mms-hooks`, `mms-ui-*`, `mms-
 ## Verify setup
 
 ```bash
-bash .cursor/skills/mms-dev-setup/scripts/verify-env.sh
+bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 pnpm install && pnpm typecheck && pnpm test
 ```
 
@@ -49,14 +49,14 @@ pnpm install && pnpm typecheck && pnpm test
 
 | Tool | Skills path |
 |------|-------------|
-| Antigravity | `.agents/skills/` (canonical) |
+| Antigravity | `.agent/skills/` (canonical) |
 | Cursor | `.cursor/skills/` |
 | Claude Code | `.claude/skills/` |
 
-Identical skill folders in all three. Workflows in `.agents/workflows/` (Claude reference: `.claude/docs/workflows/`). Rules in `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`.
+Identical skill folders in all three. Workflows in `.agent/workflows/` (Claude reference: `.claude/docs/workflows/`). Rules in `.agent/rules/`, `.cursor/rules/`, `.claude/rules/`.
 
 After editing skills or rules:
 
 ```bash
-bash .agents/scripts/sync-all.sh
+bash .agent/scripts/sync-all.sh
 ```

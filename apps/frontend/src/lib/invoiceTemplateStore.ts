@@ -1,5 +1,5 @@
 import { DEFAULT_BRANDING_SETTINGS, formatBrandingAddress, mergeBrandingSettings, type BrandingSettings } from "@mms/shared";
-import { getObject } from "./db";
+import { getObject, saveObject } from "./db";
 import { PRINT_NEUTRAL } from "./printBrandingTokens";
 
 const STORAGE_KEY = "mms_invoice_template";
@@ -368,25 +368,7 @@ export function getDefaultTemplate(): InvoiceTemplate {
  * @returns {InvoiceTemplate} The loaded template config.
  */
 export function loadTemplate(): InvoiceTemplate {
-  try {
-    let raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      const legacy = localStorage.getItem("madrasa_invoice_template");
-      if (legacy) {
-        raw = legacy;
-        localStorage.setItem(STORAGE_KEY, legacy);
-        try {
-          localStorage.removeItem("madrasa_invoice_template");
-        } catch (err) {
-          console.warn("[invoiceTemplateStore] Failed to remove legacy template key:", err);
-        }
-      }
-    }
-    if (raw) return JSON.parse(raw) as InvoiceTemplate;
-  } catch {
-    // Ignore error and fall back
-  }
-  return getDefaultTemplate();
+  return getObject<InvoiceTemplate>(STORAGE_KEY, getDefaultTemplate());
 }
 
 /**
@@ -396,7 +378,7 @@ export function loadTemplate(): InvoiceTemplate {
  * @returns {void}
  */
 export function saveTemplate(tmpl: InvoiceTemplate): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tmpl));
+  saveObject(STORAGE_KEY, tmpl);
 }
 
 export const AVAILABLE_FIELDS = [

@@ -51,6 +51,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
   const uniqueDates = [...new Set(records.map(r => r.date as string))].sort().reverse().slice(0, 7).reverse();
 
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
   const attendanceData: AttendancePoint[] = days.map((dayLabel, index) => {
     const targetDate = uniqueDates.find(d => {
       const dateObj = new Date(d);
@@ -64,11 +65,11 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
       const present = dayRecords.filter(r => r.status === "present" || r.status === "late").length;
       return {
         day: dayLabel,
-        rate: total > 0 ? Math.round((present / total) * 100) : 90
+        rate: total > 0 ? Math.round((present / total) * 100) : (isAuth ? 0 : 90)
       };
     }
 
-    const defaultRate = defaultAttendanceData[index]?.rate || 90;
+    const defaultRate = isAuth ? 0 : (defaultAttendanceData[index]?.rate || 90);
     return {
       day: dayLabel,
       rate: defaultRate
@@ -229,10 +230,11 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
 
   const activeColors = HASANAT_THEMES[colorTheme] || HASANAT_THEMES.mixed;
 
+  const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
   const hasanatData: HasanatPoint[] = [
-    { name: "Memorisation", value: memorisationPoints || 2800, color: activeColors.mem },
-    { name: "Attendance",   value: attendancePoints || 1400, color: activeColors.att },
-    { name: "Behavior",     value: behaviorPoints || 1440, color: activeColors.beh }
+    { name: "Memorisation", value: memorisationPoints || (isAuth ? 0 : 2800), color: activeColors.mem },
+    { name: "Attendance",   value: attendancePoints || (isAuth ? 0 : 1400), color: activeColors.att },
+    { name: "Behavior",     value: behaviorPoints || (isAuth ? 0 : 1440), color: activeColors.beh }
   ];
   
   const total = hasanatData.reduce((s, d) => s + d.value, 0);

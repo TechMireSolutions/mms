@@ -1,11 +1,11 @@
 ---
 name: mms-contacts
-description: Implements Contact module — globle1.md reference implementation. Forms, Kanban, cards, dedup/merge, soft delete, field RBAC, sync outbox, ContactConfigContext, /api/contacts REST. Use when editing contacts, CRM, duplicates, exports, or contact Setup.
+description: Implements Contact module — globle.md reference implementation. Forms, Kanban, cards, dedup/merge, soft delete, field RBAC, sync outbox, ContactConfigContext, /api/contacts REST. Use when editing contacts, CRM, duplicates, exports, or contact Setup.
 ---
 
 # MMS Contacts Workflow
 
-Contacts is the **reference module** for [`globle1.md`](../../globle1.md) / `mms-module-architecture.mdc`. Copy patterns to new modules before inventing structure.
+Contacts is the **reference module** for [`globle.md`](../../globle.md) / `mms-module-architecture.mdc`. Copy patterns to new modules before inventing structure.
 
 ## Module contract
 
@@ -76,7 +76,7 @@ Tests: `headers: { host: 'demo.localhost' }`. E2E: `e2e/contacts.api.spec.ts`, `
 4. Columns: `canViewContactColumn`
 5. API: `canWriteContacts` / `canDeleteContacts` / `canReadContacts`
 
-## globle1.md feature map (Contacts)
+## globle.md feature map (Contacts)
 
 | § | Feature | Status |
 |---|---------|--------|

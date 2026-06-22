@@ -1,11 +1,11 @@
 ---
 name: mms-module-setup
-description: Implements or modifies module Setup tier per globle2.md — Fields sub-tab, Preferences sub-tab, field dependency checks, setup audit, prefs cascade. Use when editing ContactsSettingsPanel, CustomFieldsBuilder, module preferences, or Setup sub-tabs.
+description: Implements or modifies module Setup tier per globle.md — Fields sub-tab, Preferences sub-tab, field dependency checks, setup audit, prefs cascade. Use when editing ContactsSettingsPanel, CustomFieldsBuilder, module preferences, or Setup sub-tabs.
 ---
 
 # MMS Module Setup Workflow
 
-**Source:** [`globle2.md`](../../globle2.md) §5–§7, §13 · Rules: `mms-module-setup.mdc`, `mms-fields.mdc`, `mms-config.mdc`
+**Source:** [`globle.md`](../../globle.md) §5–§7, §13 · Rules: `mms-module-setup.mdc`, `mms-fields.mdc`, `mms-config.mdc`
 
 ## When to use
 
@@ -21,8 +21,8 @@ For full module page shell, use skill **`mms-module-page`**. For field types/reg
 ```
 Setup (tier id: setup)
 ├── SubTabBar
-│   ├── fields       ← §6 globle2
-│   ├── preferences  ← §7 globle2
+│   ├── fields       ← §6 globle.md
+│   ├── preferences  ← §7 globle.md
 │   └── {contract.setupSubTabs extras}
 ```
 
@@ -30,8 +30,8 @@ Register sub-tab ids in `{Module}ModuleContract.setupSubTabs`.
 
 ## Contacts reference map
 
-| globle2 | Component / file |
-|---------|------------------|
+| globle.md | Component / file |
+|-----------|------------------|
 | §5 audit | `logSetupAudit` → `POST /api/contacts/setup-audit` |
 | §6 Fields | `ContactsSettingsPanel.tsx` (mode `fields`) |
 | §6.6 delete guard | `getContactFieldRemovalIssues()` in `@mms/shared` |

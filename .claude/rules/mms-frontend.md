@@ -7,189 +7,56 @@ paths:
   - "apps/frontend/package.json"
 ---
 
-# MMS Frontend
+# MMS Frontend Architecture
 
-App shell, bundles, and cross-cutting FE concerns. Module/UI detail lives in scoped rules (`mms-ui-*`, `mms-contacts`, `mms-query`, etc.).
+## 1. Directory & Provider Setup
 
-## Source layout
+- **Providers**: Configured in `providers/AppProviders.tsx` as:
+  ```
+  RootErrorBoundary → AuthProvider → QueryClientProvider → Router → BrandingPaletteProvider → TenantProvider → PlatformAuthProvider → ContactConfigProvider
+  ```
+- **Bootstrap Auth**: `AuthenticatedApp` blocks the UI only on the initial check (`isLoadingAuth && !authChecked`) and renders routes inside a `Suspense` container.
+- **Paths**: Path alias `@/` points to `apps/frontend/src/`.
 
-| Path | Role |
-|------|------|
-| `pages/` | Route-level module shells, auth, apex landing |
-| `providers/` | Root provider composition (`AppProviders.tsx`) |
-| `components/{module}/` | Feature UI by domain |
-| `components/ui/` | shadcn/Radix primitives + MMS composites (`PageHeader`, `FormModal`, `SubTabBar`, `ErrorBoundary`) |
-| `components/routing/` | `HostRoutes`, guards, `PageNotFound`, `RouteLoadingFallback`, `RootErrorBoundary` |
-| `components/layout/` | `AppLayout`, sidebar |
-| `components/dev/` | Dev-only tooling (`QueryDevtools`) |
-| `hooks/` | Reusable hooks — server state + live collections |
-| `lib/apiClient.ts`, `lib/db.ts`, `lib/notify.ts` | Core infrastructure |
-| `lib/contexts/` | React contexts (`AuthContext`, `TenantContext`, …) |
-| `lib/config/` | `env`, `routes`, `navConfig`, `tenantConfig`, `settingsNavConfig`, `settingsSectionComponents`, `moduleIcons` |
-| `lib/settingsPreview.ts`, `lib/settingsPreviewStore.ts` | Live settings preview overlay |
-| `lib/settingsGlobalDraft.ts`, `lib/settingsModulesDraft.ts` | Global/Modules panel draft helpers |
-| `lib/backup/` | Backup download, history entry, restore types |
-| `lib/extractLogoBrandColors.ts` | Canvas logo sampling → `@mms/shared` palette |
-| `lib/routing/` | `appNavigate`, `routePrefetch` |
-| `lib/data/` | Module seed/mock collections (`*Data.ts`) |
-| `lib/contactConfig/` | Contact validation, prefs, profile metrics (split from context) |
+---
 
-Path alias: `@/` → `apps/frontend/src/`
+## 2. Routing & Lazy Loading
 
-## API client (required)
+- **Single Tree**: `HostRoutes.tsx` manages routing gates for both apex and tenant hosts (never mount both concurrently).
+- **Navigation**: Imperative route redirecting uses `appNavigate.ts`. Sidebar navigations trigger pre-fetching on hover.
+- **Lazy Loading**: Route pages must be lazy-loaded using `React.lazy` + `<Suspense>` with a semantic accessibility fallback.
 
-All **internal** MMS API calls use `lib/apiClient.ts`:
+---
 
-```ts
-import { apiFetch, apiJson } from '@/lib/apiClient';
+## 3. API Client & Storage
 
-const data = await apiJson<{ students: Student[] }>('/api/students');
-await apiFetch('/api/students/1', { method: 'DELETE' });
-```
+- **Fetch Wrapper**: All internal API calls must use `apiFetch` or `apiJson` from `lib/apiClient.ts` with `credentials: 'include'`.
+- **Session Security**: Cookies (`mms_access` / `mms_refresh`) are managed entirely by the browser. `apiClient` must never read or write tokens to `localStorage`.
+- **Media Optimization**: Image inputs must be optimized client-side via `optimizeImage` before persistence.
+- **Dynamic Imports**: Large libraries (`xlsx`, `jspdf`, `jspdf-autotable`) must be imported dynamically.
 
-| Do | Don't |
-|----|-------|
-| `apiFetch` / `apiJson` with `credentials: 'include'` | Raw `fetch('/api/...')` in hooks, contexts, or lib helpers |
-| External OAuth (Google People API, etc.) | — may use raw `fetch` to third-party URLs only |
+---
 
-**Session:** httpOnly cookies (`mms_access` / `mms_refresh`) — `apiClient` does **not** read or write `localStorage` tokens. Backend `attachAccessTokenFromCookie` copies cookie → `Authorization` for JWT verify (`mms-auth.md`).
+## 4. Data Layer Patterns
 
-## Bundle size
+- **REST Domains (Students, Teachers, Contacts)**: TanStack Query + `apiJson` with paginated retrieval and batch resolution `/resolve` endpoints.
+- **Document Store (Legacy)**: Fetch data via `useLiveCollection()` and sync local mutations through the `local-database-update` event bus.
+- **Prohibitions**: Avoid bare `fetch` inside `useEffect` for API interactions, and do not use `setInterval` polling loops for live refreshing.
 
-Dynamic `import()` for heavy libs — never static entry imports:
+---
 
-- `jspdf`, `jspdf-autotable`, `xlsx`, `html2canvas`
+## 5. Responsive & Accessibility Gates
 
-Track main chunk on `pnpm build`; investigate regressions > 10% without new features.
+- Use mobile-first Tailwind utilities and touch targets of at least 44×44px.
+- Use `ResponsiveAccordionTabs` for tab shells on small screens.
+- Every module Work directory and settings shell must be wrapped in a local `ErrorBoundary`.
 
-## Images
+---
 
-Every image upload **must** be optimized client-side before persisting — `@mms/shared`:
+## 6. Build & Quality Verification
 
-- File inputs → `optimizeImage(file)` (AVIF → WebP → original)
-- Canvas exports → `canvasToOptimizedDataUrl(canvas, quality)`
-- Never persist raw `File`/`FileReader` data URLs or call `canvas.toDataURL` directly
-
-## Routing
-
-| Piece | Path |
-|-------|------|
-| Entry | `src/main.tsx` → `App.tsx` |
-| Route tree | `components/routing/HostRoutes.tsx` (apex vs tenant — **single tree**, never both) |
-| Guards | `ProtectedRoute`, `GuestRoute`, `TenantBootGate`, `ApexWorkspaceGate` |
-| Path constants | `lib/config/routes.ts` (`ROUTES`, `TENANT_APP_PATHS`, `PUBLIC_PATHS`) |
-| Nav | `lib/config/navConfig.tsx` |
-| Imperative nav | `lib/routing/appNavigate.ts` via `RouterBridge` (logout redirects) |
-| Route prefetch | `lib/routing/routePrefetch.ts` on sidebar link hover/focus |
-
-- Lazy-load pages with `React.lazy` + `Suspense`; fallback uses `t('common.loading')` + `role="status"`
-- No orphan pages without routes
-- Do not add duplicate auth wrappers in `App.tsx` — guards live in `components/routing/` (`mms-auth.md`)
-- **Apex:** landing, onboarding, workspace gate — module paths redirect to gate
-- **Tenant:** `ProtectedRoute` → `AppLayout` → module pages
-
-## Provider tree (`providers/AppProviders.tsx`)
-
-```
-RootErrorBoundary → AuthProvider → QueryClientProvider → Router → BrandingPaletteProvider → TenantProvider → PlatformAuthProvider → ContactConfigProvider
-```
-
-- `App.tsx` mounts `<AppProviders>` then `<AuthenticatedApp />` (auth gate + lazy `Suspense` routes)
-- `AuthenticatedApp` blocks only on **initial** `GET /api/auth/me` (`isLoadingAuth && !authChecked`) — not on login submit
-- `Toaster` + `QueryDevtools` sit inside `QueryClientProvider`, outside `Router`
-- `ContactConfigProvider` mounts **once** at root — never on child pages (`mms-contacts.md`)
-
-## TanStack Query defaults
-
-`lib/query-client.ts`: `refetchOnWindowFocus: false`, `retry: 1`. Per-hook `staleTime: 30_000` for REST lists.
-
-## Data fetching
-
-| Data | Pattern | Owner |
-|------|---------|-------|
-| Dedicated REST (`/api/students`, `/api/contacts`, workspace) | TanStack Query + `apiJson` | `mms-query.md` |
-| Local collections (most modules) | `useLiveCollection` + `saveCollection` | `mms-data-layer.md` |
-| Cross-view refresh (local) | `local-database-update` event | `mms-data-layer.md` |
-
-### Module inventory (current)
-
-| Module / area | Data pattern |
-|---------------|--------------|
-| Students | Query paginated (`useStudentsPaginated`, `useStudentMutations`, `useStudentsByIds`, metrics/aggregates) |
-| Teachers | Query paginated (`useTeachersPaginated`, `useTeacherMutations`, `useTeachersByIds`, metrics/aggregates) |
-| Contacts | Query paginated (`useContactsPaginated`, `useContactMutations`, `useContactsByIds`) |
-| Workspace registry (apex) | Query (`useWorkspaceRegistry`) |
-| Dashboard | Server metrics/aggregates for students/teachers/contacts + `useLiveCollection` for other modules |
-| Finance, Accounting, Obligations, Hasanat, Sessions, Users, Attendance, Enrollments, Examinations, QuestionBank | `useLiveCollection` only |
-| Auth / tenant branding | `useEffect` + `apiJson` — migrate to Query when touched |
-
-**Query-first modules:** paginated list + resolve-by-id + metrics/aggregates — no full-collection fetch on module mount (`globle2 §10`).
-
-Avoid bare `fetch` in `useEffect` for server state.
-
-## Settings page (`/settings`)
-
-Thin orchestrator pattern — detail in `mms-settings-navigation.md` + `mms-config.md`.
-
-| Piece | Path |
-|-------|------|
-| Page shell | `pages/Settings.tsx` — `SETTINGS_NAV` + `SETTINGS_SECTION_COMPONENTS` |
-| Nav config | `lib/config/settingsNavConfig.ts` |
-| Lazy sections | `lib/config/settingsSectionComponents.tsx` |
-| Panels | `components/settings/{Global,Branding,Theme,SystemModules,Backup}*.tsx` |
-| Sub-sections | `components/settings/backup/*`, `components/settings/modules/ModuleSettingsNavGrid.tsx` |
-| Shared shell | `components/ui/SettingsShell.tsx`, `SettingsFormActions.tsx` |
-
-New settings section checklist: add id to `SETTINGS_SECTIONS` + `SETTINGS_NAV` + `SETTINGS_SECTION_COMPONENTS`; panel uses `useSettingsDraft` or domain draft hook; preview via `settingsPreview.ts`; i18n via `t()`.
-
-## Large module files
-
-Split by concern — keep page files thin:
-
-| Module | Subfolder |
-|--------|-----------|
-| Contact config | `lib/contactConfig/` (profileMetrics, prefsStorage, validationSchema) |
-| Pinned widgets | `components/reports/pinnedWidgets/` (types, widgetDataUtils, widgetDefaults) |
-| Settings backup | `hooks/useBackupRestore.ts` + `lib/backup/*` + `components/settings/backup/*` |
-| Settings modules | `components/settings/modules/ModuleSettingsNavGrid.tsx` |
-
-Re-export from the original entry file so imports stay stable.
-
-## Real-time
-
-- **Now:** `local-database-update` event bus for localStorage sync
-- **Target:** WebSockets for server push
-- **Banned:** `setInterval` / `refetchInterval` polling loops
-
-## Responsive
-
-- Mobile-first Tailwind breakpoints
-- Min 44×44px touch targets
-- Modals/drawers usable at 320px width
-- Flex/Grid + `min-w-0` — prevent overflow horizontal scroll
-- Multi-tab shells: `ResponsiveAccordionTabs` (`mms-ui-tabs.md`)
-
-## Resilience & a11y
-
-- Lazy route `Suspense` fallbacks: accessible loading text (`t('common.loading')`)
-- Module pages: `ErrorBoundary` on Work/Reports content (`mms-observability.md`)
-- New UI: keyboard + `aria-label` baseline — `mms-a11y.md`
-- API/query failures: `notify.error` with `t()` — no silent `catch`
-
-## Testing
-
-| Layer | Location |
-|-------|----------|
-| Unit | Vitest + `happy-dom` (`vitest.config.ts`); colocate `*.test.ts` |
-| E2E | `e2e/smoke.spec.ts`, `e2e/interactive.spec.ts` (repo root, Playwright) |
-
-- Mock `fetch` at boundaries; test `apiClient` sends `credentials: 'include'`
-- Expand Playwright for login/onboard when touching auth (`mms-testing.md`)
-
-## Quality gate
-
-After substantive edits:
-
+After frontend edits, verify typecheck, linting, and tests:
 ```bash
 cd apps/frontend && pnpm typecheck && pnpm lint && pnpm test
 ```
+Vitest unit tests run under `happy-dom`. Playwright integration tests are stored under the root `e2e/` folder.

@@ -76,7 +76,7 @@ Update `mms-migration-status.mdc` **Recently resolved** row when fully done.
 After changing standards: edit `.cursor/rules/*.mdc`, then:
 
 ```bash
-bash .agents/scripts/sync-rules.sh
+bash .agent/scripts/sync-rules.sh
 ```
 
-Copy skill changes to both `.cursor/skills/` and `.agents/skills/`.
+Copy skill changes to both `.cursor/skills/` and `.agent/skills/`.

@@ -1,17 +1,17 @@
 ---
-description: Module command centre and Work tier rules from globle1.md sections 2-3
+description: Module command centre and Work tier rules from globle.md sections 2-3
 paths:
   - "apps/frontend/src/pages/**/*.tsx"
   - "apps/frontend/src/components/**"
   - "apps/frontend/src/hooks/use*PageState.ts"
   - "apps/frontend/src/hooks/use*PageActions.ts"
   - "packages/shared/src/*ModuleContract.ts"
-  - "globle1.md"
+  - "globle.md"
 ---
 
 # MMS Module Work Tier
 
-Human-readable source: [`globle1.md`](../../globle1.md) sections 2-3. Overall shell: `mms-module-architecture.md`; tier isolation: `mms-module-isolation.md`.
+Human-readable source: [`globle.md`](../../globle.md) sections 2-3. Overall shell: `mms-module-architecture.md`; tier isolation: `mms-module-isolation.md`.
 
 Use this rule when changing a module command centre, Work tab, directory, drawer, filters, bulk actions, or per-user column preferences.
 
@@ -19,7 +19,7 @@ Use this rule when changing a module command centre, Work tab, directory, drawer
 
 Every standard module has an always-visible command centre above `work | reports | setup`.
 
-| globle1 | Requirement | Pattern |
+| globle.md | Requirement | Pattern |
 |---------|-------------|---------|
 | 2.1 Metrics | Permission-scoped totals, shown count, pending/incomplete/duplicate warnings | `ContactsCommandMetrics` |
 | 2.2 Integrity | Dedup/merge tools with explicit user confirmation | `DuplicateDetection`, module service helpers |

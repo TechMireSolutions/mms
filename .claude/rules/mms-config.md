@@ -16,14 +16,14 @@ paths:
   - "apps/frontend/src/lib/ContactConfigContext.tsx"
   - "apps/frontend/src/lib/contactFieldsStore.ts"
   - "apps/frontend/src/lib/contactConfig/**"
-  - "globle2.md"
+  - "globle.md"
 ---
 
 # MMS Configuration
 
-See also: **`mms-settings-navigation.md`** for `/settings` scope · **`mms-module-setup.md`** for module Setup Preferences (globle2.md §7).
+See also: **`mms-settings-navigation.md`** for `/settings` scope · **`mms-module-setup.md`** for module Setup Preferences (globle.md §7).
 
-## globle2.md §7 — module preferences (Setup tier)
+## globle.md §7 — module preferences (Setup tier)
 
 | § | Requirement | Contacts |
 |---|-------------|----------|

@@ -45,7 +45,7 @@ function urgencyBadge(days: number): UrgencyBadge {
  * @returns {React.ReactElement} The overdue obligations widget.
  */
 export default function OverdueObligationsWidget({ title }: { title?: string }) {
-  const overdueStudents = useLiveCollection<OverdueStudent>("overdue_obligations", DEFAULT_OVERDUE_STUDENTS);
+  const overdueStudents = useLiveCollection<OverdueStudent>("overdue_obligations", []);
 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<number>>(new Set());

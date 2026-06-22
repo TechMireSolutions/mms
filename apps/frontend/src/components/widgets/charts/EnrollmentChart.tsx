@@ -64,7 +64,8 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
     }).length;
 
     const baselineIdx = months.findIndex(item => item.key === m.key);
-    const baseline = defaultEnrollmentData[baselineIdx]?.students || 200;
+    const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
+    const baseline = isAuth ? 0 : (defaultEnrollmentData[baselineIdx]?.students || 200);
     return {
       month: m.label,
       students: count > 0 ? count : baseline

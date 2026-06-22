@@ -2,9 +2,9 @@
 trigger: model_decision
 ---
 
-# MMS Module Cross-Cutting (globle2.md)
+# MMS Module Cross-Cutting (globle.md)
 
-Human-readable source: [`globle2.md`](../../globle2.md) §8–§14. Foundation (§1–§4): [`globle1.md`](../../globle1.md). Setup (§5–§7): `mms-module-setup.md`.
+Human-readable source: [`globle.md`](../../globle.md) (Universal Module Architecture & Logic Schema). Setup (§5–§7): `mms-module-setup.md`.
 
 Summary index in `mms-module-architecture.md` — this rule owns **implementation detail** for post-Setup behaviour.
 

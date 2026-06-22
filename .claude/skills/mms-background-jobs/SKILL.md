@@ -1,11 +1,11 @@
 ---
 name: mms-background-jobs
-description: Implements or reviews MMS background jobs and queued processing from globle2.md section 8: large exports, imports, bulk operations, dedup scans, progress UI, download artifacts, tenant/user scoping, RBAC, and audit.
+description: Implements or reviews MMS background jobs and queued processing from globle.md section 8: large exports, imports, bulk operations, dedup scans, progress UI, download artifacts, tenant/user scoping, RBAC, and audit.
 ---
 
 # MMS Background Jobs Workflow
 
-Source: `globle2.md` section 8. Rules: `mms-background-jobs.mdc`, `mms-module-crosscutting.mdc`, `mms-security.mdc`, `mms-rbac.mdc`.
+Source: `globle.md` section 8. Rules: `mms-background-jobs.mdc`, `mms-module-crosscutting.mdc`, `mms-security.mdc`, `mms-rbac.mdc`.
 
 Use this skill when adding or changing background processing, export/download artifacts, bulk operation progress, job tray UX, or queued sync recovery.
 

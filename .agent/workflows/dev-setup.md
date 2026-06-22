@@ -9,7 +9,7 @@ description: Install dependencies, verify environment, and start MMS dev servers
 1. Load skill: `mms-dev-setup`
 2. Run environment check:
    ```bash
-   bash .agents/skills/mms-dev-setup/scripts/verify-env.sh
+   bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
    ```
 3. Install and typecheck:
    ```bash

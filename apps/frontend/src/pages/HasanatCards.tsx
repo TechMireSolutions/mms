@@ -126,7 +126,7 @@ export default function HasanatCards() {
             </div>
           )}
           
-          {effectiveTab === "work" && effectiveSubTab === "overview"     && <HasanatDashboard />}
+          {effectiveTab === "work" && effectiveSubTab === "overview"     && <HasanatDashboard denoms={denoms} batches={batches} distributions={distributions} />}
           {effectiveTab === "work" && effectiveSubTab === "stock"         && <StockManager batches={batches} denoms={denoms} onUpdate={(b) => saveCollection("hasanat_batches", b)} />}
           {effectiveTab === "work" && effectiveSubTab === "distribute"    && (
             <DistributionManager

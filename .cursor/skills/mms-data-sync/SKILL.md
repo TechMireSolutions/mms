@@ -48,7 +48,7 @@ import {
 |---------|----------|
 | `useLiveCollection` + `saveCollection` | Legacy module CRUD via `/api/db/collections/*` |
 | TanStack Query + `apiJson` | Dedicated REST (`/api/students`, `/api/contacts`, `/api/teachers`, workspace) |
-| Paginated Work + resolve | `useStudentsPaginated`, `useContactsPaginated`, `useXxxByIds` — no full-list fetch (globle2 §10) |
+| Paginated Work + resolve | `useStudentsPaginated`, `useContactsPaginated`, `useXxxByIds` — no full-list fetch (globle.md §10) |
 | Metrics / aggregates | KPI, dashboard, reports — `useStudentsMetrics`, `useContactsReportAnalytics`, widget-aggregates |
 
 **Writes on REST modules:** use `useXxxMutations()` only — mutations invalidate Query; do not also `saveCollection` in the page for the same entity.
