@@ -41,7 +41,6 @@ import {
 
 const ContactForm = lazy(() => import("../components/contacts/ContactForm"));
 const DuplicateDetection = lazy(() => import("../components/contacts/DuplicateDetection"));
-const WhatsAppPanel = lazy(() => import("../components/contacts/WhatsAppPanel"));
 const SmsPanel = lazy(() => import("../components/contacts/SmsPanel"));
 const ContactsSettingsPanel = lazy(() => import("../components/contacts/ContactsSettingsPanel"));
 const ContactSyncPanel = lazy(() => import("../components/contacts/ContactSyncPanel"));
@@ -234,8 +233,6 @@ function ContactsInner() {
     setEditContact,
     showDuplicates,
     setShowDuplicates,
-    whatsappTargets,
-    setWhatsappTargets,
     smsTargets,
     setSmsTargets,
     hasActiveFilters,
@@ -271,6 +268,18 @@ function ContactsInner() {
     handleRestore,
     showDeletedArchives: viewingDeleted,
   } = state;
+
+  const handleOpenWhatsApp = (targets: Contact[]) => {
+    targets.forEach((contact, index) => {
+      const phone = getPrimaryPhone(contact);
+      if (phone) {
+        const cleanNum = phone.replace(/\D/g, "");
+        window.setTimeout(() => {
+          window.open(`https://wa.me/${cleanNum}`, "_blank");
+        }, index * 500);
+      }
+    });
+  };
 
   useEffect(() => {
     setFetchGateTab(activeTab);
@@ -489,7 +498,7 @@ function ContactsInner() {
                           <button
                             type="button"
                             disabled={!waClickable}
-                            onClick={() => setWhatsappTargets(waTargets)}
+                            onClick={() => handleOpenWhatsApp(waTargets)}
                             aria-label={t("contacts.whatsappBulk", { count: waTargets.length })}
                             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold text-primary-foreground bg-success transition-all ${
                               waClickable ? "hover:scale-[1.02] active:scale-[0.98]" : "opacity-40 cursor-not-allowed"
@@ -591,7 +600,7 @@ function ContactsInner() {
                           onDelete={handleDelete}
                           onRestore={handleRestore}
                           showArchived={viewingDeleted}
-                          onWhatsApp={(targets) => setWhatsappTargets(targets)}
+                          onWhatsApp={handleOpenWhatsApp}
                           onSms={(targets) => setSmsTargets(targets)}
                           allContacts={allContactsForLinks}
                           canWrite={canWrite}
@@ -608,7 +617,7 @@ function ContactsInner() {
                           onEdit={handleEdit as (contact: object) => void} onDelete={handleDelete}
                           onRestore={handleRestore}
                           showArchived={viewingDeleted}
-                          onWhatsApp={(targets) => setWhatsappTargets(targets as Contact[])}
+                          onWhatsApp={handleOpenWhatsApp}
                           onSms={(targets) => setSmsTargets(targets as Contact[])}
                           onSort={handleSort}
                           sortField={sortField} sortDir={sortDir}
@@ -681,7 +690,6 @@ function ContactsInner() {
               canWrite={canWrite}
             />
           )}
-          {whatsappTargets && <WhatsAppPanel contacts={whatsappTargets} onClose={() => setWhatsappTargets(null)} />}
           {smsTargets && <SmsPanel contacts={smsTargets} onClose={() => setSmsTargets(null)} />}
         </AnimatePresence>
       </Suspense>

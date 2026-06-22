@@ -26,7 +26,6 @@ import {
 } from '@mms/shared';
 import { fetchCollection, persistCollection } from './dbSyncService.js';
 import { contactListSchema } from '../validation/contactSchemas.js';
-import { handleContactSaveOrUpdate } from './whatsapp/whatsAppService.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
 import { invalidateDuplicateScanCache } from './contactDuplicateScanService.js';
 
@@ -166,7 +165,6 @@ export async function upsertContact(contact: Contact): Promise<{
   const saved = contacts[index >= 0 ? index : contacts.length - 1];
   await persistCollection('contacts', contacts);
   await invalidateDuplicateScanCache();
-  await handleContactSaveOrUpdate(saved);
   return { contact: saved, created, restoredFromDelete: restoredFromDelete || undefined };
 }
 
@@ -182,7 +180,6 @@ export async function updateContactById(id: string, contact: Contact): Promise<C
   contacts[index] = contactWithId;
   await persistCollection('contacts', contacts);
   await invalidateDuplicateScanCache();
-  await handleContactSaveOrUpdate(contactWithId);
   return contactWithId;
 }
 

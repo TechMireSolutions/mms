@@ -37,7 +37,6 @@ const mockSoftDeleteContactById = vi.fn();
 const mockRestoreContactById = vi.fn();
 const mockBulkSoftDeleteContacts = vi.fn();
 const mockBulkRestoreContacts = vi.fn();
-const mockGetWhatsAppPreferences = vi.fn();
 const mockGetUserColumnPrefs = vi.fn();
 const mockSetUserColumnPrefs = vi.fn();
 const mockListContactsSavedReports = vi.fn();
@@ -57,11 +56,6 @@ vi.mock('../services/contactService.js', () => ({
   restoreContactById: (...args: unknown[]) => mockRestoreContactById(...args),
   bulkSoftDeleteContacts: (...args: unknown[]) => mockBulkSoftDeleteContacts(...args),
   bulkRestoreContacts: (...args: unknown[]) => mockBulkRestoreContacts(...args),
-}));
-
-vi.mock('../services/whatsapp/whatsAppService.js', () => ({
-  getWhatsAppPreferences: (...args: unknown[]) => mockGetWhatsAppPreferences(...args),
-  handleContactSaveOrUpdate: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../services/contactPrefsService.js', () => ({
@@ -169,12 +163,6 @@ describe('contacts REST routes', () => {
     mockRestoreContactById.mockReset().mockResolvedValue({ ...sampleContact, deletedAt: undefined });
     mockBulkSoftDeleteContacts.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
     mockBulkRestoreContacts.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
-    mockGetWhatsAppPreferences.mockReset().mockResolvedValue({
-      autoCheckEnabled: true,
-      excludedCountryCodes: [],
-      verificationTrigger: 'IMMEDIATE_ON_SAVE',
-      uiIndicatorStyle: { color: '#075E54', label: 'WhatsApp' },
-    });
     mockGetUserColumnPrefs.mockReset().mockResolvedValue([]);
     mockSetUserColumnPrefs.mockReset().mockResolvedValue(undefined);
     mockListContactsSavedReports.mockReset().mockResolvedValue([]);
@@ -710,24 +698,6 @@ describe('contacts REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockRecordAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'contact.setup' }));
-    await app.close();
-  });
-
-  it('GET /api/contacts/:id/whatsapp-status returns status metadata', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/contacts/c1/whatsapp-status',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
-      },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toMatchObject({
-      whatsappStatus: expect.any(String),
-      uiIndicatorStyle: expect.objectContaining({ color: '#075E54' }),
-    });
     await app.close();
   });
 });

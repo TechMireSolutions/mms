@@ -281,7 +281,7 @@ export function getDisplayName(contact: Partial<Contact>): string {
  * @returns True if WhatsApp enabled, false otherwise.
  */
 export function hasWhatsApp(contact: Partial<Contact>): boolean {
-  return contact.whatsappStatus === "REGISTERED";
+  return !!getPrimaryPhone(contact);
 }
 
 /**

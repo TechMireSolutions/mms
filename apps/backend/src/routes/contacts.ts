@@ -73,7 +73,6 @@ import {
   runGoogleContactsSync,
   setContactGoogleSyncConfig,
 } from '../services/contactGoogleSyncService.js';
-import { getWhatsAppPreferences } from '../services/whatsapp/whatsAppService.js';
 import {
   createContactsSavedReport,
   deleteContactsSavedReport,
@@ -760,33 +759,6 @@ export default async function contactRoutes(
       return reply.send({ success: true, ...result });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to bulk restore contacts' });
-    }
-  });
-
-  fastify.get('/:id/whatsapp-status', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-
-    try {
-      const contacts = await loadContacts({ includeDeleted: true });
-      const contact = contacts.find((c) => String(c.id) === params.data.id);
-      if (!contact) {
-        return reply.status(404).send({ type: 'not_found', message: `Contact with ID "${params.data.id}" not found` });
-      }
-
-      const prefs = await getWhatsAppPreferences();
-      const defaultStatus: WhatsAppStatus = 'PENDING';
-      return reply.send({
-        whatsappStatus: (contact.whatsappStatus as WhatsAppStatus) || defaultStatus,
-        lastCheckedAt: contact.lastCheckedAt || null,
-        uiIndicatorStyle: prefs.uiIndicatorStyle,
-      });
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Failed to retrieve WhatsApp status';
-      return reply.status(500).send({ type: 'server_error', message: msg });
     }
   });
 }
