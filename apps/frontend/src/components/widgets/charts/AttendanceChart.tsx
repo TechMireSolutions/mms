@@ -8,8 +8,8 @@ import {
 } from "recharts";
 import { attendanceData as defaultAttendanceData, AttendancePoint, HasanatPoint } from '@/lib/data/dashboardData';
 import { getCollection } from "../../../lib/db";
-import { ATTENDANCE_RECORDS, AttendanceRecord } from '@/lib/data/attendanceData';
-import { DISTRIBUTIONS, Distribution } from '@/lib/data/hasanatData';
+import { AttendanceRecord } from '@/lib/data/attendanceData';
+import { Distribution } from '@/lib/data/hasanatData';
 
 const AttTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
   if (!active || !payload?.length) return null;

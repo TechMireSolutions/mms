@@ -8,6 +8,10 @@ import { useSessionsCollection } from '@/hooks/useSessions';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import useTranslation from "@/hooks/useTranslation";
 import usePermissions from "@/hooks/usePermissions";
+import { INVOICES } from "@/lib/data/financeData";
+import { ATTENDANCE_RECORDS } from "@/lib/data/attendanceData";
+import { DISTRIBUTIONS } from "@/lib/data/hasanatData";
+import { EXAM_RESULTS } from "@/lib/data/examinationData";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import type { AppTranslationKey } from "@mms/shared";
 import {

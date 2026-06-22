@@ -1,6 +1,6 @@
 import React from "react";
 import { TrendingUp } from "lucide-react";
-import { INVOICES, Invoice } from '@/lib/data/financeData';
+import { Invoice } from '@/lib/data/financeData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 
 /**

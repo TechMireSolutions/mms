@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Award } from "lucide-react";
 import { Exam, ExamResult } from '@/lib/data/examinationData';
-import { useStudentsCollection } from "@/hooks/useStudents";
+import { useStudentsByIds } from "@/hooks/useStudents";
+import type { Student } from "@/lib/data/studentsData";
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import type { Enrollment } from "@/lib/data/enrollmentData";
@@ -59,12 +60,19 @@ export default function ResultsView({
   const [certStudent, setCertStudent] = useState<RankedResult | null>(null);
 
   const exam = exams.find((e) => e.id === selectedExam);
-  const students = useStudentsCollection();
+  const studentIdsForExam = useMemo(() => {
+    if (!exam) return [];
+    return results
+      .filter((r) => r.examId === exam.id)
+      .map((r) => r.studentId);
+  }, [exam, results]);
+
+  const { data: students = [] } = useStudentsByIds(studentIdsForExam);
   const sessions = useSessionsCollection();
   const enrollments = useLiveCollection<Enrollment>("enrollments");
 
   const studentsById = useMemo(
-    () => new Map(students.map((student) => [String(student.id), student])),
+    () => new Map(students.map((student: Student) => [String(student.id), student])),
     [students],
   );
   const classNamesById = useMemo(

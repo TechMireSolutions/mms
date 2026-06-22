@@ -9,7 +9,7 @@ import {
   AttendanceStatus,
 } from '@/lib/data/attendanceData';
 import { useSessionsCollection } from '@/hooks/useSessions';
-import { useStudentsCollection } from '@/hooks/useStudents';
+import { useStudentsByIds } from '@/hooks/useStudents';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import type { Enrollment } from '@/lib/data/enrollmentData';
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
@@ -63,7 +63,6 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
   );
   const sessions = useSessionsCollection();
   const enrollments = useLiveCollection<Enrollment>("enrollments");
-  const allStudents = useStudentsCollection();
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>
@@ -93,20 +92,18 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
   const trendClassId = filters.classId || classesToShow[0]?.id || "";
   const monthlyTrend = useMemo(() => getMonthlyTrend(trendClassId, records), [trendClassId, records]);
 
-  // Student rates for first class
-  const students = useMemo(() => {
+  const studentIds = useMemo(() => {
     if (!trendClassId) return [];
-    const studentIds = new Set(
-      enrollments
-        .filter((enrollment) =>
-          enrollment.classId === trendClassId &&
-          enrollment.status !== "cancelled" &&
-          enrollment.status !== "completed"
-        )
-        .map((enrollment) => String(enrollment.studentId)),
-    );
-    return allStudents.filter((student) => studentIds.has(String(student.id)));
-  }, [allStudents, enrollments, trendClassId]);
+    return enrollments
+      .filter((enrollment) =>
+        enrollment.classId === trendClassId &&
+        enrollment.status !== "cancelled" &&
+        enrollment.status !== "completed"
+      )
+      .map((enrollment) => enrollment.studentId);
+  }, [enrollments, trendClassId]);
+
+  const { data: students = [] } = useStudentsByIds(studentIds);
 
   /** Abbreviated name + attendance rate entry for chart display. */
   interface StudentRateEntry { name: string; rate: number; }

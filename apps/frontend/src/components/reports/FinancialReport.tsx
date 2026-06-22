@@ -5,7 +5,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { INVOICES, Invoice } from '@/lib/data/financeData';
+import { Invoice } from '@/lib/data/financeData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";

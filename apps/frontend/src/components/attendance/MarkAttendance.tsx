@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { ClassStudent, ATTENDANCE_STATUSES, STATUS_MAP, AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useSessionsCollection } from '@/hooks/useSessions';
-import { useStudentsCollection } from '@/hooks/useStudents';
+import { useStudentsByIds } from '@/hooks/useStudents';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { getObject } from "../../lib/db";
 import type { Student } from "@/lib/data/studentsData";
@@ -263,7 +263,18 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
   const { can } = usePermissions();
   const sessions = useSessionsCollection();
   const enrollments = useLiveCollection<Enrollment>("enrollments");
-  const enrolledStudents = useStudentsCollection();
+  const studentIds = useMemo(() => {
+    if (!filters.classId) return [];
+    return enrollments
+      .filter((enrollment) =>
+        enrollment.classId === filters.classId &&
+        enrollment.status !== "cancelled" &&
+        enrollment.status !== "completed"
+      )
+      .map((enrollment) => enrollment.studentId);
+  }, [enrollments, filters.classId]);
+
+  const { data: enrolledStudents = [] } = useStudentsByIds(studentIds);
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((s) =>

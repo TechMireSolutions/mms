@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { DISTRIBUTIONS, Distribution } from '@/lib/data/hasanatData';
+import { Distribution } from '@/lib/data/hasanatData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
