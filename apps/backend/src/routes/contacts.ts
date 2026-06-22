@@ -761,4 +761,5 @@ export default async function contactRoutes(
       return reply.status(500).send({ type: 'database_error', message: 'Failed to bulk restore contacts' });
     }
   });
+  // end of contacts routes
 }
