@@ -1,4 +1,3 @@
-import { DEFAULT_BRANDING_SETTINGS, resolveBrandingChartPaletteHex } from "@mms/shared";
 
 export const ROLES = ["admin", "teacher", "accountant"] as const;
 export type UserRole = typeof ROLES[number];
