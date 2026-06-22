@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import {
   type Workspace,
   type PublicWorkspaceSummary,
@@ -18,6 +19,8 @@ import {
   purgeTenantDataBySubdomain,
   runInTransaction,
 } from '../db/database.js';
+import { getDb } from '../db/dbClient.js';
+import { collections } from '../db/schema.js';
 import { getRequestTenant, runWithTenant } from '../lib/tenantContext.js';
 
 async function listWorkspaces(): Promise<Workspace[]> {
@@ -179,21 +182,42 @@ export async function createWorkspace(data: {
   tagline?: string;
   country?: string;
 }): Promise<Workspace> {
-  const subdomain = normalizeSubdomainInput(data.subdomain);
-  await assertSubdomainAvailable(subdomain);
+  return runInTransaction(async () => {
+    const subdomain = normalizeSubdomainInput(data.subdomain);
+    if (!isValidSubdomain(subdomain)) {
+      throw Object.assign(new Error('Invalid subdomain. Use 2–63 lowercase letters, numbers, and hyphens.'), {
+        statusCode: 400,
+      });
+    }
 
-  const workspace: Workspace = {
-    id: randomBytes(8).toString('hex'),
-    subdomain,
-    madrasaName: data.madrasaName,
-    tagline: data.tagline,
-    country: data.country,
-    createdAt: new Date().toISOString(),
-    enabled: true,
-  };
+    const db = getDb();
+    // We lock the workspaces collection row to serialize concurrent writes and prevent race conditions
+    const rows = await db
+      .select()
+      .from(collections)
+      .where(eq(collections.name, WORKSPACES_COLLECTION))
+      .for('update');
 
-  const workspaces = await listWorkspaces();
-  workspaces.push(workspace);
-  await saveCollection(WORKSPACES_COLLECTION, workspaces);
-  return workspace;
+    const workspaces: Workspace[] = rows[0] ? (JSON.parse(rows[0].data) as Workspace[]) : [];
+
+    if (workspaces.some((ws) => ws.subdomain === subdomain)) {
+      throw Object.assign(new Error('This workspace subdomain is already taken.'), {
+        statusCode: 409,
+      });
+    }
+
+    const workspace: Workspace = {
+      id: randomBytes(8).toString('hex'),
+      subdomain,
+      madrasaName: data.madrasaName,
+      tagline: data.tagline,
+      country: data.country,
+      createdAt: new Date().toISOString(),
+      enabled: true,
+    };
+
+    workspaces.push(workspace);
+    await saveCollection(WORKSPACES_COLLECTION, workspaces);
+    return workspace;
+  });
 }
