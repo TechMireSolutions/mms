@@ -29,6 +29,13 @@
       "when": 1782101919141,
       "tag": "0003_absurd_living_mummy",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782162000000,
+      "tag": "0004_updated_at_constraints",
+      "breakpoints": true
     }
   ]
 }

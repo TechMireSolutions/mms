@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { StoredTenantUser } from '@mms/shared';
 import { resolveTenantLoginEmail } from '@mms/shared';
 import { getDb } from '../dbClient.js';
@@ -85,10 +85,10 @@ function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUserRow {
 export async function countTenantUsersByWorkspace(workspaceSubdomain: string): Promise<number> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const rows = await getDb()
-    .select({ id: tenantUsers.id })
+    .select({ count: sql<string>`count(*)` })
     .from(tenantUsers)
     .where(eq(tenantUsers.workspaceSubdomain, subdomain));
-  return rows.length;
+  return parseInt(rows[0]?.count ?? '0', 10);
 }
 
 export async function listTenantUsersByWorkspace(workspaceSubdomain: string): Promise<TenantUserRow[]> {
@@ -147,7 +147,7 @@ export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
   if (existing) {
     await db
       .update(tenantUsers)
-      .set(columns)
+      .set({ ...columns, updatedAt: new Date() })
       .where(eq(tenantUsers.id, columns.id));
     return;
   }

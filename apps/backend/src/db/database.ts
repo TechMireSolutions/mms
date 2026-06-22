@@ -1,8 +1,10 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
-import { sql, eq } from 'drizzle-orm';
+import { sql, eq, like } from 'drizzle-orm';
 import { join } from 'path';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from './schema.js';
 import { resolveBackendRoot } from '../config/loadEnv.js';
 import { getMinimalCollectionsForSeed, getMinimalObjects } from './minimalSeeds.js';
@@ -32,6 +34,19 @@ import { purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { setDb } from './dbClient.js';
 
+// ---------------------------------------------------------------------------
+// Transaction propagation
+// AsyncLocalStorage threads the active tx client through nested helper calls
+// so that saveCollection / getCollection inside a transaction actually use it.
+// ---------------------------------------------------------------------------
+type DbClient = NodePgDatabase<typeof schema>;
+const txStorage = new AsyncLocalStorage<DbClient>();
+
+/** Returns the active transaction client if inside runInTransaction, otherwise the root db. */
+function activeDb(): DbClient {
+  return txStorage.getStore() ?? getRootDb();
+}
+
 function resolveCollectionStorageName(name: string): string {
   const tenant = getRequestTenant();
   if (!tenant || name === WORKSPACES_COLLECTION) return name;
@@ -47,31 +62,38 @@ function resolveObjectStorageKey(key: string): string {
 const { Pool } = pg;
 
 let pool: pg.Pool;
-let db: ReturnType<typeof drizzle<typeof schema>>;
+let _rootDb: DbClient;
 
-/**
- * Initializes the PostgreSQL database, creates the necessary schema,
- * and seeds default data if the database is empty.
- *
- * @returns {Promise<void>}
- */
+function getRootDb(): DbClient {
+  if (!_rootDb) throw new Error('Database not initialized');
+  return _rootDb;
+}
+
 export async function initDb(): Promise<void> {
   try {
     const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/mms';
-    
+    const useSsl = process.env.DATABASE_SSL === 'true';
+
     pool = new Pool({
       connectionString,
       max: Number(process.env.PG_POOL_MAX) || 20,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
+      statement_timeout: 30_000,
+      ...(useSsl ? { ssl: { rejectUnauthorized: false } } : {}),
     });
-    
-    db = drizzle(pool, { schema });
-    setDb(db);
+
+    // Prevent unhandled EventEmitter error from crashing the process
+    pool.on('error', (err) => {
+      console.error('[DB Pool] Idle client error:', err);
+    });
+
+    _rootDb = drizzle(pool, { schema });
+    setDb(_rootDb);
 
     // Run Drizzle migrations dynamically on start
     const migrationsFolder = join(resolveBackendRoot(), 'src/db/migrations_drizzle');
-    await migrate(db, { migrationsFolder });
+    await migrate(_rootDb, { migrationsFolder });
 
     // Run pending data migrations — failures are fatal and halt startup
     await runMigration001();
@@ -89,9 +111,9 @@ export async function initDb(): Promise<void> {
     await purgeExpiredAuthArtifacts();
     await ensurePlatformSuperUserFromEnv();
 
-    // Check if seeding is necessary (if no collections exist)
-    const results = await db.select({ count: sql<number>`count(*)` }).from(schema.collections);
-    const count = results[0]?.count ?? 0;
+    // Postgres COUNT(*) returns bigint as a string — parseInt is required
+    const results = await _rootDb.select({ count: sql<string>`count(*)` }).from(schema.collections);
+    const count = parseInt(results[0]?.count ?? '0', 10);
 
     if (count === 0) {
       console.log('Database is empty. Seeding default collections and objects...');
@@ -103,21 +125,12 @@ export async function initDb(): Promise<void> {
   }
 }
 
-/**
- * Seeds the database with default collections and objects.
- *
- * @returns {Promise<void>}
- */
 export async function seedDatabase(): Promise<void> {
   try {
-    // Seed using a transaction block for performance
     await runInTransaction(async () => {
-      // Seed collections
       for (const [name, data] of Object.entries(await getMinimalCollectionsForSeed())) {
         await saveCollection(name, data as unknown[]);
       }
-
-      // Seed objects
       for (const [key, data] of Object.entries(getMinimalObjects())) {
         await saveObject(key, data);
       }
@@ -129,20 +142,12 @@ export async function seedDatabase(): Promise<void> {
   }
 }
 
-/**
- * Retrieves a collection by name.
- *
- * @param {string} name - The collection name.
- * @returns {Promise<unknown[] | null>} The array of objects in the collection, or null if not found.
- */
 export async function getCollection(name: string): Promise<unknown[] | null> {
   try {
     const storageName = resolveCollectionStorageName(name);
-    const rows = await db.select().from(schema.collections).where(eq(schema.collections.name, storageName));
+    const rows = await activeDb().select().from(schema.collections).where(eq(schema.collections.name, storageName));
     const row = rows[0];
-    if (!row) {
-      return null;
-    }
+    if (!row) return null;
     return JSON.parse(row.data) as unknown[];
   } catch (error) {
     console.error(`Error getting collection "${name}":`, error);
@@ -150,21 +155,15 @@ export async function getCollection(name: string): Promise<unknown[] | null> {
   }
 }
 
-/**
- * Saves/overwrites a collection.
- *
- * @param {string} name - The collection name.
- * @param {unknown[]} data - The data array to store.
- * @returns {Promise<void>}
- */
 export async function saveCollection(name: string, data: unknown[]): Promise<void> {
   try {
     const storageName = resolveCollectionStorageName(name);
-    await db.insert(schema.collections)
-      .values({ name: storageName, data: JSON.stringify(data) })
+    const serialized = JSON.stringify(data);
+    await activeDb().insert(schema.collections)
+      .values({ name: storageName, data: serialized })
       .onConflictDoUpdate({
         target: schema.collections.name,
-        set: { data: JSON.stringify(data) }
+        set: { data: serialized },
       });
   } catch (error) {
     console.error(`Error saving collection "${name}":`, error);
@@ -172,20 +171,12 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
   }
 }
 
-/**
- * Retrieves a single object by key.
- *
- * @param {string} key - The object key.
- * @returns {Promise<unknown | null>} The parsed object, or null if not found.
- */
 export async function getObject(key: string): Promise<unknown | null> {
   try {
     const storageKey = resolveObjectStorageKey(key);
-    const rows = await db.select().from(schema.objects).where(eq(schema.objects.key, storageKey));
+    const rows = await activeDb().select().from(schema.objects).where(eq(schema.objects.key, storageKey));
     const row = rows[0];
-    if (!row) {
-      return null;
-    }
+    if (!row) return null;
     return JSON.parse(row.data) as unknown;
   } catch (error) {
     console.error(`Error getting object "${key}":`, error);
@@ -193,21 +184,15 @@ export async function getObject(key: string): Promise<unknown | null> {
   }
 }
 
-/**
- * Saves/overwrites a single object.
- *
- * @param {string} key - The object key.
- * @param {unknown} data - The object data to store.
- * @returns {Promise<void>}
- */
 export async function saveObject(key: string, data: unknown): Promise<void> {
   try {
     const storageKey = resolveObjectStorageKey(key);
-    await db.insert(schema.objects)
-      .values({ key: storageKey, data: JSON.stringify(data) })
+    const serialized = JSON.stringify(data);
+    await activeDb().insert(schema.objects)
+      .values({ key: storageKey, data: serialized })
       .onConflictDoUpdate({
         target: schema.objects.key,
-        set: { data: JSON.stringify(data) }
+        set: { data: serialized },
       });
   } catch (error) {
     console.error(`Error saving object "${key}":`, error);
@@ -221,16 +206,11 @@ export async function deleteObject(key: string): Promise<void> {
   await deleteObjectByStorageKey(storageKey);
 }
 
-/**
- * Retrieves all collections and objects for bulk synchronization.
- *
- * @returns {Promise<{ collections: Record<string, unknown[]>; objects: Record<string, unknown> }>}
- */
 export async function getAllData(): Promise<{ collections: Record<string, unknown[]>; objects: Record<string, unknown> }> {
   try {
     const tenant = getRequestTenant();
     const collections: Record<string, unknown[]> = {};
-    const colRows = await db.select().from(schema.collections);
+    const colRows = await activeDb().select().from(schema.collections);
     for (const row of colRows) {
       if (row.name === WORKSPACES_COLLECTION) continue;
       const parsed = parseTenantScopedStorageKey(row.name);
@@ -243,7 +223,7 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
     }
 
     const objects: Record<string, unknown> = {};
-    const objRows = await db.select().from(schema.objects);
+    const objRows = await activeDb().select().from(schema.objects);
     for (const row of objRows) {
       const parsed = parseTenantScopedStorageKey(row.key);
       const logicalKey = parsed?.logicalKey ?? row.key;
@@ -266,6 +246,7 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
 
 /**
  * Deletes all PostgreSQL rows scoped to a workspace subdomain (collections, objects, tenant users).
+ * Uses LIKE prefix batch deletes instead of per-row sequential deletes.
  * Does not modify the global workspaces registry.
  */
 export async function purgeTenantDataBySubdomain(subdomain: string): Promise<void> {
@@ -274,28 +255,17 @@ export async function purgeTenantDataBySubdomain(subdomain: string): Promise<voi
     throw new Error('Subdomain is required to purge tenant data');
   }
 
-  const colRows = await listCollectionStorageNames();
-  for (const name of colRows) {
-    const parsed = parseTenantScopedStorageKey(name);
-    if (parsed?.subdomain === tenant) {
-      await deleteCollectionByStorageName(name);
-    }
-  }
+  // Tenant-scoped storage keys are prefixed as "subdomain::logicalKey"
+  const prefix = `${tenant}::`;
+  const db = activeDb();
 
-  const objKeys = await listObjectStorageKeys();
-  for (const key of objKeys) {
-    const parsed = parseTenantScopedStorageKey(key);
-    if (parsed?.subdomain === tenant) {
-      await deleteObjectByStorageKey(key);
-    }
-  }
-
+  await db.delete(schema.collections).where(like(schema.collections.name, `${prefix}%`));
+  await db.delete(schema.objects).where(like(schema.objects.key, `${prefix}%`));
   await deleteTenantUsersByWorkspace(tenant);
 }
 
 /**
  * Resets only the current tenant's data and reseeds minimal defaults.
- * Requires tenant context from the request host.
  */
 export async function resetTenantData(): Promise<void> {
   const tenant = getRequestTenant();
@@ -317,19 +287,19 @@ export async function resetTenantData(): Promise<void> {
 
 /**
  * Resets the entire database schema and reseeds the default data.
- *
- * @returns {Promise<void>}
+ * Tables are dropped in dependency-safe order.
  */
 export async function resetDatabase(): Promise<void> {
   try {
-    // Design Boundary Constraint: Drizzle ORM does not support dynamic schema teardown / dropping tables 
-    // at runtime via type-safe query builders. Therefore, administrative DROP statements must execute raw SQL.
-    await db.execute(sql`DROP TABLE IF EXISTS tenant_users;`);
-    await db.execute(sql`DROP TABLE IF EXISTS platform_users;`);
-    await db.execute(sql`DROP TABLE IF EXISTS auth_artifacts;`);
-    await db.execute(sql`DROP TABLE IF EXISTS collections;`);
-    await db.execute(sql`DROP TABLE IF EXISTS objects;`);
-    await db.execute(sql`DROP TABLE IF EXISTS __drizzle_migrations;`);
+    // Design Boundary: Drizzle ORM does not support DROP TABLE at runtime;
+    // administrative teardown requires raw SQL.
+    const db = activeDb();
+    await db.execute(sql`DROP TABLE IF EXISTS tenant_users CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS platform_users CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS auth_artifacts CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS collections CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS objects CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS __drizzle_migrations CASCADE;`);
     await initDb();
   } catch (error) {
     console.error('Error resetting database:', error);
@@ -337,22 +307,15 @@ export async function resetDatabase(): Promise<void> {
   }
 }
 
-/**
- * Runs a callback within a database transaction block.
- *
- * @template T
- * @param {() => Promise<T>} cb - The callback containing operations to run.
- * @returns {Promise<T>} The result of the callback.
- */
 /** Lists all collection storage names (including tenant-prefixed). */
 export async function listCollectionStorageNames(): Promise<string[]> {
-  const colRows = await db.select({ name: schema.collections.name }).from(schema.collections);
+  const colRows = await activeDb().select({ name: schema.collections.name }).from(schema.collections);
   return colRows.map((row) => row.name);
 }
 
 /** Reads a collection by exact storage name (no tenant prefixing). */
 export async function getCollectionByStorageName(name: string): Promise<unknown[] | null> {
-  const rows = await db.select().from(schema.collections).where(eq(schema.collections.name, name));
+  const rows = await activeDb().select().from(schema.collections).where(eq(schema.collections.name, name));
   const row = rows[0];
   if (!row) return null;
   return JSON.parse(row.data) as unknown[];
@@ -360,23 +323,23 @@ export async function getCollectionByStorageName(name: string): Promise<unknown[
 
 /** Deletes a collection row by exact storage name. */
 export async function deleteCollectionByStorageName(name: string): Promise<void> {
-  await db.delete(schema.collections).where(eq(schema.collections.name, name));
+  await activeDb().delete(schema.collections).where(eq(schema.collections.name, name));
 }
 
 /** Deletes an object row by exact storage key. */
 export async function deleteObjectByStorageKey(key: string): Promise<void> {
-  await db.delete(schema.objects).where(eq(schema.objects.key, key));
+  await activeDb().delete(schema.objects).where(eq(schema.objects.key, key));
 }
 
 /** Lists all object storage keys (including tenant-prefixed). */
 export async function listObjectStorageKeys(): Promise<string[]> {
-  const objRows = await db.select({ key: schema.objects.key }).from(schema.objects);
+  const objRows = await activeDb().select({ key: schema.objects.key }).from(schema.objects);
   return objRows.map((row) => row.key);
 }
 
 /** Reads an object by exact storage key (no tenant prefixing). */
 export async function getObjectByStorageKey(key: string): Promise<unknown | null> {
-  const rows = await db.select().from(schema.objects).where(eq(schema.objects.key, key));
+  const rows = await activeDb().select().from(schema.objects).where(eq(schema.objects.key, key));
   const row = rows[0];
   if (!row) return null;
   return JSON.parse(row.data) as unknown;
@@ -400,10 +363,20 @@ export async function closeDatabase(): Promise<void> {
   }
 }
 
+/**
+ * Runs a callback within a database transaction.
+ * Uses AsyncLocalStorage to propagate the tx client to all nested helper calls
+ * so they participate in the same transaction rather than the root connection.
+ * Nested calls are no-ops (they reuse the active tx).
+ */
 export async function runInTransaction<T>(cb: () => Promise<T>): Promise<T> {
+  // Already inside a transaction — reuse it to support nested calls
+  const existing = txStorage.getStore();
+  if (existing) return cb();
+
   try {
-    return await db.transaction(async () => {
-      return await cb();
+    return await getRootDb().transaction(async (tx) => {
+      return txStorage.run(tx as DbClient, cb);
     });
   } catch (error) {
     console.error('Database transaction rolled back due to error:', error);
