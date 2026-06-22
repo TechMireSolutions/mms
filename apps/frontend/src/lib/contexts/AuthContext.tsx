@@ -5,6 +5,7 @@ import { appNavigate } from '../routing/appNavigate';
 import { ROUTES } from '../config/routes';
 import { apiFetch, apiJson } from '../apiClient';
 import { isCurrentHostApex } from '../config/tenantConfig';
+import { getWorkspaceLocalStoragePrefix } from '../db';
 
 export interface AuthError {
   type: 'invalid_credentials' | 'auth_required' | 'connection_error' | 'user_not_registered';
@@ -176,6 +177,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = (shouldRedirect = true): void => {
     clear2FAState();
+    
+    // Clear user-scoped message history and templates cache to prevent leakage on logout
+    if (user?.id) {
+      try {
+        const prefix = getWorkspaceLocalStoragePrefix();
+        localStorage.removeItem(`${prefix}messages`);
+        localStorage.removeItem(`${prefix}whatsappTemplates_u:${user.id}`);
+      } catch (e) {
+        console.error('Failed to clear user-scoped caches on logout:', e);
+      }
+    }
+
     localStorage.removeItem('mms_user');
     setUser(null);
     setIsAuthenticated(false);

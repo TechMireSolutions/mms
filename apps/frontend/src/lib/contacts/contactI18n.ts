@@ -21,6 +21,8 @@ export const ACTIVITY_TYPE_I18N: Record<string, AppTranslationKey> = {
   note: 'contacts.detail.activityNote',
   stage_change: 'contacts.detail.activityStageChange',
   system: 'contacts.detail.activitySystem',
+  sms: 'contacts.sms',
+  whatsapp: 'contacts.whatsapp',
 };
 
 /** Formats registry-driven custom column values for the contacts table. */

@@ -393,3 +393,13 @@ export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "dob",            label: "Date of Birth",  enabled: false, order: 7, sortable: true,  width: 130 },
   { key: "rating",         label: "Rating",         enabled: false, order: 8, sortable: true,  width: 80  },
 ];
+
+export interface Message {
+  id: string;
+  userId: string;
+  contactId: string | number;
+  channel: 'sms' | 'whatsapp';
+  body: string;
+  sentAt: string;
+}
+

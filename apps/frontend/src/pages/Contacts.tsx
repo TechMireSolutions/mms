@@ -41,7 +41,7 @@ import {
 
 const ContactForm = lazy(() => import("../components/contacts/ContactForm"));
 const DuplicateDetection = lazy(() => import("../components/contacts/DuplicateDetection"));
-const SmsPanel = lazy(() => import("../components/contacts/SmsPanel"));
+const MessageComposerPanel = lazy(() => import("../components/contacts/MessageComposerPanel"));
 const ContactsSettingsPanel = lazy(() => import("../components/contacts/ContactsSettingsPanel"));
 const ContactSyncPanel = lazy(() => import("../components/contacts/ContactSyncPanel"));
 
@@ -233,8 +233,8 @@ function ContactsInner() {
     setEditContact,
     showDuplicates,
     setShowDuplicates,
-    smsTargets,
-    setSmsTargets,
+    messagingTarget,
+    setMessagingTarget,
     hasActiveFilters,
     activeFilterCount,
     defaultCountry,
@@ -268,18 +268,6 @@ function ContactsInner() {
     handleRestore,
     showDeletedArchives: viewingDeleted,
   } = state;
-
-  const handleOpenWhatsApp = (targets: Contact[]) => {
-    targets.forEach((contact, index) => {
-      const phone = getPrimaryPhone(contact);
-      if (phone) {
-        const cleanNum = phone.replace(/\D/g, "");
-        window.setTimeout(() => {
-          window.open(`https://wa.me/${cleanNum}`, "_blank");
-        }, index * 500);
-      }
-    });
-  };
 
   useEffect(() => {
     setFetchGateTab(activeTab);
@@ -498,7 +486,7 @@ function ContactsInner() {
                           <button
                             type="button"
                             disabled={!waClickable}
-                            onClick={() => handleOpenWhatsApp(waTargets)}
+                            onClick={() => setMessagingTarget({ channel: "whatsapp", contacts: waTargets })}
                             aria-label={t("contacts.whatsappBulk", { count: waTargets.length })}
                             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold text-primary-foreground bg-success transition-all ${
                               waClickable ? "hover:scale-[1.02] active:scale-[0.98]" : "opacity-40 cursor-not-allowed"
@@ -511,7 +499,7 @@ function ContactsInner() {
                           <button
                             type="button"
                             disabled={!smsClickable}
-                            onClick={() => setSmsTargets(smsReady)}
+                            onClick={() => setMessagingTarget({ channel: "sms", contacts: smsReady })}
                             aria-label={t("contacts.smsBulk", { count: smsReady.length })}
                             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-primary/40 bg-primary/10 text-sm font-semibold text-primary transition-all dark:border-primary/40 dark:bg-primary/20 dark:text-primary ${
                               smsClickable ? "hover:scale-[1.02] active:scale-[0.98]" : "opacity-40 cursor-not-allowed"
@@ -600,8 +588,8 @@ function ContactsInner() {
                           onDelete={handleDelete}
                           onRestore={handleRestore}
                           showArchived={viewingDeleted}
-                          onWhatsApp={handleOpenWhatsApp}
-                          onSms={(targets) => setSmsTargets(targets)}
+                          onWhatsApp={(targets) => setMessagingTarget({ channel: "whatsapp", contacts: targets })}
+                          onSms={(targets) => setMessagingTarget({ channel: "sms", contacts: targets })}
                           allContacts={allContactsForLinks}
                           canWrite={canWrite}
                           canDelete={canDelete}
@@ -617,8 +605,8 @@ function ContactsInner() {
                           onEdit={handleEdit as (contact: object) => void} onDelete={handleDelete}
                           onRestore={handleRestore}
                           showArchived={viewingDeleted}
-                          onWhatsApp={handleOpenWhatsApp}
-                          onSms={(targets) => setSmsTargets(targets as Contact[])}
+                          onWhatsApp={(targets) => setMessagingTarget({ channel: "whatsapp", contacts: targets as Contact[] })}
+                          onSms={(targets) => setMessagingTarget({ channel: "sms", contacts: targets as Contact[] })}
                           onSort={handleSort}
                           sortField={sortField} sortDir={sortDir}
                           columns={tableColumns}
@@ -690,7 +678,13 @@ function ContactsInner() {
               canWrite={canWrite}
             />
           )}
-          {smsTargets && <SmsPanel contacts={smsTargets} onClose={() => setSmsTargets(null)} />}
+          {messagingTarget && (
+            <MessageComposerPanel
+              channel={messagingTarget.channel}
+              contacts={messagingTarget.contacts}
+              onClose={() => setMessagingTarget(null)}
+            />
+          )}
         </AnimatePresence>
       </Suspense>
 

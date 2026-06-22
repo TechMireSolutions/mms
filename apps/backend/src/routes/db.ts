@@ -61,6 +61,23 @@ export default async function dbRoutes(
     }
     try {
       const data = await fetchDatabaseSnapshot();
+      if (data.collections) {
+        // Remove other users' message keys to isolate them
+        const userMsgKey = `messages_u:${user.id}`;
+        for (const key of Object.keys(data.collections)) {
+          if (key.startsWith('messages_u:') && key !== userMsgKey) {
+            delete data.collections[key];
+          }
+        }
+
+        // Remove other users' template keys to isolate them
+        const userTplKey = `whatsappTemplates_u:${user.id}`;
+        for (const key of Object.keys(data.collections)) {
+          if (key.startsWith('whatsappTemplates_u:') && key !== userTplKey) {
+            delete data.collections[key];
+          }
+        }
+      }
       return reply.send(data);
     } catch (error) {
       return reply.status(500).send({
@@ -91,6 +108,22 @@ export default async function dbRoutes(
           payload.collections.contacts = payload.collections.contacts.map((item) =>
             applyTitleCaseToContact(item as Record<string, unknown>),
           );
+        }
+        if (payload.collections) {
+          // Remove other users' message keys to prevent tampering
+          const userMsgKey = `messages_u:${user.id}`;
+          for (const key of Object.keys(payload.collections)) {
+            if (key.startsWith('messages_u:') && key !== userMsgKey) {
+              delete payload.collections[key];
+            }
+          }
+          // Prevent tampering with other users' templates
+          const userTplKey = `whatsappTemplates_u:${user.id}`;
+          for (const key of Object.keys(payload.collections)) {
+            if (key.startsWith('whatsappTemplates_u:') && key !== userTplKey) {
+              delete payload.collections[key];
+            }
+          }
         }
         await withSyncTimeout(synchronizeData(payload));
         return reply.send({ success: true });
@@ -143,7 +176,8 @@ export default async function dbRoutes(
       });
     }
     try {
-      const data = await fetchCollection(name);
+      const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
+      const data = await fetchCollection(storageName);
       if (data === null) {
         return reply.send([]);
       }
@@ -177,7 +211,8 @@ export default async function dbRoutes(
         data = data.map((item) => applyTitleCaseToContact(item as Record<string, unknown>));
       }
 
-      await persistCollection(name, data);
+      const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
+      await persistCollection(storageName, data);
       if (AUDITED_COLLECTIONS.has(name)) {
         await recordAudit({
           userId: user.id,

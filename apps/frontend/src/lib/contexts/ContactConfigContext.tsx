@@ -159,9 +159,10 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const [lifecycleColors, setLifecycleColorsState] = useState<Record<string, { bg: string; text: string; border: string }>>(() =>
     getObject("lifecycleColors", DEFAULT_LIFECYCLE_COLORS)
   );
-  const [whatsappTemplates, setWhatsappTemplatesState] = useState<WhatsAppTemplate[]>(() =>
-    getCollection("whatsappTemplates", DEFAULT_WHATSAPP_TEMPLATES)
-  );
+  const [whatsappTemplates, setWhatsappTemplatesState] = useState<WhatsAppTemplate[]>(() => {
+    const key = user?.id ? `whatsappTemplates_u:${user.id}` : "whatsappTemplates";
+    return getCollection(key, DEFAULT_WHATSAPP_TEMPLATES);
+  });
   const [phoneLabels, setPhoneLabelsState] = useState<string[]>(() =>
     getCollection("phoneLabels", ["Mobile", "Home", "Work", "Other"])
   );
@@ -174,6 +175,12 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const [countryCodes, setCountryCodesState] = useState<Array<{ country: string; code: string }>>(() =>
     getCollection("countryCodes", COUNTRY_CODES)
   );
+
+  useEffect(() => {
+    const templatesKey = user?.id ? `whatsappTemplates_u:${user.id}` : "whatsappTemplates";
+    const loaded = getCollection<WhatsAppTemplate>(templatesKey, DEFAULT_WHATSAPP_TEMPLATES);
+    setWhatsappTemplatesState(loaded);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -233,17 +240,18 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         const subKey = e.key.replace("mms_", "");
         const parsed = safeParseEvent(e, subKey);
         if (parsed) {
+          const currentTemplatesKey = user?.id ? `whatsappTemplates_u:${user.id}` : "whatsappTemplates";
           const COLLECTION_SETTERS: Record<string, (val: unknown) => void> = {
             genders: setGendersState as (val: unknown) => void,
             socialPlatforms: setSocialPlatformsState as (val: unknown) => void,
             relationships: setRelationshipsState as (val: unknown) => void,
             lifecycleStages: setLifecycleStagesState as (val: unknown) => void,
             lifecycleColors: setLifecycleColorsState as (val: unknown) => void,
-            whatsappTemplates: setWhatsappTemplatesState as (val: unknown) => void,
             phoneLabels: setPhoneLabelsState as (val: unknown) => void,
             emailLabels: setEmailLabelsState as (val: unknown) => void,
             addressLabels: setAddressLabelsState as (val: unknown) => void,
             countryCodes: setCountryCodesState as (val: unknown) => void,
+            [currentTemplatesKey]: setWhatsappTemplatesState as (val: unknown) => void,
           };
           COLLECTION_SETTERS[subKey]?.(parsed);
         }
@@ -308,9 +316,10 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     setLifecycleColorsState(val);
   }, []);
   const updateWhatsappTemplates = useCallback((val: WhatsAppTemplate[]) => {
-    saveCollection("whatsappTemplates", val);
+    const templatesKey = user?.id ? `whatsappTemplates_u:${user.id}` : "whatsappTemplates";
+    saveCollection(templatesKey, val);
     setWhatsappTemplatesState(val);
-  }, []);
+  }, [user?.id]);
   const updatePhoneLabels = useCallback((val: string[]) => {
     saveCollection("phoneLabels", val);
     setPhoneLabelsState(val);

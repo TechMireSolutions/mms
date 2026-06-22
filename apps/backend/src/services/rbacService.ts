@@ -14,6 +14,14 @@ const COLLECTION_READ_PERMISSION: Partial<Record<string, Permission>> = {
  * Mapped collections use `@mms/shared` permissions; legacy collections allow staff write roles.
  */
 export function canReadCollection(user: User, collectionName: string): boolean {
+  if (collectionName.startsWith('messages_u:')) {
+    const ownerId = collectionName.split(':')[1];
+    return ownerId === user.id;
+  }
+  if (collectionName.startsWith('whatsappTemplates_u:')) {
+    const ownerId = collectionName.split(':')[1];
+    return ownerId === String(user.id);
+  }
   if (collectionName === 'users') {
     return roleHasPermission(user.role, 'users.manage');
   }
@@ -29,6 +37,14 @@ export function canReadCollection(user: User, collectionName: string): boolean {
  * The `users` collection is restricted to administrators only.
  */
 export function canWriteCollection(user: User, collectionName: string): boolean {
+  if (collectionName.startsWith('messages_u:')) {
+    const ownerId = collectionName.split(':')[1];
+    return ownerId === user.id;
+  }
+  if (collectionName.startsWith('whatsappTemplates_u:')) {
+    const ownerId = collectionName.split(':')[1];
+    return ownerId === String(user.id);
+  }
   if (collectionName === 'users') {
     return user.role === 'admin';
   }

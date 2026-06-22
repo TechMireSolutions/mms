@@ -16,6 +16,7 @@ import useTranslation from '@/hooks/useTranslation';
 import { ACTIVITY_TYPE_I18N } from '@/lib/contacts/contactI18n';
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { apiJson } from "@/lib/apiClient";
+import { getCollection } from "@/lib/db";
 
 const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
   overview: LayoutDashboard,
@@ -36,6 +37,8 @@ const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
   note: FileText,
   stage_change: Zap,
   system: ShieldCheck,
+  sms: MessageSquare,
+  whatsapp: MessageCircle,
 };
 
 import ContactAvatar from "./ContactAvatar";
@@ -94,6 +97,21 @@ export default function ContactDetailDrawer({
   useBodyScrollLock();
   const [c, setC] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
+  const [userMessages, setUserMessages] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setUserMessages([]);
+      return;
+    }
+    const dbKey = `messages_u:${user.id}`;
+    const load = () => {
+      setUserMessages(getCollection(dbKey));
+    };
+    load();
+    window.addEventListener("local-database-update", load);
+    return () => window.removeEventListener("local-database-update", load);
+  }, [user?.id]);
   
   const detailTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.detailTabs || [];
@@ -150,6 +168,21 @@ export default function ContactDetailDrawer({
     }),
     [fields, viewerRole],
   );
+
+  const combinedActivities = useMemo(() => {
+    const noteActs = c.activities || [];
+    const messageActs: ContactActivity[] = userMessages
+      .filter((m) => String(m.contactId) === String(c.id))
+      .map((m) => ({
+        id: m.id,
+        type: m.channel,
+        content: m.body,
+        date: m.sentAt,
+        by: user?.name || t('contacts.detail.systemUser'),
+      }));
+    const all = [...noteActs, ...messageActs];
+    return all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [c.activities, userMessages, c.id, user?.name, t]);
 
   const fieldsToRender = allFields.filter(
     (f) =>
@@ -626,13 +659,13 @@ export default function ContactDetailDrawer({
 
                    <div className="space-y-6 relative pl-3">
                      <div className="absolute left-[3px] top-0 bottom-0 w-0.5 bg-border/50" />
-                     {(!c.activities || c.activities.length === 0) ? (
+                     {(!combinedActivities || combinedActivities.length === 0) ? (
                         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground opacity-30">
                            <History className="w-12 h-12 mb-2" />
                            <p className="text-xs font-bold uppercase tracking-widest">{t('contacts.detail.quietTimeline')}</p>
                         </div>
                      ) : (
-                       c.activities.map((act) => {
+                       combinedActivities.map((act) => {
                           const Icon = ICON_MAP[act.type] || History;
                           return (
                             <div key={act.id} className="relative pl-6 group">

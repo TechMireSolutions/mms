@@ -131,7 +131,7 @@ export function useContactsPageState({
   const [showForm, setShowForm] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [showDuplicates, setShowDuplicates] = useState(false);
-  const [smsTargets, setSmsTargets] = useState<Contact[] | null>(null);
+  const [messagingTarget, setMessagingTarget] = useState<{ channel: 'sms' | 'whatsapp'; contacts: Contact[] } | null>(null);
   const [activeTab, setActiveTab] = useState("work");
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
@@ -498,8 +498,8 @@ export function useContactsPageState({
     setEditContact,
     showDuplicates,
     setShowDuplicates,
-    smsTargets,
-    setSmsTargets,
+    messagingTarget,
+    setMessagingTarget,
     hasActiveFilters,
     activeFilterCount,
     defaultCountry,

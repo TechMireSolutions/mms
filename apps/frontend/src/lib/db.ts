@@ -247,6 +247,7 @@ export async function exportTenantBackup(): Promise<string> {
 }
 
 const BUSINESS_COLLECTIONS = new Set([
+  "messages",
   "contacts",
   "students",
   "teachers",
@@ -277,6 +278,14 @@ const BUSINESS_COLLECTIONS = new Set([
   "accounting_entries",
   "accounting_fiscal_years",
 ]);
+
+/**
+ * Returns true if the collection key is a syncable business collection.
+ * Includes user-scoped template keys.
+ */
+export function isBusinessCollection(key: string): boolean {
+  return BUSINESS_COLLECTIONS.has(key) || key.startsWith("whatsappTemplates_u:") || key.startsWith("messages_u:");
+}
 
 /**
  * Checks if a collection key exists in local storage.
@@ -340,7 +349,7 @@ export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]
       }
     }
     const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
-    if (isAuth && BUSINESS_COLLECTIONS.has(key)) {
+    if (isAuth && (BUSINESS_COLLECTIONS.has(key) || key.startsWith("messages_u:"))) {
       return [] as T[];
     }
     if (defaultData.length === 0) {
