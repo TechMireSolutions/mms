@@ -4,6 +4,10 @@ import {
   DEFAULT_TEACHERS_SETTINGS,
   DEFAULT_SESSIONS_SETTINGS,
   DEFAULT_ATTENDANCE_SETTINGS,
+  DEFAULT_QUESTION_BANK_SETTINGS,
+  DEFAULT_QUESTION_BANK_QUESTIONS,
+  DEFAULT_QUESTION_BANK_TESTS,
+  DEFAULT_QUESTION_BANK_RESULTS,
   WORKSPACES_COLLECTION,
 } from '@mms/shared';
 
@@ -40,6 +44,9 @@ export async function getMinimalCollectionsForSeed(): Promise<Record<string, unk
       minimal[name] = [];
     }
   }
+  minimal['questions'] = DEFAULT_QUESTION_BANK_QUESTIONS;
+  minimal['tests'] = DEFAULT_QUESTION_BANK_TESTS;
+  minimal['assessment_results'] = DEFAULT_QUESTION_BANK_RESULTS;
   minimal['overdue_obligations'] = [
     { id: 1, name: "Ahmad Raza",       obligationType: "Khums",   dueDate: "2026-04-01", amount: 12000, currency: "PKR", daysOverdue: 48 },
     { id: 2, name: "Fatima Noor",      obligationType: "Zakat",   dueDate: "2026-04-10", amount: 8500,  currency: "PKR", daysOverdue: 39 },
@@ -61,5 +68,6 @@ export function getMinimalObjects(): Record<string, unknown> {
     students_settings: objects.students_settings ?? DEFAULT_STUDENTS_SETTINGS,
     sessions_settings: objects.sessions_settings ?? DEFAULT_SESSIONS_SETTINGS,
     attendance_settings: objects.attendance_settings ?? DEFAULT_ATTENDANCE_SETTINGS,
+    question_bank_settings: objects.question_bank_settings ?? DEFAULT_QUESTION_BANK_SETTINGS,
   };
 }

@@ -36,6 +36,7 @@ import { runMigration015 } from './migrations/015_seed_teacher_config.js';
 import { runMigration016 } from './migrations/016_seed_session_config.js';
 import { runMigration017 } from './migrations/017_seed_attendance_config.js';
 import { runMigration018 } from './migrations/018_seed_overdue_obligations.js';
+import { runMigration019 } from './migrations/019_seed_question_bank.js';
 import { deleteTenantUsersByWorkspace } from './repositories/tenantUserRepository.js';
 import { purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
@@ -113,6 +114,7 @@ export async function initDb(): Promise<void> {
     await runMigration016();
     await runMigration017();
     await runMigration018();
+    await runMigration019();
     await purgeExpiredAuthArtifacts();
     await ensurePlatformSuperUserFromEnv();
 
