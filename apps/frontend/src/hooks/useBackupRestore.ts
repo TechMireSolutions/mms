@@ -51,7 +51,11 @@ export interface UseBackupRestoreResult {
   setDragActive: (active: boolean) => void;
   selectedFileName: string | null;
   setSelectedFileName: (name: string | null) => void;
-  lastExportStats: string | null;
+  lastExportStats: {
+    collections: number;
+    objects: number;
+    size: string;
+  } | null;
   safetyStep: boolean;
   confirmPhrase: string;
   runEncryptedExport: (password: string, email: string) => Promise<void>;
@@ -80,7 +84,11 @@ export function useBackupRestore({
   const [clearHistoryOpen, setClearHistoryOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
-  const [lastExportStats, setLastExportStats] = useState<string | null>(null);
+  const [lastExportStats, setLastExportStats] = useState<{
+    collections: number;
+    objects: number;
+    size: string;
+  } | null>(null);
   const [safetyStep, setSafetyStep] = useState(false);
 
   const confirmPhrase = subdomain ?? 'RESTORE';
@@ -171,13 +179,11 @@ export function useBackupRestore({
         const fileName = buildBackupFileName(now, { tenantSlug: subdomain, encrypted: true });
         triggerBackupDownload(fileName, encrypted);
 
-        setLastExportStats(
-          t('backup.exportStats', {
-            collections: stats.collectionCount,
-            objects: stats.objectCount,
-            size: formatBackupSize(encrypted.length),
-          }),
-        );
+        setLastExportStats({
+          collections: stats.collectionCount,
+          objects: stats.objectCount,
+          size: formatBackupSize(encrypted.length),
+        });
 
         persistHistory(
           appendBackupHistory(
