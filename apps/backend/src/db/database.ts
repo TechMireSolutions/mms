@@ -171,6 +171,12 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
         target: schema.collections.name,
         set: { data: serialized },
       });
+
+    const parsed = parseTenantScopedStorageKey(storageName);
+    if (parsed && parsed.logicalKey === 'users') {
+      const { replaceTenantUsersForWorkspace } = await import('./repositories/tenantUserRepository.js');
+      await replaceTenantUsersForWorkspace(parsed.subdomain, data as any[]);
+    }
   } catch (error) {
     console.error(`Error saving collection "${name}":`, error);
     throw error;
