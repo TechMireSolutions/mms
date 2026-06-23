@@ -247,6 +247,7 @@ export async function exportTenantBackup(): Promise<string> {
 }
 
 const BUSINESS_COLLECTIONS = new Set([
+  "overdue_obligations",
   "messages",
   "contacts",
   "students",
