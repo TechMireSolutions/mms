@@ -1,9 +1,22 @@
-import { normalizeStoredStudent, computeStudentsWidgetAggregates, paginateStudents, computeNextGrNumber, findStudentRegistrationConflict, collectStudentLinkedContactIds, type StudentGrNumberSettings, type StudentDuplicateCheckInput, type StudentsListQuery, type StudentsWidgetQuery } from '@mms/shared';
+import {
+  normalizeStoredStudent,
+  computeStudentsWidgetAggregates,
+  paginateStudents,
+  computeNextGrNumber,
+  findStudentRegistrationConflict,
+  collectStudentLinkedContactIds,
+  hydrateStudentFromContacts,
+  type StudentGrNumberSettings,
+  type StudentDuplicateCheckInput,
+  type StudentsListQuery,
+  type StudentsWidgetQuery,
+} from '@mms/shared';
 import {
   studentListSchema,
   type StudentRecord,
 } from '../validation/studentSchemas.js';
 import { defineCollectionCrudService } from './collectionCrudService.js';
+import { fetchCollection } from './dbSyncService.js';
 
 const students = defineCollectionCrudService(
   'students',
@@ -11,7 +24,17 @@ const students = defineCollectionCrudService(
   (record) => normalizeStoredStudent(record) as StudentRecord,
 );
 
-export const loadStudents = students.load;
+export async function loadStudents(): Promise<StudentRecord[]> {
+  const rawRows = await students.load();
+  const contactsData = await fetchCollection('contacts');
+  if (!contactsData || !Array.isArray(contactsData)) {
+    return rawRows;
+  }
+  return rawRows.map((row) =>
+    hydrateStudentFromContacts(row as never, contactsData as never)
+  ) as unknown as StudentRecord[];
+}
+
 export const createStudent = students.create;
 export const updateStudentById = students.updateById;
 export const deleteStudentById = students.deleteById;

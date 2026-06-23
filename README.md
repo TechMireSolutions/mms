@@ -136,8 +136,8 @@ pnpm install && pnpm build
 bash scripts/production/setup-pm2-startup.sh   # PM2 + boot persistence
 bash scripts/apply-production-host-isolation.sh apps/backend/.env
 
-# Daily PostgreSQL backups (cron example):
-# 0 3 * * * /var/www/mmsv2/scripts/production/backup-postgres.sh
+# Daily SQLite backups (cron example):
+# 0 3 * * * /var/www/mmsv2/scripts/production/backup-sqlite.sh
 ```
 
 Required `apps/backend/.env` on server: `JWT_SECRET`, `DATABASE_URL`, `PORT=5002`, `NODE_ENV=production`, `MMS_APP_DOMAIN`.

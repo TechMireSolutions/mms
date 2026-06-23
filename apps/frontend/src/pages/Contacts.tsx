@@ -202,7 +202,6 @@ function ContactsInner() {
     canExport,
     canViewReports,
     canViewSetup,
-    canEditSetup,
     pageActions,
     updatePrefs,
     showDeletedArchives,
@@ -602,11 +601,11 @@ function ContactsInner() {
                         <ContactsTable
                           contacts={workContacts} selected={selected}
                           onSelect={handleSelect} onSelectAll={handleSelectAll}
-                          onEdit={handleEdit as (contact: object) => void} onDelete={handleDelete}
+                          onEdit={handleEdit} onDelete={handleDelete}
                           onRestore={handleRestore}
                           showArchived={viewingDeleted}
-                          onWhatsApp={(targets) => setMessagingTarget({ channel: "whatsapp", contacts: targets as Contact[] })}
-                          onSms={(targets) => setMessagingTarget({ channel: "sms", contacts: targets as Contact[] })}
+                          onWhatsApp={(targets) => setMessagingTarget({ channel: "whatsapp", contacts: targets })}
+                          onSms={(targets) => setMessagingTarget({ channel: "sms", contacts: targets })}
                           onSort={handleSort}
                           sortField={sortField} sortDir={sortDir}
                           columns={tableColumns}

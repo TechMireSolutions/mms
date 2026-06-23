@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Save, Star } from "lucide-react";
-import { getObject, saveObject } from "../../lib/db";
 import {
   type HasanatSettings as HasanatSettingsData,
   DEFAULT_HASANAT_SETTINGS,
@@ -9,6 +8,7 @@ import {
   type ModuleCustomField,
   type ModuleFieldDef,
 } from "@mms/shared";
+import { useHasanatConfig } from "@/hooks/useHasanatConfig";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
@@ -47,8 +47,13 @@ interface HasanatSettingsProps {
 }
 
 export default function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElement {
-  const [data, setData] = useState<HasanatSettingsData>(() => getObject<HasanatSettingsData>("hasanat_settings", DEFAULT_HASANAT_SETTINGS));
+  const { settings, updateSettings } = useHasanatConfig();
+  const [data, setData] = useState<HasanatSettingsData>(settings);
   const [saved, setSaved] = useState<boolean>(false);
+
+  useEffect(() => {
+    setData(settings);
+  }, [settings]);
 
   const upd = (f: keyof HasanatSettingsData, v: HasanatSettingsData[keyof HasanatSettingsData]) => {
     setData((d) => ({ ...d, [f]: v }));
@@ -97,8 +102,8 @@ export default function HasanatSettings({ mode }: HasanatSettingsProps): React.R
   const handleCustomFieldsChange = (newFields: CustomFieldConfig[]) => {
     const coreIds = DEFAULT_HASANAT_FIELD_DEFS.map(f => f.id);
     const newIds = newFields.map(f => f.key);
-    const kept = fieldOrder.filter((id) => coreIds.includes(id) || newIds.includes(id));
-    const added = newIds.filter((id) => !kept.includes(id));
+    const kept = fieldOrder.filter((id: string) => coreIds.includes(id) || newIds.includes(id));
+    const added = newIds.filter((id: string) => !kept.includes(id));
 
     setData((d) => ({
       ...d,
@@ -178,7 +183,7 @@ export default function HasanatSettings({ mode }: HasanatSettingsProps): React.R
       <button
         type="button"
         onClick={() => {
-          saveObject("hasanat_settings", data);
+          updateSettings(data);
           setSaved(true);
           setTimeout(() => setSaved(false), 2500);
         }}

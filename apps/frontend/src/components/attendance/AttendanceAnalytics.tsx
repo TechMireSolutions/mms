@@ -5,9 +5,10 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import {
-  calcClassStats, calcStudentRate, getMonthlyTrend, ATTENDANCE_STATUSES, AttendanceRecord,
+  calcClassStats, calcStudentRate, getMonthlyTrend, AttendanceRecord,
   AttendanceStatus,
 } from '@/lib/data/attendanceData';
+import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useStudentsByIds } from '@/hooks/useStudents';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
@@ -56,6 +57,7 @@ interface AttendanceAnalyticsProps {
  * @returns {React.ReactElement} The rendered analytics dashboard.
  */
 export default function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsProps) {
+  const { statuses } = useAttendanceConfig();
   const { primary, secondary, charts } = useBrandPalette();
   const COLORS = useMemo(
     () => [primary, charts[0], secondary, charts[3]],
@@ -82,11 +84,25 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
     [classesToShow, records]
   );
 
-  const overallRate = useMemo(() => {
-    const totalPresent = classStats.reduce((s, c) => s + c.present + c.late, 0);
-    const totalAll = classStats.reduce((s, c) => s + c.present + c.absent + c.late + c.excused, 0);
-    return totalAll ? Math.round((totalPresent / totalAll) * 100) : 0;
+  const totalStats = useMemo(() => {
+    return classStats.reduce(
+      (acc, c) => {
+        Object.keys(c).forEach((key) => {
+          if (key !== "name" && key !== "rate") {
+            acc[key] = (acc[key] || 0) + (c[key as keyof typeof c] as number || 0);
+          }
+        });
+        return acc;
+      },
+      {} as Record<string, number>
+    );
   }, [classStats]);
+
+  const overallRate = useMemo(() => {
+    const totalPresent = (totalStats.present || 0) + (totalStats.late || 0);
+    const totalAll = Object.keys(totalStats).reduce((sum, key) => sum + (totalStats[key] || 0), 0);
+    return totalAll ? Math.round((totalPresent / totalAll) * 100) : 0;
+  }, [totalStats]);
 
   // Monthly trend (pick selected class or the first available tenant class)
   const trendClassId = filters.classId || classesToShow[0]?.id || "";
@@ -120,15 +136,13 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
   const topStudents = [...studentRates].sort((a, b) => b.rate - a.rate).slice(0, 3);
 
   // Pie data
-  const totalStats = classStats.reduce(
-    (acc, c) => ({ present: acc.present + c.present, absent: acc.absent + c.absent, late: acc.late + c.late, excused: acc.excused + c.excused }),
-    { present: 0, absent: 0, late: 0, excused: 0 }
+  const pieData = useMemo(() =>
+    statuses.map((s: AttendanceStatus) => ({
+      name: s.label,
+      value: totalStats[s.id] ?? 0,
+    })),
+    [statuses, totalStats]
   );
-
-  const pieData = ATTENDANCE_STATUSES.map((s: AttendanceStatus) => ({
-    name: s.label,
-    value: totalStats[s.id as keyof typeof totalStats] ?? 0,
-  }));
 
   return (
     <section className="space-y-6">
@@ -204,11 +218,11 @@ export default function AttendanceAnalytics({ filters, records }: AttendanceAnal
               </PieChart>
             </ResponsiveContainer>
             <div className="space-y-2">
-              {ATTENDANCE_STATUSES.map((s: AttendanceStatus, i: number) => (
+              {statuses.map((s: AttendanceStatus, i: number) => (
                 <div key={s.id} className="flex items-center gap-2 text-xs">
-                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[i] }} />
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
                   <span className="text-muted-foreground">{s.label}</span>
-                  <span className="font-bold text-foreground ml-auto">{totalStats[s.id as keyof typeof totalStats] || 0}</span>
+                  <span className="font-bold text-foreground ml-auto">{totalStats[s.id] || 0}</span>
                 </div>
               ))}
             </div>

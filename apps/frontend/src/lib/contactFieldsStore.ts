@@ -1,9 +1,9 @@
 /**
  * @file contactFieldsStore.ts
- * @description localStorage-backed persistence for contact field configuration.
+ * @description Tenant-cache persistence for contact field configuration.
  *
- * In a production SaaS deployment this would be stored per-madrasa in the
- * database. The store exposes four operations:
+ * The tenant database is the source of truth; the browser cache keeps the
+ * active session responsive. The store exposes these operations:
  *
  *  loadFieldConfig()       — load the active (per-session) config
  *  saveFieldConfig(cfg)    — persist the active config
@@ -34,12 +34,12 @@ import { getObject, saveObject } from "./db";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
- * Returns a deep clone of the hardcoded system defaults.
+ * Returns a deep clone of the shared system schema defaults.
  * Always returns a fresh object so callers can mutate freely.
  *
  * @returns {FieldConfig} The default field configuration.
  */
-function getHardcodedDefaults(): FieldConfig {
+function getSystemDefaults(): FieldConfig {
   const fieldsClone = JSON.parse(JSON.stringify(INITIAL_FIELD_SEED));
 
   return {
@@ -64,7 +64,7 @@ function getHardcodedDefaults(): FieldConfig {
  */
 function migrateConfig(config: unknown): FieldConfig {
   if (!config || typeof config !== "object") {
-    return getHardcodedDefaults();
+    return getSystemDefaults();
   }
 
   const rawConfig = config as Record<string, unknown>;
@@ -72,13 +72,13 @@ function migrateConfig(config: unknown): FieldConfig {
 
   // Since we migrated the schema significantly, if version is < 2, just return defaults.
   if (storedVersion < 2) {
-    return getHardcodedDefaults();
+    return getSystemDefaults();
   }
 
   const cfg = { ...rawConfig } as unknown as Partial<FieldConfig>;
   
   // Populate dynamic tab fields if they are missing
-  const defaults = getHardcodedDefaults();
+  const defaults = getSystemDefaults();
   
   const normalizeTabs = (tabs: any[] | undefined) => {
     if (!Array.isArray(tabs)) return undefined;
@@ -117,7 +117,7 @@ function migrateConfig(config: unknown): FieldConfig {
  */
 export function sanitizeConfig(config: FieldConfig): FieldConfig {
   if (!config || typeof config !== "object") {
-    return getHardcodedDefaults();
+    return getSystemDefaults();
   }
 
   const cfg = { ...config };
@@ -162,12 +162,12 @@ export function sanitizeConfig(config: FieldConfig): FieldConfig {
 
 /**
  * Loads the active field config.
- * Merges missing keys from hardcoded defaults so partial saves are safe.
+ * Merges missing structural keys from shared schema defaults so partial saves are safe.
  *
  * @returns {FieldConfig} The active field configuration.
  */
 export function loadFieldConfig(): FieldConfig {
-  const fallback = getHardcodedDefaults();
+  const fallback = getSystemDefaults();
   const parsed = getObject("contact_field_config", fallback);
   const migrated = migrateConfig(parsed);
 
@@ -191,4 +191,3 @@ export function loadFieldConfig(): FieldConfig {
 export function saveFieldConfig(config: FieldConfig): void {
   saveObject("contact_field_config", { ...config, version: CONFIG_VERSION });
 }
-

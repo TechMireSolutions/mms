@@ -195,8 +195,7 @@ export async function createWorkspace(data: {
     const rows = await db
       .select()
       .from(collections)
-      .where(eq(collections.name, WORKSPACES_COLLECTION))
-      .for('update');
+      .where(eq(collections.name, WORKSPACES_COLLECTION));
 
     const workspaces: Workspace[] = rows[0] ? (JSON.parse(rows[0].data) as Workspace[]) : [];
 

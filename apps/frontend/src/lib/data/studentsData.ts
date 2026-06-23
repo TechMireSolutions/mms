@@ -10,7 +10,7 @@ export interface StudentSession {
   enrolled: number;
   ageMin: number;
   ageMax: number;
-  gender: "male" | "female" | "any";
+  gender: string;
   baseFee: number;
   currency: string;
 }
@@ -22,7 +22,7 @@ export interface Student {
   contactId: number;
   name: string;
   cnic: string;
-  gender: "male" | "female";
+  gender: string;
   dob: string;
   phone: string;
   email: string;
@@ -33,7 +33,7 @@ export interface Student {
   guardianName?: string;
   guardianContactId?: number | null;
   enrolledSessions: string[];
-  status: "active" | "inactive";
+  status: string;
   registeredDate: string;
   discountType: "none" | "sibling" | "financial_aid" | "staff" | "scholarship";
   discountPct: number;
@@ -43,14 +43,6 @@ export interface Student {
 }
 
 export const STUDENTS: Student[] = [];
-
-export const DISCOUNT_TYPES = [
-  { id: "none",          label: "No Discount",    pct: 0 },
-  { id: "sibling",       label: "Sibling Discount", pct: 10 },
-  { id: "financial_aid", label: "Financial Aid",   pct: 25 },
-  { id: "staff",         label: "Staff Child",     pct: 50 },
-  { id: "scholarship",   label: "Full Scholarship", pct: 100 },
-];
 
 export function calcAge(dob: string | null | undefined): number | null {
   if (!dob) return null;

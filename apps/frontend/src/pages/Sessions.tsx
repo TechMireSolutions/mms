@@ -25,24 +25,25 @@ import ModuleReports from "../components/reports/ModuleReports";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import KPISummary from "../components/reports/KPISummary";
 import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
-import { formatDate, getObject } from "../lib/db";
+import { formatDate } from "../lib/db";
 import { useSessionsCollection, useSessionMutations } from "@/hooks/useSessions";
 import { useSessionColumnLayout } from "@/hooks/useSessionColumnLayout";
+import { useSessionConfig } from "@/hooks/useSessionConfig";
 import SessionsCommandMetrics from "@/components/sessions/SessionsCommandMetrics";
 import ModuleColumnCustomizer from "@/components/ui/ModuleColumnCustomizer";
-import { SessionsSettings as SessionsSettingsData, DEFAULT_SESSIONS_SETTINGS } from "@mms/shared";
+import { type AppTranslationKey } from "@mms/shared";
 
-type SessionStatus = "active" | "upcoming" | "completed" | "cancelled";
-type SessionType = typeof SESSION_TYPES[number];
+type SessionStatus = string;
+type SessionType = string;
 
-const STATUS_CLS: Record<SessionStatus, string> = {
+const STATUS_CLS: Record<string, string> = {
   active: "bg-success/10 text-success border-success/20",
   upcoming: "bg-info/10 text-info border-info/20",
   completed: "bg-muted text-muted-foreground border-border",
   cancelled: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
-const TYPE_COLORS: Partial<Record<SessionType, string>> = {
+const TYPE_COLORS: Record<string, string> = {
   "Hifz":            "bg-success/15 text-success",
   "Qaidah":          "bg-info/15 text-info",
   "Tajweed":         "bg-primary/15 text-primary",
@@ -132,7 +133,11 @@ export default function Sessions() {
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const { createSession, updateSession } = useSessionMutations();
-  const settings = getObject<SessionsSettingsData>("sessions_settings", DEFAULT_SESSIONS_SETTINGS);
+  const { settings, statuses, types } = useSessionConfig();
+  
+  const statusOptions = statuses.length > 0 ? statuses : ["active", "upcoming", "completed", "cancelled"];
+  const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
+
   const columnLayout = useSessionColumnLayout();
   const listLayout = (settings.defaultViewLayout || "cards") === "list";
   const showName = columnLayout.isColumnVisible("name");
@@ -186,16 +191,15 @@ export default function Sessions() {
 
   const hasFilters = filterStatus.length > 0 || filterType.length > 0;
 
-  const statuses: SessionStatus[] = ["active", "upcoming", "completed", "cancelled"];
-  const statusLabels = useMemo(
-    () => ({
-      active: t("sessions.status.active"),
-      upcoming: t("sessions.status.upcoming"),
-      completed: t("sessions.status.completed"),
-      cancelled: t("sessions.status.cancelled"),
-    }),
-    [t],
-  );
+  const statusLabels = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const s of statusOptions) {
+      const translationKey = `sessions.status.${s}` as AppTranslationKey;
+      const translated = t(translationKey);
+      map[s] = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+    }
+    return map;
+  }, [statusOptions, t]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
@@ -243,7 +247,7 @@ export default function Sessions() {
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuLabel className="text-xs">Status</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {statuses.map((s) => (
+                  {statusOptions.map((s) => (
                     <DropdownMenuCheckboxItem key={s} checked={filterStatus.includes(s)} onCheckedChange={() => toggleFilter(filterStatus, setFilterStatus, s)}>
                       {statusLabels[s]}
                     </DropdownMenuCheckboxItem>
@@ -261,7 +265,7 @@ export default function Sessions() {
                 <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuLabel className="text-xs">Type</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {SESSION_TYPES.map((t) => (
+                  {typeOptions.map((t) => (
                     <DropdownMenuCheckboxItem key={t} checked={filterType.includes(t)} onCheckedChange={() => toggleFilter(filterType, setFilterType, t)}>
                       {t}
                     </DropdownMenuCheckboxItem>

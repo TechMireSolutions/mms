@@ -10,7 +10,7 @@ Madrasa Management System monorepo — applies on every task.
 
 ```
 apps/frontend/     React 19 + Vite 8
-apps/backend/      Fastify 5 + PostgreSQL
+apps/backend/      Fastify 5 + SQLite
 packages/shared/   @mms/shared
 ```
 
@@ -29,7 +29,7 @@ packages/shared/   @mms/shared
 
 ## Stack (fixed)
 
-- **BE:** Fastify + tsx · Drizzle + PostgreSQL · no raw SQL
+- **BE:** Fastify + tsx · Drizzle + SQLite · no raw SQL
 - **FE:** React 19 · Vite · Tailwind v4 · Radix/shadcn · TanStack Query · Framer Motion · Recharts · Lucide
 - **Icons:** Lucide only · **Animations:** Framer Motion only
 
@@ -44,7 +44,7 @@ packages/shared/   @mms/shared
 
 | Phase | Pattern | Owner |
 |-------|---------|--------|
-| **Current** | `localStorage` + sync to PostgreSQL JSON documents | `mms-data-layer.md` |
+| **Current** | `localStorage` + sync to SQLite JSON documents | `mms-data-layer.md` |
 | **New REST features** | Server authoritative + TanStack Query cache | `mms-query.md` |
 | **Target** | Per-entity API resources; localStorage as offline cache only | `mms-migration-status.md` |
 

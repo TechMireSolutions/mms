@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Save, FileText } from "lucide-react";
-import { getObject, saveObject } from "../../lib/db";
 import {
   type ExaminationsSettings,
   DEFAULT_EXAMINATIONS_SETTINGS,
@@ -9,6 +8,7 @@ import {
   type ModuleCustomField,
   type ModuleFieldDef,
 } from "@mms/shared";
+import { useExaminationConfig } from "@/hooks/useExaminationConfig";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
@@ -57,8 +57,13 @@ interface ExaminationsSettingsProps {
  * @returns The ExaminationsSettings component.
  */
 export default function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React.ReactElement {
-  const [data, setData] = useState<ExaminationsSettings>(() => getObject<ExaminationsSettings>("examinations_settings", DEFAULT_EXAMINATIONS_SETTINGS));
+  const { settings, updateSettings } = useExaminationConfig();
+  const [data, setData] = useState<ExaminationsSettings>(settings);
   const [saved, setSaved] = useState<boolean>(false);
+
+  useEffect(() => {
+    setData(settings);
+  }, [settings]);
 
   const upd = (f: keyof ExaminationsSettings, v: ExaminationsSettings[keyof ExaminationsSettings]) => {
     setData((d) => ({ ...d, [f]: v }));
@@ -107,8 +112,8 @@ export default function ExaminationsSettings({ mode }: ExaminationsSettingsProps
   const handleCustomFieldsChange = (newFields: CustomFieldConfig[]) => {
     const coreIds = DEFAULT_EXAMINATIONS_FIELD_DEFS.map(f => f.id);
     const newIds = newFields.map(f => f.key);
-    const kept = fieldOrder.filter((id) => coreIds.includes(id) || newIds.includes(id));
-    const added = newIds.filter((id) => !kept.includes(id));
+    const kept = fieldOrder.filter((id: string) => coreIds.includes(id) || newIds.includes(id));
+    const added = newIds.filter((id: string) => !kept.includes(id));
 
     setData((d) => ({
       ...d,
@@ -227,7 +232,7 @@ export default function ExaminationsSettings({ mode }: ExaminationsSettingsProps
       <button
         type="button"
         onClick={() => {
-          saveObject("examinations_settings", data);
+          updateSettings(data);
           setSaved(true);
           setTimeout(() => setSaved(false), 2500);
         }}

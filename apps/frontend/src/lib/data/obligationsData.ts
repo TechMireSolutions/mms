@@ -59,13 +59,7 @@ export const MUJTAHID_REPS: MujtahidRep[] = [];
 export const WAKALA_TYPES: WakalaType[] = [];
 
 export const OBLIGATION_DISTRIBUTIONS: ObligationDistribution[] = [];
-
 export const DISTRIBUTION_TYPES = ["Liability", "Income"] as const;
-export const MOCK_CURRENCIES = [
-  { id: "cur1", code: "PKR", name: "Pakistani Rupee" },
-  { id: "cur2", code: "USD", name: "US Dollar" },
-  { id: "cur3", code: "GBP", name: "British Pound" },
-];
 export const PAYMENT_MODES = ["Cash", "Online"] as const;
 
 export const OBLIGATION_COLLECTIONS: ObligationCollection[] = [];

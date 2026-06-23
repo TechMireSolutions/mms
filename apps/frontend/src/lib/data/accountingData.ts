@@ -74,17 +74,6 @@ export const CHART_OF_ACCOUNTS: Account[] = [];
 export const JOURNAL_TAGS = ["Payroll", "Fees", "Donation", "Obligation", "Utilities", "Rent", "Capital", "Adjustment", "Reversal", "Opening"];
 export const JOURNAL_ENTRIES: JournalEntry[] = [];
 
-export const DEFAULT_FISCAL_YEARS: FiscalYear[] = [
-  { id: "fy1", label: "FY 2024–25", startDate: "2024-07-01", endDate: "2025-06-30", status: "closed" },
-  { id: "fy2", label: "FY 2025–26", startDate: "2025-07-01", endDate: "2026-06-30", status: "active" }
-];
-
-export const CURRENCIES: Currency[] = [
-  { id: "cur1", code: "PKR", name: "Pakistani Rupee", symbol: "₨" },
-  { id: "cur2", code: "USD", name: "US Dollar", symbol: "$" },
-  { id: "cur3", code: "GBP", name: "British Pound", symbol: "£" }
-];
-
 export function computeLedger(
   accountId: string,
   entries: JournalEntry[],

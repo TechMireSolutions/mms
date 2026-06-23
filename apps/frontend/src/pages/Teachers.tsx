@@ -20,7 +20,7 @@ import TeacherList from '@/components/teachers/TeacherList';
 import TeacherForm from '@/components/teachers/TeacherForm';
 import TeachersSettingsPanel from '@/components/teachers/TeachersSettings';
 import type { Teacher } from '@/lib/data/teachersData';
-import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, DEFAULT_TEACHERS_SETTINGS, TEACHERS_MODULE_CONTRACT, type AppTranslationKey, type TeachersSettings } from '@mms/shared';
+import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_CONTRACT, type AppTranslationKey } from '@mms/shared';
 import ModuleReports from '@/components/reports/ModuleReports';
 import KPISummary from '@/components/reports/KPISummary';
 import useTeacherCount from '@/hooks/useTeacherCount';
@@ -29,14 +29,13 @@ import { useTeacherColumnLayout } from '@/hooks/useTeacherColumnLayout';
 import ModuleColumnCustomizer from '@/components/ui/ModuleColumnCustomizer';
 import TeachersCommandMetrics from '@/components/teachers/TeachersCommandMetrics';
 import TeachersListPagination from '@/components/teachers/TeachersListPagination';
-import { getObject } from '@/lib/db';
+import { useTeacherConfig } from '@/hooks/useTeacherConfig';
 import { notify } from '@/lib/notify';
-
-const TEACHER_STATUS_OPTIONS = [...TEACHER_STATUS_VALUES] as const;
 
 function teacherStatusLabel(t: (key: AppTranslationKey) => string, status: string): string {
   const key = `teachers.status.${status}` as AppTranslationKey;
-  return t(key);
+  const val = t(key);
+  return val === key ? status.charAt(0).toUpperCase() + status.slice(1) : val;
 }
 
 /**
@@ -53,10 +52,11 @@ export default function Teachers(): React.JSX.Element {
   const [listPage, setListPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
 
-  const settings = useMemo(
-    () => getObject<TeachersSettings>('teachers_settings', DEFAULT_TEACHERS_SETTINGS),
-    [],
-  );
+  const { settings, statuses, specializations } = useTeacherConfig();
+
+  const statusOptions = statuses.length > 0 ? statuses : [...TEACHER_STATUS_VALUES];
+  const specializationOptions = specializations.length > 0 ? specializations : [...TEACHER_SPECIALIZATION_VALUES];
+
   const {
     columnRegistry,
     isColumnVisible,
@@ -215,7 +215,7 @@ export default function Teachers(): React.JSX.Element {
                   <DropdownMenuContent align="end" className="w-44">
                     <DropdownMenuLabel className="text-xs">{t('teachers.filter.status')}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {TEACHER_STATUS_OPTIONS.map((s) => (
+                    {statusOptions.map((s) => (
                       <DropdownMenuCheckboxItem
                         key={s}
                         checked={filterStatus.includes(s)}
@@ -249,7 +249,7 @@ export default function Teachers(): React.JSX.Element {
                       {t('teachers.filter.allSpecializations')}
                     </DropdownMenuCheckboxItem>
                     <DropdownMenuSeparator />
-                    {TEACHER_SPECIALIZATION_VALUES.map((spec) => (
+                    {specializationOptions.map((spec) => (
                       <DropdownMenuCheckboxItem
                         key={spec}
                         checked={filterSpecialization === spec}

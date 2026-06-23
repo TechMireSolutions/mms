@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Save, DollarSign } from "lucide-react";
-import { getObject, saveObject } from "../../lib/db";
+import { useFinanceConfig } from "@/hooks/useFinanceConfig";
 import {
   type FinanceSettings as FinanceSettingsData,
   DEFAULT_FINANCE_SETTINGS,
@@ -57,8 +57,13 @@ interface FinanceSettingsProps {
  * @returns The FinanceSettings component.
  */
 export default function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElement {
-  const [data, setData] = useState<FinanceSettingsData>(() => getObject<FinanceSettingsData>("finance_settings", DEFAULT_FINANCE_SETTINGS));
+  const { settings, updateSettings } = useFinanceConfig();
+  const [data, setData] = useState<FinanceSettingsData>(() => settings);
   const [saved, setSaved] = useState<boolean>(false);
+
+  useEffect(() => {
+    setData(settings);
+  }, [settings]);
 
   const upd = (f: keyof FinanceSettingsData, v: FinanceSettingsData[keyof FinanceSettingsData]) => {
     setData((d) => ({ ...d, [f]: v }));
@@ -274,7 +279,7 @@ export default function FinanceSettings({ mode }: FinanceSettingsProps): React.R
       <button
         type="button"
         onClick={() => {
-          saveObject("finance_settings", data);
+          updateSettings(data);
           setSaved(true);
           setTimeout(() => setSaved(false), 2500);
         }}

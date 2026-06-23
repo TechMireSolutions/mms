@@ -8,8 +8,9 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import EmptyState from '@/components/ui/EmptyState';
 import useTranslation from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
-import { formatDate, getObject } from '@/lib/db';
-import { DEFAULT_TEACHERS_SETTINGS, type TeachersSettings } from '@mms/shared';
+import { formatDate } from '@/lib/db';
+import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey } from '@mms/shared';
+import { useTeacherConfig } from '@/hooks/useTeacherConfig';
 import type { Teacher } from '@/lib/data/teachersData';
 
 const AVATAR_COLORS = [
@@ -23,9 +24,11 @@ const AVATAR_COLORS = [
 function TeacherAvatar({ teacher, fallback }: { teacher: Teacher; fallback: string }): React.JSX.Element {
   const displayName = teacher.name || fallback;
   const initials = displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
-  const idx = teacher.id.charCodeAt(teacher.id.length - 1) % AVATAR_COLORS.length;
+  const colorIndex = Math.abs(displayName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % AVATAR_COLORS.length;
+  const colorClass = AVATAR_COLORS[colorIndex];
+
   return (
-    <div className={`w-8 h-8 rounded-full ${AVATAR_COLORS[idx]} flex items-center justify-center text-[11px] font-bold flex-shrink-0`}>
+    <div className={`flex h-8 w-8 items-center justify-center rounded-full font-semibold ${colorClass}`}>
       {initials}
     </div>
   );
@@ -47,10 +50,7 @@ export default function TeacherList({
   isColumnVisible,
 }: TeacherListProps): React.JSX.Element {
   const { t } = useTranslation();
-  const settings = useMemo(
-    () => getObject<TeachersSettings>('teachers_settings', DEFAULT_TEACHERS_SETTINGS),
-    [],
-  );
+  const { settings, statuses } = useTeacherConfig();
   const customFields = settings.customFields ?? [];
   const sortedCustomFields = useMemo(() => {
     const order = settings.fieldOrder ?? DEFAULT_TEACHERS_SETTINGS.fieldOrder ?? [];
@@ -70,11 +70,23 @@ export default function TeacherList({
     isColumnVisible ? isColumnVisible(`custom:${field.id}`) : true,
   );
 
-  const statusConfig = useMemo(() => ({
-    active: { label: t('teachers.status.active'), cls: SEMANTIC_BADGE.success },
-    inactive: { label: t('teachers.status.inactive'), cls: SEMANTIC_BADGE.muted },
-    on_leave: { label: t('teachers.status.on_leave'), cls: SEMANTIC_BADGE.warning },
-  }), [t]);
+  const statusConfig = useMemo(() => {
+    const map: Record<string, { label: string; cls: string }> = {};
+    const list = statuses.length > 0 ? statuses : ['active', 'inactive', 'on_leave'];
+    for (const s of list) {
+      const translationKey = `teachers.status.${s}` as AppTranslationKey;
+      const translated = t(translationKey);
+      const label = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+      
+      let cls: string = SEMANTIC_BADGE.muted;
+      if (s === 'active') cls = SEMANTIC_BADGE.success;
+      else if (s === 'on_leave') cls = SEMANTIC_BADGE.warning;
+      else if (s === 'inactive') cls = SEMANTIC_BADGE.muted;
+
+      map[s] = { label, cls };
+    }
+    return map;
+  }, [statuses, t]);
   const [sortField, setSortField] = useState<
     'name' | 'specialization' | 'qualification' | 'status' | 'joinDate'
   >('name');

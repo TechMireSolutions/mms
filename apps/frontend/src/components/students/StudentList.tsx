@@ -12,13 +12,12 @@ import StatusBadge from "../ui/StatusBadge";
 import EmptyState from "../ui/EmptyState";
 import { calcAge, type Student } from '@/lib/data/studentsData';
 import { useSessionsCollection } from '@/hooks/useSessions';
-import { formatDate, getObject } from "../../lib/db";
-import { type StudentsSettings, DEFAULT_STUDENTS_SETTINGS } from "@mms/shared";
+import { formatDate } from "../../lib/db";
 import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
 import useTranslation from '@/hooks/useTranslation';
+import type { AppTranslationKey } from "@mms/shared";
 import StudentDetail from "./StudentDetail";
-
-const GENDER_ICON = { male: "♂", female: "♀", other: "⚧" } as const;
+import { useStudentConfig } from "@/hooks/useStudentConfig";
 
 const AVATAR_COLORS = [
   "bg-primary/15 text-primary",
@@ -50,7 +49,7 @@ export interface StudentListProps {
   onEdit: (student: Student) => void;
   onDelete: (id: string) => void;
   onBulkDelete?: (ids: string[]) => void;
-  onBulkStatusChange?: (ids: string[], status: "active" | "inactive") => void;
+  onBulkStatusChange?: (ids: string[], status: string) => void;
   layout?: string;
   isColumnVisible?: (key: string) => boolean;
   serverPagination?: StudentListServerPagination;
@@ -71,12 +70,11 @@ export default function StudentList({
 }: StudentListProps): JSX.Element {
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
-
-  const settings = useMemo(() => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS), []);
-  const fields = settings.fields || DEFAULT_STUDENTS_SETTINGS.fields || {};
+  const { settings, statuses } = useStudentConfig();
+  const fields = settings.fields || {};
   const customFields = settings.customFields || [];
   const sortedCustomFields = useMemo(() => {
-    const order = settings.fieldOrder || DEFAULT_STUDENTS_SETTINGS.fieldOrder || [];
+    const order = settings.fieldOrder || [];
     const orderMap = Object.fromEntries(order.map((id, index) => [id, index]));
     return [...customFields].sort((a, b) => {
       const ai = orderMap[a.id] ?? 9999;
@@ -290,7 +288,7 @@ export default function StudentList({
                     {fields.gender?.enabled !== false && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Gender:</span>
-                        <span className="font-semibold text-foreground capitalize">{st.gender} {GENDER_ICON[st.gender] || ""}</span>
+                        <span className="font-semibold text-foreground capitalize">{st.gender || "—"}</span>
                       </div>
                     )}
                     {fields.dob?.enabled !== false && (
@@ -508,7 +506,7 @@ export default function StudentList({
                                 )}
                               </div>
                               <p className="text-[11px] text-muted-foreground">
-                                {fields.gender?.enabled !== false ? `${GENDER_ICON[st.gender] || "♂"} · ` : ""}{st.phone || "No phone"}
+                                {fields.gender?.enabled !== false && st.gender ? `${st.gender} · ` : ""}{st.phone || "No phone"}
                               </p>
                             </div>
                           </div>
@@ -674,33 +672,31 @@ export default function StudentList({
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl border border-primary/20 bg-card/90 backdrop-blur-xl shadow-2xl"
           >
             <span className="text-xs font-bold text-foreground">
-              {selectedIds.length} selected
+              {t("students.selectedCount", { count: selectedIds.length })}
             </span>
             <div className="h-4 w-px bg-border" />
 
-            <button
-              onClick={() => {
-                if (onBulkStatusChange) {
-                  onBulkStatusChange(selectedIds, "active");
-                  setSelectedIds([]);
-                }
-              }}
-              className="px-3 py-1.5 rounded-lg border border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors"
-            >
-              Make Active
-            </button>
-
-            <button
-              onClick={() => {
-                if (onBulkStatusChange) {
-                  onBulkStatusChange(selectedIds, "inactive");
-                  setSelectedIds([]);
-                }
-              }}
-              className="px-3 py-1.5 rounded-lg border border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors"
-            >
-              Make Inactive
-            </button>
+            {statuses.map((status) => {
+              const statusKey = `students.form.status.${status}` as AppTranslationKey;
+              const translatedStatus = t(statusKey);
+              const displayStatus = translatedStatus === statusKey
+                ? (status.charAt(0).toUpperCase() + status.slice(1))
+                : translatedStatus;
+              return (
+                <button
+                  key={status}
+                  onClick={() => {
+                    if (onBulkStatusChange) {
+                      onBulkStatusChange(selectedIds, status);
+                      setSelectedIds([]);
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg border border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors"
+                >
+                  {t("students.list.bulk.setStatus", { status: displayStatus })}
+                </button>
+              );
+            })}
 
             <button
               onClick={() => {

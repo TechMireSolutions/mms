@@ -8,7 +8,7 @@ trigger: model_decision
 
 | Layer | Storage |
 |-------|---------|
-| Backend | PostgreSQL tables `collections` (JSON arrays), `objects` (JSON singletons) |
+| Backend | SQLite tables `collections` (JSON arrays), `objects` (JSON singletons) |
 | Frontend | `localStorage` keys `mms_*` via `apps/frontend/src/lib/db.ts` |
 
 ### Server-first trajectory (modern target)
@@ -17,9 +17,9 @@ trigger: model_decision
 |------|---------|
 | **Existing module CRUD** | Keep `useLiveCollection` + `saveCollection` until intentionally migrated |
 | **Dedicated REST resource** (students, contacts) | Backend route → Query on FE; optional `saveCollection` cache sync after fetch — `mms-query.md` |
-| **Target end state** | PostgreSQL authoritative; browser cache invalidates via Query/WebSocket — not full-array local RMW |
+| **Target end state** | SQLite authoritative; browser cache invalidates via Query/WebSocket — not full-array local RMW |
 
-Do not add new features that write only to React state or localStorage without a PostgreSQL path (`mms-fields.md` gate).
+Do not add new features that write only to React state or localStorage without a SQLite path (`mms-fields.md` gate).
 
 ## Read / write
 
@@ -72,7 +72,7 @@ New/changed fields → full checklist in **`mms-fields.md`** only.
 
 ## Singleton settings persistence (required)
 
-App-wide singletons (`branding`, `global_settings`) must **survive login sync** and land in PostgreSQL — not local-only.
+App-wide singletons (`branding`, `global_settings`) must **survive login sync** and land in SQLite — not local-only.
 
 | Key | Read helper | Save helper | Merge in `@mms/shared` |
 |-----|-------------|-------------|------------------------|

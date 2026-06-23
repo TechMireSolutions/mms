@@ -4,10 +4,14 @@ import {
   ComposedChart, Area, Line, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, TooltipContentProps
 } from "recharts";
-import { enrollmentData as defaultEnrollmentData, EnrollmentPoint } from '@/lib/data/dashboardData';
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import type { Enrollment } from '@/lib/data/enrollmentData';
 import { TrendingUp } from "lucide-react";
+
+interface EnrollmentPoint {
+  month: string;
+  students: number;
+}
 
 /**
  * CustomTooltip for Enrollment Chart.
@@ -57,18 +61,15 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
 
   const activeMonths = months.slice(-monthsCount);
 
-  const enrollmentData: EnrollmentPoint[] = activeMonths.map((m, idx) => {
+  const enrollmentData: EnrollmentPoint[] = activeMonths.map((m) => {
     const count = enrollments.filter((e) => {
       if (!e?.enrolledDate) return false;
       return e.enrolledDate <= `${m.key}-31`;
     }).length;
 
-    const baselineIdx = months.findIndex(item => item.key === m.key);
-    const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
-    const baseline = isAuth ? 0 : (defaultEnrollmentData[baselineIdx]?.students || 200);
     return {
       month: m.label,
-      students: count > 0 ? count : baseline
+      students: count
     };
   });
   

@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect, lazy, Suspense } from "react";
 import { Plus, Eye, Search, Receipt, Printer } from "lucide-react";
 import {
-  MOCK_CURRENCIES,
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
+import { DEFAULT_CURRENCIES } from '@mms/shared';
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import useDebounce from "../../hooks/useDebounce";
 import { useMergedObligationContacts } from "../../hooks/useObligationLookups";
 import useTranslation from "@/hooks/useTranslation";
@@ -12,8 +13,8 @@ import type { ModuleColumnRegistryEntry } from "@mms/shared";
 
 const PrintInvoiceModal = lazy(() => import("./invoice/PrintInvoiceModal"));
 
-function fmtAmount(amount: string | number, currencyId: string): string {
-  const cur = MOCK_CURRENCIES.find((c) => c.id === currencyId);
+function fmtAmount(amount: string | number, currencyId: string, currencies: any[]): string {
+  const cur = currencies.find((c) => c.id === currencyId);
   return `${cur?.code || ""} ${parseFloat(amount as string).toLocaleString()}`;
 }
 
@@ -60,6 +61,7 @@ export default function ObligationCollectionList({
 }: ObligationCollectionListProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
   const [typeFilter, setTypeFilter] = useState("all");
   const [printCollection, setPrintCollection] = useState<ObligationCollection | null>(null);
 
@@ -229,7 +231,7 @@ export default function ObligationCollectionList({
                           </td>
                         )}
                         {showAmount && (
-                          <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{fmtAmount(c.amount, c.currency_id)}</td>
+                          <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{fmtAmount(c.amount, c.currency_id, currencies)}</td>
                         )}
                         {showPaymentMode && (
                           <td className="px-3 py-2.5">

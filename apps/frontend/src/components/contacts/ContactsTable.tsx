@@ -3,22 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal, MessageCircle, MessageSquare,
   Edit2, Trash2, ChevronUp, ChevronDown,
-  Copy, Eye, MapPin, Mars, Venus, User, RotateCcw,
+  Copy, Eye, MapPin, User, RotateCcw,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, Contact, formatDate, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
+import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, Contact, formatDate } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
 import { formatContactCellValue } from '@/lib/contacts/contactI18n';
 
 function GenderIcon({ gender }: { gender?: string }): React.JSX.Element | null {
   if (!gender) return null;
-  const g = gender.toLowerCase();
-  if (g === "male") return <Mars className="w-3.5 h-3.5 text-muted-foreground inline" />;
-  if (g === "female") return <Venus className="w-3.5 h-3.5 text-muted-foreground inline" />;
   return <User className="w-3.5 h-3.5 text-muted-foreground inline" />;
 }
 const ContactDetailDrawer = lazy(() => import("./ContactDetailDrawer"));
@@ -122,7 +119,7 @@ export default function ContactsTable({
   canWrite = false,
   canDelete = false,
 }: ContactsTableProps): React.JSX.Element {
-  const { lifecycleColors, visibleColumns } = useContactConfig();
+  const { lifecycleColors, lifecycleStages, visibleColumns } = useContactConfig();
   const { t } = useTranslation();
   const visibleColumnIds = React.useMemo(
     () => new Set(visibleColumns.map((col) => col.id)),
@@ -278,7 +275,7 @@ export default function ContactsTable({
         return <td key="emergency_relationship" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{relationships.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "lifecycleStage": {
-        const stage = c.lifecycleStage || CONTACTS_MODULE_CONTRACT.defaultLifecycleStage;
+        const stage = c.lifecycleStage || lifecycleStages[0] || "";
         const colors = lifecycleColors[stage] || { bg: "bg-muted text-muted-foreground border-border", text: "text-muted-foreground" };
         return (
           <td key="lifecycleStage" className="px-4 py-3">

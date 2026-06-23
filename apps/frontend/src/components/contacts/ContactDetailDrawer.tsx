@@ -89,7 +89,7 @@ export default function ContactDetailDrawer({
   allContacts = [],
   onUpdateContact,
 }: ContactDetailDrawerProps): React.JSX.Element {
-  const { enabledTabIds, isTabFieldEnabled, fieldConfig, lifecycleColors, fields, phoneLabels, emailLabels, addressLabels, socialPlatforms } = useContactConfig();
+  const { enabledTabIds, isTabFieldEnabled, fieldConfig, lifecycleColors, lifecycleStages, fields, phoneLabels, emailLabels, addressLabels, socialPlatforms } = useContactConfig();
   const { user } = useAuth();
   const { role } = usePermissions();
   const viewerRole = role ?? '';
@@ -253,7 +253,7 @@ export default function ContactDetailDrawer({
       .catch(() => undefined);
   };
 
-  const stage = c.lifecycleStage || CONTACTS_MODULE_CONTRACT.defaultLifecycleStage;
+  const stage = c.lifecycleStage || lifecycleStages[0] || "";
   const stageColors = lifecycleColors[stage] || { bg: "bg-muted text-muted-foreground border-border", text: "text-muted-foreground", border: "border-border" };
 
   return (
@@ -548,7 +548,7 @@ export default function ContactDetailDrawer({
                               <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                    {s.platform || socialPlatforms[0] || t('contacts.detail.facebookLabel')}
+                                    {s.platform || socialPlatforms[0] || "—"}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">

@@ -1,5 +1,64 @@
 {
   "DEFAULT_COLLECTIONS": {
+    "currencies": [
+      { "id": "cur1", "code": "PKR", "name": "Pakistani Rupee", "symbol": "₨" },
+      { "id": "cur2", "code": "USD", "name": "US Dollar", "symbol": "$" },
+      { "id": "cur3", "code": "GBP", "name": "British Pound", "symbol": "£" }
+    ],
+    "genders": ["male", "female"],
+    "studentStatuses": ["active", "inactive", "suspended"],
+    "studentGenderFilters": ["male", "female", "other"],
+    "teacherStatuses": ["active", "inactive", "on_leave"],
+    "teacherSpecializations": ["Hifz", "Qaidah", "Tajweed", "Islamic Studies", "Arabic", "General", "Other"],
+    "sessionStatuses": ["active", "upcoming", "completed", "cancelled"],
+    "sessionTypes": ["Hifz", "Qaidah", "Tajweed", "Islamic Studies", "Arabic", "Other"],
+    "attendanceStatuses": [
+      { "id": "present", "label": "Present", "short": "P", "color": "emerald", "bg": "bg-success/10", "text": "text-success", "border": "border-success/30", "dot": "bg-success" },
+      { "id": "absent",  "label": "Absent",  "short": "A", "color": "red",     "bg": "bg-destructive/10",     "text": "text-destructive",     "border": "border-destructive/30",     "dot": "bg-destructive" },
+      { "id": "late",    "label": "Late",    "short": "L", "color": "amber",   "bg": "bg-warning/10",   "text": "text-warning",   "border": "border-warning/30",   "dot": "bg-warning" },
+      { "id": "excused", "label": "Excused", "short": "E", "color": "blue",    "bg": "bg-info/10",    "text": "text-info",    "border": "border-info/30",    "dot": "bg-info" }
+    ],
+    "studentDiscountTypes": [
+      { "id": "none", "label": "No Discount", "pct": 0 },
+      { "id": "sibling", "label": "Sibling Discount", "pct": 10 },
+      { "id": "financial_aid", "label": "Financial Aid", "pct": 25 },
+      { "id": "staff", "label": "Staff Child", "pct": 50 },
+      { "id": "scholarship", "label": "Full Scholarship", "pct": 100 }
+    ],
+    "socialPlatforms": ["Facebook", "Twitter / X", "Instagram", "LinkedIn", "TikTok", "YouTube", "WhatsApp", "Telegram", "Snapchat"],
+    "relationships": ["Father", "Mother", "Son", "Daughter", "Brother", "Sister", "Guardian", "Spouse", "Other"],
+    "lifecycleStages": ["Lead", "Active Student", "Alumnus", "Staff", "Donor", "Volunteer", "Parent"],
+    "whatsappTemplates": [
+      { "id": "fee", "label": "Fee Reminder", "body": "Assalamu Alaikum! This is a friendly reminder that your fee payment for this month is due. Please contact us at your earliest convenience. JazakAllah Khair." },
+      { "id": "event", "label": "Event Invitation", "body": "Assalamu Alaikum! You are cordially invited to our upcoming event at the madrasa. Please confirm your attendance. JazakAllah Khair." },
+      { "id": "absence", "label": "Absence Notice", "body": "Assalamu Alaikum! We noticed your child was absent today. Please inform us if there is an issue. JazakAllah Khair." },
+      { "id": "custom", "label": "Custom Message", "body": "" }
+    ],
+    "phoneLabels": ["Mobile", "Home", "Work", "Other"],
+    "emailLabels": ["Personal", "Work", "Other"],
+    "addressLabels": ["Home", "Work", "Other"],
+    "countryCodes": [
+      { "country": "Pakistan", "code": "+92" },
+      { "country": "United States", "code": "+1" },
+      { "country": "United Kingdom", "code": "+44" },
+      { "country": "Canada", "code": "+1" },
+      { "country": "Australia", "code": "+61" },
+      { "country": "India", "code": "+91" },
+      { "country": "Bangladesh", "code": "+880" },
+      { "country": "Egypt", "code": "+20" },
+      { "country": "Nigeria", "code": "+234" },
+      { "country": "Ghana", "code": "+233" },
+      { "country": "Saudi Arabia", "code": "+966" },
+      { "country": "United Arab Emirates", "code": "+971" },
+      { "country": "Qatar", "code": "+974" },
+      { "country": "Kuwait", "code": "+965" },
+      { "country": "Bahrain", "code": "+973" },
+      { "country": "Oman", "code": "+968" },
+      { "country": "Malaysia", "code": "+60" },
+      { "country": "Singapore", "code": "+65" },
+      { "country": "Thailand", "code": "+66" },
+      { "country": "Indonesia", "code": "+62" }
+    ],
     "contacts": [
       {
         "id": 1,
@@ -32164,6 +32223,26 @@
     ]
   },
   "DEFAULT_OBJECTS": {
+    "lifecycleColors": {
+      "Lead": { "bg": "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50", "text": "text-blue-700 dark:text-blue-400", "border": "border-blue-200 dark:border-blue-900/50" },
+      "Active Student": { "bg": "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50", "text": "text-emerald-700 dark:text-emerald-400", "border": "border-emerald-200 dark:border-emerald-900/50" },
+      "Alumnus": { "bg": "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/20 dark:text-violet-400 dark:border-violet-900/50", "text": "text-violet-700 dark:text-violet-400", "border": "border-violet-200 dark:border-violet-900/50" },
+      "Staff": { "bg": "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50", "text": "text-amber-700 dark:text-amber-400", "border": "border-amber-200 dark:border-amber-900/50" },
+      "Donor": { "bg": "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/50", "text": "text-rose-700 dark:text-rose-400", "border": "border-rose-200 dark:border-rose-900/50" },
+      "Volunteer": { "bg": "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-900/50", "text": "text-indigo-700 dark:text-indigo-400", "border": "border-indigo-200 dark:border-indigo-900/50" },
+      "Parent": { "bg": "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/20 dark:text-cyan-400 dark:border-cyan-900/50", "text": "text-cyan-700 dark:text-cyan-400", "border": "border-cyan-200 dark:border-cyan-900/50" }
+    },
+    "socialPlaceholders": {
+      "Facebook": "https://facebook.com/username",
+      "Twitter / X": "https://x.com/username",
+      "Instagram": "https://instagram.com/username",
+      "LinkedIn": "https://linkedin.com/in/username",
+      "TikTok": "https://tiktok.com/@username",
+      "YouTube": "https://youtube.com/@channel",
+      "WhatsApp": "+92 300 0000000",
+      "Telegram": "https://t.me/username",
+      "Snapchat": "https://snapchat.com/add/username"
+    },
     "contact_field_config": {
       "version": 2,
       "enabledTabs": [
@@ -33249,7 +33328,33 @@
       "maxAge": "25",
       "minAge": "5",
       "allowSiblingDiscount": true,
-      "trackHealthRecords": false
+      "trackHealthRecords": false,
+      "grNumberTemplate": "{seq}-{year}",
+      "grNumberDigits": 4,
+      "grNumberRestartAnnually": true,
+      "defaultViewLayout": "list",
+      "fields": {
+        "gender": { "enabled": true, "required": true },
+        "dob": { "enabled": true, "required": false },
+        "fatherLink": { "enabled": true, "required": false },
+        "motherLink": { "enabled": true, "required": false },
+        "guardianLink": { "enabled": true, "required": false },
+        "registeredDate": { "enabled": true, "required": true }
+      },
+      "customFields": [],
+      "fieldOrder": ["gender", "dob", "fatherLink", "motherLink", "guardianLink", "registeredDate"]
+    },
+    "studentGuardianContactDefaults": {
+      "fatherLink": {
+        "filterGender": "male",
+        "createGender": "male",
+        "lockGender": true
+      },
+      "motherLink": {
+        "filterGender": "female",
+        "createGender": "female",
+        "lockGender": true
+      }
     },
     "attendance_settings": {
       "workingDays": [

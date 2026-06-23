@@ -1,16 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DollarSign, Calendar, Plus, Pencil, Trash2,
   CheckCircle2, Lock, Clock, Save, RotateCcw, BookOpen
 } from "lucide-react";
-import { CURRENCIES, Account, AccountingSettings as SettingsType, FiscalYear } from '@/lib/data/accountingData';
+import { Account, AccountingSettings as SettingsType, FiscalYear } from '@/lib/data/accountingData';
 import {
+  DEFAULT_CURRENCIES,
   DEFAULT_ACCOUNT_FIELD_DEFS,
   DEFAULT_ACCOUNTING_SETTINGS,
   getSortedFields,
   type ModuleCustomField,
   type ModuleFieldDef,
 } from "@mms/shared";
+import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useAccountingConfig } from "@/hooks/useAccountingConfig";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
 import { DatePicker } from "../ui/DatePicker";
@@ -200,8 +203,6 @@ const FY_STATUS: Record<string, { color: string; icon: React.ElementType; label:
 
 interface AccountingSettingsProps {
   accounts: Account[];
-  settings: SettingsType;
-  onSaveSettings: (settings: SettingsType) => void;
   fiscalYears: FiscalYear[];
   onSaveFiscalYears: (fiscalYears: FiscalYear[]) => void;
   mode?: "fields" | "preferences";
@@ -213,15 +214,21 @@ interface AccountingSettingsProps {
  * @param {AccountingSettingsProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function AccountingSettings({ accounts, settings, onSaveSettings, fiscalYears, onSaveFiscalYears, mode }: AccountingSettingsProps) {
+export default function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, mode }: AccountingSettingsProps) {
+  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
+  const { settings, updateSettings } = useAccountingConfig();
   const [local,   setLocal]   = useState<SettingsType>(settings);
   const [saved,   setSaved]   = useState(false);
   const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);
 
+  useEffect(() => {
+    setLocal(settings);
+  }, [settings]);
+
   const set = <K extends keyof SettingsType>(key: K, val: SettingsType[K]) => setLocal((s) => ({ ...s, [key]: val }));
 
   const handleSave = () => {
-    onSaveSettings(local);
+    updateSettings(local);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -244,7 +251,7 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
     if (confirm("Delete this financial year?")) onSaveFiscalYears(fiscalYears.filter((f) => f.id !== id));
   };
 
-  const activeCur = CURRENCIES.find((c) => c.code === local.currency);
+  const activeCur = currencies.find((c: any) => c.code === local.currency);
   const fmtDate   = (d: string) => d ? new Date(d).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
   const showPrefs = !mode || mode === "preferences";
@@ -323,11 +330,11 @@ export default function AccountingSettings({ accounts, settings, onSaveSettings,
           <SectionCard title="Currency & Display" icon={DollarSign}>
             <Field label="Base Currency" hint="All transactions recorded in this currency">
               <select aria-label="Base Currency" value={local.currency} onChange={(e) => {
-                const cur = CURRENCIES.find(c => c.code === e.target.value);
+                const cur = currencies.find((c: any) => c.code === e.target.value);
                 set("currency", e.target.value);
                 if (cur) set("currencySymbol", cur.symbol);
               }} className={FORM_INPUT}>
-                {CURRENCIES.map((c) => (
+                {currencies.map((c: any) => (
                   <option key={c.code} value={c.code}>{c.symbol} {c.code} – {c.name}</option>
                 ))}
               </select>

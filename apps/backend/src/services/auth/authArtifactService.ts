@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { eq, lt, sql } from 'drizzle-orm';
+import { eq, lt } from 'drizzle-orm';
 import { authArtifacts } from '../../db/schema.js';
 import { getDb } from '../../db/dbClient.js';
 
@@ -94,7 +94,7 @@ export async function deleteAuthArtifact(id: string): Promise<void> {
 }
 
 export async function purgeExpiredAuthArtifacts(): Promise<void> {
-  await db().delete(authArtifacts).where(lt(authArtifacts.expiresAt, sql`now()`));
+  await db().delete(authArtifacts).where(lt(authArtifacts.expiresAt, new Date()));
 }
 
 /** Finds a non-expired refresh-token artifact by its stored hash. */

@@ -155,6 +155,7 @@ function computeCustomCard(
     questions: QuestionBankQuestion[];
     tests: QuestionBankTest[];
     assessment_results: QuestionBankResult[];
+    hasanat_denoms?: any[];
   }
 ): KPIItem & { categories: string[] } {
   const result = computeCustomCardShared(card, collections);
@@ -321,6 +322,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   const examResults = useLiveCollection("exam_results");
   const sessions = useSessionsCollection();
   const distributions = useLiveCollection("hasanat_distributions");
+  const denoms = useLiveCollection("hasanat_denoms");
   const qbQuestions = useLiveCollection("questions");
   const qbTests = useLiveCollection("tests");
   const qbResults = useLiveCollection("assessment_results");
@@ -372,12 +374,14 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
 
     // 5. Hasanat Awarded
     const totalHasanat = distributions.reduce((sum, dist) => {
-      let points = 50;
-      const name = (dist.denominationName || "").toLowerCase();
-      if (name.includes("silver")) points = 150;
-      else if (name.includes("gold")) points = 500;
-      else if (name.includes("platinum")) points = 1000;
-      else if (name.includes("diamond")) points = 2500;
+      const denomName = (dist.denominationName || "").toLowerCase();
+      const matchedDenom = denoms.find((d: any) => d.id === dist.denominationId);
+      const points = matchedDenom ? matchedDenom.points : (
+        denomName.includes("silver") ? 150 :
+        denomName.includes("gold") ? 500 :
+        denomName.includes("platinum") ? 1000 :
+        denomName.includes("diamond") ? 2500 : 50
+      );
       return sum + (dist.quantity || 1) * points;
     }, 0);
     const hasanatVal = totalHasanat.toLocaleString();
@@ -800,6 +804,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         finance_invoices: invoices,
         attendance_records: records,
         hasanat_distributions: distributions,
+        hasanat_denoms: denoms,
         contacts: [],
         questions: qbQuestions,
         tests: qbTests,

@@ -1,12 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { BookOpen } from "lucide-react";
 import { ACCOUNT_TYPES, ACCOUNT_SUBTYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
-import { getObject } from "../../lib/db";
-import {
-  DEFAULT_ACCOUNTING_SETTINGS,
-  DEFAULT_ACCOUNT_FIELD_DEFS,
-  getSortedFields,
-} from "@mms/shared";
+import { useAccountingConfig } from "@/hooks/useAccountingConfig";
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import useTranslation from "@/hooks/useTranslation";
@@ -28,17 +23,7 @@ export default function AccountModal({ initial, onSave, onClose, existingCodes }
   const type = form.type as AccountType;
   const subtypes = type ? (ACCOUNT_SUBTYPES[type] || []) : [];
 
-  const settings = getObject("accounting_settings", DEFAULT_ACCOUNTING_SETTINGS);
-  const fields = settings.fields || DEFAULT_ACCOUNTING_SETTINGS.fields || {};
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_ACCOUNTING_SETTINGS.fieldOrder || [];
-
-  const orderedFields = getSortedFields(
-    DEFAULT_ACCOUNT_FIELD_DEFS,
-    fieldOrder,
-    fields,
-    customFields
-  );
+  const { fields, customFields, orderedFields } = useAccountingConfig();
 
   const validate = () => {
     const e: Record<string, string> = {};

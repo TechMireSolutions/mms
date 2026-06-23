@@ -7,7 +7,6 @@ import {
   getQuestionBankFieldFormTab,
   getSortedFields,
   mergeQuestionBankFieldOrder,
-  normalizeQuestionBankSettings,
   type ModuleCustomField,
   type ModuleFieldDef,
   type QuestionBankFormTabId,
@@ -18,7 +17,7 @@ import {
 import type { AppTranslationKey } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
 import { useSettingsDraft } from '@/hooks/useSettingsDraft';
-import { getObject, saveObject } from '@/lib/db';
+import { useQuestionBankConfig } from '@/hooks/useQuestionBankConfig';
 import { notify } from '@/lib/notify';
 import CustomFieldsBuilder, { type CustomFieldConfig } from '../ui/CustomFieldsBuilder';
 import DraggableFieldList from '../ui/DraggableFieldList';
@@ -36,21 +35,20 @@ interface QuestionBankSettingsProps {
 export default function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React.JSX.Element {
   const { t } = useTranslation();
   const [activeFieldTab, setActiveFieldTab] = useState<QuestionBankFormTabId>('categories');
+  const { settings, updateSettings } = useQuestionBankConfig();
 
   const load = useCallback((): QuestionBankSettingsData => {
-    return normalizeQuestionBankSettings(
-      getObject<QuestionBankSettingsData>('question_bank_settings', DEFAULT_QUESTION_BANK_SETTINGS),
-    );
-  }, []);
+    return settings;
+  }, [settings]);
 
   const onSave = useCallback(
     async (draft: QuestionBankSettingsData) => {
-      saveObject('question_bank_settings', normalizeQuestionBankSettings(draft));
+      updateSettings(draft);
       notify.success(t('questionBank.settingsSaved'), {
         description: t('questionBank.settingsSavedDesc'),
       });
     },
-    [t],
+    [updateSettings, t],
   );
 
   const { data, dirty, saving, upd, handleSave } = useSettingsDraft({

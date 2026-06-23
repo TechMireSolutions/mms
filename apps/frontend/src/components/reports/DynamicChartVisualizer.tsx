@@ -182,6 +182,9 @@ export default function DynamicChartVisualizer({
   // Read data from DB and apply queries with smart sorting/grouping
   const processedData = useMemo<AggregatedItem[]>(() => {
     const dataList = getCollection(activeMeta.dbKey, activeMeta.defaultData as unknown[]) as Record<string, unknown>[];
+    const denoms = getCollection<any>("hasanat_denoms", []);
+    const pointsMap = new Map<string, number>();
+    denoms.forEach(d => pointsMap.set(d.id, d.points));
     
     // 1. Apply multiple filters
     const filteredList = dataList.filter((item) => {
@@ -234,13 +237,14 @@ export default function DynamicChartVisualizer({
         groupItems.forEach((item) => {
           // Special Hasanat points calculation
           if (collectionKey === "hasanat_distributions" && field === "points") {
-            let pts = 50;
-            const denom = String(item.denominationName || "").toLowerCase();
-            if (denom.includes("silver")) pts = 150;
-            else if (denom.includes("gold")) pts = 500;
-            else if (denom.includes("platinum")) pts = 1000;
-            else if (denom.includes("diamond")) pts = 2500;
-            values.push(Number(item.quantity || 1) * pts);
+            const denomName = String(item.denominationName || "").toLowerCase();
+            const points = pointsMap.get(item.denominationId as string) || (
+              denomName.includes("silver") ? 150 :
+              denomName.includes("gold") ? 500 :
+              denomName.includes("platinum") ? 1000 :
+              denomName.includes("diamond") ? 2500 : 50
+            );
+            values.push(Number(item.quantity || 1) * points);
           } else {
             const num = Number(item[field]);
             if (!isNaN(num)) {

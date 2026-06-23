@@ -1,14 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { ReceiptText } from "lucide-react";
 import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
-import { getObject } from "../../lib/db";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import {
-  type FinanceSettings,
-  DEFAULT_FINANCE_SETTINGS,
-  DEFAULT_FINANCE_FIELD_DEFS,
-  getSortedFields,
-} from "@mms/shared";
+import { useFinanceConfig } from "@/hooks/useFinanceConfig";
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "../ui/formStyles";
@@ -40,14 +34,7 @@ export default function PaymentForm({ open, invoice, onClose, onSave }: PaymentF
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const settings = useMemo(() => getObject<FinanceSettings>("finance_settings", DEFAULT_FINANCE_SETTINGS), []);
-  const fields = settings.fields || DEFAULT_FINANCE_SETTINGS.fields || {};
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_FINANCE_SETTINGS.fieldOrder || [];
-
-  const orderedFields = useMemo(() => {
-    return getSortedFields(DEFAULT_FINANCE_FIELD_DEFS, fieldOrder, fields, customFields);
-  }, [fieldOrder, fields, customFields]);
+  const { fields, customFields, orderedFields } = useFinanceConfig();
 
   const completeness = useMemo(
     () => calculateModuleFieldsCompleteness(data as Record<string, unknown>, orderedFields, fields),

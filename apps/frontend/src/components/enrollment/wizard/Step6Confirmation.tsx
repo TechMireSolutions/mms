@@ -3,13 +3,7 @@ import { User, BookOpen, Layers, DollarSign, CheckCircle2 } from "lucide-react";
 import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { CalculatedFee } from '@/lib/data/enrollmentData';
-import { getObject } from "../../../lib/db";
-import {
-  type EnrollmentsSettings,
-  DEFAULT_ENROLLMENTS_SETTINGS,
-  DEFAULT_ENROLLMENTS_FIELD_DEFS,
-  getSortedFields,
-} from "@mms/shared";
+import { useEnrollmentConfig } from "@/hooks/useEnrollmentConfig";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
 
 interface RowProps {
@@ -80,15 +74,11 @@ export default function Step6Confirmation({
 }: Step6ConfirmationProps): React.ReactElement {
   const age = student ? calcAge(student.dob) : null;
 
-  const settings = React.useMemo(() => getObject<EnrollmentsSettings>("enrollments_settings", DEFAULT_ENROLLMENTS_SETTINGS), []);
-  const fields = settings.fields || DEFAULT_ENROLLMENTS_SETTINGS.fields || {};
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_ENROLLMENTS_SETTINGS.fieldOrder || [];
+  const { fields, customFields, orderedFields: allOrderedFields } = useEnrollmentConfig();
 
   const orderedFields = React.useMemo(() => {
-    return getSortedFields(DEFAULT_ENROLLMENTS_FIELD_DEFS, fieldOrder, fields, customFields)
-      .filter((f) => !["studentId", "sessionId", "classId"].includes(f.id));
-  }, [fieldOrder, fields, customFields]);
+    return allOrderedFields.filter((f) => !["studentId", "sessionId", "classId"].includes(f.id));
+  }, [allOrderedFields]);
 
   return (
     <section className="space-y-4" aria-labelledby="step6-title">

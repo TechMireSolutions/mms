@@ -12,7 +12,6 @@ import { computeContactsStageComparison } from '@mms/shared';
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { useLiveCollection } from "@/hooks/useLiveCollection";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import type { Session } from "@/lib/data/sessionsData";
 
 interface ComparisonDataItem {
@@ -32,18 +31,7 @@ interface DateRange {
   to: string;
 }
 
-/**
- * Comparison data generator for session-to-session metrics (non-contacts categories).
- */
-function getSessionCompData(targetA: string, targetB: string): ComparisonDataItem[] {
-  return [
-    { metric: "Enrollment",   a: targetA === "s1" ? 21 : targetA === "s2" ? 18 : 10, b: targetB === "s1" ? 21 : targetB === "s2" ? 18 : 10 },
-    { metric: "Attendance%",  a: targetA === "s1" ? 88 : targetA === "s2" ? 92 : 82, b: targetB === "s1" ? 88 : targetB === "s2" ? 92 : 82 },
-    { metric: "Fee Collected",a: targetA === "s1" ? 73500 : targetA === "s2" ? 45000 : 40000, b: targetB === "s1" ? 73500 : targetB === "s2" ? 45000 : 40000 },
-    { metric: "Pass Rate%",   a: targetA === "s1" ? 100 : targetA === "s2" ? 100 : 90, b: targetB === "s1" ? 100 : targetB === "s2" ? 100 : 90 },
-    { metric: "Hasanat",      a: targetA === "s1" ? 1140 : targetA === "s2" ? 930 : 500, b: targetB === "s1" ? 1140 : targetB === "s2" ? 930 : 500 },
-  ];
-}
+
 
 function computeDynamicSessionComparison(
   sessions: Session[],
@@ -265,7 +253,7 @@ function computeDynamicDateRangeComparison(
       }
     });
   } else {
-    return getMockDateRangeData();
+    return [];
   }
 
   const result: DateRangeDataItem[] = [];
@@ -317,19 +305,7 @@ function buildContactsDateRangeComparison(
   }));
 }
 
-/**
- * Mock comparison data for non-contacts date ranges.
- */
-function getMockDateRangeData(): DateRangeDataItem[] {
-  return [
-    { month: "Jan", a: 18000, b: 15000 },
-    { month: "Feb", a: 22000, b: 19000 },
-    { month: "Mar", a: 19500, b: 21000 },
-    { month: "Apr", a: 25000, b: 22500 },
-    { month: "May", a: 28000, b: 26000 },
-    { month: "Jun", a: 35000, b: 30000 },
-  ];
-}
+
 
 interface ComparisonModeProps {
   category: string;
@@ -359,7 +335,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     return [yearA, yearB].filter((y) => Number.isFinite(y));
   }, [isContacts, mode, rangeA.from, rangeB.from]);
 
-  const { isAuthenticated } = useAuth();
+
   const { data: reportData } = useContactsReportAnalytics({
     enabled: isContacts,
     compareYears,
@@ -404,28 +380,8 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         }
         return [];
       }
-      if (isAuthenticated) {
-        return computeDynamicSessionComparison(
-          sessions,
-          enrollments,
-          attendanceRecords,
-          financeInvoices,
-          hasanatDistributions,
-          examResults,
-          exams,
-          denoms,
-          valA,
-          valB,
-        );
-      }
-      return getSessionCompData(valA, valB);
-    }
-    if (isContacts) {
-      return buildContactsDateRangeComparison(reportData?.monthlyByYear, rangeA, rangeB);
-    }
-    if (isAuthenticated) {
-      return computeDynamicDateRangeComparison(
-        category,
+      return computeDynamicSessionComparison(
+        sessions,
         enrollments,
         attendanceRecords,
         financeInvoices,
@@ -433,11 +389,25 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         examResults,
         exams,
         denoms,
-        rangeA,
-        rangeB,
+        valA,
+        valB,
       );
     }
-    return getMockDateRangeData();
+    if (isContacts) {
+      return buildContactsDateRangeComparison(reportData?.monthlyByYear, rangeA, rangeB);
+    }
+    return computeDynamicDateRangeComparison(
+      category,
+      enrollments,
+      attendanceRecords,
+      financeInvoices,
+      hasanatDistributions,
+      examResults,
+      exams,
+      denoms,
+      rangeA,
+      rangeB,
+    );
   }, [
     mode,
     isContacts,
@@ -446,7 +416,6 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     valB,
     rangeA,
     rangeB,
-    isAuthenticated,
     sessions,
     enrollments,
     attendanceRecords,

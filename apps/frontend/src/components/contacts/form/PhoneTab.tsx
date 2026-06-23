@@ -39,10 +39,10 @@ export default function PhoneTab({
   const fields = useVisibleContactFields("phones");
   const standardKeys = ["label", "number", "countryCode"];
   const sortedCustomFields = fields.filter((f) => !standardKeys.includes(f.key) && f.enabled !== false);
-  const { phoneLabels, countryCodesMap, updatePhoneLabels } = useContactConfig();
+  const { phoneLabels, countryCodesMap, defaultPhoneCountryCode, updatePhoneLabels } = useContactConfig();
   const { t } = useTranslation();
   const defaultPhoneLabel = phoneLabels[0] || t('contacts.detail.mobileLabel');
-  const phones = data.phones && data.phones.length > 0 ? data.phones : [{ label: defaultPhoneLabel, number: "", countryCode: countryCodesMap[defaultCountry] || "+92" }];
+  const phones = data.phones && data.phones.length > 0 ? data.phones : [{ label: defaultPhoneLabel, number: "", countryCode: countryCodesMap[defaultCountry] || defaultPhoneCountryCode }];
 
   const upd = (list: ContactPhone[]): void => {
     onChange({ ...data, phones: list });
@@ -57,7 +57,7 @@ export default function PhoneTab({
 
   const showLabel = labelField?.enabled !== false;
   const reqNumber = numberField?.required === true;
-  const defaultCode = countryCodesMap[defaultCountry] || "+92";
+  const defaultCode = countryCodesMap[defaultCountry] || defaultPhoneCountryCode;
 
   const updatePhone = (i: number, patch: Partial<ContactPhone>): void => {
     upd(phones.map((x, j) => (j === i ? { ...x, ...patch } : x)));

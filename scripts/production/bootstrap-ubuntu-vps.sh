@@ -26,16 +26,12 @@ sudo apt-get update -qq
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
   curl git build-essential ca-certificates gnupg \
   apache2 certbot python3-certbot-apache \
-  postgresql postgresql-contrib \
+  sqlite3 \
   ufw
 
-echo "── PostgreSQL ──"
-sudo systemctl enable postgresql
-sudo systemctl start postgresql
-if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='mms'" | grep -q 1; then
-  sudo -u postgres createdb mms
-  echo "Created database: mms"
-fi
+echo "── SQLite ──"
+# SQLite is a serverless local file database, no systemctl daemon configuration needed.
+# The database file is created and managed dynamically by the application.
 
 echo "── Node ${NODE_VERSION} (nvm) ──"
 export NVM_DIR="/home/${DEPLOY_USER}/.nvm"
@@ -76,7 +72,7 @@ echo "y" | sudo ufw enable || true
 echo "── Deploy directory ──"
 sudo mkdir -p "$DEPLOY_ROOT"
 sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_ROOT"
-mkdir -p "${DEPLOY_ROOT}/.logs" "${DEPLOY_ROOT}/.backups/postgres"
+mkdir -p "${DEPLOY_ROOT}/.logs" "${DEPLOY_ROOT}/.backups/sqlite" "${DEPLOY_ROOT}/data"
 
 if [ ! -f "${DEPLOY_ROOT}/package.json" ]; then
   echo ""
@@ -89,7 +85,7 @@ echo "══ Next steps (manual) ══"
 echo "1. Clone repo to ${DEPLOY_ROOT} (if not done)"
 echo "2. Create ${DEPLOY_ROOT}/apps/backend/.env with:"
 echo "     JWT_SECRET=<32+ chars>"
-echo "     DATABASE_URL=postgresql://postgres@localhost:5432/mms"
+echo "     DATABASE_URL=sqlite://data/mms.db"
 echo "     PORT=5002"
 echo "     NODE_ENV=production"
 echo "     MMS_APP_DOMAIN=mmsv2.yourdomain.com"
@@ -104,6 +100,6 @@ echo "     bash scripts/production/setup-pm2-startup.sh"
 echo "6. Apache isolation:"
 echo "     bash scripts/apply-production-host-isolation.sh apps/backend/.env"
 echo "7. Backups cron:"
-echo "     (crontab -l 2>/dev/null; echo '0 3 * * * ${DEPLOY_ROOT}/scripts/production/backup-postgres.sh') | crontab -"
+echo "     (crontab -l 2>/dev/null; echo '0 3 * * * ${DEPLOY_ROOT}/scripts/production/backup-sqlite.sh') | crontab -"
 echo ""
 echo "Bootstrap complete."

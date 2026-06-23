@@ -6,7 +6,7 @@ import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useQuestionBankConfig } from '@/hooks/useQuestionBankConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, ClipboardList, Sparkles, Plus } from 'lucide-react';
-import { resolveModuleTierTab, DEFAULT_QUESTION_BANK_SETTINGS, type QuestionBankSettings as QuestionBankSettingsData } from '@mms/shared';
+import { resolveModuleTierTab } from '@mms/shared';
 import PageHeader from '../components/ui/PageHeader';
 import ResponsiveAccordionTabs from '@/components/ui/ResponsiveAccordionTabs';
 import SubTabBar from '@/components/ui/SubTabBar';
@@ -22,7 +22,7 @@ import QuestionBankCommandMetrics from '../components/questionBank/QuestionBankC
 import ModuleReports from '../components/reports/ModuleReports';
 import KPISummary from '../components/reports/KPISummary';
 import type { QuestionBankQuestion, QuestionBankTest } from '@mms/shared';
-import { saveCollection, getObject } from '../lib/db';
+import { saveCollection } from '../lib/db';
 import { useLiveCollection } from '../hooks/useLiveCollection';
 import { useQuestionBankColumnLayout } from '@/hooks/useQuestionBankColumnLayout';
 
@@ -36,7 +36,7 @@ export default function QuestionBankPage(): React.JSX.Element {
   const questions = useLiveCollection('questions');
   const tests = useLiveCollection('tests');
   const results = useLiveCollection('assessment_results');
-  const { categories } = useQuestionBankConfig(questions);
+  const { settings, categories } = useQuestionBankConfig(questions);
   const OPS_SUB_TABS = useMemo(
     () => [
       { id: 'questions', label: t('questionBank.questions'), icon: ClipboardList },
@@ -53,7 +53,6 @@ export default function QuestionBankPage(): React.JSX.Element {
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [editQuestion, setEditQuestion] = useState<QuestionBankQuestion | null>(null);
   const [filteredCount, setFilteredCount] = useState(0);
-  const settings = getObject<QuestionBankSettingsData>('question_bank_settings', DEFAULT_QUESTION_BANK_SETTINGS);
   const columnLayout = useQuestionBankColumnLayout();
   const listLayout = (settings.defaultViewLayout || 'list') === 'list';
 

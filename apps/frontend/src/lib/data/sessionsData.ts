@@ -77,8 +77,8 @@ export const TabarrukItemSchema = z.object({
 export const SessionSchema = z.object({
   id: z.string(),
   name: z.string().min(1, "Session name is required"),
-  type: z.enum(["Hifz", "Qaidah", "Tajweed", "Islamic Studies", "Arabic", "Other"]),
-  status: z.enum(["active", "upcoming", "completed", "cancelled"]),
+  type: z.string().min(1, "Session type is required"),
+  status: z.string().min(1, "Session status is required"),
   startDate: z.string(),
   endDate: z.string(),
   baseFee: z.coerce.number().nonnegative("Base fee must be non-negative"),

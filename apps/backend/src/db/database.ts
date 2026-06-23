@@ -1,10 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import pg from 'pg';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+import Database from 'better-sqlite3';
 import { sql, eq, like } from 'drizzle-orm';
-import { join } from 'path';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { join, dirname } from 'path';
+import { mkdirSync } from 'fs';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from './schema.js';
 import { resolveBackendRoot } from '../config/loadEnv.js';
 import { getMinimalCollectionsForSeed, getMinimalObjects } from './minimalSeeds.js';
@@ -29,6 +30,11 @@ import { runMigration009 } from './migrations/009_seed_demo_students.js';
 import { runMigration010 } from './migrations/010_seed_demo_teacher_contacts.js';
 import { runMigration011 } from './migrations/011_expand_demo_roster.js';
 import { runMigration012 } from './migrations/012_migrate_users_to_tables.js';
+import { runMigration013 } from './migrations/013_seed_contact_config.js';
+import { runMigration014 } from './migrations/014_seed_student_config.js';
+import { runMigration015 } from './migrations/015_seed_teacher_config.js';
+import { runMigration016 } from './migrations/016_seed_session_config.js';
+import { runMigration017 } from './migrations/017_seed_attendance_config.js';
 import { deleteTenantUsersByWorkspace } from './repositories/tenantUserRepository.js';
 import { purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
@@ -39,7 +45,7 @@ import { setDb } from './dbClient.js';
 // AsyncLocalStorage threads the active tx client through nested helper calls
 // so that saveCollection / getCollection inside a transaction actually use it.
 // ---------------------------------------------------------------------------
-type DbClient = NodePgDatabase<typeof schema>;
+type DbClient = BetterSQLite3Database<typeof schema>;
 const txStorage = new AsyncLocalStorage<DbClient>();
 
 /** Returns the active transaction client if inside runInTransaction, otherwise the root db. */
@@ -59,9 +65,7 @@ function resolveObjectStorageKey(key: string): string {
   return tenantObjectKey(tenant, key);
 }
 
-const { Pool } = pg;
-
-let pool: pg.Pool;
+let sqliteDb: Database.Database;
 let _rootDb: DbClient;
 
 function getRootDb(): DbClient {
@@ -71,24 +75,18 @@ function getRootDb(): DbClient {
 
 export async function initDb(): Promise<void> {
   try {
-    const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/mms';
-    const useSsl = process.env.DATABASE_SSL === 'true';
+    const dbPath = process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('postgres')
+      ? process.env.DATABASE_URL.replace(/^sqlite:\/\//, '')
+      : join(resolveBackendRoot(), 'mms.db');
 
-    pool = new Pool({
-      connectionString,
-      max: Number(process.env.PG_POOL_MAX) || 20,
-      idleTimeoutMillis: 30_000,
-      connectionTimeoutMillis: 10_000,
-      statement_timeout: 30_000,
-      ...(useSsl ? { ssl: { rejectUnauthorized: false } } : {}),
-    });
+    // Ensure database directory exists
+    mkdirSync(dirname(dbPath), { recursive: true });
 
-    // Prevent unhandled EventEmitter error from crashing the process
-    pool.on('error', (err) => {
-      console.error('[DB Pool] Idle client error:', err);
-    });
+    sqliteDb = new Database(dbPath);
+    sqliteDb.pragma('journal_mode = WAL');
+    sqliteDb.pragma('busy_timeout = 5000');
 
-    _rootDb = drizzle(pool, { schema });
+    _rootDb = drizzle(sqliteDb, { schema });
     setDb(_rootDb);
 
     // Run Drizzle migrations dynamically on start
@@ -108,12 +106,16 @@ export async function initDb(): Promise<void> {
     await runMigration010();
     await runMigration011();
     await runMigration012();
+    await runMigration013();
+    await runMigration014();
+    await runMigration015();
+    await runMigration016();
+    await runMigration017();
     await purgeExpiredAuthArtifacts();
     await ensurePlatformSuperUserFromEnv();
 
-    // Postgres COUNT(*) returns bigint as a string — parseInt is required
-    const results = await _rootDb.select({ count: sql<string>`count(*)` }).from(schema.collections);
-    const count = parseInt(results[0]?.count ?? '0', 10);
+    const results = await _rootDb.select({ count: sql<number>`count(*)` }).from(schema.collections);
+    const count = Number(results[0]?.count ?? 0);
 
     if (count === 0) {
       console.log('Database is empty. Seeding default collections and objects...');
@@ -245,7 +247,7 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
 }
 
 /**
- * Deletes all PostgreSQL rows scoped to a workspace subdomain (collections, objects, tenant users).
+ * Deletes all SQLite rows scoped to a workspace subdomain (collections, objects, tenant users).
  * Uses LIKE prefix batch deletes instead of per-row sequential deletes.
  * Does not modify the global workspaces registry.
  */
@@ -255,7 +257,6 @@ export async function purgeTenantDataBySubdomain(subdomain: string): Promise<voi
     throw new Error('Subdomain is required to purge tenant data');
   }
 
-  // Tenant-scoped storage keys are prefixed as "subdomain::logicalKey"
   const prefix = `${tenant}::`;
   const db = activeDb();
 
@@ -291,15 +292,13 @@ export async function resetTenantData(): Promise<void> {
  */
 export async function resetDatabase(): Promise<void> {
   try {
-    // Design Boundary: Drizzle ORM does not support DROP TABLE at runtime;
-    // administrative teardown requires raw SQL.
     const db = activeDb();
-    await db.execute(sql`DROP TABLE IF EXISTS tenant_users CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS platform_users CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS auth_artifacts CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS collections CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS objects CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS __drizzle_migrations CASCADE;`);
+    await db.run(sql`DROP TABLE IF EXISTS tenant_users;`);
+    await db.run(sql`DROP TABLE IF EXISTS platform_users;`);
+    await db.run(sql`DROP TABLE IF EXISTS auth_artifacts;`);
+    await db.run(sql`DROP TABLE IF EXISTS collections;`);
+    await db.run(sql`DROP TABLE IF EXISTS objects;`);
+    await db.run(sql`DROP TABLE IF EXISTS __drizzle_migrations;`);
     await initDb();
   } catch (error) {
     console.error('Error resetting database:', error);
@@ -348,18 +347,18 @@ export async function getObjectByStorageKey(key: string): Promise<unknown | null
 /** Lightweight DB connectivity check for `/ready`. */
 export async function pingDatabase(): Promise<boolean> {
   try {
-    if (!pool) return false;
-    await pool.query('SELECT 1');
+    if (!sqliteDb) return false;
+    sqliteDb.prepare('SELECT 1').run();
     return true;
   } catch {
     return false;
   }
 }
 
-/** Gracefully close the PostgreSQL pool on shutdown. */
+/** Gracefully close the database on shutdown. */
 export async function closeDatabase(): Promise<void> {
-  if (pool) {
-    await pool.end();
+  if (sqliteDb) {
+    sqliteDb.close();
   }
 }
 
@@ -370,15 +369,20 @@ export async function closeDatabase(): Promise<void> {
  * Nested calls are no-ops (they reuse the active tx).
  */
 export async function runInTransaction<T>(cb: () => Promise<T>): Promise<T> {
-  // Already inside a transaction — reuse it to support nested calls
   const existing = txStorage.getStore();
   if (existing) return cb();
 
+  sqliteDb.exec('BEGIN');
   try {
-    return await getRootDb().transaction(async (tx) => {
-      return txStorage.run(tx as DbClient, cb);
-    });
+    const result = await txStorage.run(_rootDb, cb);
+    sqliteDb.exec('COMMIT');
+    return result;
   } catch (error) {
+    try {
+      sqliteDb.exec('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Failed to rollback transaction:', rollbackError);
+    }
     console.error('Database transaction rolled back due to error:', error);
     throw error;
   }

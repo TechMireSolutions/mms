@@ -5,10 +5,8 @@ import { useForm } from 'react-hook-form';
 import {
   TEACHER_STATUS_VALUES,
   type Teacher,
-  type TeachersSettings,
-  DEFAULT_TEACHERS_SETTINGS,
+  type AppTranslationKey,
 } from '@mms/shared';
-import { getObject } from '@/lib/db';
 import useTranslation from '@/hooks/useTranslation';
 import FormModal from '@/components/ui/FormModal';
 import ContactPicker from '@/components/contactLink/ContactPicker';
@@ -29,6 +27,7 @@ import {
   type TeacherFormValues,
   TEACHER_SPECIALIZATION_OPTIONS,
 } from '@/lib/forms/teacherSchemas';
+import { useTeacherConfig } from '@/hooks/useTeacherConfig';
 import { calculateKeyedUnitsCompleteness } from '@/lib/formCompleteness';
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from '@/hooks/useTeachers';
 
@@ -44,10 +43,10 @@ export default function TeacherForm({
   onSave,
 }: TeacherFormProps): React.JSX.Element {
   const { t } = useTranslation();
-  const settings = useMemo(
-    () => getObject<TeachersSettings>('teachers_settings', DEFAULT_TEACHERS_SETTINGS),
-    [],
-  );
+  const { settings, statuses, specializations } = useTeacherConfig();
+
+  const statusOptions = statuses.length > 0 ? statuses : [...TEACHER_STATUS_VALUES];
+  const specializationOptions = specializations.length > 0 ? specializations : TEACHER_SPECIALIZATION_OPTIONS;
 
   const autoGenerateId = settings.autoGenerateId && !teacher;
   const { data: linkedTeacherContactIds = [] } = useTeacherLinkedContactIds(
@@ -65,8 +64,8 @@ export default function TeacherForm({
     defaultValues: {
       contactId: teacher?.contactId as TeacherFormValues['contactId'],
       employeeId: teacher?.employeeId ?? '',
-      specialization: teacher?.specialization ?? settings.defaultSpecialization ?? 'General',
-      status: teacher?.status ?? 'active',
+      specialization: teacher?.specialization ?? settings.defaultSpecialization ?? specializationOptions[0] ?? 'General',
+      status: teacher?.status ?? statusOptions[0] ?? 'active',
       joinDate: teacher?.joinDate ?? new Date().toISOString().split('T')[0],
       qualification: teacher?.qualification ?? '',
       notes: teacher?.notes ?? '',
@@ -171,7 +170,7 @@ export default function TeacherForm({
                   <FormLabel>{t('teachers.field.specialization')}</FormLabel>
                   <FormControl>
                     <select {...field} className={FORM_SELECT}>
-                      {TEACHER_SPECIALIZATION_OPTIONS.map((opt) => (
+                      {specializationOptions.map((opt) => (
                         <option key={opt} value={opt}>{opt}</option>
                       ))}
                     </select>
@@ -204,9 +203,14 @@ export default function TeacherForm({
                   <FormLabel>{t('teachers.field.status')}</FormLabel>
                   <FormControl>
                     <select {...field} className={FORM_SELECT}>
-                      {TEACHER_STATUS_VALUES.map((s) => (
-                        <option key={s} value={s}>{t(`teachers.status.${s}`)}</option>
-                      ))}
+                      {statusOptions.map((s) => {
+                        const translationKey = `teachers.status.${s}` as AppTranslationKey;
+                        const translated = t(translationKey);
+                        const label = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+                        return (
+                          <option key={s} value={s}>{label}</option>
+                        );
+                      })}
                     </select>
                   </FormControl>
                 </FormItem>

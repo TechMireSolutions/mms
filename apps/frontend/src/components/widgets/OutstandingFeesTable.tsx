@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Phone, Send } from "lucide-react";
-import { INVOICES, Invoice } from '@/lib/data/financeData';
+import type { Invoice } from '@/lib/data/financeData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useStudentsByIds } from "../../hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
@@ -15,7 +15,7 @@ import { uniqueRegistryIds } from "@/lib/registryResolve";
  * @returns {React.ReactElement} The outstanding fees table widget.
  */
 export default function OutstandingFeesTable({ title }: { title?: string }) {
-  const invoices = useLiveCollection<Invoice>("finance_invoices", INVOICES);
+  const invoices = useLiveCollection<Invoice>("finance_invoices", []);
   const unpaidInvoices = useMemo(
     () => invoices.filter((inv) => inv.status !== "paid" && inv.status !== "cancelled"),
     [invoices],

@@ -51,3 +51,8 @@ blob-report/
 # WhatsApp Web session data
 .wwebjs_auth
 .wwebjs_cache
+
+# SQLite Database Files
+*.db
+*.db-shm
+*.db-wal

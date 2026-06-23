@@ -20,6 +20,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { isApiError } from "@/lib/apiClient";
 import { queryClientInstance } from "@/lib/query-client";
 import { CONTACTS_GOOGLE_SYNC_QUERY_KEY } from "@/hooks/useContacts";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 
 /**
  * Parses a raw vCard (.vcf) formatted string into an array of normalized contact objects.
@@ -28,7 +29,7 @@ import { CONTACTS_GOOGLE_SYNC_QUERY_KEY } from "@/hooks/useContacts";
  * @param personalLabel Label to use for email entries.
  * @returns Array of parsed contact objects.
  */
-function parseVCard(text: string, mobileLabel: string, personalLabel: string): Contact[] {
+function parseVCard(text: string, mobileLabel: string, personalLabel: string, defaultPhoneCountryCode: string): Contact[] {
   const contacts: Contact[] = [];
   const cards = text.split(/BEGIN:VCARD/i).filter((c) => c.trim());
   for (const card of cards) {
@@ -43,7 +44,7 @@ function parseVCard(text: string, mobileLabel: string, personalLabel: string): C
     const firstName = nameParts[0] || "";
     const lastName = nameParts.slice(1).join(" ");
     const phone = (card.match(/^TEL[^:]*:(.+)$/im) || [])[1]?.trim() || "";
-    const parsedRaw = parsePhoneNumber(phone, "+92");
+    const parsedRaw = parsePhoneNumber(phone, defaultPhoneCountryCode);
     const e164 = normalizeToE164(parsedRaw.countryCode, parsedRaw.number);
     const parsed = parsePhoneNumber(e164, parsedRaw.countryCode);
     const email = (card.match(/^EMAIL[^:]*:(.+)$/im) || [])[1]?.trim() || "";
@@ -501,8 +502,9 @@ interface AppleContactsPanelProps {
  */
 function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContactsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
-  const mobileLabel = t('contacts.sync.mobileLabel');
-  const personalLabel = t('contacts.sync.personalLabel');
+  const { phoneLabels, emailLabels, defaultPhoneCountryCode } = useContactConfig();
+  const mobileLabel = phoneLabels[0] || t('contacts.sync.mobileLabel');
+  const personalLabel = emailLabels[0] || t('contacts.sync.personalLabel');
   const [previewList, setPreviewList] = useState<Contact[]>([]);
   const [importing, setImporting] = useState<boolean>(false);
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
@@ -515,7 +517,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
     const reader = new FileReader();
     reader.onload = (ev) => {
       if (ev.target && typeof ev.target.result === "string") {
-        setPreviewList(parseVCard(ev.target.result, mobileLabel, personalLabel));
+        setPreviewList(parseVCard(ev.target.result, mobileLabel, personalLabel, defaultPhoneCountryCode));
         setResult(null);
       }
     };
@@ -526,12 +528,10 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
     setImporting(true);
     const existingNames = new Set(contacts.map((c) => c.name?.toLowerCase().trim()));
     const fresh = previewList.filter((c) => !existingNames.has(c.name?.toLowerCase().trim()));
-    setTimeout(() => {
-      onImport(fresh);
-      setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
-      setPreviewList([]);
-      setImporting(false);
-    }, 400);
+    onImport(fresh);
+    setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
+    setPreviewList([]);
+    setImporting(false);
   };
 
   const handleExport = (): void => {

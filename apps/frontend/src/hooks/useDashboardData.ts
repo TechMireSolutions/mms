@@ -10,11 +10,9 @@ import { useContactsMetrics, useContactsWidgetAggregates } from '@/hooks/useCont
 import { useAttendanceRecordsCollection } from '@/hooks/useAttendance';
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
-import { INVOICES, type Invoice } from '@/lib/data/financeData';
-import { DISTRIBUTIONS, type Distribution } from '@/lib/data/hasanatData';
+import type { Invoice } from '@/lib/data/financeData';
+import type { Distribution } from '@/lib/data/hasanatData';
 import type { QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from '@mms/shared';
-import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
-import { revenueData as defaultRevenueData } from '@/lib/data/dashboardData';
 import type { Student } from '@/lib/data/studentsData';
 import type { Teacher } from '@mms/shared';
 import type { Session } from '@/lib/data/sessionsData';
@@ -30,6 +28,7 @@ export interface DashboardCollectionData {
   invoices: Invoice[];
   attendanceRecords: AttendanceRecord[];
   hasanatDistributions: Distribution[];
+  denoms: any[];
   contacts: Contact[];
   contactsTotal: number;
   questions: QuestionBankQuestion[];
@@ -99,7 +98,7 @@ export function useDashboardData(
   const { data: teacherMetrics } = useTeachersMetrics({ enabled: needsTeachers });
   const teachersTotal = teacherMetrics?.total ?? 0;
   const sessions = useSessionsCollection({ enabled: needs('sessions') });
-  const invoices = useLiveCollection<Invoice>('finance_invoices', INVOICES, {
+  const invoices = useLiveCollection<Invoice>('finance_invoices', [], {
     enabled: needs('finance_invoices'),
   });
   const attendanceRecords = useAttendanceRecordsCollection({
@@ -107,21 +106,24 @@ export function useDashboardData(
   });
   const hasanatDistributions = useLiveCollection<Distribution>(
     'hasanat_distributions',
-    DISTRIBUTIONS,
+    [],
     { enabled: needs('hasanat_distributions'),
+  });
+  const denoms = useLiveCollection<any>('hasanat_denoms', [], {
+    enabled: needs('hasanat_distributions'),
   });
   const { data: contactMetrics } = useContactsMetrics({ enabled: needsContacts });
   const contactsTotal = contactMetrics?.total ?? 0;
-  const questions = useLiveCollection<QuestionBankQuestion>('questions', QUESTIONS, {
+  const questions = useLiveCollection<QuestionBankQuestion>('questions', [], {
     enabled: needs('questions'),
   });
-  const tests = useLiveCollection<QuestionBankTest>('tests', TESTS, { enabled: needs('tests') });
-  const assessmentResults = useLiveCollection<QuestionBankResult>('assessment_results', RESULTS, {
+  const tests = useLiveCollection<QuestionBankTest>('tests', [], { enabled: needs('tests') });
+  const assessmentResults = useLiveCollection<QuestionBankResult>('assessment_results', [], {
     enabled: needs('assessment_results'),
   });
   const revenueExpenses = useLiveCollection<{ revenue: number; expenses: number }>(
     'revenue_expenses',
-    defaultRevenueData,
+    [],
     { enabled: loadRevenueExpenses },
   );
 
@@ -147,6 +149,7 @@ export function useDashboardData(
     invoices,
     attendanceRecords,
     hasanatDistributions,
+    denoms,
     contacts: [] as Contact[],
     contactsTotal,
     questions,

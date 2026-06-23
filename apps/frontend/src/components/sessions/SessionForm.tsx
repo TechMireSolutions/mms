@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Calendar } from "lucide-react";
 import FormModal from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
 import { calculateModuleFieldsCompleteness } from "@/lib/formCompleteness";
 import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
-import { toTitleCase } from "@mms/shared";
-import { getObject } from "../../lib/db";
+import { toTitleCase, type AppTranslationKey } from "@mms/shared";
+import useTranslation from "@/hooks/useTranslation";
+import { useSessionConfig } from "@/hooks/useSessionConfig";
 import {
-  type SessionsSettings,
   DEFAULT_SESSIONS_SETTINGS,
   DEFAULT_SESSIONS_FIELD_DEFS,
   getSortedFields,
@@ -29,14 +29,33 @@ interface SessionFormProps {
  * A modal form for creating or editing a session.
  */
 export default function SessionForm({ open = true, session, onClose, onSave }: SessionFormProps) {
+  const { t } = useTranslation();
   const [data, setData] = useState<Partial<Session>>(session ? { ...session } : { ...EMPTY });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const settings = useMemo(() => getObject<SessionsSettings>("sessions_settings", DEFAULT_SESSIONS_SETTINGS), []);
+  const { settings, statuses, types } = useSessionConfig();
+
+  const statusOptions = statuses.length > 0 ? statuses : ["active", "upcoming", "completed", "cancelled"];
+  const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
+
   const fields = settings.fields || DEFAULT_SESSIONS_SETTINGS.fields || {};
   const customFields = settings.customFields || [];
   const fieldOrder = settings.fieldOrder || DEFAULT_SESSIONS_SETTINGS.fieldOrder || [];
+
+  const upd = <K extends keyof Session>(f: K, v: Session[K]) => setData((d) => ({ ...d, [f]: v }));
+
+  useEffect(() => {
+    if (!session && !data.status && statusOptions[0]) {
+      upd("status", statusOptions[0]);
+    }
+  }, [statusOptions, session, data.status]);
+
+  useEffect(() => {
+    if (!session && !data.type && typeOptions[0]) {
+      upd("type", typeOptions[0]);
+    }
+  }, [typeOptions, session, data.type]);
 
   const orderedFields = useMemo(() => {
     return getSortedFields(DEFAULT_SESSIONS_FIELD_DEFS, fieldOrder, fields, customFields);
@@ -46,8 +65,6 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
     () => calculateModuleFieldsCompleteness(data as Record<string, unknown>, orderedFields, fields),
     [data, orderedFields, fields],
   );
-
-  const upd = <K extends keyof Session>(f: K, v: Session[K]) => setData((d) => ({ ...d, [f]: v }));
 
   const handleSave = async () => {
     // Validate required default fields
@@ -86,8 +103,8 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
       ...saved,
       id: session?.id || `s${Date.now()}`,
       name: saved.name || "Untitled Session",
-      type: saved.type || "Hifz",
-      status: saved.status || "active",
+      type: saved.type || typeOptions[0] || "Hifz",
+      status: saved.status || statusOptions[0] || "active",
       startDate: saved.startDate || "",
       endDate: saved.endDate || "",
       baseFee: Number(saved.baseFee) || 0,
@@ -137,7 +154,7 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
                   <div key="type">
                     <label className={FORM_LABEL} htmlFor="sessionType">Type {field.required ? "*" : ""}</label>
                     <select id="sessionType" className={FORM_SELECT} value={data.type || "Hifz"} onChange={(e) => upd("type", e.target.value as Session["type"])} required={field.required}>
-                      {SESSION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      {typeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                 );
@@ -148,10 +165,14 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
                   <div key="status">
                     <label className={FORM_LABEL} htmlFor="sessionStatus">Status {field.required ? "*" : ""}</label>
                     <select id="sessionStatus" className={FORM_SELECT} value={data.status || "active"} onChange={(e) => upd("status", e.target.value as Session["status"])} required={field.required}>
-                      <option value="active">Active</option>
-                      <option value="upcoming">Upcoming</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
+                      {statusOptions.map((s) => {
+                        const translationKey = `sessions.status.${s}` as AppTranslationKey;
+                        const translated = t(translationKey);
+                        const label = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+                        return (
+                          <option key={s} value={s}>{label}</option>
+                        );
+                      })}
                     </select>
                   </div>
                 );

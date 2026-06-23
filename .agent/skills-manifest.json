@@ -237,6 +237,20 @@
         "github actions",
         "pm2"
       ]
+    },
+    {
+      "name": "mms-linux-compatibility",
+      "path": "skills/mms-linux-compatibility",
+      "keywords": [
+        "linux",
+        "ubuntu",
+        "vps",
+        "deploy",
+        "casing",
+        "line endings",
+        "permissions",
+        "pm2"
+      ]
     }
   ],
   "rules": {
@@ -245,7 +259,8 @@
       "rules/mms-core.md",
       "rules/mms-migration-status.md",
       "rules/mms-dependencies.md",
-      "rules/mms-dry.md"
+      "rules/mms-dry.md",
+      "rules/mms-completion-review.md"
     ],
     "directory": "rules/"
   },

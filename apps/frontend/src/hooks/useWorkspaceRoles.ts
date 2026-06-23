@@ -1,35 +1,23 @@
-import { useCallback, useEffect, useState } from "react";
+import { useMemo } from "react";
 import {
   cloneDefaultWorkspaceRoles,
-  DEFAULT_USERS_SETTINGS,
-  type UsersSettings,
   type WorkspaceRole,
 } from "@mms/shared";
-import { getObject } from "@/lib/db";
-
-function readWorkspaceRoles(): WorkspaceRole[] {
-  const settings = getObject<UsersSettings>("users_settings", DEFAULT_USERS_SETTINGS);
-  if (settings.workspaceRoles?.length) {
-    return settings.workspaceRoles.map((r) => ({
-      ...r,
-      permissions: structuredClone(r.permissions),
-    }));
-  }
-  return cloneDefaultWorkspaceRoles();
-}
+import { useUsersConfig } from "@/hooks/useUsersConfig";
 
 /** Live workspace roles from `users_settings` (system + custom). */
 export function useWorkspaceRoles(): WorkspaceRole[] {
-  const [roles, setRoles] = useState<WorkspaceRole[]>(readWorkspaceRoles);
+  const { settings } = useUsersConfig();
 
-  const refresh = useCallback(() => setRoles(readWorkspaceRoles()), []);
-
-  useEffect(() => {
-    refresh();
-    const onUpdate = (): void => refresh();
-    window.addEventListener("local-database-update", onUpdate);
-    return () => window.removeEventListener("local-database-update", onUpdate);
-  }, [refresh]);
+  const roles = useMemo(() => {
+    if (settings.workspaceRoles?.length) {
+      return settings.workspaceRoles.map((r) => ({
+        ...r,
+        permissions: structuredClone(r.permissions),
+      }));
+    }
+    return cloneDefaultWorkspaceRoles();
+  }, [settings.workspaceRoles]);
 
   return roles;
 }

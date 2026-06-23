@@ -6,7 +6,16 @@ import {
   ComposedChart, Area, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from "recharts";
-import { attendanceData as defaultAttendanceData, AttendancePoint, HasanatPoint } from '@/lib/data/dashboardData';
+interface AttendancePoint {
+  day: string;
+  rate: number;
+}
+
+interface HasanatPoint {
+  name: string;
+  value: number;
+  color: string;
+}
 import { getCollection } from "../../../lib/db";
 import { AttendanceRecord } from '@/lib/data/attendanceData';
 import { Distribution } from '@/lib/data/hasanatData';
@@ -51,7 +60,6 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
   const uniqueDates = [...new Set(records.map(r => r.date as string))].sort().reverse().slice(0, 7).reverse();
 
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
   const attendanceData: AttendancePoint[] = days.map((dayLabel, index) => {
     const targetDate = uniqueDates.find(d => {
       const dateObj = new Date(d);
@@ -65,14 +73,13 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
       const present = dayRecords.filter(r => r.status === "present" || r.status === "late").length;
       return {
         day: dayLabel,
-        rate: total > 0 ? Math.round((present / total) * 100) : (isAuth ? 0 : 90)
+        rate: total > 0 ? Math.round((present / total) * 100) : 0
       };
     }
 
-    const defaultRate = isAuth ? 0 : (defaultAttendanceData[index]?.rate || 90);
     return {
       day: dayLabel,
-      rate: defaultRate
+      rate: 0
     };
   });
   
@@ -195,6 +202,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
 export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { hasanat: HASANAT_THEMES } = useBrandedDashboardChartColors();
   const distributions = getCollection<Distribution>("hasanat_distributions");
+  const denoms = getCollection<any>("hasanat_denoms");
 
   const [chartType, setChartType] = useState<"pie" | "bar" | "radar">(() => {
     return (localStorage.getItem("db_chart_type_hasanat") as "pie" | "bar" | "radar") || "pie";
@@ -207,14 +215,18 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   let attendancePoints = 0;
   let behaviorPoints = 0;
 
+  const pointsMap = new Map<string, number>();
+  (denoms || []).forEach(d => pointsMap.set(d.id, d.points));
+
   distributions.forEach(d => {
     if (!d) return;
-    let points = 50;
     const denom = String(d.denominationName || "").toLowerCase();
-    if (denom.includes("silver")) points = 150;
-    else if (denom.includes("gold")) points = 500;
-    else if (denom.includes("platinum")) points = 1000;
-    else if (denom.includes("diamond")) points = 2500;
+    const points = pointsMap.get(d.denominationId) || (
+      denom.includes("silver") ? 150 :
+      denom.includes("gold") ? 500 :
+      denom.includes("platinum") ? 1000 :
+      denom.includes("diamond") ? 2500 : 50
+    );
 
     const totalPts = Number(d.quantity || 1) * points;
 
@@ -230,11 +242,10 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
 
   const activeColors = HASANAT_THEMES[colorTheme] || HASANAT_THEMES.mixed;
 
-  const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
   const hasanatData: HasanatPoint[] = [
-    { name: "Memorisation", value: memorisationPoints || (isAuth ? 0 : 2800), color: activeColors.mem },
-    { name: "Attendance",   value: attendancePoints || (isAuth ? 0 : 1400), color: activeColors.att },
-    { name: "Behavior",     value: behaviorPoints || (isAuth ? 0 : 1440), color: activeColors.beh }
+    { name: "Memorisation", value: memorisationPoints, color: activeColors.mem },
+    { name: "Attendance",   value: attendancePoints, color: activeColors.att },
+    { name: "Behavior",     value: behaviorPoints, color: activeColors.beh }
   ];
   
   const total = hasanatData.reduce((s, d) => s + d.value, 0);

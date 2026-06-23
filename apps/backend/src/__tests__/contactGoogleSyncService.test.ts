@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mockFetchObject = vi.fn();
 const mockPersistObject = vi.fn();
 const mockLoadContacts = vi.fn();
+const mockLoadContactRuntimeDefaults = vi.fn();
 
 vi.mock('../services/dbSyncService.js', () => ({
   fetchObject: (...args: unknown[]) => mockFetchObject(...args),
@@ -11,6 +12,7 @@ vi.mock('../services/dbSyncService.js', () => ({
 
 vi.mock('../services/contactService.js', () => ({
   loadContacts: (...args: unknown[]) => mockLoadContacts(...args),
+  loadContactRuntimeDefaults: (...args: unknown[]) => mockLoadContactRuntimeDefaults(...args),
 }));
 
 import {
@@ -26,6 +28,12 @@ describe('contactGoogleSyncService', () => {
     mockFetchObject.mockReset().mockResolvedValue({});
     mockPersistObject.mockReset().mockResolvedValue(undefined);
     mockLoadContacts.mockReset().mockResolvedValue([]);
+    mockLoadContactRuntimeDefaults.mockReset().mockResolvedValue({
+      defaultPhoneCountryCode: '+92',
+      phoneLabel: 'Work',
+      emailLabel: 'Work',
+      lifecycleStage: 'Lead',
+    });
     vi.stubGlobal('fetch', vi.fn());
   });
 

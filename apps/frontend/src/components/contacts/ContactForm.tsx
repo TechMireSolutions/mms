@@ -136,7 +136,7 @@ export default function ContactForm({
   initialDraft,
   lockGender = false,
 }: ContactFormProps): React.JSX.Element {
-  const { fieldConfig, prefs, enabledTabIds, requiredTabIds, fields, countryCodesMap, lifecycleStages, defaultContactRating } = useContactConfig();
+  const { fieldConfig, prefs, enabledTabIds, requiredTabIds, fields, countryCodesMap, lifecycleStages, defaultContactRating, defaultPhoneCountryCode } = useContactConfig();
   const { t } = useTranslation();
   const { role } = usePermissions();
   const viewerRole = role ?? '';
@@ -174,7 +174,7 @@ export default function ContactForm({
     if (!contact) {
       return { ...initial, ...initialDraft } as Partial<Contact>;
     }
-    const defaultCode = countryCodesMap[defaultCountryProp] || "";
+    const defaultCode = countryCodesMap[defaultCountryProp] || defaultPhoneCountryCode;
     const phones = (contact.phones || []).map((p) => {
       if (p.countryCode) return p;
       const parsed = parsePhoneNumber(p.number, defaultCode);
@@ -279,11 +279,10 @@ export default function ContactForm({
 
     setErrors([]);
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 300));
     const firstName = toTitleCase(data.firstName?.trim()) as string;
     const lastName  = toTitleCase(data.lastName?.trim()) as string;
     
-    const defaultCode = countryCodesMap[defaultCountryProp] || "+92";
+    const defaultCode = countryCodesMap[defaultCountryProp] || defaultPhoneCountryCode;
     const normalizedPhones = (data.phones || []).map((p) => {
       const e164 = normalizeToE164(p.countryCode || defaultCode, p.number);
       const parsed = parsePhoneNumber(e164, p.countryCode || defaultCode);

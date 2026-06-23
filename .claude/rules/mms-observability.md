@@ -49,7 +49,7 @@ Stable JSON shape (`mms-backend.md`):
 ```
 
 - `message` for dev/debug or generic display — user copy maps `type` → `t('errors.*')` (`mms-i18n.md`)
-- Do not leak raw PostgreSQL errors in production
+- Do not leak raw SQLite or database errors in production
 
 ## Frontend resilience
 

@@ -2,7 +2,8 @@ import React, { useMemo } from "react";
 import { UserCheck, Users, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/config/routes";
-import { ATTENDANCE_STATUSES } from '@/lib/data/attendanceData';
+import { AttendanceStatus } from '@/lib/data/attendanceData';
+import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
 import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
 import { useSessionsCollection } from "@/hooks/useSessions";
 // Type definitions
@@ -45,6 +46,7 @@ interface ClassBreakdown {
  * @returns {React.ReactElement} The rendered widget component.
  */
 export default function TodayAttendanceWidget({ title }: { title?: string }) {
+  const { statuses } = useAttendanceConfig();
   const attendanceRecords = useAttendanceRecordsCollection();
   const sessions = useSessionsCollection();
 
@@ -71,32 +73,33 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
   const displayDate = displayRecords.length > 0 ? displayRecords[0].date : today;
   const isToday = displayDate === today;
 
-  const stats = useMemo(() => ({
-    total:   displayRecords.length,
-    present: displayRecords.filter((r) => r.status === "present").length,
-    absent:  displayRecords.filter((r) => r.status === "absent").length,
-    late:    displayRecords.filter((r) => r.status === "late").length,
-    excused: displayRecords.filter((r) => r.status === "excused").length,
-  }), [displayRecords]);
+  const stats = useMemo(() => {
+    const counts: Record<string, number> = { total: displayRecords.length };
+    displayRecords.forEach((r) => {
+      counts[r.status] = (counts[r.status] || 0) + 1;
+    });
+    return counts;
+  }, [displayRecords]);
 
-  const rate = stats.total ? Math.round(((stats.present + stats.late) / stats.total) * 100) : 0;
+  const rate = stats.total ? Math.round((((stats.present || 0) + (stats.late || 0)) / stats.total) * 100) : 0;
 
   // Per-class breakdown
   const classBreakdown = useMemo(() => {
-    const map: Record<string, { present: number; absent: number; late: number; excused: number; total: number }> = {};
+    const map: Record<string, Record<string, number>> = {};
     displayRecords.forEach((r) => {
-      if (!map[r.classId]) map[r.classId] = { present: 0, absent: 0, late: 0, excused: 0, total: 0 };
-      const statusKey = r.status as keyof typeof map[string];
-      if (typeof map[r.classId][statusKey] === "number") {
-          map[r.classId][statusKey]++;
-      }
+      if (!map[r.classId]) map[r.classId] = { total: 0 };
+      map[r.classId][r.status] = (map[r.classId][r.status] || 0) + 1;
       map[r.classId].total++;
     });
     return Object.entries(map).map(([classId, s]) => ({
       classId,
       name: allClasses.find((c) => c.id === classId)?.name || classId,
-      ...s,
-      rate: s.total ? Math.round(((s.present + s.late) / s.total) * 100) : 0,
+      present: s.present || 0,
+      absent: s.absent || 0,
+      late: s.late || 0,
+      excused: s.excused || 0,
+      total: s.total,
+      rate: s.total ? Math.round((((s.present || 0) + (s.late || 0)) / s.total) * 100) : 0,
     })) as ClassBreakdown[];
   }, [displayRecords, allClasses]);
 
@@ -148,9 +151,12 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
             </div>
 
             {/* Status pills */}
-            <div className="grid grid-cols-4 gap-2">
-              {ATTENDANCE_STATUSES.map((s: { id: string; bg: string; text: string; border: string; label: string }) => {
-                const count = stats[s.id as keyof typeof stats] || 0;
+            <div 
+              className="grid gap-2"
+              style={{ gridTemplateColumns: `repeat(${statuses.length || 4}, minmax(0, 1fr))` }}
+            >
+              {statuses.map((s: AttendanceStatus) => {
+                const count = stats[s.id] || 0;
                 return (
                   <div key={s.id} className={`rounded-xl ${s.bg} ${s.text} border ${s.border} px-2 py-2 text-center`}>
                     <p className="text-base font-bold">{count}</p>
@@ -161,10 +167,10 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
             </div>
 
             {/* Alert if high absence */}
-            {stats.absent > 2 && (
+            {(stats.absent || 0) > 2 && (
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-xs font-semibold">
                 <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                {stats.absent} student{stats.absent > 1 ? "s" : ""} absent today — review needed
+                {stats.absent} student{(stats.absent || 0) > 1 ? "s" : ""} absent today — review needed
               </div>
             )}
 

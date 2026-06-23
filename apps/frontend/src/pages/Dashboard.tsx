@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Pencil, Trash2, Plus } from 'lucide-react';
 import type { Permission } from '@mms/shared';
@@ -13,7 +13,6 @@ import {
   DashboardWidgets,
   CustomWidget,
   WidgetBuilder,
-  getOrInitializeCustomWidgets,
 } from '@/components/reports/PinnedWidgets';
 import { computeCustomCard as computeCustomCardShared, type ReportCollection } from '@/components/reports/reportMetadata';
 import { computeContactsCustomCardValue, computeStudentsCustomCardValue, computeTeachersCustomCardValue } from '@/components/reports/pinnedWidgets/widgetDataUtils';
@@ -21,12 +20,7 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import useGlobalSettings from '@/hooks/useGlobalSettings';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import useTranslation from '@/hooks/useTranslation';
-import {
-  loadDisabledCardIds,
-  saveDisabledCardIds,
-  saveCustomWidgetsRaw,
-  DASHBOARD_WIDGETS_KEY,
-} from '@/lib/dashboardPreferences';
+import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { buildDashboardNotifications } from '@/lib/buildDashboardNotifications';
 
@@ -84,9 +78,14 @@ export default function Dashboard() {
   const globalSettings = useGlobalSettings();
   const enabledModules = globalSettings.enabledModules || {};
 
+  const {
+    disabledCardIds,
+    customWidgets,
+    updateCustomWidgets,
+    toggleCardVisibility,
+  } = useDashboardConfig();
+
   const [isEditMode, setIsEditMode] = useState(false);
-  const [disabledCardIds, setDisabledCardIds] = useState<string[]>(() => loadDisabledCardIds());
-  const [customWidgets, setCustomWidgets] = useState<CustomWidget[]>(() => getOrInitializeCustomWidgets());
   const [isWidgetBuilderOpen, setIsWidgetBuilderOpen] = useState(false);
   const [editingWidget, setEditingWidget] = useState<CustomWidget | null>(null);
   const [widgetBuilderType, setWidgetBuilderType] = useState<CustomWidget['widgetType']>('card');
@@ -99,33 +98,13 @@ export default function Dashboard() {
     invoices,
     attendanceRecords,
     hasanatDistributions,
+    denoms,
     contactsTotal,
     questions,
     tests,
     assessmentResults,
     dataVolume,
   } = useDashboardData(customWidgets, dashboardPersona);
-
-  useEffect(() => {
-    const handleUpdate = () => {
-      setDisabledCardIds(loadDisabledCardIds());
-      try {
-        const savedWidgets = localStorage.getItem(DASHBOARD_WIDGETS_KEY);
-        if (savedWidgets) {
-          setCustomWidgets(JSON.parse(savedWidgets) as CustomWidget[]);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
-
-    window.addEventListener('local-database-update', handleUpdate);
-    window.addEventListener('storage', handleUpdate);
-    return () => {
-      window.removeEventListener('local-database-update', handleUpdate);
-      window.removeEventListener('storage', handleUpdate);
-    };
-  }, []);
 
   const openWidgetBuilder = useCallback(
     (type: CustomWidget['widgetType'], widget: CustomWidget | null = null) => {
@@ -138,20 +117,14 @@ export default function Dashboard() {
     [isEditMode],
   );
 
-  const persistWidgets = (next: CustomWidget[]) => {
-    setCustomWidgets(next);
-    saveCustomWidgetsRaw(JSON.stringify(next));
-    window.dispatchEvent(new Event('local-database-update'));
-  };
-
   const handleUnpinWidget = (id: string) => {
-    persistWidgets(
+    updateCustomWidgets(
       customWidgets.map((w) => (w.id === id ? { ...w, isPinnedToDashboard: false } : w)),
     );
   };
 
   const handleDeleteWidget = (id: string) => {
-    persistWidgets(customWidgets.filter((w) => w.id !== id));
+    updateCustomWidgets(customWidgets.filter((w) => w.id !== id));
   };
 
   const handleEditWidget = (w: CustomWidget) => {
@@ -159,20 +132,11 @@ export default function Dashboard() {
   };
 
   const toggleWidgetPin = (id: string) => {
-    persistWidgets(
+    updateCustomWidgets(
       customWidgets.map((w) =>
         w.id === id ? { ...w, isPinnedToDashboard: !w.isPinnedToDashboard } : w,
       ),
     );
-  };
-
-  const toggleCardVisibility = (cardId: string) => {
-    const updated = disabledCardIds.includes(cardId)
-      ? disabledCardIds.filter((id) => id !== cardId)
-      : [...disabledCardIds, cardId];
-    setDisabledCardIds(updated);
-    saveDisabledCardIds(updated);
-    window.dispatchEvent(new Event('local-database-update'));
   };
 
   const activeCustomCards = useMemo(
@@ -297,6 +261,7 @@ export default function Dashboard() {
           finance_invoices: invoices,
           attendance_records: attendanceRecords,
           hasanat_distributions: hasanatDistributions,
+          hasanat_denoms: denoms,
           contacts: [],
           questions,
           tests,
@@ -399,7 +364,7 @@ export default function Dashboard() {
                         const next = exists
                           ? customWidgets.map((w) => (w.id === savedWidget.id ? savedWidget : w))
                           : [...customWidgets, savedWidget];
-                        persistWidgets(next);
+                        updateCustomWidgets(next);
                         setIsWidgetBuilderOpen(false);
                         setEditingWidget(null);
                       }}

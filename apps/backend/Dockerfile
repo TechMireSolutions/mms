@@ -1,8 +1,8 @@
 # Build from repository root:
 #   docker build -f apps/backend/Dockerfile -t mms-backend .
 #
-# Run (PostgreSQL required):
-#   docker run -p 5002:5002 -e JWT_SECRET=... -e DATABASE_URL=postgresql://... mms-backend
+# Run:
+#   docker run -p 5002:5002 -e JWT_SECRET=... -e DATABASE_URL=sqlite://mms.db mms-backend
 
 FROM node:26-alpine AS base
 ENV PUPPETEER_SKIP_DOWNLOAD=true
@@ -35,8 +35,8 @@ RUN pnpm install --frozen-lockfile --prod --filter mms-backend
 
 WORKDIR /app/apps/backend
 
-# Override at runtime — must point to a reachable PostgreSQL instance
-ENV DATABASE_URL=postgresql://postgres:postgres@postgres:5432/mms
+# Override at runtime — default to SQLite database
+ENV DATABASE_URL=sqlite://mms.db
 
 ENV PORT=5002
 

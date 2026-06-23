@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import useTranslation from '@/hooks/useTranslation';
-import { getObject } from '@/lib/db';
+import { getObject, saveObject } from '@/lib/db';
 import {
   DEFAULT_QUESTION_BANK_FIELD_DEFS,
   DEFAULT_QUESTION_BANK_SETTINGS,
@@ -32,6 +32,7 @@ export interface QuestionBankConfig {
   difficultyLabel: (difficultyId: string) => string;
   questionLanguageLabel: (languageCode: string) => string;
   refresh: () => void;
+  updateSettings: (next: QuestionBankSettings) => void;
 }
 
 export function useQuestionBankConfig(
@@ -56,6 +57,12 @@ export function useQuestionBankConfig(
     window.addEventListener('local-database-update', refresh);
     return () => window.removeEventListener('local-database-update', refresh);
   }, [refresh]);
+
+  const updateSettings = useCallback((next: QuestionBankSettings) => {
+    const merged = normalizeQuestionBankSettings(next);
+    saveObject('question_bank_settings', merged);
+    setSettings(merged);
+  }, []);
 
   const fields = settings.fields ?? DEFAULT_QUESTION_BANK_SETTINGS.fields ?? {};
   const customFields = settings.customFields ?? [];
@@ -137,5 +144,6 @@ export function useQuestionBankConfig(
     difficultyLabel,
     questionLanguageLabel,
     refresh,
+    updateSettings,
   };
 }

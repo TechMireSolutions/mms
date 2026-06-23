@@ -7,7 +7,7 @@ import {
   getSortedFields,
   type ModuleCustomField,
 } from '@mms/shared';
-import { getObject, saveObject } from '../../lib/db';
+import { useUsersConfig } from "@/hooks/useUsersConfig";
 import useTranslation from '@/hooks/useTranslation';
 import { useSettingsDraft } from '@/hooks/useSettingsDraft';
 import { notify } from '@/lib/notify';
@@ -23,17 +23,19 @@ interface UsersSettingsPanelProps {
 
 export default function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { settings, updateSettings, orderedFields: allOrderedFields } = useUsersConfig();
+
   const load = useCallback(
-    () => getObject<UsersSettingsData>('users_settings', DEFAULT_USERS_SETTINGS),
-    [],
+    () => settings,
+    [settings],
   );
 
   const onSave = useCallback(
     async (draft: UsersSettingsData) => {
-      saveObject('users_settings', draft);
+      updateSettings(draft);
       notify.success(t('users.settingsSaved'), { description: t('users.settingsSavedDesc') });
     },
-    [t],
+    [updateSettings, t],
   );
 
   const { data, dirty, saving, upd, handleSave } = useSettingsDraft({

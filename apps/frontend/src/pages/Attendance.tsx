@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import useConfigSubTabs from "@/hooks/useConfigSubTabs";
 import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
@@ -21,8 +21,8 @@ import AttendanceCommandMetrics from "../components/attendance/AttendanceCommand
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
-import { saveCollection, getObject, saveObject } from "../lib/db";
-import { DEFAULT_ATT_SETTINGS, type AttendanceRecord } from '@/lib/data/attendanceData';
+import { saveCollection } from "../lib/db";
+import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import {
   useAttendanceRecordsCollection,
   useAttendanceMutations,
@@ -58,7 +58,6 @@ export default function Attendance() {
   const queryClient = useQueryClient();
   const records = useAttendanceRecordsCollection();
   const { replaceAll } = useAttendanceMutations();
-  const [settings, setSettings] = useState(() => getObject("attendance_settings", DEFAULT_ATT_SETTINGS));
   const [subTab, setSubTab] = useState("fields");
   const columnLayout = useAttendanceColumnLayout();
 
@@ -77,9 +76,7 @@ export default function Attendance() {
     replaceAll.mutate(next);
   }, [records, replaceAll, queryClient]);
 
-  useEffect(() => {
-    saveObject("attendance_settings", settings);
-  }, [settings]);
+
 
   const canSeeAttendanceAnalytics = can("analytics.view")
     && (can("users.manage") || can("attendance.write") || can("enrollments.write") || !can("finance.write"));
@@ -124,7 +121,7 @@ export default function Attendance() {
             value={subTab}
             onChange={setSubTab}
           />
-          <AttendanceSettings role={role} settings={settings} setSettings={setSettings} mode={subTab as "fields" | "preferences"} />
+          <AttendanceSettings role={role} mode={subTab as "fields" | "preferences"} />
         </div>
       );
     }

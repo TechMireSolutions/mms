@@ -80,7 +80,7 @@ Drag-drop reorder · Lucide icon picker · user colour · per-role `permissions`
 
 ## Field persistence gate (required — create & review)
 
-Any PR that **adds or changes a stored field** must prove the value reaches **PostgreSQL** (via `/api/db/*`), not UI-only or local-only state.
+Any PR that **adds or changes a stored field** must prove the value reaches **SQLite** (via `/api/db/*`), not UI-only or local-only state.
 
 ### Checklist (every new/changed field)
 

@@ -1,6 +1,8 @@
 import React, { useState, lazy, Suspense, useMemo } from "react";
 import { Receipt, Printer } from "lucide-react";
-import { MOCK_CURRENCIES, ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
+import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
+import { DEFAULT_CURRENCIES } from '@mms/shared';
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import ObligationModal from "./ObligationModal";
 import InvoiceTemplateEditor from "./invoice/InvoiceTemplateEditor";
@@ -46,6 +48,7 @@ export interface ObligationCollectionDetailProps {
  * @returns {React.ReactElement}
  */
 export default function ObligationCollectionDetail({ collection, obligationTypes, reps, mujtahids, distributions, wakalaTypes, onClose }: ObligationCollectionDetailProps) {
+  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
   const [showPrint, setShowPrint] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
 
@@ -57,7 +60,7 @@ export default function ObligationCollectionDetail({ collection, obligationTypes
   const users = useMergedObligationUsers();
 
   const getContact = (id?: string | number | null) => contacts.find((c) => String(c.id) === String(id));
-  const getCurrency = (id: string) => MOCK_CURRENCIES.find((c) => c.id === id);
+  const getCurrency = (id: string) => currencies.find((c: any) => c.id === id);
   const getUser = (id?: string | number | null) => users.find((u) => String(u.id) === String(id));
   const getRep = (id: string) => reps.find((r) => r.id === id);
   const getMujtahid = (repId: string) => {

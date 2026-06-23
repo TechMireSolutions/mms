@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Save, Calendar } from "lucide-react";
-import { getObject, saveObject } from "../../lib/db";
 import {
-  type SessionsSettings,
+  type SessionsSettings as SessionsSettingsType,
   DEFAULT_SESSIONS_SETTINGS,
   DEFAULT_SESSIONS_FIELD_DEFS,
   getSortedFields,
   type ModuleCustomField,
   type ModuleFieldDef,
 } from "@mms/shared";
+import { useSessionConfig } from "@/hooks/useSessionConfig";
+import { SESSION_TYPES } from "../../lib/data/sessionsData";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
@@ -72,18 +73,23 @@ interface SessionsSettingsProps {
  * Allows editing session duration, session type defaults, overlays, archiving, and alerts.
  */
 export default function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Element {
-  const [data, setData] = useState<SessionsSettings>(() =>
-    getObject<SessionsSettings>("sessions_settings", DEFAULT_SESSIONS_SETTINGS)
-  );
+  const { settings, types, updateSettings } = useSessionConfig();
+  const [data, setData] = useState<SessionsSettingsType>(settings);
   const [saved, setSaved] = useState<boolean>(false);
 
-  const upd = <K extends keyof SessionsSettings>(f: K, v: SessionsSettings[K]): void => {
+  useEffect(() => {
+    setData(settings);
+  }, [settings]);
+
+  const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
+
+  const upd = <K extends keyof SessionsSettingsType>(f: K, v: SessionsSettingsType[K]): void => {
     setData((d) => ({ ...d, [f]: v }));
     setSaved(false);
   };
 
   const handleSave = (): void => {
-    saveObject("sessions_settings", data);
+    updateSettings(data);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -174,10 +180,9 @@ export default function SessionsSettings({ mode }: SessionsSettingsProps): React
                 value={data.defaultSessionType}
                 onChange={(e) => upd("defaultSessionType", e.target.value)}
               >
-                <option value="annual">Annual</option>
-                <option value="semester">Semester</option>
-                <option value="trimester">Trimester</option>
-                <option value="quarterly">Quarterly</option>
+                {typeOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
               </select>
             </div>
             <div>

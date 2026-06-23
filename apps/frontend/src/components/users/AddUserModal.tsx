@@ -28,12 +28,8 @@ import {
   validatePasswordPolicy,
 } from "@mms/shared";
 import ContactPicker from '@/components/contactLink/ContactPicker';
-import { getGlobalSettings, getObject } from "../../lib/db";
-import {
-  DEFAULT_USERS_SETTINGS,
-  DEFAULT_USERS_FIELD_DEFS,
-  getSortedFields,
-} from "@mms/shared";
+import { getGlobalSettings } from "../../lib/db";
+import { useUsersConfig } from "@/hooks/useUsersConfig";
 import { DatePicker } from "../ui/DatePicker";
 import { FORM_INPUT, FORM_LABEL, FORM_INPUT_ICON, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
 
@@ -319,17 +315,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
   const workspaceRoles = useWorkspaceRoles();
   const selectRole = (id: string): void => setForm((f) => ({ ...f, role: id }));
 
-  const settings = getObject("users_settings", DEFAULT_USERS_SETTINGS);
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_USERS_SETTINGS.fieldOrder || [];
-  const fields = settings.fields || DEFAULT_USERS_SETTINGS.fields || {};
-
-  const orderedFields = getSortedFields(
-    DEFAULT_USERS_FIELD_DEFS,
-    fieldOrder,
-    fields,
-    customFields
-  );
+  const { orderedFields } = useUsersConfig();
 
   return (
     <div className="space-y-4">
@@ -563,6 +549,7 @@ export interface AddUserModalProps {
  */
 export default function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserModalProps): JSX.Element {
   const { t } = useTranslation();
+  const { settings, customFields } = useUsersConfig();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -587,8 +574,6 @@ export default function AddUserModal({ onClose, onAdd, existingEmails = [] }: Ad
     if (step === 2) {
       if (!form.role) e.role = t("users.addErrorRole");
 
-      const settings = getObject("users_settings", DEFAULT_USERS_SETTINGS);
-      const customFields = settings.customFields || [];
       for (const cf of customFields) {
         if (cf.required) {
           const val = (form as unknown as Record<string, unknown>)[cf.id];
@@ -630,8 +615,6 @@ export default function AddUserModal({ onClose, onAdd, existingEmails = [] }: Ad
   const handleSubmit = (): void => {
     if (!validate()) return;
     setSubmitting(true);
-    const settings = getObject("users_settings", DEFAULT_USERS_SETTINGS);
-    const customFields = settings.customFields || [];
     const newUser: SystemUser = {
       id: `u${Date.now()}`,
       contactId: form.contactId!,

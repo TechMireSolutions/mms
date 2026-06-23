@@ -54,7 +54,7 @@ bash scripts/check-workspace.sh <subdomain> apps/backend/.env
 
 **First-time VPS:** `sudo bash scripts/production/bootstrap-ubuntu-vps.sh`  
 **PM2 boot persistence:** `bash scripts/production/setup-pm2-startup.sh`  
-**DB backups:** `bash scripts/production/backup-postgres.sh` (cron daily)
+**DB backups:** `bash scripts/production/backup-sqlite.sh` (cron daily)
 
 Process manager: `ecosystem.config.cjs` — single `mmsv2-backend` (SPA served by Fastify; no separate frontend PM2).
 

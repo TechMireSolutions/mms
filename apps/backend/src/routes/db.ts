@@ -18,6 +18,8 @@ import {
   mergeGlobalSettings,
   type BrandingSettings,
   type GlobalSettings,
+  WORKSPACES_COLLECTION,
+  PLATFORM_SUPER_USERS_OBJECT_KEY,
 } from '@mms/shared';
 import type { User } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
@@ -62,6 +64,7 @@ export default async function dbRoutes(
     try {
       const data = await fetchDatabaseSnapshot();
       if (data.collections) {
+        delete data.collections[WORKSPACES_COLLECTION];
         // Remove other users' message keys to isolate them
         const userMsgKey = `messages_u:${user.id}`;
         for (const key of Object.keys(data.collections)) {
@@ -77,6 +80,9 @@ export default async function dbRoutes(
             delete data.collections[key];
           }
         }
+      }
+      if (data.objects) {
+        delete data.objects[PLATFORM_SUPER_USERS_OBJECT_KEY];
       }
       return reply.send(data);
     } catch (error) {
@@ -104,6 +110,18 @@ export default async function dbRoutes(
 
       try {
         const payload = parsed.data as SyncPayload;
+        if (payload.collections && WORKSPACES_COLLECTION in payload.collections) {
+          return reply.status(403).send({
+            type: 'forbidden',
+            message: 'Sync payload contains global collection "workspaces"',
+          });
+        }
+        if (payload.objects && PLATFORM_SUPER_USERS_OBJECT_KEY in payload.objects) {
+          return reply.status(403).send({
+            type: 'forbidden',
+            message: 'Sync payload contains global object "platform_super_users"',
+          });
+        }
         if (payload.collections?.contacts) {
           payload.collections.contacts = payload.collections.contacts.map((item) =>
             applyTitleCaseToContact(item as Record<string, unknown>),

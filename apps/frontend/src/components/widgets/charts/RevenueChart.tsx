@@ -4,9 +4,14 @@ import {
   ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, TooltipContentProps, TooltipPayloadEntry,
 } from "recharts";
-import { revenueData as defaultRevenueData, RevenuePoint } from '@/lib/data/dashboardData';
 import { getCollection } from "../../../lib/db";
-import { INVOICES, Invoice } from '@/lib/data/financeData';
+import type { Invoice } from '@/lib/data/financeData';
+
+interface RevenuePoint {
+  month: string;
+  revenue: number;
+  expenses: number;
+}
 
 /**
  * CustomTooltip for Revenue Chart.
@@ -58,7 +63,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
     { key: "2026-04", label: "Apr" }
   ];
 
-  const revenueData: RevenuePoint[] = months.map((m, idx) => {
+  const revenueData: RevenuePoint[] = months.map((m) => {
     let revenue = 0;
     invoices.forEach(inv => {
       if (!inv || inv.status === "cancelled") return;
@@ -72,19 +77,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
       }
     });
 
-    const defaultPt = defaultRevenueData[idx];
-    const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
-    const scaleFactor = invoices.length > 0 ? (invoices.length / INVOICES.length) : 1;
-    let expenses = defaultPt ? Math.round(defaultPt.expenses * scaleFactor) : Math.round(revenue * 0.6);
-
-    if (isAuth) {
-      expenses = invoices.length > 0 ? Math.round(revenue * 0.6) : 0;
-    }
-
-    if (revenue === 0 && defaultPt && !isAuth) {
-      revenue = defaultPt.revenue;
-      expenses = defaultPt.expenses;
-    }
+    const expenses = invoices.length > 0 ? Math.round(revenue * 0.6) : 0;
 
     return {
       month: m.label,

@@ -167,4 +167,149 @@ describe('tenant JWT binding', () => {
     expect(res.json()).toMatchObject({ type: 'not_found' });
     await app.close();
   });
+
+  describe('tenant database isolation controls', () => {
+    it('blocks reading workspaces collection', async () => {
+      const app = await buildApp();
+      const token = app.jwt.sign({
+        id: 'u-admin',
+        email: 'admin@test.com',
+        name: 'Admin',
+        role: 'admin',
+        workspaceSubdomain: 'demo',
+        twoFactorVerified: true,
+        tokenType: 'access',
+      });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/db/collections/workspaces',
+        headers: {
+          host: 'demo.localhost',
+          authorization: `Bearer ${token}`,
+        },
+      });
+      expect(res.statusCode).toBe(403);
+      expect(res.json()).toMatchObject({ type: 'forbidden' });
+      await app.close();
+    });
+
+    it('blocks writing workspaces collection', async () => {
+      const app = await buildApp();
+      const token = app.jwt.sign({
+        id: 'u-admin',
+        email: 'admin@test.com',
+        name: 'Admin',
+        role: 'admin',
+        workspaceSubdomain: 'demo',
+        twoFactorVerified: true,
+        tokenType: 'access',
+      });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/db/collections/workspaces',
+        headers: {
+          host: 'demo.localhost',
+          authorization: `Bearer ${token}`,
+        },
+        payload: { data: [] },
+      });
+      expect(res.statusCode).toBe(403);
+      expect(res.json()).toMatchObject({ type: 'forbidden' });
+      await app.close();
+    });
+
+    it('blocks reading platform_super_users object', async () => {
+      const app = await buildApp();
+      const token = app.jwt.sign({
+        id: 'u-admin',
+        email: 'admin@test.com',
+        name: 'Admin',
+        role: 'admin',
+        workspaceSubdomain: 'demo',
+        twoFactorVerified: true,
+        tokenType: 'access',
+      });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/db/objects/platform_super_users',
+        headers: {
+          host: 'demo.localhost',
+          authorization: `Bearer ${token}`,
+        },
+      });
+      expect(res.statusCode).toBe(403);
+      expect(res.json()).toMatchObject({ type: 'forbidden' });
+      await app.close();
+    });
+
+    it('blocks writing platform_super_users object', async () => {
+      const app = await buildApp();
+      const token = app.jwt.sign({
+        id: 'u-admin',
+        email: 'admin@test.com',
+        name: 'Admin',
+        role: 'admin',
+        workspaceSubdomain: 'demo',
+        twoFactorVerified: true,
+        tokenType: 'access',
+      });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/db/objects/platform_super_users',
+        headers: {
+          host: 'demo.localhost',
+          authorization: `Bearer ${token}`,
+        },
+        payload: {},
+      });
+      expect(res.statusCode).toBe(403);
+      expect(res.json()).toMatchObject({ type: 'forbidden' });
+      await app.close();
+    });
+
+    it('blocks sync upload payload with workspaces or platform_super_users', async () => {
+      const app = await buildApp();
+      const token = app.jwt.sign({
+        id: 'u-admin',
+        email: 'admin@test.com',
+        name: 'Admin',
+        role: 'admin',
+        workspaceSubdomain: 'demo',
+        twoFactorVerified: true,
+        tokenType: 'access',
+      });
+
+      // Attempt workspaces collection upload
+      const resCol = await app.inject({
+        method: 'POST',
+        url: '/api/db/sync',
+        headers: {
+          host: 'demo.localhost',
+          authorization: `Bearer ${token}`,
+        },
+        payload: {
+          collections: { workspaces: [] },
+        },
+      });
+      expect(resCol.statusCode).toBe(403);
+      expect(resCol.json()).toMatchObject({ type: 'forbidden' });
+
+      // Attempt platform_super_users object upload
+      const resObj = await app.inject({
+        method: 'POST',
+        url: '/api/db/sync',
+        headers: {
+          host: 'demo.localhost',
+          authorization: `Bearer ${token}`,
+        },
+        payload: {
+          objects: { platform_super_users: {} },
+        },
+      });
+      expect(resObj.statusCode).toBe(403);
+      expect(resObj.json()).toMatchObject({ type: 'forbidden' });
+
+      await app.close();
+    });
+  });
 });

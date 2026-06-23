@@ -8,10 +8,6 @@ import { useSessionsCollection } from '@/hooks/useSessions';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import useTranslation from "@/hooks/useTranslation";
 import usePermissions from "@/hooks/usePermissions";
-import { INVOICES } from "@/lib/data/financeData";
-import { ATTENDANCE_RECORDS } from "@/lib/data/attendanceData";
-import { DISTRIBUTIONS } from "@/lib/data/hasanatData";
-import { EXAM_RESULTS } from "@/lib/data/examinationData";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import type { AppTranslationKey } from "@mms/shared";
 import {
@@ -163,10 +159,10 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
   const studentsColl = (studentsPreviewPage?.students ?? []) as unknown as Record<string, unknown>[];
   const sessionsFromQuery = useSessionsCollection();
   const sessionsColl = sessionsFromQuery as unknown as Record<string, unknown>[];
-  const financialColl = useLiveCollection<Record<string, unknown>>("finance_invoices", INVOICES as unknown as Record<string, unknown>[]);
-  const attendanceColl = useLiveCollection<Record<string, unknown>>("attendance_records", ATTENDANCE_RECORDS as unknown as Record<string, unknown>[]);
-  const hasanatColl = useLiveCollection<Record<string, unknown>>("hasanat_distributions", DISTRIBUTIONS as unknown as Record<string, unknown>[]);
-  const academicColl = useLiveCollection<Record<string, unknown>>("exam_results", EXAM_RESULTS as unknown as Record<string, unknown>[]);
+  const financialColl = useLiveCollection<Record<string, unknown>>("finance_invoices", []);
+  const attendanceColl = useLiveCollection<Record<string, unknown>>("attendance_records", []);
+  const hasanatColl = useLiveCollection<Record<string, unknown>>("hasanat_distributions", []);
+  const academicColl = useLiveCollection<Record<string, unknown>>("exam_results", []);
 
   const [selectedFields, setSelectedFields] = useState<string[]>(() => {
     if (initialSource === "contacts") return ["fullName", "lifecycleStage", "city"];

@@ -4,7 +4,8 @@ import {
   CheckCircle2, XCircle, Save, Send, Users, Search,
   WifiOff, Wifi, MapPin, Scan, UploadCloud,
 } from "lucide-react";
-import { ClassStudent, ATTENDANCE_STATUSES, STATUS_MAP, AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
+import { ClassStudent, AttendanceRecord, AttendanceStatus, getAttendanceStatusInfo } from '@/lib/data/attendanceData';
+import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useStudentsByIds } from '@/hooks/useStudents';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
@@ -260,6 +261,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
  * MarkAttendance
  */
 export default function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
+  const { statuses } = useAttendanceConfig();
   const { can } = usePermissions();
   const sessions = useSessionsCollection();
   const enrollments = useLiveCollection<Enrollment>("enrollments");
@@ -371,12 +373,13 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
     [rows, search]
   );
 
-  const stats = useMemo(() => ({
-    present: rows.filter((r) => r.status === "present").length,
-    absent:  rows.filter((r) => r.status === "absent").length,
-    late:    rows.filter((r) => r.status === "late").length,
-    excused: rows.filter((r) => r.status === "excused").length,
-  }), [rows]);
+  const stats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    rows.forEach((r) => {
+      counts[r.status] = (counts[r.status] || 0) + 1;
+    });
+    return counts;
+  }, [rows]);
 
   const setRow = (studentId: string, key: string, value: any) => {
     const before = rows.find((r) => r.studentId === studentId);
@@ -583,10 +586,13 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
       </header>
 
       {/* Stats Strip */}
-      <div className="grid grid-cols-4 gap-2">
-        {ATTENDANCE_STATUSES.map((s: AttendanceStatus) => (
+      <div 
+        className="grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${statuses.length || 4}, minmax(0, 1fr))` }}
+      >
+        {statuses.map((s: AttendanceStatus) => (
           <div key={s.id} className={`rounded-xl ${s.bg} ${s.text} border ${s.border} px-3 py-2 text-center`}>
-            <p className="text-lg font-bold">{stats[s.id as keyof typeof stats] || 0}</p>
+            <p className="text-lg font-bold">{stats[s.id] || 0}</p>
             <p className="text-[11px] font-semibold">{s.label}</p>
           </div>
         ))}
@@ -633,7 +639,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
               {filteredRows.length === 0 ? (
                 <tr><td colSpan={orderedFields.filter(f => fields[f.id]?.enabled !== false).length + 2} className="px-4 py-10 text-center text-muted-foreground text-sm">No students found</td></tr>
               ) : filteredRows.map((row) => {
-                const s = STATUS_MAP[row.status as keyof typeof STATUS_MAP];
+                const s = getAttendanceStatusInfo(row.status, statuses);
                 return (
                   <motion.tr key={row.studentId} layout className={`transition-colors hover:bg-muted/20 ${s?.bg || ""}`}>
                     <td className="px-3 py-2.5 text-[11px] text-muted-foreground font-mono">{row.rollNo}</td>

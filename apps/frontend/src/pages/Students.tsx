@@ -22,17 +22,18 @@ import StudentList from "../components/students/StudentList";
 import StudentForm from "../components/students/StudentForm";
 import StudentsSettingsPanel from "../components/students/StudentsSettings";
 import { Student } from '@/lib/data/studentsData';
-import { type StudentsSettings, DEFAULT_STUDENTS_SETTINGS, STUDENTS_MODULE_CONTRACT } from "@mms/shared";
+import { type StudentsSettings, STUDENTS_MODULE_CONTRACT } from "@mms/shared";
 
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
-import { saveCollection, getObject } from "../lib/db";
+import { saveCollection } from "../lib/db";
 import useStudentCount from "@/hooks/useStudentCount";
 import { useStudentsPaginated, useStudentMutations, fetchAllStudentsForQuery, type StudentRecord } from "@/hooks/useStudents";
 import { useStudentColumnLayout } from "@/hooks/useStudentColumnLayout";
 import ModuleColumnCustomizer from "@/components/ui/ModuleColumnCustomizer";
 import StudentsCommandMetrics from "@/components/students/StudentsCommandMetrics";
 import StudentsListPagination from "@/components/students/StudentsListPagination";
+import { useStudentConfig } from "@/hooks/useStudentConfig";
 
 const STUDENTS_GR_MIGRATION_KEY = "mms_students_gr_migration_v1";
 
@@ -43,8 +44,6 @@ function grMigrationAlreadyDone(): boolean {
     return false;
   }
 }
-
-const STUDENT_STATUS_OPTIONS = ["active", "inactive", "suspended"];
 
 function applyGrNumberMigration(
   rawStudents: StudentRecord[],
@@ -94,15 +93,11 @@ export default function Students() {
   const { t } = useTranslation();
   const { data: serverCount } = useStudentCount();
   const { createStudent, updateStudent, deleteStudent } = useStudentMutations();
+  const { settings, statuses: studentStatusOptions, genderFilters } = useStudentConfig();
   const [activeTab, setActiveTab] = useState("work");
   const [needsMigrationScan, setNeedsMigrationScan] = useState(() => !grMigrationAlreadyDone());
   const [showStudentForm, setShowStudentForm] = useState(false);
   const [listPage, setListPage] = useState(1);
-
-  const settings = useMemo(
-    () => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS),
-    [],
-  );
 
   const {
     columnRegistry,
@@ -277,7 +272,7 @@ export default function Students() {
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuLabel className="text-xs">Filter by status</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {STUDENT_STATUS_OPTIONS.map((s) => (
+                  {studentStatusOptions.map((s) => (
                     <DropdownMenuCheckboxItem
                       key={s}
                       checked={studentFilterStatus.includes(s)}
@@ -301,19 +296,19 @@ export default function Students() {
                     <Users className="w-3.5 h-3.5" />
                     {studentFilterGender
                       ? studentFilterGender.charAt(0).toUpperCase() + studentFilterGender.slice(1)
-                      : "Gender"}
+                      : t("students.gender")}
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-36">
-                  {["", "male", "female", "other"].map((g) => (
+                  {["", ...genderFilters].map((g) => (
                     <DropdownMenuCheckboxItem
-                      key={g}
-                      checked={studentFilterGender === g}
-                      onCheckedChange={() => setStudentFilterGender(g)}
-                    >
-                      {g ? g.charAt(0).toUpperCase() + g.slice(1) : "All genders"}
-                    </DropdownMenuCheckboxItem>
+                       key={g}
+                       checked={studentFilterGender === g}
+                       onCheckedChange={() => setStudentFilterGender(g)}
+                     >
+                       {g ? g.charAt(0).toUpperCase() + g.slice(1) : t("students.allGenders")}
+                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Receipt } from "lucide-react";
 import {
-  MOCK_CURRENCIES, PAYMENT_MODES, generateReceiptNo,
+  PAYMENT_MODES, generateReceiptNo,
   ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
+import { DEFAULT_CURRENCIES } from '@mms/shared';
+import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ContactPicker from '@/components/contactLink/ContactPicker';
 import { useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import FormModal from "@/components/ui/FormModal";
@@ -59,6 +61,7 @@ export interface ObligationCollectionFormProps {
 export default function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
   const { t } = useTranslation();
   const users = useMergedObligationUsers();
+  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
 
   const [form, setForm] = useState<FormState>({ ...EMPTY, receipt_no: generateReceiptNo(existingCollections) });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -202,7 +205,7 @@ export default function ObligationCollectionForm({ onClose, onSave, obligationTy
           )}
           {field("currency_id", "Currency", true,
             <select value={form.currency_id} onChange={(e) => setForm({ ...form, currency_id: e.target.value })} className={FORM_SELECT}>
-              {MOCK_CURRENCIES.map((c) => <option key={c.id} value={c.id}>{c.code} – {c.name}</option>)}
+              {currencies.map((c) => <option key={c.id} value={c.id}>{c.code} – {c.name}</option>)}
             </select>
           )}
         </fieldset>

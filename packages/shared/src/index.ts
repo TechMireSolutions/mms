@@ -88,6 +88,7 @@ export * from './accountingModuleContract.js';
 export * from './hasanatModuleContract.js';
 export * from './examinationsModuleContract.js';
 export * from './questionBankModuleContract.js';
+export * from './usersModuleContract.js';
 export * from './moduleCommandMetrics.js';
 export * from './moduleColumnPrefs.js';
 export * from './studentUtils.js';
@@ -100,3 +101,8 @@ export * from './platformSetupValidation.js';
 export * from './serverPorts.js';
 export * from './tenantAuthTypes.js';
 
+export const DEFAULT_CURRENCIES = [
+  { id: "cur1", code: "PKR", name: "Pakistani Rupee", symbol: "₨" },
+  { id: "cur2", code: "USD", name: "US Dollar", symbol: "$" },
+  { id: "cur3", code: "GBP", name: "British Pound", symbol: "£" }
+];

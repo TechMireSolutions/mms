@@ -258,7 +258,7 @@ export default async function contactRoutes(
     const parsed = parseRequest(contactDuplicateCheckBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const prepared = prepareContactRecord(parsed.data.contact as Contact);
+      const prepared = await prepareContactRecord(parsed.data.contact as Contact);
       const matchCount = await countContactDuplicateMatches(prepared);
       return reply.send({ matchCount });
     } catch {

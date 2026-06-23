@@ -1,15 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Save, QrCode, Bell, Clock, Shield, Scan, ClipboardCheck } from "lucide-react";
 import {
-  DEFAULT_ATT_SETTINGS,
-  type AttendanceSettings as AttendanceSettingsData
-} from '@/lib/data/attendanceData';
-import {
   DEFAULT_ATTENDANCE_FIELD_DEFS,
+  DEFAULT_ATTENDANCE_SETTINGS,
   getSortedFields,
   type ModuleCustomField,
   type ModuleFieldDef,
+  type AttendanceModuleSettings as AttendanceSettingsData,
 } from "@mms/shared";
+import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import DraggableFieldList from "../ui/DraggableFieldList";
 import { SEMANTIC_BADGE, TOGGLE_THUMB } from "@/lib/semanticTone";
@@ -18,8 +17,6 @@ import { cn } from "@/lib/utils";
 
 interface AttendanceSettingsProps {
   role: string;
-  settings: AttendanceSettingsData;
-  setSettings: React.Dispatch<React.SetStateAction<AttendanceSettingsData>>;
   mode?: "fields" | "preferences";
 }
 
@@ -67,9 +64,15 @@ function Toggle({ checked, onChange }: ToggleProps) {
  * Provides an interface for administrators to configure global attendance rules,
  * such as late thresholds, QR code enablement, and notifications.
  */
-export default function AttendanceSettings({ role, settings, setSettings, mode }: AttendanceSettingsProps) {
+export default function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
   const { t } = useTranslation();
+  const { settings, updateSettings } = useAttendanceConfig();
+  const [data, setData] = useState<AttendanceSettingsData>(settings);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setData(settings);
+  }, [settings]);
 
   if (role !== "admin") {
     return (
@@ -82,18 +85,22 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
   }
 
   const set = <K extends keyof AttendanceSettingsData>(k: K, v: AttendanceSettingsData[K]) => { 
-    setSettings((s) => ({ ...s, [k]: v })); 
+    setData((s) => ({ ...s, [k]: v })); 
     setSaved(false); 
   };
 
-  const handleSave = () => setSaved(true);
+  const handleSave = () => {
+    updateSettings(data);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
 
   const showPrefs = !mode || mode === "preferences";
   const showFields = !mode || mode === "fields";
 
-  const fields = settings.fields || DEFAULT_ATT_SETTINGS.fields || {};
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_ATT_SETTINGS.fieldOrder || [];
+  const fields = data.fields || DEFAULT_ATTENDANCE_SETTINGS.fields || {};
+  const customFields = data.customFields || [];
+  const fieldOrder = data.fieldOrder || DEFAULT_ATTENDANCE_SETTINGS.fieldOrder || [];
 
   const orderedFields = getSortedFields(DEFAULT_ATTENDANCE_FIELD_DEFS, fieldOrder, fields, customFields);
 
@@ -103,7 +110,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
     if (prop === "enabled" && !value) {
       updatedFieldObj.required = false;
     }
-    setSettings((s) => ({ ...s, fields: { ...fields, [fieldKey]: updatedFieldObj } }));
+    setData((s) => ({ ...s, fields: { ...fields, [fieldKey]: updatedFieldObj } }));
     setSaved(false);
   };
 
@@ -120,23 +127,23 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
       updateFieldConfig(id, "required", !cfg.required);
     } else {
       const updated = customFields.map(f => f.id === id ? { ...f, required: !f.required } : f);
-      setSettings((s) => ({ ...s, customFields: updated }));
+      setData((s) => ({ ...s, customFields: updated as unknown as ModuleCustomField[] }));
       setSaved(false);
     }
   };
 
   const handleReorder = (reordered: ModuleFieldDef[]) => {
-    setSettings((s) => ({ ...s, fieldOrder: reordered.map(f => f.id) }));
+    setData((s) => ({ ...s, fieldOrder: reordered.map(f => f.id) }));
     setSaved(false);
   };
 
   const handleCustomFieldsChange = (newFields: CustomFieldConfig[]) => {
     const coreIds = DEFAULT_ATTENDANCE_FIELD_DEFS.map(f => f.id);
     const newIds = newFields.map(f => f.key);
-    const kept = fieldOrder.filter((id) => coreIds.includes(id) || newIds.includes(id));
+    const kept = fieldOrder.filter((id: string) => coreIds.includes(id) || newIds.includes(id));
     const added = newIds.filter((id) => !kept.includes(id));
 
-    setSettings((s) => ({
+    setData((s) => ({
       ...s,
       customFields: newFields.map(f => ({ ...f, id: f.key })) as unknown as ModuleCustomField[],
       fieldOrder: [...kept, ...added]
@@ -166,7 +173,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
                     type="number" 
                     min={1} 
                     max={60} 
-                    value={settings.lateThresholdMins}
+                    value={data.lateThresholdMins}
                     onChange={(e) => set("lateThresholdMins", Number(e.target.value))}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
@@ -181,7 +188,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
                     type="number" 
                     min={10} 
                     max={120} 
-                    value={settings.autoAbsentAfterMins}
+                    value={data.autoAbsentAfterMins}
                     onChange={(e) => set("autoAbsentAfterMins", Number(e.target.value))}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
@@ -189,7 +196,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
                 </div>
               </SettingRow>
               <SettingRow label="Lock After Submit" sub="Prevent edits once attendance is submitted">
-                <Toggle checked={settings.lockAfterSubmit} onChange={(v) => set("lockAfterSubmit", v)} />
+                <Toggle checked={data.lockAfterSubmit} onChange={(v) => set("lockAfterSubmit", v)} />
               </SettingRow>
             </div>
           </article>
@@ -202,7 +209,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
             </header>
             <div className="px-4">
               <SettingRow label="Enable QR Attendance" sub="Allow teachers to scan student QR codes to mark attendance">
-                <Toggle checked={settings.qrEnabled} onChange={(v) => set("qrEnabled", v)} />
+                <Toggle checked={data.qrEnabled} onChange={(v) => set("qrEnabled", v)} />
               </SettingRow>
             </div>
           </article>
@@ -222,7 +229,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
                     type="number" 
                     min={50} 
                     max={100} 
-                    value={settings.lowAttendanceThreshold}
+                    value={data.lowAttendanceThreshold}
                     onChange={(e) => set("lowAttendanceThreshold", Number(e.target.value))}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
@@ -230,10 +237,10 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
                 </div>
               </SettingRow>
               <SettingRow label="Notify Parents" sub="Send SMS/WhatsApp to parent on student absence">
-                <Toggle checked={settings.notifyParents} onChange={(v) => set("notifyParents", v)} />
+                <Toggle checked={data.notifyParents} onChange={(v) => set("notifyParents", v)} />
               </SettingRow>
               <SettingRow label="Require Note for Absent" sub="Teacher must add a note when marking a student absent">
-                <Toggle checked={settings.requireNoteForAbsent} onChange={(v) => set("requireNoteForAbsent", v)} />
+                <Toggle checked={data.requireNoteForAbsent} onChange={(v) => set("requireNoteForAbsent", v)} />
               </SettingRow>
             </div>
           </article>
@@ -246,10 +253,10 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
             </header>
             <div className="px-4">
               <SettingRow label="Offline Mode" sub="Allow teachers to mark attendance without internet; syncs when reconnected">
-                <Toggle checked={settings.offlineEnabled ?? true} onChange={(v) => set("offlineEnabled", v)} />
+                <Toggle checked={data.offlineEnabled ?? true} onChange={(v) => set("offlineEnabled", v)} />
               </SettingRow>
               <SettingRow label="Geo-location Tagging" sub="Record teacher's GPS coordinates when submitting attendance">
-                <Toggle checked={settings.geoTagging ?? false} onChange={(v) => set("geoTagging", v)} />
+                <Toggle checked={data.geoTagging ?? false} onChange={(v) => set("geoTagging", v)} />
               </SettingRow>
               <SettingRow label="Default View Layout" sub="Select default layout format for attendance records in work view">
                 <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
@@ -257,7 +264,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
                     type="button"
                     onClick={() => set("defaultViewLayout", "list")}
                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                      (settings.defaultViewLayout || "list") === "list"
+                      (data.defaultViewLayout || "list") === "list"
                         ? "bg-card text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
@@ -268,7 +275,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
                     type="button"
                     onClick={() => set("defaultViewLayout", "cards")}
                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                      settings.defaultViewLayout === "cards"
+                      data.defaultViewLayout === "cards"
                         ? "bg-card text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
@@ -281,7 +288,7 @@ export default function AttendanceSettings({ role, settings, setSettings, mode }
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>
               </SettingRow>
               <SettingRow label="Daily Auto-Lock" sub="Automatically lock attendance after end-of-day submission">
-                <Toggle checked={settings.lockAfterSubmit} onChange={(v) => set("lockAfterSubmit", v)} />
+                <Toggle checked={data.lockAfterSubmit} onChange={(v) => set("lockAfterSubmit", v)} />
               </SettingRow>
               <SettingRow label="Audit Logging" sub="Record all edits and submissions in an audit trail (always on)">
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>

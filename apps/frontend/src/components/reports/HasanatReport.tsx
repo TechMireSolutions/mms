@@ -72,18 +72,20 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
     [palette],
   );
   const distributions = useLiveCollection<Distribution>("hasanat_distributions");
+  const denoms = useLiveCollection<any>("hasanat_denoms");
 
   const { distributionData, hasanatByFaculty } = useMemo(() => {
     const studentMap: Record<string, HasanatReportItem> = {};
     const facultyMap: Record<string, HasanatByFacultyItem> = {};
 
+    const pointsMap = new Map<string, number>();
+    denoms.forEach((denom) => {
+      pointsMap.set(denom.id, denom.points);
+    });
+
     distributions.forEach(d => {
-      // Calculate points (mock logic based on name string for demo if points aren't in dist object)
-      let points = 50; // default bronze
-      if (d.denominationName?.toLowerCase().includes("silver")) points = 150;
-      else if (d.denominationName?.toLowerCase().includes("gold")) points = 500;
-      else if (d.denominationName?.toLowerCase().includes("platinum")) points = 1000;
-      else if (d.denominationName?.toLowerCase().includes("diamond")) points = 2500;
+      // Resolve points from the database denoms collection
+      const points = pointsMap.get(d.denominationId) || 50;
 
       const totalPoints = points * d.quantity;
       const isRedeemed = d.status === "redeemed";
@@ -124,7 +126,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       distributionData: Object.values(studentMap),
       hasanatByFaculty: Object.values(facultyMap)
     };
-  }, [distributions]);
+  }, [distributions, denoms]);
 
   const distribution = useMemo<HasanatReportItem[]>(() => {
     let list = distributionData;

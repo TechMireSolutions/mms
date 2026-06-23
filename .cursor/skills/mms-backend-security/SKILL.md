@@ -44,7 +44,7 @@ Legacy unmapped collections: read allowed for staff write roles until per-module
 
 ## Ephemeral auth state
 
-Store in PostgreSQL `auth_artifacts` via `authArtifactService` — **never** in-memory `Map`:
+Store in SQLite `auth_artifacts` via `authArtifactService` — **never** in-memory `Map`:
 
 | kind | TTL |
 |------|-----|

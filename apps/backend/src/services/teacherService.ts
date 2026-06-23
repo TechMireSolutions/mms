@@ -1,9 +1,20 @@
-import { normalizeStoredTeacher, paginateTeachers, computeTeachersWidgetAggregates, computeNextTeacherEmployeeId, collectTeacherLinkedContactIds, type TeacherEmployeeIdSettings, type TeachersListQuery, type TeachersWidgetQuery } from '@mms/shared';
+import {
+  normalizeStoredTeacher,
+  paginateTeachers,
+  computeTeachersWidgetAggregates,
+  computeNextTeacherEmployeeId,
+  collectTeacherLinkedContactIds,
+  hydrateTeacherFromContact,
+  type TeacherEmployeeIdSettings,
+  type TeachersListQuery,
+  type TeachersWidgetQuery,
+} from '@mms/shared';
 import {
   teacherListSchema,
   type TeacherRecord,
 } from '../validation/teacherSchemas.js';
 import { defineCollectionCrudService } from './collectionCrudService.js';
+import { fetchCollection } from './dbSyncService.js';
 
 const teachers = defineCollectionCrudService(
   'teachers',
@@ -11,7 +22,17 @@ const teachers = defineCollectionCrudService(
   (record) => normalizeStoredTeacher(record) as TeacherRecord,
 );
 
-export const loadTeachers = teachers.load;
+export async function loadTeachers(): Promise<TeacherRecord[]> {
+  const rawRows = await teachers.load();
+  const contactsData = await fetchCollection('contacts');
+  if (!contactsData || !Array.isArray(contactsData)) {
+    return rawRows;
+  }
+  return rawRows.map((row) =>
+    hydrateTeacherFromContact(row as never, contactsData as never)
+  ) as unknown as TeacherRecord[];
+}
+
 export const createTeacher = teachers.create;
 export const updateTeacherById = teachers.updateById;
 export const deleteTeacherById = teachers.deleteById;

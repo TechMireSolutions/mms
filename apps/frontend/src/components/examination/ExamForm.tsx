@@ -6,13 +6,12 @@ import { calculateModuleFieldsCompleteness } from "@/lib/formCompleteness";
 import { Exam } from '@/lib/data/examinationData';
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { toTitleCase } from "@mms/shared";
-import { getObject } from "../../lib/db";
 import {
-  type ExaminationsSettings,
   DEFAULT_EXAMINATIONS_SETTINGS,
   DEFAULT_EXAMINATIONS_FIELD_DEFS,
   getSortedFields,
 } from "@mms/shared";
+import { useExaminationConfig } from "@/hooks/useExaminationConfig";
 import { DatePicker } from "../ui/DatePicker";
 
 const SUBJECTS = ["Tajweed", "Hifz", "Islamic Studies", "Arabic", "Aqeedah", "Quran Recitation", "Fiqh"];
@@ -47,7 +46,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
   const [error, setError] = useState("");
   const sessions = useSessionsCollection();
 
-  const settings = useMemo(() => getObject<ExaminationsSettings>("examinations_settings", DEFAULT_EXAMINATIONS_SETTINGS), []);
+  const { settings } = useExaminationConfig();
   const fields = settings.fields || DEFAULT_EXAMINATIONS_SETTINGS.fields || {};
   const customFields = settings.customFields || [];
   const fieldOrder = settings.fieldOrder || DEFAULT_EXAMINATIONS_SETTINGS.fieldOrder || [];

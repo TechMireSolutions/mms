@@ -13,7 +13,7 @@ export interface AttendanceRecord {
   studentId: string;
   studentName: string;
   rollNo: string;
-  status: "present" | "absent" | "late" | "excused";
+  status: string;
   timeIn: string;
   timeOut: string;
   notes: string;
@@ -21,9 +21,9 @@ export interface AttendanceRecord {
 
 export const ATTENDANCE_STATUSES = [
   { id: "present", label: "Present", short: "P", color: "emerald", bg: "bg-success/10", text: "text-success", border: "border-success/30", dot: "bg-success" },
-  { id: "absent",  label: "Absent",  short: "A", color: "red",     bg: "bg-destructive/10",     text: "text-destructive",     border: "border-destructive/30",     dot: "bg-destructive"     },
-  { id: "late",    label: "Late",    short: "L", color: "amber",   bg: "bg-warning/10",   text: "text-warning",   border: "border-warning/30",   dot: "bg-warning"   },
-  { id: "excused", label: "Excused", short: "E", color: "blue",    bg: "bg-info/10",    text: "text-info",    border: "border-info/30",    dot: "bg-info"    },
+  { id: "absent",  label: "Absent",  short: "A", color: "red",     bg: "bg-destructive/10",     text: "text-destructive",     border: "border-destructive/30",     dot: "bg-destructive" },
+  { id: "late",    label: "Late",    short: "L", color: "amber",   bg: "bg-warning/10",   text: "text-warning",   border: "border-warning/30",   dot: "bg-warning" },
+  { id: "excused", label: "Excused", short: "E", color: "blue",    bg: "bg-info/10",    text: "text-info",    border: "border-info/30",    dot: "bg-info" },
 ];
 
 export const ATTENDANCE_RECORDS: AttendanceRecord[] = [];
@@ -46,27 +46,42 @@ export type AttendanceStatus = {
   dot: string;
 };
 
+export function getAttendanceStatusInfo(status: string, customStatuses?: AttendanceStatus[]): AttendanceStatus {
+  const list = customStatuses && customStatuses.length > 0 ? customStatuses : ATTENDANCE_STATUSES;
+  const found = list.find((s) => s.id === status);
+  if (found) return found;
+  return {
+    id: status,
+    label: status.charAt(0).toUpperCase() + status.slice(1),
+    short: status.charAt(0).toUpperCase(),
+    color: "slate",
+    bg: "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200",
+    text: "text-slate-800 dark:text-slate-200",
+    border: "border-slate-200 dark:border-slate-700",
+    dot: "bg-slate-400",
+  };
+}
+
 export const STATUS_MAP: Record<string, AttendanceStatus> = {
   present: ATTENDANCE_STATUSES[0] as AttendanceStatus,
   absent: ATTENDANCE_STATUSES[1] as AttendanceStatus,
   late: ATTENDANCE_STATUSES[2] as AttendanceStatus,
-  excused: ATTENDANCE_STATUSES[3] as AttendanceStatus
+  excused: ATTENDANCE_STATUSES[3] as AttendanceStatus,
 };
 
 export const CLASS_STUDENTS: Record<string, ClassStudent[]> = {};
 
 export function calcClassStats(classId: string, records: AttendanceRecord[]) {
   const classRecs = records.filter(r => r.classId === classId);
-  let present = 0, absent = 0, late = 0, excused = 0;
+  const counts: Record<string, number> = {};
   classRecs.forEach(r => {
-    if (r.status === "present") present++;
-    else if (r.status === "absent") absent++;
-    else if (r.status === "late") late++;
-    else if (r.status === "excused") excused++;
+    counts[r.status] = (counts[r.status] || 0) + 1;
   });
-  const total = present + absent + late + excused;
+  const total = classRecs.length;
+  const present = counts.present || 0;
+  const late = counts.late || 0;
   const rate = total ? Math.round(((present + late) / total) * 100) : 0;
-  return { present, absent, late, excused, rate };
+  return { ...counts, rate };
 }
 
 export function calcStudentRate(studentId: string, records: AttendanceRecord[]): number {

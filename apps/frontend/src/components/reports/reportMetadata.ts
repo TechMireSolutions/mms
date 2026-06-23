@@ -1,12 +1,12 @@
 import { type Contact } from "@mms/shared";
 import { getObject } from "@/lib/db";
-import { STUDENTS, type Student } from '@/lib/data/studentsData';
-import { TEACHERS, type Teacher } from '@/lib/data/teachersData';
-import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
-import { INVOICES, type Invoice } from '@/lib/data/financeData';
-import { ATTENDANCE_RECORDS, type AttendanceRecord } from '@/lib/data/attendanceData';
-import { DISTRIBUTIONS, type Distribution } from '@/lib/data/hasanatData';
-import { QUESTIONS, TESTS, RESULTS } from '@/lib/data/questionBankData';
+import { type Student } from '@/lib/data/studentsData';
+import { type Teacher } from '@/lib/data/teachersData';
+import { type Session } from '@/lib/data/sessionsData';
+import { type Invoice } from '@/lib/data/financeData';
+import { type AttendanceRecord } from '@/lib/data/attendanceData';
+import { type Distribution } from '@/lib/data/hasanatData';
+import type { QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from '@mms/shared';
 
 export type ReportCollection =
   | "students"
@@ -55,7 +55,7 @@ export const METADATA_FIELDS = {
   students: {
     name: "Students",
     dbKey: "students",
-    defaultData: STUDENTS,
+    defaultData: [] as Student[],
     fields: [
       { value: "status", label: "Status (active/inactive)" },
       { value: "gender", label: "Gender (male/female)" },
@@ -73,7 +73,7 @@ export const METADATA_FIELDS = {
   teachers: {
     name: "Teachers",
     dbKey: "teachers",
-    defaultData: TEACHERS,
+    defaultData: [] as Teacher[],
     fields: [
       { value: "status", label: "Status (active/inactive/on_leave)" },
       { value: "gender", label: "Gender (male/female)" },
@@ -86,7 +86,7 @@ export const METADATA_FIELDS = {
   sessions: {
     name: "Sessions & Classes",
     dbKey: "sessions",
-    defaultData: SESSIONS_DATA,
+    defaultData: [] as Session[],
     fields: [
       { value: "status", label: "Status (active/cancelled)" },
       { value: "gender", label: "Gender Orientation (male/female/any)" },
@@ -108,7 +108,7 @@ export const METADATA_FIELDS = {
   finance_invoices: {
     name: "Financial Invoices",
     dbKey: "finance_invoices",
-    defaultData: INVOICES,
+    defaultData: [] as Invoice[],
     fields: [
       { value: "status", label: "Status (paid/unpaid/partial/cancelled)" },
       { value: "paymentMethod", label: "Payment Channel" },
@@ -129,7 +129,7 @@ export const METADATA_FIELDS = {
   attendance_records: {
     name: "Attendance Registry",
     dbKey: "attendance_records",
-    defaultData: ATTENDANCE_RECORDS,
+    defaultData: [] as AttendanceRecord[],
     fields: [
       { value: "status", label: "Status (present/absent/late/excused)" },
       { value: "className", label: "Class Name" },
@@ -141,7 +141,7 @@ export const METADATA_FIELDS = {
   hasanat_distributions: {
     name: "Hasanat Rewards",
     dbKey: "hasanat_distributions",
-    defaultData: DISTRIBUTIONS,
+    defaultData: [] as Distribution[],
     fields: [
       { value: "denominationName", label: "Reward Category (Bronze/Silver/Gold/Platinum/Diamond)" },
       { value: "quantity", label: "Quantity Distributed", isNumeric: true },
@@ -175,7 +175,7 @@ export const METADATA_FIELDS = {
   questions: {
     name: "Question Bank Questions",
     dbKey: "questions",
-    defaultData: QUESTIONS,
+    defaultData: [] as QuestionBankQuestion[],
     fields: [
       { value: "type", label: "Question Type" },
       { value: "difficulty", label: "Difficulty" },
@@ -189,7 +189,7 @@ export const METADATA_FIELDS = {
   tests: {
     name: "Generated Tests",
     dbKey: "tests",
-    defaultData: TESTS,
+    defaultData: [] as QuestionBankTest[],
     fields: [
       { value: "difficulty", label: "Difficulty" },
       { value: "categoryId", label: "Category" },
@@ -203,7 +203,7 @@ export const METADATA_FIELDS = {
   assessment_results: {
     name: "Assessment Results",
     dbKey: "assessment_results",
-    defaultData: RESULTS,
+    defaultData: [] as QuestionBankResult[],
     fields: [
       { value: "testId", label: "Test" },
       { value: "studentName", label: "Student Name" },
@@ -226,7 +226,8 @@ export const METADATA_FIELDS = {
 function calculateDynamicTrend(
   card: CustomCard,
   list: Record<string, unknown>[],
-  collectionName: string
+  collectionName: string,
+  denoms?: any[]
 ): number {
   const dateField = {
     students: "registeredDate",
@@ -300,12 +301,14 @@ function calculateDynamicTrend(
     let count = 0;
     filtered.forEach((item) => {
       if (card.collection === "hasanat_distributions" && field === "points") {
-        let points = 50;
-        const denom = String(item.denominationName || "").toLowerCase();
-        if (denom.includes("silver")) points = 150;
-        else if (denom.includes("gold")) points = 500;
-        else if (denom.includes("platinum")) points = 1000;
-        else if (denom.includes("diamond")) points = 2500;
+        const denomName = String(item.denominationName || "").toLowerCase();
+        const matchedDenom = (denoms || []).find((d: any) => d.id === item.denominationId);
+        const points = matchedDenom ? matchedDenom.points : (
+          denomName.includes("silver") ? 150 :
+          denomName.includes("gold") ? 500 :
+          denomName.includes("platinum") ? 1000 :
+          denomName.includes("diamond") ? 2500 : 50
+        );
         sum += Number(item.quantity || 1) * points;
         count++;
       } else {
@@ -357,9 +360,10 @@ export function computeCustomCard(
     attendance_records: AttendanceRecord[];
     hasanat_distributions: Distribution[];
     contacts: Contact[];
-    questions: typeof QUESTIONS;
-    tests: typeof TESTS;
-    assessment_results: typeof RESULTS;
+    questions: QuestionBankQuestion[];
+    tests: QuestionBankTest[];
+    assessment_results: QuestionBankResult[];
+    hasanat_denoms?: any[];
   }
 ) {
   const list = (collections[card.collection] as Record<string, unknown>[]) || [];
@@ -395,12 +399,14 @@ export function computeCustomCard(
     let count = 0;
     filteredList.forEach((item) => {
       if (card.collection === "hasanat_distributions" && field === "points") {
-        let points = 50;
-        const denom = String(item.denominationName || "").toLowerCase();
-        if (denom.includes("silver")) points = 150;
-        else if (denom.includes("gold")) points = 500;
-        else if (denom.includes("platinum")) points = 1000;
-        else if (denom.includes("diamond")) points = 2500;
+        const denomName = String(item.denominationName || "").toLowerCase();
+        const matchedDenom = (collections.hasanat_denoms || []).find((d: any) => d.id === item.denominationId);
+        const points = matchedDenom ? matchedDenom.points : (
+          denomName.includes("silver") ? 150 :
+          denomName.includes("gold") ? 500 :
+          denomName.includes("platinum") ? 1000 :
+          denomName.includes("diamond") ? 2500 : 50
+        );
         sum += Number(item.quantity || 1) * points;
         count++;
       } else {
@@ -443,7 +449,7 @@ export function computeCustomCard(
 
   let trendVal = card.trend || 0;
   if (card.trendType === "database") {
-    trendVal = calculateDynamicTrend(card, list, card.collection);
+    trendVal = calculateDynamicTrend(card, list, card.collection, collections.hasanat_denoms);
   }
 
   return {

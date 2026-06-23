@@ -6,7 +6,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Distribution, Denomination, StockBatch } from '@/lib/data/hasanatData';
-import { getObject } from "../../lib/db";
+import { useHasanatConfig } from "@/hooks/useHasanatConfig";
 import {
   DEFAULT_HASANAT_SETTINGS,
   DEFAULT_HASANAT_FIELD_DEFS,
@@ -86,7 +86,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
   const availableBatches = batches.filter((b) => b.denominationId === data.denominationId && b.remaining > 0);
   const totalAvailable = availableBatches.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
 
-  const settings = getObject("hasanat_settings", DEFAULT_HASANAT_SETTINGS);
+  const { settings } = useHasanatConfig();
   const fields = settings.fields || DEFAULT_HASANAT_SETTINGS.fields || {};
   const customFields = settings.customFields || [];
   const fieldOrder = settings.fieldOrder || DEFAULT_HASANAT_SETTINGS.fieldOrder || [];

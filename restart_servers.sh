@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# MMS — single entry point for local dev (PostgreSQL → backend :3000 → frontend :5173)
+# MMS — single entry point for local dev (SQLite/PostgreSQL → backend :3000 → frontend :5173)
 #
 # Usage:
 #   ./restart_servers.sh              # start in GNU screen (default, survives agent exit)
@@ -269,8 +269,11 @@ ensure_docker_daemon() {
 }
 
 ensure_postgres_container() {
+  if [ -f "apps/backend/.env" ] && grep -q '^DATABASE_URL=sqlite://' apps/backend/.env 2>/dev/null; then
+    NO_DOCKER=true
+  fi
   if [ "$NO_DOCKER" = true ]; then
-    log "Skipping Docker (--no-docker)"
+    log "Skipping Docker (SQLite configured or --no-docker)"
     return 0
   fi
   ensure_docker_daemon || return 0
@@ -410,12 +413,31 @@ show_status() {
   else
     warn "Screen session '$SCREEN_SESSION' not running"
   fi
-  if command -v docker &>/dev/null && docker info >/dev/null 2>&1; then
-    docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$PG_CONTAINER" \
-      && ok "PostgreSQL: $PG_CONTAINER running" \
-      || warn "PostgreSQL: container '$PG_CONTAINER' not running"
+
+  local is_sqlite=false
+  if [ -f "apps/backend/.env" ] && grep -q '^DATABASE_URL=sqlite://' apps/backend/.env 2>/dev/null; then
+    is_sqlite=true
+  fi
+
+  if [ "$is_sqlite" = true ]; then
+    local db_file
+    db_file="$(grep '^DATABASE_URL=sqlite://' apps/backend/.env | sed 's/DATABASE_URL=sqlite:\/\///')"
+    if [[ "$db_file" != /* ]]; then
+      db_file="apps/backend/$db_file"
+    fi
+    if [ -f "$db_file" ]; then
+      ok "SQLite: database file exists ($db_file, $(stat -f%z "$db_file" 2>/dev/null || stat -c%s "$db_file" 2>/dev/null) bytes)"
+    else
+      warn "SQLite: database file not found ($db_file)"
+    fi
   else
-    warn "Docker: not available"
+    if command -v docker &>/dev/null && docker info >/dev/null 2>&1; then
+      docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$PG_CONTAINER" \
+        && ok "PostgreSQL: $PG_CONTAINER running" \
+        || warn "PostgreSQL: container '$PG_CONTAINER' not running"
+    else
+      warn "Docker: not available"
+    fi
   fi
 
   local be fe

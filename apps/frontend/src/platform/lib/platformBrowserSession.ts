@@ -15,3 +15,12 @@ export function clearPlatformBrowserSession(): void {
     /* sessionStorage unavailable */
   }
 }
+
+export function hasPlatformBrowserSession(): boolean {
+  try {
+    return sessionStorage.getItem(PLATFORM_BROWSER_SESSION_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+

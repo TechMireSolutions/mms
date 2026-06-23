@@ -22,11 +22,10 @@ import ErrorBoundary from "../components/ui/ErrorBoundary";
 import AccountingCommandMetrics from "../components/accounting/AccountingCommandMetrics";
 import { useAccountingJournalColumnLayout } from "@/hooks/useAccountingJournalColumnLayout";
 import { useAccountingAccountColumnLayout } from "@/hooks/useAccountingAccountColumnLayout";
-import {
-  DEFAULT_SETTINGS, CURRENCIES,
-} from '@/lib/data/accountingData';
-import { saveCollection, getObject, saveObject } from "../lib/db";
+import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
+import { useAccountingConfig } from "@/hooks/useAccountingConfig";
+import { DEFAULT_CURRENCIES } from "@mms/shared";
 
 const SUB_TAB_IDS = ["overview", "journal", "ledger", "trial", "coa"] as const;
 type SubTabId = (typeof SUB_TAB_IDS)[number];
@@ -70,7 +69,8 @@ export default function Accounting() {
   const accounts = useLiveCollection("accounting_accounts");
   const entries = useLiveCollection("accounting_entries");
   const fiscalYears = useLiveCollection("accounting_fiscal_years");
-  const [settings,   setSettings]    = useState(() => getObject("accounting_settings", DEFAULT_SETTINGS));
+  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
+  const { settings } = useAccountingConfig();
   const [filteredCount, setFilteredCount] = useState(0);
   const journalColumnLayout = useAccountingJournalColumnLayout();
   const accountColumnLayout = useAccountingAccountColumnLayout();
@@ -91,16 +91,12 @@ export default function Accounting() {
   }, [fiscalYears]);
 
   useEffect(() => {
-    saveObject("accounting_settings", settings);
-  }, [settings]);
-
-  useEffect(() => {
     if (activeSubTab === 'journal' || activeSubTab === 'coa') return;
     setFilteredCount(entries.length);
   }, [activeSubTab, entries.length]);
 
   const activeFY = fiscalYears.find((f) => f.status === "active");
-  const cur = CURRENCIES.find((c) => c.code === settings.currency) || CURRENCIES[0];
+  const cur = currencies.find((c) => c.code === settings.currency) || currencies[0] || { symbol: "$", code: "USD", name: "US Dollar" };
   const fmt = (n: number) => `${cur.symbol} ${n.toLocaleString(undefined, { minimumFractionDigits: settings.decimalPlaces })}`;
 
   return (
@@ -207,8 +203,6 @@ export default function Accounting() {
               />
               <AccountingSettings
                 accounts={accounts}
-                settings={settings}
-                onSaveSettings={setSettings}
                 fiscalYears={fiscalYears}
                 onSaveFiscalYears={setFiscalYears}
                 mode={configSubTab}

@@ -8,7 +8,6 @@ import type {
   QuestionBankTest,
 } from "@mms/shared";
 import { getQuestionCategoryIds } from "@mms/shared";
-import { RESULTS, QUESTIONS, TESTS } from '@/lib/data/questionBankData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import useTranslation from "@/hooks/useTranslation";
 import { useQuestionBankConfig } from "@/hooks/useQuestionBankConfig";
@@ -28,9 +27,9 @@ function testTotalMarks(test: QuestionBankTest, questions: QuestionBankQuestion[
 
 export default function QuestionBankReport(): React.JSX.Element {
   const { t } = useTranslation();
-  const questions = useLiveCollection<QuestionBankQuestion>("questions", QUESTIONS);
-  const tests = useLiveCollection<QuestionBankTest>("tests", TESTS);
-  const results = useLiveCollection<QuestionBankResult>("assessment_results", RESULTS);
+  const questions = useLiveCollection<QuestionBankQuestion>("questions", []);
+  const tests = useLiveCollection<QuestionBankTest>("tests", []);
+  const results = useLiveCollection<QuestionBankResult>("assessment_results", []);
   const config = useQuestionBankConfig(questions);
 
   const avgScore = useMemo(() => {

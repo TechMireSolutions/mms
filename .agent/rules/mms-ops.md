@@ -31,7 +31,7 @@ cd apps/backend && pnpm dev && pnpm typecheck && pnpm test && pnpm lint
 Helper scripts:
 
 ```bash
-./restart_servers.sh              # start dev (GNU screen) + Postgres + health check
+./restart_servers.sh              # start dev (GNU screen) + SQLite + health check
 ./restart_servers.sh status       # screen session, :3000 / :5173
 ./restart_servers.sh stop         # stop screen + servers
 ./restart_servers.sh --foreground # run in this terminal (blocks)
@@ -43,7 +43,7 @@ Helper scripts:
 |----------|-----|----------|
 | `VITE_API_URL` | frontend | dev default via Vite proxy `/api` → `:3000` |
 | `JWT_SECRET` | backend | **yes** — server refuses start without it |
-| `DATABASE_URL` | backend | default `postgresql://postgres:postgres@localhost:5432/mms` |
+| `DATABASE_URL` | backend | default `sqlite://mms.db` (For VPS production, use `sqlite://data/mms.db`) |
 | `PORT` | backend | **Hetzner:** `5002` only — **never** `3000`/`3001` (`mms-production-ports.md`). **Local dev:** `3000` / `MMS_BACKEND_PORT` |
 | `ALLOWED_ORIGIN` | backend | production CORS (must match frontend origin with `credentials: true`) |
 | `NODE_ENV` | backend | `production` tightens CORS |
@@ -54,7 +54,7 @@ Create `apps/backend/.env` locally — never commit real secrets. See root and p
 
 ## Database
 
-- PostgreSQL — **not** SQLite (ignore stale `DATABASE_PATH` in Dockerfile until fixed).
+- SQLite — local file database. For VPS production, isolate the file in a persistent subdirectory (e.g. `sqlite://data/mms.db`).
 - Drizzle DDL migrations in `migrations_drizzle/` — **journal entry required** in `meta/_journal.json`.
 - Data migrations `001–003` run on startup in `initDb()`.
 - Empty DB → legacy full seed from `seeds.json`; **new tenant onboard** uses `minimalSeeds.ts`.
@@ -67,11 +67,10 @@ Create `apps/backend/.env` locally — never commit real secrets. See root and p
 
 ## Docker (backend)
 
-`apps/backend/Dockerfile` is **outdated** (SQLite, npm-only) — tracked in `mms-migration-status.md`. Before production:
+`apps/backend/Dockerfile` is configured for production using SQLite:
 
 - pnpm workspace build (shared → backend)
-- `DATABASE_URL` pointing at PostgreSQL service
-- Remove stale `DATABASE_PATH` / SQLite references
+- `DATABASE_URL` pointing at the SQLite database path (default `sqlite://mms.db`)
 - Match Node 26 + pnpm 11 from CI (`mms-ci.md`)
 
 ## API health
@@ -79,7 +78,7 @@ Create `apps/backend/.env` locally — never commit real secrets. See root and p
 | Endpoint | Purpose |
 |----------|---------|
 | `GET http://localhost:3000/health` | Liveness — process up |
-| `GET http://localhost:3000/ready` | Readiness — PostgreSQL ping; returns `503` if DB down |
+| `GET http://localhost:3000/ready` | Readiness — SQLite ping; returns `503` if DB down |
 
 Deploy should curl `/ready` after PM2 restart (`mms-observability.md`).
 

@@ -73,7 +73,7 @@ Settings that affect visible UI must **preview on change**; **Save** still persi
 
 ### Panel rules
 
-1. **Draft in React state** — do not write localStorage/PostgreSQL until explicit Save.
+1. **Draft in React state** — do not write localStorage/SQLite until explicit Save.
 2. **`onPreview(draft)`** on every draft change — theme, language, nav modules, branding chrome, field visibility, etc.
 3. **`revertSettingsPreviews()`** when leaving `/settings` without save (`RouterBridge`).
 4. **Clear preview** after successful save (`clearGlobalSettingsPreview` / `clearBrandingSettingsPreview` or typed save helpers).

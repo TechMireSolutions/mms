@@ -1,5 +1,5 @@
 import type { User } from '@mms/shared';
-import { roleHasPermission, type Permission } from '@mms/shared';
+import { roleHasPermission, type Permission, WORKSPACES_COLLECTION, PLATFORM_SUPER_USERS_OBJECT_KEY } from '@mms/shared';
 
 const WRITE_ROLES = new Set(['admin', 'accountant', 'teacher', 'assistant_teacher']);
 
@@ -14,6 +14,9 @@ const COLLECTION_READ_PERMISSION: Partial<Record<string, Permission>> = {
  * Mapped collections use `@mms/shared` permissions; legacy collections allow staff write roles.
  */
 export function canReadCollection(user: User, collectionName: string): boolean {
+  if (collectionName === WORKSPACES_COLLECTION) {
+    return false;
+  }
   if (collectionName.startsWith('messages_u:')) {
     const ownerId = collectionName.split(':')[1];
     return ownerId === user.id;
@@ -37,6 +40,9 @@ export function canReadCollection(user: User, collectionName: string): boolean {
  * The `users` collection is restricted to administrators only.
  */
 export function canWriteCollection(user: User, collectionName: string): boolean {
+  if (collectionName === WORKSPACES_COLLECTION) {
+    return false;
+  }
   if (collectionName.startsWith('messages_u:')) {
     const ownerId = collectionName.split(':')[1];
     return ownerId === user.id;
@@ -56,6 +62,9 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
  * Email integration settings are admin-only; other staff objects follow workspace roles.
  */
 export function canReadObject(user: User, key: string): boolean {
+  if (key === PLATFORM_SUPER_USERS_OBJECT_KEY) {
+    return false;
+  }
   if (key === 'email_integration') {
     return user.role === 'admin';
   }
@@ -66,6 +75,9 @@ export function canReadObject(user: User, key: string): boolean {
  * Returns true if the user may write the given KV object.
  */
 export function canWriteObject(user: User, key: string): boolean {
+  if (key === PLATFORM_SUPER_USERS_OBJECT_KEY) {
+    return false;
+  }
   if (key === 'global_settings' || key === 'branding' || key === 'email_integration') {
     return user.role === 'admin';
   }

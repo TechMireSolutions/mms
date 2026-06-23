@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Save, ClipboardList } from "lucide-react";
-import { getObject, saveObject } from "../../lib/db";
+import { useEnrollmentConfig } from "@/hooks/useEnrollmentConfig";
 import {
   type EnrollmentsSettings as EnrollmentsSettingsData,
   DEFAULT_ENROLLMENTS_SETTINGS,
@@ -72,10 +72,13 @@ interface EnrollmentsSettingsProps {
  * Allows editing maximum class size, waitlists, approval flows, deadlines, and reminders.
  */
 export default function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.JSX.Element {
-  const [data, setData] = useState<EnrollmentsSettingsData>(() =>
-    getObject<EnrollmentsSettingsData>("enrollments_settings", DEFAULT_ENROLLMENTS_SETTINGS)
-  );
+  const { settings, updateSettings } = useEnrollmentConfig();
+  const [data, setData] = useState<EnrollmentsSettingsData>(() => settings);
   const [saved, setSaved] = useState<boolean>(false);
+
+  useEffect(() => {
+    setData(settings);
+  }, [settings]);
 
   const upd = <K extends keyof EnrollmentsSettingsData>(f: K, v: EnrollmentsSettingsData[K]): void => {
     setData((d) => ({ ...d, [f]: v }));
@@ -83,7 +86,7 @@ export default function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps):
   };
 
   const handleSave = (): void => {
-    saveObject("enrollments_settings", data);
+    updateSettings(data);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };

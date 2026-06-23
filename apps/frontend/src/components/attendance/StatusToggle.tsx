@@ -1,5 +1,6 @@
 import React from "react";
-import { ATTENDANCE_STATUSES } from '@/lib/data/attendanceData';
+import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
+import type { AttendanceStatus } from "@/lib/data/attendanceData";
 
 interface StatusToggleProps {
   value: string;
@@ -15,13 +16,15 @@ interface StatusToggleProps {
  * @returns {React.ReactElement} The rendered toggle component.
  */
 export default function StatusToggle({ value, onChange }: StatusToggleProps) {
+  const { statuses } = useAttendanceConfig();
+  
   return (
     <div 
       role="group" 
       aria-label="Attendance Status Toggle" 
       className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold"
     >
-      {ATTENDANCE_STATUSES.map((s: { id: string; label: string; bg: string; text: string; short: string }) => (
+      {statuses.map((s: AttendanceStatus) => (
         <button
           key={s.id}
           type="button"

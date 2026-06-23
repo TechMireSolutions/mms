@@ -1,16 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Save, GraduationCap, GripVertical, Check } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { getObject, saveObject } from "../../lib/db";
 import {
   type StudentsSettings,
-  DEFAULT_STUDENTS_SETTINGS,
   type StudentCustomField,
   getSortedStudentFields,
   DEFAULT_STUDENT_FIELD_DEFS
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { useStudentConfig } from "@/hooks/useStudentConfig";
 
 
 interface ToggleProps {
@@ -52,17 +51,22 @@ function Toggle({ label, description, value, onChange }: ToggleProps): React.Rea
  * @returns The StudentsSettings component.
  */
 export default function StudentsSettings({ mode }: { mode?: "fields" | "preferences" }): React.ReactElement {
-  const [data, setData] = useState<StudentsSettings>(() => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS));
+  const { settings, updateSettings } = useStudentConfig();
+  const [data, setData] = useState<StudentsSettings>(() => settings);
   const [saved, setSaved] = useState<boolean>(false);
+
+  useEffect(() => {
+    setData(settings);
+  }, [settings]);
 
   const upd = (f: keyof StudentsSettings, v: StudentsSettings[keyof StudentsSettings]) => {
     setData((d) => ({ ...d, [f]: v }));
     setSaved(false);
   };
 
-  const fields = data.fields || DEFAULT_STUDENTS_SETTINGS.fields || {};
+  const fields = data.fields || {};
   const customFields = data.customFields || [];
-  const fieldOrder = data.fieldOrder || DEFAULT_STUDENTS_SETTINGS.fieldOrder || [];
+  const fieldOrder = data.fieldOrder || [];
 
   const orderedFields = getSortedStudentFields(fieldOrder, fields, customFields);
 
@@ -334,7 +338,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
         <button
           type="button"
           onClick={() => {
-            saveObject("students_settings", data);
+            updateSettings(data);
             setSaved(true);
             setTimeout(() => setSaved(false), 2500);
           }}

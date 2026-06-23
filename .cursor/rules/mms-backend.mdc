@@ -8,20 +8,20 @@ alwaysApply: false
 
 ## 1. Stack & Bootstrap
 
-- **Stack**: Fastify 5, Drizzle ORM (`pg`), Vitest, Zod (schemas), and ESM.
+- **Stack**: Fastify 5, Drizzle ORM (`better-sqlite3`), Vitest, Zod (schemas), and ESM.
 - **Boot Validation**: Hard-fail at startup if `JWT_SECRET` is missing. Data migrations (`001–003`) and expired `auth_artifacts` purging run during database initialization (`initDb()`).
 - **Health Checks**:
   - `GET /health` (liveness).
-  - `GET /ready` returns `200` if PostgreSQL ping (`pingDatabase`) succeeds, else `503`.
+  - `GET /ready` returns `200` if SQLite ping (`pingDatabase`) succeeds, else `503`.
 
 ---
 
 ## 2. Layering & Architecture
 
 - **Flow**: `routes/*.ts` → `services/*.ts` → `db/database.ts` (using `dbClient.ts` singleton).
-- **Decoupling**: Never import `pg` or Drizzle drivers inside route handlers. Use Zod schemas in `validation/*Schemas.ts` with `parseRequest` for request body validation.
+- **Decoupling**: Never import `better-sqlite3` or Drizzle drivers inside route handlers. Use Zod schemas in `validation/*Schemas.ts` with `parseRequest` for request body validation.
 - **REST Endpoints**: Prefer dedicated resource endpoints (e.g. `/api/students`, `/api/contacts`) with validation schemas and RBAC checks over legacy bulk collection updates.
-- **Ephemeral State**: OTP codes, handoff codes, and refresh token hashes must be persisted in PostgreSQL (`auth_artifacts`), not in-memory maps.
+- **Ephemeral State**: OTP codes, handoff codes, and refresh token hashes must be persisted in SQLite (`auth_artifacts`), not in-memory maps.
 
 ---
 

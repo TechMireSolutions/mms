@@ -84,7 +84,7 @@ if curl_local_backend_ok "${LOCAL_BASE}/health" "$APP_DOMAIN"; then
   if curl_local_backend_ok "${LOCAL_BASE}/ready" "$APP_DOMAIN"; then
     echo "Backend ready (database connected)"
   else
-    echo "ERROR: /ready failed — check DATABASE_URL and PostgreSQL"
+    echo "ERROR: /ready failed — check DATABASE_URL and database connection"
     LOCAL_OK=false
   fi
   if curl_local_backend_ok "${LOCAL_BASE}/" "$APP_DOMAIN"; then

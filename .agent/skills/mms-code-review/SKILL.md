@@ -59,7 +59,7 @@ E2E when touching auth/routing: `pnpm exec playwright test`
 
 ### Field persistence (new/changed fields)
 - [ ] Field on `@mms/shared` type + `DEFAULT_*` + merge helper
-- [ ] Write reaches PostgreSQL
+- [ ] Write reaches SQLite
 - [ ] UI control bound to save path — not orphaned `useState`
 
 ### Auth / security

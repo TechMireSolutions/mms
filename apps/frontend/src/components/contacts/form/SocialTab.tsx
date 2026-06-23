@@ -8,18 +8,6 @@ import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields"
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
 
-const SOCIAL_PLACEHOLDERS: Record<string, string> = {
-  Facebook: "https://facebook.com/username",
-  "Twitter / X": "https://x.com/username",
-  Instagram: "https://instagram.com/username",
-  LinkedIn: "https://linkedin.com/in/username",
-  TikTok: "https://tiktok.com/@username",
-  YouTube: "https://youtube.com/@channel",
-  WhatsApp: "+92 300 0000000",
-  Telegram: "https://t.me/username",
-  Snapchat: "https://snapchat.com/add/username",
-};
-
 interface ContactSocial {
   platform: string;
   url: string;
@@ -47,9 +35,9 @@ export default function SocialTab({
   onChange,
   required = false,
 }: SocialTabProps): React.JSX.Element {
-  const { socialPlatforms, updateSocialPlatforms } = useContactConfig();
+  const { socialPlatforms, socialPlaceholders, updateSocialPlatforms } = useContactConfig();
   const { t } = useTranslation();
-  const defaultSocialPlatform = socialPlatforms[0] || t('contacts.detail.facebookLabel');
+  const defaultSocialPlatform = socialPlatforms[0] || "";
   const enabledFields = useVisibleContactFields("socials");
 
   const createNewSocial = (): ContactSocial => {
@@ -79,7 +67,7 @@ export default function SocialTab({
 
   const getPlaceholder = (field: FieldDefinition, platform: string): string => {
     if (field.key === "url") {
-      return SOCIAL_PLACEHOLDERS[platform] || field.placeholder || t("contacts.form.urlPlaceholderDefault");
+      return socialPlaceholders[platform] || field.placeholder || t("contacts.form.urlPlaceholderDefault");
     }
     return field.placeholder || "";
   };
@@ -146,4 +134,3 @@ export default function SocialTab({
     </div>
   );
 }
-

@@ -43,7 +43,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | React hooks (live data, i18n, permissions) | `mms-hooks.mdc` | `mms-data-layer`, `mms-i18n`, `mms-rbac` |
 | Contacts CRM module | `mms-contacts.mdc` | `mms-config` (provider mount only) |
 | Fastify API / routes | `mms-backend.mdc` | `mms-auth`, `mms-database` |
-| PostgreSQL / Drizzle | `mms-database.mdc` | `mms-data-layer` |
+| SQLite / Drizzle | `mms-database.mdc` | `mms-data-layer` |
 | Dev / env / Docker | `mms-ops.mdc` | `mms-ci` (pipeline pointer), `mms-production-ports.mdc` (Hetzner ports) |
 | Copy layers (`t` / `labelKey` / legacy `uiStrings`) | `mms-i18n.mdc` | `mms-ui-rendering` (notify), `mms-contacts` (legacy) |
 | Contact-first person links (ids only on save) | `mms-contact-link.mdc` | `mms-core`, `mms-data-layer`, `mms-contacts` |
@@ -97,6 +97,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-testing.mdc` | Vitest, API tests, CI when suite exists |
 | `mms-observability.mdc` | Logging, `/health`, ErrorBoundary, error reporting |
 | `mms-a11y.mdc` | WCAG baseline, RTL, keyboard, ARIA |
+| `mms-linux-compatibility.mdc` | Linux/Ubuntu VPS compatibility rules, paths, casing, permissions |
 
 ## Skills (workflows)
 

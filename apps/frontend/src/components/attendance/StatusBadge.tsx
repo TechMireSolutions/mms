@@ -1,5 +1,6 @@
 import React from "react";
-import { STATUS_MAP } from '@/lib/data/attendanceData';
+import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
+import { getAttendanceStatusInfo } from "@/lib/data/attendanceData";
 
 interface StatusBadgeProps {
   status: string;
@@ -15,8 +16,8 @@ interface StatusBadgeProps {
  * @returns {React.ReactElement | null} The rendered badge or null if status is invalid.
  */
 export default function StatusBadge({ status, size = "sm" }: StatusBadgeProps) {
-  // Ensure we safely access STATUS_MAP, falling back if not found
-  const s = STATUS_MAP[status as keyof typeof STATUS_MAP];
+  const { statuses } = useAttendanceConfig();
+  const s = getAttendanceStatusInfo(status, statuses);
   
   if (!s) {
     console.warn(`StatusBadge: Invalid status provided - "${status}"`);

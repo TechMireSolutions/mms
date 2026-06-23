@@ -1,40 +1,12 @@
 {
   "version": "7",
-  "dialect": "postgresql",
+  "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "7",
-      "when": 1780162758154,
-      "tag": "0000_flaky_venom",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1781634000000,
-      "tag": "0001_auth_artifacts",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1781849000000,
-      "tag": "0002_platform_tenant_users",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1782101919141,
-      "tag": "0003_absurd_living_mummy",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1782162000000,
-      "tag": "0004_updated_at_constraints",
+      "version": "6",
+      "when": 1782205710826,
+      "tag": "0000_lowly_pride",
       "breakpoints": true
     }
   ]

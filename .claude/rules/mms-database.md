@@ -1,5 +1,5 @@
 ---
-description: PostgreSQL, Drizzle schema, migrations, seeds, auth artifacts
+description: SQLite, Drizzle schema, migrations, seeds, auth artifacts
 paths:
   - "apps/backend/src/db/**"
   - "apps/backend/drizzle.config.ts"
@@ -10,10 +10,11 @@ paths:
 
 ## Stack
 
-- PostgreSQL (`DATABASE_URL`) — **not SQLite**
+- SQLite (`DATABASE_URL`) — local file database (default `mms.db`). For VPS production, default to `sqlite://data/mms.db`.
 - Drizzle ORM — `apps/backend/src/db/schema.ts`
-- Connection pool via `pg` in `database.ts`
+- Connection database via `better-sqlite3` in `database.ts`
 - `dbClient.ts` — `setDb()` / `getDb()` singleton for `authArtifactService` (avoids circular imports)
+- VPS Best Practices: Ensure parent folders are initialized recursively (`mkdirSync`) and busy timeout is configured (`sqliteDb.pragma('busy_timeout = 5000')`) to prevent connection locks under concurrent PM2 workers.
 
 ## Schema (`schema.ts`)
 
@@ -45,7 +46,7 @@ Tenant key resolution happens in `database.ts` via `getRequestTenant()` from `te
 - No ad-hoc raw SQL in application route code
 - `resetTenantData()` — deletes tenant-scoped rows only; reseeds **minimal** defaults
 
-**DDL migrations shipped:** `0001_auth_artifacts.sql`, `0002_platform_tenant_users.sql`.
+**DDL migrations shipped:** `0000_lowly_pride.sql`.
 
 ## Seeds
 
@@ -68,7 +69,7 @@ route handler → service → dbSyncService.ts → database.ts
 
 REST resource routes (`students`, `contacts`) use `dbSyncService.fetchCollection` / `persistCollection` — not direct `database.ts` imports.
 
-Never import `pg` in route files.
+Never import `better-sqlite3` in route files.
 
 ## reset / destructive ops
 
@@ -87,7 +88,7 @@ Do not reintroduce global multi-tenant wipe via `/api/db/reset`.
 
 When implementing custom tabs/fields per `mms-fields.md`:
 
-1. Add real `pgTable` definitions to `schema.ts`
+1. Add real SQLite table definitions to `schema.ts`
 2. `drizzle-kit generate` + update `meta/_journal.json`
 3. Keep document store for legacy collections until migrated
 

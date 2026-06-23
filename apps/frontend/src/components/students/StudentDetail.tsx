@@ -4,10 +4,8 @@ import {
   X, Edit2, MessageCircle, Phone,
   Calendar, User, Clock, BookOpen, GraduationCap, Sparkles
 } from "lucide-react";
-import { formatDate, getObject } from "../../lib/db";
+import { formatDate } from "../../lib/db";
 import {
-  type StudentsSettings,
-  DEFAULT_STUDENTS_SETTINGS,
   getSortedStudentFields
 } from "@mms/shared";
 import { useSessionsCollection } from '@/hooks/useSessions';
@@ -15,6 +13,7 @@ import { useContactsByIds } from '@/hooks/useContacts';
 import { calcAge, type Student } from '@/lib/data/studentsData';
 import StatusBadge from "../ui/StatusBadge";
 import { AVATAR_GRADIENT_ROTATION } from "@/lib/semanticTone";
+import { useStudentConfig } from "@/hooks/useStudentConfig";
 
 interface StudentDetailProps {
   student: Student;
@@ -40,10 +39,10 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
   const contacts = useContactsByIds(linkedIds);
   const contactList = contacts.data ?? [];
 
-  const settings = useMemo(() => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS), []);
-  const fields = settings.fields || DEFAULT_STUDENTS_SETTINGS.fields || {};
+  const { settings } = useStudentConfig();
+  const fields = settings.fields || {};
   const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_STUDENTS_SETTINGS.fieldOrder || [];
+  const fieldOrder = settings.fieldOrder || [];
   const orderedFields = useMemo(() => {
     return getSortedStudentFields(fieldOrder, fields, customFields);
   }, [fieldOrder, fields, customFields]);

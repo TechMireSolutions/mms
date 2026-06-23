@@ -1,6 +1,6 @@
 /** Active employment status for a teacher profile. */
 export const TEACHER_STATUS_VALUES = ['active', 'inactive', 'on_leave'] as const;
-export type TeacherStatus = (typeof TEACHER_STATUS_VALUES)[number];
+export type TeacherStatus = string;
 
 /** Teaching specialization options for madrasa faculty. */
 export const TEACHER_SPECIALIZATION_VALUES = [

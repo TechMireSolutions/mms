@@ -180,6 +180,7 @@ export function getWidgetCollections() {
   const invoices = getCollection("finance_invoices");
   const attendance = getCollection("attendance_records");
   const distributions = getCollection("hasanat_distributions");
+  const denoms = getCollection("hasanat_denoms");
   const sessions = getCollection("sessions");
   const questions = getCollection("questions");
   const tests = getCollection("tests");
@@ -192,6 +193,7 @@ export function getWidgetCollections() {
     finance_invoices: invoices,
     attendance_records: attendance,
     hasanat_distributions: distributions,
+    hasanat_denoms: denoms,
     contacts,
     questions,
     tests,
@@ -302,12 +304,14 @@ export function computeWidgetSingleValue(
     let count = 0;
     filtered.forEach((item) => {
       if (widget.collection === "hasanat_distributions" && field === "points") {
-        let points = 50;
-        const denom = String(item.denominationName || "").toLowerCase();
-        if (denom.includes("silver")) points = 150;
-        else if (denom.includes("gold")) points = 500;
-        else if (denom.includes("platinum")) points = 1000;
-        else if (denom.includes("diamond")) points = 2500;
+        const denomName = String(item.denominationName || "").toLowerCase();
+        const matchedDenom = (collections.hasanat_denoms || []).find((d: any) => d.id === item.denominationId);
+        const points = matchedDenom ? matchedDenom.points : (
+          denomName.includes("silver") ? 150 :
+          denomName.includes("gold") ? 500 :
+          denomName.includes("platinum") ? 1000 :
+          denomName.includes("diamond") ? 2500 : 50
+        );
         sum += Number(item.quantity || 1) * points;
         count++;
       } else {
@@ -408,12 +412,14 @@ export function computeWidgetChartData(
       let count = 0;
       items.forEach((item) => {
         if (widget.collection === "hasanat_distributions" && field === "points") {
-          let points = 50;
-          const denom = String(item.denominationName || "").toLowerCase();
-          if (denom.includes("silver")) points = 150;
-          else if (denom.includes("gold")) points = 500;
-          else if (denom.includes("platinum")) points = 1000;
-          else if (denom.includes("diamond")) points = 2500;
+          const denomName = String(item.denominationName || "").toLowerCase();
+          const matchedDenom = (collections.hasanat_denoms || []).find((d: any) => d.id === item.denominationId);
+          const points = matchedDenom ? matchedDenom.points : (
+            denomName.includes("silver") ? 150 :
+            denomName.includes("gold") ? 500 :
+            denomName.includes("platinum") ? 1000 :
+            denomName.includes("diamond") ? 2500 : 50
+          );
           sum += Number(item.quantity || 1) * points;
           count++;
         } else {

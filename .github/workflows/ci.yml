@@ -36,20 +36,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: mms
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v6
 
@@ -66,7 +52,7 @@ jobs:
       - name: Start backend
         env:
           JWT_SECRET: ci-test-secret
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mms
+          DATABASE_URL: sqlite://mms.db
           NODE_ENV: test
           PLATFORM_ALLOW_ENV_BOOTSTRAP: 'true'
           PLATFORM_ADMIN_EMAIL: platform@test.com

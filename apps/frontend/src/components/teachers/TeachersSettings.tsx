@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, School } from 'lucide-react';
-import { getObject, saveObject } from '@/lib/db';
 import {
-  type TeachersSettings,
+  type TeachersSettings as TeachersSettingsType,
   DEFAULT_TEACHERS_SETTINGS,
   TEACHER_SPECIALIZATION_VALUES,
   getSortedTeacherFields,
   DEFAULT_TEACHER_FIELD_DEFS,
   type AppTranslationKey,
 } from '@mms/shared';
+import { useTeacherConfig } from '@/hooks/useTeacherConfig';
 import useTranslation from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
@@ -63,18 +63,23 @@ function Toggle({ label, description, value, onChange }: ToggleProps): React.Rea
 
 export default function TeachersSettings({ mode }: { mode?: 'fields' | 'preferences' }): React.ReactElement {
   const { t } = useTranslation();
-  const [data, setData] = useState<TeachersSettings>(() =>
-    getObject<TeachersSettings>('teachers_settings', DEFAULT_TEACHERS_SETTINGS),
-  );
+  const { settings, specializations, updateSettings } = useTeacherConfig();
+  const [data, setData] = useState<TeachersSettingsType>(settings);
   const [saved, setSaved] = useState(false);
 
-  const upd = <K extends keyof TeachersSettings>(f: K, v: TeachersSettings[K]) => {
+  useEffect(() => {
+    setData(settings);
+  }, [settings]);
+
+  const specializationOptions = specializations.length > 0 ? specializations : [...TEACHER_SPECIALIZATION_VALUES];
+
+  const upd = <K extends keyof TeachersSettingsType>(f: K, v: TeachersSettingsType[K]) => {
     setData((d) => ({ ...d, [f]: v }));
     setSaved(false);
   };
 
   const handleSave = () => {
-    saveObject('teachers_settings', data);
+    updateSettings(data);
     setSaved(true);
     notify.success(t('teachers.settings.saved'));
   };
@@ -166,7 +171,7 @@ export default function TeachersSettings({ mode }: { mode?: 'fields' | 'preferen
             value={data.defaultSpecialization}
             onChange={(e) => upd('defaultSpecialization', e.target.value)}
           >
-            {TEACHER_SPECIALIZATION_VALUES.map((opt) => (
+            {specializationOptions.map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
             ))}
           </select>

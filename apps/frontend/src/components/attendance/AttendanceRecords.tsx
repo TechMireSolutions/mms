@@ -2,7 +2,8 @@ import React, { useState, useMemo } from "react";
 import { Search, Pencil, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
-import { ATTENDANCE_STATUSES, AttendanceRecord } from '@/lib/data/attendanceData';
+import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
+import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
 import { useSessionsCollection } from '@/hooks/useSessions';
 import usePermissions from "@/hooks/usePermissions";
 import useTranslation from "@/hooks/useTranslation";
@@ -44,6 +45,7 @@ export default function AttendanceRecords({
   isColumnVisible,
   columnCustomizer,
 }: AttendanceRecordsProps) {
+  const { statuses } = useAttendanceConfig();
   const { t } = useTranslation();
   const { can } = usePermissions();
   const sessions = useSessionsCollection();
@@ -62,6 +64,8 @@ export default function AttendanceRecords({
   const [page, setPage] = useState(1);
 
   const statusLabel = (statusId: string) => {
+    const found = statuses.find((s) => s.id === statusId);
+    if (found) return found.label;
     const key = `attendance.status.${statusId}` as AppTranslationKey;
     return t(key);
   };
@@ -131,7 +135,7 @@ export default function AttendanceRecords({
           >
             {t("attendance.filter.all")}
           </button>
-          {ATTENDANCE_STATUSES.map((s: { id: string; label: string; bg: string; text: string }) => (
+          {statuses.map((s: AttendanceStatus) => (
             <button
               type="button"
               key={s.id}

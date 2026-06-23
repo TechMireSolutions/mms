@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, BookOpen, CheckCircle2, Layers, DollarSign, ClipboardCheck,
@@ -14,12 +14,8 @@ import Step6Confirmation from "./wizard/Step6Confirmation";
 import { suggestClass, runFullEligibility, Enrollment, CalculatedFee } from '@/lib/data/enrollmentData';
 import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
-import { getObject } from "../../lib/db";
 import { useSessionsCollection } from "@/hooks/useSessions";
-import {
-  type EnrollmentsSettings,
-  DEFAULT_ENROLLMENTS_SETTINGS,
-} from "@mms/shared";
+import { useEnrollmentConfig } from "@/hooks/useEnrollmentConfig";
 
 const STEPS: Step[] = [
   { id: "student",     label: "Student",     icon: User },
@@ -55,9 +51,7 @@ export default function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWiz
   const [done, setDone]             = useState<boolean>(false);
   const [direction, setDirection]   = useState<number>(1);
 
-  const settings = useMemo(() => getObject<EnrollmentsSettings>("enrollments_settings", DEFAULT_ENROLLMENTS_SETTINGS), []);
-  const fields = settings.fields || DEFAULT_ENROLLMENTS_SETTINGS.fields || {};
-  const customFields = settings.customFields || [];
+  const { settings, fields, customFields } = useEnrollmentConfig();
 
   const suggested = student && session ? suggestClass(student, session) : null;
 

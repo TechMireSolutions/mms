@@ -62,7 +62,7 @@ JWT / API public shape: `User` from `@mms/shared` — `{ id, email, name, role, 
 
 OTP codes: `crypto.randomInt()` — never `Math.random()`.
 
-## Auth artifacts (PostgreSQL)
+## Auth artifacts (SQLite)
 
 Ephemeral auth state lives in `auth_artifacts` — **not** in-memory `Map`.
 

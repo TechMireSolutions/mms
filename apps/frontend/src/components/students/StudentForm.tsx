@@ -1,18 +1,15 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import {
-  DEFAULT_STUDENTS_SETTINGS,
   getStudentRegistrationFields,
   normalizeStoredStudent,
   type StudentFieldDef,
-  type StudentsSettings,
   type StudentDuplicateReason,
   type AppTranslationKey,
 } from "@mms/shared";
 import type { Student } from "@/lib/data/studentsData";
 import type { Contact } from "@mms/shared";
 import { toTitleCase } from "@/lib/utils";
-import { getObject } from "@/lib/db";
 import { useContactMutations, useContactById } from "@/hooks/useContacts";
 import {
   checkStudentRegistrationDuplicate,
@@ -25,6 +22,7 @@ import FormModal from "../ui/FormModal";
 import ContactPicker from "../contactLink/ContactPicker";
 import { calculateKeyedUnitsCompleteness } from "@/lib/formCompleteness";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "../ui/formStyles";
+import { useStudentConfig } from "@/hooks/useStudentConfig";
 
 interface StudentFormData {
   contactId: string | number | null;
@@ -34,13 +32,13 @@ interface StudentFormData {
   fatherName: string;
   motherName: string;
   guardianName: string;
-  status: "active" | "inactive" | "suspended";
+  status: string;
   grNumber: string;
   registeredDate: string;
   [key: string]: unknown;
 }
 
-function buildInitialData(student?: Partial<Student> | null): StudentFormData {
+function buildInitialData(student: Partial<Student> | null | undefined, defaultStatus: string): StudentFormData {
   const base: StudentFormData = {
     contactId: student?.contactId ?? null,
     fatherContactId: student?.fatherContactId ?? null,
@@ -49,7 +47,7 @@ function buildInitialData(student?: Partial<Student> | null): StudentFormData {
     fatherName: student?.fatherName ?? "",
     motherName: student?.motherName ?? "",
     guardianName: student?.guardianName ?? "",
-    status: student?.status ?? "active",
+    status: student?.status ?? defaultStatus,
     grNumber: student?.grNumber ?? "",
     registeredDate: student?.registeredDate ?? new Date().toISOString().split("T")[0],
   };
@@ -169,14 +167,11 @@ export default function StudentForm({
 }: StudentFormProps): React.JSX.Element {
   const { t } = useTranslation();
   const { updateContact } = useContactMutations();
-
-  const settings = useMemo(
-    () => getObject<StudentsSettings>("students_settings", DEFAULT_STUDENTS_SETTINGS),
-    [],
-  );
-  const fields = settings.fields || DEFAULT_STUDENTS_SETTINGS.fields || {};
+  const { settings, statuses, guardianContactDefaults } = useStudentConfig();
+  const defaultStatus = statuses[0] || "";
+  const fields = settings.fields || {};
   const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_STUDENTS_SETTINGS.fieldOrder || [];
+  const fieldOrder = settings.fieldOrder || [];
 
   const registrationFields = useMemo(
     () => getStudentRegistrationFields(fieldOrder, fields, customFields),
@@ -196,9 +191,13 @@ export default function StudentForm({
   );
   const showRegisteredDate = fields.registeredDate?.enabled !== false;
 
-  const [data, setData] = useState<StudentFormData>(() => buildInitialData(student));
+  const [data, setData] = useState<StudentFormData>(() => buildInitialData(student, defaultStatus));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setData((current) => (current.status || !defaultStatus ? current : { ...current, status: defaultStatus }));
+  }, [defaultStatus]);
 
   const regDate = data.registeredDate || new Date().toISOString().split("T")[0];
   const { data: nextGrNumber } = useStudentNextGrNumber({
@@ -377,9 +376,16 @@ export default function StudentForm({
             label={`${t("students.form.fatherLink")}${field.required ? " *" : ""}`}
             value={data.fatherContactId}
             onChange={handleFatherSelect}
-            filterGender="male"
+            filterGender={guardianContactDefaults.fatherLink?.filterGender}
             excludeIds={[data.contactId, data.motherContactId, data.guardianContactId].filter(Boolean)}
-            createDefaults={{ gender: "male", lockGender: true }}
+            createDefaults={
+              guardianContactDefaults.fatherLink?.createGender
+                ? {
+                    gender: guardianContactDefaults.fatherLink.createGender,
+                    lockGender: guardianContactDefaults.fatherLink.lockGender ?? true,
+                  }
+                : undefined
+            }
             searchPlaceholder={t("teachers.form.searchContact")}
             emptyTitle={t("teachers.form.noContacts")}
             emptyHint={t("teachers.form.noContactsHint")}
@@ -395,9 +401,16 @@ export default function StudentForm({
             label={`${t("students.form.motherLink")}${field.required ? " *" : ""}`}
             value={data.motherContactId}
             onChange={handleMotherSelect}
-            filterGender="female"
+            filterGender={guardianContactDefaults.motherLink?.filterGender}
             excludeIds={[data.contactId, data.fatherContactId, data.guardianContactId].filter(Boolean)}
-            createDefaults={{ gender: "female", lockGender: true }}
+            createDefaults={
+              guardianContactDefaults.motherLink?.createGender
+                ? {
+                    gender: guardianContactDefaults.motherLink.createGender,
+                    lockGender: guardianContactDefaults.motherLink.lockGender ?? true,
+                  }
+                : undefined
+            }
             searchPlaceholder={t("teachers.form.searchContact")}
             emptyTitle={t("teachers.form.noContacts")}
             emptyHint={t("teachers.form.noContactsHint")}
@@ -534,13 +547,15 @@ export default function StudentForm({
                   onChange={(e) =>
                     setData((d) => ({
                       ...d,
-                      status: e.target.value as StudentFormData["status"],
+                      status: e.target.value,
                     }))
                   }
                 >
-                  <option value="active">{t("students.form.status.active")}</option>
-                  <option value="inactive">{t("students.form.status.inactive")}</option>
-                  <option value="suspended">{t("students.form.status.suspended")}</option>
+                  {statuses.map((status) => (
+                    <option key={status} value={status}>
+                      {t(`students.form.status.${status}` as AppTranslationKey)}
+                    </option>
+                  ))}
                 </select>
               </div>
 

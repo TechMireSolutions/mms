@@ -3,8 +3,8 @@ import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Scale, ClipboardList, History, 
-  Shield, BookOpen, BarChart2, Plus
+  Scale, ClipboardList, 
+  Shield, BookOpen, Plus
 } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
 import PageHeader from "../components/ui/PageHeader";
@@ -34,13 +34,6 @@ import { useObligationColumnLayout } from "@/hooks/useObligationColumnLayout";
 export default function Obligations() {
   const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
-  const OPS_SUB_TABS = useMemo(
-    () => [
-      { id: "summary", label: t("obligations.summary"), icon: BarChart2 },
-      { id: "collections", label: t("obligations.collections"), icon: History },
-    ],
-    [t]
-  );
   const CONFIG_SUB_TABS = useMemo(
     () => [
       { id: "types", label: t("obligations.types"), icon: ClipboardList },
@@ -50,7 +43,6 @@ export default function Obligations() {
     [t]
   );
   const [activeTab, setActiveTab] = useState("work");
-  const [activeSubTab, setActiveSubTab] = useState("summary");
   const [activeConfigTab, setActiveConfigTab] = useState("types");
 
   const obligationTypes = useLiveCollection("obligation_types");
@@ -82,7 +74,6 @@ export default function Obligations() {
     activeTab,
     PAGE_TABS.map((tab) => tab.id),
   );
-  const effectiveSubTab = OPS_SUB_TABS.find((t) => t.id === activeSubTab) ? activeSubTab : "summary";
   const effectiveConfigTab = CONFIG_SUB_TABS.find((t) => t.id === activeConfigTab) ? activeConfigTab : "types";
 
   return (
@@ -112,15 +103,6 @@ export default function Obligations() {
         onTabChange={setActiveTab}
         panelIdPrefix="obligations-tab"
       >
-      {/* Work tier sub-tabs */}
-      {effectiveTab === "work" && (
-        <SubTabBar
-          tabs={OPS_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-          value={effectiveSubTab}
-          onChange={setActiveSubTab}
-        />
-      )}
-
       {effectiveTab === "setup" && (
         <SubTabBar
           tabs={CONFIG_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
@@ -131,7 +113,7 @@ export default function Obligations() {
 
       {/* Content */}
       <AnimatePresence mode="wait">
-        <motion.div key={effectiveTab + "-" + (effectiveTab === "work" ? effectiveSubTab : (effectiveTab === "setup" ? effectiveConfigTab : "main"))}
+        <motion.div key={effectiveTab + "-" + (effectiveTab === "setup" ? effectiveConfigTab : "main")}
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
           className="space-y-4">
@@ -148,18 +130,7 @@ export default function Obligations() {
             />
           )}
 
-          {effectiveTab === "work" && effectiveSubTab === "summary" && (
-            <ObligationsSummaryComponent
-              collections={collections}
-              obligationTypes={obligationTypes}
-              reps={reps}
-              mujtahids={mujtahids}
-              wakalaTypes={wakalaTypes}
-              distributions={distributions}
-            />
-          )}
-
-          {effectiveTab === "work" && effectiveSubTab === "collections" && (
+          {effectiveTab === "work" && (
             <div className="space-y-4">
               <ObligationCollectionList
                 collections={collections}

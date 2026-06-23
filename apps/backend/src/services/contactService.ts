@@ -9,7 +9,6 @@ import {
   DEFAULT_FORM_TABS,
   DEFAULT_REQUIRED_TABS,
   filterActiveContacts,
-  INITIAL_FIELD_SEED,
   normalizeToE164,
   paginateContacts,
   parsePhoneNumber,
@@ -29,7 +28,12 @@ import { contactListSchema } from '../validation/contactSchemas.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
 import { invalidateDuplicateScanCache } from './contactDuplicateScanService.js';
 
-const DEFAULT_PHONE_CODE = '+92';
+export interface ContactRuntimeDefaults {
+  defaultPhoneCountryCode: string;
+  phoneLabel: string;
+  emailLabel: string;
+  lifecycleStage: string;
+}
 
 export async function loadContacts(options?: { includeDeleted?: boolean }): Promise<Contact[]> {
   const data = await fetchCollection('contacts');
@@ -49,7 +53,7 @@ function metricsFieldConfig(cfg: FieldConfig | null): FieldConfig {
     version: 1,
     enabledTabs: [...DEFAULT_ENABLED_TABS],
     requiredTabs: [...DEFAULT_REQUIRED_TABS],
-    fields: INITIAL_FIELD_SEED,
+    fields: {},
     formTabs: DEFAULT_FORM_TABS,
   };
 }
@@ -60,9 +64,44 @@ export async function loadContactsCommandMetrics(): Promise<ContactsCommandMetri
   return computeContactsCommandMetrics(contacts, { fieldConfig: cfg });
 }
 
-function resolveDefaultLifecycleStage(cfg: FieldConfig): string {
+function firstString(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function firstCollectionString(rows: unknown[] | null): string {
+  return firstString(rows?.[0]);
+}
+
+function firstCountryCode(rows: unknown[] | null): string {
+  const first = rows?.find((entry) => {
+    return entry && typeof entry === 'object' && typeof (entry as { code?: unknown }).code === 'string';
+  }) as { code?: string } | undefined;
+  return first?.code ?? '';
+}
+
+async function resolveDefaultLifecycleStage(cfg: FieldConfig): Promise<string> {
   const field = (cfg.fields?.basic ?? []).find((f) => f.key === 'lifecycleStage');
-  return field?.options?.[0] ?? 'Lead';
+  return (
+    field?.options?.[0]
+    || firstCollectionString(await fetchCollection('lifecycleStages'))
+    || ''
+  );
+}
+
+export async function loadContactRuntimeDefaults(): Promise<ContactRuntimeDefaults> {
+  const [countryCodes, phoneLabels, emailLabels, lifecycleStages] = await Promise.all([
+    fetchCollection('countryCodes'),
+    fetchCollection('phoneLabels'),
+    fetchCollection('emailLabels'),
+    fetchCollection('lifecycleStages'),
+  ]);
+
+  return {
+    defaultPhoneCountryCode: firstCountryCode(countryCodes),
+    phoneLabel: firstCollectionString(phoneLabels),
+    emailLabel: firstCollectionString(emailLabels),
+    lifecycleStage: firstCollectionString(lifecycleStages),
+  };
 }
 
 export async function loadContactsReportAnalytics(options?: {
@@ -70,7 +109,7 @@ export async function loadContactsReportAnalytics(options?: {
 }): Promise<{ analytics: ContactsReportAnalyticsSnapshot; monthlyByYear?: ContactsMonthlyYearCounts[] }> {
   const contacts = await loadContacts();
   const cfg = metricsFieldConfig(await loadContactFieldConfig());
-  const defaultStage = resolveDefaultLifecycleStage(cfg);
+  const defaultStage = await resolveDefaultLifecycleStage(cfg);
   const analytics = computeContactsReportAnalytics(contacts, { defaultStage });
 
   const years = options?.compareYears?.filter(Boolean) ?? [];
@@ -121,15 +160,17 @@ export async function getContactById(id: string, includeDeleted = false): Promis
   return found;
 }
 
-export function normalizeContactPhones(contact: Contact): Contact {
+export async function normalizeContactPhones(contact: Contact): Promise<Contact> {
   if (!contact.phones?.length) {
     return contact;
   }
+  const { defaultPhoneCountryCode } = await loadContactRuntimeDefaults();
   return {
     ...contact,
     phones: contact.phones.map((p) => {
-      const e164 = normalizeToE164(p.countryCode || DEFAULT_PHONE_CODE, p.number);
-      const parsed = parsePhoneNumber(e164, p.countryCode || DEFAULT_PHONE_CODE);
+      const fallbackCode = p.countryCode || defaultPhoneCountryCode;
+      const e164 = normalizeToE164(fallbackCode, p.number);
+      const parsed = parsePhoneNumber(e164, fallbackCode);
       return {
         ...p,
         countryCode: parsed.countryCode,
@@ -139,8 +180,8 @@ export function normalizeContactPhones(contact: Contact): Contact {
   };
 }
 
-export function prepareContactRecord(contact: Contact, id?: string | number): Contact {
-  const withPhones = normalizeContactPhones(contact);
+export async function prepareContactRecord(contact: Contact, id?: string | number): Promise<Contact> {
+  const withPhones = await normalizeContactPhones(contact);
   const resolvedId = id ?? withPhones.id ?? `temp-${Date.now()}`;
   return applyTitleCaseToContact({ ...withPhones, id: resolvedId }) as Contact;
 }
@@ -150,7 +191,7 @@ export async function upsertContact(contact: Contact): Promise<{
   created: boolean;
   restoredFromDelete?: boolean;
 }> {
-  const contactWithId = prepareContactRecord(contact, contact.id);
+  const contactWithId = await prepareContactRecord(contact, contact.id);
   const data = await fetchCollection('contacts');
   const parsed = contactListSchema.safeParse(data ?? []);
   const contacts = parsed.success ? (parsed.data as Contact[]) : [];
@@ -169,7 +210,7 @@ export async function upsertContact(contact: Contact): Promise<{
 }
 
 export async function updateContactById(id: string, contact: Contact): Promise<Contact | null> {
-  const contactWithId = prepareContactRecord({ ...contact, id }, id);
+  const contactWithId = await prepareContactRecord({ ...contact, id }, id);
   const data = await fetchCollection('contacts');
   const parsed = contactListSchema.safeParse(data ?? []);
   const contacts = parsed.success ? (parsed.data as Contact[]) : [];

@@ -5,6 +5,7 @@ import { useTenant } from '@/lib/contexts/TenantContext';
 import usePlatformSessionTimeout from '@/platform/hooks/usePlatformSessionTimeout';
 import {
   clearPlatformBrowserSession,
+  hasPlatformBrowserSession,
   markPlatformBrowserSession,
 } from '@/platform/lib/platformBrowserSession';
 
@@ -29,7 +30,7 @@ export interface PlatformAuthContextType {
   platformAuthChecked: boolean;
   platformLogin: (email: string, password: string) => Promise<void>;
   platformLogout: () => void;
-  checkPlatformAuth: () => Promise<void>;
+  checkPlatformAuth: (options?: { force?: boolean }) => Promise<void>;
 }
 
 const PlatformAuthContext = createContext<PlatformAuthContextType | undefined>(undefined);
@@ -42,11 +43,19 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isPlatformLoginSubmitting, setIsPlatformLoginSubmitting] = useState(false);
   const [platformAuthChecked, setPlatformAuthChecked] = useState(false);
 
-  const checkPlatformAuth = useCallback(async (): Promise<void> => {
+  const checkPlatformAuth = useCallback(async (options?: { force?: boolean }): Promise<void> => {
     if (!isApex) {
       setPlatformUser(null);
       setIsPlatformAuthenticated(false);
       setPlatformAuthChecked(true);
+      return;
+    }
+
+    if (!options?.force && !hasPlatformBrowserSession()) {
+      setPlatformUser(null);
+      setIsPlatformAuthenticated(false);
+      setPlatformAuthChecked(true);
+      setIsCheckingPlatformAuth(false);
       return;
     }
 

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Tag, Loader2, BookOpen, User, Clock, MapPin } from "lucide-react";
-import { DISCOUNT_TYPES, Student, StudentSession } from '@/lib/data/studentsData';
+import { Student, StudentSession } from '@/lib/data/studentsData';
+import { useStudentConfig } from "@/hooks/useStudentConfig";
 
 interface FeeRowProps {
   label: string;
@@ -54,11 +55,16 @@ interface EnrollmentConfirmationProps {
  * @returns The EnrollmentConfirmation component.
  */
 export default function EnrollmentConfirmation({ student, session, onConfirm, onBack }: EnrollmentConfirmationProps): React.ReactElement {
+  const { discountTypes } = useStudentConfig();
   const [discountType, setDiscountType] = useState<string>(student.discountType || "none");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [confirmed, setConfirmed] = useState<boolean>(false);
 
-  const discount = DISCOUNT_TYPES.find((d) => d.id === discountType) || DISCOUNT_TYPES[0];
+  const discount = discountTypes.find((d) => d.id === discountType) ?? discountTypes[0] ?? {
+    id: "none",
+    label: "No Discount",
+    pct: 0,
+  };
   const discountAmount = Math.round(session.baseFee * (discount.pct / 100));
   const netFee = session.baseFee - discountAmount;
   const registrationFee = 500;
@@ -138,7 +144,7 @@ export default function EnrollmentConfirmation({ student, session, onConfirm, on
           <h3 className="text-[12px] font-bold text-foreground uppercase tracking-wide">Discount / Concession</h3>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="radiogroup" aria-label="Select discount option">
-          {DISCOUNT_TYPES.map((d) => {
+          {discountTypes.map((d) => {
             const isSelected = discountType === d.id;
             return (
               <button

@@ -4,7 +4,7 @@ import useTranslation from "@/hooks/useTranslation";
 import useModuleTierTabs from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, FileText, PenTool, Layers } from "lucide-react";
-import { resolveModuleTierTab, DEFAULT_EXAMINATIONS_SETTINGS, type ExaminationsSettings as ExaminationsSettingsData } from "@mms/shared";
+import { resolveModuleTierTab } from "@mms/shared";
 import PageHeader from "../components/ui/PageHeader";
 import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
 import SubTabBar from "@/components/ui/SubTabBar";
@@ -19,10 +19,11 @@ import ExaminationsCommandMetrics from "../components/examination/ExaminationsCo
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import { Exam, ExamResult } from '@/lib/data/examinationData';
-import { saveCollection, getObject } from "../lib/db";
+import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 import { useExaminationExamColumnLayout } from "@/hooks/useExaminationExamColumnLayout";
 import { useExaminationResultsColumnLayout } from "@/hooks/useExaminationResultsColumnLayout";
+import { useExaminationConfig } from "@/hooks/useExaminationConfig";
 
 /**
  * Examinations — formal exams, marking, and results. Work | Reports | Setup.
@@ -44,7 +45,7 @@ export default function Examinations(): React.JSX.Element {
 
   const exams = useLiveCollection("exams");
   const examResults = useLiveCollection("exam_results");
-  const settings = getObject<ExaminationsSettingsData>("examinations_settings", DEFAULT_EXAMINATIONS_SETTINGS);
+  const { settings } = useExaminationConfig();
   const examColumnLayout = useExaminationExamColumnLayout();
   const resultsColumnLayout = useExaminationResultsColumnLayout();
   const listLayout = (settings.defaultViewLayout || "cards") === "list";

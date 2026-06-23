@@ -1,14 +1,11 @@
 import type { Contact } from '@mms/shared';
 import { normalizeToE164, parsePhoneNumber } from '@mms/shared';
-import { loadContacts } from './contactService.js';
+import { loadContactRuntimeDefaults, loadContacts, type ContactRuntimeDefaults } from './contactService.js';
 import { fetchObject, persistObject } from './dbSyncService.js';
 
 const STORAGE_KEY = 'contact_google_sync_by_user';
 const GOOGLE_PEOPLE_FIELDS =
   'names,emailAddresses,phoneNumbers,organizations,birthdays,addresses,biographies';
-const DEFAULT_PHONE_COUNTRY = '+92';
-const IMPORT_PHONE_LABEL = 'Mobile';
-const IMPORT_EMAIL_LABEL = 'Personal';
 
 export interface ContactGoogleSyncConfig {
   clientId?: string;
@@ -224,13 +221,13 @@ export async function exchangeGoogleContactsOAuthCode(
   return redactGoogleSyncConfigForClient(saved);
 }
 
-function mapGoogleConnectionToContact(person: GoogleConnection): Contact | null {
+function mapGoogleConnectionToContact(person: GoogleConnection, defaults: ContactRuntimeDefaults): Contact | null {
   const nameObj = person.names?.[0];
   const name = nameObj?.displayName || '';
   if (!name) return null;
 
   const phone = person.phoneNumbers?.[0]?.value || '';
-  const parsedRaw = parsePhoneNumber(phone, DEFAULT_PHONE_COUNTRY);
+  const parsedRaw = parsePhoneNumber(phone, defaults.defaultPhoneCountryCode);
   const e164 = normalizeToE164(parsedRaw.countryCode, parsedRaw.number);
   const parsed = parsePhoneNumber(e164, parsedRaw.countryCode);
   const email = person.emailAddresses?.[0]?.value || '';
@@ -246,9 +243,9 @@ function mapGoogleConnectionToContact(person: GoogleConnection): Contact | null 
     firstName: nameObj?.givenName || name.split(' ')[0],
     lastName: nameObj?.familyName || name.split(' ').slice(1).join(' '),
     phones: phone
-      ? [{ label: IMPORT_PHONE_LABEL, countryCode: parsed.countryCode, number: parsed.number }]
+      ? [{ label: defaults.phoneLabel, countryCode: parsed.countryCode, number: parsed.number }]
       : [],
-    emails: email ? [{ label: IMPORT_EMAIL_LABEL, address: email }] : [],
+    emails: email ? [{ label: defaults.emailLabel, address: email }] : [],
     employer: org,
     designation: title,
     notes: note,
@@ -332,8 +329,9 @@ async function fetchGoogleConnectionsWithRefresh(userId: string): Promise<Google
 /** Fetch Google Contacts server-side; returns new contacts not already in the directory. */
 export async function runGoogleContactsSync(userId: string): Promise<GoogleContactsSyncRunResult> {
   const connections = await fetchGoogleConnectionsWithRefresh(userId);
+  const defaults = await loadContactRuntimeDefaults();
   const mapped = connections
-    .map(mapGoogleConnectionToContact)
+    .map((connection) => mapGoogleConnectionToContact(connection, defaults))
     .filter((contact): contact is Contact => contact != null);
 
   const existing = await loadContacts();

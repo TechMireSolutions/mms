@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES } from '@mms/shared';
+import { TEACHER_SPECIALIZATION_VALUES } from '@mms/shared';
 
 export const teacherFormSchema = z.object({
   contactId: z.union([z.string(), z.number()], {
@@ -7,7 +7,7 @@ export const teacherFormSchema = z.object({
   }),
   employeeId: z.string().optional(),
   specialization: z.string().min(1, 'teachers.errorSpecializationRequired'),
-  status: z.enum(TEACHER_STATUS_VALUES),
+  status: z.string().min(1, 'teachers.errorStatusRequired'),
   joinDate: z.string().min(1, 'teachers.errorJoinDateRequired'),
   qualification: z.string().optional(),
   notes: z.string().optional(),

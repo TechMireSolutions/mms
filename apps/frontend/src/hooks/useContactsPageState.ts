@@ -46,7 +46,6 @@ export interface UseContactsPageStateOptions {
   canExport: boolean;
   canViewReports: boolean;
   canViewSetup: boolean;
-  canEditSetup: boolean;
   pageActions: PageActions;
   updatePrefs: (patch: Record<string, unknown>) => void;
   showDeletedArchives?: boolean;
@@ -68,7 +67,6 @@ export function useContactsPageState({
   canExport,
   canViewReports,
   canViewSetup,
-  canEditSetup,
   pageActions,
   updatePrefs,
   showDeletedArchives = false,
@@ -237,7 +235,7 @@ export function useContactsPageState({
       if (!contactMatchesSearch(c, search)) return false;
       if (filterGender && c.gender !== filterGender) return false;
       if (filterLifecycleStage) {
-        const stage = c.lifecycleStage || lifecycleStages[0] || "Lead";
+        const stage = c.lifecycleStage || lifecycleStages[0] || "";
         if (stage !== filterLifecycleStage) return false;
       }
       return true;

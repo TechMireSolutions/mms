@@ -2,9 +2,9 @@ import React, { useState, lazy, Suspense, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal, MessageCircle, MessageSquare, Edit2, Trash2, Eye, Phone, Mail, RotateCcw, Copy, Check,
-  MapPin, Mars, Venus, User, Star, Calendar, CheckCircle2
+  MapPin, User, Star, Calendar, CheckCircle2
 } from "lucide-react";
-import { CONTACTS_MODULE_CONTRACT, type Contact, formatDate } from "@mms/shared";
+import { type Contact, formatDate } from "@mms/shared";
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
 import {
@@ -59,7 +59,7 @@ export default function ContactCards({
   onSelectAll,
   allSelected = false,
 }: ContactCardsProps): React.JSX.Element {
-  const { lifecycleColors } = useContactConfig();
+  const { lifecycleColors, lifecycleStages } = useContactConfig();
   const { t } = useTranslation();
   const [viewContact, setViewContact] = useState<Contact | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -95,17 +95,9 @@ export default function ContactCards({
       case "gender": {
         const val = item.gender;
         if (!val) return <span className="text-muted-foreground/40">—</span>;
-        const isMale = val.toLowerCase() === "male";
-        const isFemale = val.toLowerCase() === "female";
         return (
           <span className="flex items-center gap-1 capitalize">
-            {isMale ? (
-              <Mars className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-            ) : isFemale ? (
-              <Venus className="w-3.5 h-3.5 text-pink-500 shrink-0" />
-            ) : (
-              <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            )}
+            <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             {val}
           </span>
         );
@@ -245,7 +237,7 @@ export default function ContactCards({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {contacts.map((contact) => {
           const isSelected = selected.includes(contact.id);
-          const stage = contact.lifecycleStage || CONTACTS_MODULE_CONTRACT.defaultLifecycleStage;
+          const stage = contact.lifecycleStage || lifecycleStages[0] || "";
           const stageColors = lifecycleColors[stage] || {
             bg: "bg-muted text-muted-foreground border-border",
             text: "text-muted-foreground",
@@ -542,4 +534,3 @@ function AlertCircleWarningIcon({ className }: { className?: string }): React.JS
     </svg>
   );
 }
-
