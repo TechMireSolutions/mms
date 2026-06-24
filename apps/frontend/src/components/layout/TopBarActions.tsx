@@ -30,19 +30,10 @@ import useTranslation from "@/hooks/useTranslation";
 import SyncStatusBadge from "./SyncStatusBadge";
 import BackgroundJobsTray from "@/components/ui/BackgroundJobsTray";
 
-interface Notification {
-  id: number;
-  title: string;
-  desc: string;
-  time: string;
-  unread: boolean;
-}
-
-const notifications: Notification[] = [
-  { id: 1, title: "New student enrolled", desc: "Ahmad Ali joined Quran Memorization", time: "5m ago", unread: true },
-  { id: 2, title: "Attendance alert", desc: "3 students absent in Session A", time: "1h ago", unread: true },
-  { id: 3, title: "Payment received", desc: "$250 from Fatima Hassan", time: "3h ago", unread: false },
-];
+import { useDashboardData } from "@/hooks/useDashboardData";
+import { resolveDashboardPersona } from "@/lib/dashboardPersona";
+import usePermissions from "@/hooks/usePermissions";
+import { buildDashboardNotifications } from "@/lib/buildDashboardNotifications";
 
 export interface TopBarActionsProps {
   /** Tighter spacing for mobile header. */
@@ -61,6 +52,20 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
     ? user.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()
     : "AK";
 
+  const { can } = usePermissions();
+  const persona = resolveDashboardPersona(can);
+  const { invoices, attendanceRecords, studentMetricsInactive } = useDashboardData([], persona);
+
+  const notifications = React.useMemo(() => {
+    return buildDashboardNotifications(
+      persona,
+      { invoices, attendanceRecords, inactiveStudents: studentMetricsInactive },
+      t,
+    );
+  }, [persona, invoices, attendanceRecords, studentMetricsInactive, t]);
+
+  const unreadCount = notifications.length;
+
   return (
     <div className={cn("flex shrink-0 items-center gap-1 sm:gap-2", className)}>
       <SyncStatusBadge />
@@ -76,38 +81,44 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             className="relative rounded-lg p-2 hover:bg-muted transition-colors h-9 w-9"
           >
             <Bell className="h-[18px] w-[18px] text-muted-foreground" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive animate-pulse" />
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-80 p-0">
           <div className="border-b border-border px-4 py-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold">Notifications</h3>
-              <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                2 new
-              </Badge>
+              {unreadCount > 0 && (
+                <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                  {unreadCount} new
+                </Badge>
+              )}
             </div>
           </div>
           <div className="max-h-80 overflow-y-auto">
-            {notifications.map((n) => (
-              <div
-                key={n.id}
-                className={`border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors ${
-                  n.unread ? "bg-primary/[0.02]" : ""
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  {n.unread && (
+            {notifications.length === 0 ? (
+              <div className="px-4 py-6 text-center text-xs text-muted-foreground">
+                All caught up! No notifications.
+              </div>
+            ) : (
+              notifications.map((n) => (
+                <div
+                  key={n.id}
+                  className="border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors bg-primary/[0.02]"
+                >
+                  <div className="flex items-start gap-3">
                     <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                  )}
-                  <div className={n.unread ? "" : "ml-[18px]"}>
-                    <p className="text-sm font-medium">{n.title}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p>
-                    <p className="mt-1 text-[11px] text-muted-foreground/60">{n.time}</p>
+                    <div>
+                      <p className="text-sm font-medium">{n.title}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground/60">{n.time}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
           <div className="border-t border-border px-4 py-2.5">
             <Button
