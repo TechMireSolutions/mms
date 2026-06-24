@@ -103,18 +103,18 @@ export default function WelcomeBanner({ persona }: WelcomeBannerProps): React.JS
           <p className="text-sm text-white/65 mt-1 max-w-lg mb-0">{subtitle}</p>
         </div>
 
-        <div className="flex-shrink-0 flex flex-col items-start sm:items-end gap-1.5 self-start sm:self-auto">
+        <div className="flex-shrink-0 flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <div
-            className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2 text-left sm:text-right`}
+            className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5`}
           >
-            <Calendar className="w-3.5 h-3.5 text-white/70" aria-hidden="true" />
-            <span className="text-[11px] font-bold text-white/90 whitespace-nowrap">{gregDate}</span>
+            <Calendar className="w-4 h-4 text-white/70" aria-hidden="true" />
+            <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{gregDate}</span>
           </div>
           {hijriDate && (
             <div
-              className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2 text-left sm:text-right`}
+              className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5`}
             >
-              <span className="text-[11px] font-bold text-white/90 whitespace-nowrap">{hijriDate}</span>
+              <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{hijriDate}</span>
             </div>
           )}
         </div>
