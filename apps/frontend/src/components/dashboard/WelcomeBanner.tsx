@@ -110,9 +110,8 @@ export default function WelcomeBanner({ persona }: WelcomeBannerProps): React.JS
 
         <div className="flex-shrink-0 flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <div
-            className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5`}
+            className={`${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5`}
           >
-            <Calendar className="w-4 h-4 text-white/70" aria-hidden="true" />
             <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{dayName}</span>
           </div>
           <div
