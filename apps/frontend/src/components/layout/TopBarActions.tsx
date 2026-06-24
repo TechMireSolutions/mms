@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Bell,
   ChevronDown,
@@ -66,12 +66,15 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
 
   const unreadCount = notifications.length;
 
+  const navigate = useNavigate();
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
+
   return (
     <div className={cn("flex shrink-0 items-center gap-1 sm:gap-2", className)}>
       <SyncStatusBadge />
       <BackgroundJobsTray compact={compact} />
 
-      <Popover>
+      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger asChild>
           <Button
             type="button"
@@ -124,6 +127,10 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             <Button
               type="button"
               variant="link"
+              onClick={() => {
+                setPopoverOpen(false);
+                navigate(ROUTES.home);
+              }}
               className="text-xs font-medium text-primary hover:underline p-0 h-auto"
             >
               View all notifications
