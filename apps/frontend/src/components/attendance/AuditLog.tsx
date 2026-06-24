@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { ClipboardList, RefreshCw } from "lucide-react";
+import { Button } from "../ui/button";
 import { DatePicker } from "../ui/DatePicker";
 import { getAuditLog } from "./MarkAttendance";
 import { useSessionsCollection } from '@/hooks/useSessions';
@@ -105,13 +106,16 @@ export default function AuditLog({ filters }: AuditLogProps) {
           <h2 className="text-sm font-bold text-foreground m-0">Audit Log</h2>
           <span className="text-[11px] text-muted-foreground">({log.length} entries)</span>
         </div>
-        <button 
+        <Button 
+          type="button"
+          variant="outline"
+          size="icon"
           onClick={reload} 
           aria-label="Reload Audit Log"
-          className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-        </button>
+        </Button>
       </header>
 
       {/* Filters */}

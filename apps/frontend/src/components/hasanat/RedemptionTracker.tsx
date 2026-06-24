@@ -11,6 +11,9 @@ import { saveCollection } from "@/lib/db";
 import useTranslation from "@/hooks/useTranslation";
 import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
@@ -79,23 +82,27 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
       <div className="space-y-4">
         <div>
           <label htmlFor="dist-sel" className={FORM_LABEL}>{t("hasanat.fieldRecipient")} *</label>
-          <select id="dist-sel" className={`${FORM_INPUT} cursor-pointer`} value={data.distributionId} onChange={(e) => upd("distributionId", e.target.value)}>
-            {activeDistr.map((d) => (
-              <option key={d.id} value={d.id}>{d.recipientName} — {d.denominationName} × {d.quantity}</option>
-            ))}
-          </select>
+          <FormSelect
+            id="dist-sel"
+            value={data.distributionId || ""}
+            onChange={(val) => upd("distributionId", val)}
+            options={activeDistr.map((d) => ({
+              value: d.id,
+              label: `${d.recipientName} — ${d.denominationName} × ${d.quantity}`
+            }))}
+          />
           {selected && (
             <p className="text-[11px] text-muted-foreground mt-1 m-0">{selected.reason}</p>
           )}
         </div>
         <div>
           <label htmlFor="reward-given" className={FORM_LABEL}>{t("hasanat.columns.redemption.reward")} *</label>
-          <input id="reward-given" className={FORM_INPUT} value={data.reward} onChange={(e) => upd("reward", e.target.value)} placeholder={t("hasanat.rewardPlaceholder")} />
+          <Input id="reward-given" className={FORM_INPUT} value={data.reward} onChange={(e) => upd("reward", e.target.value)} placeholder={t("hasanat.rewardPlaceholder")} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="pts-used" className={FORM_LABEL}>{t("hasanat.columns.redemption.pointsUsed")} *</label>
-            <input id="pts-used" type="number" className={FORM_INPUT} value={data.pointsUsed || ""} onChange={(e) => upd("pointsUsed", Number(e.target.value))} placeholder="0" min={1} />
+            <Input id="pts-used" type="number" className={FORM_INPUT} value={data.pointsUsed || ""} onChange={(e) => upd("pointsUsed", Number(e.target.value))} placeholder="0" min={1} />
           </div>
           <div>
             <label htmlFor="red-date" className={FORM_LABEL}>{t("hasanat.columns.redemption.date")}</label>
@@ -176,13 +183,13 @@ export default function RedemptionTracker({
               labels={columnCustomizer.labels}
             />
           )}
-          <button
+          <Button
             type="button"
             onClick={() => setShowModal(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.recordRedemption")}
-          </button>
+          </Button>
         </div>
       </header>
 

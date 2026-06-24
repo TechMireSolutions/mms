@@ -1,25 +1,30 @@
 import React, { useState, useEffect } from "react";
 import {
   DollarSign, Calendar, Plus, Pencil, Trash2,
-  CheckCircle2, Lock, Clock, Save, RotateCcw, BookOpen
+  CheckCircle2, Lock, Clock, Save, BookOpen, Info
 } from "lucide-react";
 import { Account, AccountingSettings as SettingsType, FiscalYear } from '@/lib/data/accountingData';
 import {
   DEFAULT_CURRENCIES,
-  DEFAULT_ACCOUNT_FIELD_DEFS,
-  DEFAULT_ACCOUNTING_SETTINGS,
-  getSortedFields,
-  type ModuleCustomField,
-  type ModuleFieldDef,
+  ACCOUNTING_TAB_REGISTRY,
+  INITIAL_ACCOUNTING_FIELD_SEED,
+  type FieldDefinition,
+  type TabDefinition,
 } from "@mms/shared";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useAccountingConfig } from "@/hooks/useAccountingConfig";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import DraggableFieldList from "../ui/DraggableFieldList";
+import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
-import { FORM_INPUT, FORM_LABEL } from "../ui/formStyles";
-import { TOGGLE_THUMB } from "@/lib/semanticTone";
+import { FORM_LABEL } from "../ui/formStyles";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import FormSelect from "../ui/FormSelect";
+import { Switch } from "../ui/switch";
+import { Checkbox } from "../ui/checkbox";
+import Modal from "../ui/Modal";
 
 const DATE_FORMATS = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"];
 const DECIMAL_SEPARATORS = [
@@ -34,9 +39,6 @@ interface SectionCardProps {
   children: React.ReactNode;
 }
 
-/**
- * SectionCard component.
- */
 function SectionCard({ title, icon: Icon, children }: SectionCardProps) {
   return (
     <section aria-label={title} className="rounded-xl border border-border bg-card overflow-hidden">
@@ -55,9 +57,6 @@ interface FieldProps {
   children: React.ReactNode;
 }
 
-/**
- * Field component for forms.
- */
 function Field({ label, hint = undefined, children }: FieldProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start py-3 border-b border-border last:border-0">
@@ -76,21 +75,13 @@ interface ToggleProps {
   ariaLabel?: string;
 }
 
-/**
- * Toggle component.
- */
 function Toggle({ checked, onChange, ariaLabel }: ToggleProps) {
   return (
-    <button 
-      type="button" 
-      role="switch" 
-      aria-checked={checked}
-      aria-label={ariaLabel || "Toggle setting"}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? "bg-primary" : "bg-muted border border-border"}`}
-    >
-      <span className={`inline-block h-4 w-4 transform rounded-full ${TOGGLE_THUMB} transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`} aria-hidden="true" />
-    </button>
+    <Switch 
+      checked={checked} 
+      onCheckedChange={onChange} 
+      aria-label={ariaLabel || "Toggle setting"} 
+    />
   );
 }
 
@@ -148,12 +139,11 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
       <div className="space-y-4">
         <div>
           <label htmlFor="fy-label" className={FORM_LABEL}>Label *</label>
-          <input
+          <Input
             id="fy-label"
             value={form.label || ""}
             onChange={(e) => setForm({ ...form, label: e.target.value })}
             placeholder="e.g. FY 2026–27"
-            className={FORM_INPUT}
             required
           />
         </div>
@@ -179,16 +169,16 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
         </div>
         <div>
           <label htmlFor="fy-status" className={FORM_LABEL}>Status</label>
-          <select
+          <FormSelect
             id="fy-status"
             value={form.status || "upcoming"}
-            onChange={(e) => setForm({ ...form, status: e.target.value as FiscalYear["status"] | "upcoming" })}
-            className={`${FORM_INPUT} cursor-pointer`}
-          >
-            <option value="upcoming">Upcoming</option>
-            <option value="active">Active</option>
-            <option value="closed">Closed</option>
-          </select>
+            onChange={(val) => setForm({ ...form, status: val as FiscalYear["status"] | "upcoming" })}
+            options={[
+              { value: "upcoming", label: "Upcoming" },
+              { value: "active", label: "Active" },
+              { value: "closed", label: "Closed" }
+            ]}
+          />
         </div>
       </div>
     </FormModal>
@@ -208,33 +198,273 @@ interface AccountingSettingsProps {
   mode?: "fields" | "preferences";
 }
 
-/**
- * AccountingSettings component.
- * 
- * @param {AccountingSettingsProps} props - The component props.
- * @returns {React.ReactElement}
- */
+function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
+  if (!savedOrder || savedOrder.length === 0) return fields;
+  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
+  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
+}
+
+function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
+  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
+  const added = newFieldIds.filter((id) => !kept.includes(id));
+  return [...kept, ...added];
+}
+
 export default function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, mode }: AccountingSettingsProps) {
   const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
   const { settings, updateSettings } = useAccountingConfig();
-  const [local,   setLocal]   = useState<SettingsType>(settings);
-  const [saved,   setSaved]   = useState(false);
+  const [saved, setSaved] = useState(false);
   const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);
 
+  // Prefs state
+  const [organizationName, setOrganizationName] = useState(settings.organizationName);
+  const [currency, setCurrency] = useState(settings.currency);
+  const [currencySymbol, setCurrencySymbol] = useState(settings.currencySymbol);
+  const [dateFormat, setDateFormat] = useState(settings.dateFormat);
+  const [decimalSeparator, setDecimalSeparator] = useState(settings.decimalSeparator);
+  const [decimalPlaces, setDecimalPlaces] = useState(settings.decimalPlaces);
+  const [fyStartMonth, setFyStartMonth] = useState(settings.fyStartMonth);
+  const [requireNarration, setRequireNarration] = useState(settings.requireNarration);
+  const [allowEditPosted, setAllowEditPosted] = useState(settings.allowEditPosted);
+  const [autoPostDrafts, setAutoPostDrafts] = useState(settings.autoPostDrafts);
+  const [accountCodeLength, setAccountCodeLength] = useState(settings.accountCodeLength);
+  const [retainedEarningsAccount, setRetainedEarningsAccount] = useState(settings.retainedEarningsAccount);
+
+  const {
+    formTabs,
+    setFormTabs,
+    tabFields,
+    setTabFields,
+    enabledTabs,
+    setEnabledTabs,
+    requiredTabs,
+    setRequiredTabs,
+    tabFieldEnabled,
+    setTabFieldEnabled,
+    tabFieldRequired,
+    setTabFieldRequired,
+    tabFieldUnique,
+    setTabFieldUnique,
+    tabFieldDefaultValues,
+    setTabFieldDefaultValues,
+    tabFieldPermissions,
+    setTabFieldPermissions,
+    tabFieldOrder,
+    setTabFieldOrder,
+    toggleTabEnabled,
+    toggleTabRequired,
+    toggleFieldEnabled,
+    toggleFieldRequired,
+    toggleFieldUnique,
+    handleReorder,
+  } = useModuleFieldsEditor({
+    initialTabs: ACCOUNTING_TAB_REGISTRY,
+    initialFields: settings.fields || {},
+    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
+    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
+  });
+
+  const [isAddTabModalOpen, setIsAddTabModalOpen] = useState(false);
+  const [newTabLabel, setNewTabLabel] = useState("");
+  const [renamingTabKey, setRenamingTabKey] = useState<string | null>(null);
+  const [renameTabLabel, setRenameTabLabel] = useState("");
+
   useEffect(() => {
-    setLocal(settings);
+    if (!settings) return;
+    setOrganizationName(settings.organizationName);
+    setCurrency(settings.currency);
+    setCurrencySymbol(settings.currencySymbol);
+    setDateFormat(settings.dateFormat);
+    setDecimalSeparator(settings.decimalSeparator);
+    setDecimalPlaces(settings.decimalPlaces);
+    setFyStartMonth(settings.fyStartMonth);
+    setRequireNarration(settings.requireNarration);
+    setAllowEditPosted(settings.allowEditPosted);
+    setAutoPostDrafts(settings.autoPostDrafts);
+    setAccountCodeLength(settings.accountCodeLength);
+    setRetainedEarningsAccount(settings.retainedEarningsAccount);
+
+    setEnabledTabs(new Set(settings.enabledTabs || ["basic"]));
+    setRequiredTabs(new Set(settings.requiredTabs || []));
+
+    const coreKeys = new Set(ACCOUNTING_TAB_REGISTRY.map((t: any) => t.key));
+    const customTabs = (settings.formTabs || []).filter((t: any) => !coreKeys.has(t.key));
+    setFormTabs([
+      ...ACCOUNTING_TAB_REGISTRY,
+      ...customTabs
+    ].map((t: any) => ({
+      ...t,
+      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    })));
+
+    const newTabIds = Array.from(new Set([
+      ...ACCOUNTING_TAB_REGISTRY.map((t: any) => t.key),
+      ...(settings.formTabs || []).map((t: any) => t.key)
+    ]));
+    const currentFields = settings.fields || {};
+    setTabFields(Object.fromEntries(newTabIds.map(tabId => [tabId, currentFields[tabId] || []])));
+    setTabFieldEnabled(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.enabled).map((f: any) => f.key))])));
+    setTabFieldRequired(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.required).map((f: any) => f.key))])));
+    setTabFieldUnique(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.unique).map((f: any) => f.key))])));
+    setTabFieldDefaultValues(Object.fromEntries(newTabIds.map(tabId => [
+      tabId,
+      Object.fromEntries((currentFields[tabId] || []).filter((f: any) => f.defaultValue !== undefined).map((f: any) => [f.key, f.defaultValue]))
+    ])));
+    setTabFieldPermissions(Object.fromEntries(newTabIds.map(tabId => [
+      tabId,
+      Object.fromEntries((currentFields[tabId] || []).filter((f: any) => f.permissions).map((f: any) => [f.key, f.permissions as string[]]))
+    ])));
+    setTabFieldOrder(Object.fromEntries(newTabIds.map(tabId => [tabId, (currentFields[tabId] || []).map((f: any) => f.key)])));
   }, [settings]);
 
-  const set = <K extends keyof SettingsType>(key: K, val: SettingsType[K]) => setLocal((s) => ({ ...s, [key]: val }));
+  const handleToggleTabEnabled = (id: string) => { toggleTabEnabled(id); setSaved(false); };
+  const handleToggleTabRequired = (id: string) => { toggleTabRequired(id); setSaved(false); };
+  const handleToggleFieldEnabled = (tabId: string, fieldId: string) => { toggleFieldEnabled(tabId, fieldId); setSaved(false); };
+  const handleToggleFieldRequired = (tabId: string, fieldId: string) => { toggleFieldRequired(tabId, fieldId); setSaved(false); };
+  const handleToggleFieldUnique = (tabId: string, fieldId: string) => { toggleFieldUnique(tabId, fieldId); setSaved(false); };
+  const handleReorderFields = (tabId: string, reorderedFields: FieldDefinition[]) => { handleReorder(tabId, reorderedFields); setSaved(false); };
 
-  const handleSave = () => {
-    updateSettings(local);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
+    const newKeys = newFields.map((f) => f.key);
+    setTabFieldOrder((prev) => ({
+      ...prev,
+      [tabId]: syncOrder(prev[tabId] || [], newKeys),
+    }));
+    setTabFields((prev) => ({ ...prev, [tabId]: newFields as unknown as FieldDefinition[] }));
+    setSaved(false);
   };
 
-  const handleReset = () => {
-    if (confirm("Reset settings to current saved values?")) setLocal(settings);
+  const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
+    setTabFields(prev => ({
+      ...prev,
+      [tabId]: (prev[tabId] || []).map(f => f.key === updatedField.key ? updatedField : f)
+    }));
+    setSaved(false);
+  };
+
+  const handleDeleteField = async (tabId: string, fieldId: string) => {
+    setTabFields(prev => ({
+      ...prev,
+      [tabId]: (prev[tabId] || []).filter(f => f.key !== fieldId)
+    }));
+    setTabFieldOrder(prev => ({
+      ...prev,
+      [tabId]: (prev[tabId] || []).filter(id => id !== fieldId)
+    }));
+    setSaved(false);
+  };
+
+  const handleAddTab = (label: string) => {
+    if (!label.trim()) return;
+    const key = `custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 5)}`;
+    const newTab: TabDefinition = {
+      key,
+      label: label.trim(),
+      description: "Custom user-defined tab",
+      enabled: true,
+      order: formTabs.length,
+      isSystem: false,
+    };
+
+    setFormTabs(prev => [...prev, newTab]);
+    setEnabledTabs(prev => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+
+    setTabFields(prev => ({ ...prev, [key]: [] }));
+    setTabFieldEnabled(prev => ({ ...prev, [key]: new Set() }));
+    setTabFieldRequired(prev => ({ ...prev, [key]: new Set() }));
+    setTabFieldUnique(prev => ({ ...prev, [key]: new Set() }));
+    setTabFieldDefaultValues(prev => ({ ...prev, [key]: {} }));
+    setTabFieldPermissions(prev => ({ ...prev, [key]: {} }));
+    setTabFieldOrder(prev => ({ ...prev, [key]: [] }));
+    setSaved(false);
+  };
+
+  const handleDeleteTab = (key: string) => {
+    setFormTabs(prev => prev.filter(t => t.key !== key));
+    setEnabledTabs(prev => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    setRequiredTabs(prev => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    setSaved(false);
+  };
+
+  const handleRenameTab = (key: string, newLabel: string) => {
+    if (!newLabel.trim()) return;
+    setFormTabs(prev => prev.map(t => t.key === key ? { ...t, label: newLabel.trim() } : t));
+    setSaved(false);
+  };
+
+  const buildFieldsMap = (): Record<string, FieldDefinition[]> => {
+    const newFields: Record<string, FieldDefinition[]> = {};
+    formTabs.forEach(tab => {
+      const tabId = tab.key;
+      const combined = (tabFields[tabId] || []).map(f => {
+        const fieldKey = f.key || (f as { id?: string }).id || "";
+        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? f.enabled  ?? false;
+        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? f.required ?? false;
+        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? f.unique   ?? false;
+        const orderArray   = tabFieldOrder[tabId] || [];
+        const orderIdx     = orderArray.indexOf(fieldKey);
+        const order        = orderIdx >= 0 ? orderIdx : (f.order ?? 999);
+        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? f.defaultValue;
+        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? f.permissions;
+
+        return {
+          ...f,
+          key: fieldKey,
+          enabled,
+          required,
+          unique,
+          order,
+          defaultValue,
+          permissions,
+        } as FieldDefinition;
+      });
+
+      newFields[tabId] = combined.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+    });
+    return newFields;
+  };
+
+  const handleSave = () => {
+    const updatedFormTabs = formTabs.map(t => ({
+      ...t,
+      enabled: enabledTabs.has(t.key)
+    }));
+
+    const cfg: SettingsType = {
+      ...settings,
+      organizationName,
+      currency,
+      currencySymbol,
+      dateFormat,
+      decimalSeparator,
+      decimalPlaces,
+      fyStartMonth,
+      requireNarration,
+      allowEditPosted,
+      autoPostDrafts,
+      accountCodeLength,
+      retainedEarningsAccount,
+      enabledTabs: Array.from(enabledTabs),
+      requiredTabs: Array.from(requiredTabs),
+      formTabs: updatedFormTabs,
+      fields: buildFieldsMap(),
+    };
+
+    updateSettings(cfg);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
   };
 
   const handleSaveFY = (fy: FiscalYear) => {
@@ -251,93 +481,49 @@ export default function AccountingSettings({ accounts, fiscalYears, onSaveFiscal
     if (confirm("Delete this financial year?")) onSaveFiscalYears(fiscalYears.filter((f) => f.id !== id));
   };
 
-  const activeCur = currencies.find((c: any) => c.code === local.currency);
+  const activeCur = currencies.find((c: any) => c.code === currency);
   const fmtDate   = (d: string) => d ? new Date(d).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
-  const showPrefs = !mode || mode === "preferences";
-  const showFields = !mode || mode === "fields";
-
-  const fields = local.fields || DEFAULT_ACCOUNTING_SETTINGS.fields || {};
-  const customFields = local.customFields || [];
-  const fieldOrder = local.fieldOrder || DEFAULT_ACCOUNTING_SETTINGS.fieldOrder || [];
-
-  const orderedFields = getSortedFields(
-    DEFAULT_ACCOUNT_FIELD_DEFS,
-    fieldOrder,
-    fields,
-    customFields
-  );
-
-  const updateFieldConfig = (fieldKey: string, prop: "enabled" | "required", value: boolean) => {
-    const fieldObj = fields[fieldKey] || { enabled: true, required: false };
-    const updatedFieldObj = { ...fieldObj, [prop]: value };
-    if (prop === "enabled" && !value) {
-      updatedFieldObj.required = false;
-    }
-    set("fields", { ...fields, [fieldKey]: updatedFieldObj });
-  };
-
-  const handleToggleEnabled = (id: string) => {
-    if (DEFAULT_ACCOUNT_FIELD_DEFS.some(f => f.id === id)) {
-      const cfg = fields[id] || { enabled: true, required: false };
-      updateFieldConfig(id, "enabled", !cfg.enabled);
-    }
-  };
-
-  const handleToggleRequired = (id: string) => {
-    if (DEFAULT_ACCOUNT_FIELD_DEFS.some(f => f.id === id)) {
-      const cfg = fields[id] || { enabled: true, required: false };
-      updateFieldConfig(id, "required", !cfg.required);
-    } else {
-      const updated = customFields.map(f => f.id === id ? { ...f, required: !f.required } : f);
-      set("customFields", updated);
-    }
-  };
-
-  const handleReorder = (reordered: ModuleFieldDef[]) => {
-    set("fieldOrder", reordered.map(f => f.id));
-  };
-
-  const handleCustomFieldsChange = (newFields: CustomFieldConfig[]) => {
-    const coreIds = DEFAULT_ACCOUNT_FIELD_DEFS.map(f => f.id);
-    const newIds = newFields.map(f => f.key);
-    const kept = fieldOrder.filter((id) => coreIds.includes(id) || newIds.includes(id));
-    const added = newIds.filter((id) => !kept.includes(id));
-
-    setLocal((d) => ({
-      ...d,
-      customFields: newFields.map(f => ({ ...f, id: f.key })) as unknown as ModuleCustomField[],
-      fieldOrder: [...kept, ...added]
-    }));
-  };
-
-  const enabledSet = new Set(Object.keys(fields).filter(k => fields[k].enabled));
-  const requiredSet = new Set(Object.keys(fields).filter(k => fields[k].required));
+  const showPrefs = mode === "preferences";
+  const showFields = mode === "fields";
 
   return (
-    <div className="space-y-6">
+    <section className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-5 shadow-sm" aria-labelledby="accounting-settings-title">
+      <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
+        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <BookOpen className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+        </div>
+        <h3 id="accounting-settings-title" className="text-[13px] font-bold text-foreground">
+          {showFields ? "Field Configuration" : "General Preferences"}
+        </h3>
+      </div>
 
       {showPrefs && (
-        <>
+        <div className="space-y-6">
           {/* Organisation */}
           <SectionCard title="Organisation" icon={null}>
             <Field label="Organisation Name" hint="Displayed on reports and printed documents">
-              <input value={local.organizationName || ""} aria-label="Organisation Name" onChange={(e) => set("organizationName", e.target.value)} className={FORM_INPUT} />
+              <Input value={organizationName || ""} aria-label="Organisation Name" onChange={(e) => { setOrganizationName(e.target.value); setSaved(false); }} />
             </Field>
           </SectionCard>
 
           {/* Currency & Display */}
           <SectionCard title="Currency & Display" icon={DollarSign}>
             <Field label="Base Currency" hint="All transactions recorded in this currency">
-              <select aria-label="Base Currency" value={local.currency} onChange={(e) => {
-                const cur = currencies.find((c: any) => c.code === e.target.value);
-                set("currency", e.target.value);
-                if (cur) set("currencySymbol", cur.symbol);
-              }} className={FORM_INPUT}>
-                {currencies.map((c: any) => (
-                  <option key={c.code} value={c.code}>{c.symbol} {c.code} – {c.name}</option>
-                ))}
-              </select>
+              <FormSelect
+                aria-label="Base Currency"
+                value={currency}
+                onChange={(val) => {
+                  const cur = currencies.find((c: any) => c.code === val);
+                  setCurrency(val);
+                  if (cur) setCurrencySymbol(cur.symbol);
+                  setSaved(false);
+                }}
+                options={currencies.map((c: any) => ({
+                  value: c.code,
+                  label: `${c.symbol} ${c.code} – ${c.name}`
+                }))}
+              />
               {activeCur && (
                 <p className="text-xs text-muted-foreground mt-1 m-0">
                   Symbol: <span className="font-bold">{activeCur.symbol}</span> · Code: <span className="font-mono font-bold">{activeCur.code}</span>
@@ -345,37 +531,56 @@ export default function AccountingSettings({ accounts, fiscalYears, onSaveFiscal
               )}
             </Field>
             <Field label="Date Format">
-              <select aria-label="Date Format" value={local.dateFormat} onChange={(e) => set("dateFormat", e.target.value)} className={FORM_INPUT}>
-                {DATE_FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
+              <FormSelect
+                aria-label="Date Format"
+                value={dateFormat}
+                onChange={(val) => { setDateFormat(val); setSaved(false); }}
+                options={DATE_FORMATS}
+              />
             </Field>
             <Field label="Number Format">
-              <select aria-label="Number Format" value={local.decimalSeparator} onChange={(e) => set("decimalSeparator", e.target.value as "period" | "comma")} className={FORM_INPUT}>
-                {DECIMAL_SEPARATORS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-              </select>
+              <FormSelect
+                aria-label="Number Format"
+                value={decimalSeparator}
+                onChange={(val) => { setDecimalSeparator(val as "period" | "comma"); setSaved(false); }}
+                options={DECIMAL_SEPARATORS}
+              />
             </Field>
             <Field label="Decimal Places">
-              <select aria-label="Decimal Places" value={local.decimalPlaces} onChange={(e) => set("decimalPlaces", parseInt(e.target.value))} className={`${FORM_INPUT} w-32`}>
-                {[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
+              <FormSelect
+                aria-label="Decimal Places"
+                value={String(decimalPlaces)}
+                onChange={(val) => { setDecimalPlaces(parseInt(val)); setSaved(false); }}
+                options={[0, 1, 2, 3].map((n) => String(n))}
+                className="w-32"
+              />
             </Field>
           </SectionCard>
 
           {/* Financial Years */}
           <SectionCard title="Financial Years" icon={Calendar}>
             <Field label="FY Start Month" hint="Month when each financial year begins">
-              <select aria-label="FY Start Month" value={local.fyStartMonth} onChange={(e) => set("fyStartMonth", e.target.value)} className={`${FORM_INPUT} w-48`}>
-                {FY_MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
+              <FormSelect
+                aria-label="FY Start Month"
+                value={fyStartMonth}
+                onChange={(val) => { setFyStartMonth(val); setSaved(false); }}
+                options={FY_MONTHS}
+                className="w-48"
+              />
             </Field>
 
             <div className="mt-4">
               <header className="flex items-center justify-between mb-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">Configured Financial Years</h4>
-                <button type="button" onClick={() => setFyModal({ label: "", startDate: "", endDate: "", status: "upcoming" })}
-                  className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={() => setFyModal({ label: "", startDate: "", endDate: "", status: "upcoming" })}
+                  className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
+                >
                   <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Year
-                </button>
+                </Button>
               </header>
               <div className="rounded-xl border border-border overflow-hidden">
                 <table className="w-full text-sm">
@@ -405,14 +610,27 @@ export default function AccountingSettings({ accounts, fiscalYears, onSaveFiscal
                           </td>
                           <td className="px-4 py-2.5 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <button type="button" aria-label={`Edit ${fy.label}`} onClick={() => setFyModal({ ...fy })}
-                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Edit ${fy.label}`}
+                                onClick={() => setFyModal({ ...fy })}
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground shadow-none"
+                              >
                                 <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                              </button>
-                              <button type="button" aria-label={`Delete ${fy.label}`} onClick={() => handleDeleteFY(fy.id)} disabled={fy.status === "active"}
-                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Delete ${fy.label}`}
+                                onClick={() => handleDeleteFY(fy.id)}
+                                disabled={fy.status === "active"}
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive shadow-none"
+                              >
                                 <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                              </button>
+                              </Button>
                             </div>
                           </td>
                         </tr>
@@ -427,84 +645,295 @@ export default function AccountingSettings({ accounts, fiscalYears, onSaveFiscal
           {/* Journal Entry Rules */}
           <SectionCard title="Journal Entry Rules" icon={null}>
             <Field label="Require Narration" hint="Enforce description on every entry">
-              <Toggle ariaLabel="Require Narration" checked={local.requireNarration} onChange={(v) => set("requireNarration", v)} />
+              <Toggle ariaLabel="Require Narration" checked={requireNarration} onChange={(v) => { setRequireNarration(v); setSaved(false); }} />
             </Field>
             <Field label="Allow Editing Posted Entries" hint="If off, posted entries are locked (recommended)">
-              <Toggle ariaLabel="Allow Editing Posted Entries" checked={local.allowEditPosted} onChange={(v) => set("allowEditPosted", v)} />
-              {local.allowEditPosted && (
+              <Toggle ariaLabel="Allow Editing Posted Entries" checked={allowEditPosted} onChange={(v) => { setAllowEditPosted(v); setSaved(false); }} />
+              {allowEditPosted && (
                 <p className="text-xs text-warning mt-1 font-semibold m-0" role="alert">⚠ Enabling this breaks audit integrity. Use reversals instead.</p>
               )}
             </Field>
             <Field label="Auto-post Draft Entries" hint="Automatically post entries saved as draft">
-              <Toggle ariaLabel="Auto-post Draft Entries" checked={local.autoPostDrafts} onChange={(v) => set("autoPostDrafts", v)} />
+              <Toggle ariaLabel="Auto-post Draft Entries" checked={autoPostDrafts} onChange={(v) => { setAutoPostDrafts(v); setSaved(false); }} />
             </Field>
           </SectionCard>
 
           {/* Account Numbering */}
           <SectionCard title="Account Numbering" icon={null}>
             <Field label="Default Code Length" hint="Number of digits for new account codes">
-              <select aria-label="Default Code Length" value={local.accountCodeLength} onChange={(e) => set("accountCodeLength", parseInt(e.target.value))} className={`${FORM_INPUT} w-32`}>
-                {[3, 4, 5, 6].map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
+              <FormSelect
+                aria-label="Default Code Length"
+                value={String(accountCodeLength)}
+                onChange={(val) => { setAccountCodeLength(parseInt(val)); setSaved(false); }}
+                options={[3, 4, 5, 6].map((n) => String(n))}
+                className="w-32"
+              />
             </Field>
             <Field label="Retained Earnings Account" hint="Used for closing net surplus at year-end">
-              <select aria-label="Retained Earnings Account" value={local.retainedEarningsAccount} onChange={(e) => set("retainedEarningsAccount", e.target.value)} className={FORM_INPUT}>
-                <option value="">— None —</option>
-                {accounts
+              <FormSelect
+                aria-label="Retained Earnings Account"
+                value={retainedEarningsAccount || ""}
+                onChange={(val) => { setRetainedEarningsAccount(val); setSaved(false); }}
+                placeholder="— None —"
+                options={accounts
                   .filter((a) => a.type === "Equity" && a.isActive !== false)
                   .sort((a, b) => a.code.localeCompare(b.code))
-                  .map((a) => <option key={a.id} value={a.id}>{a.code} – {a.name}</option>)}
-              </select>
+                  .map((a) => ({ value: a.id, label: `${a.code} – ${a.name}` }))}
+              />
             </Field>
           </SectionCard>
-        </>
+        </div>
       )}
 
       {showFields && (
-        <section className="rounded-xl border border-border bg-card p-5 space-y-4" aria-labelledby="accounting-fields-title">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-primary" />
-            <h3 id="accounting-fields-title" className="text-sm font-bold text-foreground">Chart of Accounts Form Fields</h3>
-            <span className="text-xs text-muted-foreground ml-1">
-              — drag to reorder
-            </span>
+        <div className="space-y-4 text-left">
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-left">
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-xs">Dynamic Fields Manager</h4>
+              <p className="text-[11px] mt-0.5 text-info/90">
+                Configure visible sections, reorder fields, and manage custom metadata definitions.
+              </p>
+            </div>
           </div>
 
-          <DraggableFieldList
-            tabId="accounting-fields"
-            fields={orderedFields}
-            enabledSet={enabledSet}
-            requiredSet={requiredSet}
-            onToggleEnabled={handleToggleEnabled}
-            onToggleRequired={handleToggleRequired}
-            onReorder={handleReorder}
-          />
+          {formTabs.map((tab) => {
+            const tabId = tab.key;
+            const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
+            const tabDesc = tab.description;
+            const tabDefs = tabFields[tabId] || [];
+            const enabledSet = tabFieldEnabled[tabId] || new Set();
+            const requiredSet = tabFieldRequired[tabId] || new Set();
+            const isOn = tabId === "basic" ? true : enabledTabs.has(tabId);
+            const isReq = requiredTabs.has(tabId);
 
-          <div className="border-t border-border pt-4">
-            <CustomFieldsBuilder
-              fields={customFields as unknown as CustomFieldConfig[]}
-              droppableId="custom-fields-accounting"
-              onChange={handleCustomFieldsChange}
-            />
+            return (
+              <section key={tabId} className="rounded-xl border border-border bg-card overflow-hidden text-left">
+                <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={isOn}
+                      onCheckedChange={tabId !== "basic" ? () => handleToggleTabEnabled(tabId) : undefined}
+                      aria-label={`Enable Tab ${tabLabel}`}
+                      disabled={tabId === "basic"}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 ml-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-foreground">{tabLabel}</span>
+                      {!tab.isSystem && (
+                        <div className="flex items-center gap-1.5 ml-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => {
+                              setRenamingTabKey(tabId);
+                              setRenameTabLabel(tab.label);
+                            }}
+                            className="p-1 h-6 w-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none flex items-center justify-center"
+                            title="Rename Tab"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => handleDeleteTab(tabId)}
+                            className="p-1 h-6 w-6 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
+                            title="Delete Tab"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{tabDesc}</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
+                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                  </span>
+                  {tabId !== "basic" && isOn && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => handleToggleTabRequired(tabId)}
+                      className={`flex-shrink-0 px-2.5 py-1 h-auto text-[10px] font-bold border transition-all shadow-none ml-2
+                        ${
+                          isReq
+                            ? "bg-destructive/10 border-destructive/30 text-destructive hover:bg-destructive/20 hover:text-destructive"
+                            : "bg-muted border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                      {isReq ? "Required" : "Optional"}
+                    </Button>
+                  )}
+                </div>
+
+                {isOn && (
+                  <div className="p-3 space-y-3">
+                    <CoreFieldEditorList
+                      tabId={tabId}
+                      fields={getOrderedFields(tabDefs, tabFieldOrder[tabId])}
+                      enabledSet={enabledSet}
+                      requiredSet={requiredSet}
+                      onToggleEnabled={(fieldId: string) => handleToggleFieldEnabled(tabId, fieldId)}
+                      onToggleRequired={(fieldId: string) => handleToggleFieldRequired(tabId, fieldId)}
+                      onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
+                      onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
+                      isUniqueField={(tid: string, fid: string) => tabFieldUnique[tid]?.has(fid) || false}
+                      isCoreField={(key: string) => INITIAL_ACCOUNTING_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+                      defaultValues={tabFieldDefaultValues[tabId]}
+                      permissions={tabFieldPermissions[tabId]}
+                      onChangeDefaults={(fieldId: string, val: unknown) => {
+                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                        setSaved(false);
+                      }}
+                      onChangePermissions={(fieldId: string, roles: string[]) => {
+                        setTabFieldPermissions(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: roles } }));
+                        setSaved(false);
+                      }}
+                      onEditField={(f: FieldDefinition) => handleEditField(tabId, f)}
+                      onDeleteField={(id: string) => handleDeleteField(tabId, id)}
+                      labels={{
+                        required: "Required",
+                        optional: "Optional",
+                        unique: "Unique",
+                        standard: "Standard",
+                      }}
+                    />
+                    <div className="border-t border-border pt-3">
+                      <CustomFieldsBuilder
+                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        droppableId={`custom-fields-${tabId}`}
+                        onChange={(f) => handleCustomFieldsChange(tabId, f)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })}
+
+          <div className="flex justify-end pt-2">
+            <Button
+              type="button"
+              onClick={() => setIsAddTabModalOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-none"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Custom Tab</span>
+            </Button>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* Save / Reset */}
-      <footer className="flex items-center justify-between gap-4 pt-1">
-        <button type="button" onClick={handleReset}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">
-          <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> Discard Changes
-        </button>
-        <button type="button" onClick={handleSave}
-          className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            saved ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground hover:bg-primary/90"
-          }`}>
+      {/* Add Tab Modal */}
+      <Modal
+        open={isAddTabModalOpen}
+        onClose={() => {
+          setIsAddTabModalOpen(false);
+          setNewTabLabel("");
+        }}
+        title="Add Custom Tab"
+        icon={Plus}
+        footer={
+          <div className="flex justify-end gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddTabModalOpen(false);
+                setNewTabLabel("");
+              }}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                handleAddTab(newTabLabel);
+                setIsAddTabModalOpen(false);
+                setNewTabLabel("");
+              }}
+              disabled={!newTabLabel.trim()}
+              type="button"
+            >
+              Add Tab
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-left">
+          <label htmlFor="newTabLabel" className="text-xs font-semibold text-foreground">Tab Name *</label>
+          <Input
+            id="newTabLabel"
+            value={newTabLabel}
+            onChange={(e) => setNewTabLabel(e.target.value)}
+            placeholder="e.g. Extra Info"
+            autoFocus
+          />
+        </div>
+      </Modal>
+
+      {/* Rename Tab Modal */}
+      <Modal
+        open={renamingTabKey !== null}
+        onClose={() => {
+          setRenamingTabKey(null);
+          setRenameTabLabel("");
+        }}
+        title="Rename Custom Tab"
+        icon={Pencil}
+        footer={
+          <div className="flex justify-end gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRenamingTabKey(null);
+                setRenameTabLabel("");
+              }}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (renamingTabKey) {
+                  handleRenameTab(renamingTabKey, renameTabLabel);
+                }
+                setRenamingTabKey(null);
+                setRenameTabLabel("");
+              }}
+              disabled={!renameTabLabel.trim()}
+              type="button"
+            >
+              Rename Tab
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-left">
+          <label htmlFor="renameTabLabel" className="text-xs font-semibold text-foreground">Tab Name *</label>
+          <Input
+            id="renameTabLabel"
+            value={renameTabLabel}
+            onChange={(e) => setRenameTabLabel(e.target.value)}
+            placeholder="e.g. Custom Fields"
+            autoFocus
+          />
+        </div>
+      </Modal>
+
+      <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
+        <Button
+          type="button"
+          onClick={handleSave}
+          className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
+        >
           {saved ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Saved!</> : <><Save className="w-3.5 h-3.5" aria-hidden="true" /> Save Settings</>}
-        </button>
+        </Button>
       </footer>
 
       <FYModal open={!!fyModal} initial={fyModal} onSave={handleSaveFY} onClose={() => setFyModal(null)} />
-    </div>
+    </section>
   );
 }

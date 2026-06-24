@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
+import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertTriangle, GitMerge, Check, Loader2 } from "lucide-react";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
@@ -131,14 +132,15 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm }: MergePreviewProps
             <GitMerge className="w-4 h-4 text-primary" />
             <h3 className="text-sm font-bold text-foreground">{t('contacts.duplicates.mergePreview')}</h3>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+            className="text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
             aria-label={t('common.close')}
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
@@ -176,21 +178,22 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm }: MergePreviewProps
         </div>
 
         <div className="px-6 py-4 border-t border-border flex gap-3 justify-end">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onClose}
-            className="px-4 min-h-[44px] rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors text-foreground bg-card"
+            className="min-h-[44px] px-4 font-medium"
           >
             {t('common.cancel')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={onConfirm}
-            className="flex items-center gap-2 px-5 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all"
+            className="flex items-center gap-2 px-5 min-h-[44px] font-semibold"
           >
             <GitMerge className="w-4 h-4" />
             <span>{t('contacts.duplicates.confirmMerge')}</span>
-          </button>
+          </Button>
         </div>
       </motion.div>
     </motion.div>
@@ -313,14 +316,15 @@ export default function DuplicateDetection({
               </p>
             </div>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onClose}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+            className="min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"
             aria-label={t('common.close')}
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         
@@ -367,23 +371,24 @@ export default function DuplicateDetection({
                     </div>
                     <div className="flex items-center gap-2">
                       {canWrite && (
-                      <button
+                      <Button
                         type="button"
                         onClick={() => setMerging(pair)}
-                        className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold hover:bg-primary/90 transition-all"
+                        className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg text-[12px] font-semibold"
                       >
                         <GitMerge className="w-3.5 h-3.5" />
                         <span>{t('contacts.duplicates.merge')}</span>
-                      </button>
+                      </Button>
                       )}
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => handleDismiss(pair.id)}
-                        className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-transparent hover:border-border"
+                        className="min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-transparent hover:border-border"
                         title={t('contacts.duplicates.dismiss')}
                       >
                         <X className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
@@ -408,26 +413,29 @@ export default function DuplicateDetection({
           )}
           {serverPairs?.hasMore && (
             <div className="flex justify-center pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleLoadMoreDuplicates}
                 disabled={pairsFetching}
-                className="px-4 py-2 rounded-lg border border-border text-xs font-semibold hover:bg-muted disabled:opacity-50"
+                className="font-semibold"
               >
                 {pairsFetching ? t('common.loading') : t('contacts.duplicates.loadMore')}
-              </button>
+              </Button>
             </div>
           )}
         </div>
 
         <div className="px-6 py-4 border-t border-border flex-shrink-0">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onClose}
-            className="min-h-[44px] px-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-card border border-transparent"
+            className="min-h-[44px] px-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-transparent hover:bg-muted"
           >
             {t('common.close')}
-          </button>
+          </Button>
         </div>
       </motion.div>
 

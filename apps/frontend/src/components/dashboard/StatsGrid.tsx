@@ -8,6 +8,9 @@ import {
   Zap, BarChart2
 } from "lucide-react";
 import useTranslation from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
+
+const MotionButton = motion(Button);
 
 const ICONS: Record<string, React.ElementType> = {
   GraduationCap, CalendarCheck, BookOpen, UserCheck, DollarSign, AlertCircle, Star, TrendingUp, Receipt,
@@ -99,30 +102,32 @@ export default function StatsGrid({
                 {isEditMode && (
                   <div className="flex items-center gap-1">
                     {onEditCustomCard && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                           e.stopPropagation();
                           onEditCustomCard(stat.id);
                         }}
-                        className="p-1 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all cursor-pointer border border-transparent hover:border-primary/10"
+                        className="p-1 w-7 h-7 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all cursor-pointer border border-transparent hover:border-primary/10"
                         title={t("dashboard.editCardConfig")}
-                        type="button"
                       >
                         <Pencil className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     )}
                     {isCustom && onDeleteCustomCard && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                           e.stopPropagation();
                           onDeleteCustomCard(stat.id);
                         }}
-                        className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all cursor-pointer border border-transparent hover:border-destructive/10"
+                        className="p-1 w-7 h-7 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all cursor-pointer border border-transparent hover:border-destructive/10"
                         title={t("dashboard.deleteCard")}
-                        type="button"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     )}
                   </div>
                 )}
@@ -146,13 +151,13 @@ export default function StatsGrid({
       })}
 
       {isEditMode && onAddCardClick && (
-        <motion.button
+        <MotionButton
+          variant="outline"
           onClick={onAddCardClick}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: stats.length * 0.05, duration: 0.35, ease: "easeOut" }}
-          className="border border-dashed border-border rounded-xl p-4 md:p-5 flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-300 group text-muted-foreground min-h-[115px]"
-          type="button"
+          className="border border-dashed border-border rounded-xl p-4 md:p-5 flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-300 group text-muted-foreground min-h-[115px] h-auto"
         >
           <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
             <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -160,7 +165,7 @@ export default function StatsGrid({
           <span className="text-xs font-bold group-hover:text-primary transition-colors">
             {t("dashboard.addMetricCard")}
           </span>
-        </motion.button>
+        </MotionButton>
       )}
     </section>
   );

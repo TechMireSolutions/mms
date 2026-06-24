@@ -4,6 +4,7 @@ import { X, Award, Printer } from "lucide-react";
 import { getRankSuffix, GradeInfo } from "./gradeUtils";
 import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "../../lib/db";
+import { Button } from "@/components/ui/button";
 
 export interface StudentResultItem {
   pct: number;
@@ -59,14 +60,15 @@ export default function StudentResultCard({ result, exam, allResults, onClose, o
       >
         {/* Header gradient */}
         <div className="px-6 pt-8 pb-6 text-center bg-card" style={{ background: `linear-gradient(135deg, ${grade.bg}, white)` }}>
-          <button
+          <Button
+            variant="ghost"
             type="button"
             onClick={onClose}
             aria-label="Close card"
             className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-black/10 text-muted-foreground"
           >
             <X className="w-4 h-4" aria-hidden="true" />
-          </button>
+          </Button>
 
           {/* Circular progress */}
           <div className="relative w-28 h-28 mx-auto mb-4" aria-hidden="true">
@@ -128,21 +130,21 @@ export default function StudentResultCard({ result, exam, allResults, onClose, o
         {/* Actions */}
         <div className="px-5 pb-5 flex gap-2.5">
           {result.passed && (
-            <button
+            <Button
               type="button"
               onClick={onCertificate}
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-warning/40 bg-warning/10 text-warning text-sm font-semibold hover:bg-warning/15"
             >
               <Award className="w-4 h-4" aria-hidden="true" /> Certificate
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             type="button"
             onClick={() => window.print()}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm font-semibold hover:bg-muted/80"
           >
             <Printer className="w-4 h-4" aria-hidden="true" /> Print
-          </button>
+          </Button>
         </div>
       </motion.div>
     </div>

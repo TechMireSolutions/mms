@@ -37,7 +37,7 @@ export default function BackupExportSection({
         <div className="flex-1">
           {lastExportStats ? (
             <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-500">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-success">
                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                 <span>{t('backup.createSuccess')}</span>
               </div>

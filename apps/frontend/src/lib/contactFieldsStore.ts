@@ -18,7 +18,6 @@ import {
   DEFAULT_REQUIRED_TABS,
   FieldConfig,
   FieldDefinition,
-  TAB_REGISTRY,
   INITIAL_FIELD_SEED,
   DEFAULT_PAGE_TABS,
   DEFAULT_FORM_TABS,
@@ -135,9 +134,8 @@ export function sanitizeConfig(config: FieldConfig): FieldConfig {
     cfg.fields = cleanedFields;
   }
 
-  const validFormTabIds = new Set(TAB_REGISTRY.map((t) => t.key));
   if (Array.isArray(cfg.formTabs)) {
-    cfg.formTabs = cfg.formTabs.filter((t) => validFormTabIds.has(t.key));
+    cfg.formTabs = cfg.formTabs.filter((t) => t && typeof t === "object" && typeof t.key === "string" && t.key.trim().length > 0);
   }
 
   const validPageTabIds = new Set(DEFAULT_PAGE_TABS.map((t) => t.key));
@@ -145,9 +143,8 @@ export function sanitizeConfig(config: FieldConfig): FieldConfig {
     cfg.pageTabs = cfg.pageTabs.filter((t) => validPageTabIds.has(t.key));
   }
 
-  const validDetailTabIds = new Set(DEFAULT_DETAIL_TABS.map((t) => t.key));
   if (Array.isArray(cfg.detailTabs)) {
-    cfg.detailTabs = cfg.detailTabs.filter((t) => validDetailTabIds.has(t.key));
+    cfg.detailTabs = cfg.detailTabs.filter((t) => t && typeof t === "object" && typeof t.key === "string" && t.key.trim().length > 0);
   }
 
   const validSettingsSubTabIds = new Set(DEFAULT_SETTINGS_SUB_TABS.map((t) => t.key));

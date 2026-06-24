@@ -1,5 +1,7 @@
 import React from 'react';
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   countFillBlankMarkers,
   joinQuestionCompoundAnswer,
@@ -50,7 +52,7 @@ export default function QuestionTypeAnswerFields({
               <label htmlFor={`qb-blank-${index}`} className="mb-1 block text-xs font-medium text-foreground">
                 {t('questionBank.blankAnswerN', { n: index + 1 })}
               </label>
-              <input
+              <Input
                 id={`qb-blank-${index}`}
                 className={FORM_INPUT}
                 value={blank}
@@ -84,7 +86,7 @@ export default function QuestionTypeAnswerFields({
           <div key={index} className="grid grid-cols-1 gap-2 rounded-lg border border-border/70 bg-muted/10 p-3 sm:grid-cols-[1fr_1fr_auto]">
             <div>
               <label className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingLeft')}</label>
-              <input
+              <Input
                 className={FORM_INPUT}
                 value={pair.left}
                 onChange={(e) => {
@@ -95,7 +97,7 @@ export default function QuestionTypeAnswerFields({
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingRight')}</label>
-              <input
+              <Input
                 className={FORM_INPUT}
                 value={pair.right}
                 onChange={(e) => {
@@ -105,25 +107,27 @@ export default function QuestionTypeAnswerFields({
               />
             </div>
             {pairs.length > 2 && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => syncPairs(pairs.filter((_, i) => i !== index))}
-                className="flex min-h-10 items-center justify-center gap-1 self-end rounded-lg border border-border px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-destructive"
+                className="flex min-h-10 items-center justify-center gap-1 self-end rounded-lg border border-border px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-destructive h-auto"
                 aria-label={t('questionBank.removeMatchingPair', { n: index + 1 })}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden />
-              </button>
+              </Button>
             )}
           </div>
         ))}
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => syncPairs([...pairs, { left: '', right: '' }])}
-          className="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground"
+          className="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground bg-transparent"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden />
           {t('questionBank.addMatchingPair')}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -150,7 +154,7 @@ export default function QuestionTypeAnswerFields({
         {items.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
             <span className="w-6 flex-shrink-0 text-center text-[11px] font-bold text-muted-foreground">{index + 1}</span>
-            <input
+            <Input
               className={FORM_INPUT}
               value={item}
               placeholder={t('questionBank.orderingItemN', { n: index + 1 })}
@@ -161,45 +165,52 @@ export default function QuestionTypeAnswerFields({
               }}
             />
             <div className="flex flex-shrink-0 flex-col gap-0.5">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 disabled={index === 0}
                 onClick={() => moveItem(index, -1)}
-                className="rounded border border-border p-1 text-muted-foreground hover:bg-muted disabled:opacity-40"
+                className="rounded border border-border p-1 text-muted-foreground hover:bg-muted disabled:opacity-40 h-7 w-7"
                 aria-label={t('questionBank.moveOrderingUp', { n: index + 1 })}
               >
                 <ChevronUp className="h-3.5 w-3.5" aria-hidden />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 disabled={index === items.length - 1}
                 onClick={() => moveItem(index, 1)}
-                className="rounded border border-border p-1 text-muted-foreground hover:bg-muted disabled:opacity-40"
+                className="rounded border border-border p-1 text-muted-foreground hover:bg-muted disabled:opacity-40 h-7 w-7"
                 aria-label={t('questionBank.moveOrderingDown', { n: index + 1 })}
               >
                 <ChevronDown className="h-3.5 w-3.5" aria-hidden />
-              </button>
+              </Button>
             </div>
             {items.length > 2 && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 onClick={() => syncItems(items.filter((_, i) => i !== index))}
-                className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-muted hover:text-destructive"
+                className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-muted hover:text-destructive h-8 w-8"
                 aria-label={t('questionBank.removeMatchingPair', { n: index + 1 })}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden />
-              </button>
+              </Button>
             )}
           </div>
         ))}
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => syncItems([...items, ''])}
-          className="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground"
+          className="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground bg-transparent"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden />
           {t('questionBank.addOrderingItem')}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -211,7 +222,7 @@ export default function QuestionTypeAnswerFields({
       <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-2">
         <div>
           <label htmlFor="qb-numeric-answer" className={FORM_LABEL}>{t('questionBank.numericAnswer')} *</label>
-          <input
+          <Input
             id="qb-numeric-answer"
             type="number"
             className={FORM_INPUT}
@@ -221,7 +232,7 @@ export default function QuestionTypeAnswerFields({
         </div>
         <div>
           <label htmlFor="qb-numeric-tolerance" className={FORM_LABEL}>{t('questionBank.numericTolerance')}</label>
-          <input
+          <Input
             id="qb-numeric-tolerance"
             type="number"
             min={0}

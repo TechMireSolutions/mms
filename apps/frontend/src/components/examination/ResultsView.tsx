@@ -13,6 +13,7 @@ import CertificatePreview from "./CertificatePreview";
 import useTranslation from "@/hooks/useTranslation";
 import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { Button } from "@/components/ui/button";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
@@ -141,7 +142,7 @@ export default function ResultsView({
           {exams.map((e) => {
             const isSelected = selectedExam === e.id;
             return (
-              <button
+              <Button
                 key={e.id}
                 type="button"
                 role="radio"
@@ -150,7 +151,7 @@ export default function ResultsView({
                 className={`px-3.5 py-2 rounded-lg border text-[12px] font-semibold transition-all ${isSelected ? "border-primary bg-primary/5 text-primary" : "border-border bg-card hover:bg-muted text-foreground"}`}
               >
                 {e.name}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -266,13 +267,13 @@ export default function ResultsView({
                     )}
 
                     {r.passed && r.rank <= 3 && (
-                      <button
+                       <Button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setCertStudent(r); }}
                         className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-warning/10 text-warning hover:bg-warning/15 transition-colors flex-shrink-0"
                       >
                         <Award className="w-3 h-3" aria-hidden="true" /> {t("examinations.certificate")}
-                      </button>
+                      </Button>
                     )}
                   </motion.div>
                 ))}

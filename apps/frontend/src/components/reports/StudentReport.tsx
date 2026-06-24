@@ -244,7 +244,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         enrollments.length === 0 ? (
           <EmptyState icon={Users} title="No enrollment records found" compact />
         ) : (
-          <div className="rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm mt-4">
+          <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm mt-4">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/50">
                 <tr>

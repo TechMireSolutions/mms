@@ -1,18 +1,19 @@
 import React, { useState, useMemo } from "react";
 import { BookOpen } from "lucide-react";
 import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL, FORM_TEXTAREA } from "@/components/ui/formStyles";
 import { calculateModuleFieldsCompleteness } from "@/lib/formCompleteness";
 import { Exam } from '@/lib/data/examinationData';
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { toTitleCase } from "@mms/shared";
-import {
-  DEFAULT_EXAMINATIONS_SETTINGS,
-  DEFAULT_EXAMINATIONS_FIELD_DEFS,
-  getSortedFields,
-} from "@mms/shared";
+
+
 import { useExaminationConfig } from "@/hooks/useExaminationConfig";
 import { DatePicker } from "../ui/DatePicker";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const SUBJECTS = ["Tajweed", "Hifz", "Islamic Studies", "Arabic", "Aqeedah", "Quran Recitation", "Fiqh"];
 
@@ -46,14 +47,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
   const [error, setError] = useState("");
   const sessions = useSessionsCollection();
 
-  const { settings } = useExaminationConfig();
-  const fields = settings.fields || DEFAULT_EXAMINATIONS_SETTINGS.fields || {};
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_EXAMINATIONS_SETTINGS.fieldOrder || [];
-
-  const orderedFields = useMemo(() => {
-    return getSortedFields(DEFAULT_EXAMINATIONS_FIELD_DEFS, fieldOrder, fields, customFields);
-  }, [fieldOrder, fields, customFields]);
+  const { fields, customFields, orderedFields } = useExaminationConfig();
 
   const completeness = useMemo(
     () => calculateModuleFieldsCompleteness(data as Record<string, unknown>, orderedFields, fields),
@@ -146,7 +140,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                 return (
                   <div key="name" className="sm:col-span-2">
                     <label htmlFor="exam-name" className={FORM_LABEL}>Exam Name *</label>
-                    <input
+                    <Input
                       id="exam-name"
                       className={FORM_INPUT}
                       value={data.name || ""}
@@ -162,16 +156,13 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                 return (
                   <div key="subject">
                     <label htmlFor="exam-subject" className={FORM_LABEL}>Subject {field.required ? "*" : ""}</label>
-                    <select
+                    <FormSelect
                       id="exam-subject"
-                      className={FORM_SELECT}
                       value={data.subject || ""}
-                      onChange={(e) => upd("subject", e.target.value)}
-                      required={field.required}
-                    >
-                      <option value="">Select subject…</option>
-                      {SUBJECTS.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                      onChange={(val) => upd("subject", val)}
+                      placeholder="Select subject…"
+                      options={SUBJECTS}
+                    />
                   </div>
                 );
               }
@@ -180,17 +171,16 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                 return (
                   <div key="status">
                     <label htmlFor="exam-status" className={FORM_LABEL}>Status {field.required ? "*" : ""}</label>
-                    <select
+                    <FormSelect
                       id="exam-status"
-                      className={FORM_SELECT}
                       value={data.status || "upcoming"}
-                      onChange={(e) => upd("status", e.target.value as Exam["status"])}
-                      required={field.required}
-                    >
-                      <option value="upcoming">Upcoming</option>
-                      <option value="ongoing">Ongoing</option>
-                      <option value="completed">Completed</option>
-                    </select>
+                      onChange={(val) => upd("status", val as Exam["status"])}
+                      options={[
+                        { value: "upcoming", label: "Upcoming" },
+                        { value: "ongoing", label: "Ongoing" },
+                        { value: "completed", label: "Completed" },
+                      ]}
+                    />
                   </div>
                 );
               }
@@ -199,7 +189,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                 return (
                   <div key="totalMarks">
                     <label htmlFor="exam-total" className={FORM_LABEL}>Total Marks {field.required ? "*" : ""}</label>
-                    <input
+                    <Input
                       id="exam-total"
                       type="number"
                       className={FORM_INPUT}
@@ -216,7 +206,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                 return (
                   <div key="passingMarks">
                     <label htmlFor="exam-passing" className={FORM_LABEL}>Passing Marks {field.required ? "*" : ""}</label>
-                    <input
+                    <Input
                       id="exam-passing"
                       type="number"
                       className={FORM_INPUT}
@@ -234,7 +224,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                 return (
                   <div key="duration">
                     <label htmlFor="exam-duration" className={FORM_LABEL}>Duration (min) {field.required ? "*" : ""}</label>
-                    <input
+                    <Input
                       id="exam-duration"
                       type="number"
                       className={FORM_INPUT}
@@ -269,7 +259,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                       {classes.map((cls) => {
                         const active = !!(data.classIds && data.classIds.includes(cls.id));
                         return (
-                          <button
+                          <Button
                             key={cls.id}
                             type="button"
                             onClick={() => toggleClass(cls.id)}
@@ -280,7 +270,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                             }`}
                           >
                             {cls.name}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -322,31 +312,22 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                         required={field.required}
                       />
                     ) : field.type === "select" ? (
-                      <select
-                        className={FORM_SELECT}
+                      <FormSelect
                         value={val as string}
-                        onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
-                        required={field.required}
-                      >
-                        <option value="">Select option…</option>
-                        {field.options?.map((opt) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(value) => setData((d) => ({ ...d, [field.id]: value }))}
+                        placeholder="Select option…"
+                        options={field.options || []}
+                      />
                     ) : field.type === "boolean" ? (
                       <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={!!val}
-                          onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.checked }))}
-                          className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
+                          onCheckedChange={(checked) => setData((d) => ({ ...d, [field.id]: !!checked }))}
                         />
                         <span className="text-xs font-medium text-foreground">{field.label}</span>
                       </label>
                     ) : field.type === "number" ? (
-                      <input
+                      <Input
                         type="number"
                         className={FORM_INPUT}
                         value={val as number}
@@ -361,7 +342,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                         required={field.required}
                       />
                     ) : (
-                      <input
+                      <Input
                         type={field.type === "email" ? "email" : field.type === "url" ? "url" : "text"}
                         className={FORM_INPUT}
                         value={val as string}

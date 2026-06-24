@@ -10,7 +10,7 @@ import {
 } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import DraggableFieldList from "../ui/ContactDraggableFieldList";
+import CoreFieldEditorList from "../ui/CoreFieldEditorList";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import useTranslation from "@/hooks/useTranslation";
 import { useContactMutations } from "@/hooks/useContacts";
@@ -72,18 +72,18 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
-interface ContactsSettingsPanelProps {
+interface ContactsSetupPanelProps {
   config: FieldConfig;
   onConfigChange: (config: FieldConfig) => void;
   mode?: "fields" | "preferences";
 }
 
 /**
- * ContactsSettingsPanel component providing a full dynamic field configuration UI.
+ * ContactsSetupPanel component providing a full dynamic field configuration UI.
  * @param props Component properties.
  * @returns React element.
  */
-export default function ContactsSettingsPanel({ config, onConfigChange, mode }: ContactsSettingsPanelProps): React.JSX.Element {
+export default function ContactsSetupPanel({ config, onConfigChange, mode }: ContactsSetupPanelProps): React.JSX.Element {
   const { updatePrefs, prefs: contextPrefs } = useContactConfig();
   const { logSetupAudit } = useContactMutations();
   const { t } = useTranslation();
@@ -414,28 +414,28 @@ export default function ContactsSettingsPanel({ config, onConfigChange, mode }: 
 
                   {isOn && (
                     <div className="p-3 space-y-3">
-                      <DraggableFieldList
+                      <CoreFieldEditorList
                         tabId={tabId}
                         fields={getOrderedFields(tabDefs, tabFieldOrder[tabId])}
                         enabledSet={enabledSet}
                         requiredSet={requiredSet}
-                        onToggleEnabled={(fieldId) => toggleFieldEnabled(tabId, fieldId)}
-                        onToggleRequired={(fieldId) => toggleFieldRequired(tabId, fieldId)}
-                        onToggleUnique={(fieldId) => toggleFieldUnique(tabId, fieldId)}
-                        onReorder={(reordered) => handleReorder(tabId, reordered)}
+                        onToggleEnabled={(fieldId: string) => toggleFieldEnabled(tabId, fieldId)}
+                        onToggleRequired={(fieldId: string) => toggleFieldRequired(tabId, fieldId)}
+                        onToggleUnique={(fieldId: string) => toggleFieldUnique(tabId, fieldId)}
+                        onReorder={(reordered: FieldDefinition[]) => handleReorder(tabId, reordered)}
                         isUniqueField={isUniqueField}
                         defaultValues={tabFieldDefaultValues[tabId]}
                         permissions={tabFieldPermissions[tabId]}
-                        onChangeDefaults={(fieldId, val) => {
+                        onChangeDefaults={(fieldId: string, val: unknown) => {
                           setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
                           setSaved(false);
                         }}
-                        onChangePermissions={(fieldId, roles) => {
+                        onChangePermissions={(fieldId: string, roles: string[]) => {
                           setTabFieldPermissions(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: roles } }));
                           setSaved(false);
                         }}
-                        onEditField={(f) => handleEditField(tabId, f)}
-                        onDeleteField={(id) => handleDeleteField(tabId, id)}
+                        onEditField={(f: FieldDefinition) => handleEditField(tabId, f)}
+                        onDeleteField={(id: string) => handleDeleteField(tabId, id)}
                       />
                       <div className="border-t border-border pt-3">
                         <CustomFieldsBuilder

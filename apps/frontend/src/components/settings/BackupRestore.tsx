@@ -13,6 +13,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import useTranslation from '@/hooks/useTranslation';
+import { Button } from '@/components/ui/button';
 
 /**
  * Full-workspace backup export, validated restore, and local backup history.
@@ -43,14 +44,14 @@ export default function BackupRestore(): React.JSX.Element {
       introKey="settings.introBackup"
       footer={
         <div className="flex w-full flex-wrap items-center gap-3 pt-1">
-          <button
+          <Button
             type="button"
             onClick={() => backup.setClearHistoryOpen(true)}
             className="flex min-h-[44px] items-center gap-2 rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
           >
             <Trash2 className="h-3.5 w-3.5" />
             <span>{t('backup.clearHistory')}</span>
-          </button>
+          </Button>
         </div>
       }
     >

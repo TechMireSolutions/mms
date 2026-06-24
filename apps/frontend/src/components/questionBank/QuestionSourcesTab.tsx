@@ -20,6 +20,9 @@ import {
 } from '@/lib/data/questionBankSourceBooks';
 import FormModal from '@/components/ui/FormModal';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import FormSelect from '@/components/ui/FormSelect';
 
 
 type TranslateFn = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
@@ -61,7 +64,7 @@ function renderSourceInput(
   return (
     <div key={field.id}>
       <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
-      <input
+      <Input
         id={inputId}
         type={field.type === 'date' ? 'date' : 'text'}
         className={FORM_INPUT}
@@ -187,13 +190,14 @@ export default function QuestionSourcesTab({
             <BookOpen className="h-4 w-4 text-primary" aria-hidden />
             <h3 className="text-sm font-bold text-foreground">{t('questionBank.sourceBooksTitle')}</h3>
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={startNewBook}
-            className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted h-auto"
           >
             {t('questionBank.addSourceBook')}
-          </button>
+          </Button>
         </div>
         <p className="text-[11px] text-muted-foreground">{t('questionBank.sourceBooksHint')}</p>
 
@@ -213,21 +217,24 @@ export default function QuestionSourcesTab({
                   </p>
                 </div>
                 <div className="flex flex-shrink-0 gap-1">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => startEditBook(book)}
-                    className="rounded-lg border border-border px-2 py-1 text-[11px] font-semibold hover:bg-muted"
+                    className="rounded-lg border border-border px-2 py-1 text-[11px] font-semibold hover:bg-muted h-auto"
                   >
                     {t('questionBank.editSourceBook')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="icon"
                     onClick={() => deleteBook(book.id)}
-                    className="rounded-lg border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-destructive"
+                    className="rounded-lg border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-destructive h-7 w-7"
                     aria-label={t('questionBank.deleteSourceBook', { name: book.name })}
                   >
                     <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                  </button>
+                  </Button>
                 </div>
               </li>
             ))}
@@ -256,19 +263,20 @@ export default function QuestionSourcesTab({
                   {availableFieldIds.map((fieldId) => {
                     const selected = draftBook.fieldIds.includes(fieldId);
                     return (
-                      <button
+                      <Button
                         key={fieldId}
                         type="button"
+                        variant="outline"
                         onClick={() => fieldId !== 'sourceBookName' && toggleBookField(fieldId)}
                         disabled={fieldId === 'sourceBookName'}
-                        className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                        className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold h-auto ${
                           selected
-                            ? 'border-primary bg-primary/10 text-primary'
+                            ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary'
                             : 'border-border text-muted-foreground hover:bg-muted'
                         }`}
                       >
                         {fieldLabel(fieldId)}
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -314,14 +322,15 @@ export default function QuestionSourcesTab({
                     {t('questionBank.citationEntry', { n: index + 1 })}
                   </p>
                   {citationEntries.length > 1 && entry.bookId && (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       onClick={() => removeCitation(index)}
-                      className="flex min-h-8 items-center gap-1 rounded-lg border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-destructive"
+                      className="flex min-h-8 items-center gap-1 rounded-lg border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-destructive h-auto"
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden />
                       {t('questionBank.removeCitation')}
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -329,17 +338,14 @@ export default function QuestionSourcesTab({
                   <label htmlFor={`qb-citation-book-${index}`} className={FORM_LABEL}>
                     {t('questionBank.selectSourceBook')}
                   </label>
-                  <select
+                  <FormSelect
                     id={`qb-citation-book-${index}`}
-                    className={`${FORM_INPUT} cursor-pointer`}
+                    className={FORM_INPUT}
                     value={entry.bookId}
-                    onChange={(e) => updCitation(index, { bookId: e.target.value, citation: {} })}
-                  >
-                    <option value="">{t('questionBank.selectSourceBook')}</option>
-                    {sourceBooks.map((b) => (
-                      <option key={b.id} value={b.id}>{b.name}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => updCitation(index, { bookId: val, citation: {} })}
+                    placeholder={t('questionBank.selectSourceBook')}
+                    options={sourceBooks.map((b) => ({ value: b.id, label: b.name }))}
+                  />
                 </div>
 
                 {book && citationFieldIds.length > 0 && (
@@ -369,14 +375,15 @@ export default function QuestionSourcesTab({
         )}
 
         {sourceBooks.length > 0 && (
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={addCitation}
-            className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground"
+            className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground bg-transparent"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {t('questionBank.addBookCitation')}
-          </button>
+          </Button>
         )}
       </section>
     </div>

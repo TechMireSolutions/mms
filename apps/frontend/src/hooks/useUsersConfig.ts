@@ -4,6 +4,8 @@ import {
   DEFAULT_USERS_FIELD_DEFS,
   USERS_MODULE_CONTRACT,
   getSortedFields,
+  mergeTabbedFields,
+  getFlatFieldsConfig,
   type UsersSettings,
 } from '@mms/shared';
 import { getObject, saveObject } from '@/lib/db';
@@ -12,10 +14,13 @@ function mergeUsersSettings(settings: Partial<UsersSettings> | null | undefined)
   return {
     ...DEFAULT_USERS_SETTINGS,
     ...(settings ?? {}),
-    fields: {
-      ...(DEFAULT_USERS_SETTINGS.fields ?? {}),
-      ...(settings?.fields ?? {}),
-    },
+    formTabs: settings?.formTabs ?? DEFAULT_USERS_SETTINGS.formTabs ?? [],
+    enabledTabs: settings?.enabledTabs ?? DEFAULT_USERS_SETTINGS.enabledTabs ?? [],
+    requiredTabs: settings?.requiredTabs ?? DEFAULT_USERS_SETTINGS.requiredTabs ?? [],
+    fields: mergeTabbedFields(
+      DEFAULT_USERS_SETTINGS.fields || {},
+      settings?.fields
+    ),
     customFields: settings?.customFields ?? DEFAULT_USERS_SETTINGS.customFields ?? [],
     fieldOrder: settings?.fieldOrder ?? DEFAULT_USERS_SETTINGS.fieldOrder ?? [],
   };
@@ -55,7 +60,7 @@ export function useUsersConfig() {
     setSettings(merged);
   }, []);
 
-  const fields = settings.fields ?? DEFAULT_USERS_SETTINGS.fields ?? {};
+  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
   const customFields = settings.customFields ?? [];
   const fieldOrder = settings.fieldOrder ?? DEFAULT_USERS_SETTINGS.fieldOrder ?? [];
 
@@ -72,3 +77,4 @@ export function useUsersConfig() {
     updateSettings,
   };
 }
+

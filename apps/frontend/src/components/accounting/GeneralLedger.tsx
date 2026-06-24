@@ -3,6 +3,8 @@ import { Download } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeLedger, Account, JournalEntry, AccountType } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
+import { Button } from "../ui/button";
+import FormSelect from "../ui/FormSelect";
 
 interface GeneralLedgerProps {
   accounts: Account[];
@@ -78,24 +80,20 @@ export default function GeneralLedger({ accounts, entries, fmt }: GeneralLedgerP
     <section aria-label="General Ledger" className="space-y-4">
       {/* Selectors */}
       <nav aria-label="Ledger filters" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <select 
+        <FormSelect 
           aria-label="Filter accounts by type"
           value={typeFilter} 
-          onChange={(e) => { setTypeFilter(e.target.value as AccountType | "all"); setSelectedAccount(""); }}
-          className="text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-        >
-          <option value="all">All Types</option>
-          {ACCOUNT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <select 
+          onChange={(val) => { setTypeFilter(val as AccountType | "all"); setSelectedAccount(""); }}
+          options={[{ value: "all", label: "All Types" }, ...ACCOUNT_TYPES]}
+        />
+        <FormSelect 
           aria-label="Select account"
           value={selectedAccount} 
-          onChange={(e) => setSelectedAccount(e.target.value)}
-          className="col-span-2 sm:col-span-1 text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-        >
-          <option value="">— Select Account —</option>
-          {filteredAccounts.map((a) => <option key={a.id} value={a.id}>{a.code} – {a.name}</option>)}
-        </select>
+          onChange={setSelectedAccount}
+          placeholder="— Select Account —"
+          options={filteredAccounts.map((a) => ({ value: a.id, label: `${a.code} – ${a.name}` }))}
+          className="col-span-2 sm:col-span-1"
+        />
         <DatePicker
           id="ledger-date-from"
           value={dateFrom}
@@ -152,12 +150,15 @@ export default function GeneralLedger({ accounts, entries, fmt }: GeneralLedgerP
             </div>
           </article>
 
-          {/* Export */}
           <div className="flex justify-end">
-            <button type="button" onClick={exportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors">
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={exportCSV}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+            >
               <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export CSV
-            </button>
+            </Button>
           </div>
 
           {/* Ledger table */}

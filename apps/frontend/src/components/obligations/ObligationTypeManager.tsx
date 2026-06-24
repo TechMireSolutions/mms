@@ -3,9 +3,13 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { DESIGNATED_FOR_OPTIONS, ObligationType } from '@/lib/data/obligationsData';
 import FormModal from "@/components/ui/FormModal";
 import useTranslation from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { OBLIGATION_TYPE_BADGE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export type DesignatedFor = "Syed" | "Non-Syed" | "Both" | "None";
 
@@ -63,10 +67,10 @@ export default function ObligationTypeManager({ types, onChange }: ObligationTyp
     <div className="space-y-4">
       <header className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground m-0">{types.length} obligation type{types.length !== 1 ? "s" : ""} configured</p>
-        <button type="button" onClick={() => setModal({ mode: "add", data: { ...EMPTY } })}
+        <Button type="button" onClick={() => setModal({ mode: "add", data: { ...EMPTY } })}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Type
-        </button>
+        </Button>
       </header>
 
       <section aria-label="Obligation Types List" className="rounded-xl border border-border overflow-hidden">
@@ -95,14 +99,16 @@ export default function ObligationTypeManager({ types, onChange }: ObligationTyp
                 <td className="px-4 py-3"><TypeBadge val={t.designated_for} /></td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button type="button" aria-label={`Edit ${t.name}`} onClick={() => setModal({ mode: "edit", data: { ...t } })}
-                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                    <Button type="button" aria-label={`Edit ${t.name}`} onClick={() => setModal({ mode: "edit", data: { ...t } })}
+                      variant="ghost"
+                      className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                       <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-                    <button type="button" aria-label={`Delete ${t.name}`} onClick={() => handleDelete(t.id)}
-                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors">
+                    </Button>
+                    <Button type="button" aria-label={`Delete ${t.name}`} onClick={() => handleDelete(t.id)}
+                      variant="ghost"
+                      className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                       <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -163,7 +169,7 @@ function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obligation
       <div className="space-y-4">
         <div>
           <label htmlFor="type-name" className={FORM_LABEL}>Name *</label>
-          <input
+          <Input
             id="type-name"
             value={form.name || ""}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -173,24 +179,20 @@ function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obligation
         </div>
         <div>
           <label htmlFor="type-designated" className={FORM_LABEL}>Designated For *</label>
-          <select
+          <FormSelect
             id="type-designated"
-            value={form.designated_for}
-            onChange={(e) => setForm({ ...form, designated_for: e.target.value as DesignatedFor })}
-            className={FORM_SELECT}
-          >
-            {DESIGNATED_FOR_OPTIONS.map((o) => <option key={o}>{o}</option>)}
-          </select>
+            value={form.designated_for || ""}
+            onChange={(val) => setForm({ ...form, designated_for: val as DesignatedFor })}
+            options={DESIGNATED_FOR_OPTIONS}
+          />
         </div>
         <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
+          <Checkbox
             id="qty"
             checked={form.quantity_based}
-            onChange={(e) => setForm({ ...form, quantity_based: e.target.checked })}
-            className="rounded border-border text-primary focus:ring-primary/20"
+            onCheckedChange={(checked) => setForm({ ...form, quantity_based: !!checked })}
           />
-          <label htmlFor="qty" className="text-sm font-medium text-foreground cursor-pointer">Quantity Based</label>
+          <label htmlFor="qty" className="text-sm font-medium text-foreground cursor-pointer select-none">Quantity Based</label>
         </div>
       </div>
     </FormModal>

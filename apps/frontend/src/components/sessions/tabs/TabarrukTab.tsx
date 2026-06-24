@@ -4,7 +4,10 @@ import { Plus, Trash2, Gift, Edit2 } from "lucide-react";
 import { Session, TabarrukItem } from '@/lib/data/sessionsData';
 import { DatePicker } from "../../ui/DatePicker";
 import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 const EMPTY: Partial<TabarrukItem> = { item: "", quantity: "", occasion: "", date: "", note: "" };
 
@@ -39,12 +42,12 @@ function TabarrukModal({ open, entry, onClose, onSave }: TabarrukModalProps) {
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="tabarruk-item">Item *</label>
-          <input id="tabarruk-item" className={FORM_INPUT} value={data.item || ""} onChange={(e) => upd("item", e.target.value)} placeholder="e.g. Dates (Ajwa)" required />
+          <Input id="tabarruk-item" value={data.item || ""} onChange={(e) => upd("item", e.target.value)} placeholder="e.g. Dates (Ajwa)" required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="tabarruk-quantity">Quantity</label>
-            <input id="tabarruk-quantity" className={FORM_INPUT} value={data.quantity || ""} onChange={(e) => upd("quantity", e.target.value)} placeholder="e.g. 5 kg" />
+            <Input id="tabarruk-quantity" value={data.quantity || ""} onChange={(e) => upd("quantity", e.target.value)} placeholder="e.g. 5 kg" />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="tabarruk-date">Date</label>
@@ -57,11 +60,11 @@ function TabarrukModal({ open, entry, onClose, onSave }: TabarrukModalProps) {
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="tabarruk-occasion">Occasion</label>
-          <input id="tabarruk-occasion" className={FORM_INPUT} value={data.occasion || ""} onChange={(e) => upd("occasion", e.target.value)} placeholder="e.g. Opening Ceremony" />
+          <Input id="tabarruk-occasion" value={data.occasion || ""} onChange={(e) => upd("occasion", e.target.value)} placeholder="e.g. Opening Ceremony" />
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="tabarruk-note">Note</label>
-          <textarea id="tabarruk-note" className={`${FORM_INPUT} min-h-[60px] resize-none`} value={data.note || ""} onChange={(e) => upd("note", e.target.value)} placeholder="Any additional notes…" />
+          <Textarea id="tabarruk-note" className="min-h-[60px] resize-none" value={data.note || ""} onChange={(e) => upd("note", e.target.value)} placeholder="Any additional notes…" />
         </div>
       </div>
     </FormModal>
@@ -108,12 +111,12 @@ export default function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
 
       <header className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground m-0">{items.length} item{items.length !== 1 ? "s" : ""} recorded</p>
-        <button
+        <Button
           onClick={() => { setEditEntry(null); setShowModal(true); }}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Tabarruk
-        </button>
+        </Button>
       </header>
 
       {items.length === 0 ? (
@@ -158,12 +161,12 @@ export default function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 justify-end">
-                      <button aria-label={`Edit ${item.item}`} onClick={() => { setEditEntry(item); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
+                      <Button aria-label={`Edit ${item.item}`} onClick={() => { setEditEntry(item); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                      </button>
-                      <button aria-label={`Delete ${item.item}`} onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100">
+                      </Button>
+                      <Button aria-label={`Delete ${item.item}`} onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </motion.tr>
@@ -173,7 +176,7 @@ export default function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
         </div>
       )}
 
-      <TabarrukModal
+      <TabarrukTabPropsModal
         open={showModal}
         entry={editEntry}
         onClose={() => { setShowModal(false); setEditEntry(null); }}
@@ -182,3 +185,7 @@ export default function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
     </section>
   );
 }
+
+// Rename component helper to avoid clash/error with named export
+const TabarrukTabPropsModal = TabarrukModal;
+

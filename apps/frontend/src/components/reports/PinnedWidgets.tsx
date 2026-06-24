@@ -1287,7 +1287,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
       {/* Module checkboxes visibility parameters togglers */}
       {showControls && (
-        <div className="bg-card/45 backdrop-blur-xl border border-border/50 p-5 rounded-[2rem] space-y-4 shadow-sm">
+        <div className="bg-card/45 backdrop-blur-xl border border-border/50 p-5 rounded-2xl space-y-4 shadow-sm">
           <div>
             <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">Dashboard Controls</h4>
             <p className="text-[9px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">Configure what widgets display on the home dashboard</p>
@@ -1467,7 +1467,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
       {/* Dynamic widgets listings config items */}
       {filteredWidgets.length === 0 ? (
-        <div className="rounded-[2rem] border border-dashed border-border/50 bg-card/10 backdrop-blur p-8 text-center">
+        <div className="rounded-2xl border border-dashed border-border/50 bg-card/10 backdrop-blur p-8 text-center">
           <LayoutDashboard className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
           <h4 className="text-sm font-black text-foreground uppercase tracking-widest">No Custom Widgets yet</h4>
           <p className="text-xs text-muted-foreground mt-1">Open the widget builder to construct single-metric widgets.</p>
@@ -1480,7 +1480,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                 key={w.id}
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="rounded-[1.75rem] border border-border/60 bg-card/50 backdrop-blur-md p-5 space-y-4 shadow-sm relative group text-left font-sans"
+                className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-md p-5 space-y-4 shadow-sm relative group text-left font-sans"
               >
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -1750,7 +1750,7 @@ export function WidgetBuilder({
   };
 
   return (
-    <div className="overflow-hidden rounded-[2rem] border border-border bg-card/40 backdrop-blur-lg p-6 space-y-4 font-sans text-left">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-lg p-6 space-y-4 font-sans text-left">
       {/* Builder Header Warning banner detailing Single-Metric rule */}
       <div className="pb-3 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>

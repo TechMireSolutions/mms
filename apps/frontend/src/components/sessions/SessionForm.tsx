@@ -7,11 +7,8 @@ import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
 import { toTitleCase, type AppTranslationKey } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
 import { useSessionConfig } from "@/hooks/useSessionConfig";
-import {
-  DEFAULT_SESSIONS_SETTINGS,
-  DEFAULT_SESSIONS_FIELD_DEFS,
-  getSortedFields,
-} from "@mms/shared";
+
+
 import { DatePicker } from "../ui/DatePicker";
 
 const EMPTY: Partial<Session> = { name: "", type: "Hifz", status: "active", startDate: "", endDate: "", baseFee: 0, currency: "PKR", description: "" };
@@ -28,20 +25,16 @@ interface SessionFormProps {
  *
  * A modal form for creating or editing a session.
  */
-export default function SessionForm({ open = true, session, onClose, onSave }: SessionFormProps) {
+export default function SessionForm({ open = true, session, onClose, onSave }: SessionFormProps): React.JSX.Element {
   const { t } = useTranslation();
-  const [data, setData] = useState<Partial<Session>>(session ? { ...session } : { ...EMPTY });
+  const [data, setData] = useState<Partial<Session>>(() => (session ? { ...session } : { ...EMPTY }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { settings, statuses, types } = useSessionConfig();
+  const { settings, statuses, types, fields, customFields, orderedFields } = useSessionConfig();
 
   const statusOptions = statuses.length > 0 ? statuses : ["active", "upcoming", "completed", "cancelled"];
   const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
-
-  const fields = settings.fields || DEFAULT_SESSIONS_SETTINGS.fields || {};
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_SESSIONS_SETTINGS.fieldOrder || [];
 
   const upd = <K extends keyof Session>(f: K, v: Session[K]) => setData((d) => ({ ...d, [f]: v }));
 
@@ -56,10 +49,6 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
       upd("type", typeOptions[0]);
     }
   }, [typeOptions, session, data.type]);
-
-  const orderedFields = useMemo(() => {
-    return getSortedFields(DEFAULT_SESSIONS_FIELD_DEFS, fieldOrder, fields, customFields);
-  }, [fieldOrder, fields, customFields]);
 
   const completeness = useMemo(
     () => calculateModuleFieldsCompleteness(data as Record<string, unknown>, orderedFields, fields),

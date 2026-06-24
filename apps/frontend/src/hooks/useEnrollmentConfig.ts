@@ -4,6 +4,8 @@ import {
   DEFAULT_ENROLLMENTS_FIELD_DEFS,
   ENROLLMENTS_MODULE_CONTRACT,
   getSortedFields,
+  mergeTabbedFields,
+  getFlatFieldsConfig,
   type EnrollmentsSettings,
 } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
@@ -12,10 +14,13 @@ function mergeEnrollmentsSettings(settings: Partial<EnrollmentsSettings> | null 
   return {
     ...DEFAULT_ENROLLMENTS_SETTINGS,
     ...(settings ?? {}),
-    fields: {
-      ...(DEFAULT_ENROLLMENTS_SETTINGS.fields ?? {}),
-      ...(settings?.fields ?? {}),
-    },
+    formTabs: settings?.formTabs ?? DEFAULT_ENROLLMENTS_SETTINGS.formTabs ?? [],
+    enabledTabs: settings?.enabledTabs ?? DEFAULT_ENROLLMENTS_SETTINGS.enabledTabs ?? [],
+    requiredTabs: settings?.requiredTabs ?? DEFAULT_ENROLLMENTS_SETTINGS.requiredTabs ?? [],
+    fields: mergeTabbedFields(
+      DEFAULT_ENROLLMENTS_SETTINGS.fields || {},
+      settings?.fields
+    ),
     customFields: settings?.customFields ?? DEFAULT_ENROLLMENTS_SETTINGS.customFields ?? [],
     fieldOrder: settings?.fieldOrder ?? DEFAULT_ENROLLMENTS_SETTINGS.fieldOrder ?? [],
   };
@@ -55,7 +60,7 @@ export function useEnrollmentConfig() {
     setSettings(merged);
   }, []);
 
-  const fields = settings.fields ?? DEFAULT_ENROLLMENTS_SETTINGS.fields ?? {};
+  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
   const customFields = settings.customFields ?? [];
   const fieldOrder = settings.fieldOrder ?? DEFAULT_ENROLLMENTS_SETTINGS.fieldOrder ?? [];
 
@@ -72,3 +77,4 @@ export function useEnrollmentConfig() {
     updateSettings,
   };
 }
+

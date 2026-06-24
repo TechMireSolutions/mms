@@ -3,6 +3,8 @@ import { Search, TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { JournalEntry, Account } from '@/lib/data/accountingData';
 import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 
 // Money-in account IDs (asset accounts that receive income)
 const MONEY_IN_CREDITS = ["a4000","a4100","a4200","a4300","a4400"]; // Revenue accounts
@@ -123,24 +125,25 @@ export default function CashbookView({ entries, accounts, fmt }: CashbookViewPro
       <nav aria-label="Filter transactions" className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <input 
+          <Input 
             type="search"
             aria-label="Search transactions"
             value={search} 
             onChange={(e) => setSearch(e.target.value)} 
             placeholder="Search transactions…"
-            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
+            className="pl-9 pr-4" 
           />
         </div>
         {(["all","in","out","transfer"] as const).map((f) => (
-          <button 
+          <Button 
             key={f} 
+            variant={filterType === f ? "default" : "outline"}
             onClick={() => setFilterType(f)}
             aria-pressed={filterType === f}
-            className={`px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${filterType === f ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
+            className="rounded-xl text-xs font-bold"
           >
             {f === "all" ? "All" : f === "in" ? "Money In" : f === "out" ? "Money Out" : "Transfers"}
-          </button>
+          </Button>
         ))}
       </nav>
 

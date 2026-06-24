@@ -1,10 +1,7 @@
-/**
- * ExportToolbar
- * A compact Excel / PDF export selector for a grid.
- */
 import React, { useState } from "react";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
+import { Button } from "@/components/ui/button";
 
 export interface ExportColumn {
   header: string;
@@ -139,32 +136,32 @@ export default function ExportToolbar({
     <div className="flex items-center gap-1.5" role="toolbar" aria-label="Export tools">
       {/* Format picker */}
       <div className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold">
-        <button
+        <Button
           type="button"
           aria-pressed={format === "excel"}
           onClick={() => setFormat("excel")}
-          className={`flex items-center gap-1 px-2.5 py-1.5 transition-colors ${format === "excel" ? "bg-success text-success-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+          className={`flex items-center gap-1 h-auto px-2.5 py-1.5 rounded-none shadow-none font-bold transition-colors ${format === "excel" ? "bg-success text-success-foreground hover:bg-success/90" : "bg-card text-muted-foreground hover:bg-muted"}`}
         >
           <FileSpreadsheet className="w-3 h-3" aria-hidden="true" /> Excel
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           aria-pressed={format === "pdf"}
           onClick={() => setFormat("pdf")}
-          className={`flex items-center gap-1 px-2.5 py-1.5 border-l border-border transition-colors ${format === "pdf" ? "bg-destructive text-destructive-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+          className={`flex items-center gap-1 h-auto px-2.5 py-1.5 rounded-none shadow-none border-l border-border font-bold transition-colors ${format === "pdf" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-card text-muted-foreground hover:bg-muted"}`}
         >
           <FileText className="w-3 h-3" aria-hidden="true" /> PDF
-        </button>
+        </Button>
       </div>
       {/* Export button */}
-      <button
+      <Button
         type="button"
         aria-label={`Export as ${format === "excel" ? "Excel" : "PDF"}`}
         onClick={handleExport}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold hover:bg-primary/90 transition-colors"
+        className="flex items-center gap-1.5 h-auto px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold hover:bg-primary/90 transition-colors"
       >
         <Download className="w-3 h-3" aria-hidden="true" /> Export
-      </button>
+      </Button>
     </div>
   );
 }

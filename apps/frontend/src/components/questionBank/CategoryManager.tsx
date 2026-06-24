@@ -3,6 +3,8 @@ import { Plus, Trash2 } from 'lucide-react';
 import useTranslation from '@/hooks/useTranslation';
 import { createQuestionCategory, type QuestionCategory } from '@mms/shared';
 import { FORM_INPUT } from '@/components/ui/formStyles';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface CategoryManagerProps {
   categories: QuestionCategory[];
@@ -30,17 +32,18 @@ export default function CategoryManager({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground m-0">
           {t('questionBank.categoriesTitle')}
         </h4>
-        <button
+        <Button
           type="button"
           onClick={addCategory}
-          className="flex min-h-9 items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
+          variant="outline"
+          className="flex min-h-9 items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 h-auto text-xs font-semibold hover:bg-muted shadow-none"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden />
           {t('questionBank.addCategory')}
-        </button>
+        </Button>
       </div>
       <div className="space-y-2">
         {categories.map((cat) => (
@@ -48,23 +51,23 @@ export default function CategoryManager({
             key={cat.id}
             className="grid grid-cols-[auto_1fr_5rem_5rem_auto] items-center gap-2 rounded-lg border border-border/70 bg-muted/20 p-2"
           >
-            <input
+            <Input
               type="text"
-              className="w-12 rounded-lg border border-border bg-background px-2 py-1.5 text-center text-sm"
+              className="w-12 rounded-lg border border-border bg-background px-2 py-1.5 h-9 text-center text-sm shadow-none"
               value={cat.icon}
               onChange={(e) => update(cat.id, { icon: e.target.value })}
               aria-label={t('questionBank.categoryIcon')}
             />
-            <input
+            <Input
               type="text"
-              className={FORM_INPUT}
+              className={`${FORM_INPUT} h-9 shadow-none`}
               value={cat.name}
               onChange={(e) => update(cat.id, { name: e.target.value })}
               aria-label={t('questionBank.categoryName')}
             />
-            <input
+            <Input
               type="color"
-              className="h-9 w-full cursor-pointer rounded-lg border border-border bg-background"
+              className="h-9 w-full cursor-pointer rounded-lg border border-border bg-background p-0.5 shadow-none"
               value={cat.color}
               onChange={(e) => update(cat.id, { color: e.target.value })}
               aria-label={t('questionBank.categoryColor')}
@@ -75,14 +78,15 @@ export default function CategoryManager({
             >
               {cat.name}
             </span>
-            <button
+            <Button
               type="button"
               onClick={() => removeCategory(cat.id)}
-              className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              variant="ghost"
+              className="rounded-lg p-1.5 h-auto text-muted-foreground hover:bg-destructive/10 hover:text-destructive shadow-none"
               aria-label={t('questionBank.removeCategory')}
             >
               <Trash2 className="h-3.5 w-3.5" aria-hidden />
-            </button>
+            </Button>
           </div>
         ))}
       </div>

@@ -11,6 +11,10 @@ import { calculateQuestionFormCompleteness } from '@/lib/questionBank/questionFo
 import CategorySelector from './CategorySelector';
 import QuestionSourcesTab from './QuestionSourcesTab';
 import QuestionTypeAnswerFields from './QuestionTypeAnswerFields';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import FormSelect from '@/components/ui/FormSelect';
 import {
   APP_LANGUAGES,
   QUESTION_SOURCE_FIELD_IDS,
@@ -434,12 +438,12 @@ export default function QuestionForm({
       return (
         <div key="type">
           <label htmlFor="qb-type" className={FORM_LABEL}>{label}{requiredMark}</label>
-          <select
+          <FormSelect
             id="qb-type"
             className={FORM_SELECT}
             value={questionType}
-            onChange={(e) => {
-              const nextType = e.target.value as QuestionType;
+            onChange={(val) => {
+              const nextType = val as QuestionType;
               const payload = defaultPayloadForQuestionType(nextType, trueLabel, falseLabel);
               setData((d) => ({
                 ...d,
@@ -451,13 +455,11 @@ export default function QuestionForm({
                     : d.text,
               }));
             }}
-          >
-            {config.enabledQuestionTypes.map((k) => (
-              <option key={k} value={k}>
-                {QUESTION_TYPE_ICONS[k]} {typeLabel(k)}
-              </option>
-            ))}
-          </select>
+            options={config.enabledQuestionTypes.map((k) => ({
+              value: k,
+              label: `${QUESTION_TYPE_ICONS[k]} ${typeLabel(k)}`,
+            }))}
+          />
         </div>
       );
     }
@@ -466,16 +468,16 @@ export default function QuestionForm({
       return (
         <div key="difficulty">
           <label htmlFor="qb-difficulty" className={FORM_LABEL}>{label}{requiredMark}</label>
-          <select
+          <FormSelect
             id="qb-difficulty"
             className={FORM_SELECT}
             value={(data.difficulty as string) || 'easy'}
-            onChange={(e) => upd('difficulty', e.target.value)}
-          >
-            {config.enabledDifficulties.map((k) => (
-              <option key={k} value={k}>{difficultyLabel(k)}</option>
-            ))}
-          </select>
+            onChange={(val) => upd('difficulty', val)}
+            options={config.enabledDifficulties.map((k) => ({
+              value: k,
+              label: difficultyLabel(k),
+            }))}
+          />
         </div>
       );
     }
@@ -485,18 +487,16 @@ export default function QuestionForm({
       return (
         <div key="questionLanguage">
           <label htmlFor="qb-question-language" className={FORM_LABEL}>{label}{requiredMark}</label>
-          <select
+          <FormSelect
             id="qb-question-language"
             className={FORM_SELECT}
             value={currentLanguage}
-            onChange={(e) => handleQuestionLanguageChange(e.target.value)}
-          >
-            {APP_LANGUAGES.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {questionLanguageLabel(lang.code)}
-              </option>
-            ))}
-          </select>
+            onChange={handleQuestionLanguageChange}
+            options={APP_LANGUAGES.map((lang) => ({
+              value: lang.code,
+              label: questionLanguageLabel(lang.code),
+            }))}
+          />
         </div>
       );
     }
@@ -517,7 +517,7 @@ export default function QuestionForm({
                   onChange={() => upd('answer', opt)}
                   className="h-4 w-4 flex-shrink-0 accent-primary"
                 />
-                <input
+                <Input
                   type="text"
                   className={FORM_INPUT}
                   value={opt as string}
@@ -537,17 +537,18 @@ export default function QuestionForm({
           <span className={FORM_LABEL}>{label}{requiredMark}</span>
           <div className="flex gap-3">
             {[trueLabel, falseLabel].map((v) => (
-              <button
+              <Button
                 key={v}
                 type="button"
+                variant="outline"
                 onClick={() => {
                   upd('answer', v);
                   upd('options', [trueLabel, falseLabel]);
                 }}
-                className={`flex-1 rounded-lg border py-2 text-sm font-medium ${data.answer === v ? 'border-primary bg-primary/5 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                className={`flex-1 rounded-lg border py-2 text-sm font-medium ${data.answer === v ? 'border-primary bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
               >
                 {v}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -597,16 +598,13 @@ export default function QuestionForm({
       return (
         <div key={field.id}>
           <label className={FORM_LABEL}>{label}{requiredMark}</label>
-          <select
+          <FormSelect
             className={FORM_SELECT}
             value={val as string}
-            onChange={(e) => upd(field.id, e.target.value)}
-          >
-            <option value="">{tForm('questionBank.selectCategory')}</option>
-            {field.options?.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
+            onChange={(val) => upd(field.id, val)}
+            placeholder={tForm('questionBank.selectCategory')}
+            options={field.options ?? []}
+          />
         </div>
       );
     }
@@ -614,11 +612,9 @@ export default function QuestionForm({
     if (field.type === 'boolean') {
       return (
         <div key={field.id} className="flex items-center gap-2 sm:col-span-2">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={!!val}
-            onChange={(e) => upd(field.id, e.target.checked)}
-            className="h-4 w-4 accent-primary"
+            onCheckedChange={(checked) => upd(field.id, !!checked)}
           />
           <span className="text-sm font-medium">{label}</span>
         </div>
@@ -629,7 +625,7 @@ export default function QuestionForm({
       return (
         <div key={field.id}>
           <label className={FORM_LABEL}>{label}{requiredMark}</label>
-          <input
+          <Input
             type="number"
             className={FORM_INPUT}
             value={val as number}
@@ -643,7 +639,7 @@ export default function QuestionForm({
       return (
         <div key={field.id}>
           <label className={FORM_LABEL}>{label}{requiredMark}</label>
-          <input
+          <Input
             className={FORM_INPUT}
             value={Array.isArray(val) ? val.join(', ') : (val as string)}
             onChange={(e) =>
@@ -660,7 +656,7 @@ export default function QuestionForm({
     return (
       <div key={field.id}>
         <label className={FORM_LABEL}>{label}{requiredMark}</label>
-        <input
+        <Input
           type={field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text'}
           className={FORM_INPUT}
           value={val as string}

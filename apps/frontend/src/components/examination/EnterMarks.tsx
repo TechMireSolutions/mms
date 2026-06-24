@@ -10,6 +10,8 @@ import { useLiveCollection } from "@/hooks/useLiveCollection";
 import type { Enrollment } from '@/lib/data/enrollmentData';
 import { getGrade } from "./gradeUtils";
 import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface EnterMarksProps {
   exams: Exam[];
@@ -59,8 +61,8 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
     const classIds = new Set(exam.classIds);
     const enrollmentByStudent = new Map(
       enrollments
-        .filter((e) => classIds.has(e.classId))
-        .map((e) => [String(e.studentId), e]),
+         .filter((e) => classIds.has(e.classId))
+         .map((e) => [String(e.studentId), e]),
     );
     return resolvedStudents
       .filter((s) => enrollmentByStudent.has(String(s.id)))
@@ -106,7 +108,7 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
           {exams.map((e) => {
             const isSelected = selectedExam === e.id;
             return (
-              <button
+              <Button
                 key={e.id}
                 type="button"
                 role="radio"
@@ -115,7 +117,7 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
                 className={`px-3.5 py-2 rounded-lg border text-[12px] font-semibold transition-all ${isSelected ? "border-primary bg-primary/5 text-primary" : "border-border bg-card hover:bg-muted text-foreground"}`}
               >
                 {e.name}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -165,7 +167,7 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
                         </span>
                       )}
                       <div className="flex items-center gap-1.5">
-                        <input
+                        <Input
                           type="number"
                           min={0}
                           max={exam.totalMarks}
@@ -190,13 +192,13 @@ export default function EnterMarks({ exams, results, onSaveResults }: EnterMarks
                 <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> Marks saved!
               </div>
             ) : (
-              <button
+              <Button
                 type="button"
                 onClick={handleSave}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90"
               >
                 <Save className="w-4 h-4" aria-hidden="true" /> Save Marks
-              </button>
+              </Button>
             )}
           </div>
         </>

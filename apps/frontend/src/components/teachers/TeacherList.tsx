@@ -12,6 +12,7 @@ import { formatDate } from '@/lib/db';
 import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey } from '@mms/shared';
 import { useTeacherConfig } from '@/hooks/useTeacherConfig';
 import type { Teacher } from '@/lib/data/teachersData';
+import { Button } from '@/components/ui/button';
 
 const AVATAR_COLORS = [
   'bg-primary/15 text-primary',
@@ -139,37 +140,37 @@ export default function TeacherList({
         <table className="w-full text-sm">
           <thead className="bg-muted/40 border-b border-border/50">
             <tr>
-              <th className="px-4 py-3 text-start">
-                <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('name')}>
+               <th className="px-4 py-3 text-start">
+                <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('name')}>
                   {t('teachers.field.name')} {renderSortIcon('name')}
-                </button>
+                </Button>
               </th>
               {showSpecialization && (
                 <th className="px-4 py-3 text-start hidden sm:table-cell">
-                  <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('specialization')}>
+                  <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('specialization')}>
                     {t('teachers.field.specialization')} {renderSortIcon('specialization')}
-                  </button>
+                  </Button>
                 </th>
               )}
               {showQualification && (
                 <th className="px-4 py-3 text-start hidden md:table-cell">
-                  <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('qualification')}>
+                  <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('qualification')}>
                     {t('teachers.field.qualification')} {renderSortIcon('qualification')}
-                  </button>
+                  </Button>
                 </th>
               )}
               {showJoinDate && (
                 <th className="px-4 py-3 text-start hidden md:table-cell">
-                  <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('joinDate')}>
+                  <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('joinDate')}>
                     {t('teachers.field.joinDate')} {renderSortIcon('joinDate')}
-                  </button>
+                  </Button>
                 </th>
               )}
               {showStatus && (
                 <th className="px-4 py-3 text-start">
-                  <button type="button" className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground" onClick={() => handleSort('status')}>
+                  <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('status')}>
                     {t('teachers.field.status')} {renderSortIcon('status')}
-                  </button>
+                  </Button>
                 </th>
               )}
               {visibleCustomFields.map((field) => (
@@ -230,9 +231,9 @@ export default function TeacherList({
                   <td className="px-4 py-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button type="button" className="p-1.5 rounded-lg hover:bg-muted transition-colors" aria-label={t('common.actions')}>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" aria-label={t('common.actions')}>
                           <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-                        </button>
+                        </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => onEdit(teacher)}>

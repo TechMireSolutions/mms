@@ -1,19 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { Save, QrCode, Bell, Clock, Shield, Scan, ClipboardCheck } from "lucide-react";
+import { Save, QrCode, Bell, Clock, Shield, Scan, Info, Plus, Pencil, Trash2 } from "lucide-react";
 import {
-  DEFAULT_ATTENDANCE_FIELD_DEFS,
-  DEFAULT_ATTENDANCE_SETTINGS,
-  getSortedFields,
-  type ModuleCustomField,
-  type ModuleFieldDef,
   type AttendanceModuleSettings as AttendanceSettingsData,
+  type FieldDefinition,
+  ATTENDANCE_TAB_REGISTRY,
+  INITIAL_ATTENDANCE_FIELD_SEED,
+  type TabDefinition,
 } from "@mms/shared";
 import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import DraggableFieldList from "../ui/DraggableFieldList";
-import { SEMANTIC_BADGE, TOGGLE_THUMB } from "@/lib/semanticTone";
+import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import useTranslation from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
+import { Switch } from "../ui/switch";
+import { Checkbox } from "../ui/checkbox";
+import { Input } from "../ui/input";
+import Modal from "../ui/Modal";
 
 interface AttendanceSettingsProps {
   role: string;
@@ -45,33 +50,137 @@ interface ToggleProps {
 
 function Toggle({ checked, onChange }: ToggleProps) {
   return (
-    <button 
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`relative w-10 rounded-full transition-colors flex items-center ${checked ? "bg-primary" : "bg-border"}`}
-      style={{ height: "22px" }}
-    >
-      <span className={`absolute h-4 w-4 rounded-full ${TOGGLE_THUMB} transition-all ${checked ? "left-5" : "left-1"}`} />
-    </button>
+    <Switch 
+      checked={checked} 
+      onCheckedChange={onChange} 
+    />
   );
 }
 
-/**
- * AttendanceSettings
- * 
- * Provides an interface for administrators to configure global attendance rules,
- * such as late thresholds, QR code enablement, and notifications.
- */
+function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
+  if (!savedOrder || savedOrder.length === 0) return fields;
+  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
+  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
+}
+
+function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
+  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
+  const added = newFieldIds.filter((id) => !kept.includes(id));
+  return [...kept, ...added];
+}
+
 export default function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
   const { t } = useTranslation();
   const { settings, updateSettings } = useAttendanceConfig();
-  const [data, setData] = useState<AttendanceSettingsData>(settings);
   const [saved, setSaved] = useState(false);
 
+  // Prefs state
+  const [workingDays, setWorkingDays] = useState(settings.workingDays);
+  const [cutoffTime, setCutoffTime] = useState(settings.cutoffTime);
+  const [lateThresholdMins, setLateThresholdMins] = useState(settings.lateThresholdMins);
+  const [autoAbsentAfterMins, setAutoAbsentAfterMins] = useState(settings.autoAbsentAfterMins);
+  const [qrEnabled, setQrEnabled] = useState(settings.qrEnabled);
+  const [lowAttendanceThreshold, setLowAttendanceThreshold] = useState(settings.lowAttendanceThreshold);
+  const [notifyParents, setNotifyParents] = useState(settings.notifyParents);
+  const [requireNoteForAbsent, setRequireNoteForAbsent] = useState(settings.requireNoteForAbsent);
+  const [lockAfterSubmit, setLockAfterSubmit] = useState(settings.lockAfterSubmit);
+  const [trackHalfDay, setTrackHalfDay] = useState(settings.trackHalfDay);
+  const [weeklyReport, setWeeklyReport] = useState(settings.weeklyReport);
+  const [attendanceAlerts, setAttendanceAlerts] = useState(settings.attendanceAlerts);
+  const [allowManualOverride, setAllowManualOverride] = useState(settings.allowManualOverride);
+  const [offlineEnabled, setOfflineEnabled] = useState(settings.offlineEnabled);
+  const [geoTagging, setGeoTagging] = useState(settings.geoTagging);
+  const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
+
+  const {
+    formTabs,
+    setFormTabs,
+    tabFields,
+    setTabFields,
+    enabledTabs,
+    setEnabledTabs,
+    requiredTabs,
+    setRequiredTabs,
+    tabFieldEnabled,
+    setTabFieldEnabled,
+    tabFieldRequired,
+    setTabFieldRequired,
+    tabFieldUnique,
+    setTabFieldUnique,
+    tabFieldDefaultValues,
+    setTabFieldDefaultValues,
+    tabFieldPermissions,
+    setTabFieldPermissions,
+    tabFieldOrder,
+    setTabFieldOrder,
+    toggleTabEnabled,
+    toggleTabRequired,
+    toggleFieldEnabled,
+    toggleFieldRequired,
+    toggleFieldUnique,
+    handleReorder,
+  } = useModuleFieldsEditor({
+    initialTabs: ATTENDANCE_TAB_REGISTRY,
+    initialFields: settings.fields || {},
+    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
+    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
+  });
+
+  const [isAddTabModalOpen, setIsAddTabModalOpen] = useState(false);
+  const [newTabLabel, setNewTabLabel] = useState("");
+  const [renamingTabKey, setRenamingTabKey] = useState<string | null>(null);
+  const [renameTabLabel, setRenameTabLabel] = useState("");
+
   useEffect(() => {
-    setData(settings);
+    if (!settings) return;
+    setWorkingDays(settings.workingDays);
+    setCutoffTime(settings.cutoffTime);
+    setLateThresholdMins(settings.lateThresholdMins);
+    setAutoAbsentAfterMins(settings.autoAbsentAfterMins);
+    setQrEnabled(settings.qrEnabled);
+    setLowAttendanceThreshold(settings.lowAttendanceThreshold);
+    setNotifyParents(settings.notifyParents);
+    setRequireNoteForAbsent(settings.requireNoteForAbsent);
+    setLockAfterSubmit(settings.lockAfterSubmit);
+    setTrackHalfDay(settings.trackHalfDay);
+    setWeeklyReport(settings.weeklyReport);
+    setAttendanceAlerts(settings.attendanceAlerts);
+    setAllowManualOverride(settings.allowManualOverride);
+    setOfflineEnabled(settings.offlineEnabled);
+    setGeoTagging(settings.geoTagging);
+    setDefaultViewLayout(settings.defaultViewLayout);
+
+    setEnabledTabs(new Set(settings.enabledTabs || ["basic"]));
+    setRequiredTabs(new Set(settings.requiredTabs || []));
+
+    const coreKeys = new Set(ATTENDANCE_TAB_REGISTRY.map((t: any) => t.key));
+    const customTabs = (settings.formTabs || []).filter((t: any) => !coreKeys.has(t.key));
+    setFormTabs([
+      ...ATTENDANCE_TAB_REGISTRY,
+      ...customTabs
+    ].map((t: any) => ({
+      ...t,
+      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    })));
+
+    const newTabIds = Array.from(new Set([
+      ...ATTENDANCE_TAB_REGISTRY.map((t: any) => t.key),
+      ...(settings.formTabs || []).map((t: any) => t.key)
+    ]));
+    const currentFields = settings.fields || {};
+    setTabFields(Object.fromEntries(newTabIds.map(tabId => [tabId, currentFields[tabId] || []])));
+    setTabFieldEnabled(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.enabled).map((f: any) => f.key))])));
+    setTabFieldRequired(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.required).map((f: any) => f.key))])));
+    setTabFieldUnique(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.unique).map((f: any) => f.key))])));
+    setTabFieldDefaultValues(Object.fromEntries(newTabIds.map(tabId => [
+      tabId,
+      Object.fromEntries((currentFields[tabId] || []).filter((f: any) => f.defaultValue !== undefined).map((f: any) => [f.key, f.defaultValue]))
+    ])));
+    setTabFieldPermissions(Object.fromEntries(newTabIds.map(tabId => [
+      tabId,
+      Object.fromEntries((currentFields[tabId] || []).filter((f: any) => f.permissions).map((f: any) => [f.key, f.permissions as string[]]))
+    ])));
+    setTabFieldOrder(Object.fromEntries(newTabIds.map(tabId => [tabId, (currentFields[tabId] || []).map((f: any) => f.key)])));
   }, [settings]);
 
   if (role !== "admin") {
@@ -84,75 +193,162 @@ export default function AttendanceSettings({ role, mode }: AttendanceSettingsPro
     );
   }
 
-  const set = <K extends keyof AttendanceSettingsData>(k: K, v: AttendanceSettingsData[K]) => { 
-    setData((s) => ({ ...s, [k]: v })); 
-    setSaved(false); 
-  };
+  const handleToggleTabEnabled = (id: string) => { toggleTabEnabled(id); setSaved(false); };
+  const handleToggleTabRequired = (id: string) => { toggleTabRequired(id); setSaved(false); };
+  const handleToggleFieldEnabled = (tabId: string, fieldId: string) => { toggleFieldEnabled(tabId, fieldId); setSaved(false); };
+  const handleToggleFieldRequired = (tabId: string, fieldId: string) => { toggleFieldRequired(tabId, fieldId); setSaved(false); };
+  const handleToggleFieldUnique = (tabId: string, fieldId: string) => { toggleFieldUnique(tabId, fieldId); setSaved(false); };
+  const handleReorderFields = (tabId: string, reorderedFields: FieldDefinition[]) => { handleReorder(tabId, reorderedFields); setSaved(false); };
 
-  const handleSave = () => {
-    updateSettings(data);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-  };
-
-  const showPrefs = !mode || mode === "preferences";
-  const showFields = !mode || mode === "fields";
-
-  const fields = data.fields || DEFAULT_ATTENDANCE_SETTINGS.fields || {};
-  const customFields = data.customFields || [];
-  const fieldOrder = data.fieldOrder || DEFAULT_ATTENDANCE_SETTINGS.fieldOrder || [];
-
-  const orderedFields = getSortedFields(DEFAULT_ATTENDANCE_FIELD_DEFS, fieldOrder, fields, customFields);
-
-  const updateFieldConfig = (fieldKey: string, prop: "enabled" | "required", value: boolean) => {
-    const fieldObj = fields[fieldKey] || { enabled: true, required: false };
-    const updatedFieldObj = { ...fieldObj, [prop]: value };
-    if (prop === "enabled" && !value) {
-      updatedFieldObj.required = false;
-    }
-    setData((s) => ({ ...s, fields: { ...fields, [fieldKey]: updatedFieldObj } }));
+  const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
+    const newKeys = newFields.map((f) => f.key);
+    setTabFieldOrder((prev) => ({
+      ...prev,
+      [tabId]: syncOrder(prev[tabId] || [], newKeys),
+    }));
+    setTabFields((prev) => ({ ...prev, [tabId]: newFields as unknown as FieldDefinition[] }));
     setSaved(false);
   };
 
-  const handleToggleEnabled = (id: string) => {
-    if (DEFAULT_ATTENDANCE_FIELD_DEFS.some(f => f.id === id)) {
-      const cfg = fields[id] || { enabled: true, required: false };
-      updateFieldConfig(id, "enabled", !cfg.enabled);
-    }
-  };
-
-  const handleToggleRequired = (id: string) => {
-    if (DEFAULT_ATTENDANCE_FIELD_DEFS.some(f => f.id === id)) {
-      const cfg = fields[id] || { enabled: true, required: false };
-      updateFieldConfig(id, "required", !cfg.required);
-    } else {
-      const updated = customFields.map(f => f.id === id ? { ...f, required: !f.required } : f);
-      setData((s) => ({ ...s, customFields: updated as unknown as ModuleCustomField[] }));
-      setSaved(false);
-    }
-  };
-
-  const handleReorder = (reordered: ModuleFieldDef[]) => {
-    setData((s) => ({ ...s, fieldOrder: reordered.map(f => f.id) }));
-    setSaved(false);
-  };
-
-  const handleCustomFieldsChange = (newFields: CustomFieldConfig[]) => {
-    const coreIds = DEFAULT_ATTENDANCE_FIELD_DEFS.map(f => f.id);
-    const newIds = newFields.map(f => f.key);
-    const kept = fieldOrder.filter((id: string) => coreIds.includes(id) || newIds.includes(id));
-    const added = newIds.filter((id) => !kept.includes(id));
-
-    setData((s) => ({
-      ...s,
-      customFields: newFields.map(f => ({ ...f, id: f.key })) as unknown as ModuleCustomField[],
-      fieldOrder: [...kept, ...added]
+  const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
+    setTabFields(prev => ({
+      ...prev,
+      [tabId]: (prev[tabId] || []).map(f => f.key === updatedField.key ? updatedField : f)
     }));
     setSaved(false);
   };
 
-  const enabledSet = new Set(Object.keys(fields).filter(k => fields[k].enabled));
-  const requiredSet = new Set(Object.keys(fields).filter(k => fields[k].required));
+  const handleDeleteField = async (tabId: string, fieldId: string) => {
+    setTabFields(prev => ({
+      ...prev,
+      [tabId]: (prev[tabId] || []).filter(f => f.key !== fieldId)
+    }));
+    setTabFieldOrder(prev => ({
+      ...prev,
+      [tabId]: (prev[tabId] || []).filter(id => id !== fieldId)
+    }));
+    setSaved(false);
+  };
+
+  const handleAddTab = (label: string) => {
+    if (!label.trim()) return;
+    const key = `custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 5)}`;
+    const newTab: TabDefinition = {
+      key,
+      label: label.trim(),
+      description: "Custom user-defined tab",
+      enabled: true,
+      order: formTabs.length,
+      isSystem: false,
+    };
+
+    setFormTabs(prev => [...prev, newTab]);
+    setEnabledTabs(prev => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+
+    setTabFields(prev => ({ ...prev, [key]: [] }));
+    setTabFieldEnabled(prev => ({ ...prev, [key]: new Set() }));
+    setTabFieldRequired(prev => ({ ...prev, [key]: new Set() }));
+    setTabFieldUnique(prev => ({ ...prev, [key]: new Set() }));
+    setTabFieldDefaultValues(prev => ({ ...prev, [key]: {} }));
+    setTabFieldPermissions(prev => ({ ...prev, [key]: {} }));
+    setTabFieldOrder(prev => ({ ...prev, [key]: [] }));
+    setSaved(false);
+  };
+
+  const handleDeleteTab = (key: string) => {
+    setFormTabs(prev => prev.filter(t => t.key !== key));
+    setEnabledTabs(prev => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    setRequiredTabs(prev => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    setSaved(false);
+  };
+
+  const handleRenameTab = (key: string, newLabel: string) => {
+    if (!newLabel.trim()) return;
+    setFormTabs(prev => prev.map(t => t.key === key ? { ...t, label: newLabel.trim() } : t));
+    setSaved(false);
+  };
+
+  const buildFieldsMap = (): Record<string, FieldDefinition[]> => {
+    const newFields: Record<string, FieldDefinition[]> = {};
+    formTabs.forEach(tab => {
+      const tabId = tab.key;
+      const combined = (tabFields[tabId] || []).map(f => {
+        const fieldKey = f.key || (f as { id?: string }).id || "";
+        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? f.enabled  ?? false;
+        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? f.required ?? false;
+        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? f.unique   ?? false;
+        const orderArray   = tabFieldOrder[tabId] || [];
+        const orderIdx     = orderArray.indexOf(fieldKey);
+        const order        = orderIdx >= 0 ? orderIdx : (f.order ?? 999);
+        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? f.defaultValue;
+        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? f.permissions;
+
+        return {
+          ...f,
+          key: fieldKey,
+          enabled,
+          required,
+          unique,
+          order,
+          defaultValue,
+          permissions,
+        } as FieldDefinition;
+      });
+
+      newFields[tabId] = combined.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+    });
+    return newFields;
+  };
+
+  const handleSave = () => {
+    const updatedFormTabs = formTabs.map(t => ({
+      ...t,
+      enabled: enabledTabs.has(t.key)
+    }));
+
+    const cfg: AttendanceSettingsData = {
+      ...settings,
+      workingDays,
+      cutoffTime,
+      lateThresholdMins,
+      autoAbsentAfterMins,
+      qrEnabled,
+      lowAttendanceThreshold,
+      notifyParents,
+      requireNoteForAbsent,
+      lockAfterSubmit,
+      trackHalfDay,
+      weeklyReport,
+      attendanceAlerts,
+      allowManualOverride,
+      offlineEnabled,
+      geoTagging,
+      defaultViewLayout,
+      enabledTabs: Array.from(enabledTabs),
+      requiredTabs: Array.from(requiredTabs),
+      formTabs: updatedFormTabs,
+      fields: buildFieldsMap(),
+    };
+
+    updateSettings(cfg);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  const showPrefs = mode === "preferences";
+  const showFields = mode === "fields";
 
   return (
     <section className="max-w-2xl space-y-6">
@@ -173,8 +369,8 @@ export default function AttendanceSettings({ role, mode }: AttendanceSettingsPro
                     type="number" 
                     min={1} 
                     max={60} 
-                    value={data.lateThresholdMins}
-                    onChange={(e) => set("lateThresholdMins", Number(e.target.value))}
+                    value={lateThresholdMins}
+                    onChange={(e) => { setLateThresholdMins(Number(e.target.value)); setSaved(false); }}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
                   <span className="text-xs text-muted-foreground">min</span>
@@ -188,15 +384,15 @@ export default function AttendanceSettings({ role, mode }: AttendanceSettingsPro
                     type="number" 
                     min={10} 
                     max={120} 
-                    value={data.autoAbsentAfterMins}
-                    onChange={(e) => set("autoAbsentAfterMins", Number(e.target.value))}
+                    value={autoAbsentAfterMins}
+                    onChange={(e) => { setAutoAbsentAfterMins(Number(e.target.value)); setSaved(false); }}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
                   <span className="text-xs text-muted-foreground">min</span>
                 </div>
               </SettingRow>
               <SettingRow label="Lock After Submit" sub="Prevent edits once attendance is submitted">
-                <Toggle checked={data.lockAfterSubmit} onChange={(v) => set("lockAfterSubmit", v)} />
+                <Toggle checked={lockAfterSubmit} onChange={(v) => { setLockAfterSubmit(v); setSaved(false); }} />
               </SettingRow>
             </div>
           </article>
@@ -209,7 +405,7 @@ export default function AttendanceSettings({ role, mode }: AttendanceSettingsPro
             </header>
             <div className="px-4">
               <SettingRow label="Enable QR Attendance" sub="Allow teachers to scan student QR codes to mark attendance">
-                <Toggle checked={data.qrEnabled} onChange={(v) => set("qrEnabled", v)} />
+                <Toggle checked={qrEnabled} onChange={(v) => { setQrEnabled(v); setSaved(false); }} />
               </SettingRow>
             </div>
           </article>
@@ -229,18 +425,18 @@ export default function AttendanceSettings({ role, mode }: AttendanceSettingsPro
                     type="number" 
                     min={50} 
                     max={100} 
-                    value={data.lowAttendanceThreshold}
-                    onChange={(e) => set("lowAttendanceThreshold", Number(e.target.value))}
+                    value={lowAttendanceThreshold}
+                    onChange={(e) => { setLowAttendanceThreshold(Number(e.target.value)); setSaved(false); }}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
                   <span className="text-xs text-muted-foreground">%</span>
                 </div>
               </SettingRow>
               <SettingRow label="Notify Parents" sub="Send SMS/WhatsApp to parent on student absence">
-                <Toggle checked={data.notifyParents} onChange={(v) => set("notifyParents", v)} />
+                <Toggle checked={notifyParents} onChange={(v) => { setNotifyParents(v); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Require Note for Absent" sub="Teacher must add a note when marking a student absent">
-                <Toggle checked={data.requireNoteForAbsent} onChange={(v) => set("requireNoteForAbsent", v)} />
+                <Toggle checked={requireNoteForAbsent} onChange={(v) => { setRequireNoteForAbsent(v); setSaved(false); }} />
               </SettingRow>
             </div>
           </article>
@@ -253,42 +449,40 @@ export default function AttendanceSettings({ role, mode }: AttendanceSettingsPro
             </header>
             <div className="px-4">
               <SettingRow label="Offline Mode" sub="Allow teachers to mark attendance without internet; syncs when reconnected">
-                <Toggle checked={data.offlineEnabled ?? true} onChange={(v) => set("offlineEnabled", v)} />
+                <Toggle checked={offlineEnabled} onChange={(v) => { setOfflineEnabled(v); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Geo-location Tagging" sub="Record teacher's GPS coordinates when submitting attendance">
-                <Toggle checked={data.geoTagging ?? false} onChange={(v) => set("geoTagging", v)} />
+                <Toggle checked={geoTagging} onChange={(v) => { setGeoTagging(v); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Default View Layout" sub="Select default layout format for attendance records in work view">
                 <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
-                  <button
+                  <Button
                     type="button"
-                    onClick={() => set("defaultViewLayout", "list")}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                      (data.defaultViewLayout || "list") === "list"
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    variant={(defaultViewLayout || "list") === "list" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => { setDefaultViewLayout("list"); setSaved(false); }}
+                    className="h-7 text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+                    data-state={(defaultViewLayout || "list") === "list" ? "active" : "inactive"}
                   >
                     List View
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
-                    onClick={() => set("defaultViewLayout", "cards")}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                      data.defaultViewLayout === "cards"
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    variant={defaultViewLayout === "cards" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => { setDefaultViewLayout("cards"); setSaved(false); }}
+                    className="h-7 text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+                    data-state={defaultViewLayout === "cards" ? "active" : "inactive"}
                   >
                     Card Grid
-                  </button>
+                  </Button>
                 </div>
               </SettingRow>
               <SettingRow label="Facial Recognition" sub="AI-powered face scan for attendance (coming soon)">
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>
               </SettingRow>
               <SettingRow label="Daily Auto-Lock" sub="Automatically lock attendance after end-of-day submission">
-                <Toggle checked={data.lockAfterSubmit} onChange={(v) => set("lockAfterSubmit", v)} />
+                <Toggle checked={lockAfterSubmit} onChange={(v) => { setLockAfterSubmit(v); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Audit Logging" sub="Record all edits and submissions in an audit trail (always on)">
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>
@@ -299,42 +493,254 @@ export default function AttendanceSettings({ role, mode }: AttendanceSettingsPro
       )}
 
       {showFields && (
-        <article className="rounded-xl border border-border bg-card overflow-hidden p-5 space-y-4 text-left">
-          <header className="pb-1 border-b border-border/60 flex items-center gap-2">
-            <ClipboardCheck className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold text-foreground m-0">Attendance Grid Fields</h2>
-          </header>
-
-          <DraggableFieldList
-            tabId="attendance-fields"
-            fields={orderedFields}
-            enabledSet={enabledSet}
-            requiredSet={requiredSet}
-            onToggleEnabled={handleToggleEnabled}
-            onToggleRequired={handleToggleRequired}
-            onReorder={handleReorder}
-          />
-
-          <div className="border-t border-border pt-4">
-            <CustomFieldsBuilder
-              fields={customFields as unknown as CustomFieldConfig[]}
-              droppableId="custom-fields-attendance"
-              onChange={handleCustomFieldsChange}
-            />
+        <div className="space-y-4 text-left">
+          {/* Info Banner */}
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-left">
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-xs">Dynamic Fields Manager</h4>
+              <p className="text-[11px] mt-0.5 text-info/90">
+                Configure visible sections, reorder fields, and manage custom metadata definitions.
+              </p>
+            </div>
           </div>
-        </article>
+
+          {formTabs.map((tab) => {
+            const tabId = tab.key;
+            const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
+            const tabDesc = tab.description;
+            const tabDefs = tabFields[tabId] || [];
+            const enabledSet = tabFieldEnabled[tabId] || new Set();
+            const requiredSet = tabFieldRequired[tabId] || new Set();
+            const isOn = tabId === "basic" ? true : enabledTabs.has(tabId);
+            const isReq = requiredTabs.has(tabId);
+
+            return (
+              <section key={tabId} className="rounded-xl border border-border bg-card overflow-hidden text-left">
+                <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={isOn}
+                      onCheckedChange={tabId !== "basic" ? () => handleToggleTabEnabled(tabId) : undefined}
+                      aria-label={`Enable Tab ${tabLabel}`}
+                      disabled={tabId === "basic"}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 ml-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-foreground">{tabLabel}</span>
+                      {!tab.isSystem && (
+                        <div className="flex items-center gap-1.5 ml-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => {
+                              setRenamingTabKey(tabId);
+                              setRenameTabLabel(tab.label);
+                            }}
+                            className="p-1 h-6 w-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none flex items-center justify-center"
+                            title="Rename Tab"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => handleDeleteTab(tabId)}
+                            className="p-1 h-6 w-6 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
+                            title="Delete Tab"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{tabDesc}</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
+                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                  </span>
+                  {tabId !== "basic" && isOn && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => handleToggleTabRequired(tabId)}
+                      className={`flex-shrink-0 px-2.5 py-1 h-auto text-[10px] font-bold border transition-all shadow-none ml-2
+                        ${
+                          isReq
+                            ? "bg-destructive/10 border-destructive/30 text-destructive hover:bg-destructive/20 hover:text-destructive"
+                            : "bg-muted border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                      {isReq ? "Required" : "Optional"}
+                    </Button>
+                  )}
+                </div>
+
+                {isOn && (
+                  <div className="p-3 space-y-3">
+                    <CoreFieldEditorList
+                      tabId={tabId}
+                      fields={getOrderedFields(tabDefs, tabFieldOrder[tabId])}
+                      enabledSet={enabledSet}
+                      requiredSet={requiredSet}
+                      onToggleEnabled={(fieldId: string) => handleToggleFieldEnabled(tabId, fieldId)}
+                      onToggleRequired={(fieldId: string) => handleToggleFieldRequired(tabId, fieldId)}
+                      onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
+                      onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
+                      isUniqueField={(tid: string, fid: string) => tabFieldUnique[tid]?.has(fid) || false}
+                      isCoreField={(key: string) => INITIAL_ATTENDANCE_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+                      defaultValues={tabFieldDefaultValues[tabId]}
+                      permissions={tabFieldPermissions[tabId]}
+                      onChangeDefaults={(fieldId: string, val: unknown) => {
+                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                        setSaved(false);
+                      }}
+                      onChangePermissions={(fieldId: string, roles: string[]) => {
+                        setTabFieldPermissions(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: roles } }));
+                        setSaved(false);
+                      }}
+                      onEditField={(f: FieldDefinition) => handleEditField(tabId, f)}
+                      onDeleteField={(id: string) => handleDeleteField(tabId, id)}
+                      labels={{
+                        required: "Required",
+                        optional: "Optional",
+                        unique: "Unique",
+                        standard: "Standard",
+                      }}
+                    />
+                    <div className="border-t border-border pt-3">
+                      <CustomFieldsBuilder
+                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        droppableId={`custom-fields-${tabId}`}
+                        onChange={(f) => handleCustomFieldsChange(tabId, f)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })}
+
+          <div className="flex justify-end pt-2">
+            <Button
+              type="button"
+              onClick={() => setIsAddTabModalOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-none"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Custom Tab</span>
+            </Button>
+          </div>
+        </div>
       )}
 
+      {/* Add Tab Modal */}
+      <Modal
+        open={isAddTabModalOpen}
+        onClose={() => {
+          setIsAddTabModalOpen(false);
+          setNewTabLabel("");
+        }}
+        title="Add Custom Tab"
+        icon={Plus}
+        footer={
+          <div className="flex justify-end gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddTabModalOpen(false);
+                setNewTabLabel("");
+              }}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                handleAddTab(newTabLabel);
+                setIsAddTabModalOpen(false);
+                setNewTabLabel("");
+              }}
+              disabled={!newTabLabel.trim()}
+              type="button"
+            >
+              Add Tab
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-left">
+          <label htmlFor="newTabLabel" className="text-xs font-semibold text-foreground">Tab Name *</label>
+          <Input
+            id="newTabLabel"
+            value={newTabLabel}
+            onChange={(e) => setNewTabLabel(e.target.value)}
+            placeholder="e.g. Extra Info"
+            autoFocus
+          />
+        </div>
+      </Modal>
+
+      {/* Rename Tab Modal */}
+      <Modal
+        open={renamingTabKey !== null}
+        onClose={() => {
+          setRenamingTabKey(null);
+          setRenameTabLabel("");
+        }}
+        title="Rename Custom Tab"
+        icon={Pencil}
+        footer={
+          <div className="flex justify-end gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRenamingTabKey(null);
+                setRenameTabLabel("");
+              }}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (renamingTabKey) {
+                  handleRenameTab(renamingTabKey, renameTabLabel);
+                }
+                setRenamingTabKey(null);
+                setRenameTabLabel("");
+              }}
+              disabled={!renameTabLabel.trim()}
+              type="button"
+            >
+              Rename Tab
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-left">
+          <label htmlFor="renameTabLabel" className="text-xs font-semibold text-foreground">Tab Name *</label>
+          <Input
+            id="renameTabLabel"
+            value={renameTabLabel}
+            onChange={(e) => setRenameTabLabel(e.target.value)}
+            placeholder="e.g. Custom Fields"
+            autoFocus
+          />
+        </div>
+      </Modal>
+
       {/* Actions */}
-      <div className="flex gap-3">
-        <button 
+      <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
+        <Button
           onClick={handleSave}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className={cn("ml-auto", saved && "bg-success hover:bg-success/90 text-success-foreground")}
         >
           <Save className="w-3.5 h-3.5" />
           {saved ? "Saved!" : "Save Settings"}
-        </button>
-      </div>
+        </Button>
+      </footer>
     </section>
   );
 }

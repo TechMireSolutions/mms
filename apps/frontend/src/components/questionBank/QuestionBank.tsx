@@ -5,6 +5,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import useTranslation from '@/hooks/useTranslation';
 import { useQuestionBankConfig } from '@/hooks/useQuestionBankConfig';
 import {
@@ -185,7 +187,7 @@ export default function QuestionBank({
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <input
+          <Input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -194,28 +196,30 @@ export default function QuestionBank({
             className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           {search && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setSearch('')}
               aria-label={t('questionBank.clearSearch')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground h-auto p-0 hover:bg-transparent"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
-            </button>
+            </Button>
           )}
         </div>
         {config.isFieldEnabled('categoryId') && config.categories.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
+              <Button
                 type="button"
-                className={`flex min-h-11 items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium ${filterCats.length ? 'border-primary/30 bg-primary/5 text-primary' : 'border-border bg-card hover:bg-muted'}`}
+                variant="outline"
+                className={`flex min-h-11 items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium ${filterCats.length ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10' : 'border-border bg-card hover:bg-muted'}`}
               >
                 <Filter className="h-3.5 w-3.5" aria-hidden />
                 {t('questionBank.category')}
                 {filterCats.length > 0 && ` (${filterCats.length})`}
                 <ChevronDown className="h-3 w-3" aria-hidden />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="z-50 w-48 rounded-xl border border-border bg-card p-1 shadow-lg">
               <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold">
@@ -240,15 +244,16 @@ export default function QuestionBank({
         {config.isFieldEnabled('difficulty') && config.enabledDifficulties.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
+              <Button
                 type="button"
-                className={`flex min-h-11 items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium ${filterDiff.length ? 'border-primary/30 bg-primary/5 text-primary' : 'border-border bg-card hover:bg-muted'}`}
+                variant="outline"
+                className={`flex min-h-11 items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium ${filterDiff.length ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10' : 'border-border bg-card hover:bg-muted'}`}
               >
                 <Filter className="h-3.5 w-3.5" aria-hidden />
                 {t('questionBank.filterDifficulty')}
                 {filterDiff.length > 0 && ` (${filterDiff.length})`}
                 <ChevronDown className="h-3 w-3" aria-hidden />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="z-50 w-36 rounded-xl border border-border bg-card p-1 shadow-lg">
               <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold">
@@ -271,14 +276,14 @@ export default function QuestionBank({
           </DropdownMenu>
         )}
         {!hideToolbarAdd && (
-          <button
+          <Button
             type="button"
             onClick={() => { setEditQ(null); setShowModal(true); }}
-            className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 shadow-sm"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {t('questionBank.addQuestion')}
-          </button>
+          </Button>
         )}
         {columnCustomizer && (
           <ModuleColumnCustomizer
@@ -396,22 +401,26 @@ export default function QuestionBank({
                       })}
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => { setEditQ(q); setShowModal(true); }}
-                      className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                       aria-label={t('questionBank.editQuestionAria', { text: q.text })}
                     >
                       <Edit2 className="h-3.5 w-3.5" aria-hidden />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => onUpdate(questions.filter((x) => x.id !== q.id))}
-                      className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       aria-label={t('questionBank.deleteQuestionAria', { text: q.text })}
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </motion.div>
@@ -522,22 +531,26 @@ export default function QuestionBank({
                         )}
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                            <button
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="icon"
                               onClick={() => { setEditQ(q); setShowModal(true); }}
-                              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                              className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                               aria-label={t('questionBank.editQuestionAria', { text: q.text })}
                             >
                               <Edit2 className="h-3.5 w-3.5" aria-hidden />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="icon"
                               onClick={() => onUpdate(questions.filter((x) => x.id !== q.id))}
-                              className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                               aria-label={t('questionBank.deleteQuestionAria', { text: q.text })}
                             >
                               <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </motion.tr>

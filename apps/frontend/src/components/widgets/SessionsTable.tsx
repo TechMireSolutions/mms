@@ -3,6 +3,7 @@ import { Users, MapPin, Radio } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { type Session } from "../../lib/data/sessionsData";
+import { Button } from "../ui/button";
 
 export interface UpcomingSessionItem {
   id: number;
@@ -75,7 +76,7 @@ export default function SessionsTable({ title }: { title?: string }) {
             {sessions.length} scheduled
           </span>
         </div>
-        <button className="text-[12px] font-semibold text-primary hover:underline">View all</button>
+        <Button variant="link" className="text-[12px] font-semibold h-auto p-0">View all</Button>
       </header>
 
       <div className="divide-y divide-border/50">

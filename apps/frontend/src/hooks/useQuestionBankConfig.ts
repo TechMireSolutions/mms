@@ -8,6 +8,7 @@ import {
   getSortedFields,
   mergeQuestionCategories,
   normalizeQuestionBankSettings,
+  getFlatFieldsConfig,
   type AppTranslationKey,
   type ModuleFieldDef,
   type QuestionBankSettings,
@@ -64,7 +65,7 @@ export function useQuestionBankConfig(
     setSettings(merged);
   }, []);
 
-  const fields = settings.fields ?? DEFAULT_QUESTION_BANK_SETTINGS.fields ?? {};
+  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
   const customFields = settings.customFields ?? [];
   const fieldOrder = settings.fieldOrder ?? DEFAULT_QUESTION_BANK_SETTINGS.fieldOrder ?? [];
 
@@ -147,3 +148,4 @@ export function useQuestionBankConfig(
     updateSettings,
   };
 }
+

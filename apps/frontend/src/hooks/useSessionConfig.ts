@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_SESSIONS_SETTINGS,
   SESSIONS_MODULE_CONTRACT,
+  DEFAULT_SESSIONS_FIELD_DEFS,
+  getSortedFields,
+  mergeTabbedFields,
+  getFlatFieldsConfig,
   type SessionsSettings,
 } from "@mms/shared";
 import { getCollection, getObject, saveObject } from "@/lib/db";
@@ -14,10 +18,13 @@ function mergeSessionSettings(settings: Partial<SessionsSettings> | null | undef
   return {
     ...DEFAULT_SESSIONS_SETTINGS,
     ...(settings ?? {}),
-    fields: {
-      ...(DEFAULT_SESSIONS_SETTINGS.fields ?? {}),
-      ...(settings?.fields ?? {}),
-    },
+    formTabs: settings?.formTabs ?? DEFAULT_SESSIONS_SETTINGS.formTabs ?? [],
+    enabledTabs: settings?.enabledTabs ?? DEFAULT_SESSIONS_SETTINGS.enabledTabs ?? [],
+    requiredTabs: settings?.requiredTabs ?? DEFAULT_SESSIONS_SETTINGS.requiredTabs ?? [],
+    fields: mergeTabbedFields(
+      DEFAULT_SESSIONS_SETTINGS.fields || {},
+      settings?.fields
+    ),
     customFields: settings?.customFields ?? DEFAULT_SESSIONS_SETTINGS.customFields ?? [],
     fieldOrder: settings?.fieldOrder ?? DEFAULT_SESSIONS_SETTINGS.fieldOrder ?? [],
   };
@@ -63,10 +70,22 @@ export function useSessionConfig() {
     setSettings(merged);
   }, []);
 
+  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
+  const customFields = settings.customFields ?? [];
+  const fieldOrder = settings.fieldOrder ?? DEFAULT_SESSIONS_SETTINGS.fieldOrder ?? [];
+
+  const orderedFields = useMemo(() => {
+    return getSortedFields(DEFAULT_SESSIONS_FIELD_DEFS, fieldOrder, fields, customFields);
+  }, [fieldOrder, fields, customFields]);
+
   return {
     settings,
     statuses,
     types,
+    fields,
+    customFields,
+    orderedFields,
     updateSettings,
   };
 }
+

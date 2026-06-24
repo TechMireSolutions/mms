@@ -4,6 +4,8 @@ import {
   DEFAULT_ACCOUNT_FIELD_DEFS,
   ACCOUNTING_MODULE_CONTRACT,
   getSortedFields,
+  mergeTabbedFields,
+  getFlatFieldsConfig,
   type AccountingSettings,
 } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
@@ -12,10 +14,13 @@ function mergeAccountingSettings(settings: Partial<AccountingSettings> | null | 
   return {
     ...DEFAULT_ACCOUNTING_SETTINGS,
     ...(settings ?? {}),
-    fields: {
-      ...(DEFAULT_ACCOUNTING_SETTINGS.fields ?? {}),
-      ...(settings?.fields ?? {}),
-    },
+    formTabs: settings?.formTabs ?? DEFAULT_ACCOUNTING_SETTINGS.formTabs ?? [],
+    enabledTabs: settings?.enabledTabs ?? DEFAULT_ACCOUNTING_SETTINGS.enabledTabs ?? [],
+    requiredTabs: settings?.requiredTabs ?? DEFAULT_ACCOUNTING_SETTINGS.requiredTabs ?? [],
+    fields: mergeTabbedFields(
+      DEFAULT_ACCOUNTING_SETTINGS.fields || {},
+      settings?.fields
+    ),
     customFields: settings?.customFields ?? DEFAULT_ACCOUNTING_SETTINGS.customFields ?? [],
     fieldOrder: settings?.fieldOrder ?? DEFAULT_ACCOUNTING_SETTINGS.fieldOrder ?? [],
   };
@@ -55,7 +60,7 @@ export function useAccountingConfig() {
     setSettings(merged);
   }, []);
 
-  const fields = settings.fields ?? DEFAULT_ACCOUNTING_SETTINGS.fields ?? {};
+  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
   const customFields = settings.customFields ?? [];
   const fieldOrder = settings.fieldOrder ?? DEFAULT_ACCOUNTING_SETTINGS.fieldOrder ?? [];
 
@@ -72,3 +77,4 @@ export function useAccountingConfig() {
     updateSettings,
   };
 }
+

@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import {
-  getStudentRegistrationFields,
   normalizeStoredStudent,
-  type StudentFieldDef,
-  type StudentDuplicateReason,
   type AppTranslationKey,
+  type FieldDefinition,
+  type StudentDuplicateReason,
+  DEFAULT_STUDENT_ENABLED_TABS,
+  DEFAULT_STUDENT_REQUIRED_TABS,
 } from "@mms/shared";
 import type { Student } from "@/lib/data/studentsData";
 import type { Contact } from "@mms/shared";
@@ -21,8 +22,13 @@ import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import ContactPicker from "../contactLink/ContactPicker";
 import { calculateKeyedUnitsCompleteness } from "@/lib/formCompleteness";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "../ui/formStyles";
+import { FORM_INPUT, FORM_LABEL } from "../ui/formStyles";
 import { useStudentConfig } from "@/hooks/useStudentConfig";
+import { buildDynamicStudentSchema, formatZodIssues, type ValidationError } from "@/lib/studentConfig/validationSchema";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import FormSelect from "../ui/FormSelect";
+import { Checkbox } from "../ui/checkbox";
 
 interface StudentFormData {
   contactId: string | number | null;
@@ -73,58 +79,54 @@ function CustomFieldInput({
   value,
   onChange,
 }: {
-  field: StudentFieldDef;
+  field: FieldDefinition;
   value: unknown;
   onChange: (next: unknown) => void;
 }): React.JSX.Element {
   if (field.type === "textarea") {
     return (
-      <textarea
-        className={FORM_TEXTAREA}
+      <Textarea
+        className="bg-background text-xs py-1.5 min-h-[80px]"
         value={(value as string) ?? ""}
         onChange={(e) => onChange(e.target.value)}
         required={field.required}
+        placeholder={field.placeholder || ""}
       />
     );
   }
   if (field.type === "select") {
     return (
-      <select
-        className={FORM_SELECT}
+      <FormSelect
+        placeholder="—"
         value={(value as string) ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        required={field.required}
-      >
-        <option value="">—</option>
-        {field.options?.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
+        onChange={(val) => onChange(val)}
+        options={field.options || []}
+      />
     );
   }
   if (field.type === "boolean") {
     return (
-      <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
-        <input
-          type="checkbox"
+      <div className="flex items-center gap-2.5 py-2">
+        <Checkbox
           checked={Boolean(value)}
-          onChange={(e) => onChange(e.target.checked)}
-          className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
+          onCheckedChange={(checked) => onChange(Boolean(checked))}
+          id={`field-${field.key}`}
         />
-        <span className="text-xs font-medium text-foreground">{field.label}</span>
-      </label>
+        <label htmlFor={`field-${field.key}`} className="text-xs font-medium text-foreground cursor-pointer select-none">
+          {field.label}
+        </label>
+      </div>
     );
   }
   if (field.type === "number") {
     return (
-      <input
+      <Input
         type="number"
         className={FORM_INPUT}
         value={(value as number) ?? ""}
         onChange={(e) => onChange(e.target.value)}
         required={field.required}
+        placeholder={field.placeholder || ""}
       />
     );
   }
@@ -138,12 +140,13 @@ function CustomFieldInput({
     );
   }
   return (
-    <input
+    <Input
       type="text"
       className={FORM_INPUT}
       value={(value as string) ?? ""}
       onChange={(e) => onChange(e.target.value)}
       required={field.required}
+      placeholder={field.placeholder || ""}
     />
   );
 }
@@ -168,32 +171,37 @@ export default function StudentForm({
   const { t } = useTranslation();
   const { updateContact } = useContactMutations();
   const { settings, statuses, guardianContactDefaults } = useStudentConfig();
+  const settingsFields = (settings.fields as Record<string, FieldDefinition[]>) || {};
   const defaultStatus = statuses[0] || "";
-  const fields = settings.fields || {};
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || [];
 
-  const registrationFields = useMemo(
-    () => getStudentRegistrationFields(fieldOrder, fields, customFields),
-    [fieldOrder, fields, customFields],
-  );
-
-  const guardianFields = useMemo(
-    () =>
-      registrationFields.filter(
-        (f) => f.id === "fatherLink" || f.id === "motherLink" || f.id === "guardianLink",
-      ),
-    [registrationFields],
-  );
-  const customFormFields = useMemo(
-    () => registrationFields.filter((f) => f.isCustom),
-    [registrationFields],
-  );
-  const showRegisteredDate = fields.registeredDate?.enabled !== false;
-
+  const [tab, setTab] = useState<string>("basic");
   const [data, setData] = useState<StudentFormData>(() => buildInitialData(student, defaultStatus));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState<ValidationError[]>([]);
+
+  const enabledTabsSet = useMemo(() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS), [settings.enabledTabs]);
+  const requiredTabsSet = useMemo(() => new Set(settings.requiredTabs || DEFAULT_STUDENT_REQUIRED_TABS), [settings.requiredTabs]);
+
+  const visibleTabs = useMemo(() => {
+    const tabsFromConfig = settings.formTabs || [];
+    return [...tabsFromConfig]
+      .sort((a, b) => a.order - b.order)
+      .filter((tabDef) => {
+        if (!tabDef.enabled) return false;
+        if (tabDef.key === "basic") return true;
+        return enabledTabsSet.has(tabDef.key);
+      });
+  }, [settings.formTabs, enabledTabsSet]);
+
+  const formTabs = useMemo(
+    () =>
+      visibleTabs.map((t) => ({
+        key: t.key,
+        label: t.label,
+      })),
+    [visibleTabs],
+  );
 
   useEffect(() => {
     setData((current) => (current.status || !defaultStatus ? current : { ...current, status: defaultStatus }));
@@ -223,16 +231,20 @@ export default function StudentForm({
 
   const completeness = useMemo(() => {
     const units: { key: string; enabled?: boolean }[] = [{ key: "contactId" }];
-    for (const field of registrationFields) {
-      const enabled = field.isCustom ? true : fields[field.id]?.enabled !== false;
-      if (!enabled) continue;
-      if (field.id === "fatherLink") units.push({ key: "fatherContactId" });
-      else if (field.id === "motherLink") units.push({ key: "motherContactId" });
-      else if (field.id === "guardianLink") units.push({ key: "guardianContactId" });
-      else if (field.id !== "gender" && field.id !== "dob") units.push({ key: field.id });
-    }
+    const fields = settingsFields;
+    
+    Object.entries(fields).forEach(([tabId, tabFields]) => {
+      if (tabId !== "basic" && !enabledTabsSet.has(tabId)) return;
+      tabFields.forEach((field) => {
+        if (!field.enabled) return;
+        if (field.key === "fatherLink") units.push({ key: "fatherContactId" });
+        else if (field.key === "motherLink") units.push({ key: "motherContactId" });
+        else if (field.key === "guardianLink") units.push({ key: "guardianContactId" });
+        else if (field.key !== "gender" && field.key !== "dob") units.push({ key: field.key });
+      });
+    });
     return calculateKeyedUnitsCompleteness(data, units);
-  }, [data, registrationFields, fields]);
+  }, [data, settingsFields, enabledTabsSet]);
 
   const linkedGender = linkedContact?.gender?.trim() || "";
   const linkedDob = linkedContact?.dob?.trim() || "";
@@ -278,59 +290,60 @@ export default function StudentForm({
     setData((d) => ({ ...d, motherContactId: id, motherName: contact?.name ?? "" }));
   };
 
+  const handlePageChangeTab = (nextTab: string): void => {
+    setTab(nextTab);
+  };
+
   const handleGuardianSelect = (id: string | number | null, contact?: Contact | null): void => {
     setData((d) => ({ ...d, guardianContactId: id, guardianName: contact?.name ?? "" }));
   };
 
   const handleSave = async (): Promise<void> => {
     setError("");
+    setErrors([]);
 
-    if (!data.contactId) {
-      setError(t("students.form.contactRequired"));
-      return;
-    }
+    const fields = settingsFields;
+    const schema = buildDynamicStudentSchema(
+      settings,
+      enabledTabsSet,
+      requiredTabsSet,
+      fields,
+      "en"
+    );
 
-    if (fields.gender?.required && !linkedGender) {
-      setError(t("students.form.genderRequiredOnContact"));
-      return;
-    }
-    if (fields.dob?.required && !linkedDob) {
-      setError(t("students.form.dobRequiredOnContact"));
-      return;
-    }
-    if (fields.fatherLink?.required && !data.fatherContactId) {
-      setError(t("students.form.fatherRequired"));
-      return;
-    }
-    if (fields.motherLink?.required && !data.motherContactId) {
-      setError(t("students.form.motherRequired"));
-      return;
-    }
-    if (fields.guardianLink?.required && !data.guardianContactId) {
-      setError(t("students.form.guardianLinkRequired"));
-      return;
-    }
-    if (fields.registeredDate?.required && !data.registeredDate) {
-      setError(t("students.form.registeredDateRequired"));
-      return;
-    }
-    if (
-      settings.requireGuardian &&
-      !data.fatherContactId &&
-      !data.motherContactId &&
-      !data.guardianContactId
-    ) {
-      setError(t("students.form.guardianRequired"));
-      return;
-    }
+    const validationData = {
+      ...data,
+      gender: linkedGender,
+      dob: linkedDob,
+    };
 
-    for (const field of customFields) {
-      if (!field.required) continue;
-      const val = data[field.id];
-      if (val === undefined || val === null || val === "" || val === false) {
-        setError(t("students.form.customFieldRequired", { label: field.label }));
+    const result = schema.safeParse(validationData);
+    if (!result.success) {
+      const validationErrors = formatZodIssues(result.error, validationData, fields);
+      if (validationErrors.length > 0) {
+        setErrors(validationErrors);
+        setError(validationErrors[0].message);
+        if (validationErrors[0].tabId) {
+          setTab(validationErrors[0].tabId);
+        }
         return;
       }
+    }
+
+    // Gender & DOB requirements checks since they are part of contact
+    const basicFields = fields.basic || [];
+    const genderDef = basicFields.find((f: FieldDefinition) => f.key === "gender");
+    const dobDef = basicFields.find((f: FieldDefinition) => f.key === "dob");
+
+    if (genderDef?.required && !linkedGender) {
+      setError(t("students.form.genderRequiredOnContact"));
+      setTab("basic");
+      return;
+    }
+    if (dobDef?.required && !linkedDob) {
+      setError(t("students.form.dobRequiredOnContact"));
+      setTab("basic");
+      return;
     }
 
     setSaving(true);
@@ -365,11 +378,44 @@ export default function StudentForm({
     setSaving(false);
   };
 
-  const renderRegistrationField = (field: StudentFieldDef): React.ReactNode => {
-    const isEnabled = field.isCustom ? true : fields[field.id]?.enabled !== false;
-    if (!isEnabled) return null;
+  const renderFieldByKey = (field: FieldDefinition): React.ReactNode => {
+    if (!field.enabled) return null;
 
-    if (field.id === "fatherLink") {
+    if (field.key === "gender") {
+      return (
+        <div key="gender">
+          <label className={FORM_LABEL}>
+            Gender (contact)
+            {field.required ? " *" : ""}
+          </label>
+          <Input
+            disabled
+            value={linkedGender || "—"}
+            className={FORM_INPUT}
+          />
+          <p className="text-[10px] text-muted-foreground mt-0.5">Hydrated from linked contact</p>
+        </div>
+      );
+    }
+
+    if (field.key === "dob") {
+      return (
+        <div key="dob">
+          <label className={FORM_LABEL}>
+            Date of Birth (contact)
+            {field.required ? " *" : ""}
+          </label>
+          <Input
+            disabled
+            value={linkedDob || "—"}
+            className={FORM_INPUT}
+          />
+          <p className="text-[10px] text-muted-foreground mt-0.5">Hydrated from linked contact</p>
+        </div>
+      );
+    }
+
+    if (field.key === "fatherLink") {
       return (
         <div key="fatherLink" className="sm:col-span-2">
           <ContactPicker
@@ -394,7 +440,7 @@ export default function StudentForm({
       );
     }
 
-    if (field.id === "motherLink") {
+    if (field.key === "motherLink") {
       return (
         <div key="motherLink" className="sm:col-span-2">
           <ContactPicker
@@ -419,7 +465,7 @@ export default function StudentForm({
       );
     }
 
-    if (field.id === "guardianLink") {
+    if (field.key === "guardianLink") {
       return (
         <div key="guardianLink" className="sm:col-span-2">
           <ContactPicker
@@ -435,7 +481,7 @@ export default function StudentForm({
       );
     }
 
-    if (field.id === "registeredDate") {
+    if (field.key === "registeredDate") {
       return (
         <div key="registeredDate">
           <label className={FORM_LABEL}>
@@ -451,56 +497,34 @@ export default function StudentForm({
       );
     }
 
-    if (field.isCustom) {
-      const value = data[field.id] ?? "";
-      return (
-        <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
-          {field.type !== "boolean" ? (
-            <label className={FORM_LABEL}>
-              {field.label}
-              {field.required ? " *" : ""}
-            </label>
-          ) : null}
-          <CustomFieldInput
-            field={field}
-            value={value}
-            onChange={(next) => setData((d) => ({ ...d, [field.id]: next }))}
-          />
-        </div>
-      );
-    }
-
-    return null;
+    const value = data[field.key] ?? "";
+    return (
+      <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
+        {field.type !== "boolean" ? (
+          <label className={FORM_LABEL}>
+            {field.label}
+            {field.required ? " *" : ""}
+          </label>
+        ) : null}
+        <CustomFieldInput
+          field={field}
+          value={value}
+          onChange={(next) => setData((d) => ({ ...d, [field.key]: next }))}
+        />
+        {field.description && (
+          <p className="text-[10px] text-muted-foreground mt-1">{field.description}</p>
+        )}
+      </div>
+    );
   };
 
-  const showGuardians = guardianFields.some((f) => fields[f.id]?.enabled !== false);
-  const showCustomFields = customFormFields.length > 0;
+  const renderTab = () => {
+    if (tab === "basic") {
+      const basicFields = (settingsFields.basic || []).filter((f: FieldDefinition) => f.enabled);
 
-  return (
-    <>
-      <FormModal
-        open
-        onClose={onClose}
-        title={student ? t("students.form.editTitle") : t("students.form.addTitle")}
-        subtitle={t("students.form.subtitle")}
-        icon={Sparkles}
-        tall
-        progress={completeness}
-        progressLabel={t("common.formProgress")}
-        cancelLabel={t("common.cancel")}
-        saveLabel={
-          saving
-            ? t("students.form.saving")
-            : student
-              ? t("students.form.saveUpdate")
-              : t("students.form.saveRegister")
-        }
-        onSave={() => void handleSave()}
-        saving={saving}
-        saveDisabled={!data.contactId}
-        error={error || undefined}
-      >
-        <div className="space-y-5">
+      return (
+        <div className="space-y-5 text-left">
+          {/* Contact Picker Section */}
           <section className="rounded-xl border border-border bg-card/50 p-4 space-y-3">
             <div>
               <h3 className="text-xs font-bold text-foreground">{t("students.form.contactLabel")}</h3>
@@ -518,6 +542,7 @@ export default function StudentForm({
             />
           </section>
 
+          {/* Identity Fields Section */}
           <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
             <div>
               <h3 className="text-xs font-bold text-foreground">{t("students.form.registrationSection")}</h3>
@@ -529,10 +554,10 @@ export default function StudentForm({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={FORM_LABEL}>{t("students.form.grNumber")} *</label>
-                <input
+                <Input
                   required
                   className={FORM_INPUT}
-                  value={data.grNumber}
+                  value={data.grNumber || ""}
                   onChange={(e) => setData((d) => ({ ...d, grNumber: e.target.value }))}
                   placeholder={t("students.form.grNumberPlaceholder")}
                 />
@@ -541,57 +566,94 @@ export default function StudentForm({
 
               <div>
                 <label className={FORM_LABEL}>{t("students.form.status")}</label>
-                <select
-                  className={FORM_SELECT}
+                <FormSelect
                   value={data.status}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setData((d) => ({
                       ...d,
-                      status: e.target.value,
-                    }))
+                      status: val,
+                     }))
                   }
-                >
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {t(`students.form.status.${status}` as AppTranslationKey)}
-                    </option>
-                  ))}
-                </select>
+                  options={statuses.map((status) => ({
+                    value: status,
+                    label: t(`students.form.status.${status}` as AppTranslationKey),
+                  }))}
+                />
               </div>
 
-              {showRegisteredDate
-                ? renderRegistrationField(
-                    registrationFields.find((f) => f.id === "registeredDate") ?? {
-                      id: "registeredDate",
-                      label: t("students.form.registeredDate"),
-                    },
-                  )
-                : null}
+              {basicFields.map((field: FieldDefinition) => {
+                if (field.key !== "registeredDate") {
+                  return renderFieldByKey(field);
+                }
+                return null;
+              })}
+
+              {basicFields.some((f: FieldDefinition) => f.key === "registeredDate") && renderFieldByKey(
+                basicFields.find((f: FieldDefinition) => f.key === "registeredDate")!
+              )}
             </div>
           </section>
-
-          {showGuardians ? (
-            <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
-              <div>
-                <h3 className="text-xs font-bold text-foreground">{t("students.form.guardiansSection")}</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {t("students.form.guardiansSectionDesc")}
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {guardianFields.map((field) => renderRegistrationField(field))}
-              </div>
-            </section>
-          ) : null}
-
-          {showCustomFields ? (
-            <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {customFormFields.map((field) => renderRegistrationField(field))}
-              </div>
-            </section>
-          ) : null}
         </div>
+      );
+    }
+
+    const tabFields = (settingsFields[tab] || []).filter((f: FieldDefinition) => f.enabled);
+
+    return (
+      <div className="space-y-4 text-left">
+        <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {tabFields.map((field: FieldDefinition) => renderFieldByKey(field))}
+          </div>
+        </section>
+      </div>
+    );
+  };
+
+  const footerStart = linkedContact?.name ? (
+    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      <span className="font-semibold text-foreground">{linkedContact.name}</span>
+      <div className="flex items-center gap-2 border-l border-border pl-3">
+        <span>GR: {data.grNumber}</span>
+        <span className="border-l border-border pl-2 capitalize">
+          Status: {data.status}
+        </span>
+      </div>
+    </div>
+  ) : (
+    <span className="text-xs text-destructive">{t("students.form.contactRequired")}</span>
+  );
+
+  return (
+    <>
+      <FormModal
+        open
+        onClose={onClose}
+        title={student ? t("students.form.editTitle") : t("students.form.addTitle")}
+        subtitle={t("students.form.subtitle")}
+        icon={GraduationCap}
+        tall
+        progress={completeness}
+        progressLabel={t("common.formProgress")}
+        tabs={formTabs}
+        activeTab={tab}
+        onTabChange={handlePageChangeTab}
+        tabPanelIdPrefix="student-form-tab"
+        cancelLabel={t("common.cancel")}
+        saveLabel={
+          saving
+            ? t("students.form.saving")
+            : student
+              ? t("students.form.saveUpdate")
+              : t("students.form.saveRegister")
+        }
+        onSave={() => void handleSave()}
+        saving={saving}
+        saveDisabled={!data.contactId}
+        error={error || undefined}
+        footerStart={footerStart}
+      >
+        {renderTab()}
       </FormModal>
     </>
   );

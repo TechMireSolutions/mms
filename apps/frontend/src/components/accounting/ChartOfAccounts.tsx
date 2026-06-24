@@ -7,6 +7,9 @@ import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import useTranslation from "@/hooks/useTranslation";
 import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import FormSelect from "../ui/FormSelect";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
@@ -115,40 +118,39 @@ export default function ChartOfAccounts({
       <nav aria-label="Account controls" className="flex flex-wrap gap-2 items-center">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <input 
+          <Input 
             type="search"
             aria-label="Search accounts"
             value={search} 
             onChange={(e) => setSearch(e.target.value)} 
             placeholder="Search accounts…"
-            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
+            className="pl-9 pr-4" 
           />
         </div>
-        <select 
+        <FormSelect 
           aria-label="Filter by account type"
           value={typeFilter} 
-          onChange={(e) => setTypeFilter(e.target.value as AccountType | "all")}
-          className="text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-        >
-          <option value="all">All Types</option>
-          {ACCOUNT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <button 
+          onChange={(val) => setTypeFilter(val as AccountType | "all")}
+          options={[{ value: "all", label: "All Types" }, ...ACCOUNT_TYPES]}
+        />
+        <Button 
           type="button"
+          variant={showInactive ? "secondary" : "outline"}
           aria-pressed={showInactive}
           onClick={() => setShowInactive(!showInactive)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-semibold transition-colors ${showInactive ? "bg-primary/10 border-primary/20 text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
+          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
         >
           {showInactive ? <Eye className="w-3.5 h-3.5" aria-hidden="true" /> : <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />}
           {showInactive ? "Showing All" : "Show Inactive"}
-        </button>
-        <button 
+        </Button>
+        <Button 
           type="button"
+          variant="outline"
           onClick={exportCSV}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
+          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold text-muted-foreground"
         >
           <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export
-        </button>
+        </Button>
         {columnCustomizer && (
           <ModuleColumnCustomizer
             columnRegistry={columnCustomizer.columnRegistry}
@@ -156,13 +158,14 @@ export default function ChartOfAccounts({
             labels={columnCustomizer.labels}
           />
         )}
-        <button 
+        <Button 
           type="button"
+          variant="default"
           onClick={() => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true })}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors ml-auto"
+          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold ml-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Account
-        </button>
+        </Button>
       </nav>
 
       {/* Summary stats */}
@@ -254,13 +257,39 @@ export default function ChartOfAccounts({
                       )}
                       <td className="px-4 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button type="button" aria-label={`Edit ${a.name}`} onClick={() => setModal({ ...a })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Edit ${a.name}`}
+                            onClick={() => setModal({ ...a })}
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          >
                             <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                          </button>
-                          {a.isActive === false
-                            ? <button type="button" aria-label={`Reactivate ${a.name}`} onClick={() => handleReactivate(a.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-success transition-colors"><Eye className="w-3.5 h-3.5" aria-hidden="true" /></button>
-                            : <button type="button" aria-label={`Deactivate ${a.name}`} onClick={() => handleDelete(a.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"><EyeOff className="w-3.5 h-3.5" aria-hidden="true" /></button>
-                          }
+                          </Button>
+                          {a.isActive === false ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Reactivate ${a.name}`}
+                              onClick={() => handleReactivate(a.id)}
+                              className="h-8 w-8 text-muted-foreground hover:text-success"
+                            >
+                              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Deactivate ${a.name}`}
+                              onClick={() => handleDelete(a.id)}
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            >
+                              <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

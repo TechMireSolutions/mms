@@ -4,6 +4,8 @@ import useTranslation from '@/hooks/useTranslation';
 import { createQuestionCategory, type AppTranslationKey, type QuestionCategory } from '@mms/shared';
 import { persistQuestionCategory } from '@/lib/data/questionBankCategories';
 import { FORM_INPUT } from '@/components/ui/formStyles';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface CategorySelectorProps {
   categories: QuestionCategory[];
@@ -94,9 +96,9 @@ export default function CategorySelector({
       {multiple && (
         <p className="text-[11px] text-muted-foreground">{t('questionBank.categoriesMultiHint')}</p>
       )}
-      <input
+      <Input
         type="search"
-        className={FORM_INPUT}
+        className={`${FORM_INPUT} shadow-none`}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder={t('questionBank.categorySearch')}
@@ -116,22 +118,22 @@ export default function CategorySelector({
           {filtered.map((cat) => {
             const selected = selectedIds.includes(cat.id);
             return (
-              <button
+              <Button
                 key={cat.id}
                 type="button"
                 role="option"
                 aria-selected={selected}
                 onClick={() => toggleCategory(cat.id)}
-                className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 h-auto text-xs font-semibold shadow-none transition-colors ${
                   selected
-                    ? 'border-transparent text-white shadow-sm'
+                    ? 'border-transparent text-white'
                     : 'border-border bg-card text-foreground hover:bg-muted'
                 }`}
                 style={selected ? { background: cat.color, borderColor: cat.color } : undefined}
               >
                 <span aria-hidden>{cat.icon}</span>
                 <span>{cat.name}</span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -145,9 +147,9 @@ export default function CategorySelector({
 
       {showCreate ? (
         <div className="flex flex-col gap-2 rounded-lg border border-dashed border-border p-3 sm:flex-row">
-          <input
+          <Input
             type="text"
-            className={FORM_INPUT}
+            className={`${FORM_INPUT} shadow-none`}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder={t('questionBank.newCategoryName')}
@@ -160,35 +162,37 @@ export default function CategorySelector({
             }}
           />
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
               onClick={handleCreate}
               disabled={!newName.trim()}
-              className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="rounded-lg bg-primary h-auto px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {t('questionBank.createCategory')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => {
                 setShowCreate(false);
                 setNewName('');
               }}
-              className="rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
+              variant="outline"
+              className="rounded-lg border border-border h-auto px-3 py-2 text-xs font-medium hover:bg-muted shadow-none"
             >
               {t('questionBank.cancel')}
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
-        <button
+        <Button
           type="button"
           onClick={() => setShowCreate(true)}
-          className="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground"
+          variant="outline"
+          className="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border h-auto text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground shadow-none"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden />
           {t('questionBank.createCategory')}
-        </button>
+        </Button>
       )}
     </div>
   );

@@ -17,6 +17,8 @@ import { ACTIVITY_TYPE_I18N } from '@/lib/contacts/contactI18n';
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { apiJson } from "@/lib/apiClient";
 import { getCollection } from "@/lib/db";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
   overview: LayoutDashboard,
@@ -46,23 +48,23 @@ import ContactAvatar from "./ContactAvatar";
 const DETAIL_STYLES = {
   whatsappActive: "bg-success/10 text-success border-success/30 hover:bg-success/20",
   whatsappDisabled: "opacity-40 cursor-not-allowed bg-muted/50 text-muted-foreground",
-  syedBadge: "bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
-  starActive: "text-amber-500 fill-amber-500",
+  syedBadge: "bg-success/10 text-success border border-success/20",
+  starActive: "text-secondary fill-secondary",
   starInactive: "text-muted-foreground/30 fill-transparent",
-  smsAction: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/20 dark:text-violet-400 dark:border-violet-900/50 hover:bg-violet-100",
-  callAction: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50 hover:bg-blue-100",
-  emailAction: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-900/50 hover:bg-indigo-100",
+  smsAction: "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20",
+  callAction: "bg-info/10 text-info border border-info/20 hover:bg-info/20",
+  emailAction: "bg-secondary/10 text-secondary border border-secondary/20 hover:bg-secondary/20",
   emergencyBadge: "bg-destructive/10 text-destructive border-destructive/30",
   networkHeader: "bg-success/10 border-success/30",
   networkIcon: "bg-success/10 text-success",
   networkTitle: "text-success",
-  networkSubtitle: "text-emerald-600/80 dark:text-emerald-400/80",
-  networkItemCard: "border-border hover:border-emerald-200 hover:bg-emerald-50/[0.02]",
-  networkItemIcon: "bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
+  networkSubtitle: "text-success/80",
+  networkItemCard: "border-border hover:border-success/30 hover:bg-success/5",
+  networkItemIcon: "bg-success/10 text-success border border-success/20",
   networkItemAction: "hover:bg-muted text-muted-foreground hover:text-foreground",
-  networkRelType: "text-emerald-650 dark:text-emerald-400",
-  liveIntelIndicator: "bg-emerald-500",
-  liveIntelText: "text-emerald-650 dark:text-emerald-400",
+  networkRelType: "text-success",
+  liveIntelIndicator: "bg-success",
+  liveIntelText: "text-success",
 } as const;
 
 interface ContactDetailDrawerProps {
@@ -272,20 +274,22 @@ export default function ContactDetailDrawer({
           <div className="flex items-center justify-between">
             <h2 className="text-[13px] font-bold text-foreground leading-tight">{t('contacts.detail.title')}</h2>
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => onEdit(c)}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shadow-none"
                 title={t('contacts.detail.editProfile')}
               >
                 <Edit2 className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={onClose}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors shadow-none"
                 aria-label={t('contacts.detail.close')}
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -295,16 +299,17 @@ export default function ContactDetailDrawer({
               const Icon = t.icon;
               const isActive = activeTab === t.key;
               return (
-                <button
+                <Button
                   key={t.key}
+                  variant="ghost"
                   onClick={() => setActiveTab(t.key)}
-                  className={`flex-1 flex flex-col items-center min-h-[44px] justify-center gap-1.5 py-2 border-b-2 transition-all ${
+                  className={`flex-1 flex flex-col items-center min-h-[44px] justify-center gap-1.5 py-2 border-b-2 rounded-none transition-all shadow-none font-bold ${
                     isActive ? "border-primary text-primary bg-primary/5" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-bold">{t.label}</span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -364,27 +369,29 @@ export default function ContactDetailDrawer({
                   
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {enabledTabIds.has("phones") && (
-                      <button
+                      <Button
+                        variant="ghost"
                         disabled={!hasWhatsApp(c)}
                         onClick={() => onWhatsApp([c])}
-                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${
+                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border h-auto font-normal transition-all shadow-none ${
                           hasWhatsApp(c) ? DETAIL_STYLES.whatsappActive : DETAIL_STYLES.whatsappDisabled
                         }`}
                         type="button"
                       >
                         <MessageCircle className="w-5 h-5" />
                         <span className="text-[10px] font-bold">{t('contacts.whatsapp')}</span>
-                      </button>
+                      </Button>
                     )}
                     {primaryPhone && (
-                      <button
+                      <Button
+                        variant="ghost"
                         onClick={() => onSms([c])}
-                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${DETAIL_STYLES.smsAction}`}
+                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border h-auto font-normal transition-all shadow-none ${DETAIL_STYLES.smsAction}`}
                         type="button"
                       >
                         <MessageSquare className="w-5 h-5" />
                         <span className="text-[10px] font-bold">{t('contacts.sms')}</span>
-                      </button>
+                      </Button>
                     )}
                     {primaryPhone && (
                       <a
@@ -597,20 +604,21 @@ export default function ContactDetailDrawer({
                                     {t('contacts.detail.emergencyContact')}
                                   </span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                                <div className="grid grid-cols-2 gap-2 text-xs">
                                   {tabFields.map(f => {
                                     if (f.key === "contactId") {
                                       return (
                                         <div key={f.key} className="col-span-2">
                                           <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{f.label}</span>
                                           {target ? (
-                                            <button
+                                            <Button
                                               type="button"
+                                              variant="link"
                                               onClick={() => handleNavigateToContact(target.id)}
-                                              className="font-semibold text-primary hover:underline text-left"
+                                              className="font-semibold text-primary hover:underline text-left h-auto p-0 shadow-none justify-start"
                                             >
                                               {target.name}
-                                            </button>
+                                            </Button>
                                           ) : (
                                             <span className="font-semibold text-foreground">{String(ec.contactId || "")}</span>
                                           )}
@@ -641,19 +649,19 @@ export default function ContactDetailDrawer({
                 <div className="space-y-5">
                    <div className="relative">
                      <form onSubmit={handleAddNote} className="flex gap-2">
-                        <input
+                        <Input
                           type="text"
                           placeholder={t('contacts.detail.logEventOrNote')}
                           value={noteText}
                           onChange={(e) => setNoteText(e.target.value)}
-                          className="flex-1 px-4 py-3 rounded-2xl border border-border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+                          className="flex-1 px-4 py-3 rounded-2xl"
                         />
-                        <button
+                        <Button
                           type="submit"
-                          className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md shadow-primary/20"
+                          className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-none"
                         >
                           <Send className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </form>
                    </div>
 
@@ -703,13 +711,13 @@ export default function ContactDetailDrawer({
                    </div>
 
                    <div className="space-y-3">
-                     {(!c.relationships || c.relationships.length === 0) ? (
+                      {(!c.relationships || c.relationships.length === 0) ? (
                         <div className="text-center py-20">
                            <UsersIcon className="w-12 h-12 mx-auto text-muted-foreground/20" />
                            <p className="text-xs font-bold text-muted-foreground mt-2 uppercase tracking-widest">{t('contacts.detail.noConnectionsMapped')}</p>
-                           <button className="mt-4 px-4 min-h-[44px] rounded-xl border border-border text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all" type="button">{t('contacts.detail.addRelationship')}</button>
+                           <Button variant="outline" className="mt-4 px-4 min-h-[44px] rounded-xl border border-border text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none" type="button">{t('contacts.detail.addRelationship')}</Button>
                         </div>
-                     ) : (
+                      ) : (
                         c.relationships.map((rel, i) => {
                           const target = allContacts.find(x => String(x.id) === String(rel.contactId));
                           return (
@@ -724,9 +732,9 @@ export default function ContactDetailDrawer({
                                   </div>
                                </div>
                                {target && (
-                                   <button onClick={() => handleNavigateToContact(rel.contactId)} className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all ${DETAIL_STYLES.networkItemAction}`} type="button">
+                                   <Button variant="ghost" onClick={() => handleNavigateToContact(rel.contactId)} className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all shadow-none ${DETAIL_STYLES.networkItemAction}`} type="button">
                                      <Search className="w-4 h-4" />
-                                  </button>
+                                  </Button>
                                 )}
                             </div>
                           );
@@ -746,7 +754,7 @@ export default function ContactDetailDrawer({
                          <h4 className="text-sm font-bold text-foreground">{t('contacts.detail.cloudStorageRepository')}</h4>
                          <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">{t('contacts.detail.dragDropDocuments')}</p>
                       </div>
-                      <button className="mt-2 px-6 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all" type="button">{t('contacts.detail.browseFiles')}</button>
+                      <Button className="mt-2 px-6 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow-none" type="button">{t('contacts.detail.browseFiles')}</Button>
                    </div>
 
                    <div className="space-y-3">

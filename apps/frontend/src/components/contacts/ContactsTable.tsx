@@ -9,6 +9,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, Contact, formatDate } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
@@ -41,14 +43,15 @@ function CopyBtn({ text }: CopyBtnProps): React.JSX.Element {
       });
   };
   return (
-    <button
+    <Button
       onClick={copy}
       title={copied ? t('contacts.table.copied') : t('contacts.table.copy')}
-      className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground"
+      variant="ghost"
+      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground"
       type="button"
     >
       <Copy className="w-3 h-3" />
-    </button>
+    </Button>
   );
 }
 
@@ -154,13 +157,14 @@ export default function ContactsTable({
             <div className="flex items-center gap-3">
               <ContactAvatar contact={c} />
               <div>
-                <button
+                <Button
                   onClick={() => setViewContact(c)}
-                  className="min-h-[44px] text-[13px] font-semibold text-foreground hover:text-primary transition-colors text-left"
+                  variant="ghost"
+                  className="min-h-[44px] h-auto p-0 text-[13px] font-semibold text-foreground hover:text-primary transition-colors text-left justify-start hover:bg-transparent"
                   type="button"
                 >
                   {getDisplayName(c)}
-                </button>
+                </Button>
                 <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                   <GenderIcon gender={c.gender} />
                   {c.dob && <span>{t('contacts.table.dobLabel')} {formatDate(c.dob)}</span>}
@@ -187,14 +191,15 @@ export default function ContactsTable({
                 </div>
               )}
               <CopyBtn text={getPrimaryPhone(c) || ""} />
-              <button
+              <Button
                 disabled={!hasWhatsApp(c)}
                 onClick={(e) => {
                   e.stopPropagation();
                   onWhatsApp([c]);
                 }}
                 title={hasWhatsApp(c) ? t('contacts.whatsapp') : t('contacts.table.notRegisteredWhatsApp')}
-                className={`min-w-[44px] min-h-[44px] flex items-center justify-center transition-all ${
+                variant="ghost"
+                className={`min-w-[44px] min-h-[44px] flex items-center justify-center p-0 transition-all hover:bg-transparent ${
                   hasWhatsApp(c)
                     ? "opacity-0 group-hover/phone:opacity-100 text-success hover:text-success/80 cursor-pointer"
                     : "opacity-30 group-hover/phone:opacity-60 text-muted-foreground cursor-not-allowed"
@@ -202,7 +207,7 @@ export default function ContactsTable({
                 type="button"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           </td>
         );
@@ -323,12 +328,10 @@ export default function ContactsTable({
           <thead>
             <tr className="border-b border-border bg-muted/30">
               <th className="w-10 px-4 py-3">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  ref={(el) => { if (el) el.indeterminate = someSelected; }}
-                  onChange={() => onSelectAll()}
-                  className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
+                <Checkbox
+                  checked={someSelected ? "indeterminate" : allSelected}
+                  onCheckedChange={() => onSelectAll()}
+                  className="cursor-pointer"
                 />
               </th>
               {columns.map((col) => (
@@ -353,20 +356,19 @@ export default function ContactsTable({
                     className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/[0.02]" : ""}`}
                   >
                     <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={isSelected}
-                        onChange={() => onSelect(c.id)}
-                        className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
+                        onCheckedChange={() => onSelect(c.id)}
+                        className="cursor-pointer"
                       />
                     </td>
                     {columns.map((col) => renderCell(col, c))}
                     <td className="px-4 py-3">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" type="button" aria-label={t('contacts.table.actions')}>
+                          <Button variant="ghost" className="min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" type="button" aria-label={t('contacts.table.actions')}>
                             <MoreHorizontal className="w-4 h-4" />
-                          </button>
+                          </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
                           <DropdownMenuItem onClick={() => setViewContact(c)}>

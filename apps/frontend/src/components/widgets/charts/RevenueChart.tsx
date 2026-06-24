@@ -6,6 +6,14 @@ import {
 } from "recharts";
 import { getCollection } from "../../../lib/db";
 import type { Invoice } from '@/lib/data/financeData';
+import { Button } from "../../ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
 
 interface RevenuePoint {
   month: string;
@@ -100,49 +108,57 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
         <div className="flex items-center gap-2 ml-auto">
           {isEditMode && (
             <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
-              <select
+              <Select
                 value={chartType}
-                onChange={(e) => {
-                  const type = e.target.value as "bar" | "line" | "area";
+                onValueChange={(val) => {
+                  const type = val as "bar" | "line" | "area";
                   setChartType(type);
                   localStorage.setItem("db_chart_type_revenue", type);
                 }}
-                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="bar">Bar Chart</option>
-                <option value="line">Line Chart</option>
-                <option value="area">Area Chart</option>
-              </select>
-              <select
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                  <SelectValue placeholder="Select chart type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bar">Bar Chart</SelectItem>
+                  <SelectItem value="line">Line Chart</SelectItem>
+                  <SelectItem value="area">Area Chart</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
                 value={colorTheme}
-                onChange={(e) => {
-                  const col = e.target.value;
+                onValueChange={(col) => {
                   setColorTheme(col);
                   localStorage.setItem("db_chart_color_revenue", col);
                 }}
-                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="mixed">Mixed</option>
-                <option value="emerald">Emerald</option>
-                <option value="violet">Violet</option>
-                <option value="blue">Blue</option>
-                <option value="amber">Amber</option>
-                <option value="red">Red</option>
-              </select>
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                  <SelectValue placeholder="Select color theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mixed">Mixed</SelectItem>
+                  <SelectItem value="emerald">Emerald</SelectItem>
+                  <SelectItem value="violet">Violet</SelectItem>
+                  <SelectItem value="blue">Blue</SelectItem>
+                  <SelectItem value="amber">Amber</SelectItem>
+                  <SelectItem value="red">Red</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
           <div className="flex gap-1 bg-muted rounded-lg p-0.5">
             {(["6m", "10m"] as const).map((p) => (
-              <button
+              <Button
                 key={p}
+                variant="ghost"
                 onClick={() => setPeriod(p)}
                 aria-pressed={period === p}
-                className={`text-[11px] font-medium px-2.5 py-1 rounded-md transition-all ${
-                  period === p ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
+                className={`text-[11px] font-medium px-2.5 py-1 h-auto rounded-md transition-all shadow-none ${
+                  period === p ? "bg-card text-foreground hover:bg-card hover:text-foreground" : "text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
                 }`}
               >
                 {p}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

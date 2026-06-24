@@ -2,11 +2,12 @@ import React, { useMemo, useState } from "react";
 import { Search, User, Calendar } from "lucide-react";
 import { STUDENTS_MODULE_CONTRACT } from "@mms/shared";
 import { calcAge, Student } from '@/lib/data/studentsData';
-import { FORM_INPUT_ICON } from "@/components/ui/formStyles";
 import { Session } from '@/lib/data/sessionsData';
 import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
 import { useStudentsByIds, useStudentsPaginated } from "@/hooks/useStudents";
 import useTranslation from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface Step1SelectStudentProps {
   value: Student | null | undefined;
@@ -56,14 +57,14 @@ export default function Step1SelectStudent({ value, onChange, sessions = [] }: S
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-        <input
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" aria-hidden="true" />
+        <Input
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search students by name…"
           aria-label="Search students by name"
-          className={FORM_INPUT_ICON + " pr-4"}
+          className="pl-9 pr-4 py-2 text-sm rounded-xl"
         />
       </div>
 
@@ -75,14 +76,14 @@ export default function Step1SelectStudent({ value, onChange, sessions = [] }: S
           const age = calcAge(st.dob);
           const selected = value?.id === st.id;
           return (
-            <button
+            <Button
               key={st.id}
-              type="button"
               role="radio"
               aria-checked={selected}
               onClick={() => onChange(st)}
-              className={`w-full text-left flex items-start gap-3 p-4 rounded-xl border-2 transition-all ${
-                selected ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40 hover:bg-muted/30"
+              variant="outline"
+              className={`w-full text-left flex items-start gap-3 p-4 rounded-xl border-2 transition-all h-auto justify-start hover:bg-transparent ${
+                selected ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground hover:text-foreground" : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground hover:text-foreground"
               }`}
             >
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -104,7 +105,7 @@ export default function Step1SelectStudent({ value, onChange, sessions = [] }: S
                   }`}>{st.status}</span>
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" aria-hidden="true" /> Age {age ?? "?"}</span>
+                  <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" /> Age {age ?? "?"}</span>
                   <span>Father: {st.fatherName}</span>
                   {st.city && <span>{st.city}</span>}
                 </div>
@@ -123,7 +124,7 @@ export default function Step1SelectStudent({ value, onChange, sessions = [] }: S
                   <div className={`h-2 w-2 rounded-full ${WIZARD_SELECTION_DOT}`} />
                 </div>
               )}
-            </button>
+            </Button>
           );
         })}
       </div>

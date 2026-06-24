@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import {
   X, Edit2, MessageCircle, Phone,
   Calendar, User, Clock, BookOpen, GraduationCap, Sparkles
 } from "lucide-react";
 import { formatDate } from "../../lib/db";
 import {
-  getSortedStudentFields
+  DEFAULT_STUDENT_ENABLED_TABS,
+  type FieldDefinition,
 } from "@mms/shared";
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useContactsByIds } from '@/hooks/useContacts';
@@ -41,11 +43,49 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
   const { settings } = useStudentConfig();
   const fields = settings.fields || {};
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || [];
-  const orderedFields = useMemo(() => {
-    return getSortedStudentFields(fieldOrder, fields, customFields);
-  }, [fieldOrder, fields, customFields]);
+
+  const tabOrderMap = useMemo(() => {
+    const tabs = settings.formTabs || [];
+    return Object.fromEntries(tabs.map((t, idx) => [t.key, idx]));
+  }, [settings.formTabs]);
+
+  const enabledTabIds = useMemo(() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS), [settings.enabledTabs]);
+
+  const sortedEnabledFields = useMemo(() => {
+    const list: Array<{
+      key: string;
+      label: string;
+      type: string;
+      tab: string;
+      enabled: boolean;
+      order: number;
+    }> = [];
+
+    Object.entries(fields).forEach(([tabId, tabFields]) => {
+      if (tabId !== "basic" && !enabledTabIds.has(tabId)) return;
+      (tabFields as FieldDefinition[]).forEach((f) => {
+        if (f.enabled) {
+          list.push({
+            key: f.key,
+            label: f.label,
+            type: f.type,
+            tab: tabId,
+            enabled: f.enabled,
+            order: f.order,
+          });
+        }
+      });
+    });
+
+    return list.sort((a, b) => {
+      const aTabIdx = tabOrderMap[a.tab] ?? 9999;
+      const bTabIdx = tabOrderMap[b.tab] ?? 9999;
+      if (aTabIdx !== bTabIdx) {
+        return aTabIdx - bTabIdx;
+      }
+      return (a.order ?? 999) - (b.order ?? 999);
+    });
+  }, [fields, enabledTabIds, tabOrderMap]);
 
   const studentContact = contactList.find(c => String(c.id) === String(student.contactId));
   const fatherContact = contactList.find(c => String(c.id) === String(student.fatherContactId));
@@ -95,20 +135,26 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
             </div>
             
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
                 onClick={() => onEdit(student)}
-                className="p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                 title="Edit Student"
               >
                 <Edit2 className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+                className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
                 aria-label="Close details"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -118,10 +164,12 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
               const Icon = t.icon;
               const isActive = activeTab === t.id;
               return (
-                <button
+                <Button
                   key={t.id}
+                  type="button"
+                  variant="ghost"
                   onClick={() => setActiveTab(t.id)}
-                  className={`flex-1 flex flex-col items-center gap-1.5 py-2 border-b-2 transition-all ${
+                  className={`flex-1 flex flex-col items-center gap-1.5 py-2 border-b-2 transition-all rounded-none h-auto ${
                     isActive
                       ? "border-primary text-primary bg-primary/5"
                       : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -129,7 +177,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-bold">{t.label}</span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -191,21 +239,18 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   </div>
 
                   {/* Ordered Attributes & Connections list */}
-                  {orderedFields.some(f => fields[f.id]?.enabled !== false && (f.id === "fatherLink" ? (fatherContact || student.fatherName) : f.id === "motherLink" ? (motherContact || student.motherName) : f.id === "guardianLink" ? (guardianContact || student.guardianName) : true)) && (
+                  {sortedEnabledFields.some(f => f.key === "fatherLink" ? (fatherContact || student.fatherName) : f.key === "motherLink" ? (motherContact || student.motherName) : f.key === "guardianLink" ? (guardianContact || student.guardianName) : true) && (
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Student Details</h4>
                       <div className="space-y-2.5">
-                        {orderedFields.map((field) => {
-                          const isEnabled = fields[field.id]?.enabled !== false;
-                          if (!isEnabled) return null;
-
-                          if (field.id === "gender") {
+                        {sortedEnabledFields.map((field) => {
+                          if (field.key === "gender") {
                             return (
                               <div key="gender" className="flex items-center gap-3 p-3 bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
                                 <div className="p-2 rounded-lg bg-muted text-muted-foreground">
                                   <User className="w-3.5 h-3.5" />
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 text-left">
                                   <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">Gender</span>
                                   <span className="text-xs font-semibold text-foreground capitalize">{student.gender || "Not specified"}</span>
                                 </div>
@@ -213,13 +258,13 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             );
                           }
 
-                          if (field.id === "dob") {
+                          if (field.key === "dob") {
                             return (
                               <div key="dob" className="flex items-center gap-3 p-3 bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
                                 <div className="p-2 rounded-lg bg-muted text-muted-foreground">
                                   <Calendar className="w-3.5 h-3.5" />
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 text-left">
                                   <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">DOB & Age</span>
                                   <span className="text-xs font-semibold text-foreground">
                                     {student.dob ? formatDate(student.dob, true) : "—"} {age ? `(${age} yrs)` : ""}
@@ -229,13 +274,13 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             );
                           }
 
-                          if (field.id === "registeredDate") {
+                          if (field.key === "registeredDate") {
                             return (
                               <div key="registeredDate" className="flex items-center gap-3 p-3 bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
                                 <div className="p-2 rounded-lg bg-muted text-muted-foreground">
                                   <Clock className="w-3.5 h-3.5" />
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 text-left">
                                   <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">Registered Date</span>
                                   <span className="text-xs font-semibold text-foreground">
                                     {student.registeredDate ? formatDate(student.registeredDate, true) : "—"}
@@ -245,11 +290,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             );
                           }
 
-                          if (field.id === "fatherLink") {
+                          if (field.key === "fatherLink") {
                             if (!fatherContact && !student.fatherName) return null;
                             return (
                               <div key="fatherLink" className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-card shadow-sm">
-                                <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex items-center gap-3 min-w-0 text-left">
                                   <div className="w-8 h-8 rounded-lg bg-info/10 text-info flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                                     FA
                                   </div>
@@ -271,11 +316,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             );
                           }
 
-                          if (field.id === "motherLink") {
+                          if (field.key === "motherLink") {
                             if (!motherContact && !student.motherName) return null;
                             return (
                               <div key="motherLink" className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-card shadow-sm">
-                                <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex items-center gap-3 min-w-0 text-left">
                                   <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                                     MO
                                   </div>
@@ -297,11 +342,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             );
                           }
 
-                          if (field.id === "guardianLink") {
+                          if (field.key === "guardianLink") {
                             if (!guardianContact && !student.guardianName) return null;
                             return (
                               <div key="guardianLink" className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-card shadow-sm">
-                                <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex items-center gap-3 min-w-0 text-left">
                                   <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                                     GU
                                   </div>
@@ -323,8 +368,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             );
                           }
 
-                          if (!["gender", "dob", "registeredDate", "fatherLink", "motherLink", "guardianLink"].includes(field.id)) {
-                            const val = (student as unknown as Record<string, unknown>)[field.id];
+                          if (!["gender", "dob", "registeredDate", "fatherLink", "motherLink", "guardianLink"].includes(field.key)) {
+                            const val = (student as unknown as Record<string, unknown>)[field.key];
                             if (val === undefined || val === null || val === "" || val === false) return null;
 
                             let displayVal = "";
@@ -335,11 +380,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             }
 
                             return (
-                              <div key={field.id} className="flex items-center gap-3 p-3 bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+                              <div key={field.key} className="flex items-center gap-3 p-3 bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
                                 <div className="p-2 rounded-lg bg-muted text-muted-foreground">
                                   <Sparkles className="w-3.5 h-3.5" />
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 text-left">
                                   <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">{field.label}</span>
                                   <span className="text-xs font-semibold text-foreground">{displayVal}</span>
                                 </div>

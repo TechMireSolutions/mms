@@ -4,6 +4,7 @@ import { Session } from '@/lib/data/sessionsData';
 import { SEMANTIC_BADGE, WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
 import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import useTranslation from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
 
 /**
  * Format a date string to a localized PK date.
@@ -61,18 +62,18 @@ export default function Step2SelectSession({ value, onChange, sessions = [] }: S
           const isFull = spotsLeft <= 0;
 
           return (
-            <button
+            <Button
               key={session.id}
-              type="button"
               role="radio"
               aria-checked={selected}
               disabled={isFull}
               onClick={() => !isFull && onChange(session)}
-              className={`w-full text-left p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                selected ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40 hover:bg-muted/30"
+              variant="outline"
+              className={`w-full text-left p-4 rounded-xl border-2 transition-all h-auto disabled:opacity-50 disabled:cursor-not-allowed justify-start hover:bg-transparent ${
+                selected ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground hover:text-foreground" : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground hover:text-foreground"
               }`}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 w-full">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <BookOpen className="w-5 h-5 text-primary" aria-hidden="true" />
                 </div>
@@ -89,11 +90,11 @@ export default function Step2SelectSession({ value, onChange, sessions = [] }: S
                       <span>{fmt(session.startDate)} – {fmt(session.endDate)}</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Users className="w-3 h-3" aria-hidden="true" />
+                      <Users className="w-3.5 h-3.5" aria-hidden="true" />
                       <span>{spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs font-bold text-foreground">
-                      <DollarSign className="w-3 h-3 text-primary" aria-hidden="true" />
+                      <DollarSign className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
                       PKR {session.baseFee?.toLocaleString()}
                     </div>
                   </div>
@@ -113,7 +114,7 @@ export default function Step2SelectSession({ value, onChange, sessions = [] }: S
                   </div>
                 )}
               </div>
-            </button>
+            </Button>
           );
         })}
       </div>

@@ -5,6 +5,7 @@ import type { Invoice } from '@/lib/data/financeData';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useStudentsByIds } from "../../hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
+import { Button } from "../ui/button";
 
 /**
  * OutstandingFeesTable Component
@@ -61,9 +62,9 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
             {totalUnpaid} students
           </span>
         </div>
-        <button className="text-[12px] font-semibold text-primary hover:underline">
+        <Button variant="link" className="text-[12px] font-semibold h-auto p-0">
           Send all reminders
-        </button>
+        </Button>
       </header>
       
       <div className="overflow-x-auto">
@@ -111,20 +112,22 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                 </td>
                 <td className="px-3 py-3 text-right">
                   <div className="flex items-center justify-end gap-1.5">
-                    <button
+                    <Button
+                      variant="ghost"
                       aria-label={`Call ${fee.student}`}
                       title="Call"
-                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-none"
                     >
                       <Phone className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
                       aria-label={`Send reminder to ${fee.student}`}
                       title="Send reminder"
-                      className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                      className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none"
                     >
                       <Send className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </motion.tr>
@@ -134,9 +137,9 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
       </div>
 
       <footer className="px-5 py-3 border-t border-border">
-        <button className="text-xs text-primary font-medium hover:underline">
+        <Button variant="link" className="text-xs font-medium h-auto p-0">
           View all outstanding payments
-        </button>
+        </Button>
       </footer>
     </section>
   );

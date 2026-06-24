@@ -3,6 +3,7 @@ import { X, User, BookOpen, Layers, DollarSign, Clock, ArrowRight } from "lucide
 import { motion } from "framer-motion";
 import { STATUS_MAP, Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/hooks/useStudents";
+import { Button } from "@/components/ui/button";
 
 interface SectionProps {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
@@ -116,14 +117,15 @@ export default function EnrollmentDetail({ enrollment, onClose, onStatusChange, 
           </div>
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${s.color}`}>{s.label}</span>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onClose}
               aria-label="Close details"
-              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="w-4 h-4" aria-hidden="true" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -189,19 +191,19 @@ export default function EnrollmentDetail({ enrollment, onClose, onStatusChange, 
               const info = STATUS_MAP[ns];
               const isCancel = ns === "cancelled";
               return (
-                <button
+                <Button
                   key={ns}
-                  type="button"
+                  variant="ghost"
                   onClick={() => onStatusChange(enrollment.id, ns)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors h-auto ${
                     isCancel
-                      ? "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/15"
-                      : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                      ? "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/15 hover:text-destructive"
+                      : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 hover:text-primary"
                   }`}
                 >
-                  <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                  <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                   {info?.label || ns}
-                </button>
+                </Button>
               );
             })}
           </div>

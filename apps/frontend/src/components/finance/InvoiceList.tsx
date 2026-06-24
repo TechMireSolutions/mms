@@ -11,6 +11,7 @@ import {
 import useTranslation from "@/hooks/useTranslation";
 import { INVOICE_STATUSES, Invoice } from '@/lib/data/financeData';
 import type { AppTranslationKey, ModuleColumnRegistryEntry } from "@mms/shared";
+import { Button } from "@/components/ui/button";
 
 const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
 
@@ -98,11 +99,11 @@ export default function InvoiceList({
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}>
+            <Button className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}>
               <Filter className="w-3.5 h-3.5" aria-hidden="true" /> {t("finance.filter.status")}
               {filterStatus.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{filterStatus.length}</span>}
               <ChevronDown className="w-3 h-3" aria-hidden="true" />
-            </button>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuLabel className="text-xs">{t("finance.filter.status")}</DropdownMenuLabel>
@@ -127,11 +128,11 @@ export default function InvoiceList({
         {filterStatus.length > 0 && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="flex gap-2 flex-wrap" aria-label={t("finance.filter.active")}>
             {filterStatus.map((s) => (
-              <button key={s} onClick={() => toggleStatus(s)} aria-label={t("finance.filter.remove", { label: statusLabel(s) })} className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+              <Button key={s} onClick={() => toggleStatus(s)} aria-label={t("finance.filter.remove", { label: statusLabel(s) })} className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                 {statusLabel(s)} <X className="w-3 h-3" aria-hidden="true" />
-              </button>
+              </Button>
             ))}
-            <button onClick={() => setFilterStatus([])} className="text-xs text-muted-foreground hover:text-foreground underline">{t("contacts.clearFilters")}</button>
+            <Button variant="link" onClick={() => setFilterStatus([])} className="text-xs text-muted-foreground hover:text-foreground underline p-0 h-auto">{t("contacts.clearFilters")}</Button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -252,13 +253,13 @@ export default function InvoiceList({
                       )}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => onView(inv)} aria-label={t("finance.viewInvoice", { id: inv.id })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                          <Button variant="ghost" onClick={() => onView(inv)} aria-label={t("finance.viewInvoice", { id: inv.id })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                             <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                          </button>
+                          </Button>
                           {inv.status !== "paid" && (
-                            <button onClick={() => onRecord(inv)} aria-label={t("finance.recordPaymentFor", { id: inv.id })} className="p-1.5 rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
+                            <Button variant="ghost" onClick={() => onRecord(inv)} aria-label={t("finance.recordPaymentFor", { id: inv.id })} className="p-1.5 rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
                               <ReceiptText className="w-3.5 h-3.5" aria-hidden="true" />
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </td>

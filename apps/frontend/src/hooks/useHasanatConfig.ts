@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_HASANAT_SETTINGS,
   HASANAT_MODULE_CONTRACT,
+  DEFAULT_HASANAT_FIELD_DEFS,
+  getSortedFields,
+  mergeTabbedFields,
+  getFlatFieldsConfig,
   type HasanatSettings,
 } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
@@ -10,10 +14,13 @@ function mergeHasanatSettings(settings: Partial<HasanatSettings> | null | undefi
   return {
     ...DEFAULT_HASANAT_SETTINGS,
     ...(settings ?? {}),
-    fields: {
-      ...(DEFAULT_HASANAT_SETTINGS.fields ?? {}),
-      ...(settings?.fields ?? {}),
-    },
+    formTabs: settings?.formTabs ?? DEFAULT_HASANAT_SETTINGS.formTabs ?? [],
+    enabledTabs: settings?.enabledTabs ?? DEFAULT_HASANAT_SETTINGS.enabledTabs ?? [],
+    requiredTabs: settings?.requiredTabs ?? DEFAULT_HASANAT_SETTINGS.requiredTabs ?? [],
+    fields: mergeTabbedFields(
+      DEFAULT_HASANAT_SETTINGS.fields || {},
+      settings?.fields
+    ),
     customFields: settings?.customFields ?? DEFAULT_HASANAT_SETTINGS.customFields ?? [],
     fieldOrder: settings?.fieldOrder ?? DEFAULT_HASANAT_SETTINGS.fieldOrder ?? [],
   };
@@ -53,8 +60,21 @@ export function useHasanatConfig() {
     setSettings(merged);
   }, []);
 
+  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
+  const customFields = settings.customFields ?? [];
+  const fieldOrder = settings.fieldOrder ?? DEFAULT_HASANAT_SETTINGS.fieldOrder ?? [];
+
+  const orderedFields = useMemo(
+    () => getSortedFields(DEFAULT_HASANAT_FIELD_DEFS, fieldOrder, fields, customFields),
+    [fieldOrder, fields, customFields],
+  );
+
   return {
     settings,
+    orderedFields,
+    fields,
+    customFields,
     updateSettings,
   };
 }
+

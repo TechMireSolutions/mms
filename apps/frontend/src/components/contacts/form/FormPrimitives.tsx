@@ -7,6 +7,9 @@ import { uploadUserImage } from "@/lib/imageUpload";
 import { cn } from "../../../lib/utils";
 import AvatarCropper from "../AvatarCropper";
 import FormSelect from "../../ui/FormSelect";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import useTranslation from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "../../ui/formStyles";
 export const INPUT = FORM_INPUT;
@@ -36,14 +39,15 @@ interface CardRemoveButtonProps {
  */
 export function CardRemoveButton({ onClick, label }: CardRemoveButtonProps): React.JSX.Element {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       onClick={onClick}
-      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${REMOVE_BTN}`}
+      className={`min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg transition-colors ${REMOVE_BTN}`}
       aria-label={label}
     >
       <Trash2 className="w-4 h-4" />
-    </button>
+    </Button>
   );
 }
 
@@ -170,14 +174,15 @@ export function EditableSelect({
                   <span className="truncate">{opt}</span>
                 </span>
                 {canEditOptions ? (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={(e) => handleRemove(opt, e)}
-                    className={`min-w-[28px] min-h-[28px] flex items-center justify-center rounded transition-colors ${REMOVE_BTN}`}
+                    className={`min-w-[28px] min-h-[28px] p-0 flex items-center justify-center rounded transition-colors ${REMOVE_BTN}`}
                     title={t("contacts.form.removeOption", { option: opt })}
                   >
-                    <X className="w-3 h-3" />
-                  </button>
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
                 ) : null}
               </div>
             );
@@ -188,7 +193,7 @@ export function EditableSelect({
         </div>
         {canEditOptions ? (
         <div className="p-2 flex gap-1.5 bg-muted/20 flex-shrink-0">
-          <input
+          <Input
             type="text"
             value={customVal}
             onChange={(e) => setCustomVal(e.target.value)}
@@ -200,15 +205,16 @@ export function EditableSelect({
               }
             }}
             placeholder={t("contacts.form.addNewTypePlaceholder")}
-            className="flex-1 min-w-0 px-2.5 py-1.5 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/60"
+            className="flex-1 min-w-0 px-2.5 py-1.5 text-xs rounded-lg border border-border bg-background focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:border-primary/60 h-auto"
           />
-          <button
+          <Button
             type="button"
+            size="sm"
             onClick={handleAdd}
-            className="px-2.5 py-1.5 inline-flex items-center justify-center text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0"
+            className="px-2.5 py-1.5 text-xs font-semibold rounded-lg flex-shrink-0"
           >
             {t("common.add")}
-          </button>
+          </Button>
         </div>
         ) : null}
       </PopoverContent>
@@ -330,14 +336,15 @@ function TagsInput({ selected = [], predefined = [], onChange }: TagsInputProps)
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20"
             >
               {tag}
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => toggle(tag)}
-                className="hover:text-primary/60 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center -mr-2"
+                className="hover:text-primary/60 transition-colors min-h-[44px] min-w-[44px] p-0 flex items-center justify-center -mr-2"
                 aria-label={t("contacts.form.removeTag", { tag })}
               >
                 <X className="w-3 h-3" />
-              </button>
+              </Button>
             </span>
           ))}
         </div>
@@ -347,23 +354,24 @@ function TagsInput({ selected = [], predefined = [], onChange }: TagsInputProps)
       {predefined.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {predefined.filter((t) => !selected.includes(t)).map((tag) => (
-            <button
+            <Button
               key={tag}
               type="button"
+              variant="outline"
               onClick={() => toggle(tag)}
               className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all"
             >
               + {tag}
-            </button>
+            </Button>
           ))}
         </div>
       )}
 
       
       <div className="flex gap-2">
-        <input
+        <Input
           ref={inputRef}
-          className={`${INPUT} flex-1`}
+          className="flex-1"
           value={inputVal}
           onChange={(e) => setInputVal(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -373,13 +381,14 @@ function TagsInput({ selected = [], predefined = [], onChange }: TagsInputProps)
           placeholder={t("contacts.form.typeTagPlaceholder")}
         />
         {inputVal.trim() && (
-          <button
+          <Button
             type="button"
+            size="sm"
             onClick={() => addCustom(inputVal)}
-            className="px-3 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors flex-shrink-0"
+            className="px-3 min-h-[44px] text-xs font-semibold flex-shrink-0"
           >
             {t("common.add")}
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -446,20 +455,14 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
   if (field.type === "boolean") {
     const isChecked = !!value;
     return (
-      <div className="flex items-center gap-2 pt-1">
-        <button
-          type="button"
-          onClick={() => !disabled && onChange(!isChecked)}
+      <div className="flex items-center gap-2 pt-1 h-[44px]">
+        <Checkbox
+          id={field.key}
+          checked={isChecked}
+          onCheckedChange={(checked) => !disabled && onChange(!!checked)}
           disabled={disabled}
           aria-label={t("contacts.form.toggleOption", { field: field.key })}
-          className={`w-11 h-11 flex-shrink-0 flex items-center justify-center transition-all bg-transparent ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
-        >
-          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-            isChecked ? "bg-primary border-primary" : "border-border bg-background"
-          }`}>
-            {isChecked && <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />}
-          </div>
-        </button>
+        />
         <span className="text-sm text-muted-foreground">{isChecked ? t("common.yes") : t("common.no")}</span>
       </div>
     );
@@ -537,7 +540,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
                 <span className="text-xl font-bold text-primary">{initials}</span>
               )}
             </div>
-            <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/90 transition-colors">
+            <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/90 transition-colors z-10">
               <Camera className="w-3 h-3" />
               <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
             </label>
@@ -546,13 +549,14 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
             <p className="font-semibold text-foreground mb-0.5">{field.label}</p>
             <p>{t("contacts.form.uploadAvatarInstructions")}</p>
             {fileUrl && (
-              <button
+              <Button
                 type="button"
+                variant="link"
                 onClick={() => onChange(null)}
-                className="text-destructive hover:text-destructive/90 mt-1 font-medium min-h-[44px]"
+                className="text-destructive hover:text-destructive/90 mt-1 font-medium min-h-[44px] h-auto p-0"
               >
                 {t("contacts.form.removePhoto")}
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -567,9 +571,9 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
               <FileText className="w-4 h-4 text-primary flex-shrink-0" />
               <span className="text-xs font-semibold truncate">{file.name}</span>
             </div>
-            <button onClick={() => onChange(null)} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors" type="button">
+            <Button variant="ghost" onClick={() => onChange(null)} className="min-w-[44px] min-h-[44px] p-0 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors" type="button">
               <X className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         ) : (
           <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-border rounded-xl hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
@@ -587,16 +591,14 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
     return (
       <div className="space-y-2">
         <div className="grid grid-cols-2 gap-2">
-          <input
-            className={INPUT}
+          <Input
             type="number"
             step="any"
             placeholder={t("contacts.form.latitude")}
             value={loc.lat}
             onChange={(e) => onChange({ ...loc, lat: parseFloat(e.target.value) })}
           />
-          <input
-            className={INPUT}
+          <Input
             type="number"
             step="any"
             placeholder={t("contacts.form.longitude")}
@@ -632,16 +634,17 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
         {Array.from({ length: 5 }).map((_, idx) => {
           const starValue = idx + 1;
           return (
-            <button
+            <Button
               key={idx}
               type="button"
+              variant="ghost"
               onClick={() => onChange(starValue)}
-              className={`w-11 h-11 flex items-center justify-center transition-all hover:scale-125 focus:outline-none ${
-                starValue <= currentRating ? "text-primary" : "text-muted-foreground/30"
+              className={`w-11 h-11 p-0 flex items-center justify-center transition-all hover:scale-125 hover:bg-transparent ${
+                starValue <= currentRating ? "text-primary hover:text-primary" : "text-muted-foreground/30 hover:text-muted-foreground/40"
               }`}
             >
               <Star className={`w-5 h-5 ${starValue <= currentRating ? "fill-primary" : "fill-transparent"}`} />
-            </button>
+            </Button>
           );
         })}
         {currentRating > 0 && (
@@ -664,8 +667,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false }: C
   }
   const inputType = field.type === "number" ? "number" : "text";
   return (
-    <input
-      className={INPUT}
+    <Input
       type={inputType}
       value={String(displayValue)}
       onChange={(e) => onChange(e.target.value)}

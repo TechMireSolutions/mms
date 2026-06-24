@@ -1,5 +1,15 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Checkbox } from "../ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import {
   CheckCircle2, XCircle, Save, Send, Users, Search,
   WifiOff, Wifi, MapPin, Scan, UploadCloud,
@@ -9,17 +19,12 @@ import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useStudentsByIds } from '@/hooks/useStudents';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
-import { getObject } from "../../lib/db";
 import type { Student } from "@/lib/data/studentsData";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import usePermissions from "@/hooks/usePermissions";
 import StatusToggle from "./StatusToggle";
 import { AttendanceFilterState } from "./AttendanceFilters";
 import {
-  type AttendanceModuleSettings,
-  DEFAULT_ATTENDANCE_SETTINGS,
-  DEFAULT_ATTENDANCE_FIELD_DEFS,
-  getSortedFields,
   type ModuleCustomField,
 } from "@mms/shared";
 
@@ -188,9 +193,9 @@ function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: Of
             Offline Mode — changes will sync when reconnected
             {queue.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-warning/30 text-[10px] font-bold">{queue.length} pending</span>}
           </div>
-          <button onClick={onSync} className="text-xs font-bold px-2.5 py-1 rounded-lg bg-warning/30 hover:bg-warning/40 transition-colors flex items-center gap-1">
+          <Button onClick={onSync} variant="ghost" size="sm" className="text-xs font-bold px-2.5 py-1 rounded-lg bg-warning/30 hover:bg-warning/40 hover:text-warning transition-colors flex items-center gap-1 h-auto">
             <UploadCloud className="w-3 h-3" aria-hidden="true" /> Sync Now
-          </button>
+          </Button>
         </motion.div>
       )}
       {!offline && queue.length > 0 && (
@@ -200,9 +205,9 @@ function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: Of
             <Wifi className="w-4 h-4" aria-hidden="true" />
             Back online — {queue.length} record{queue.length > 1 ? "s" : ""} ready to sync
           </div>
-          <button onClick={onSync} className="text-xs font-bold px-2.5 py-1 rounded-lg bg-success/30 hover:bg-success/40 transition-colors flex items-center gap-1">
+          <Button onClick={onSync} variant="ghost" size="sm" className="text-xs font-bold px-2.5 py-1 rounded-lg bg-success/30 hover:bg-success/40 hover:text-success transition-colors flex items-center gap-1 h-auto">
             <UploadCloud className="w-3 h-3" aria-hidden="true" /> Sync Now
-          </button>
+          </Button>
         </motion.div>
       )}
     </AnimatePresence>
@@ -222,10 +227,10 @@ function GeoTag({ geo, onRequest }: { geo: GeoData | "loading" | null; onRequest
     </span>
   );
   return (
-    <button onClick={onRequest}
-      className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium px-2 py-1 rounded-lg border border-dashed border-border hover:bg-muted transition-colors">
+    <Button onClick={onRequest} variant="outline" size="sm"
+      className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium px-2 py-1 rounded-lg border border-dashed border-border hover:bg-muted hover:text-muted-foreground transition-colors h-auto bg-transparent">
       <MapPin className="w-3 h-3" aria-hidden="true" /> Tag Location
-    </button>
+    </Button>
   );
 }
 
@@ -250,7 +255,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
           <p className="text-[11px] text-muted-foreground">Camera preview will appear here</p>
         </div>
       </div>
-      <button onClick={onClose} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Dismiss</button>
+      <Button onClick={onClose} variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground transition-colors h-auto py-1">Dismiss</Button>
     </motion.div>
   );
 }
@@ -261,7 +266,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
  * MarkAttendance
  */
 export default function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
-  const { statuses } = useAttendanceConfig();
+  const { settings, statuses, fields, customFields, orderedFields } = useAttendanceConfig();
   const { can } = usePermissions();
   const sessions = useSessionsCollection();
   const enrollments = useLiveCollection<Enrollment>("enrollments");
@@ -292,15 +297,6 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
     return fromEnrollments;
   }, [enrollments, enrolledStudents, filters.classId]);
 
-  // Read settings
-  const settings = useMemo(() => getObject<AttendanceModuleSettings>("attendance_settings", DEFAULT_ATTENDANCE_SETTINGS), []);
-  const fields = settings.fields || DEFAULT_ATTENDANCE_SETTINGS.fields || {};
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_ATTENDANCE_SETTINGS.fieldOrder || [];
-
-  const orderedFields = useMemo(() => {
-    return getSortedFields(DEFAULT_ATTENDANCE_FIELD_DEFS, fieldOrder, fields, customFields);
-  }, [fieldOrder, fields, customFields]);
 
   const [rows, setRows] = useState<AttendanceRow[]>(() => {
     if (!filters.classId || !filters.date) return [];
@@ -570,17 +566,17 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {isDraft && <span className="px-2 py-1 rounded-lg bg-warning/15 text-warning text-[11px] font-bold">Draft Saved</span>}
-          <button onClick={() => setShowFaceAI((o) => !o)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+          <Button onClick={() => setShowFaceAI((o) => !o)} variant="outline" size="sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted hover:text-foreground transition-colors h-auto">
             <Scan className="w-3 h-3" aria-hidden="true" /> Face AI
-          </button>
+          </Button>
           <div className="flex rounded-lg border border-border overflow-hidden text-xs font-semibold" role="group" aria-label="Bulk actions">
-            <button onClick={() => markAll("present")} className="px-3 py-1.5 bg-success/10 text-success hover:bg-success/15 transition-colors flex items-center gap-1">
+            <Button onClick={() => markAll("present")} variant="ghost" className="px-3 py-1.5 rounded-none bg-success/10 text-success hover:bg-success/15 hover:text-success transition-colors flex items-center gap-1 h-auto font-semibold">
               <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> All Present
-            </button>
-            <button onClick={() => markAll("absent")} className="px-3 py-1.5 bg-destructive/10 text-destructive hover:bg-destructive/15 transition-colors flex items-center gap-1">
+            </Button>
+            <Button onClick={() => markAll("absent")} variant="ghost" className="px-3 py-1.5 rounded-none bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive transition-colors flex items-center gap-1 h-auto font-semibold">
               <XCircle className="w-3 h-3" aria-hidden="true" /> All Absent
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -602,7 +598,7 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
         <label htmlFor="search-mark" className="sr-only">Search student</label>
-        <input 
+        <Input 
           id="search-mark"
           value={search} 
           onChange={(e) => setSearch(e.target.value)}
@@ -662,13 +658,13 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
                         return (
                           <td key="timeIn" className="px-3 py-2.5">
                             <label htmlFor={`time-in-${row.studentId}`} className="sr-only">Time In</label>
-                            <input 
+                            <Input 
                               id={`time-in-${row.studentId}`}
                               type="time" 
                               value={row.timeIn}
                               onChange={(e) => setRow(row.studentId, "timeIn", e.target.value)}
                               disabled={row.status === "absent"}
-                              className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40" 
+                              className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 h-8" 
                             />
                           </td>
                         );
@@ -678,13 +674,13 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
                         return (
                           <td key="timeOut" className="px-3 py-2.5">
                             <label htmlFor={`time-out-${row.studentId}`} className="sr-only">Time Out</label>
-                            <input 
+                            <Input 
                               id={`time-out-${row.studentId}`}
                               type="time" 
                               value={row.timeOut}
                               onChange={(e) => setRow(row.studentId, "timeOut", e.target.value)}
                               disabled={row.status === "absent"}
-                              className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40" 
+                              className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 h-8" 
                             />
                           </td>
                         );
@@ -694,13 +690,13 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
                         return (
                           <td key="notes" className="px-3 py-2.5">
                             <label htmlFor={`notes-${row.studentId}`} className="sr-only">Notes</label>
-                            <input 
+                            <Input 
                               id={`notes-${row.studentId}`}
                               type="text" 
                               value={row.notes} 
                               placeholder="Add note…"
                               onChange={(e) => setRow(row.studentId, "notes", e.target.value)}
-                              className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground" 
+                              className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground h-8" 
                             />
                           </td>
                         );
@@ -712,30 +708,33 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
                         return (
                           <td key={field.id} className="px-3 py-2.5">
                             {field.type === "select" ? (
-                              <select
-                                value={val}
-                                onChange={(e) => setRow(row.studentId, field.id, e.target.value)}
-                                className="text-xs rounded-lg border border-border bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-pointer"
+                              <Select
+                                value={val || "__empty__"}
+                                onValueChange={(v) => setRow(row.studentId, field.id, v === "__empty__" ? "" : v)}
                               >
-                                <option value="">Select…</option>
-                                {field.options?.map((opt) => (
-                                  <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                              </select>
+                                <SelectTrigger className="h-8 text-xs py-1 px-2 w-[120px] bg-background">
+                                  <SelectValue placeholder="Select…" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__empty__">Select…</SelectItem>
+                                  {field.options?.map((opt) => (
+                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             ) : field.type === "boolean" ? (
-                              <input
-                                type="checkbox"
+                              <Checkbox
                                 checked={!!val}
-                                onChange={(e) => setRow(row.studentId, field.id, e.target.checked)}
-                                className="w-4 h-4 rounded border border-border accent-primary cursor-pointer animate-none"
+                                onCheckedChange={(checked) => setRow(row.studentId, field.id, !!checked)}
+                                className="w-4 h-4 rounded border border-border cursor-pointer"
                               />
                             ) : (
-                              <input
+                              <Input
                                 type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
                                 value={val}
                                 onChange={(e) => setRow(row.studentId, field.id, e.target.value)}
                                 placeholder={field.placeholder || "Enter…"}
-                                className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground"
+                                className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground h-8"
                               />
                             )}
                           </td>
@@ -756,16 +755,16 @@ export default function MarkAttendance({ filters, role, records, setRecords }: M
       <footer className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-xs text-muted-foreground">{rows.length} students · {filteredRows.length} shown</p>
         <div className="flex gap-2">
-          <button onClick={handleSaveDraft}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+          <Button onClick={handleSaveDraft} variant="outline"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-auto">
             <Save className="w-3.5 h-3.5" aria-hidden="true" /> Save Draft
-          </button>
-          <button onClick={handleSubmit}
+          </Button>
+          <Button onClick={handleSubmit}
             disabled={!can("attendance.write")}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors">
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors h-auto">
             <Send className="w-3.5 h-3.5" aria-hidden="true" />
             {isOffline ? "Save Offline" : submitted ? "Update Attendance" : "Submit Attendance"}
-          </button>
+          </Button>
         </div>
       </footer>
     </section>

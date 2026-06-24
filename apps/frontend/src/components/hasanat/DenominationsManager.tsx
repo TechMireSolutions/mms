@@ -5,6 +5,9 @@ import { Denomination } from '@/lib/data/hasanatData';
 import FormModal from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { DEFAULT_DENOMINATION_COLOR, getDenominationPresetColors } from "@/lib/denominationColors";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const EMPTY: Denomination = { id: "", name: "", points: 100, color: DEFAULT_DENOMINATION_COLOR, description: "", icon: "⭐", active: true };
 const PRESET_ICONS = ["⭐", "🌟", "✨", "💎", "👑", "🏆", "🎖️", "📿"];
@@ -48,23 +51,23 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="denom-name" className={FORM_LABEL}>Card Name *</label>
-            <input id="denom-name" className={FORM_INPUT} value={data.name} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Gold Card" />
+            <Input id="denom-name" className={FORM_INPUT} value={data.name} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Gold Card" />
           </div>
           <div>
             <label htmlFor="denom-pts" className={FORM_LABEL}>Points Value *</label>
-            <input id="denom-pts" type="number" className={FORM_INPUT} value={data.points} onChange={(e) => upd("points", +e.target.value)} min={1} />
+            <Input id="denom-pts" type="number" className={FORM_INPUT} value={data.points} onChange={(e) => upd("points", +e.target.value)} min={1} />
           </div>
         </div>
         <div>
           <label htmlFor="denom-desc" className={FORM_LABEL}>Description</label>
-          <input id="denom-desc" className={FORM_INPUT} value={data.description} onChange={(e) => upd("description", e.target.value)} placeholder="When is this card awarded?" />
+          <Input id="denom-desc" className={FORM_INPUT} value={data.description} onChange={(e) => upd("description", e.target.value)} placeholder="When is this card awarded?" />
         </div>
 
         <fieldset>
           <legend className={FORM_LABEL}>Icon</legend>
           <div className="flex gap-2 flex-wrap">
             {PRESET_ICONS.map((ic) => (
-              <button
+              <Button
                 type="button"
                 aria-pressed={data.icon === ic}
                 key={ic}
@@ -72,7 +75,7 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
                 className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${data.icon === ic ? "bg-primary/15 ring-2 ring-primary" : "bg-muted hover:bg-muted/80"}`}
               >
                 {ic}
-              </button>
+              </Button>
             ))}
           </div>
         </fieldset>
@@ -81,7 +84,7 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
           <legend className={FORM_LABEL}>Color</legend>
           <div className="flex gap-2 flex-wrap items-center">
             {presetColors.map((c) => (
-              <button
+              <Button
                 type="button"
                 aria-pressed={data.color === c}
                 aria-label={`Select color ${c}`}
@@ -92,12 +95,12 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
               />
             ))}
             <label className="sr-only" htmlFor="custom-color">Custom Color</label>
-            <input id="custom-color" type="color" value={data.color} onChange={(e) => upd("color", e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 p-0" title="Custom color" />
+            <Input id="custom-color" type="color" value={data.color} onChange={(e) => upd("color", e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 p-0" title="Custom color" />
           </div>
         </fieldset>
 
         <label className="flex items-center gap-2.5 cursor-pointer">
-          <input type="checkbox" checked={data.active} onChange={(e) => upd("active", e.target.checked)} className="w-4 h-4 accent-primary" />
+          <Checkbox checked={data.active} onCheckedChange={(checked) => upd("active", !!checked)} />
           <span className="text-sm font-medium text-foreground">Active</span>
         </label>
       </div>
@@ -137,13 +140,13 @@ export default function DenominationsManager({ denoms, onUpdate }: Denominations
     <section aria-label="Denominations Manager" className="space-y-4">
       <header className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground m-0">{denoms.length} denomination{denoms.length !== 1 ? "s" : ""}</p>
-        <button
+        <Button
           type="button"
           onClick={() => { setEditDenom(null); setShowModal(true); }}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> New Denomination
-        </button>
+        </Button>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -172,15 +175,15 @@ export default function DenominationsManager({ denoms, onUpdate }: Denominations
             <footer className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-foreground px-2 py-1 rounded-lg bg-muted">{d.points} pts</span>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button type="button" onClick={() => toggleActive(d.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={d.active ? "Deactivate" : "Activate"} aria-label={d.active ? "Deactivate" : "Activate"}>
+                <Button variant="ghost" type="button" onClick={() => toggleActive(d.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={d.active ? "Deactivate" : "Activate"} aria-label={d.active ? "Deactivate" : "Activate"}>
                   {d.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
-                </button>
-                <button type="button" aria-label={`Edit ${d.name}`} onClick={() => { setEditDenom(d); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
+                </Button>
+                <Button variant="ghost" type="button" aria-label={`Edit ${d.name}`} onClick={() => { setEditDenom(d); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
                   <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </button>
-                <button type="button" aria-label={`Delete ${d.name}`} onClick={() => handleDelete(d.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                </Button>
+                <Button variant="ghost" type="button" aria-label={`Delete ${d.name}`} onClick={() => handleDelete(d.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </button>
+                </Button>
               </div>
             </footer>
           </motion.article>

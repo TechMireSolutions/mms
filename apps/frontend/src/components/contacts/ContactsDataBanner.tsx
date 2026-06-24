@@ -4,6 +4,7 @@ import useTranslation from '@/hooks/useTranslation';
 import { useContacts } from '@/hooks/useContacts';
 import { useContactsSyncOutbox } from '@/hooks/useContactsSyncOutbox';
 import ConfirmAlertDialog from '@/components/ui/ConfirmAlertDialog';
+import { Button } from '@/components/ui/button';
 
 interface ContactsDataBannerProps {
   onReviewConflicts?: () => void;
@@ -66,13 +67,14 @@ export default function ContactsDataBanner({
           </span>
         </div>
         {!flushing && pendingCount > 0 && (
-          <button
+          <Button
             type="button"
+            variant="link"
             onClick={() => void flush()}
-            className="shrink-0 text-xs font-semibold underline hover:no-underline"
+            className="shrink-0 text-xs font-semibold underline hover:no-underline p-0 h-auto text-info shadow-none"
           >
             {t('contacts.sync.retryNow')}
-          </button>
+          </Button>
         )}
       </div>,
     );
@@ -90,20 +92,22 @@ export default function ContactsDataBanner({
           <span>{t('contacts.sync.conflicts', { count: conflictCount })}</span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button
+          <Button
             type="button"
+            variant="link"
             onClick={onReviewConflicts}
-            className="text-xs font-semibold underline hover:no-underline"
+            className="text-xs font-semibold underline hover:no-underline p-0 h-auto text-warning shadow-none"
           >
             {t('contacts.sync.reviewConflicts')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="link"
             onClick={() => setDismissAllOpen(true)}
-            className="text-xs font-semibold underline hover:no-underline opacity-80"
+            className="text-xs font-semibold underline hover:no-underline opacity-80 p-0 h-auto text-warning shadow-none"
           >
             {t('contacts.sync.dismissConflicts')}
-          </button>
+          </Button>
         </div>
       </div>,
     );

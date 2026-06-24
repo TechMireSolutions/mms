@@ -16,6 +16,7 @@ import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useEnrollmentConfig } from "@/hooks/useEnrollmentConfig";
+import { Button } from "@/components/ui/button";
 
 const STEPS: Step[] = [
   { id: "student",     label: "Student",     icon: User },
@@ -183,43 +184,41 @@ export default function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWiz
       <div className="flex items-center justify-between pt-2 border-t border-border">
         <div>
           {step === 0 ? (
-            <button
-              type="button"
+            <Button
               onClick={onCancel}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              variant="outline"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-auto"
             >
               <X className="w-3.5 h-3.5" aria-hidden="true" /> Cancel
-            </button>
+            </Button>
           ) : (
-            <button
-              type="button"
+            <Button
               onClick={() => go(-1)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+              variant="outline"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-foreground hover:bg-muted transition-colors h-auto"
             >
               <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" /> Back
-            </button>
+            </Button>
           )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground" aria-live="polite">Step {step + 1} of {STEPS.length}</span>
           {step < STEPS.length - 1 ? (
-            <button
-              type="button"
+            <Button
               onClick={handleNext}
               disabled={!canNext()}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors h-auto"
             >
               Next <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-            </button>
+            </Button>
           ) : (
-            <button
-              type="button"
+            <Button
               onClick={handleSubmit}
               disabled={!canConfirm()}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors h-auto"
             >
               <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Confirm Enrollment
-            </button>
+            </Button>
           )}
         </div>
       </div>

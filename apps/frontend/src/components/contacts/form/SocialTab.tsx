@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Share2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
 import { FieldDefinition } from "@mms/shared";
@@ -123,14 +124,15 @@ export default function SocialTab({
         </motion.div>
       ))}
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => upd([...socials, createNewSocial()])}
-        className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+        className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
       >
         <Plus className="w-4 h-4" />
         <span>{t("contacts.form.addSocialLink")}</span>
-      </button>
+      </Button>
     </div>
   );
 }

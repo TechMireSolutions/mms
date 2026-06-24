@@ -174,12 +174,13 @@ export default function BrandColorPanel({
             const lowContrast =
               presetContrast !== null && !meetsWcagAaUiContrast(presetContrast);
             return (
-              <button
+              <Button
                 key={preset.id}
                 type="button"
+                variant="ghost"
                 onClick={() => onApplyPreset(preset.primaryColor, preset.secondaryColor)}
                 className={cn(
-                  'flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all hover:border-primary/40',
+                  'h-auto flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all hover:border-primary/40',
                   active ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-muted/20',
                 )}
               >
@@ -213,7 +214,7 @@ export default function BrandColorPanel({
                     {preset.primaryColor}
                   </span>
                 </span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -277,20 +278,22 @@ export default function BrandColorPanel({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-3 border-b border-border p-4 md:border-b-0 md:border-r">
-            <button
+            <Button
               type="button"
-              className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm"
+              variant="ghost"
+              className="w-full h-auto rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm"
               style={{ backgroundColor: onPrimaryBg, color: onPrimaryFg }}
             >
               {t('theme.previewPrimaryAction')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="w-full rounded-lg border px-4 py-2.5 text-sm font-semibold"
+              variant="ghost"
+              className="w-full h-auto rounded-lg border px-4 py-2.5 text-sm font-semibold"
               style={{ backgroundColor: onSecondaryBg, color: onSecondaryFg, borderColor: onSecondaryBg }}
             >
               {t('theme.previewAccentAction')}
-            </button>
+            </Button>
             <div className="flex flex-wrap gap-2">
               <span
                 className="rounded-full px-2.5 py-1 text-[10px] font-semibold"

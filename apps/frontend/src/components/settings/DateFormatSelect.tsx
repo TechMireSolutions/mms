@@ -80,11 +80,12 @@ export default function DateFormatSelect({
         <PopoverContent className="w-[min(100vw-2rem,22rem)] p-1" align="start">
           <div className="max-h-[min(50vh,18rem)] overflow-y-auto">
             {options.map((opt) => (
-              <button
+              <Button
                 key={opt.value}
                 type="button"
+                variant="ghost"
                 className={cn(
-                  'flex w-full items-start gap-2 rounded-sm px-2 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground',
+                  'h-auto w-full justify-start items-start gap-2 rounded-sm px-2 py-2 text-left font-normal hover:bg-accent hover:text-accent-foreground',
                   normalizedValue === opt.value && 'bg-accent text-accent-foreground',
                 )}
                 onClick={() => {
@@ -101,12 +102,12 @@ export default function DateFormatSelect({
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block font-mono text-xs">{opt.pattern}</span>
-                  <span className="block text-muted-foreground">{opt.sample}</span>
-                  <span className="block text-[11px] text-muted-foreground/80">
+                  <span className="block text-muted-foreground text-left">{opt.sample}</span>
+                  <span className="block text-left text-[11px] text-muted-foreground/80">
                     {t(opt.hintKey as AppTranslationKey)}
                   </span>
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
         </PopoverContent>

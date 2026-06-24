@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { ROUTES } from "@/lib/config/routes";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,13 +67,17 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
       <BackgroundJobsTray compact={compact} />
 
       <Popover>
-        <PopoverTrigger
-          type="button"
-          aria-label="Notifications"
-          className="relative rounded-lg p-2 hover:bg-muted transition-colors"
-        >
-          <Bell className="h-[18px] w-[18px] text-muted-foreground" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Notifications"
+            className="relative rounded-lg p-2 hover:bg-muted transition-colors h-9 w-9"
+          >
+            <Bell className="h-[18px] w-[18px] text-muted-foreground" />
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
+          </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-80 p-0">
           <div className="border-b border-border px-4 py-3">
@@ -105,9 +110,13 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             ))}
           </div>
           <div className="border-t border-border px-4 py-2.5">
-            <button type="button" className="text-xs font-medium text-primary hover:underline">
+            <Button
+              type="button"
+              variant="link"
+              className="text-xs font-medium text-primary hover:underline p-0 h-auto"
+            >
               View all notifications
-            </button>
+            </Button>
           </div>
         </PopoverContent>
       </Popover>
@@ -115,27 +124,30 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
       {!compact ? <div className="mx-1 hidden h-6 w-px bg-border sm:block" /> : null}
 
       <DropdownMenu>
-        <DropdownMenuTrigger
-          type="button"
-          aria-label="Account menu"
-          className={cn(
-            "flex items-center rounded-lg transition-colors hover:bg-muted",
-            compact ? "gap-1 p-1.5" : "gap-2.5 py-1.5 pl-2 pr-3",
-          )}
-        >
-          <Avatar className={compact ? "h-7 w-7" : "h-8 w-8"}>
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          {!compact ? (
-            <>
-              <div className="hidden text-left sm:block">
-                <p className="text-sm font-medium leading-none">{user?.name ?? "User"}</p>
-              </div>
-              <ChevronDown className="hidden h-3 w-3 text-muted-foreground sm:block" />
-            </>
-          ) : null}
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label="Account menu"
+            className={cn(
+              "flex items-center rounded-lg transition-colors hover:bg-muted justify-start font-normal h-auto",
+              compact ? "gap-1 p-1.5" : "gap-2.5 py-1.5 pl-2 pr-3",
+            )}
+          >
+            <Avatar className={compact ? "h-7 w-7" : "h-8 w-8"}>
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {!compact ? (
+              <>
+                <div className="hidden text-left sm:block">
+                  <p className="text-sm font-medium leading-none">{user?.name ?? "User"}</p>
+                </div>
+                <ChevronDown className="hidden h-3 w-3 text-muted-foreground sm:block" />
+              </>
+            ) : null}
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>

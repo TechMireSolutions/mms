@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import useTranslation from '@/hooks/useTranslation';
+import { Button } from '@/components/ui/button';
 
 interface ContactsListPaginationProps {
   page: number;
@@ -30,29 +31,31 @@ export default function ContactsListPagination({
         {t('contacts.pagination.range', { from, to, total })}
       </p>
       <div className="flex items-center gap-1">
-        <button
+        <Button
           type="button"
+          variant="outline"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border disabled:opacity-40 hover:bg-muted/60"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border disabled:opacity-40 hover:bg-muted/60 h-auto shadow-none text-foreground"
           aria-label={t('contacts.pagination.previous')}
         >
           <ChevronLeft className="w-4 h-4" />
           {t('contacts.pagination.previous')}
-        </button>
+        </Button>
         <span className="text-xs text-muted-foreground px-2 tabular-nums">
           {t('contacts.pagination.pageOf', { page, totalPages })}
         </span>
-        <button
+        <Button
           type="button"
+          variant="outline"
           disabled={!hasMore && page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border disabled:opacity-40 hover:bg-muted/60"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border disabled:opacity-40 hover:bg-muted/60 h-auto shadow-none text-foreground"
           aria-label={t('contacts.pagination.next')}
         >
           {t('contacts.pagination.next')}
           <ChevronRight className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );

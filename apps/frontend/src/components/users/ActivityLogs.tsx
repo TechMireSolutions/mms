@@ -10,6 +10,9 @@ import useTranslation from '@/hooks/useTranslation';
 import useGlobalSettings from '@/hooks/useGlobalSettings';
 import { DatePicker } from '../ui/DatePicker';
 import { ActivityActionBadge } from '@/components/users/UserBadges';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import FormSelect from '@/components/ui/FormSelect';
 
 const PAGE_SIZE = 15;
 
@@ -50,44 +53,45 @@ export default function ActivityLogs({ logs, users }: ActivityLogsProps): React.
 
   const fmtTs = (ts: string): string => formatDate(ts, globalSettings.dateFormat, false);
 
+  const userOptions = useMemo(() => [
+    { value: 'all', label: t('users.activityAllUsers') },
+    ...users.map((u) => ({ value: u.id, label: u.name })),
+  ], [users, t]);
+
+  const actionOptions = useMemo(() => [
+    { value: 'all', label: t('users.activityAllActions') },
+    ...ACTIVITY_ACTION_VALUES.map((a) => ({
+      value: a,
+      label: t(`users.action.${a === 'login_failed' ? 'loginFailed' : a === 'role_change' ? 'roleChange' : a}`),
+    })),
+  ], [t]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[180px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
+          <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('users.activitySearch')}
-            className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="pl-9.5"
           />
         </div>
-        <select
+        <FormSelect
           value={userFilter}
-          onChange={(e) => setUser(e.target.value)}
-          className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
+          onChange={setUser}
+          options={userOptions}
           aria-label={t('users.activityFilterUser')}
-        >
-          <option value="all">{t('users.activityAllUsers')}</option>
-          {users.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.name}
-            </option>
-          ))}
-        </select>
-        <select
+          className="w-auto min-w-[140px]"
+        />
+        <FormSelect
           value={actionFilter}
-          onChange={(e) => setAct(e.target.value)}
-          className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
+          onChange={setAct}
+          options={actionOptions}
           aria-label={t('users.activityFilterAction')}
-        >
-          <option value="all">{t('users.activityAllActions')}</option>
-          {ACTIVITY_ACTION_VALUES.map((a) => (
-            <option key={a} value={a}>
-              {t(`users.action.${a === 'login_failed' ? 'loginFailed' : a === 'role_change' ? 'roleChange' : a}`)}
-            </option>
-          ))}
-        </select>
+          className="w-auto min-w-[160px]"
+        />
         <DatePicker value={dateFrom} onChange={setFrom} className="text-sm" />
         <DatePicker value={dateTo} onChange={setTo} className="text-sm" />
       </div>
@@ -139,24 +143,28 @@ export default function ActivityLogs({ logs, users }: ActivityLogsProps): React.
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{t('users.activityPageInfo', { page, total: totalPages, count: filtered.length })}</span>
         <div className="flex gap-1">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
-            className="rounded-lg border border-border p-1.5 disabled:opacity-40"
+            className="rounded-lg border border-border p-1.5 disabled:opacity-40 h-8 w-8 shadow-none"
             aria-label={t('users.activityPrev')}
           >
             <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className="rounded-lg border border-border p-1.5 disabled:opacity-40"
+            className="rounded-lg border border-border p-1.5 disabled:opacity-40 h-8 w-8 shadow-none"
             aria-label={t('users.activityNext')}
           >
             <ChevronRight className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

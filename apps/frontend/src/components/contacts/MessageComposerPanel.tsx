@@ -5,6 +5,7 @@ import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { openDeviceSmsComposer } from '@/lib/deviceSms';
 import { notify } from '@/lib/notify';
 import FormModal from '@/components/ui/FormModal';
+import { Button } from '@/components/ui/button';
 import { FormSelect } from './form/FormPrimitives';
 import { FORM_LABEL, FORM_TEXTAREA } from '@/components/ui/formStyles';
 import useTranslation from '@/hooks/useTranslation';
@@ -185,13 +186,14 @@ export default function MessageComposerPanel({
               <li key={contact.id} className="flex items-center gap-2 text-xs text-muted-foreground">
                 <User className="w-3 h-3 flex-shrink-0" />
                 <span className="truncate">{contact.name || contact.firstName}</span>
-                <button
+                <Button
                   type="button"
-                  className="ml-auto text-primary font-semibold hover:underline flex-shrink-0"
+                  variant="link"
+                  className="ml-auto text-primary font-semibold hover:underline flex-shrink-0 h-auto p-0"
                   onClick={() => openForContact(contact, message)}
                 >
                   {isSms ? t('contacts.openSmsApp') : t('contacts.whatsapp.open')}
-                </button>
+                </Button>
               </li>
             ))}
           </ul>

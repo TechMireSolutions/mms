@@ -5,6 +5,8 @@ import {
   Key, ExternalLink, AlertCircle, ChevronDown, ChevronUp,
   Users, Loader2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 import {
   GOOGLE_CONTACTS_OAUTH_MESSAGE,
@@ -16,7 +18,7 @@ import {
 } from '@/hooks/useContacts';
 import useTranslation from "@/hooks/useTranslation";
 import { Contact, normalizeToE164, parsePhoneNumber } from "@mms/shared";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 import { isApiError } from "@/lib/apiClient";
 import { queryClientInstance } from "@/lib/query-client";
 import { CONTACTS_GOOGLE_SYNC_QUERY_KEY } from "@/hooks/useContacts";
@@ -303,15 +305,16 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
             </span>
           )}
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => setShowSetup((v) => !v)}
-          className="text-xs font-medium min-h-[44px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+          className="text-xs font-medium min-h-[44px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors shadow-none"
         >
           <Key className="w-3 h-3" />
           <span>{isConfigured ? t('contacts.sync.editCredentials') : t('contacts.sync.setup')}</span>
           {showSetup ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-        </button>
+        </Button>
       </div>
 
       <div className="p-4 space-y-4 text-left">
@@ -332,9 +335,8 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
             <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">{t('contacts.sync.oauthHeader')}</h4>
             <div>
               <label className={FORM_LABEL} htmlFor="clientId">{t('contacts.sync.clientIdLabel')}</label>
-              <input
+              <Input
                 id="clientId"
-                className={FORM_INPUT}
                 value={form.clientId}
                 onChange={(e) => setForm((f) => ({ ...f, clientId: e.target.value }))}
                 placeholder="xxxx.apps.googleusercontent.com"
@@ -342,10 +344,9 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
             </div>
             <div>
               <label className={FORM_LABEL} htmlFor="clientSecret">{t('contacts.sync.clientSecretLabel')}</label>
-              <input
+              <Input
                 id="clientSecret"
                 type="password"
-                className={FORM_INPUT}
                 value={form.clientSecret}
                 onChange={(e) => setForm((f) => ({ ...f, clientSecret: e.target.value }))}
                 placeholder="GOCSPX-…"
@@ -357,23 +358,24 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
               </p>
             )}
             <div className="flex gap-2">
-              <button
+              <Button
                 type="button"
                 onClick={handleSaveCredentials}
-                className="px-4 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
+                className="px-4 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors shadow-none"
               >
                 {t('contacts.sync.saveCredentials')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => {
                   setShowSetup(false);
                   setError("");
                 }}
-                className="px-4 min-h-[44px] rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card"
+                className="px-4 min-h-[44px] rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
               >
                 {t('common.cancel')}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -382,37 +384,37 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
         {isConfigured && !isConnected && !showSetup && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">{t('contacts.sync.credentialsSaved')}</p>
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleConnect}
-              className="w-full flex items-center gap-2 px-4 min-h-[44px] rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors shadow-sm"
+              className="w-full flex items-center gap-2 px-4 min-h-[44px] rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors shadow-none justify-start"
             >
               <Globe className="w-4 h-4 text-muted-foreground" />
               <span>{t('contacts.sync.connectGoogle')}</span>
               <ExternalLink className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
-            </button>
+            </Button>
 
             {showAuthCode && (
               <div className="space-y-2 p-3 rounded-xl bg-info/10 border border-info/30 text-info">
                 <label className={FORM_LABEL} htmlFor="authCode">
                   {t('contacts.sync.pasteAuthCode')}
                 </label>
-                <input
+                <Input
                   id="authCode"
-                  className={FORM_INPUT}
                   value={authCode}
                   onChange={(e) => setAuthCode(e.target.value)}
                   placeholder={t('contacts.sync.pasteAuthCodePlaceholder')}
                 />
-                <button
+                <Button
                   type="button"
                   onClick={handleExchangeCode}
                   disabled={!authCode.trim() || exchanging}
-                  className="flex items-center gap-2 px-4 min-h-[44px] rounded-lg bg-info text-info-foreground text-xs font-bold hover:bg-info/90 disabled:opacity-60 transition-colors border border-transparent"
+                  className="flex items-center gap-2 px-4 min-h-[44px] rounded-lg bg-info text-info-foreground text-xs font-bold hover:bg-info/90 disabled:opacity-60 transition-colors border border-transparent shadow-none"
                 >
                   {exchanging ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}
                   <span>{t('contacts.sync.confirmAuth')}</span>
-                </button>
+                </Button>
               </div>
             )}
 
@@ -433,14 +435,15 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
                 <p className="text-sm font-semibold text-success">{t('contacts.sync.googleConnectedTitle')}</p>
                 <p className="text-xs text-success/90">{t('contacts.sync.googleConnectedDesc')}</p>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={handleDisconnect}
-                className="flex items-center gap-1 text-xs transition-colors border border-border bg-card rounded-lg px-2.5 min-h-[44px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                className="flex items-center gap-1 text-xs transition-colors border border-border bg-card rounded-lg px-2.5 min-h-[44px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive shadow-none"
               >
                 <Unlink className="w-3 h-3" />
                 <span>{t('contacts.sync.disconnect')}</span>
-              </button>
+              </Button>
             </div>
 
             {error && (
@@ -466,11 +469,11 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
               </div>
             )}
 
-            <button
+            <Button
               type="button"
               onClick={handleSync}
               disabled={syncing || !canWrite}
-              className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
+              className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-none"
             >
               {syncing ? (
                 <>
@@ -483,7 +486,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
                   <span>{t('contacts.sync.syncGoogle')}</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -566,16 +569,17 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
         
         <input ref={fileRef} type="file" accept=".vcf,text/vcard" className="hidden" onChange={handleFile} />
         {previewList.length === 0 && !result && (
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => canWrite && fileRef.current?.click()}
             disabled={!canWrite}
-            className="w-full flex flex-col items-center justify-center gap-2 py-7 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer bg-card disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card"
+            className="w-full flex flex-col items-center justify-center gap-2 py-7 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer bg-card disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card h-auto shadow-none"
           >
             <FileText className="w-7 h-7 opacity-40" />
             <span className="text-sm font-semibold text-foreground">{t('contacts.sync.uploadVcf')}</span>
             <span className="text-xs">{t('contacts.sync.dragDropBrowse')}</span>
-          </button>
+          </Button>
         )}
 
         {previewList.length > 0 && (
@@ -584,13 +588,14 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
               <p className="text-sm font-semibold text-foreground">
                 {previewList.length} {t('contacts.sync.contactsFound')}
               </p>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setPreviewList([])}
-                className="text-xs min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors bg-transparent"
+                className="text-xs min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors bg-transparent shadow-none"
               >
                 {t('contacts.sync.clear')}
-              </button>
+              </Button>
             </div>
             <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-xl p-2 bg-card">
               {previewList.slice(0, 50).map((c, i) => (
@@ -608,27 +613,28 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
               )}
             </div>
             <div className="flex gap-2">
-              <button
+              <Button
                 type="button"
                 onClick={handleImport}
                 disabled={importing || !canWrite}
-                className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
+                className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-none"
               >
                 {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                 <span>
                   {t('contacts.sync.importCount', { count: previewList.length })}
                 </span>
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => {
                   setPreviewList([]);
                   fileRef.current?.click();
                 }}
-                className="px-4 min-h-[44px] rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-card"
+                className="px-4 min-h-[44px] rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
               >
                 {t('contacts.sync.chooseDifferentFile')}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -649,17 +655,18 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
         
         <div className="border-t border-border pt-3 flex items-center justify-between">
           <span className="text-xs text-muted-foreground">{t('contacts.sync.exportAppleHint')}</span>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={handleExport}
             disabled={contacts.length === 0}
-            className="flex items-center gap-1.5 px-3.5 min-h-[44px] rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50 transition-colors bg-card"
+            className="flex items-center gap-1.5 px-3.5 min-h-[44px] rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50 transition-colors bg-card shadow-none"
           >
             <Download className="w-3.5 h-3.5" />
             <span>
               {t('contacts.sync.exportVcf', { count: contacts.length })}
             </span>
-          </button>
+          </Button>
         </div>
       </div>
     </section>

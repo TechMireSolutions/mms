@@ -4,6 +4,8 @@ import { X, Check, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { uploadCanvasImage } from "@/lib/imageUpload";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import useTranslation from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 
 interface AvatarCropperProps {
   src: string;
@@ -146,14 +148,15 @@ export default function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperPr
             <h3 className="text-sm font-bold text-foreground">{t("contacts.form.cropProfilePhoto")}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">{t("contacts.form.cropperInstructions")}</p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onCancel}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors shadow-none"
             aria-label={t("contacts.form.closeCropper")}
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         <div className="flex items-center justify-center bg-neutral-900 py-6">
@@ -184,47 +187,48 @@ export default function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperPr
         <div className="px-5 py-3 border-t border-border space-y-3">
           <div className="flex items-center gap-3">
             <ZoomOut className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <input
-              type="range"
+            <Slider
               min={0.3}
               max={5}
               step={0.01}
-              value={scale}
-              onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="flex-1 accent-primary h-1.5 rounded-full bg-border"
+              value={[scale]}
+              onValueChange={(val) => setScale(val[0])}
+              className="flex-1"
               aria-label={t("contacts.form.zoomScale")}
             />
             <ZoomIn className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setRotation((r) => r - 90)}
-              className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-foreground"
+              className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-foreground shadow-none"
             >
               <RotateCw className="w-3.5 h-3.5 scale-x-[-1]" />
               <span>{t("contacts.form.rotate")}</span>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
               onClick={() => {
                 setScale(1);
                 setOffset({ x: 0, y: 0 });
                 setRotation(0);
               }}
-              className="px-3 min-h-[44px] rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-muted-foreground"
+              className="px-3 min-h-[44px] rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-muted-foreground shadow-none"
             >
               {t("contacts.form.reset")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={handleCrop}
-              className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-none"
             >
               <Check className="w-4 h-4" />
               <span>{t("contacts.form.applyPhoto")}</span>
-            </button>
+            </Button>
           </div>
         </div>
       </motion.div>

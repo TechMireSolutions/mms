@@ -317,7 +317,7 @@ function ensureAccessibleFillSurface(color: HslColor): HslColor {
   for (let step = 0; step < 24; step += 1) {
     const hex = hslColorToHex(adjusted);
     const whiteRatio = getContrastRatio('#ffffff', hex);
-    const darkText = hslColorToHex(tone(adjusted, { s: -15, l: -42 }));
+    const darkText = hslColorToHex({ h: adjusted.h, s: 30, l: 12 });
     const darkRatio = getContrastRatio(darkText, hex);
     if (meetsWcagAaTextContrast(whiteRatio) || meetsWcagAaTextContrast(darkRatio)) {
       return adjusted;

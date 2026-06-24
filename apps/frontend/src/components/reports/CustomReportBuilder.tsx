@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical, Plus, Check, Trash2, FileSpreadsheet, FileText, Settings, Database, Sliders } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
 import { useContactsPaginated } from '@/hooks/useContacts';
 import { useStudentsPaginated } from '@/hooks/useStudents';
 import { CONTACTS_MODULE_CONTRACT, STUDENTS_MODULE_CONTRACT } from '@mms/shared';
@@ -82,32 +85,35 @@ function DraggableField({
         <span className="text-xs font-semibold text-foreground truncate">{field}</span>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
-        <button
+        <Button
           disabled={isFirst}
           onClick={onMoveUp}
-          className="w-5 h-5 flex items-center justify-center rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
+          variant="ghost"
+          className="w-5 h-5 flex items-center justify-center p-0 rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
           type="button"
           title="Move Up"
         >
           ▲
-        </button>
-        <button
+        </Button>
+        <Button
           disabled={isLast}
           onClick={onMoveDown}
-          className="w-5 h-5 flex items-center justify-center rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
+          variant="ghost"
+          className="w-5 h-5 flex items-center justify-center p-0 rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
           type="button"
           title="Move Down"
         >
           ▼
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onRemove}
-          className="w-5 h-5 flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-all"
+          variant="ghost"
+          className="w-5 h-5 flex items-center justify-center p-0 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-all"
           type="button"
           title="Remove field"
         >
           <X className="w-3 h-3" />
-        </button>
+        </Button>
       </div>
     </motion.div>
   );
@@ -425,7 +431,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
-      className="rounded-[2.5rem] border border-border/50 bg-card/45 backdrop-blur-2xl shadow-2xl overflow-hidden text-left"
+      className="rounded-3xl border border-border/50 bg-card/45 backdrop-blur-2xl shadow-2xl overflow-hidden text-left"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-border/50 bg-card/30">
@@ -438,9 +444,15 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
             <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">Dynamic column schemas and real-time computation</p>
           </div>
         </div>
-        <button onClick={onClose} className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors" type="button">
+        <Button
+          onClick={onClose}
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 p-0 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+          type="button"
+        >
           <X className="w-5 h-5" />
-        </button>
+        </Button>
       </div>
 
       <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -453,12 +465,12 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
               Report Title Label
             </label>
-            <input
+            <Input
               type="text"
               value={reportName}
               onChange={(e) => setReportName(e.target.value)}
               placeholder="e.g. Active Students Roll"
-              className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground"
+              className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-4 py-2.5 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all text-foreground h-auto"
             />
           </div>
 
@@ -467,12 +479,11 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
               Query Data Source
             </label>
-            <select
+            <FormSelect
               value={source}
-              onChange={(e) => {
-                const newSource = e.target.value as DataSource;
+              onChange={(val) => {
+                const newSource = val as DataSource;
                 setSource(newSource);
-                // Preselect default fields for new source to keep reactive preview hydrated
                 if (newSource === "contacts") setSelectedFields(["fullName", "lifecycleStage", "city"]);
                 else if (newSource === "financial") setSelectedFields(["Student Name", "Class", "Base Fee", "Final Amount"]);
                 else if (newSource === "attendance") setSelectedFields(["Student Name", "Class", "Status", "Rate %"]);
@@ -482,17 +493,18 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 else if (newSource === "faculty") setSelectedFields(["Faculty Name", "Classes", "Sessions", "Hours/Week"]);
                 else setSelectedFields(["Name", "Class", "Session", "Status"]);
               }}
-              className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-foreground"
-            >
-              <option value="students">Students Database</option>
-              <option value="contacts">{t("contacts.reportBuilder.sourceLabel")}</option>
-              <option value="attendance">Attendance Ledger</option>
-              <option value="financial">Financial Invoices</option>
-              <option value="academic">Academic Examinations</option>
-              <option value="hasanat">Hasanat Rewards Ledger</option>
-              <option value="sessions">Sessions & Classrooms</option>
-              <option value="faculty">Faculty Workload Registry</option>
-            </select>
+              options={[
+                { value: "students", label: "Students Database" },
+                { value: "contacts", label: t("contacts.reportBuilder.sourceLabel") },
+                { value: "attendance", label: "Attendance Ledger" },
+                { value: "financial", label: "Financial Invoices" },
+                { value: "academic", label: "Academic Examinations" },
+                { value: "hasanat", label: "Hasanat Rewards Ledger" },
+                { value: "sessions", label: "Sessions & Classrooms" },
+                { value: "faculty", label: "Faculty Workload Registry" },
+              ]}
+              className="w-full"
+            />
           </div>
 
           {/* Available Fields (Column Schema Picker) */}
@@ -511,15 +523,16 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 </div>
               ) : (
                 available.map((f) => (
-                  <button
+                  <Button
                     key={f}
                     onClick={() => addField(f)}
-                    className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-primary/10 text-xs font-semibold text-left text-foreground transition-all group cursor-pointer"
+                    variant="ghost"
+                    className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-primary/10 text-xs font-semibold text-left text-foreground transition-all group cursor-pointer justify-start h-auto"
                     type="button"
                   >
                     <Plus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-transform shrink-0" />
                     <span className="truncate">{resolveFieldLabel(f)}</span>
-                  </button>
+                  </Button>
                 ))
               )}
             </div>
@@ -531,27 +544,27 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
                 Aggregator Function
               </label>
-              <select
+              <FormSelect
                 value={aggregate}
-                onChange={(e) => setAggregate(e.target.value)}
-                className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-foreground"
-              >
-                {AGGREGATE_FNS.map((a) => <option key={a}>{a}</option>)}
-              </select>
+                onChange={(val) => setAggregate(val)}
+                options={AGGREGATE_FNS.map((a) => ({ value: a, label: a }))}
+                className="w-full"
+              />
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
                 Group Category (X)
               </label>
-              <select
+              <FormSelect
                 value={groupBy}
                 disabled={aggregate === "None"}
-                onChange={(e) => setGroupBy(e.target.value)}
+                onChange={(val) => setGroupBy(val)}
+                options={[
+                  { value: "", label: "No Grouping" },
+                  ...selectedFields.map((f) => ({ value: f, label: resolveFieldLabel(f) }))
+                ]}
                 className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <option value="">No Grouping</option>
-                {selectedFields.map((f) => <option key={f} value={f}>{resolveFieldLabel(f)}</option>)}
-              </select>
+              />
             </div>
           </div>
 
@@ -562,36 +575,39 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 Document Alignment
               </label>
               <div className="flex gap-1 p-1 bg-muted/30 border border-border/50 rounded-xl">
-                 <button 
+                 <Button 
                   onClick={() => setOrientation("p")}
-                  className={`flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${orientation === "p" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  variant={orientation === "p" ? "default" : "ghost"}
+                  className={`flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer h-auto ${orientation === "p" ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground" : "text-sidebar-muted-foreground hover:text-foreground hover:bg-muted"}`}
                   type="button"
                  >
                    Portrait
-                 </button>
-                 <button 
+                 </Button>
+                 <Button 
                   onClick={() => setOrientation("l")}
-                  className={`flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${orientation === "l" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  variant={orientation === "l" ? "default" : "ghost"}
+                  className={`flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer h-auto ${orientation === "l" ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground" : "text-sidebar-muted-foreground hover:text-foreground hover:bg-muted"}`}
                   type="button"
                  >
                    Landscape
-                 </button>
+                 </Button>
                </div>
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
                 Export Layout Format
               </label>
-              <select
+              <FormSelect
                 value={pageSize}
-                onChange={(e) => setPageSize(e.target.value)}
-                className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-foreground"
-              >
-                <option value="a4">A4 (Standard)</option>
-                <option value="letter">Letter</option>
-                <option value="a3">A3 (Wide Ledger)</option>
-                <option value="legal">Legal Page</option>
-              </select>
+                onChange={(val) => setPageSize(val)}
+                options={[
+                  { value: "a4", label: "A4 (Standard)" },
+                  { value: "letter", label: "Letter" },
+                  { value: "a3", label: "A3 (Wide Ledger)" },
+                  { value: "legal", label: "Legal Page" }
+                ]}
+                className="w-full animate-none"
+              />
             </div>
           </div>
 
@@ -607,13 +623,14 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 Selected Columns Schema ({selectedFields.length})
               </label>
               {selectedFields.length > 0 && (
-                <button
+                <Button
                   onClick={() => setSelectedFields([])}
-                  className="text-[9px] font-bold uppercase tracking-wider text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1 cursor-pointer"
+                  variant="link"
+                  className="text-[9px] font-bold uppercase tracking-wider text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1 cursor-pointer h-auto p-0 hover:no-underline"
                   type="button"
                 >
-                  <Trash2 className="w-3 h-3" /> Clear Columns
-                </button>
+                  <Trash2 className="w-3.5 h-3.5" /> Clear Columns
+                </Button>
               )}
             </div>
             <div className="rounded-2xl border border-border bg-background/30 p-3 shadow-inner">
@@ -660,22 +677,24 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               {/* Unified Export Bar (2026 styling) */}
               {previewData.length > 0 && (
                 <div className="flex gap-2">
-                  <button 
+                  <Button 
                     onClick={handleExportExcel}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-success hover:text-success px-3 py-1.5 rounded-xl border border-success/30 bg-success/10 hover:bg-success/15 transition-all shadow-sm cursor-pointer"
+                    variant="outline"
+                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-success hover:text-success px-3 py-1.5 rounded-xl border border-success/30 bg-success/10 hover:bg-success/15 transition-all shadow-sm cursor-pointer h-auto"
                     type="button"
                     title="Export data to Excel Sheet"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5" /> Sheet
-                  </button>
-                  <button 
+                  </Button>
+                  <Button 
                     onClick={handleExportPdf}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-destructive hover:text-destructive px-3 py-1.5 rounded-xl border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all shadow-sm cursor-pointer"
+                    variant="outline"
+                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-destructive hover:text-destructive px-3 py-1.5 rounded-xl border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all shadow-sm cursor-pointer h-auto"
                     type="button"
                     title="Export layout to PDF document"
                   >
                     <FileText className="w-3.5 h-3.5" /> Document
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>

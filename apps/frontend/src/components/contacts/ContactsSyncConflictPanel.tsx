@@ -22,6 +22,7 @@ import { useContactsSyncOutbox } from '@/hooks/useContactsSyncOutbox';
 import { useContactById, useContactMutations } from '@/hooks/useContacts';
 import FormModal from '@/components/ui/FormModal';
 import ConfirmAlertDialog from '@/components/ui/ConfirmAlertDialog';
+import { Button } from '@/components/ui/button';
 import { notify } from '@/lib/notify';
 
 interface ContactsSyncConflictPanelProps {
@@ -141,23 +142,25 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setExpanded((v) => !v)}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/60"
             aria-expanded={expanded}
             aria-label={expanded ? t('contacts.sync.conflictCollapse') : t('contacts.sync.conflictExpand')}
           >
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => onRequestDismiss(entry.id)}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             aria-label={t('contacts.sync.conflictDismissOne')}
           >
             <Trash2 className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
       {expanded && (
@@ -184,26 +187,28 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
                     <tr key={d.field} className="border-t border-border/50">
                       <td className="py-1 pr-2 font-medium">{fieldLabel(d.field, t)}</td>
                       <td className="py-1 pr-2">
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => togglePick(d.field, 'local')}
-                          className={`text-left break-all w-full rounded px-1 ${
+                          className={`text-left break-all w-full rounded px-1 h-auto justify-start font-normal ${
                             fieldPicks[d.field] === 'local' ? 'bg-primary/15 ring-1 ring-primary/40' : 'hover:bg-muted/50'
                           }`}
                         >
                           {d.local}
-                        </button>
+                        </Button>
                       </td>
                       <td className="py-1">
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => togglePick(d.field, 'server')}
-                          className={`text-left break-all w-full rounded px-1 ${
+                          className={`text-left break-all w-full rounded px-1 h-auto justify-start font-normal ${
                             fieldPicks[d.field] === 'server' ? 'bg-primary/15 ring-1 ring-primary/40' : 'hover:bg-muted/50'
                           }`}
                         >
                           {d.server}
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -220,32 +225,34 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
           <div className="flex flex-wrap gap-2 pt-1">
             {local && (
               <>
-                <button
+                <Button
                   type="button"
+                  size="sm"
                   disabled={applying}
                   onClick={() => void handleApplyMerge()}
-                  className="px-2.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50"
                 >
                   {t('contacts.sync.conflictApplyMerge')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   disabled={applying}
                   onClick={() => void handleKeepMine()}
-                  className="px-2.5 py-1.5 rounded-lg border border-border text-xs font-medium disabled:opacity-50"
                 >
                   {t('contacts.sync.conflictKeepLocal')}
-                </button>
+                </Button>
               </>
             )}
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               disabled={applying}
               onClick={handleUseServer}
-              className="px-2.5 py-1.5 rounded-lg border border-border text-xs font-medium disabled:opacity-50"
             >
               {t('contacts.sync.conflictUseServer')}
-            </button>
+            </Button>
           </div>
         </div>
       )}

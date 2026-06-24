@@ -2,6 +2,8 @@ import React, { useState, useMemo } from "react";
 import { Search, Pencil, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
 import { useSessionsCollection } from '@/hooks/useSessions';
@@ -118,32 +120,34 @@ export default function AttendanceRecords({
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <label htmlFor="search-student" className="sr-only">{t("attendance.searchStudent")}</label>
-          <input
+          <Input
             id="search-student"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t("attendance.searchStudent")}
-            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="pl-9 pr-4"
           />
         </div>
 
         <div className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold" role="group" aria-label={t("attendance.filter.status")}>
-          <button
+          <Button
             type="button"
+            variant={statusFilter === "all" ? "default" : "ghost"}
             onClick={() => { setStatusFilter("all"); setPage(1); }}
-            className={`px-3 py-2 transition-colors ${statusFilter === "all" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+            className="rounded-none h-8 px-3 text-[11px] font-bold border-r border-border"
           >
             {t("attendance.filter.all")}
-          </button>
+          </Button>
           {statuses.map((s: AttendanceStatus) => (
-            <button
+            <Button
               type="button"
               key={s.id}
+              variant={statusFilter === s.id ? "default" : "ghost"}
               onClick={() => { setStatusFilter(s.id); setPage(1); }}
-              className={`px-3 py-2 transition-colors ${statusFilter === s.id ? `${s.bg} ${s.text}` : "bg-card text-muted-foreground hover:bg-muted"}`}
+              className={`rounded-none h-8 px-3 text-[11px] font-bold border-r border-border last:border-r-0 ${statusFilter === s.id ? `${s.bg} ${s.text}` : ""}`}
             >
               {statusLabel(s.id)}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -263,22 +267,28 @@ export default function AttendanceRecords({
                   <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1">
                       {can("attendance.write") && (
-                        <button
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => setEditing(editing === r.id ? null : r.id)}
                           aria-label={editing === r.id ? t("common.cancel") : t("common.edit")}
-                          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
                         >
                           {editing === r.id ? <X className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
-                        </button>
+                        </Button>
                       )}
                       {can("users.manage") && (
-                        <button
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => deleteRecord(r.id)}
                           aria-label={t("attendance.deleteRecord")}
-                          className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </td>
@@ -292,22 +302,28 @@ export default function AttendanceRecords({
       <footer className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{t("attendance.pagination.summary", { count: filtered.length, page, totalPages })}</span>
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label={t("attendance.pagination.previous")}
-            className="p-1.5 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
+            className="h-8 w-8"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label={t("attendance.pagination.next")}
-            className="p-1.5 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
+            className="h-8 w-8"
           >
             <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
       </footer>
     </section>

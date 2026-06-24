@@ -213,7 +213,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
       </div>
 
       {/* Report Content - 2026 Glassmorphism */}
-      <div className="bg-card/60 backdrop-blur-xl rounded-[2rem] border border-border/50 overflow-hidden shadow-xl ring-1 ring-black/[0.03]">
+      <div className="bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 overflow-hidden shadow-xl ring-1 ring-black/[0.03]">
         {renderReport()}
       </div>
     </div>

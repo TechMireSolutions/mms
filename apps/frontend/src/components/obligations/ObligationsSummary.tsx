@@ -11,6 +11,9 @@ import useDebounce from "../../hooks/useDebounce";
 import { DatePicker } from "../ui/DatePicker";
 import { KPI_TONE } from "@/lib/semanticTone";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
 
 function fmt(amount: string | number | null | undefined, code = "PKR"): string {
   return `${code} ${parseFloat(amount as string || "0").toLocaleString()}`;
@@ -240,6 +243,21 @@ export default function ObligationsSummary({
 
   const hasFilters = dateFrom || dateTo || repFilter !== "all" || typeFilter !== "all" || userFilter !== "all" || search;
 
+  const repOptions = useMemo(() => [
+    { value: "all", label: "All Reps" },
+    ...reps.map((r) => ({ value: r.id, label: r.name }))
+  ], [reps]);
+
+  const typeOptions = useMemo(() => [
+    { value: "all", label: "All Obligation Types" },
+    ...obligationTypes.map((t) => ({ value: t.id, label: t.name }))
+  ], [obligationTypes]);
+
+  const userOptions = useMemo(() => [
+    { value: "all", label: "All Collectors" },
+    ...users.map((u) => ({ value: u.id, label: u.name || "" }))
+  ], [users]);
+
   return (
     <div className="space-y-6">
       {/* ── Filter Bar ── */}
@@ -248,15 +266,16 @@ export default function ObligationsSummary({
           <Filter className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
           <h2 className="text-sm font-bold text-foreground m-0">Filters</h2>
           {hasFilters && (
-            <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); setRepFilter("all"); setTypeFilter("all"); setUserFilter("all"); setSearch(""); }}
-              className="ml-auto text-[11px] text-primary font-semibold hover:underline">Clear all</button>
+            <Button type="button" onClick={() => { setDateFrom(""); setDateTo(""); setRepFilter("all"); setTypeFilter("all"); setUserFilter("all"); setSearch(""); }}
+              variant="link"
+              className="ml-auto p-0 text-[11px] h-auto text-primary font-semibold hover:underline shadow-none">Clear all</Button>
           )}
         </header>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           {/* Search */}
           <div className="relative col-span-2 sm:col-span-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
-            <input 
+            <Input 
               type="search"
               aria-label="Search by receipt, rep, or type"
               value={search} 
@@ -284,32 +303,29 @@ export default function ObligationsSummary({
             />
           </div>
           {/* Rep filter */}
-          <select 
+          <FormSelect 
             aria-label="Filter by representative"
             value={repFilter} 
-            onChange={(e) => setRepFilter(e.target.value)}
-            className="px-2 py-2 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20">
-            <option value="all">All Reps</option>
-            {reps.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
+            onChange={(val) => setRepFilter(val)}
+            options={repOptions}
+            className="text-xs rounded-lg border border-border bg-background"
+          />
           {/* Type filter */}
-          <select 
+          <FormSelect 
             aria-label="Filter by obligation type"
             value={typeFilter} 
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-2 py-2 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20">
-            <option value="all">All Obligation Types</option>
-            {obligationTypes.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
+            onChange={(val) => setTypeFilter(val)}
+            options={typeOptions}
+            className="text-xs rounded-lg border border-border bg-background"
+          />
           {/* Received by */}
-          <select 
+          <FormSelect 
             aria-label="Filter by collector"
             value={userFilter} 
-            onChange={(e) => setUserFilter(e.target.value)}
-            className="px-2 py-2 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20">
-            <option value="all">All Collectors</option>
-            {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-          </select>
+            onChange={(val) => setUserFilter(val)}
+            options={userOptions}
+            className="text-xs rounded-lg border border-border bg-background"
+          />
         </div>
       </section>
 

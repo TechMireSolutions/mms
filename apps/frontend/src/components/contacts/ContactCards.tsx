@@ -15,6 +15,10 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { notify } from "@/lib/notify";
 import ContactAvatar from "./ContactAvatar";
 import { formatContactCellValue } from "@/lib/contacts/contactI18n";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const MotionButton = motion(Button);
 
 const ContactDetailDrawer = lazy(() => import("./ContactDetailDrawer"));
 
@@ -154,7 +158,7 @@ export default function ContactCards({
         return (
           <span className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
             hasWhatsApp(item)
-              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+              ? "bg-success/10 text-success border-success/20"
               : "bg-muted text-muted-foreground border-border"
           }`}>
             {hasWhatsApp(item) ? t("common.yes") : t("common.no")}
@@ -211,17 +215,9 @@ export default function ContactCards({
       {onSelectAll && contacts.length > 0 && (
         <div className="flex items-center justify-between px-4 py-3 bg-card/65 backdrop-blur-md rounded-2xl border border-border/40 mb-3.5 shadow-sm">
           <div className="flex items-center gap-2.5">
-            <input
-              type="checkbox"
-              checked={allSelected}
-              ref={(el) => {
-                if (el) {
-                  const someSelected = selected.length > 0 && selected.length < contacts.length;
-                  el.indeterminate = someSelected;
-                }
-              }}
-              onChange={onSelectAll}
-              className="w-4.5 h-4.5 rounded-lg border-border/60 text-primary accent-primary cursor-pointer transition-all"
+            <Checkbox
+              checked={allSelected ? true : (selected.length > 0 ? "indeterminate" : false)}
+              onCheckedChange={onSelectAll}
               id="select-all-cards"
             />
             <label htmlFor="select-all-cards" className="text-xs font-black text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors">
@@ -268,20 +264,19 @@ export default function ContactCards({
               {/* Core Profile Area */}
               <div className="flex gap-3 pr-16 items-start">
                 <div className="flex items-center justify-center flex-shrink-0 pt-0.5">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={isSelected}
-                    onChange={() => onSelect(contact.id)}
-                    className="w-4.5 h-4.5 rounded-lg border-border/60 text-primary accent-primary cursor-pointer transition-all focus:ring-2 focus:ring-primary/20"
+                    onCheckedChange={() => onSelect(contact.id)}
                     aria-label={getDisplayName(contact)}
                   />
                 </div>
-                <button
+                <Button
                   type="button"
-                  className="flex flex-1 items-start gap-2.5 min-w-0 text-left cursor-pointer group"
+                  variant="ghost"
+                  className="h-auto p-0 hover:bg-transparent flex flex-1 items-start gap-2.5 min-w-0 text-left cursor-pointer group hover:text-foreground shadow-none justify-start"
                   onClick={() => setViewContact(contact)}
                 >
-                  <div className="relative">
+                  <div className="relative animate-none">
                     <ContactAvatar contact={contact} className="w-11 h-11 rounded-2xl text-sm shadow-inner group-hover:scale-105 transition-transform duration-200" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -292,17 +287,18 @@ export default function ContactCards({
                       {stage}
                     </p>
                   </div>
-                </button>
+                </Button>
               </div>
 
               {/* Contact Information Pills */}
               {(showPhonePill || showEmailPill) && (
                 <div className="space-y-2 py-0.5">
                   {phone && showPhonePill && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => handleCopy(phone, `phone:${contact.id}`)}
-                      className="w-full flex items-center justify-between text-xs text-muted-foreground bg-muted/30 hover:bg-muted/50 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/15 transition-all group/pill cursor-pointer min-w-0"
+                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/30 hover:bg-muted/50 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
                         <Phone className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
@@ -317,7 +313,7 @@ export default function ContactCards({
                               animate={{ scale: 1, opacity: 1 }}
                               exit={{ scale: 0.7, opacity: 0 }}
                             >
-                              <Check className="w-3.5 h-3.5 text-emerald-500" />
+                              <Check className="w-3.5 h-3.5 text-success" />
                             </motion.div>
                           ) : (
                             <motion.div
@@ -329,13 +325,14 @@ export default function ContactCards({
                           )}
                         </AnimatePresence>
                       </div>
-                    </button>
+                    </Button>
                   )}
                   {email && showEmailPill && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => handleCopy(email, `email:${contact.id}`)}
-                      className="w-full flex items-center justify-between text-xs text-muted-foreground bg-muted/30 hover:bg-muted/50 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/15 transition-all group/pill cursor-pointer min-w-0"
+                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/30 hover:bg-muted/50 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
                         <Mail className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
@@ -350,7 +347,7 @@ export default function ContactCards({
                               animate={{ scale: 1, opacity: 1 }}
                               exit={{ scale: 0.7, opacity: 0 }}
                             >
-                              <Check className="w-3.5 h-3.5 text-emerald-500" />
+                              <Check className="w-3.5 h-3.5 text-success" />
                             </motion.div>
                           ) : (
                             <motion.div
@@ -362,7 +359,7 @@ export default function ContactCards({
                           )}
                         </AnimatePresence>
                       </div>
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -420,61 +417,65 @@ export default function ContactCards({
                     </div>
                   )}
 
-                  <motion.button
+                  <MotionButton
                     type="button"
+                    variant="ghost"
                     disabled={!hasWhatsApp(contact)}
                     whileHover={hasWhatsApp(contact) ? { scale: 1.05 } : undefined}
                     whileTap={hasWhatsApp(contact) ? { scale: 0.95 } : undefined}
                     onClick={() => onWhatsApp([contact])}
-                    className={`p-2.5 rounded-xl border transition-colors shadow-sm ${
+                    className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${
                       hasWhatsApp(contact)
-                        ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+                        ? "border-success/20 bg-success/5 text-success hover:bg-success/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
                     }`}
                     title={t("contacts.whatsapp")}
                   >
                     <MessageCircle className="w-4 h-4" />
-                  </motion.button>
+                  </MotionButton>
 
-                  <motion.button
+                  <MotionButton
                     type="button"
+                    variant="ghost"
                     disabled={!phone}
                     whileHover={phone ? { scale: 1.05 } : undefined}
                     whileTap={phone ? { scale: 0.95 } : undefined}
                     onClick={() => onSms([contact])}
-                    className={`p-2.5 rounded-xl border transition-colors shadow-sm ${
+                    className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${
                       phone
-                        ? "border-violet-500/20 bg-violet-500/5 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10 cursor-pointer"
+                        ? "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
                     }`}
                     title={t("contacts.sms")}
                   >
                     <MessageSquare className="w-4 h-4" />
-                  </motion.button>
+                  </MotionButton>
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <motion.button
+                  <MotionButton
                     type="button"
+                    variant="outline"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setViewContact(contact)}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border/40 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:border-border transition-colors cursor-pointer"
+                    className="flex items-center h-auto gap-1.5 px-3 py-2 rounded-xl border border-border/40 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:border-border transition-colors cursor-pointer shadow-none"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>{t("contacts.table.viewProfile")}</span>
-                  </motion.button>
+                  </MotionButton>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <motion.button
+                      <MotionButton
                         type="button"
+                        variant="outline"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="p-2.5 rounded-xl border border-border/40 hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
+                        className="p-2.5 rounded-xl border border-border/40 hover:bg-muted text-muted-foreground transition-colors cursor-pointer h-auto shadow-none"
                         aria-label={t("contacts.table.actions")}
                       >
                         <MoreHorizontal className="w-4 h-4" />
-                      </motion.button>
+                      </MotionButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44">
                       {canWrite && !showArchived && (

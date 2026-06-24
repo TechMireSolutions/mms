@@ -14,6 +14,7 @@ import EventsTab from "./tabs/EventsTab";
 import TabarrukTab from "./tabs/TabarrukTab";
 
 import { Session } from '@/lib/data/sessionsData';
+import { Button } from "@/components/ui/button";
 
 const TABS = [
   { id: "classes",   label: "Classes",   icon: GraduationCap },
@@ -88,12 +89,12 @@ export default function SessionDetail({ session, onClose, onUpdate, onEdit }: Se
               </div>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
-              <button onClick={() => onEdit(session)} aria-label="Edit Session" className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              <Button onClick={() => onEdit(session)} variant="ghost" size="icon" aria-label="Edit Session" className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                 <Edit2 className="w-4 h-4" aria-hidden="true" />
-              </button>
-              <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              </Button>
+              <Button onClick={onClose} variant="ghost" size="icon" aria-label="Close" className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                 <X className="w-4 h-4" aria-hidden="true" />
-              </button>
+              </Button>
             </div>
           </div>
         </header>
@@ -104,17 +105,18 @@ export default function SessionDetail({ session, onClose, onUpdate, onEdit }: Se
             const Icon = t.icon;
             const active = tab === t.id;
             return (
-              <button
+              <Button
                 key={t.id}
+                variant="ghost"
                 onClick={() => setTab(t.id)}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-1.5 px-3.5 py-3 text-[12px] font-semibold whitespace-nowrap border-b-2 transition-all ${
-                  active ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                className={`flex items-center gap-1.5 px-3.5 py-3 text-[12px] font-semibold whitespace-nowrap border-b-2 rounded-none transition-all h-auto ${
+                  active ? "border-primary text-primary hover:text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-transparent"
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" aria-hidden="true" />
                 {t.label}
-              </button>
+              </Button>
             );
           })}
         </nav>

@@ -3,6 +3,7 @@ import { CheckCircle2, AlertCircle, Download } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeTrialBalance, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
+import { Button } from "../ui/button";
 
 interface TrialBalanceProps {
   accounts: Account[];
@@ -88,14 +89,24 @@ export default function TrialBalance({ accounts, entries, fiscalYears, fmt }: Tr
           />
         </div>
         {activeFY && (
-          <button type="button" onClick={() => { setDateFrom(activeFY.startDate); setDateTo(activeFY.endDate); }}
-            className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+          <Button 
+            type="button" 
+            variant="link" 
+            size="sm" 
+            onClick={() => { setDateFrom(activeFY.startDate); setDateTo(activeFY.endDate); }}
+            className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
+          >
             Use Active FY ({activeFY.label})
-          </button>
+          </Button>
         )}
-        <button type="button" onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors ml-auto">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={exportCSV} 
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors ml-auto h-auto"
+        >
           <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export CSV
-        </button>
+        </Button>
       </section>
 
       {/* Balance status banner */}

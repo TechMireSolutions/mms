@@ -20,8 +20,9 @@ import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { getObject, saveObject } from '@/lib/db';
 import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import FormModal from '@/components/ui/FormModal';
-import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_LABEL } from '@/components/ui/formStyles';
 import { UserRoleBadge } from './UserBadges';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 
@@ -33,18 +34,19 @@ interface PermCellProps {
 
 function PermCell({ checked, onChange, disabled = false }: PermCellProps): React.JSX.Element {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
-      className={`mx-auto flex h-7 w-7 items-center justify-center rounded-lg border-2 transition-all ${
+      className={`mx-auto flex h-7 w-7 items-center justify-center rounded-lg border-2 transition-all p-0 shadow-none hover:bg-transparent ${
         checked
-          ? 'border-primary bg-primary text-primary-foreground'
+          ? 'border-primary bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground'
           : 'border-border bg-card text-transparent hover:border-primary/50'
       } ${disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}
     >
       <Check className="h-3.5 w-3.5" />
-    </button>
+    </Button>
   );
 }
 
@@ -124,24 +126,22 @@ function RoleFormModal({ open, title, role, visibleModules, onSave, onClose }: R
             <label className={FORM_LABEL} htmlFor="role-name">
               {t('users.permissions.fieldName')}
             </label>
-            <input
+            <Input
               id="role-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t('users.permissions.fieldNamePlaceholder')}
-              className={FORM_INPUT}
             />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="role-desc">
               {t('users.permissions.fieldDescription')}
             </label>
-            <input
+            <Input
               id="role-desc"
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               placeholder={t('users.permissions.fieldDescriptionPlaceholder')}
-              className={FORM_INPUT}
             />
           </div>
         </div>
@@ -223,17 +223,18 @@ function PermissionMatrixRow({
       ))}
       {!readOnly ? (
         <td className="px-2 py-2.5">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => (allChecked ? onClearAll(mod.id) : onSelectAll(mod.id))}
-            className={`mx-auto flex h-7 w-7 items-center justify-center rounded-lg border-2 text-xs font-bold transition-all ${
+            className={`mx-auto flex h-7 w-7 items-center justify-center rounded-lg border-2 text-xs font-bold transition-all p-0 h-7 w-7 shadow-none ${
               allChecked
                 ? 'border-primary bg-primary/15 text-primary hover:bg-primary/25'
                 : 'border-primary/30 text-primary/60 hover:bg-primary/10'
             }`}
           >
             {allChecked ? <X className="h-3 w-3" /> : <Check className="h-3 w-3" />}
-          </button>
+          </Button>
         </td>
       ) : null}
     </tr>
@@ -462,18 +463,19 @@ export default function RolesPermissions(): React.JSX.Element {
                     {workspaceRoleDescription(r, t)}
                   </p>
                 </div>
-                {!r.isSystem && isAdmin ? (
-                  <button
+                 {!r.isSystem && isAdmin ? (
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={(e) => {
                       e.stopPropagation();
                       setEdit(r);
                     }}
-                    className="rounded p-1 text-muted-foreground transition-colors hover:text-primary"
+                    className="rounded p-1 text-muted-foreground transition-colors hover:text-primary h-auto w-auto p-1 shadow-none hover:bg-transparent"
                     aria-label={t('users.permissions.editRoleDetails', { name: workspaceRoleLabel(r, t) })}
                   >
                     <Pencil className="h-3 w-3" />
-                  </button>
+                  </Button>
                 ) : null}
               </div>
             </div>

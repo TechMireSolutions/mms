@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { X, CheckCircle2, Clock, AlertCircle, ReceiptText, User, Calendar, CreditCard } from "lucide-react";
 import { Invoice } from '@/lib/data/financeData';
+import { Button } from "@/components/ui/button";
 
 const STATUS_CFG: Record<string, { label: string, cls: string, icon: React.ElementType }> = {
   paid:      { label: "Paid",      cls: "bg-success/10 text-success border-success/20", icon: CheckCircle2 },
@@ -55,7 +56,7 @@ export default function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDet
             <ReceiptText className="w-4 h-4 text-primary" aria-hidden="true" />
             <h3 id="invoice-detail-title" className="text-[13px] font-bold text-foreground m-0">Invoice {invoice.id}</h3>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" aria-hidden="true" /></button>
+          <Button type="button" variant="ghost" onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" aria-hidden="true" /></Button>
         </header>
 
         <div className="px-6 py-5 space-y-5">
@@ -105,12 +106,12 @@ export default function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDet
 
         {invoice.status !== "paid" && invoice.status !== "cancelled" && (
           <footer className="px-6 py-4 border-t border-border">
-            <button
+            <Button
               onClick={() => { onRecord(invoice); onClose(); }}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               <ReceiptText className="w-4 h-4" aria-hidden="true" /> Record Payment
-            </button>
+            </Button>
           </footer>
         )}
       </motion.section>

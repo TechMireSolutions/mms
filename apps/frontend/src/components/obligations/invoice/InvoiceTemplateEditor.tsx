@@ -1,7 +1,3 @@
-/**
- * InvoiceTemplateEditor
- * Full-featured drag-and-drop, resize, style editor for the obligation invoice template.
- */
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { getObject } from "../../../lib/db";
 import {
@@ -12,6 +8,10 @@ import {
   PAGE_SIZES, AVAILABLE_FIELDS, loadTemplate, saveTemplate, InvoiceTemplate, TemplateElement, ElementStyle
 } from "../../../lib/invoiceTemplateStore";
 import { getPrintBrandingTokens, PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const SNAP = 4; // px grid snap
 
@@ -34,10 +34,11 @@ interface StyleBtnProps {
  */
 function StyleBtn({ active, onClick, children, title }: StyleBtnProps) {
   return (
-    <button type="button" title={title} onClick={onClick}
-      className={`w-7 h-7 flex items-center justify-center rounded text-xs transition-colors border ${active ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted text-foreground"}`}>
+    <Button type="button" title={title} onClick={onClick}
+      variant="ghost"
+      className={`w-7 h-7 flex items-center justify-center p-0 rounded text-xs transition-colors border shadow-none ${active ? "bg-primary text-primary-foreground border-primary hover:bg-primary/95" : "border-border hover:bg-muted text-foreground"}`}>
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -60,9 +61,9 @@ function StyleInput({ label, value, onChange, type = "text", min, max, step, cla
   return (
     <div className={`flex flex-col gap-0.5 ${className}`}>
       <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide">{label}</span>
-      <input type={type} value={value} onChange={(e) => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
+      <Input type={type} value={value} onChange={(e) => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
         min={min} max={max} step={step}
-        className="w-full px-1.5 py-0.5 text-xs border border-border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+        className="w-full px-1.5 py-0.5 h-auto text-xs border border-border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
     </div>
   );
 }
@@ -352,10 +353,10 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
         {/* Action strip */}
         {isSelected && (
           <div style={{ position: "absolute", top: -22, left: 0, display: "flex", gap: 2, zIndex: 20 }}>
-            <button type="button" onClick={(e) => { e.stopPropagation(); duplicateEl(el.id); }}
-              style={{ padding: "1px 4px", background: printTokens.primary, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>⧉</button>
-            <button type="button" onClick={(e) => { e.stopPropagation(); deleteEl(el.id); }}
-              style={{ padding: "1px 4px", background: printTokens.destructive, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>✕</button>
+            <Button type="button" onClick={(e) => { e.stopPropagation(); duplicateEl(el.id); }}
+              style={{ padding: "1px 4px", background: printTokens.primary, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>⧉</Button>
+            <Button type="button" onClick={(e) => { e.stopPropagation(); deleteEl(el.id); }}
+              style={{ padding: "1px 4px", background: printTokens.destructive, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>✕</Button>
           </div>
         )}
       </div>
@@ -368,39 +369,44 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
       <header className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-card flex-shrink-0 flex-wrap">
         <h2 className="font-bold text-sm text-foreground m-0">Invoice Template Editor</h2>
         <div className="flex items-center gap-1 ml-2">
-          <button type="button" onClick={undo} disabled={!history.length} title="Undo (Ctrl+Z)"
-            className="p-1.5 rounded hover:bg-muted disabled:opacity-30 transition-colors"><Undo2 className="w-4 h-4" aria-hidden="true" /></button>
-          <button type="button" onClick={redo} disabled={!future.length} title="Redo (Ctrl+Y)"
-            className="p-1.5 rounded hover:bg-muted disabled:opacity-30 transition-colors"><Redo2 className="w-4 h-4" aria-hidden="true" /></button>
+          <Button type="button" onClick={undo} disabled={!history.length} title="Undo (Ctrl+Z)"
+            variant="ghost"
+            className="p-1.5 h-auto rounded hover:bg-muted disabled:opacity-30 transition-colors shadow-none"><Undo2 className="w-4 h-4" aria-hidden="true" /></Button>
+          <Button type="button" onClick={redo} disabled={!future.length} title="Redo (Ctrl+Y)"
+            variant="ghost"
+            className="p-1.5 h-auto rounded hover:bg-muted disabled:opacity-30 transition-colors shadow-none"><Redo2 className="w-4 h-4" aria-hidden="true" /></Button>
         </div>
 
         {/* Page size */}
         <div className="flex items-center gap-1.5 ml-2">
           <span className="text-xs text-muted-foreground font-semibold">Page:</span>
           {Object.entries(PAGE_SIZES).map(([k, v]) => (
-            <button type="button" key={k} onClick={() => handlePageSize(k)}
-              className={`px-2.5 py-1 text-xs font-semibold rounded border transition-colors ${template.pageSize === k ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>
+            <Button type="button" key={k} onClick={() => handlePageSize(k)}
+              variant={template.pageSize === k ? "default" : "outline"}
+              className={`h-auto px-2.5 py-1 text-xs font-semibold rounded border transition-colors shadow-none ${template.pageSize === k ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>
               {k}
-            </button>
+            </Button>
           ))}
         </div>
 
         {/* Guides toggle */}
-        <button type="button" onClick={() => setShowGuides(!showGuides)} title="Toggle snap guides"
-          className="p-1.5 rounded hover:bg-muted transition-colors ml-1">
+        <Button type="button" onClick={() => setShowGuides(!showGuides)} title="Toggle snap guides"
+          variant="ghost"
+          className="p-1.5 h-auto rounded hover:bg-muted transition-colors ml-1 shadow-none">
           {showGuides ? <Eye className="w-4 h-4 text-primary" aria-hidden="true" /> : <EyeOff className="w-4 h-4 text-muted-foreground" aria-hidden="true" />}
-        </button>
+        </Button>
 
         <div className="ml-auto flex items-center gap-2">
-          <button type="button" onClick={handleSave}
-            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+          <Button type="button" onClick={handleSave}
+            className="flex items-center gap-1.5 h-auto px-4 py-1.5 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
             <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? "Saved!" : "Save Template"}
-          </button>
+          </Button>
           {fullscreen && (
-            <button type="button" onClick={onClose}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors">
+            <Button type="button" onClick={onClose}
+              variant="outline"
+              className="px-3 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
               Close
-            </button>
+            </Button>
           )}
         </div>
       </header>
@@ -413,14 +419,16 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
           <div>
             <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">Add Elements</p>
             <div className="space-y-1">
-              <button type="button" onClick={addStaticText}
-                className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2">
+              <Button type="button" onClick={addStaticText}
+                variant="outline"
+                className="w-full text-left px-2.5 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
                 <Type className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> Static Text
-              </button>
-              <button type="button" onClick={addDivider}
-                className="w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2">
+              </Button>
+              <Button type="button" onClick={addDivider}
+                variant="outline"
+                className="w-full text-left px-2.5 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
                 <Minus className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" /> Divider Line
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -428,10 +436,11 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
             <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">Add Fields</p>
             <div className="space-y-1">
               {AVAILABLE_FIELDS.map((f) => (
-                <button type="button" key={f.field} onClick={() => addField(f)}
-                  className="w-full text-left px-2.5 py-1.5 text-[10px] font-medium rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors">
+                <Button type="button" key={f.field} onClick={() => addField(f)}
+                  variant="outline"
+                  className="w-full text-left px-2.5 py-1.5 h-auto text-[10px] font-medium rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors shadow-none justify-start">
                   {f.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -534,22 +543,23 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
                     {/* Font family */}
                     <div>
                       <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide block mb-1">Font</span>
-                      <select value={selectedEl.style?.fontFamily || "inherit"}
-                        onChange={(e) => patchStyle(selectedEl.id, { fontFamily: e.target.value })}
-                        className="w-full px-1.5 py-0.5 text-xs border border-border rounded bg-background focus:outline-none">
-                        <option value="inherit">Default (Inter)</option>
-                        <option value="serif">Serif</option>
-                        <option value="monospace">Monospace</option>
-                        <option value="'Amiri', serif">Amiri (Arabic)</option>
-                        <option value="Arial, sans-serif">Arial</option>
-                        <option value="Georgia, serif">Georgia</option>
-                      </select>
+                      <FormSelect value={selectedEl.style?.fontFamily || "inherit"}
+                        onChange={(val) => patchStyle(selectedEl.id, { fontFamily: val })}
+                        className="w-full"
+                        options={[
+                          { value: "inherit", label: "Default (Inter)" },
+                          { value: "serif", label: "Serif" },
+                          { value: "monospace", label: "Monospace" },
+                          { value: "'Amiri', serif", label: "Amiri (Arabic)" },
+                          { value: "Arial, sans-serif", label: "Arial" },
+                          { value: "Georgia, serif", label: "Georgia" }
+                        ]}
+                      />
                     </div>
                     {/* RTL */}
-                    <label className="flex items-center gap-2 text-xs cursor-pointer">
-                      <input type="checkbox" checked={selectedEl.style?.direction === "rtl"}
-                        onChange={(e) => patchStyle(selectedEl.id, { direction: e.target.checked ? "rtl" : "ltr" })}
-                        className="rounded" />
+                    <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                      <Checkbox checked={selectedEl.style?.direction === "rtl"}
+                        onCheckedChange={(checked) => patchStyle(selectedEl.id, { direction: checked ? "rtl" : "ltr" })} />
                       RTL Direction
                     </label>
                   </div>
@@ -567,14 +577,16 @@ export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: In
 
               {/* Actions */}
               <div className="pt-2 border-t border-border flex gap-2">
-                <button type="button" onClick={() => duplicateEl(selectedEl.id)}
-                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-semibold rounded-lg border border-border hover:bg-muted transition-colors">
+                <Button type="button" onClick={() => duplicateEl(selectedEl.id)}
+                  variant="outline"
+                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 h-auto text-[10px] font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
                   <Copy className="w-3 h-3" aria-hidden="true" /> Duplicate
-                </button>
-                <button type="button" onClick={() => deleteEl(selectedEl.id)}
-                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-semibold rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors">
+                </Button>
+                <Button type="button" onClick={() => deleteEl(selectedEl.id)}
+                  variant="outline"
+                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 h-auto text-[10px] font-semibold rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors shadow-none">
                   <Trash2 className="w-3 h-3" aria-hidden="true" /> Delete
-                </button>
+                </Button>
               </div>
             </>
           )}

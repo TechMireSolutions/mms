@@ -1,8 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Phone, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { normalizeToE164, parsePhoneNumber } from "@mms/shared";
-import { INPUT, LABEL, Field, FormEmptyState, RequiredBanner, CustomFieldInput, CustomFieldConfig, EditableSelect, COLLECTION_CARD, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
+import { LABEL, Field, FormEmptyState, RequiredBanner, CustomFieldInput, CustomFieldConfig, EditableSelect, COLLECTION_CARD, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
 import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
@@ -113,8 +115,7 @@ export default function PhoneTab({
           )}
           <div className="flex gap-2">
             <div className="w-20 flex-shrink-0">
-              <input
-                className={INPUT}
+              <Input
                 value={p.countryCode || defaultCode}
                 onChange={(e) => updatePhone(i, { countryCode: e.target.value })}
                 onBlur={() => handlePhoneBlur(i)}
@@ -122,8 +123,7 @@ export default function PhoneTab({
                 aria-label={`${t("contacts.form.countryCode")} ${i + 1}`}
               />
             </div>
-            <input
-              className={INPUT}
+            <Input
               value={p.number}
               onChange={(e) => updatePhone(i, { number: e.target.value })}
               onBlur={() => handlePhoneBlur(i)}
@@ -134,25 +134,26 @@ export default function PhoneTab({
         </motion.div>
       ))}
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() =>
           upd([
             ...phones,
             { label: phoneLabels[0] || defaultPhoneLabel, number: "", countryCode: defaultCode }
           ])
         }
-        className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+        className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
       >
         <Plus className="w-4 h-4" />
         <span>{t("contacts.form.addPhoneNumber")}</span>
-      </button>
+      </Button>
 
       {sortedCustomFields.map((field) => {
         const label = field.label as string;
         const reqField = field.required as boolean | undefined;
         return (
-          <Field key={field.key} label={label} required={reqField}>
+          <Field key={field.key} label={label} required={reqField} hint={field.description}>
             <CustomFieldInput
               field={field as unknown as CustomFieldConfig}
               value={data[field.key]}

@@ -42,7 +42,7 @@ import {
 const ContactForm = lazy(() => import("../components/contacts/ContactForm"));
 const DuplicateDetection = lazy(() => import("../components/contacts/DuplicateDetection"));
 const MessageComposerPanel = lazy(() => import("../components/contacts/MessageComposerPanel"));
-const ContactsSettingsPanel = lazy(() => import("../components/contacts/ContactsSettingsPanel"));
+const ContactsSetupPanel = lazy(() => import("../components/contacts/ContactsSetupPanel"));
 const ContactSyncPanel = lazy(() => import("../components/contacts/ContactSyncPanel"));
 
 function LazyFallback(): React.JSX.Element {
@@ -133,10 +133,10 @@ function SettingsPanel({ contacts, onImport, canWrite, canEditSetup }: SettingsP
           </p>
         ) : null}
         {sub === "fields" && canEditSetup && (
-          <ContactsSettingsPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="fields" />
+          <ContactsSetupPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="fields" />
         )}
         {sub === "preferences" && canEditSetup && (
-          <ContactsSettingsPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="preferences" />
+          <ContactsSetupPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="preferences" />
         )}
         {sub === "sync" && (
           <ContactSyncPanel contacts={contacts} onImport={onImport as (contacts: object[]) => void} canWrite={canWrite} />

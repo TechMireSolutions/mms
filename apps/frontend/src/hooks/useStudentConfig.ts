@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  DEFAULT_STUDENTS_SETTINGS,
-  STUDENTS_MODULE_CONTRACT,
   type StudentsSettings,
 } from "@mms/shared";
-import { getCollection, getObject, saveObject } from "@/lib/db";
+import { getCollection, getObject } from "@/lib/db";
 import {
   STUDENT_CONFIG_COLLECTION_KEYS,
   STUDENT_CONFIG_OBJECT_KEYS,
@@ -12,25 +10,12 @@ import {
   getStudentConfigCollectionDefaults,
   type StudentGuardianContactDefaults,
 } from "@/lib/studentConfig/studentConfigSeeds";
+import {
+  loadStudentSettings,
+  saveStudentSettings,
+} from "@/lib/studentConfig/studentFieldsStore";
 
-function mergeStudentSettings(settings: Partial<StudentsSettings> | null | undefined): StudentsSettings {
-  return {
-    ...DEFAULT_STUDENTS_SETTINGS,
-    ...(settings ?? {}),
-    fields: {
-      ...(DEFAULT_STUDENTS_SETTINGS.fields ?? {}),
-      ...(settings?.fields ?? {}),
-    },
-    customFields: settings?.customFields ?? DEFAULT_STUDENTS_SETTINGS.customFields ?? [],
-    fieldOrder: settings?.fieldOrder ?? DEFAULT_STUDENTS_SETTINGS.fieldOrder ?? [],
-  };
-}
-
-export function loadStudentSettings(): StudentsSettings {
-  return mergeStudentSettings(
-    getObject<Partial<StudentsSettings>>(STUDENTS_MODULE_CONTRACT.settingsObjectKey, DEFAULT_STUDENTS_SETTINGS),
-  );
-}
+export { loadStudentSettings };
 
 export function useStudentConfig() {
   const defaults = useMemo(() => getStudentConfigCollectionDefaults(), []);
@@ -71,9 +56,8 @@ export function useStudentConfig() {
   }, [reloadStudentConfig]);
 
   const updateSettings = useCallback((next: StudentsSettings) => {
-    const merged = mergeStudentSettings(next);
-    saveObject(STUDENTS_MODULE_CONTRACT.settingsObjectKey, merged);
-    setSettings(merged);
+    saveStudentSettings(next);
+    setSettings(next);
   }, []);
 
   return {
@@ -85,3 +69,4 @@ export function useStudentConfig() {
     updateSettings,
   };
 }
+

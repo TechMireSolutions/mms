@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2, Tag, Loader2, BookOpen, User, Clock, MapPin } from "lucide-react";
 import { Student, StudentSession } from '@/lib/data/studentsData';
 import { useStudentConfig } from "@/hooks/useStudentConfig";
+import { Button } from "@/components/ui/button";
 
 interface FeeRowProps {
   label: string;
@@ -132,8 +133,8 @@ export default function EnrollmentConfirmation({ student, session, onConfirm, on
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Session</span>
           </div>
           <p className="text-[14px] font-bold text-foreground">{session.name}</p>
-          <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" aria-hidden="true" />{session.time}</p>
-          <p className="text-[11px] text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" aria-hidden="true" />{session.room} · {session.teacher}</p>
+          <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />{session.time}</p>
+          <p className="text-[11px] text-muted-foreground flex items-center gap-1"><MapPin className="w-3.5 h-3.5" aria-hidden="true" />{session.room} · {session.teacher}</p>
         </section>
       </div>
 
@@ -147,21 +148,21 @@ export default function EnrollmentConfirmation({ student, session, onConfirm, on
           {discountTypes.map((d) => {
             const isSelected = discountType === d.id;
             return (
-              <button
+              <Button
                 key={d.id}
-                type="button"
+                variant="outline"
                 role="radio"
                 aria-checked={isSelected}
                 onClick={() => setDiscountType(d.id)}
-                className={`rounded-lg border-2 px-3 py-2.5 text-left transition-all ${
+                className={`rounded-lg border-2 px-3 py-2.5 text-left transition-all h-auto block hover:bg-transparent ${
                   isSelected
-                    ? "border-primary bg-primary/[0.04]"
-                    : "border-border hover:border-primary/30"
+                    ? "border-primary bg-primary/[0.04] hover:bg-primary/[0.04] text-primary hover:text-primary"
+                    : "border-border hover:border-primary/30 text-foreground hover:text-foreground"
                 }`}
               >
                 <p className={`text-[12px] font-semibold ${isSelected ? "text-primary" : "text-foreground"}`}>{d.label}</p>
                 <p className="text-[11px] text-muted-foreground">{d.pct === 0 ? "No discount" : `${d.pct}% off`}</p>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -189,22 +190,21 @@ export default function EnrollmentConfirmation({ student, session, onConfirm, on
 
       {/* Actions */}
       <div className="flex items-center justify-between pt-1">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={onBack}
-          className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-auto"
         >
           ← Back
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           onClick={handleConfirm}
           disabled={submitting}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-70 transition-all"
+          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-70 transition-all h-auto"
         >
           {submitting ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <CheckCircle2 className="w-4 h-4" aria-hidden="true" />}
           {submitting ? "Processing…" : "Confirm Enrollment"}
-        </button>
+        </Button>
       </div>
     </div>
   );

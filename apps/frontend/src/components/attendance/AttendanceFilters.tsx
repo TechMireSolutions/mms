@@ -2,6 +2,8 @@ import React, { useState, useMemo } from "react";
 import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
+import { Button } from "../ui/button";
+import FormSelect from "../ui/FormSelect";
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useTeachersPaginated } from '@/hooks/useTeachers';
 import { TEACHERS_MODULE_CONTRACT } from '@mms/shared';
@@ -86,11 +88,13 @@ export default function AttendanceFilters({ filters, onChange }: AttendanceFilte
 
   return (
     <section className="rounded-xl border border-border bg-card overflow-hidden">
-      <button
+      <Button
+        type="button"
+        variant="ghost"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls="filters-panel"
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors h-auto rounded-none justify-between hover:text-foreground"
       >
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
@@ -101,17 +105,19 @@ export default function AttendanceFilters({ filters, onChange }: AttendanceFilte
         </div>
         <div className="flex items-center gap-2">
           {activeCount > 0 && (
-            <button 
+            <Button 
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={(e) => { e.stopPropagation(); reset(); }}
-              className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors"
+              className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors h-auto p-0 hover:bg-transparent"
             >
               <X className="w-3 h-3" /> Clear
-            </button>
+            </Button>
           )}
           {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
         </div>
-      </button>
+      </Button>
 
       <AnimatePresence>
         {open && (
@@ -127,45 +133,37 @@ export default function AttendanceFilters({ filters, onChange }: AttendanceFilte
               {/* Session */}
               <div className="flex flex-col gap-1">
                 <label htmlFor="filter-session" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Session</label>
-                <select 
+                <FormSelect
                   id="filter-session"
-                  value={filters.sessionId} 
-                  onChange={(e) => set("sessionId", e.target.value)}
-                  className="text-sm rounded-lg border border-border bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="">All Sessions</option>
-                  {sessions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
+                  value={filters.sessionId}
+                  onChange={(val) => set("sessionId", val)}
+                  placeholder="All Sessions"
+                  options={sessions.map((s) => ({ value: s.id, label: s.name }))}
+                />
               </div>
 
               {/* Class */}
               <div className="flex flex-col gap-1">
                 <label htmlFor="filter-class" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Class</label>
-                <select 
+                <FormSelect
                   id="filter-class"
-                  value={filters.classId} 
-                  onChange={(e) => set("classId", e.target.value)}
-                  className="text-sm rounded-lg border border-border bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="">All Classes</option>
-                  {sessionClasses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                  value={filters.classId}
+                  onChange={(val) => set("classId", val)}
+                  placeholder="All Classes"
+                  options={sessionClasses.map((c) => ({ value: c.id, label: c.name }))}
+                />
               </div>
 
               {/* Teacher */}
               <div className="flex flex-col gap-1">
                 <label htmlFor="filter-teacher" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Teacher</label>
-                <select 
+                <FormSelect
                   id="filter-teacher"
-                  value={filters.teacherId} 
-                  onChange={(e) => set("teacherId", e.target.value)}
-                  className="text-sm rounded-lg border border-border bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="">{t('attendance.filters.allTeachers')}</option>
-                  {assignableTeachers.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>{teacher.name}</option>
-                  ))}
-                </select>
+                  value={filters.teacherId}
+                  onChange={(val) => set("teacherId", val)}
+                  placeholder={t('attendance.filters.allTeachers')}
+                  options={assignableTeachers.map((teacher) => ({ value: teacher.id, label: teacher.name || "Unknown" }))}
+                />
               </div>
 
               {/* Date */}

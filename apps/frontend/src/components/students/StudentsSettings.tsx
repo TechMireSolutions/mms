@@ -1,127 +1,239 @@
 import React, { useEffect, useState } from "react";
-import { Save, GraduationCap, GripVertical, Check } from "lucide-react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { Save, GraduationCap, Plus, Trash2, Pencil, Info } from "lucide-react";
 import {
   type StudentsSettings,
-  type StudentCustomField,
-  getSortedStudentFields,
-  DEFAULT_STUDENT_FIELD_DEFS
+  type FieldDefinition,
+  STUDENT_TAB_REGISTRY,
+  DEFAULT_STUDENT_ENABLED_TABS,
+  DEFAULT_STUDENT_REQUIRED_TABS,
+  DEFAULT_STUDENT_COLUMN_REGISTRY,
+  INITIAL_STUDENT_FIELD_SEED,
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import CoreFieldEditorList from "../ui/CoreFieldEditorList";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useStudentConfig } from "@/hooks/useStudentConfig";
-
+import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
+import Modal from "../ui/Modal";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Switch } from "../ui/switch";
+import { Checkbox } from "../ui/checkbox";
 
 interface ToggleProps {
   label: string;
   description?: string;
   value: boolean;
   onChange: (val: boolean) => void;
+  ariaLabel?: string;
 }
 
-/**
- * Custom switch toggle component.
- *
- * @returns Component layout.
- */
-function Toggle({ label, description, value, onChange }: ToggleProps): React.ReactElement {
+function Toggle({ label, description, value, onChange, ariaLabel }: ToggleProps): React.ReactElement {
   return (
-    <div className="flex items-center justify-between py-1">
+    <div className="flex items-center justify-between py-1.5 text-left">
       <div>
         <p className="text-[13px] font-semibold text-foreground">{label}</p>
         {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={value}
-        aria-label={`${label}: ${description || ""}`}
-        onClick={() => onChange(!value)}
-        style={{ width: 40, height: 22, background: value ? "hsl(var(--primary))" : "hsl(var(--border))", borderRadius: 999, position: "relative", flexShrink: 0, transition: "background 0.2s" }}
-      >
-        <span style={{ width: 17, height: 17, top: 2.5, left: value ? 19 : 3, position: "absolute", borderRadius: "50%", background: "white", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
-      </button>
+      <Switch
+        checked={value}
+        onCheckedChange={onChange}
+        aria-label={ariaLabel || label}
+      />
     </div>
   );
 }
 
-/**
- * Panel managing rules and defaults for the student registry.
- *
- * @returns The StudentsSettings component.
- */
+function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
+  if (!savedOrder || savedOrder.length === 0) return fields;
+  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
+  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
+}
+
+function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
+  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
+  const added = newFieldIds.filter((id) => !kept.includes(id));
+  return [...kept, ...added];
+}
+
 export default function StudentsSettings({ mode }: { mode?: "fields" | "preferences" }): React.ReactElement {
   const { settings, updateSettings } = useStudentConfig();
-  const [data, setData] = useState<StudentsSettings>(() => settings);
   const [saved, setSaved] = useState<boolean>(false);
 
+  const settingsFields = (settings.fields as Record<string, FieldDefinition[]>) || {};
+
+  // General Preferences state
+  const [idPrefix, setIdPrefix] = useState(settings.idPrefix);
+  const [autoGenerateId, setAutoGenerateId] = useState(settings.autoGenerateId);
+  const [requireGuardian, setRequireGuardian] = useState(settings.requireGuardian);
+  const [requirePhoto, setRequirePhoto] = useState(settings.requirePhoto);
+  const [defaultGender, setDefaultGender] = useState(settings.defaultGender);
+  const [maxAge, setMaxAge] = useState(settings.maxAge);
+  const [minAge, setMinAge] = useState(settings.minAge);
+  const [allowSiblingDiscount, setAllowSiblingDiscount] = useState(settings.allowSiblingDiscount);
+  const [trackHealthRecords, setTrackHealthRecords] = useState(settings.trackHealthRecords);
+  const [grNumberTemplate, setGrNumberTemplate] = useState(settings.grNumberTemplate);
+  const [grNumberDigits, setGrNumberDigits] = useState(settings.grNumberDigits);
+  const [grNumberRestartAnnually, setGrNumberRestartAnnually] = useState(settings.grNumberRestartAnnually);
+  const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
+
+  // Fields and Tabs state managed by DRY hook
+  const {
+    formTabs,
+    setFormTabs,
+    tabFields,
+    setTabFields,
+    enabledTabs,
+    setEnabledTabs,
+    requiredTabs,
+    setRequiredTabs,
+    tabFieldEnabled,
+    setTabFieldEnabled,
+    tabFieldRequired,
+    setTabFieldRequired,
+    tabFieldUnique,
+    setTabFieldUnique,
+    tabFieldDefaultValues,
+    setTabFieldDefaultValues,
+    tabFieldPermissions,
+    setTabFieldPermissions,
+    tabFieldOrder,
+    setTabFieldOrder,
+    toggleTabEnabled,
+    toggleTabRequired,
+    toggleFieldEnabled,
+    toggleFieldRequired,
+    toggleFieldUnique,
+    handleReorder,
+    handleCustomFieldsChange,
+    handleEditField,
+    handleDeleteField,
+    handleAddTab,
+    handleDeleteTab,
+    handleRenameTab,
+    buildFieldsMap,
+    resetAllState,
+  } = useModuleFieldsEditor({
+    initialTabs: STUDENT_TAB_REGISTRY,
+    initialFields: settingsFields,
+    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS)),
+    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || DEFAULT_STUDENT_REQUIRED_TABS)),
+  });
+
+  // Custom tabs modal state
+  const [isAddTabModalOpen, setIsAddTabModalOpen] = useState(false);
+  const [newTabLabel, setNewTabLabel] = useState("");
+  const [renamingTabKey, setRenamingTabKey] = useState<string | null>(null);
+  const [renameTabLabel, setRenameTabLabel] = useState("");
+
   useEffect(() => {
-    setData(settings);
+    if (!settings) return;
+    // Keep internal state updated when context settings reload/change
+    setIdPrefix(settings.idPrefix);
+    setAutoGenerateId(settings.autoGenerateId);
+    setRequireGuardian(settings.requireGuardian);
+    setRequirePhoto(settings.requirePhoto);
+    setDefaultGender(settings.defaultGender);
+    setMaxAge(settings.maxAge);
+    setMinAge(settings.minAge);
+    setAllowSiblingDiscount(settings.allowSiblingDiscount);
+    setTrackHealthRecords(settings.trackHealthRecords);
+    setGrNumberTemplate(settings.grNumberTemplate);
+    setGrNumberDigits(settings.grNumberDigits);
+    setGrNumberRestartAnnually(settings.grNumberRestartAnnually);
+    setDefaultViewLayout(settings.defaultViewLayout);
+
+    const coreKeys = new Set(STUDENT_TAB_REGISTRY.map(t => t.key));
+    const customTabs = (settings.formTabs || []).filter(t => !coreKeys.has(t.key));
+    const updatedTabs = [
+      ...STUDENT_TAB_REGISTRY,
+      ...customTabs
+    ].map(t => ({
+      ...t,
+      enabled: t.key === "basic" ? true : (settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS).includes(t.key)
+    }));
+
+    resetAllState(
+      updatedTabs,
+      (settings.fields as Record<string, FieldDefinition[]>) || {},
+      settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS,
+      settings.requiredTabs || DEFAULT_STUDENT_REQUIRED_TABS
+    );
   }, [settings]);
 
-  const upd = (f: keyof StudentsSettings, v: StudentsSettings[keyof StudentsSettings]) => {
-    setData((d) => ({ ...d, [f]: v }));
+  const handleToggleTabEnabled = (id: string) => { toggleTabEnabled(id); setSaved(false); };
+  const handleToggleTabRequired = (id: string) => { toggleTabRequired(id); setSaved(false); };
+  const handleToggleFieldEnabled = (tabId: string, fieldId: string) => { toggleFieldEnabled(tabId, fieldId); setSaved(false); };
+  const handleToggleFieldRequired = (tabId: string, fieldId: string) => { toggleFieldRequired(tabId, fieldId); setSaved(false); };
+  const handleToggleFieldUnique = (tabId: string, fieldId: string) => { toggleFieldUnique(tabId, fieldId); setSaved(false); };
+  const handleReorderFields = (tabId: string, reorderedFields: FieldDefinition[]) => { handleReorder(tabId, reorderedFields); setSaved(false); };
+
+  const handleCustomFieldsChangeLocal = (tabId: string, newFields: CustomFieldConfig[]): void => {
+    handleCustomFieldsChange(tabId, newFields);
     setSaved(false);
   };
 
-  const fields = data.fields || {};
-  const customFields = data.customFields || [];
-  const fieldOrder = data.fieldOrder || [];
-
-  const orderedFields = getSortedStudentFields(fieldOrder, fields, customFields);
-
-  const updateFieldConfig = (fieldKey: string, prop: "enabled" | "required", value: boolean) => {
-    const fieldObj = fields[fieldKey] || { enabled: true, required: false };
-    const updatedFieldObj = { ...fieldObj, [prop]: value };
-    if (prop === "enabled" && !value) {
-      updatedFieldObj.required = false;
-    }
-    upd("fields", { ...fields, [fieldKey]: updatedFieldObj });
+  const handleEditFieldLocal = (tabId: string, updatedField: FieldDefinition) => {
+    handleEditField(tabId, updatedField);
+    setSaved(false);
   };
 
-  const handleToggleEnabled = (id: string) => {
-    if (DEFAULT_STUDENT_FIELD_DEFS.some(f => f.id === id)) {
-      const cfg = fields[id] || { enabled: true, required: false };
-      updateFieldConfig(id, "enabled", !cfg.enabled);
-    }
+  const handleDeleteFieldLocal = (tabId: string, fieldId: string) => {
+    handleDeleteField(tabId, fieldId);
+    setSaved(false);
   };
 
-  const handleToggleRequired = (id: string) => {
-    if (DEFAULT_STUDENT_FIELD_DEFS.some(f => f.id === id)) {
-      const cfg = fields[id] || { enabled: true, required: false };
-      updateFieldConfig(id, "required", !cfg.required);
-    } else {
-      const updated = customFields.map(f => f.id === id ? { ...f, required: !f.required } : f);
-      upd("customFields", updated);
-    }
+  const handleAddTabLocal = (label: string) => {
+    handleAddTab(label);
+    setSaved(false);
   };
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination || result.destination.index === result.source.index) return;
-    const reordered = Array.from(orderedFields);
-    const [moved] = reordered.splice(result.source.index, 1);
-    reordered.splice(result.destination.index, 0, moved);
-    upd("fieldOrder", reordered.map(f => f.id));
+  const handleDeleteTabLocal = (key: string) => {
+    handleDeleteTab(key);
+    setSaved(false);
   };
 
-  const handleCustomFieldsChange = (newFields: CustomFieldConfig[]) => {
-    const coreIds = DEFAULT_STUDENT_FIELD_DEFS.map(f => f.id);
-    const newIds = newFields.map(f => f.key);
-    
-    // Sync fieldOrder
-    const kept = fieldOrder.filter((id) => coreIds.includes(id) || newIds.includes(id));
-    const added = newIds.filter((id) => !kept.includes(id));
-    
-    setData(d => ({
-      ...d,
-      customFields: newFields.map(f => ({ ...f, id: f.key })) as unknown as StudentCustomField[],
-      fieldOrder: [...kept, ...added]
+  const handleRenameTabLocal = (key: string, newLabel: string) => {
+    handleRenameTab(key, newLabel);
+    setSaved(false);
+  };
+
+  const handleSave = (): void => {
+    const updatedFormTabs = formTabs.map(t => ({
+      ...t,
+      enabled: enabledTabs.has(t.key)
     }));
-    setSaved(false);
+
+    const cfg: StudentsSettings = {
+      ...settings,
+      idPrefix,
+      autoGenerateId,
+      requireGuardian,
+      requirePhoto,
+      defaultGender,
+      maxAge,
+      minAge,
+      allowSiblingDiscount,
+      trackHealthRecords,
+      grNumberTemplate,
+      grNumberDigits,
+      grNumberRestartAnnually,
+      defaultViewLayout,
+      version: 2,
+      enabledTabs: Array.from(enabledTabs),
+      requiredTabs: Array.from(requiredTabs),
+      fields: buildFieldsMap(),
+      formTabs: updatedFormTabs,
+      columnRegistry: settings.columnRegistry || DEFAULT_STUDENT_COLUMN_REGISTRY,
+    };
+
+    updateSettings(cfg);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
   };
 
-  const showFields = !mode || mode === "fields";
-  const showPrefs = !mode || mode === "preferences";
+  const showFields = mode === "fields";
+  const showPrefs = mode === "preferences";
 
   return (
     <section className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-5 shadow-sm" aria-labelledby="students-settings-title">
@@ -133,31 +245,31 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
       </div>
 
       {showPrefs && (
-        <>
+        <div className="space-y-4">
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider">General Register (GR) Number Settings</h4>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 text-left">
               <div>
                 <label htmlFor="gr-template" className={FORM_LABEL}>GR Number Template</label>
-                <input
+                <Input
                   id="gr-template"
                   className={FORM_INPUT}
-                  value={data.grNumberTemplate || ""}
-                  onChange={(e) => upd("grNumberTemplate", e.target.value)}
+                  value={grNumberTemplate || ""}
+                  onChange={(e) => { setGrNumberTemplate(e.target.value); setSaved(false); }}
                   placeholder="e.g. {seq}-{year}"
                 />
                 <span className="text-[9px] text-muted-foreground mt-1 block">Use placeholders: <code>{`{seq}`}</code>, <code>{`{year}`}</code></span>
               </div>
               <div>
                 <label htmlFor="gr-digits" className={FORM_LABEL}>Sequence Digits</label>
-                <input
+                <Input
                   id="gr-digits"
                   type="number"
                   min="1"
                   max="8"
                   className={FORM_INPUT}
-                  value={data.grNumberDigits || 4}
-                  onChange={(e) => upd("grNumberDigits", Number(e.target.value))}
+                  value={grNumberDigits || 4}
+                  onChange={(e) => { setGrNumberDigits(Number(e.target.value)); setSaved(false); }}
                 />
                 <span className="text-[9px] text-muted-foreground mt-1 block">e.g., 4 is "0001", 3 is "001"</span>
               </div>
@@ -165,188 +277,299 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
             <Toggle
               label="Restart Sequence Annually"
               description="Reset GR number sequence to 0001 at the beginning of each calendar year"
-              value={data.grNumberRestartAnnually ?? true}
-              onChange={(v) => upd("grNumberRestartAnnually", v)}
+              value={grNumberRestartAnnually ?? true}
+              onChange={(v) => { setGrNumberRestartAnnually(v); setSaved(false); }}
             />
           </div>
 
-          <div className="space-y-2 pt-1" role="group" aria-label="Student registry feature flags toggles">
-            <Toggle label="Auto-generate Student ID" description="System assigns unique ID on registration" value={data.autoGenerateId} onChange={(v) => upd("autoGenerateId", v)} />
-            <Toggle label="Require Guardian Contact" description="Student must have at least one guardian linked" value={data.requireGuardian} onChange={(v) => upd("requireGuardian", v)} />
-            <Toggle label="Require Photo" description="Student profile photo is mandatory" value={data.requirePhoto} onChange={(v) => upd("requirePhoto", v)} />
+          <div className="space-y-2 pt-1 border-t border-border/40" role="group" aria-label="Student registry feature flags toggles">
+            <Toggle label="Auto-generate Student ID" description="System assigns unique ID on registration" value={autoGenerateId} onChange={(v) => { setAutoGenerateId(v); setSaved(false); }} />
+            <Toggle label="Require Guardian Contact" description="Student must have at least one guardian linked" value={requireGuardian} onChange={(v) => { setRequireGuardian(v); setSaved(false); }} />
+            <Toggle label="Require Photo" description="Student profile photo is mandatory" value={requirePhoto} onChange={(v) => { setRequirePhoto(v); setSaved(false); }} />
           </div>
 
           <div className="py-3 border-t border-border mt-3 flex items-center justify-between">
-            <div>
+            <div className="text-left">
               <p className="text-[13px] font-semibold text-foreground">Default View Layout</p>
               <p className="text-[11px] text-muted-foreground">Select how students are displayed in work view</p>
             </div>
             <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
-              <button
+              <Button
                 type="button"
-                onClick={() => upd("defaultViewLayout", "list")}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  (data.defaultViewLayout || "list") === "list"
-                    ? "bg-card text-foreground shadow-sm"
+                variant="ghost"
+                onClick={() => { setDefaultViewLayout("list"); setSaved(false); }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all h-auto ${
+                  (defaultViewLayout || "list") === "list"
+                    ? "bg-card text-foreground shadow-sm hover:bg-card"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 List View
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                onClick={() => upd("defaultViewLayout", "cards")}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  data.defaultViewLayout === "cards"
-                    ? "bg-card text-foreground shadow-sm"
+                variant="ghost"
+                onClick={() => { setDefaultViewLayout("cards"); setSaved(false); }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all h-auto ${
+                  defaultViewLayout === "cards"
+                    ? "bg-card text-foreground shadow-sm hover:bg-card"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Card Grid
-              </button>
+              </Button>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {showFields && (
-        <div className="space-y-3 pt-2">
-        <div className="flex items-center gap-2">
-          <GraduationCap className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-bold text-foreground">Student Form Fields</h3>
-          <span className="text-xs text-muted-foreground ml-1 flex items-center gap-1">
-            <span>— drag </span>
-            <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60" />
-            <span> to reorder</span>
-          </span>
-        </div>
-
-        {/* ── Identity section (Always On) ── */}
-        <section className="rounded-xl border border-border bg-card overflow-hidden text-left">
-          <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-foreground">Identity</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Always On</span>
-              </div>
-              <p className="text-xs text-muted-foreground">Core student fields + your custom fields</p>
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-left">
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-xs">Dynamic Fields Manager</h4>
+              <p className="text-[11px] mt-0.5 text-info/90">
+                Configure visible sections, reorder fields, and manage custom metadata definitions.
+              </p>
             </div>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-              {orderedFields.filter(f => fields[f.id]?.enabled ?? true).length}/{orderedFields.length}
-            </span>
           </div>
 
-          <div className="p-4 space-y-4">
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="student-fields-droppable">
-                {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-1.5">
-                    {orderedFields.map((field, index) => {
-                      const isCustom = !DEFAULT_STUDENT_FIELD_DEFS.some(df => df.id === field.id);
-                      const isEnabled = fields[field.id]?.enabled ?? true;
-                      const isRequired = fields[field.id]?.required ?? false;
+          {formTabs.map((tab) => {
+            const tabId = tab.key;
+            const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
+            const tabDesc = tab.description;
+            const tabDefs = tabFields[tabId] || [];
+            const enabledSet = tabFieldEnabled[tabId] || new Set();
+            const requiredSet = tabFieldRequired[tabId] || new Set();
+            const isOn = tabId === "basic" ? true : enabledTabs.has(tabId);
+            const isReq = requiredTabs.has(tabId);
 
-                      return (
-                        <Draggable key={field.id} draggableId={field.id} index={index}>
-                          {(drag, snapshot) => {
-                            const { style, ...draggableProps } = drag.draggableProps;
-                            return (
-                            <div
-                              ref={drag.innerRef}
-                              {...draggableProps}
-                              style={style as React.CSSProperties}
-                              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-all select-none text-xs
-                                ${
-                                  snapshot.isDragging
-                                    ? "shadow-lg border-primary/40 bg-primary/5"
-                                    : isEnabled
-                                    ? "border-border bg-card"
-                                    : "border-border/40 bg-muted/20 opacity-55"
-                                }`}
-                            >
-                              <span
-                                {...drag.dragHandleProps}
-                                aria-label="Drag to reorder field"
-                                className="flex-shrink-0 cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
-                              >
-                                <GripVertical className="w-3.5 h-3.5" />
-                              </span>
+            return (
+              <section key={tabId} className="rounded-xl border border-border bg-card overflow-hidden text-left">
+                <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={isOn}
+                      onCheckedChange={tabId !== "basic" ? () => handleToggleTabEnabled(tabId) : undefined}
+                      aria-label={`Enable Tab ${tabLabel}`}
+                      disabled={tabId === "basic"}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 ml-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-foreground">{tabLabel}</span>
+                      {!tab.isSystem && (
+                        <div className="flex items-center gap-1.5 ml-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => {
+                              setRenamingTabKey(tabId);
+                              setRenameTabLabel(tab.label);
+                            }}
+                            className="p-1 h-6 w-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none flex items-center justify-center"
+                            title="Rename Tab"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => handleDeleteTabLocal(tabId)}
+                            className="p-1 h-6 w-6 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
+                            title="Delete Tab"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{tabDesc}</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
+                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                  </span>
+                  {tabId !== "basic" && isOn && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => handleToggleTabRequired(tabId)}
+                      className={`flex-shrink-0 px-2.5 py-1 h-auto text-[10px] font-bold border transition-all shadow-none ml-2
+                        ${
+                          isReq
+                            ? "bg-destructive/10 border-destructive/30 text-destructive hover:bg-destructive/20 hover:text-destructive"
+                            : "bg-muted border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                      {isReq ? "Required" : "Optional"}
+                    </Button>
+                  )}
+                </div>
 
-                              {/* Enable Toggle */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleEnabled(field.id)}
-                                  disabled={isCustom}
-                                  className={`w-4 h-4 rounded flex-shrink-0 border-2 flex items-center justify-center transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
-                                    ${isEnabled ? "bg-primary border-primary" : "border-border bg-background"}`}
-                                >
-                                {isEnabled && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
-                              </button>
-
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="font-semibold text-foreground">{field.label}</p>
-                                  {isCustom && field.type && (
-                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/30">
-                                      Custom · {field.type}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Required Toggle */}
-                              {isEnabled && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleRequired(field.id)}
-                                  className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border transition-all
-                                    ${
-                                      isRequired
-                                        ? "bg-destructive/10 border-destructive/30 text-destructive dark:bg-destructive/20 dark:border-destructive/30 dark:text-destructive"
-                                        : "bg-muted border-border text-muted-foreground hover:text-foreground"
-                                    }`}
-                                >
-                                  {isRequired ? "Required" : "Optional"}
-                                </button>
-                              )}
-                            </div>
-                          );
-                          }}
-                        </Draggable>
-                      );
-                    })}
-                    {provided.placeholder}
+                {isOn && (
+                  <div className="p-3 space-y-3">
+                    <CoreFieldEditorList
+                      tabId={tabId}
+                      fields={getOrderedFields(tabDefs, tabFieldOrder[tabId])}
+                      enabledSet={enabledSet}
+                      requiredSet={requiredSet}
+                      onToggleEnabled={(fieldId: string) => handleToggleFieldEnabled(tabId, fieldId)}
+                      onToggleRequired={(fieldId: string) => handleToggleFieldRequired(tabId, fieldId)}
+                      onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
+                      onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
+                      isUniqueField={(tid: string, fid: string) => tabFieldUnique[tid]?.has(fid) || false}
+                      isCoreField={(key: string) => INITIAL_STUDENT_FIELD_SEED[tabId]?.some((f) => f.key === key) ?? false}
+                      defaultValues={tabFieldDefaultValues[tabId]}
+                      permissions={tabFieldPermissions[tabId]}
+                      onChangeDefaults={(fieldId: string, val: unknown) => {
+                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                        setSaved(false);
+                      }}
+                      onChangePermissions={(fieldId: string, roles: string[]) => {
+                        setTabFieldPermissions(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: roles } }));
+                        setSaved(false);
+                      }}
+                      onEditField={(f: FieldDefinition) => handleEditFieldLocal(tabId, f)}
+                      onDeleteField={(id: string) => handleDeleteFieldLocal(tabId, id)}
+                      labels={{
+                        required: "Required",
+                        optional: "Optional",
+                        unique: "Unique",
+                        standard: "Standard",
+                      }}
+                    />
+                    <div className="border-t border-border pt-3">
+                      <CustomFieldsBuilder
+                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        droppableId={`custom-fields-${tabId}`}
+                        onChange={(f) => handleCustomFieldsChangeLocal(tabId, f)}
+                      />
+                    </div>
                   </div>
                 )}
-              </Droppable>
-            </DragDropContext>
+              </section>
+            );
+          })}
 
-            {/* Custom Fields Builder nested at bottom of card */}
-            <div className="border-t border-border pt-4">
-              <CustomFieldsBuilder
-                fields={customFields as unknown as CustomFieldConfig[]}
-                droppableId="custom-fields-students"
-                onChange={handleCustomFieldsChange}
-              />
-            </div>
+          <div className="flex justify-end pt-2">
+            <Button
+              type="button"
+              onClick={() => setIsAddTabModalOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-none"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Custom Tab</span>
+            </Button>
           </div>
-        </section>
-      </div>
+        </div>
       )}
 
-      <div className="pt-2 border-t border-border/50">
-        <button
+      {/* Add Tab Modal */}
+      <Modal
+        open={isAddTabModalOpen}
+        onClose={() => {
+          setIsAddTabModalOpen(false);
+          setNewTabLabel("");
+        }}
+        title="Add Custom Tab"
+        icon={Plus}
+        footer={
+          <div className="flex justify-end gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddTabModalOpen(false);
+                setNewTabLabel("");
+              }}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                handleAddTabLocal(newTabLabel);
+                setIsAddTabModalOpen(false);
+                setNewTabLabel("");
+              }}
+              disabled={!newTabLabel.trim()}
+              type="button"
+            >
+              Add Tab
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-left">
+          <label htmlFor="newTabLabel" className="text-xs font-semibold text-foreground">Tab Name *</label>
+          <Input
+            id="newTabLabel"
+            value={newTabLabel}
+            onChange={(e) => setNewTabLabel(e.target.value)}
+            placeholder="e.g. Extra Info"
+            autoFocus
+          />
+        </div>
+      </Modal>
+
+      {/* Rename Tab Modal */}
+      <Modal
+        open={renamingTabKey !== null}
+        onClose={() => {
+          setRenamingTabKey(null);
+          setRenameTabLabel("");
+        }}
+        title="Rename Custom Tab"
+        icon={Pencil}
+        footer={
+          <div className="flex justify-end gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRenamingTabKey(null);
+                setRenameTabLabel("");
+              }}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (renamingTabKey) {
+                  handleRenameTabLocal(renamingTabKey, renameTabLabel);
+                }
+                setRenamingTabKey(null);
+                setRenameTabLabel("");
+              }}
+              disabled={!renameTabLabel.trim()}
+              type="button"
+            >
+              Rename Tab
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-left">
+          <label htmlFor="renameTabLabel" className="text-xs font-semibold text-foreground">Tab Name *</label>
+          <Input
+            id="renameTabLabel"
+            value={renameTabLabel}
+            onChange={(e) => setRenameTabLabel(e.target.value)}
+            placeholder="e.g. Custom Fields"
+            autoFocus
+          />
+        </div>
+      </Modal>
+
+      <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
+        <Button
           type="button"
-          onClick={() => {
-            updateSettings(data);
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2500);
-          }}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all shadow-md shadow-primary/10"
+          onClick={handleSave}
+          className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
         >
           <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? "Saved!" : "Save Settings"}
-        </button>
-      </div>
+        </Button>
+      </footer>
     </section>
   );
 }

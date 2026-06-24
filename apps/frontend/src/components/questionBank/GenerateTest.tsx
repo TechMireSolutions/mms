@@ -9,6 +9,10 @@ import {
   type QuestionBankTest,
 } from "@mms/shared";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 
 
 interface AIGeneratingProps {
@@ -147,6 +151,11 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
 
   const getCat = (id: string) => qbConfig.categories.find((c) => c.id === id);
 
+  const diffSelectOptions = useMemo(() => [
+    { value: "any", label: t("questionBank.difficultyAny") },
+    ...qbConfig.enabledDifficulties.map((k) => ({ value: k, label: qbConfig.difficultyLabel(k) }))
+  ], [qbConfig, t]);
+
   if (step === "done") {
     return (
       <div className="py-16 text-center space-y-4" role="status" aria-live="polite">
@@ -155,13 +164,13 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
         </div>
         <p className="text-base font-bold text-foreground">{t("questionBank.testCreated")}</p>
         <p className="text-sm text-muted-foreground">{t("questionBank.testCreatedDesc")}</p>
-        <button
+        <Button
           type="button"
           onClick={() => setStep("config")}
-          className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90"
+          className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 h-auto"
         >
           {t("questionBank.generateAnother")}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -185,9 +194,9 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
         <div className="rounded-xl border border-border bg-card p-5 space-y-5">
           <div>
             <label htmlFor="config-name" className={FORM_LABEL}>{t("questionBank.testName")}</label>
-            <input
+            <Input
               id="config-name"
-              className={FORM_INPUT}
+              className={`${FORM_INPUT} shadow-none`}
               value={config.name}
               onChange={(e) => upd("name", e.target.value)}
               placeholder={t("questionBank.testNamePlaceholder")}
@@ -200,15 +209,15 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
               {qbConfig.categories.map((c) => {
                 const active = config.categoryIds.includes(c.id);
                 return (
-                  <button
+                  <Button
                     key={c.id}
                     type="button"
                     onClick={() => toggleCat(c.id)}
-                    className={`flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-full border transition-all ${active ? "text-white border-transparent" : "border-border bg-muted text-foreground hover:bg-muted/80"}`}
+                    className={`flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-full border transition-all h-auto shadow-none ${active ? "text-white border-transparent" : "border-border bg-muted text-foreground hover:bg-muted/80"}`}
                     style={active ? { background: c.color, borderColor: c.color } : {}}
                   >
                     <span>{c.icon}</span> <span>{c.name}</span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -217,24 +226,19 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label htmlFor="config-difficulty" className={FORM_LABEL}>{t("questionBank.difficulty")}</label>
-              <select
+              <FormSelect
                 id="config-difficulty"
-                className={FORM_INPUT + " cursor-pointer"}
                 value={config.difficulty}
-                onChange={(e) => upd("difficulty", e.target.value)}
-              >
-                <option value="any">{t("questionBank.difficultyAny")}</option>
-                {qbConfig.enabledDifficulties.map((k) => (
-                  <option key={k} value={k}>{qbConfig.difficultyLabel(k)}</option>
-                ))}
-              </select>
+                onChange={(val) => upd("difficulty", val)}
+                options={diffSelectOptions}
+              />
             </div>
             <div>
               <label htmlFor="config-num" className={FORM_LABEL}>{t("questionBank.numQuestions")}</label>
-              <input
+              <Input
                 id="config-num"
                 type="number"
-                className={FORM_INPUT}
+                className={`${FORM_INPUT} shadow-none`}
                 value={config.numQuestions}
                 onChange={(e) => upd("numQuestions", +e.target.value)}
                 min={1}
@@ -243,10 +247,10 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
             </div>
             <div>
               <label htmlFor="config-duration" className={FORM_LABEL}>{t("questionBank.durationMin")}</label>
-              <input
+              <Input
                 id="config-duration"
                 type="number"
-                className={FORM_INPUT}
+                className={`${FORM_INPUT} shadow-none`}
                 value={config.duration}
                 onChange={(e) => upd("duration", +e.target.value)}
                 min={5}
@@ -254,12 +258,10 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
             </div>
           </div>
 
-          <label className="flex items-center gap-2.5 cursor-pointer">
-            <input
-              type="checkbox"
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <Checkbox
               checked={config.shuffle}
-              onChange={(e) => upd("shuffle", e.target.checked)}
-              className="w-4 h-4 accent-primary"
+              onCheckedChange={(checked) => upd("shuffle", !!checked)}
             />
             <span className="text-sm text-foreground">{t("questionBank.shuffle")}</span>
           </label>
@@ -293,7 +295,7 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
             );
           })()}
 
-          <button
+          <Button
             type="button"
             onClick={handleGenerate}
             disabled={!config.numQuestions || questions.filter((q) => {
@@ -303,10 +305,10 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
               const mDiff = config.difficulty === "any" || q.difficulty === config.difficulty;
               return mCat && mDiff;
             }).length < config.numQuestions}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 disabled:opacity-60 h-auto"
           >
             <Sparkles className="w-4 h-4" aria-hidden="true" /> {t("questionBank.generateTest")}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -314,7 +316,7 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
         <div className="space-y-4">
           <section className="rounded-xl border border-border bg-card p-4" aria-label={t("questionBank.previewTest")}>
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-[13px] font-bold text-foreground">
+              <h3 className="text-[13px] font-bold text-foreground m-0">
                 {t("questionBank.previewTitle", {
                   name: config.name || t("questionBank.previewDefaultName"),
                 })}
@@ -340,7 +342,7 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
                       {t("questionBank.previewQuestionLabel", { n: i + 1 })}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-semibold text-foreground leading-snug">{q.text}</p>
+                      <p className="text-[12px] font-semibold text-foreground leading-snug m-0">{q.text}</p>
                       <div className="flex flex-wrap items-center gap-1.5 mt-1">
                         {getQuestionCategoryIds(q).map((catId) => {
                           const cat = getCat(catId);
@@ -360,34 +362,36 @@ export default function GenerateTest({ questions, onCreateTest }: GenerateTestPr
                         </span>
                       </div>
                     </div>
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setGeneratedQIds((p) => p.filter((x) => x !== id))}
                       aria-label={t("questionBank.removeQuestionAria", { n: i + 1 })}
-                      className="p-1 rounded hover:bg-muted text-muted-foreground flex-shrink-0"
+                      variant="ghost"
+                      className="p-1 rounded hover:bg-muted text-muted-foreground flex-shrink-0 h-auto shadow-none"
                     >
                       <X className="w-3 h-3" aria-hidden="true" />
-                    </button>
+                    </Button>
                   </div>
                 );
               })}
             </div>
           </section>
           <div className="flex gap-3">
-            <button
+            <Button
               type="button"
               onClick={() => setStep("config")}
-              className="flex-1 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-muted"
+              variant="outline"
+              className="flex-1 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-muted h-auto shadow-none"
             >
               {t("questionBank.back")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={handleSave}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 h-auto"
             >
               <Save className="w-4 h-4" aria-hidden="true" /> {t("questionBank.saveTest")}
-            </button>
+            </Button>
           </div>
         </div>
       )}

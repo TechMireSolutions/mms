@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, AlertTriangle, Calendar, User, DollarSign, X } from 'lucide-react';
 import useTranslation from '@/hooks/useTranslation';
 import type { DashboardNotificationItem } from '@/lib/buildDashboardNotifications';
+import { Button } from '@/components/ui/button';
 
 interface NotificationsPanelProps {
   items: DashboardNotificationItem[];
@@ -39,13 +40,13 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
           )}
         </div>
         {dismissed.length > 0 && (
-          <button
+          <Button
+            variant="link"
             onClick={() => setDismissed([])}
-            className="text-[11px] text-primary font-medium hover:underline shrink-0"
-            type="button"
+            className="text-[11px] font-medium shrink-0 h-auto p-0 text-primary hover:underline"
           >
             {t('notifications.restoreAll')}
-          </button>
+          </Button>
         )}
       </header>
 
@@ -91,14 +92,15 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
                     <p className="text-[12px] text-muted-foreground mt-0.5 m-0">{notif.desc}</p>
                     <p className="text-[11px] text-muted-foreground/60 mt-1 m-0">{notif.time}</p>
                   </div>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setDismissed((d) => [...d, notif.id])}
-                    className="text-muted-foreground/40 hover:text-muted-foreground transition-colors flex-shrink-0 mt-0.5 p-0.5"
+                    className="text-muted-foreground/40 hover:text-muted-foreground transition-colors flex-shrink-0 mt-0.5 p-0.5 w-6 h-6"
                     aria-label={t('notifications.dismiss', { title: notif.title })}
-                    type="button"
                   >
                     <X className="w-3.5 h-3.5" aria-hidden="true" />
-                  </button>
+                  </Button>
                 </motion.article>
               );
             })

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import useBranding from "@/hooks/useBranding";
 
@@ -123,12 +124,14 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
 
             return (
               <div key={item.labelKey} className="space-y-1">
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
                   onClick={() => toggleMenu(item.labelKey)}
-                  className={`group flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
+                  className={`group flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all duration-200 relative h-auto hover:bg-sidebar-accent/50 ${
                     hasActiveSub
                       ? "bg-sidebar-accent/35 text-sidebar-foreground"
-                      : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      : "text-sidebar-muted-foreground hover:text-sidebar-foreground"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -153,7 +156,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                       }`}
                     />
                   )}
-                </button>
+                </Button>
 
                 <AnimatePresence initial={false}>
                   {isMenuOpen && !collapsed && (
@@ -245,9 +248,11 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
 
       {/* Collapse toggle */}
       <div className="px-3 py-4 border-t border-sidebar-border">
-        <button
+        <Button
+          type="button"
+          variant="ghost"
           onClick={onToggle}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors h-auto"
         >
           {collapsed ? (
             <ChevronRight className="w-4 h-4" />
@@ -257,7 +262,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
               <span className="text-xs font-medium">{t("nav.collapse")}</span>
             </>
           )}
-        </button>
+        </Button>
       </div>
     </aside>
   );

@@ -331,4 +331,5 @@ export const APP_TRANSLATIONS_FA = {
   "contacts.deletionReasonLabel": "دلیل (اختیاری)",
   "contacts.deletionReasonPlaceholder": "چرا این مخاطب حذف می‌شود؟",
   "contacts.noDeletedContacts": "مخاطب حذف‌شده‌ای نیست",
+  "backup.securityViolation": "بررسی امنیتی ناموفق بود. فایل پشتیبان حاوی کلیدهای نامعتبر یا داده‌های غیرمجاز است.",
 } as const;

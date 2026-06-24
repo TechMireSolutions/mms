@@ -5,6 +5,7 @@ import { formatDate, validateContactsSavedReportDrillDown } from "@mms/shared";
 import EmptyState from "@/components/ui/EmptyState";
 import FormModal from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -170,14 +171,14 @@ export default function ContactsSavedReports({
           <p className="text-xs text-muted-foreground mt-0.5">{t("contacts.savedReports.subtitle")}</p>
         </div>
         {canSave && (
-          <button
+          <Button
             type="button"
             onClick={openSaveDialog}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors shadow-none"
           >
             <Plus className="w-3.5 h-3.5" />
             {t("contacts.savedReports.saveCurrent")}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -235,22 +236,24 @@ export default function ContactsSavedReports({
                   )}
                 </div>
                 <div className="flex items-center gap-2 pt-1 border-t border-border">
-                  <button
+                  <Button
                     type="button"
+                    variant="link"
                     onClick={() => void handleRun(r)}
-                    className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                    className="flex items-center gap-1 text-xs font-medium text-primary hover:underline p-0 h-auto shadow-none"
                   >
                     <Play className="w-3 h-3" />
                     {t("contacts.savedReports.run")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => void handleDelete(r.id)}
-                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto"
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto p-0 h-auto hover:bg-transparent shadow-none"
                   >
                     <Trash2 className="w-3 h-3" />
                     {t("contacts.savedReports.delete")}
-                  </button>
+                  </Button>
                 </div>
               </div>
             );

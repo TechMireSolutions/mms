@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Layers, AlertTriangle, Users, CheckCircle2 } from "lucide-react";
 import { Session, Class } from '@/lib/data/sessionsData';
 import { Student } from '@/lib/data/studentsData';
+import { Button } from "@/components/ui/button";
 
 interface Step4ClassAssignmentProps {
   session: Session | null | undefined;
@@ -84,18 +85,18 @@ export default function Step4ClassAssignment({ session, student, suggestedClass,
           const full       = spotsLeft <= 0;
 
           return (
-            <button
+            <Button
               key={cls.id}
-              type="button"
               role="radio"
               aria-checked={selected}
               disabled={full}
               onClick={() => !full && handleSelect(cls)}
-              className={`w-full text-left p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                selected ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40 hover:bg-muted/30"
+              variant="outline"
+              className={`w-full text-left p-4 rounded-xl border-2 transition-all h-auto disabled:opacity-50 disabled:cursor-not-allowed justify-start hover:bg-transparent ${
+                selected ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground hover:text-foreground" : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground hover:text-foreground"
               }`}
             >
-              <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center justify-between gap-3 flex-wrap w-full">
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Layers className="w-4 h-4 text-primary" aria-hidden="true" />
@@ -116,7 +117,7 @@ export default function Step4ClassAssignment({ session, student, suggestedClass,
                 </div>
                 <div className="text-right flex-shrink-0" aria-hidden="true">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Users className="w-3 h-3" />
+                    <Users className="w-3.5 h-3.5" />
                     <span>{cls.enrolled}/{cls.capacity}</span>
                   </div>
                   <div className="h-1.5 w-20 rounded-full bg-muted mt-1 overflow-hidden">
@@ -128,7 +129,7 @@ export default function Step4ClassAssignment({ session, student, suggestedClass,
                   <p className="text-[10px] text-muted-foreground mt-0.5">{spotsLeft} left</p>
                 </div>
               </div>
-            </button>
+            </Button>
           );
         })}
       </div>

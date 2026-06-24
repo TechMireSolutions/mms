@@ -8,9 +8,11 @@ import { genderAvatarGradient, genderBadgeClass } from '@/lib/semanticTone';
 import ContactCreateModal, {
   type ContactCreateDefaults,
 } from '@/components/contacts/ContactCreateModal';
-import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_LABEL } from '@/components/ui/formStyles';
 import useDebounce from '@/hooks/useDebounce';
 import { useContactById, useContactsPaginated } from '@/hooks/useContacts';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export interface ContactPickerProps {
   label: string;
@@ -164,13 +166,14 @@ export default function ContactPicker({
               )}
             </div>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => onChange(null)}
-            className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors focus:outline-none focus:ring-2 focus:ring-destructive/20"
+            className="h-auto p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors focus:outline-none focus:ring-2 focus:ring-destructive/20 shadow-none"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -181,8 +184,8 @@ export default function ContactPicker({
       <span className={FORM_LABEL}>{label}</span>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/75 pointer-events-none" />
-        <input
-          className={cn(FORM_INPUT, 'pl-9.5 pr-8.5')}
+        <Input
+          className="pl-9.5 pr-8.5"
           placeholder={searchPlaceholder ?? `Search ${label.toLowerCase()}…`}
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
@@ -190,13 +193,14 @@ export default function ContactPicker({
           onBlur={() => setTimeout(() => setOpen(false), 200)}
         />
         {query && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-md hover:bg-muted"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 h-auto rounded-md hover:bg-muted shadow-none"
           >
             <X className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         )}
         <AnimatePresence>
           {open && (matches.length > 0 || allowCreate || (serverMode && isSearching)) && (
@@ -222,11 +226,12 @@ export default function ContactPicker({
                 const cTag = c.tag as string | undefined;
 
                 return (
-                  <button
+                  <Button
                     key={c.id}
                     type="button"
+                    variant="ghost"
                     onMouseDown={() => { onChange(c.id, c); setQuery(''); setOpen(false); }}
-                    className="w-full flex items-center gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-left focus:outline-none"
+                    className="w-full flex items-center h-auto font-normal justify-start gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-left focus:outline-none rounded-none shadow-none text-foreground"
                   >
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${cGradient} flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white shadow-sm`}>
                       {cInitials}
@@ -239,25 +244,26 @@ export default function ContactPicker({
                         {cTag && <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.2 rounded border border-primary/10 capitalize font-medium">{cTag}</span>}
                       </p>
                     </div>
-                  </button>
+                  </Button>
                 );
               })}
               {allowCreate && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     openCreateFlow(query);
                     setQuery('');
                     setOpen(false);
                   }}
-                  className="w-full flex items-center gap-2 px-4 py-3 hover:bg-primary/5 hover:text-primary text-primary font-semibold text-xs text-left transition-colors border-t border-border"
+                  className="w-full flex items-center h-auto justify-start gap-2 px-4 py-3 hover:bg-primary/5 hover:text-primary text-primary font-semibold text-xs text-left transition-colors border-t border-border rounded-none shadow-none"
                 >
                   <Plus className="w-4 h-4 text-primary" />
                   {query
                     ? (createWithQueryLabel?.(query) ?? `Create contact "${query}"`)
                     : createLabel}
-                </button>
+                </Button>
               )}
             </motion.div>
           )}

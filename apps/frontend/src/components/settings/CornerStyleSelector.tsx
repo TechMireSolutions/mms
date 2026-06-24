@@ -6,6 +6,7 @@ import {
 } from '@mms/shared';
 import useTranslation from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface CornerStyleSelectorProps {
   value: BrandingCornerStyle;
@@ -31,7 +32,7 @@ export default function CornerStyleSelector({
         const active = value === option.value;
         const radius = BRANDING_CORNER_RADIUS[option.value];
         return (
-          <button
+          <Button
             key={option.value}
             type="button"
             role="radio"
@@ -60,7 +61,7 @@ export default function CornerStyleSelector({
                 {t(option.descriptionKey)}
               </span>
             </span>
-          </button>
+          </Button>
         );
       })}
     </div>

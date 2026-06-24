@@ -161,9 +161,10 @@ export default function TimezoneSelect({
             />
           </div>
           <div className="max-h-[min(50vh,20rem)] overflow-y-auto p-1">
-            <button
+            <Button
               type="button"
-              className="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+              variant="ghost"
+              className="w-full justify-start items-center gap-2 rounded-sm px-2 py-2 text-left font-normal hover:bg-accent hover:text-accent-foreground"
               onClick={() => void handleLocationDetect()}
               disabled={detecting}
             >
@@ -173,15 +174,16 @@ export default function TimezoneSelect({
                 <MapPin className="h-4 w-4 text-primary" aria-hidden />
               )}
               {detecting ? t('global.timezoneDetecting') : t('global.timezoneDetectLocation')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+              variant="ghost"
+              className="w-full justify-start items-center gap-2 rounded-sm px-2 py-2 text-left font-normal hover:bg-accent hover:text-accent-foreground"
               onClick={applyDeviceTimezone}
             >
               <LocateFixed className="h-4 w-4 text-primary" aria-hidden />
               {t('global.timezoneUseDevice')}
-            </button>
+            </Button>
             <div className="my-1 h-px bg-border" role="separator" />
             {filtered.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
@@ -192,11 +194,12 @@ export default function TimezoneSelect({
                 <div key={region} className="mb-1">
                   <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{region}</p>
                   {regionOptions.map((opt) => (
-                    <button
+                    <Button
                       key={opt.value}
                       type="button"
+                      variant="ghost"
                       className={cn(
-                        'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground',
+                        'w-full justify-start items-center gap-2 rounded-sm px-2 py-1.5 text-left font-normal hover:bg-accent hover:text-accent-foreground',
                         normalizedValue === opt.value && 'bg-accent text-accent-foreground',
                       )}
                       onClick={() => applyTimezone(opt.value, true)}
@@ -212,7 +215,7 @@ export default function TimezoneSelect({
                       <span className="ml-auto pl-2 font-mono text-[10px] text-muted-foreground">
                         {opt.value}
                       </span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               ))

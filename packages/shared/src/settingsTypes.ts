@@ -21,6 +21,7 @@ import {
 } from "./dateFormatUtils.js";
 import { normalizeDateFormat, type DateFormatId } from "./dateFormatUtils.js";
 import type { AppTranslationKey } from "./appTranslations.js";
+import type { TabDefinition, FieldDefinition, ColumnRegistryEntry } from "./contactTypes.js";
 import {
   DEFAULT_QUESTION_CATEGORIES,
   DEFAULT_QUESTION_SOURCE_BOOKS,
@@ -341,9 +342,12 @@ export interface AttendanceModuleSettings {
   offlineEnabled: boolean;
   geoTagging: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, ModuleFieldConfig>;
+  fields?: Record<string, any>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
 }
 
 export const DEFAULT_ATTENDANCE_SETTINGS: AttendanceModuleSettings = {
@@ -397,9 +401,12 @@ export interface FinanceSettings {
   reminderDaysBefore: string;
   feeReminders: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, ModuleFieldConfig>;
+  fields?: Record<string, any>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
 }
 
 export const DEFAULT_FINANCE_SETTINGS: FinanceSettings = {
@@ -465,9 +472,12 @@ export interface ExaminationsSettings {
   /** Whether exam reminder notifications are sent to students/guardians. */
   examReminders: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, ModuleFieldConfig>;
+  fields?: Record<string, any>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
 }
 
 /** Authoritative default values for ExaminationsSettings. */
@@ -506,9 +516,12 @@ export interface QuestionBankSettings {
   questionTypes?: import('./questionBankTypes.js').QuestionTypeRegistryEntry[];
   difficultyLevels?: import('./questionBankTypes.js').QuestionDifficultyRegistryEntry[];
   defaultViewLayout?: string;
-  fields?: Record<string, ModuleFieldConfig>;
+  fields?: Record<string, any>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
 }
 
 export const DEFAULT_QUESTION_BANK_SETTINGS: QuestionBankSettings = {
@@ -686,9 +699,12 @@ export interface SessionsSettings {
   /** Month in which the academic session starts, e.g. "april". */
   sessionStart: string;
   defaultViewLayout?: string;
-  fields?: Record<string, ModuleFieldConfig>;
+  fields?: Record<string, any>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
 }
 
 /** Authoritative default values for SessionsSettings. */
@@ -749,9 +765,12 @@ export interface EnrollmentsSettings {
   /** Whether guardians receive a reminder when re-enrollment opens. */
   reenrollmentReminder: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, ModuleFieldConfig>;
+  fields?: Record<string, any>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
 }
 
 /** Authoritative default values for EnrollmentsSettings. */
@@ -825,11 +844,16 @@ export interface StudentsSettings {
   grNumberRestartAnnually: boolean;
   defaultViewLayout?: string;
   /** Field level customization visibility/requirement toggles */
-  fields?: Record<string, StudentFieldConfig>;
+  fields?: Record<string, any>;
   /** User defined dynamic custom fields */
   customFields?: StudentCustomField[];
   /** Sequence ordering of the default and custom fields in the form/views */
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
+  columnRegistry?: ColumnRegistryEntry[];
+  version?: number;
 }
 
 /** Authoritative default values for StudentsSettings. */
@@ -961,9 +985,13 @@ export interface TeachersSettings {
   requireContactLink: boolean;
   defaultSpecialization: string;
   defaultViewLayout?: string;
-  fields?: Record<string, TeacherFieldConfig>;
+  fields?: Record<string, any>;
   customFields?: TeacherCustomField[];
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
+  columnRegistry?: ColumnRegistryEntry[];
 }
 
 /** Authoritative default values for TeachersSettings. */
@@ -1087,9 +1115,12 @@ export interface AccountingSettings {
   retainedEarningsAccount: string;
   organizationName: string;
   defaultViewLayout?: string;
-  fields?: Record<string, ModuleFieldConfig>;
+  fields?: Record<string, any>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
 }
 
 export const DEFAULT_ACCOUNTING_SETTINGS: AccountingSettings = {
@@ -1128,9 +1159,12 @@ export interface HasanatSettings {
   pointsPerUnit: number;
   autoApprovePayouts: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, ModuleFieldConfig>;
+  fields?: Record<string, any>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
 }
 
 export const DEFAULT_HASANAT_SETTINGS: HasanatSettings = {
@@ -1162,9 +1196,12 @@ export interface UsersSettings {
   allowSelfRegistration: boolean;
   requireEmailVerification: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, ModuleFieldConfig>;
+  fields?: Record<string, any>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
   /** Persisted workspace roles (system + custom); falls back to `DEFAULT_WORKSPACE_ROLES`. */
   workspaceRoles?: import("./userTypes.js").WorkspaceRole[];
 }
@@ -1426,5 +1463,270 @@ export function prepareImageForUpload(
 ): Promise<File> {
   return optimizeImage(file, IMAGE_UPLOAD_PRESETS[purpose]);
 }
+
+// ─── Fields Setup & Tabbed Fields Utilities ───────────────────────────────────
+
+export function mergeTabbedFields(
+  defaults: Record<string, any>,
+  input?: Record<string, any>
+): Record<string, any> {
+  if (!input) return defaults;
+  const merged = { ...defaults };
+  for (const [tab, fields] of Object.entries(input)) {
+    if (Array.isArray(fields)) {
+      merged[tab] = fields;
+    } else if (fields && typeof fields === "object") {
+      merged[tab] = {
+        ...(merged[tab] || {}),
+        ...fields,
+      };
+    }
+  }
+  return merged;
+}
+
+export function getFlatFieldsConfig(
+  fields?: Record<string, any>
+): Record<string, { enabled: boolean; required: boolean }> {
+  const result: Record<string, { enabled: boolean; required: boolean }> = {};
+  if (!fields) return result;
+  for (const [tab, list] of Object.entries(fields)) {
+    if (Array.isArray(list)) {
+      for (const f of list) {
+        if (f && typeof f === "object" && f.key) {
+          result[f.key] = {
+            enabled: f.enabled !== false,
+            required: !!f.required,
+          };
+        }
+      }
+    } else if (list && typeof list === "object") {
+      for (const [key, cfg] of Object.entries(list)) {
+        if (cfg && typeof cfg === "object") {
+          result[key] = {
+            enabled: (cfg as any).enabled !== false,
+            required: !!(cfg as any).required,
+          };
+        }
+      }
+    }
+  }
+  return result;
+}
+
+// ─── Default Students Field Setup Constants ───────────────────────────────────
+
+export const DEFAULT_STUDENT_ENABLED_TABS = ["guardian", "academic"];
+export const DEFAULT_STUDENT_REQUIRED_TABS: string[] = [];
+
+export const STUDENT_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Identity", enabled: true, order: 0, isSystem: true },
+  { key: "guardian", label: "Guardian Connections", enabled: true, order: 1, isSystem: true },
+  { key: "academic", label: "Enrollment Info", enabled: true, order: 2, isSystem: true },
+  { key: "health", label: "Health & Medical", enabled: false, order: 3, isSystem: true },
+];
+
+export const INITIAL_STUDENT_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "gender", label: "Gender", type: "select", options: ["Male", "Female"], enabled: true, order: 0, required: true },
+    { key: "dob", label: "Date of Birth", type: "date", enabled: true, order: 1, required: false },
+  ],
+  guardian: [
+    { key: "fatherLink", label: "Father Link", type: "text", enabled: true, order: 0, required: false },
+    { key: "motherLink", label: "Mother Link", type: "text", enabled: true, order: 1, required: false },
+    { key: "guardianLink", label: "Guardian Link", type: "text", enabled: true, order: 2, required: false },
+  ],
+  academic: [
+    { key: "registeredDate", label: "Registration Date", type: "date", enabled: true, order: 0, required: true },
+  ],
+  health: [
+    { key: "bloodGroup", label: "Blood Group", type: "select", options: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], enabled: true, order: 0, required: false },
+    { key: "allergies", label: "Allergies / Conditions", type: "textarea", enabled: true, order: 1, required: false },
+  ]
+};
+
+export const DEFAULT_STUDENT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
+  { key: "name", label: "Name", enabled: true, order: 0, sortable: true, width: 0, fixed: true },
+  { key: "grNumber", label: "GR Number", enabled: true, order: 1, sortable: true, width: 120 },
+  { key: "gender", label: "Gender", enabled: true, order: 2, sortable: true, width: 100 },
+  { key: "status", label: "Status", enabled: true, order: 3, sortable: true, width: 100 },
+  { key: "fatherName", label: "Father Name", enabled: true, order: 4, sortable: true, width: 150 },
+  { key: "registeredDate", label: "Registered Date", enabled: true, order: 5, sortable: true, width: 130 },
+];
+
+// ─── Default Question Bank Field Setup Constants ───────────────────────────────
+
+export const QUESTION_BANK_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Basic Setup", enabled: true, order: 0, isSystem: true },
+  { key: "options", label: "Options & Metadata", enabled: true, order: 1, isSystem: true },
+];
+
+export const INITIAL_QUESTION_BANK_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "text", label: "Question Text", type: "textarea", enabled: true, order: 0, required: true },
+    { key: "categoryId", label: "Category", type: "select", enabled: true, order: 1, required: true },
+    { key: "questionLanguage", label: "Language", type: "select", options: ["en", "ur", "ar", "fa"], enabled: true, order: 2, required: true },
+  ],
+  options: [
+    { key: "type", label: "Question Type", type: "select", options: ["mcq", "true_false", "short", "fill_blank", "matching", "numeric", "ordering"], enabled: true, order: 0, required: true },
+    { key: "difficulty", label: "Difficulty", type: "select", options: ["easy", "medium", "hard"], enabled: true, order: 1, required: true },
+  ]
+};
+
+// ─── Default Sessions Field Setup Constants ────────────────────────────────────
+
+export const SESSIONS_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Basic Info", enabled: true, order: 0, isSystem: true },
+  { key: "financial", label: "Financial Setup", enabled: true, order: 1, isSystem: true },
+];
+
+export const INITIAL_SESSIONS_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "name", label: "Session Name", type: "text", enabled: true, order: 0, required: true },
+    { key: "type", label: "Session Type", type: "select", options: ["annual", "semester", "trimester", "quarterly"], enabled: true, order: 1, required: true },
+    { key: "status", label: "Status", type: "select", options: ["draft", "active", "completed", "archived"], enabled: true, order: 2, required: true },
+    { key: "startDate", label: "Start Date", type: "date", enabled: true, order: 3, required: true },
+    { key: "endDate", label: "End Date", type: "date", enabled: true, order: 4, required: true },
+    { key: "description", label: "Description", type: "textarea", enabled: true, order: 5, required: false },
+  ],
+  financial: [
+    { key: "baseFee", label: "Base Fee", type: "number", enabled: true, order: 0, required: true },
+    { key: "currency", label: "Currency", type: "select", options: ["PKR", "USD", "GBP", "CAD", "SAR", "AED"], enabled: true, order: 1, required: true },
+  ]
+};
+
+// ─── Default Teachers Field Setup Constants ────────────────────────────────────
+
+export const TEACHERS_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Profile", enabled: true, order: 0, isSystem: true },
+  { key: "employment", label: "Employment Details", enabled: true, order: 1, isSystem: true },
+];
+
+export const INITIAL_TEACHERS_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "specialization", label: "Specialization", type: "select", options: ["General", "Hifz", "Tajweed", "Arabic", "Islamic Studies", "Hadith", "Fiqh"], enabled: true, order: 0, required: true },
+    { key: "qualification", label: "Qualification", type: "text", enabled: true, order: 1, required: false },
+  ],
+  employment: [
+    { key: "joinDate", label: "Joining Date", type: "date", enabled: true, order: 0, required: true },
+  ]
+};
+
+// ─── Default Users Field Setup Constants ───────────────────────────────────────
+
+export const USERS_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Account Info", enabled: true, order: 0, isSystem: true },
+  { key: "security", label: "Security & Roles", enabled: true, order: 1, isSystem: true },
+];
+
+export const INITIAL_USERS_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "name", label: "Full Name", type: "text", enabled: true, order: 0, required: true },
+    { key: "email", label: "Email Address", type: "email", enabled: true, order: 1, required: true },
+  ],
+  security: [
+    { key: "roles", label: "System Roles", type: "multiselect", options: ["admin", "teacher", "student", "guardian", "accountant"], enabled: true, order: 0, required: true },
+  ]
+};
+
+// ─── Default Enrollments Field Setup Constants ─────────────────────────────────
+
+export const ENROLLMENTS_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Basic Setup", enabled: true, order: 0, isSystem: true },
+];
+
+export const INITIAL_ENROLLMENTS_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "studentId", label: "Select Student", type: "text", enabled: true, order: 0, required: true },
+    { key: "sessionId", label: "Select Session", type: "text", enabled: true, order: 1, required: true },
+    { key: "classId", label: "Assign Class", type: "text", enabled: true, order: 2, required: true },
+    { key: "notes", label: "Notes", type: "textarea", enabled: true, order: 3, required: false },
+  ]
+};
+
+// ─── Default Examinations Field Setup Constants ────────────────────────────────
+
+export const EXAMINATIONS_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Basic Info", enabled: true, order: 0, isSystem: true },
+];
+
+export const INITIAL_EXAMINATIONS_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "name", label: "Exam Name", type: "text", enabled: true, order: 0, required: true },
+    { key: "subject", label: "Subject", type: "text", enabled: true, order: 1, required: false },
+    { key: "status", label: "Status", type: "select", options: ["draft", "scheduled", "completed"], enabled: true, order: 2, required: false },
+    { key: "totalMarks", label: "Total Marks", type: "number", enabled: true, order: 3, required: false },
+    { key: "passingMarks", label: "Passing Marks", type: "number", enabled: true, order: 4, required: false },
+    { key: "duration", label: "Duration (min)", type: "number", enabled: true, order: 5, required: false },
+    { key: "date", label: "Exam Date", type: "date", enabled: true, order: 6, required: true },
+    { key: "classIds", label: "Assign to Classes", type: "multiselect", enabled: true, order: 7, required: true },
+    { key: "description", label: "Description", type: "textarea", enabled: true, order: 8, required: false },
+  ]
+};
+
+// ─── Default Finance Field Setup Constants ─────────────────────────────────────
+
+export const FINANCE_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Basic Info", enabled: true, order: 0, isSystem: true },
+];
+
+export const INITIAL_FINANCE_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "studentId", label: "Student ID", type: "text", enabled: true, order: 0, required: true },
+    { key: "amount", label: "Amount", type: "number", enabled: true, order: 1, required: true },
+    { key: "dueDate", label: "Due Date", type: "date", enabled: true, order: 2, required: true },
+    { key: "status", label: "Status", type: "select", options: ["unpaid", "paid", "partially_paid", "cancelled"], enabled: true, order: 3, required: true },
+  ]
+};
+
+// ─── Default Hasanat Field Setup Constants ─────────────────────────────────────
+
+export const HASANAT_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Basic Info", enabled: true, order: 0, isSystem: true },
+];
+
+export const INITIAL_HASANAT_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "denominationId", label: "Denomination", type: "text", enabled: true, order: 0, required: true },
+    { key: "recipientType", label: "Recipient Type", type: "select", options: ["student", "teacher"], enabled: true, order: 1, required: true },
+    { key: "recipientName", label: "Recipient Name", type: "text", enabled: true, order: 2, required: true },
+    { key: "recipientClass", label: "Class / Department", type: "text", enabled: true, order: 3, required: false },
+    { key: "quantity", label: "Quantity", type: "number", enabled: true, order: 4, required: true },
+    { key: "issuedDate", label: "Issued Date", type: "date", enabled: true, order: 5, required: true },
+    { key: "reason", label: "Reason / Achievement", type: "textarea", enabled: true, order: 6, required: true },
+    { key: "issuedBy", label: "Issued By", type: "text", enabled: true, order: 7, required: false },
+  ]
+};
+
+// ─── Default Accounting Field Setup Constants ──────────────────────────────────
+
+export const ACCOUNTING_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Basic Setup", enabled: true, order: 0, isSystem: true },
+];
+
+export const INITIAL_ACCOUNTING_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "code", label: "Account Code", type: "text", enabled: true, order: 0, required: true },
+    { key: "type", label: "Type", type: "select", options: ["asset", "liability", "equity", "revenue", "expense"], enabled: true, order: 1, required: true },
+    { key: "name", label: "Account Name", type: "text", enabled: true, order: 2, required: true },
+    { key: "subtype", label: "Sub-type", type: "text", enabled: true, order: 3, required: false },
+    { key: "description", label: "Description", type: "textarea", enabled: true, order: 4, required: false },
+  ]
+};
+
+// ─── Default Attendance Field Setup Constants ──────────────────────────────────
+
+export const ATTENDANCE_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Basic Setup", enabled: true, order: 0, isSystem: true },
+];
+
+export const INITIAL_ATTENDANCE_FIELD_SEED: Record<string, FieldDefinition[]> = {
+  basic: [
+    { key: "status", label: "Attendance Status", type: "select", options: ["present", "absent", "late", "excused"], enabled: true, order: 0, required: true },
+    { key: "timeIn", label: "Time In", type: "text", enabled: true, order: 1, required: false },
+    { key: "timeOut", label: "Time Out", type: "text", enabled: true, order: 2, required: false },
+    { key: "notes", label: "Notes / Comments", type: "textarea", enabled: true, order: 3, required: false },
+  ]
+};
 
 

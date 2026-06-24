@@ -4,6 +4,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import ColumnCustomizer from "./ColumnCustomizer";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import useTranslation from "@/hooks/useTranslation";
@@ -72,22 +74,23 @@ export default function ContactsToolbar({
     <div className="flex flex-col sm:flex-row gap-2">
       
       <div className="relative flex-1">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <input
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+        <Input
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={t("contacts.searchPlaceholder")}
-          className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+          className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 transition-all h-auto"
         />
         {search && (
-            <button
-              type="button"
-              onClick={() => onSearchChange("")}
-              className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={t("contacts.clearFilters")}
-            >
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onSearchChange("")}
+            className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] p-0 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors hover:bg-transparent"
+            aria-label={t("contacts.clearFilters")}
+          >
             <X className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         )}
       </div>
  
@@ -95,12 +98,13 @@ export default function ContactsToolbar({
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
+            <Button
               type="button"
-              className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${
+              variant="ghost"
+              className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
                 activeFilterCount > 0
-                  ? "border-primary/30 bg-primary/5 text-primary"
-                  : "border-border bg-card text-foreground hover:bg-muted"
+                  ? "border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/5"
+                  : "border-border bg-card text-foreground"
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -110,7 +114,7 @@ export default function ContactsToolbar({
                   {activeFilterCount}
                 </span>
               )}
-            </button>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-card border border-border">
             <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.genderFilter")}</DropdownMenuLabel>
@@ -157,30 +161,32 @@ export default function ContactsToolbar({
 
         
         {hasActiveFilters && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onClearFilters}
             className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>{t("contacts.clearFilters")}</span>
-          </button>
+          </Button>
         )}
 
         {canViewDeleted && onShowDeletedChange && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => onShowDeletedChange(!showDeletedArchives)}
             aria-pressed={showDeletedArchives}
-            className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
               showDeletedArchives
-                ? "border-primary/40 bg-primary/10 text-primary"
-                : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted"
+                ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
+                : "border-border bg-card text-muted-foreground hover:text-foreground"
             }`}
           >
             <Archive className="w-3.5 h-3.5" />
             <span>{showDeletedArchives ? t("contacts.showActive") : t("contacts.showDeleted")}</span>
-          </button>
+          </Button>
         )}
 
         

@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { GitCompare, X } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
+import { Button } from "@/components/ui/button";
+import FormSelect from "@/components/ui/FormSelect";
 import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -442,14 +444,33 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         </div>
         <div className="flex items-center gap-3">
           <div className="flex rounded-lg border border-border/50 overflow-hidden text-xs font-semibold">
-            <button onClick={() => setMode("sessions")} className={`px-3 py-1.5 transition-colors ${mode === "sessions" ? "bg-primary text-primary-foreground" : "bg-card/50 backdrop-blur-md text-muted-foreground hover:text-foreground"}`} type="button">
+            <Button
+              onClick={() => setMode("sessions")}
+              variant={mode === "sessions" ? "default" : "ghost"}
+              className={`px-3 py-1.5 h-auto text-xs font-semibold rounded-none ${mode === "sessions" ? "bg-primary text-primary-foreground hover:bg-primary/95" : "bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+              type="button"
+            >
               {isContacts ? "Stages" : "Sessions"}
-            </button>
-            <button onClick={() => setMode("daterange")} className={`px-3 py-1.5 transition-colors ${mode === "daterange" ? "bg-primary text-primary-foreground" : "bg-card/50 backdrop-blur-md text-muted-foreground hover:text-foreground"}`} type="button">Date Ranges</button>
+            </Button>
+            <Button
+              onClick={() => setMode("daterange")}
+              variant={mode === "daterange" ? "default" : "ghost"}
+              className={`px-3 py-1.5 h-auto text-xs font-semibold rounded-none ${mode === "daterange" ? "bg-primary text-primary-foreground hover:bg-primary/95" : "bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+              type="button"
+            >
+              Date Ranges
+            </Button>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted transition-colors" type="button" aria-label="Close comparison">
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 p-0 rounded-lg hover:bg-muted transition-colors"
+            type="button"
+            aria-label="Close comparison"
+          >
             <X className="w-4 h-4 text-muted-foreground" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -463,9 +484,12 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
             ].map(({ label, val, set, color }) => (
               <div key={label} className="flex flex-col gap-1">
                 <label className={`text-[11px] font-bold uppercase tracking-wide ${color}`}>{isContacts ? "Stage" : "Session"} {label}</label>
-                <select value={val} onChange={(e) => set(e.target.value)} className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20">
-                  {options.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
+                <FormSelect
+                  value={val}
+                  onChange={(newVal) => set(newVal)}
+                  options={options.map((s) => ({ value: s.id, label: s.name }))}
+                  className="w-full"
+                />
               </div>
             ))}
           </div>

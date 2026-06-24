@@ -1,8 +1,3 @@
-/**
- * PrintInvoiceModal
- * Shows a print-ready preview of the invoice for a specific collection.
- * Supports Print and Export PDF actions.
- */
 import React, { useRef, useMemo } from "react";
 import { X, Printer, FileDown, Settings } from "lucide-react";
 import { loadTemplate, PAGE_SIZES, InvoiceTemplate } from "../../../lib/invoiceTemplateStore";
@@ -11,6 +6,7 @@ import { DEFAULT_CURRENCIES } from '@mms/shared';
 import { useLiveCollection } from "../../../hooks/useLiveCollection";
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../../hooks/useObligationLookups";
 import InvoicePrintPreview from "./InvoicePrintPreview";
+import { Button } from "@/components/ui/button";
 
 export interface PrintInvoiceModalProps {
   collection: ObligationCollection;
@@ -108,14 +104,17 @@ export default function PrintInvoiceModal({
           </div>
           <div className="flex items-center gap-2">
             {onOpenEditor && (
-              <button type="button" onClick={onOpenEditor}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors">
+              <Button type="button" onClick={onOpenEditor}
+                variant="outline"
+                className="flex items-center gap-1.5 px-3 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
                 <Settings className="w-3.5 h-3.5" aria-hidden="true" /> Customize Template
-              </button>
+              </Button>
             )}
-            <button type="button" aria-label="Close modal" onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
+            <Button type="button" aria-label="Close modal" onClick={onClose}
+              variant="ghost"
+              className="p-2 h-auto rounded-lg hover:bg-muted transition-colors text-muted-foreground shadow-none">
               <X className="w-4 h-4" aria-hidden="true" />
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -138,18 +137,20 @@ export default function PrintInvoiceModal({
             Page size: <span className="font-semibold">{template.pageSize}</span> · {size.width}×{size.height}px
           </p>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">
+            <Button type="button" onClick={onClose}
+              variant="outline"
+              className="px-4 py-2 h-auto rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors shadow-none">
               Cancel
-            </button>
-            <button type="button" onClick={handleExportPDF}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors">
+            </Button>
+            <Button type="button" onClick={handleExportPDF}
+              variant="outline"
+              className="flex items-center gap-2 px-4 py-2 h-auto rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors shadow-none">
               <FileDown className="w-4 h-4" aria-hidden="true" /> Export PDF
-            </button>
-            <button type="button" onClick={handlePrint}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors">
+            </Button>
+            <Button type="button" onClick={handlePrint}
+              className="flex items-center gap-2 px-5 py-2 h-auto rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors">
               <Printer className="w-4 h-4" aria-hidden="true" /> Print
-            </button>
+            </Button>
           </div>
         </footer>
       </div>

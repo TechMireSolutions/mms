@@ -8,9 +8,7 @@ import {
 import { Distribution, Denomination, StockBatch } from '@/lib/data/hasanatData';
 import { useHasanatConfig } from "@/hooks/useHasanatConfig";
 import {
-  DEFAULT_HASANAT_SETTINGS,
   DEFAULT_HASANAT_FIELD_DEFS,
-  getSortedFields,
 } from "@mms/shared";
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "@/components/ui/FormModal";
@@ -21,6 +19,10 @@ import useTranslation from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const STATUS_CLS: Record<string, string> = {
   active: "bg-info/10 text-info border-info/20",
@@ -86,17 +88,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
   const availableBatches = batches.filter((b) => b.denominationId === data.denominationId && b.remaining > 0);
   const totalAvailable = availableBatches.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
 
-  const { settings } = useHasanatConfig();
-  const fields = settings.fields || DEFAULT_HASANAT_SETTINGS.fields || {};
-  const customFields = settings.customFields || [];
-  const fieldOrder = settings.fieldOrder || DEFAULT_HASANAT_SETTINGS.fieldOrder || [];
-
-  const orderedFields = getSortedFields(
-    DEFAULT_HASANAT_FIELD_DEFS,
-    fieldOrder,
-    fields,
-    customFields
-  );
+  const { fields, customFields, orderedFields } = useHasanatConfig();
 
   const isValid = useMemo(() => {
     if (totalAvailable === 0) return false;
@@ -160,9 +152,15 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                 return (
                   <div key="denominationId" className="sm:col-span-2">
                     <label htmlFor="denom" className={FORM_LABEL}>Denomination *</label>
-                    <select id="denom" className={FORM_INPUT + " cursor-pointer"} value={data.denominationId} onChange={(e) => upd("denominationId", e.target.value)}>
-                      {denoms.filter((d) => d.active).map((d) => <option key={d.id} value={d.id}>{d.icon} {d.name} ({d.points} pts)</option>)}
-                    </select>
+                    <FormSelect
+                      id="denom"
+                      value={data.denominationId || ""}
+                      onChange={(val) => upd("denominationId", val)}
+                      options={denoms.filter((d) => d.active).map((d) => ({
+                        value: d.id,
+                        label: `${d.icon} ${d.name} (${d.points} pts)`
+                      }))}
+                    />
                     {selectedDen && (
                       <div className="mt-2 flex items-center gap-2">
                         <div className="h-8 flex-1 rounded-lg flex items-center gap-2 px-3 text-white text-xs font-semibold" style={{ background: selectedDen.color }}>
@@ -188,7 +186,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                       ]).map((rt) => {
                         const Icon = rt.icon;
                         return (
-                          <button
+                          <Button
                             key={rt.id}
                             type="button"
                             aria-pressed={data.recipientType === rt.id}
@@ -201,7 +199,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border text-sm font-medium transition-colors ${data.recipientType === rt.id ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-muted text-muted-foreground"}`}
                           >
                             <Icon className="w-3.5 h-3.5" aria-hidden="true" /> {rt.label}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -246,7 +244,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                 return (
                   <div key="recipientClass">
                     <label htmlFor="recp-class" className={FORM_LABEL}>{data.recipientType === "student" ? "Class" : "Department"} {isRequired ? "*" : ""}</label>
-                    <input id="recp-class" className={FORM_INPUT} value={data.recipientClass || ""} onChange={(e) => upd("recipientClass", e.target.value)} placeholder="e.g. Hifz A" required={isRequired} />
+                    <Input id="recp-class" className={FORM_INPUT} value={data.recipientClass || ""} onChange={(e) => upd("recipientClass", e.target.value)} placeholder="e.g. Hifz A" required={isRequired} />
                   </div>
                 );
               }
@@ -255,7 +253,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                 return (
                   <div key="quantity">
                     <label htmlFor="qty" className={FORM_LABEL}>Quantity *</label>
-                    <input id="qty" type="number" className={FORM_INPUT} value={data.quantity || 1} onChange={(e) => upd("quantity", Math.min(+e.target.value, totalAvailable))} min={1} max={totalAvailable} required />
+                    <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || 1} onChange={(e) => upd("quantity", Math.min(+e.target.value, totalAvailable))} min={1} max={totalAvailable} required />
                   </div>
                 );
               }
@@ -278,7 +276,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                 return (
                   <div key="reason" className="sm:col-span-2">
                     <label htmlFor="reason" className={FORM_LABEL}>Reason / Achievement *</label>
-                    <input id="reason" className={FORM_INPUT} value={data.reason || ""} onChange={(e) => upd("reason", e.target.value)} placeholder="e.g. Completed Juz 5" required />
+                    <Input id="reason" className={FORM_INPUT} value={data.reason || ""} onChange={(e) => upd("reason", e.target.value)} placeholder="e.g. Completed Juz 5" required />
                   </div>
                 );
               }
@@ -316,31 +314,22 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                         required={field.required}
                       />
                     ) : field.type === "select" ? (
-                      <select
-                        className={FORM_INPUT + " cursor-pointer"}
+                      <FormSelect
                         value={value as string}
-                        onChange={(e) => upd(field.id as any, e.target.value as any)}
-                        required={field.required}
-                      >
-                        <option value="">Select option…</option>
-                        {field.options?.map((opt: string) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => upd(field.id as any, val as any)}
+                        placeholder="Select option…"
+                        options={field.options || []}
+                      />
                     ) : field.type === "boolean" ? (
                       <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={!!value}
-                          onChange={(e) => upd(field.id as any, e.target.checked as any)}
-                          className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
+                          onCheckedChange={(checked) => upd(field.id as any, !!checked as any)}
                         />
                         <span className="text-xs font-medium text-foreground">{field.label}</span>
                       </label>
                     ) : field.type === "number" ? (
-                      <input
+                      <Input
                         type="number"
                         className={FORM_INPUT}
                         value={value as number}
@@ -355,7 +344,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                         required={field.required}
                       />
                     ) : (
-                      <input
+                      <Input
                         type="text"
                         className={FORM_INPUT}
                         value={value as string}
@@ -459,14 +448,14 @@ export default function DistributionManager({
         <div className="relative flex-1">
           <label htmlFor="search-dist" className="sr-only">Search distributions</label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <input id="search-dist" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("hasanat.searchDistributions")} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
-          {search && <button type="button" aria-label="Clear search" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="w-3.5 h-3.5" aria-hidden="true" /></button>}
+          <Input id="search-dist" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("hasanat.searchDistributions")} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+          {search && <Button variant="ghost" type="button" aria-label="Clear search" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="w-3.5 h-3.5" aria-hidden="true" /></Button>}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button type="button" className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card hover:bg-muted"}`}>
+            <Button type="button" className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card hover:bg-muted"}`}>
               <Filter className="w-3.5 h-3.5" aria-hidden="true" /> Status <ChevronDown className="w-3 h-3" aria-hidden="true" />
-            </button>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuLabel className="text-xs">{t("hasanat.filter.status")}</DropdownMenuLabel>
@@ -485,9 +474,9 @@ export default function DistributionManager({
             labels={columnCustomizer.labels}
           />
         )}
-        <button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap">
+        <Button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap">
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.distributeCards")}
-        </button>
+        </Button>
       </header>
 
       <div className="rounded-xl border border-border overflow-hidden bg-card">
@@ -598,9 +587,9 @@ export default function DistributionManager({
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button type="button" aria-label="Change status" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium flex items-center gap-1">
+                              <Button variant="ghost" type="button" aria-label="Change status" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium flex items-center gap-1">
                                 <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                              </button>
+                              </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-36">
                               <DropdownMenuLabel className="text-xs">{t("hasanat.changeStatus")}</DropdownMenuLabel>

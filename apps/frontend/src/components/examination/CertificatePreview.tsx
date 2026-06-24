@@ -7,6 +7,7 @@ import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "../../lib/db";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
+import { Button } from "@/components/ui/button";
 
 interface CertificatePreviewProps {
   result: StudentResultItem;
@@ -73,21 +74,22 @@ export default function CertificatePreview({ result, exam, onClose }: Certificat
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
           <h3 id="cert-modal-title" className="text-sm font-bold text-foreground">Certificate Preview</h3>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
               onClick={handlePrint}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold hover:bg-primary/90"
             >
               <Printer className="w-3.5 h-3.5" aria-hidden="true" /> Print / Download
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               type="button"
               onClick={onClose}
               aria-label="Close preview"
               className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"
             >
               <X className="w-4 h-4" aria-hidden="true" />
-            </button>
+            </Button>
           </div>
         </div>
 

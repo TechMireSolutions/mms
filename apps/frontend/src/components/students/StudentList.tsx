@@ -8,6 +8,15 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import StatusBadge from "../ui/StatusBadge";
 import EmptyState from "../ui/EmptyState";
 import { calcAge, type Student } from '@/lib/data/studentsData';
@@ -15,7 +24,7 @@ import { useSessionsCollection } from '@/hooks/useSessions';
 import { formatDate } from "../../lib/db";
 import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
 import useTranslation from '@/hooks/useTranslation';
-import type { AppTranslationKey } from "@mms/shared";
+import type { AppTranslationKey, FieldDefinition } from "@mms/shared";
 import StudentDetail from "./StudentDetail";
 import { useStudentConfig } from "@/hooks/useStudentConfig";
 
@@ -72,25 +81,40 @@ export default function StudentList({
   const sessions = useSessionsCollection();
   const { settings, statuses } = useStudentConfig();
   const fields = settings.fields || {};
-  const customFields = settings.customFields || [];
+
+  const isFieldEnabled = React.useCallback((fieldKey: string): boolean => {
+    for (const tabFields of Object.values(fields) as any[][]) {
+      const found = tabFields.find(f => f.key === fieldKey);
+      if (found) {
+        return found.enabled !== false;
+      }
+    }
+    return true; // default enabled
+  }, [fields]);
+
   const sortedCustomFields = useMemo(() => {
-    const order = settings.fieldOrder || [];
-    const orderMap = Object.fromEntries(order.map((id, index) => [id, index]));
-    return [...customFields].sort((a, b) => {
-      const ai = orderMap[a.id] ?? 9999;
-      const bi = orderMap[b.id] ?? 9999;
-      return ai - bi;
+    const list: Array<{ id: string; label: string }> = [];
+    Object.entries(fields).forEach(([tabId, tabFields]) => {
+      (tabFields as FieldDefinition[]).forEach((f) => {
+        const isSystemField =
+          (tabId === "basic" && ["gender", "dob", "registeredDate"].includes(f.key)) ||
+          (tabId === "guardians" && ["fatherLink", "motherLink", "guardianLink"].includes(f.key));
+        if (!isSystemField) {
+          list.push({ id: f.key, label: f.label });
+        }
+      });
     });
-  }, [customFields, settings.fieldOrder]);
+    return list;
+  }, [fields]);
 
   const showDob = isColumnVisible
     ? isColumnVisible("dob")
-    : fields.dob?.enabled !== false;
+    : isFieldEnabled("dob");
   const showParents = isColumnVisible
     ? isColumnVisible("parents")
-    : fields.fatherLink?.enabled !== false ||
-      fields.motherLink?.enabled !== false ||
-      fields.guardianLink?.enabled !== false;
+    : isFieldEnabled("fatherLink") ||
+      isFieldEnabled("motherLink") ||
+      isFieldEnabled("guardianLink");
   const showSessions = isColumnVisible ? isColumnVisible("sessions") : true;
   const showStatus = isColumnVisible ? isColumnVisible("status") : true;
   const visibleCustomFields = sortedCustomFields.filter((field) =>
@@ -240,19 +264,17 @@ export default function StudentList({
                   }`}
                 >
                   <div className="absolute top-3 left-3">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={isSelected}
-                      onChange={() => handleSelectOne(st.id)}
-                      className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
+                      onCheckedChange={() => handleSelectOne(st.id)}
                     />
                   </div>
                   <div className="absolute top-3 right-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                           <MoreHorizontal className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
                         <DropdownMenuItem onClick={() => setViewStudent(st)}>
@@ -285,25 +307,25 @@ export default function StudentList({
                   </div>
 
                   <div className="space-y-2 border-t border-border/40 pt-3 text-[11px]">
-                    {fields.gender?.enabled !== false && (
+                    {isFieldEnabled("gender") && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Gender:</span>
                         <span className="font-semibold text-foreground capitalize">{st.gender || "—"}</span>
                       </div>
                     )}
-                    {fields.dob?.enabled !== false && (
+                    {isFieldEnabled("dob") && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Age / DOB:</span>
                         <span className="font-semibold text-foreground">{age ? `${age} yrs` : "—"}</span>
                       </div>
                     )}
-                    {fields.fatherLink?.enabled !== false && st.fatherName && (
+                    {isFieldEnabled("fatherLink") && st.fatherName && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Father:</span>
                         <span className="font-semibold text-foreground truncate max-w-[100px]">{st.fatherName}</span>
                       </div>
                     )}
-                    {fields.guardianLink?.enabled !== false && st.guardianName && (
+                    {isFieldEnabled("guardianLink") && st.guardianName && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Guardian:</span>
                         <span className="font-semibold text-foreground truncate max-w-[100px]">{st.guardianName}</span>
@@ -331,37 +353,44 @@ export default function StudentList({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span>Rows per page:</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="bg-background border border-border rounded px-1.5 py-0.5 text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  {[8, 16, 24, 48].map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
+                <Select value={String(pageSize)} onValueChange={(val) => setPageSize(Number(val))}>
+                  <SelectTrigger className="h-7 w-[60px] bg-background border border-border rounded px-1.5 py-0.5 text-foreground cursor-pointer">
+                    <SelectValue placeholder={pageSize} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[8, 16, 24, 48].map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-center gap-1">
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => p - 1)}
-                  className="p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
+                  className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                </button>
+                </Button>
                 <span>
                   Page {currentPage} of {totalPages}
                 </span>
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => p + 1)}
-                  className="p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
+                  className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -391,14 +420,9 @@ export default function StudentList({
             <thead>
               <tr className="border-b border-border/50 bg-muted/20">
                 <th className="w-10 px-4 py-3">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    ref={(el) => {
-                      if (el) el.indeterminate = someSelected;
-                    }}
-                    onChange={handleSelectAll}
-                    className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
+                  <Checkbox
+                    checked={someSelected ? "indeterminate" : allSelected}
+                    onCheckedChange={handleSelectAll}
                   />
                 </th>
                 <th
@@ -484,11 +508,9 @@ export default function StudentList({
                         }`}
                       >
                         <td className="px-4 py-3">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={isSelected}
-                            onChange={() => handleSelectOne(st.id)}
-                            className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
+                            onCheckedChange={() => handleSelectOne(st.id)}
                           />
                         </td>
                         <td className="px-4 py-3">
@@ -506,7 +528,7 @@ export default function StudentList({
                                 )}
                               </div>
                               <p className="text-[11px] text-muted-foreground">
-                                {fields.gender?.enabled !== false && st.gender ? `${st.gender} · ` : ""}{st.phone || "No phone"}
+                                {isFieldEnabled("gender") && st.gender ? `${st.gender} · ` : ""}{st.phone || "No phone"}
                               </p>
                             </div>
                           </div>
@@ -523,17 +545,17 @@ export default function StudentList({
                         )}
                         {showParents && (
                           <td className="px-4 py-3 hidden md:table-cell">
-                            {fields.fatherLink?.enabled !== false && (
+                            {isFieldEnabled("fatherLink") && (
                               <p className="text-[13px] text-foreground">
                                 {st.fatherName || "—"}
                               </p>
                             )}
-                            {fields.motherLink?.enabled !== false && (
+                            {isFieldEnabled("motherLink") && (
                               <p className="text-[11px] text-muted-foreground">
                                 {st.motherName || "—"}
                               </p>
                             )}
-                            {fields.guardianLink?.enabled !== false && (
+                            {isFieldEnabled("guardianLink") && (
                               <p className="text-[11px] text-muted-foreground">
                                 {st.guardianName || "—"}
                               </p>
@@ -584,9 +606,9 @@ export default function StudentList({
                         <td className="px-4 py-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
                                 <MoreHorizontal className="w-4 h-4" />
-                              </button>
+                              </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
                               <DropdownMenuItem onClick={() => setViewStudent(st)}>
@@ -625,37 +647,44 @@ export default function StudentList({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span>Rows per page:</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="bg-background border border-border rounded px-1.5 py-0.5 text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  {[5, 10, 25, 50].map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
+                <Select value={String(pageSize)} onValueChange={(val) => setPageSize(Number(val))}>
+                  <SelectTrigger className="h-7 w-[60px] bg-background border border-border rounded px-1.5 py-0.5 text-foreground cursor-pointer">
+                    <SelectValue placeholder={pageSize} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[5, 10, 25, 50].map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-center gap-1">
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => p - 1)}
-                  className="p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
+                  className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                </button>
+                </Button>
                 <span>
                   Page {currentPage} of {totalPages}
                 </span>
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => p + 1)}
-                  className="p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
+                  className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -680,25 +709,29 @@ export default function StudentList({
               const statusKey = `students.form.status.${status}` as AppTranslationKey;
               const translatedStatus = t(statusKey);
               const displayStatus = translatedStatus === statusKey
-                ? (status.charAt(0).toUpperCase() + status.slice(1))
+                 ? (status.charAt(0).toUpperCase() + status.slice(1))
                 : translatedStatus;
               return (
-                <button
+                <Button
                   key={status}
+                  type="button"
+                  variant="outline"
                   onClick={() => {
                     if (onBulkStatusChange) {
                       onBulkStatusChange(selectedIds, status);
                       setSelectedIds([]);
                     }
                   }}
-                  className="px-3 py-1.5 rounded-lg border border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors"
+                  className="px-3 py-1.5 rounded-lg border border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto"
                 >
                   {t("students.list.bulk.setStatus", { status: displayStatus })}
-                </button>
+                </Button>
               );
             })}
 
-            <button
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => {
                 const selectedStudents = students.filter((s) => selectedIds.includes(s.id));
                 const headers = [
@@ -734,24 +767,26 @@ export default function StudentList({
                   rows: [headers, ...rows],
                 });
               }}
-              className="px-3 py-1.5 rounded-lg border border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors"
+              className="px-3 py-1.5 rounded-lg border border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto"
             >
               Export CSV
-            </button>
+            </Button>
 
             <div className="h-4 w-px bg-border" />
 
-            <button
+            <Button
+              type="button"
+              variant="destructive"
               onClick={() => {
                 if (onBulkDelete && window.confirm(`Are you sure you want to remove these ${selectedIds.length} students?`)) {
                   onBulkDelete(selectedIds);
                   setSelectedIds([]);
                 }
               }}
-              className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors h-auto"
             >
               Delete
-            </button>
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>

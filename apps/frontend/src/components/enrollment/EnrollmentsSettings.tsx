@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Save, ClipboardList } from "lucide-react";
+import { Save, ClipboardList, Info, Plus, Pencil, Trash2 } from "lucide-react";
 import { useEnrollmentConfig } from "@/hooks/useEnrollmentConfig";
 import {
   type EnrollmentsSettings as EnrollmentsSettingsData,
-  DEFAULT_ENROLLMENTS_SETTINGS,
-  DEFAULT_ENROLLMENTS_FIELD_DEFS,
-  getSortedFields,
-  type ModuleCustomField,
-  type ModuleFieldDef,
+  ENROLLMENTS_TAB_REGISTRY,
+  INITIAL_ENROLLMENTS_FIELD_SEED,
+  type FieldDefinition,
 } from "@mms/shared";
 import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import DraggableFieldList from "../ui/DraggableFieldList";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
-
+import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Switch } from "../ui/switch";
+import { Checkbox } from "../ui/checkbox";
+import Modal from "../ui/Modal";
+import useTranslation from "@/hooks/useTranslation";
 
 interface ToggleProps {
   label: string;
@@ -21,9 +25,6 @@ interface ToggleProps {
   onChange: (newValue: boolean) => void;
 }
 
-/**
- * A reusable toggle switch component.
- */
 function Toggle({ label, description, value, onChange }: ToggleProps): React.JSX.Element {
   return (
     <div className="flex items-center justify-between py-1 text-left">
@@ -31,34 +32,11 @@ function Toggle({ label, description, value, onChange }: ToggleProps): React.JSX
         <p className="text-[13px] font-semibold text-foreground">{label}</p>
         {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
       </div>
-      <button
-        type="button"
-        onClick={() => onChange(!value)}
+      <Switch
+        checked={value}
+        onCheckedChange={onChange}
         aria-label={`Toggle ${label}`}
-        style={{
-          width: 40,
-          height: 22,
-          background: value ? "hsl(var(--primary))" : "hsl(var(--border))",
-          borderRadius: 999,
-          position: "relative",
-          flexShrink: 0,
-          transition: "background 0.2s"
-        }}
-      >
-        <span
-          style={{
-            width: 17,
-            height: 17,
-            top: 2.5,
-            left: value ? 19 : 3,
-            position: "absolute",
-            borderRadius: "50%",
-            background: "white",
-            transition: "left 0.2s",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
-          }}
-        />
-      </button>
+      />
     </div>
   );
 }
@@ -67,85 +45,175 @@ interface EnrollmentsSettingsProps {
   mode?: "fields" | "preferences";
 }
 
-/**
- * Component for configuring enrollment settings.
- * Allows editing maximum class size, waitlists, approval flows, deadlines, and reminders.
- */
+function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
+  if (!savedOrder || savedOrder.length === 0) return fields;
+  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
+  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
+}
+
+function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
+  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
+  const added = newFieldIds.filter((id) => !kept.includes(id));
+  return [...kept, ...added];
+}
+
 export default function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.JSX.Element {
+  const { t } = useTranslation();
   const { settings, updateSettings } = useEnrollmentConfig();
-  const [data, setData] = useState<EnrollmentsSettingsData>(() => settings);
   const [saved, setSaved] = useState<boolean>(false);
 
+  // Prefs state
+  const [maxStudentsPerClass, setMaxStudentsPerClass] = useState(settings.maxStudentsPerClass);
+  const [dropDeadlineDays, setDropDeadlineDays] = useState(settings.dropDeadlineDays);
+  const [waitlistEnabled, setWaitlistEnabled] = useState(settings.waitlistEnabled);
+  const [requireEligibilityCheck, setRequireEligibilityCheck] = useState(settings.requireEligibilityCheck);
+  const [autoAssignClass, setAutoAssignClass] = useState(settings.autoAssignClass);
+  const [enrollmentApproval, setEnrollmentApproval] = useState(settings.enrollmentApproval);
+  const [allowTransfers, setAllowTransfers] = useState(settings.allowTransfers);
+  const [reenrollmentReminder, setReenrollmentReminder] = useState(settings.reenrollmentReminder);
+
+  const {
+    formTabs,
+    setFormTabs,
+    tabFields,
+    setTabFields,
+    enabledTabs,
+    setEnabledTabs,
+    requiredTabs,
+    setRequiredTabs,
+    tabFieldEnabled,
+    setTabFieldEnabled,
+    tabFieldRequired,
+    setTabFieldRequired,
+    tabFieldUnique,
+    setTabFieldUnique,
+    tabFieldDefaultValues,
+    setTabFieldDefaultValues,
+    tabFieldPermissions,
+    setTabFieldPermissions,
+    tabFieldOrder,
+    setTabFieldOrder,
+    toggleTabEnabled,
+    toggleTabRequired,
+    toggleFieldEnabled,
+    toggleFieldRequired,
+    toggleFieldUnique,
+    handleReorder,
+    handleCustomFieldsChange,
+    handleEditField,
+    handleDeleteField,
+    handleAddTab,
+    handleDeleteTab,
+    handleRenameTab,
+    buildFieldsMap,
+    resetAllState,
+  } = useModuleFieldsEditor({
+    initialTabs: ENROLLMENTS_TAB_REGISTRY,
+    initialFields: settings.fields || {},
+    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
+    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
+  });
+
+  const [isAddTabModalOpen, setIsAddTabModalOpen] = useState(false);
+  const [newTabLabel, setNewTabLabel] = useState("");
+  const [renamingTabKey, setRenamingTabKey] = useState<string | null>(null);
+  const [renameTabLabel, setRenameTabLabel] = useState("");
+
   useEffect(() => {
-    setData(settings);
+    if (!settings) return;
+    setMaxStudentsPerClass(settings.maxStudentsPerClass);
+    setDropDeadlineDays(settings.dropDeadlineDays);
+    setWaitlistEnabled(settings.waitlistEnabled);
+    setRequireEligibilityCheck(settings.requireEligibilityCheck);
+    setAutoAssignClass(settings.autoAssignClass);
+    setEnrollmentApproval(settings.enrollmentApproval);
+    setAllowTransfers(settings.allowTransfers);
+    setReenrollmentReminder(settings.reenrollmentReminder);
+
+    const coreKeys = new Set(ENROLLMENTS_TAB_REGISTRY.map((t: any) => t.key));
+    const customTabs = (settings.formTabs || []).filter((t: any) => !coreKeys.has(t.key));
+    const updatedTabs = [
+      ...ENROLLMENTS_TAB_REGISTRY,
+      ...customTabs
+    ].map((t: any) => ({
+      ...t,
+      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    }));
+
+    resetAllState(
+      updatedTabs,
+      settings.fields || {},
+      settings.enabledTabs || ["basic"],
+      settings.requiredTabs || []
+    );
   }, [settings]);
 
-  const upd = <K extends keyof EnrollmentsSettingsData>(f: K, v: EnrollmentsSettingsData[K]): void => {
-    setData((d) => ({ ...d, [f]: v }));
+  const handleToggleTabEnabled = (id: string) => { toggleTabEnabled(id); setSaved(false); };
+  const handleToggleTabRequired = (id: string) => { toggleTabRequired(id); setSaved(false); };
+  const handleToggleFieldEnabled = (tabId: string, fieldId: string) => { toggleFieldEnabled(tabId, fieldId); setSaved(false); };
+  const handleToggleFieldRequired = (tabId: string, fieldId: string) => { toggleFieldRequired(tabId, fieldId); setSaved(false); };
+  const handleToggleFieldUnique = (tabId: string, fieldId: string) => { toggleFieldUnique(tabId, fieldId); setSaved(false); };
+  const handleReorderFields = (tabId: string, reorderedFields: FieldDefinition[]) => { handleReorder(tabId, reorderedFields); setSaved(false); };
+
+  const handleCustomFieldsChangeLocal = (tabId: string, newFields: CustomFieldConfig[]): void => {
+    handleCustomFieldsChange(tabId, newFields);
+    setSaved(false);
+  };
+
+  const handleEditFieldLocal = (tabId: string, updatedField: FieldDefinition) => {
+    handleEditField(tabId, updatedField);
+    setSaved(false);
+  };
+
+  const handleDeleteFieldLocal = (tabId: string, fieldId: string) => {
+    handleDeleteField(tabId, fieldId);
+    setSaved(false);
+  };
+
+  const handleAddTabLocal = (label: string) => {
+    handleAddTab(label);
+    setSaved(false);
+  };
+
+  const handleDeleteTabLocal = (key: string) => {
+    handleDeleteTab(key);
+    setSaved(false);
+  };
+
+  const handleRenameTabLocal = (key: string, newLabel: string) => {
+    handleRenameTab(key, newLabel);
     setSaved(false);
   };
 
   const handleSave = (): void => {
-    updateSettings(data);
+    const updatedFormTabs = formTabs.map(t => ({
+      ...t,
+      enabled: enabledTabs.has(t.key)
+    }));
+
+    const cfg: EnrollmentsSettingsData = {
+      ...settings,
+      maxStudentsPerClass,
+      dropDeadlineDays,
+      waitlistEnabled,
+      requireEligibilityCheck,
+      autoAssignClass,
+      enrollmentApproval,
+      allowTransfers,
+      reenrollmentReminder,
+      enabledTabs: Array.from(enabledTabs),
+      requiredTabs: Array.from(requiredTabs),
+      formTabs: updatedFormTabs,
+      fields: buildFieldsMap(),
+    };
+
+    updateSettings(cfg);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const showPrefs = !mode || mode === "preferences";
-  const showFields = !mode || mode === "fields";
-
-  const fields = data.fields || DEFAULT_ENROLLMENTS_SETTINGS.fields || {};
-  const customFields = data.customFields || [];
-  const fieldOrder = data.fieldOrder || DEFAULT_ENROLLMENTS_SETTINGS.fieldOrder || [];
-
-  const orderedFields = getSortedFields(DEFAULT_ENROLLMENTS_FIELD_DEFS, fieldOrder, fields, customFields);
-
-  const updateFieldConfig = (fieldKey: string, prop: "enabled" | "required", value: boolean) => {
-    const fieldObj = fields[fieldKey] || { enabled: true, required: false };
-    const updatedFieldObj = { ...fieldObj, [prop]: value };
-    if (prop === "enabled" && !value) {
-      updatedFieldObj.required = false;
-    }
-    upd("fields", { ...fields, [fieldKey]: updatedFieldObj });
-  };
-
-  const handleToggleEnabled = (id: string) => {
-    if (DEFAULT_ENROLLMENTS_FIELD_DEFS.some(f => f.id === id)) {
-      const cfg = fields[id] || { enabled: true, required: false };
-      updateFieldConfig(id, "enabled", !cfg.enabled);
-    }
-  };
-
-  const handleToggleRequired = (id: string) => {
-    if (DEFAULT_ENROLLMENTS_FIELD_DEFS.some(f => f.id === id)) {
-      const cfg = fields[id] || { enabled: true, required: false };
-      updateFieldConfig(id, "required", !cfg.required);
-    } else {
-      const updated = customFields.map(f => f.id === id ? { ...f, required: !f.required } : f);
-      upd("customFields", updated);
-    }
-  };
-
-  const handleReorder = (reordered: ModuleFieldDef[]) => {
-    upd("fieldOrder", reordered.map(f => f.id));
-  };
-
-  const handleCustomFieldsChange = (newFields: CustomFieldConfig[]) => {
-    const coreIds = DEFAULT_ENROLLMENTS_FIELD_DEFS.map(f => f.id);
-    const newIds = newFields.map(f => f.key);
-    const kept = fieldOrder.filter((id) => coreIds.includes(id) || newIds.includes(id));
-    const added = newIds.filter((id) => !kept.includes(id));
-
-    setData((d) => ({
-      ...d,
-      customFields: newFields.map(f => ({ ...f, id: f.key })) as unknown as ModuleCustomField[],
-      fieldOrder: [...kept, ...added]
-    }));
-    setSaved(false);
-  };
-
-  const enabledSet = new Set(Object.keys(fields).filter(k => fields[k].enabled));
-  const requiredSet = new Set(Object.keys(fields).filter(k => fields[k].required));
+  const showPrefs = mode === "preferences";
+  const showFields = mode === "fields";
 
   return (
     <section className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-4 shadow-sm">
@@ -161,22 +229,20 @@ export default function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps):
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={FORM_LABEL} htmlFor="maxStudentsPerClass">Max Students Per Class</label>
-              <input
+              <Input
                 id="maxStudentsPerClass"
                 type="number"
-                className={FORM_INPUT}
-                value={data.maxStudentsPerClass}
-                onChange={(e) => upd("maxStudentsPerClass", e.target.value)}
+                value={maxStudentsPerClass}
+                onChange={(e) => { setMaxStudentsPerClass(e.target.value); setSaved(false); }}
               />
             </div>
             <div>
               <label className={FORM_LABEL} htmlFor="dropDeadlineDays">Drop Deadline (days after enroll)</label>
-              <input
+              <Input
                 id="dropDeadlineDays"
                 type="number"
-                className={FORM_INPUT}
-                value={data.dropDeadlineDays}
-                onChange={(e) => upd("dropDeadlineDays", e.target.value)}
+                value={dropDeadlineDays}
+                onChange={(e) => { setDropDeadlineDays(e.target.value); setSaved(false); }}
               />
             </div>
           </div>
@@ -185,81 +251,291 @@ export default function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps):
             <Toggle
               label="Enable Waitlist"
               description="Allow students to join a waitlist when class is full"
-              value={data.waitlistEnabled}
-              onChange={(v) => upd("waitlistEnabled", v)}
+              value={waitlistEnabled}
+              onChange={(v) => { setWaitlistEnabled(v); setSaved(false); }}
             />
             <Toggle
               label="Require Eligibility Check"
               description="Run eligibility rules before confirming enrollment"
-              value={data.requireEligibilityCheck}
-              onChange={(v) => upd("requireEligibilityCheck", v)}
+              value={requireEligibilityCheck}
+              onChange={(v) => { setRequireEligibilityCheck(v); setSaved(false); }}
             />
             <Toggle
               label="Auto-assign to Class"
               description="System automatically places student in best available class"
-              value={data.autoAssignClass}
-              onChange={(v) => upd("autoAssignClass", v)}
+              value={autoAssignClass}
+              onChange={(v) => { setAutoAssignClass(v); setSaved(false); }}
             />
             <Toggle
               label="Enrollment Requires Approval"
               description="Admin must approve each enrollment"
-              value={data.enrollmentApproval}
-              onChange={(v) => upd("enrollmentApproval", v)}
+              value={enrollmentApproval}
+              onChange={(v) => { setEnrollmentApproval(v); setSaved(false); }}
             />
             <Toggle
               label="Allow Class Transfers"
               description="Students can be transferred between classes"
-              value={data.allowTransfers}
-              onChange={(v) => upd("allowTransfers", v)}
+              value={allowTransfers}
+              onChange={(v) => { setAllowTransfers(v); setSaved(false); }}
             />
             <Toggle
               label="Re-enrollment Reminder"
               description="Remind guardians when re-enrollment period opens"
-              value={data.reenrollmentReminder}
-              onChange={(v) => upd("reenrollmentReminder", v)}
+              value={reenrollmentReminder}
+              onChange={(v) => { setReenrollmentReminder(v); setSaved(false); }}
             />
           </div>
         </>
       )}
 
       {showFields && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-bold text-foreground">Enrollment Wizard Fields</h3>
-            <span className="text-xs text-muted-foreground ml-1 flex items-center gap-1">
-              <span>— drag to reorder</span>
-            </span>
+        <div className="space-y-4 text-left">
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-left">
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-xs">Dynamic Fields Manager</h4>
+              <p className="text-[11px] mt-0.5 text-info/90">
+                Configure visible sections, reorder fields, and manage custom metadata definitions.
+              </p>
+            </div>
           </div>
 
-          <DraggableFieldList
-            tabId="enrollments-fields"
-            fields={orderedFields}
-            enabledSet={enabledSet}
-            requiredSet={requiredSet}
-            onToggleEnabled={handleToggleEnabled}
-            onToggleRequired={handleToggleRequired}
-            onReorder={handleReorder}
-          />
+          {formTabs.map((tab) => {
+            const tabId = tab.key;
+            const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
+            const tabDesc = tab.description;
+            const tabDefs = tabFields[tabId] || [];
+            const enabledSet = tabFieldEnabled[tabId] || new Set();
+            const requiredSet = tabFieldRequired[tabId] || new Set();
+            const isOn = tabId === "basic" ? true : enabledTabs.has(tabId);
+            const isReq = requiredTabs.has(tabId);
 
-          <div className="border-t border-border pt-4">
-            <CustomFieldsBuilder
-              fields={customFields as unknown as CustomFieldConfig[]}
-              droppableId="custom-fields-enrollments"
-              onChange={handleCustomFieldsChange}
-            />
+            return (
+              <section key={tabId} className="rounded-xl border border-border bg-card overflow-hidden text-left">
+                <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={isOn}
+                      onCheckedChange={tabId !== "basic" ? () => handleToggleTabEnabled(tabId) : undefined}
+                      aria-label={`Enable Tab ${tabLabel}`}
+                      disabled={tabId === "basic"}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 ml-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-foreground">{tabLabel}</span>
+                      {!tab.isSystem && (
+                        <div className="flex items-center gap-1.5 ml-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => {
+                              setRenamingTabKey(tabId);
+                              setRenameTabLabel(tab.label);
+                            }}
+                            className="p-1 h-6 w-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none flex items-center justify-center"
+                            title="Rename Tab"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => handleDeleteTab(tabId)}
+                            className="p-1 h-6 w-6 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
+                            title="Delete Tab"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{tabDesc}</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
+                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                  </span>
+                  {tabId !== "basic" && isOn && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => handleToggleTabRequired(tabId)}
+                      className={`flex-shrink-0 px-2.5 py-1 h-auto text-[10px] font-bold border transition-all shadow-none ml-2
+                        ${
+                          isReq
+                            ? "bg-destructive/10 border-destructive/30 text-destructive hover:bg-destructive/20 hover:text-destructive"
+                            : "bg-muted border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                      {isReq ? "Required" : "Optional"}
+                    </Button>
+                  )}
+                </div>
+
+                {isOn && (
+                  <div className="p-3 space-y-3">
+                    <CoreFieldEditorList
+                      tabId={tabId}
+                      fields={getOrderedFields(tabDefs, tabFieldOrder[tabId])}
+                      enabledSet={enabledSet}
+                      requiredSet={requiredSet}
+                      onToggleEnabled={(fieldId: string) => handleToggleFieldEnabled(tabId, fieldId)}
+                      onToggleRequired={(fieldId: string) => handleToggleFieldRequired(tabId, fieldId)}
+                      onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
+                      onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
+                      isUniqueField={(tid: string, fid: string) => tabFieldUnique[tid]?.has(fid) || false}
+                      isCoreField={(key: string) => INITIAL_ENROLLMENTS_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+                      defaultValues={tabFieldDefaultValues[tabId]}
+                      permissions={tabFieldPermissions[tabId]}
+                      onChangeDefaults={(fieldId: string, val: unknown) => {
+                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                        setSaved(false);
+                      }}
+                      onChangePermissions={(fieldId: string, roles: string[]) => {
+                        setTabFieldPermissions(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: roles } }));
+                        setSaved(false);
+                      }}
+                      onEditField={(f: FieldDefinition) => handleEditField(tabId, f)}
+                      onDeleteField={(id: string) => handleDeleteField(tabId, id)}
+                      labels={{
+                        required: "Required",
+                        optional: "Optional",
+                        unique: "Unique",
+                        standard: "Standard",
+                      }}
+                    />
+                    <div className="border-t border-border pt-3">
+                      <CustomFieldsBuilder
+                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        droppableId={`custom-fields-${tabId}`}
+                        onChange={(f) => handleCustomFieldsChange(tabId, f)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })}
+
+          <div className="flex justify-end pt-2">
+            <Button
+              type="button"
+              onClick={() => setIsAddTabModalOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-none"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Custom Tab</span>
+            </Button>
           </div>
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={handleSave}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+      {/* Add Tab Modal */}
+      <Modal
+        open={isAddTabModalOpen}
+        onClose={() => {
+          setIsAddTabModalOpen(false);
+          setNewTabLabel("");
+        }}
+        title="Add Custom Tab"
+        icon={Plus}
+        footer={
+          <div className="flex justify-end gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddTabModalOpen(false);
+                setNewTabLabel("");
+              }}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                handleAddTab(newTabLabel);
+                setIsAddTabModalOpen(false);
+                setNewTabLabel("");
+              }}
+              disabled={!newTabLabel.trim()}
+              type="button"
+            >
+              Add Tab
+            </Button>
+          </div>
+        }
       >
-        <Save className="w-3.5 h-3.5" />
-        <span>{saved ? "Saved!" : "Save Settings"}</span>
-      </button>
+        <div className="space-y-3 text-left">
+          <label htmlFor="newTabLabel" className="text-xs font-semibold text-foreground">Tab Name *</label>
+          <Input
+            id="newTabLabel"
+            value={newTabLabel}
+            onChange={(e) => setNewTabLabel(e.target.value)}
+            placeholder="e.g. Extra Info"
+            autoFocus
+          />
+        </div>
+      </Modal>
+
+      {/* Rename Tab Modal */}
+      <Modal
+        open={renamingTabKey !== null}
+        onClose={() => {
+          setRenamingTabKey(null);
+          setRenameTabLabel("");
+        }}
+        title="Rename Custom Tab"
+        icon={Pencil}
+        footer={
+          <div className="flex justify-end gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRenamingTabKey(null);
+                setRenameTabLabel("");
+              }}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (renamingTabKey) {
+                  handleRenameTab(renamingTabKey, renameTabLabel);
+                }
+                setRenamingTabKey(null);
+                setRenameTabLabel("");
+              }}
+              disabled={!renameTabLabel.trim()}
+              type="button"
+            >
+              Rename Tab
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-left">
+          <label htmlFor="renameTabLabel" className="text-xs font-semibold text-foreground">Tab Name *</label>
+          <Input
+            id="renameTabLabel"
+            value={renameTabLabel}
+            onChange={(e) => setRenameTabLabel(e.target.value)}
+            placeholder="e.g. Custom Fields"
+            autoFocus
+          />
+        </div>
+      </Modal>
+
+      <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
+        <Button
+          type="button"
+          onClick={handleSave}
+          className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
+        >
+          <Save className="w-3.5 h-3.5" />
+          <span>{saved ? "Saved!" : "Save Settings"}</span>
+        </Button>
+      </footer>
     </section>
   );
 }

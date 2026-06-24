@@ -4,6 +4,8 @@ import {
   DEFAULT_FINANCE_FIELD_DEFS,
   FINANCE_MODULE_CONTRACT,
   getSortedFields,
+  mergeTabbedFields,
+  getFlatFieldsConfig,
   type FinanceSettings,
 } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
@@ -12,10 +14,13 @@ function mergeFinanceSettings(settings: Partial<FinanceSettings> | null | undefi
   return {
     ...DEFAULT_FINANCE_SETTINGS,
     ...(settings ?? {}),
-    fields: {
-      ...(DEFAULT_FINANCE_SETTINGS.fields ?? {}),
-      ...(settings?.fields ?? {}),
-    },
+    formTabs: settings?.formTabs ?? DEFAULT_FINANCE_SETTINGS.formTabs ?? [],
+    enabledTabs: settings?.enabledTabs ?? DEFAULT_FINANCE_SETTINGS.enabledTabs ?? [],
+    requiredTabs: settings?.requiredTabs ?? DEFAULT_FINANCE_SETTINGS.requiredTabs ?? [],
+    fields: mergeTabbedFields(
+      DEFAULT_FINANCE_SETTINGS.fields || {},
+      settings?.fields
+    ),
     customFields: settings?.customFields ?? DEFAULT_FINANCE_SETTINGS.customFields ?? [],
     fieldOrder: settings?.fieldOrder ?? DEFAULT_FINANCE_SETTINGS.fieldOrder ?? [],
   };
@@ -55,7 +60,7 @@ export function useFinanceConfig() {
     setSettings(merged);
   }, []);
 
-  const fields = settings.fields ?? DEFAULT_FINANCE_SETTINGS.fields ?? {};
+  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
   const customFields = settings.customFields ?? [];
   const fieldOrder = settings.fieldOrder ?? DEFAULT_FINANCE_SETTINGS.fieldOrder ?? [];
 
@@ -72,3 +77,4 @@ export function useFinanceConfig() {
     updateSettings,
   };
 }
+

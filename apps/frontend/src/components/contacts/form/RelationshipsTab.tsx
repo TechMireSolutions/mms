@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Users, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Field, FormEmptyState, EditableSelect, COLLECTION_CARD, CardRemoveButton } from "./FormPrimitives";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import useTranslation from "@/hooks/useTranslation";
@@ -97,14 +98,15 @@ export default function RelationshipsTab({
         </motion.div>
       ))}
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => upd([...list, { contactId: "", type: "" }])}
-        className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+        className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
       >
         <Plus className="w-4 h-4" />
         <span>{t("contacts.form.addRelationshipLink")}</span>
-      </button>
+      </Button>
     </div>
   );
 }

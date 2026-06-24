@@ -115,10 +115,16 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
               {branding.madrasaName || "Madrasa MS"}
             </span>
           </div>
-          <button onClick={onClose} className="text-sidebar-muted-foreground hover:text-sidebar-foreground">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8 p-0 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+          >
             <span className="sr-only">Close sidebar</span>
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
@@ -130,12 +136,14 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
 
               return (
                 <div key={item.labelKey} className="space-y-1">
-                  <button
+                  <Button
+                    type="button"
+                    variant="ghost"
                     onClick={() => toggleMenu(item.labelKey)}
-                    className={`group flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                    className={`group flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all duration-200 h-auto hover:bg-sidebar-accent/50 ${
                       hasActiveSub
                         ? "bg-sidebar-accent/30 text-sidebar-foreground"
-                        : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                        : "text-sidebar-muted-foreground hover:text-sidebar-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -147,7 +155,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                         isMenuOpen ? "rotate-90 text-sidebar-foreground" : "text-sidebar-muted-foreground"
                       }`}
                     />
-                  </button>
+                  </Button>
 
                   <AnimatePresence initial={false}>
                     {isMenuOpen && (

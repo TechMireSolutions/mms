@@ -157,7 +157,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
 
       {/* Chart */}
       {summary.length > 0 && (
-        <div className="rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
+        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Attendance Rate by Class</p>
           <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={summary} barSize={36}>
@@ -180,7 +180,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
       {summary.length === 0 ? (
         <EmptyState icon={UserCheck} title="No attendance data" description="Adjust filters to view data." compact />
       ) : (
-        <div className="rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm">
+        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>

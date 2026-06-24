@@ -3,7 +3,10 @@ import { Plus, Trash2, TrendingUp, TrendingDown, DollarSign } from "lucide-react
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, Session, BudgetIncome, BudgetExpense } from '@/lib/data/sessionsData';
 import { DatePicker } from "../../ui/DatePicker";
 import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "../../ui/FormSelect";
 
 /** A single income or expense transaction entry. */
 interface TransactionEntry {
@@ -47,14 +50,18 @@ function TransactionModal({ open, type, onClose, onSave }: TransactionModalProps
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="tx-category">Category</label>
-          <select id="tx-category" className={`${FORM_INPUT} cursor-pointer`} value={data.category} onChange={(e) => upd("category", e.target.value)}>
-            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <FormSelect
+            id="tx-category"
+            value={data.category}
+            onChange={(val) => upd("category", val)}
+            options={categories}
+            className="w-full"
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="tx-amount">Amount (PKR) *</label>
-            <input id="tx-amount" type="number" className={FORM_INPUT} value={data.amount} onChange={(e) => upd("amount", e.target.value)} placeholder="0" min={0} required />
+            <Input id="tx-amount" type="number" value={data.amount} onChange={(e) => upd("amount", e.target.value)} placeholder="0" min={0} required />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="tx-date">Date</label>
@@ -68,7 +75,7 @@ function TransactionModal({ open, type, onClose, onSave }: TransactionModalProps
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="tx-note">Note</label>
-          <input id="tx-note" className={FORM_INPUT} value={data.note} onChange={(e) => upd("note", e.target.value)} placeholder="Optional note…" />
+          <Input id="tx-note" value={data.note} onChange={(e) => upd("note", e.target.value)} placeholder="Optional note…" />
         </div>
       </div>
     </FormModal>
@@ -121,7 +128,7 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
         ].map((stat) => (
           <article key={stat.label} className="rounded-xl border border-border bg-card p-4">
             <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center mb-2`} aria-hidden="true">
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
+              <stat.icon className={`w-4 h-4 ${stat.color}`} style={{ color: stat.color.includes("success") ? "hsl(var(--success))" : "hsl(var(--destructive))" }} />
             </div>
             <p className={`text-[16px] font-bold ${stat.color} m-0`}>{fmt(stat.value)}</p>
             <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{stat.label}</p>
@@ -136,12 +143,12 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
             <TrendingUp className="w-4 h-4 text-success" aria-hidden="true" />
             <h3 id="income-heading" className="text-sm font-bold text-foreground m-0">Income</h3>
           </div>
-          <button
+          <Button
             onClick={() => setAddType("income")}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-success/10 text-success text-xs font-semibold hover:bg-success/15 border border-success/20 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-success/10 text-success text-xs font-semibold hover:bg-success/15 border border-success/20 transition-colors h-auto hover:text-success"
           >
-            <Plus className="w-3 h-3" aria-hidden="true" /> Add Income
-          </button>
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Income
+          </Button>
         </header>
         <div className="rounded-xl border border-border overflow-hidden">
           {(!budget.incomes || budget.incomes.length === 0) ? (
@@ -155,9 +162,9 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
                 </div>
                 <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{inc.date}</p>
                 <p className="text-[13px] font-bold text-success flex-shrink-0 m-0">{fmt(inc.amount)}</p>
-                <button aria-label={`Delete income ${inc.category}`} onClick={() => handleDelete("income", inc.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                <Button aria-label={`Delete income ${inc.category}`} onClick={() => handleDelete("income", inc.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </button>
+                </Button>
               </article>
             ))
           )}
@@ -171,12 +178,12 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
             <TrendingDown className="w-4 h-4 text-destructive" aria-hidden="true" />
             <h3 id="expense-heading" className="text-sm font-bold text-foreground m-0">Expenses</h3>
           </div>
-          <button
+          <Button
             onClick={() => setAddType("expense")}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/15 border border-destructive/20 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/15 border border-destructive/20 transition-colors h-auto hover:text-destructive"
           >
-            <Plus className="w-3 h-3" aria-hidden="true" /> Add Expense
-          </button>
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Expense
+          </Button>
         </header>
         <div className="rounded-xl border border-border overflow-hidden">
           {(!budget.expenses || budget.expenses.length === 0) ? (
@@ -190,9 +197,9 @@ export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
                 </div>
                 <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{exp.date}</p>
                 <p className="text-[13px] font-bold text-destructive flex-shrink-0 m-0">{fmt(exp.amount)}</p>
-                <button aria-label={`Delete expense ${exp.category}`} onClick={() => handleDelete("expense", exp.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                <Button aria-label={`Delete expense ${exp.category}`} onClick={() => handleDelete("expense", exp.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </button>
+                </Button>
               </article>
             ))
           )}

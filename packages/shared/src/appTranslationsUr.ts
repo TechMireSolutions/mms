@@ -956,6 +956,7 @@ export const APP_TRANSLATIONS_UR = {
   "backup.clearHistory": "بیک اپ کی تاریخ صاف کریں",
   "backup.historyCount": "{count} میں سے {max} محفوظ ایکسپورٹ",
   "backup.invalidFormat": "یہ فائل درست MMS ورک سپیس بیک اپ نہیں ہے۔",
+  "backup.securityViolation": "سیکورٹی آڈٹ ناکام ہو گیا۔ بیک اپ میں غیر معتبر کیز یا غیر قانونی ڈیٹا پایا گیا ہے۔",
   "backup.emptyBackup": "بیک اپ فائل میں کوئی ڈیٹا نہیں۔",
   "backup.noData": "بیک اپ ڈیٹا نہیں",
   "backup.noDataDesc": "نیا ایکسپورٹ بنائیں یا JSON فائل اپ لوڈ کریں۔ بڑے ایکسپورٹ میں تاریخ میں ڈیٹا محفوظ نہیں ہو سکتا۔",

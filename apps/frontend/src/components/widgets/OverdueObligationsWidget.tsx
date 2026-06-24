@@ -3,6 +3,7 @@ import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale } from "lucide-react
 import { Link } from "react-router-dom";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { ROUTES } from "@/lib/config/routes";
+import { Button } from "../ui/button";
 
 export interface OverdueStudent {
   id: number;
@@ -78,21 +79,23 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="destructive"
             onClick={handleRemindAll}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors h-auto"
           >
             <Bell className="w-3 h-3" aria-hidden="true" />
             Remind All
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
             aria-label="Toggle overdue obligations list"
-            className="p-1.5 rounded-lg hover:bg-destructive/15 text-destructive transition-colors"
+            className="h-8 w-8 p-0 rounded-lg hover:bg-destructive/15 text-destructive hover:text-destructive transition-colors shadow-none"
           >
             {expanded ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -149,19 +152,20 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-center">
-                      <button
+                      <Button
+                        variant="ghost"
                         onClick={() => handleRemind(s.id)}
                         disabled={reminded}
                         aria-label={reminded ? `Reminder sent to ${s.name}` : `Send reminder to ${s.name}`}
-                        className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${
+                        className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors h-auto shadow-none ${
                           reminded
-                            ? "bg-success/10 text-success border border-success/30 cursor-default"
-                            : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20"
+                            ? "bg-success/10 text-success border border-success/30 cursor-default hover:bg-success/10 hover:text-success"
+                            : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
                         }`}
                       >
                         <Bell className="w-2.5 h-2.5" aria-hidden="true" />
                         {reminded ? "Sent" : "Remind"}
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 );

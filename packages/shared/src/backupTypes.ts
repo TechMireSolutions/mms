@@ -222,6 +222,42 @@ export function buildWorkspaceBackupEnvelope(
   return JSON.stringify(envelope);
 }
 
+/** Detects prototype pollution keys recursively in any parsed value. */
+export function hasPrototypePollution(val: unknown): boolean {
+  if (!val || typeof val !== 'object') return false;
+  if (Array.isArray(val)) {
+    for (const item of val) {
+      if (hasPrototypePollution(item)) return true;
+    }
+    return false;
+  }
+  const obj = val as Record<string, unknown>;
+  for (const key of Object.keys(obj)) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      return true;
+    }
+    if (hasPrototypePollution(obj[key])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Checks if a logical key represents a restricted platform-level resource. */
+export function isRestrictedKey(logicalKey: string): boolean {
+  const lower = logicalKey.toLowerCase();
+  return (
+    lower === 'workspaces' ||
+    lower === 'platform_super_users' ||
+    lower === 'platform_users' ||
+    lower === 'auth_artifacts' ||
+    lower === '__proto__' ||
+    lower === 'constructor' ||
+    lower === 'prototype' ||
+    lower.startsWith('platform_')
+  );
+}
+
 /** Summarizes a backup file for pre-restore preview (no writes). */
 export function summarizeWorkspaceBackup(
   jsonString: string,
@@ -229,14 +265,60 @@ export function summarizeWorkspaceBackup(
 ): WorkspaceBackupSummaryResult {
   try {
     const parsed: unknown = JSON.parse(jsonString);
+    if (hasPrototypePollution(parsed)) {
+      return { ok: false, errorKey: 'backup.securityViolation' };
+    }
+
     const raw = extractBackupRawKeys(parsed);
     if (!raw) {
       return { ok: false, errorKey: 'backup.invalidFormat' };
     }
 
+    for (const [key, value] of Object.entries(raw)) {
+      const logical = extractLogicalStorageKey(key);
+      if (logical && isRestrictedKey(logical)) {
+        return { ok: false, errorKey: 'backup.securityViolation' };
+      }
+      try {
+        const valParsed: unknown = JSON.parse(value);
+        if (hasPrototypePollution(valParsed)) {
+          return { ok: false, errorKey: 'backup.securityViolation' };
+        }
+      } catch {
+        // Non-JSON strings cannot pollute prototypes
+      }
+    }
+
     const remapped = remapBackupKeysToPrefix(raw, targetPrefix);
     if (Object.keys(remapped).length === 0) {
       return { ok: false, errorKey: 'backup.invalidFormat' };
+    }
+
+    // Deduplicate each collection by `id` to keep stats accurate
+    for (const key of Object.keys(remapped)) {
+      try {
+        const parsedVal: unknown = JSON.parse(remapped[key]);
+        if (Array.isArray(parsedVal)) {
+          const seen = new Set<string>();
+          const deduped: unknown[] = [];
+          for (const item of parsedVal) {
+            if (item && typeof item === 'object') {
+              const record = item as Record<string, unknown>;
+              if ('id' in record && record.id !== undefined && record.id !== null) {
+                const idStr = String(record.id);
+                if (seen.has(idStr)) {
+                  continue;
+                }
+                seen.add(idStr);
+              }
+            }
+            deduped.push(item);
+          }
+          remapped[key] = JSON.stringify(deduped);
+        }
+      } catch {
+        // Ignore
+      }
     }
 
     const stats = computeBackupStats(remapped);
@@ -291,6 +373,10 @@ export function validateWorkspaceBackupJson(
 ): BackupValidationResult {
   try {
     const parsed: unknown = JSON.parse(jsonString);
+    if (hasPrototypePollution(parsed)) {
+      return { ok: false, errorKey: 'backup.securityViolation' };
+    }
+
     const raw = extractBackupRawKeys(parsed);
     if (!raw) {
       return { ok: false, errorKey: 'backup.invalidFormat' };
@@ -300,9 +386,51 @@ export function validateWorkspaceBackupJson(
       return { ok: false, errorKey: 'backup.emptyBackup' };
     }
 
+    for (const [key, value] of Object.entries(raw)) {
+      const logical = extractLogicalStorageKey(key);
+      if (logical && isRestrictedKey(logical)) {
+        return { ok: false, errorKey: 'backup.securityViolation' };
+      }
+      try {
+        const valParsed: unknown = JSON.parse(value);
+        if (hasPrototypePollution(valParsed)) {
+          return { ok: false, errorKey: 'backup.securityViolation' };
+        }
+      } catch {
+        // Non-JSON strings cannot pollute prototypes
+      }
+    }
+
     const remapped = remapBackupKeysToPrefix(raw, targetPrefix);
     if (Object.keys(remapped).length === 0) {
       return { ok: false, errorKey: 'backup.invalidFormat' };
+    }
+
+    // Deduplicate each collection by `id`
+    for (const key of Object.keys(remapped)) {
+      try {
+        const parsedVal: unknown = JSON.parse(remapped[key]);
+        if (Array.isArray(parsedVal)) {
+          const seen = new Set<string>();
+          const deduped: unknown[] = [];
+          for (const item of parsedVal) {
+            if (item && typeof item === 'object') {
+              const record = item as Record<string, unknown>;
+              if ('id' in record && record.id !== undefined && record.id !== null) {
+                const idStr = String(record.id);
+                if (seen.has(idStr)) {
+                  continue;
+                }
+                seen.add(idStr);
+              }
+            }
+            deduped.push(item);
+          }
+          remapped[key] = JSON.stringify(deduped);
+        }
+      } catch {
+        // Ignore
+      }
     }
 
     return { ok: true, data: remapped };

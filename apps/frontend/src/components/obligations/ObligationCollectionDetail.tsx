@@ -6,6 +6,7 @@ import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../hooks/useObligationLookups";
 import ObligationModal from "./ObligationModal";
 import InvoiceTemplateEditor from "./invoice/InvoiceTemplateEditor";
+import { Button } from "@/components/ui/button";
 
 const PrintInvoiceModal = lazy(() => import("./invoice/PrintInvoiceModal"));
 
@@ -157,14 +158,15 @@ export default function ObligationCollectionDetail({ collection, obligationTypes
         )}
 
         <footer className="flex items-center justify-between">
-          <button type="button" onClick={() => setShowPrint(true)}
+          <Button type="button" onClick={() => setShowPrint(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
             <Printer className="w-4 h-4" aria-hidden="true" /> Print Receipt
-          </button>
-          <button type="button" onClick={onClose}
+          </Button>
+          <Button type="button" onClick={onClose}
+            variant="outline"
             className="px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">
             Close
-          </button>
+          </Button>
         </footer>
       </div>
 

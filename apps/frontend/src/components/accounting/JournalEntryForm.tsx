@@ -4,7 +4,9 @@ import { ACCOUNT_TYPE_META, JOURNAL_TAGS, generateJERef, Account, JournalEntry, 
 import { DatePicker } from "../ui/DatePicker";
 import FormModal from "../ui/FormModal";
 import { Button } from "../ui/button";
-import { FORM_INPUT, FORM_LABEL, FORM_INPUT_COMPACT } from "../ui/formStyles";
+import { Input } from "../ui/input";
+import FormSelect from "../ui/FormSelect";
+import { FORM_LABEL } from "../ui/formStyles";
 import { hasFieldValue } from "@/lib/formCompleteness";
 
 interface DraftLine extends Omit<JournalLine, "debit" | "credit"> {
@@ -128,6 +130,11 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
     accountGroups[a.type].push(a);
   });
 
+  const flattenedAccountOptions = sortedAccounts.map((a) => ({
+    value: a.id,
+    label: `${a.type}: ${a.code} – ${a.name}`
+  }));
+
   const errorMessages = useMemo(
     () => Object.values(errors).filter(Boolean),
     [errors],
@@ -170,15 +177,23 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
             </div>
             <div>
               <label htmlFor="je-fy" className={FORM_LABEL}>Financial Year</label>
-              <select id="je-fy" value={form.fiscal_year} onChange={(e) => setForm({ ...form, fiscal_year: e.target.value })} className={FORM_INPUT}>
-                <option value="">— None —</option>
-                {(fiscalYears || []).map((fy) => <option key={fy.id} value={fy.label}>{fy.label}</option>)}
-              </select>
+              <FormSelect
+                id="je-fy"
+                value={form.fiscal_year || ""}
+                onChange={(val) => setForm({ ...form, fiscal_year: val })}
+                placeholder="— None —"
+                options={(fiscalYears || []).map((fy) => fy.label)}
+              />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="je-desc" className={FORM_LABEL}>Narration / Description *</label>
-              <input id="je-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="e.g. Student fee collection for Spring 2026…" className={FORM_INPUT} aria-invalid={!!errors.description} />
+              <Input
+                id="je-desc"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="e.g. Student fee collection for Spring 2026…"
+                aria-invalid={!!errors.description}
+              />
               {errors.description && <p className="text-xs text-destructive mt-1" role="alert">{errors.description}</p>}
             </div>
           </fieldset>
@@ -188,13 +203,16 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
             <legend className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1"><Tag className="w-3 h-3" aria-hidden="true" /> Tags</legend>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {JOURNAL_TAGS.map((t) => (
-                <button key={t} type="button" onClick={() => toggleTag(t)}
+                <Button
+                  key={t}
+                  type="button"
+                  variant={form.tags?.includes(t) ? "default" : "outline"}
+                  onClick={() => toggleTag(t)}
                   aria-pressed={form.tags?.includes(t)}
-                  className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-colors ${
-                    form.tags?.includes(t)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background text-muted-foreground border-border hover:border-primary/40"
-                  }`}>{t}</button>
+                  className="px-2.5 py-1 rounded-full text-xs font-semibold h-auto"
+                >
+                  {t}
+                </Button>
               ))}
             </div>
           </fieldset>
@@ -203,10 +221,15 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
           <fieldset className="border-0 p-0 m-0">
             <div className="flex items-center justify-between mb-2">
               <legend className={FORM_LABEL}>Journal Lines *</legend>
-              <button type="button" onClick={addLine}
-                className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                onClick={addLine}
+                className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
+              >
                 <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Line
-              </button>
+              </Button>
             </div>
 
             <div className="rounded-xl border border-border overflow-hidden">
@@ -227,20 +250,13 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                     return (
                       <tr key={line.id} className="hover:bg-muted/10">
                         <td className="px-3 py-2">
-                          <select 
+                          <FormSelect
                             aria-label={`Account for line ${idx + 1}`}
-                            value={line.account_id} 
-                            onChange={(e) => updateLine(idx, "account_id", e.target.value)}
-                            className="w-full px-2 py-1.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-                            aria-invalid={!!errors[`line${idx}`]}
-                          >
-                            <option value="">Select account…</option>
-                            {Object.entries(accountGroups).map(([type, accs]) => (
-                              <optgroup key={type} label={type}>
-                                {accs.map((a) => <option key={a.id} value={a.id}>{a.code} – {a.name}</option>)}
-                              </optgroup>
-                            ))}
-                          </select>
+                            value={line.account_id}
+                            onChange={(val) => updateLine(idx, "account_id", val)}
+                            placeholder="Select account…"
+                            options={flattenedAccountOptions}
+                          />
                           {acc && (
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${ACCOUNT_TYPE_META[acc.type]?.color}`}>
                               {acc.type} · {ACCOUNT_TYPE_META[acc.type]?.normalBalance === "debit" ? "Dr normal" : "Cr normal"}
@@ -249,48 +265,50 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                           {errors[`line${idx}`] && <p className="text-[10px] text-destructive m-0" role="alert">{errors[`line${idx}`]}</p>}
                         </td>
                         <td className="px-3 py-2 hidden md:table-cell">
-                          <input 
+                          <Input
                             aria-label={`Description for line ${idx + 1}`}
-                            value={line.description || ""} 
+                            value={line.description || ""}
                             onChange={(e) => updateLine(idx, "description", e.target.value)}
-                            placeholder="Note…" 
-                            className={FORM_INPUT_COMPACT} 
+                            placeholder="Note…"
+                            className="h-8 py-1 px-2 text-xs"
                           />
                         </td>
                         <td className="px-3 py-2">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            step="0.01" 
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
                             aria-label={`Debit amount for line ${idx + 1}`}
-                            value={line.debit} 
+                            value={line.debit}
                             placeholder="0.00"
                             onChange={(e) => updateLine(idx, "debit", e.target.value)}
-                            className="w-full px-2 py-1.5 text-sm text-right rounded-lg border border-border bg-info/10/50 focus:outline-none focus:ring-2 focus:ring-info/30 font-mono" 
+                            className="h-8 py-1 px-2 text-xs text-right bg-info/5 focus:ring-info/30 font-mono"
                           />
                         </td>
                         <td className="px-3 py-2">
-                          <input 
-                            type="number" 
-                            min="0" 
-                            step="0.01" 
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
                             aria-label={`Credit amount for line ${idx + 1}`}
-                            value={line.credit} 
+                            value={line.credit}
                             placeholder="0.00"
                             onChange={(e) => updateLine(idx, "credit", e.target.value)}
-                            className="w-full px-2 py-1.5 text-sm text-right rounded-lg border border-border bg-success/10/50 focus:outline-none focus:ring-2 focus:ring-success/30 font-mono" 
+                            className="h-8 py-1 px-2 text-xs text-right bg-success/5 focus:ring-success/30 font-mono"
                           />
                         </td>
                         <td className="px-3 py-2">
-                          <button 
-                            type="button" 
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
                             aria-label={`Remove line ${idx + 1}`}
-                            onClick={() => removeLine(idx)} 
+                            onClick={() => removeLine(idx)}
                             disabled={form.lines.length <= 2}
-                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors disabled:opacity-30"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                          </button>
+                          </Button>
                         </td>
                       </tr>
                     );

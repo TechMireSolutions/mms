@@ -3,7 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Clock, MapPin, Trash2 } from "lucide-react";
 import { DAYS, ACTIVITY_TYPES, Session, TimetableItem } from '@/lib/data/sessionsData';
 import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "../../ui/FormSelect";
 
 const TYPE_CONFIG: Record<string, { color: string, dot: string }> = {
   class:      { color: "bg-success/15 text-success border-success/30", dot: "bg-success" },
@@ -39,13 +42,15 @@ function ActivityChip({ entry, onDelete }: ActivityChipProps) {
           {entry.location && <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" aria-hidden="true" />{entry.location}</span>}
         </div>
       </div>
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         aria-label={`Delete ${entry.activity}`}
         onClick={() => onDelete(entry.id)}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-current hover:text-destructive ml-1 flex-shrink-0"
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-current hover:text-destructive ml-1 flex-shrink-0 w-6 h-6 p-0"
       >
         <Trash2 className="w-3 h-3" aria-hidden="true" />
-      </button>
+      </Button>
     </motion.article>
   );
 }
@@ -80,35 +85,43 @@ function AddActivityModal({ open, onClose, onSave }: AddActivityModalProps) {
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="activity-name">Activity Name *</label>
-          <input id="activity-name" className={FORM_INPUT} value={data.activity || ""} onChange={(e) => upd("activity", e.target.value)} placeholder="e.g. Hifz Revision" required />
+          <Input id="activity-name" value={data.activity || ""} onChange={(e) => upd("activity", e.target.value)} placeholder="e.g. Hifz Revision" required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="activity-day">Day</label>
-            <select id="activity-day" className={`${FORM_INPUT} cursor-pointer`} value={data.day || "Mon"} onChange={(e) => upd("day", e.target.value as TimetableItem["day"])}>
-              {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
-            </select>
+            <FormSelect
+              id="activity-day"
+              value={data.day || "Mon"}
+              onChange={(val) => upd("day", val as TimetableItem["day"])}
+              options={DAYS}
+              className="w-full"
+            />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="activity-type">Type</label>
-            <select id="activity-type" className={`${FORM_INPUT} cursor-pointer`} value={data.type || "class"} onChange={(e) => upd("type", e.target.value as TimetableItem["type"])}>
-              {ACTIVITY_TYPES.map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
-            </select>
+            <FormSelect
+              id="activity-type"
+              value={data.type || "class"}
+              onChange={(val) => upd("type", val as TimetableItem["type"])}
+              options={ACTIVITY_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
+              className="w-full"
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="activity-start">Start Time</label>
-            <input id="activity-start" type="time" className={FORM_INPUT} value={data.startTime || ""} onChange={(e) => upd("startTime", e.target.value)} required />
+            <Input id="activity-start" type="time" value={data.startTime || ""} onChange={(e) => upd("startTime", e.target.value)} required />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="activity-end">End Time</label>
-            <input id="activity-end" type="time" className={FORM_INPUT} value={data.endTime || ""} onChange={(e) => upd("endTime", e.target.value)} required />
+            <Input id="activity-end" type="time" value={data.endTime || ""} onChange={(e) => upd("endTime", e.target.value)} required />
           </div>
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="activity-location">Location</label>
-          <input id="activity-location" className={FORM_INPUT} value={data.location || ""} onChange={(e) => upd("location", e.target.value)} placeholder="e.g. Room A" />
+          <Input id="activity-location" value={data.location || ""} onChange={(e) => upd("location", e.target.value)} placeholder="e.g. Room A" />
         </div>
       </div>
     </FormModal>
@@ -151,12 +164,12 @@ export default function TimetableTab({ session, onUpdate }: TimetableTabProps) {
     <section aria-label="Session Timetable" className="space-y-4">
       <header className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground m-0">{timetable.length} activit{timetable.length !== 1 ? "ies" : "y"} scheduled</p>
-        <button
+        <Button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Activity
-        </button>
+        </Button>
       </header>
 
       {/* Legend */}

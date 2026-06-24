@@ -3,7 +3,12 @@ import { motion } from "framer-motion";
 import { Plus, Trash2, Edit2, Tag, ToggleLeft, ToggleRight } from "lucide-react";
 import { Session, Discount } from '@/lib/data/sessionsData';
 import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import FormSelect from "../../ui/FormSelect";
 
 const EMPTY: Partial<Discount> = { name: "", type: "percentage", value: 0, conditions: "", active: true };
 
@@ -38,27 +43,33 @@ function DiscountModal({ open, discount, onClose, onSave }: DiscountModalProps) 
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="discount-name">Name *</label>
-          <input id="discount-name" className={FORM_INPUT} value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Sibling Discount" required />
+          <Input id="discount-name" value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Sibling Discount" required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="discount-type">Type</label>
-            <select id="discount-type" className={`${FORM_INPUT} cursor-pointer`} value={data.type || "percentage"} onChange={(e) => upd("type", e.target.value as Discount["type"])}>
-              <option value="percentage">Percentage (%)</option>
-              <option value="fixed">Fixed Amount</option>
-            </select>
+            <FormSelect
+              id="discount-type"
+              value={data.type || "percentage"}
+              onChange={(val) => upd("type", val as Discount["type"])}
+              options={[
+                { value: "percentage", label: "Percentage (%)" },
+                { value: "fixed", label: "Fixed Amount" },
+              ]}
+              className="w-full"
+            />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="discount-value">Value</label>
-            <input id="discount-value" type="number" className={FORM_INPUT} value={data.value || ""} onChange={(e) => upd("value", +e.target.value)} min={0} max={data.type === "percentage" ? 100 : undefined} required />
+            <Input id="discount-value" type="number" value={data.value || 0} onChange={(e) => upd("value", +e.target.value)} min={0} max={data.type === "percentage" ? 100 : undefined} required />
           </div>
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="discount-conditions">Conditions</label>
-          <textarea id="discount-conditions" className={`${FORM_INPUT} min-h-[64px] resize-none`} value={data.conditions || ""} onChange={(e) => upd("conditions", e.target.value)} placeholder="Who qualifies for this discount?" />
+          <Textarea id="discount-conditions" className="min-h-[64px] resize-none" value={data.conditions || ""} onChange={(e) => upd("conditions", e.target.value)} placeholder="Who qualifies for this discount?" />
         </div>
         <label className="flex items-center gap-2.5 cursor-pointer">
-          <input type="checkbox" checked={data.active || false} onChange={(e) => upd("active", e.target.checked)} className="w-4 h-4 accent-primary" />
+          <Checkbox checked={data.active || false} onCheckedChange={(checked) => upd("active", !!checked)} />
           <span className="text-sm text-foreground font-medium">Active</span>
         </label>
       </div>
@@ -101,12 +112,12 @@ export default function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
     <section aria-label="Session Discounts" className="space-y-4">
       <header className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground m-0">{discounts.length} discount{discounts.length !== 1 ? "s" : ""}</p>
-        <button
+        <Button
           onClick={() => { setEditDiscount(null); setShowModal(true); }}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Discount
-        </button>
+        </Button>
       </header>
 
       {discounts.length === 0 ? (
@@ -140,15 +151,15 @@ export default function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
                 {d.conditions && <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{d.conditions}</p>}
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button aria-label={d.active ? "Deactivate" : "Activate"} onClick={() => toggleActive(d.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={d.active ? "Deactivate" : "Activate"}>
+                <Button aria-label={d.active ? "Deactivate" : "Activate"} onClick={() => toggleActive(d.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-8 h-8" title={d.active ? "Deactivate" : "Activate"} variant="ghost" size="icon">
                   {d.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
-                </button>
-                <button aria-label={`Edit ${d.name}`} onClick={() => { setEditDiscount(d); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                </Button>
+                <Button aria-label={`Edit ${d.name}`} onClick={() => { setEditDiscount(d); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-8 h-8" variant="ghost" size="icon">
                   <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </button>
-                <button aria-label={`Delete ${d.name}`} onClick={() => handleDelete(d.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+                </Button>
+                <Button aria-label={`Delete ${d.name}`} onClick={() => handleDelete(d.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors w-8 h-8" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </button>
+                </Button>
               </div>
             </motion.article>
           ))}

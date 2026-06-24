@@ -10,6 +10,9 @@ import { useMergedObligationContacts } from "../../hooks/useObligationLookups";
 import useTranslation from "@/hooks/useTranslation";
 import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
 
 const PrintInvoiceModal = lazy(() => import("./invoice/PrintInvoiceModal"));
 
@@ -100,12 +103,17 @@ export default function ObligationCollectionList({
   const showAmount = isColumnVisible ? isColumnVisible("amount") : true;
   const showPaymentMode = isColumnVisible ? isColumnVisible("paymentMode") : true;
 
+  const selectOptions = useMemo(() => [
+    { value: "all", label: t("obligations.filter.allTypes") },
+    ...obligationTypes.map((item) => ({ value: item.id, label: item.name }))
+  ], [obligationTypes, t]);
+
   return (
     <div className="space-y-4">
       <section aria-label={t("obligations.filter.label")} className="flex flex-wrap gap-2 items-center">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <input
+          <Input
             type="search"
             aria-label={t("obligations.searchPlaceholder")}
             value={search}
@@ -114,15 +122,15 @@ export default function ObligationCollectionList({
             className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
-        <select
-          aria-label={t("obligations.filter.type")}
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-        >
-          <option value="all">{t("obligations.filter.allTypes")}</option>
-          {obligationTypes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-        </select>
+        <div className="min-w-[150px]">
+          <FormSelect
+            aria-label={t("obligations.filter.type")}
+            value={typeFilter}
+            onChange={(val) => setTypeFilter(val)}
+            options={selectOptions}
+            className="text-sm rounded-xl border border-border bg-background"
+          />
+        </div>
         {columnCustomizer && (
           <ModuleColumnCustomizer
             columnRegistry={columnCustomizer.columnRegistry}
@@ -147,10 +155,10 @@ export default function ObligationCollectionList({
               </p>
             </div>
             {!search && typeFilter === "all" && (
-              <button type="button" onClick={onAddNew}
+              <Button type="button" onClick={onAddNew}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
                 <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.newCollection")}
-              </button>
+              </Button>
             )}
           </div>
         ) : (
@@ -242,18 +250,20 @@ export default function ObligationCollectionList({
                         )}
                         <td className="px-3 py-2.5 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <button type="button" onClick={() => onView(c)}
-                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                            <Button type="button" onClick={() => onView(c)}
+                              variant="ghost"
+                              className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
                               aria-label={t("obligations.actions.view", { receipt: c.receipt_no })}
                               title={t("obligations.actions.viewShort")}>
                               <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                            </button>
-                            <button type="button" onClick={() => setPrintCollection(c)}
-                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                            </Button>
+                            <Button type="button" onClick={() => setPrintCollection(c)}
+                              variant="ghost"
+                              className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
                               aria-label={t("obligations.actions.print", { receipt: c.receipt_no })}
                               title={t("obligations.actions.printShort")}>
                               <Printer className="w-3.5 h-3.5" aria-hidden="true" />
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>

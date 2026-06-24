@@ -6,6 +6,9 @@ import { DatePicker } from "../ui/DatePicker";
 import FormModal from "@/components/ui/FormModal";
 import UserActorSelect from "@/components/ui/UserActorSelect";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
 
 interface AddBatchModalProps {
   open: boolean;
@@ -55,11 +58,15 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
       <div className="space-y-4">
         <div>
           <label htmlFor="denom" className={FORM_LABEL}>Denomination *</label>
-          <select id="denom" className={`${FORM_INPUT} cursor-pointer`} value={data.denominationId} onChange={(e) => upd("denominationId", e.target.value)}>
-            {denoms.filter((d) => d.active).map((d) => (
-              <option key={d.id} value={d.id}>{d.icon} {d.name} ({d.points} pts)</option>
-            ))}
-          </select>
+          <FormSelect
+            id="denom"
+            value={data.denominationId || ""}
+            onChange={(val) => upd("denominationId", val)}
+            options={denoms.filter((d) => d.active).map((d) => ({
+              value: d.id,
+              label: `${d.icon} ${d.name} (${d.points} pts)`
+            }))}
+          />
         </div>
         {selectedDen && (
           <div className="h-10 rounded-xl flex items-center gap-2 px-3 text-white text-sm font-semibold" style={{ background: selectedDen.color }}>
@@ -69,7 +76,7 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="qty" className={FORM_LABEL}>Quantity *</label>
-            <input id="qty" type="number" className={FORM_INPUT} value={data.quantity || ""} onChange={(e) => upd("quantity", Number(e.target.value))} placeholder="0" min={1} />
+            <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || ""} onChange={(e) => upd("quantity", Number(e.target.value))} placeholder="0" min={1} />
           </div>
           <div>
             <label htmlFor="add-date" className={FORM_LABEL}>Date</label>
@@ -89,7 +96,7 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
         />
         <div>
           <label htmlFor="note" className={FORM_LABEL}>Note</label>
-          <input id="note" className={FORM_INPUT} value={data.note} onChange={(e) => upd("note", e.target.value)} placeholder="e.g. January batch" />
+          <Input id="note" className={FORM_INPUT} value={data.note} onChange={(e) => upd("note", e.target.value)} placeholder="e.g. January batch" />
         </div>
       </div>
     </FormModal>
@@ -128,13 +135,13 @@ export default function StockManager({ batches, denoms, onUpdate }: StockManager
     <section aria-label="Stock Manager" className="space-y-5">
       <header className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground m-0">{batches.length} batch{batches.length !== 1 ? "es" : ""}</p>
-        <button
+        <Button
           type="button"
           onClick={() => setShowModal(true)}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Batch
-        </button>
+        </Button>
       </header>
 
       {(Object.values(grouped) as { den: Denomination; batches: StockBatch[] }[]).map(({ den, batches: dBatches }) => {

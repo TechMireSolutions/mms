@@ -658,7 +658,7 @@ export default function DynamicChartVisualizer({
       
       {/* 1. Left Configurator Panel (5 cols) */}
       <div className="lg:col-span-5 space-y-5 print:hidden">
-        <div className="rounded-[2rem] border border-border/50 bg-card/45 backdrop-blur-2xl p-5 space-y-4 shadow-xl">
+        <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-2xl p-5 space-y-4 shadow-xl">
           <div className="flex items-center gap-2 pb-2 border-b border-border/50">
             <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <Sparkles className="w-4 h-4" />
@@ -824,7 +824,7 @@ export default function DynamicChartVisualizer({
         </div>
 
         {/* 2. Filters builder inside panel */}
-        <div className="rounded-[2rem] border border-border/50 bg-card/45 backdrop-blur-2xl p-5 space-y-4 shadow-xl">
+        <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-2xl p-5 space-y-4 shadow-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -905,7 +905,7 @@ export default function DynamicChartVisualizer({
 
       {/* 3. Right Visual Render Panel (7 cols) */}
       <div className="lg:col-span-7 space-y-5">
-        <div className="rounded-[2.5rem] border border-border/50 bg-card/45 backdrop-blur-2xl p-6 shadow-xl space-y-6">
+        <div className="rounded-3xl border border-border/50 bg-card/45 backdrop-blur-2xl p-6 shadow-xl space-y-6">
           
           {/* Header metadata row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4">

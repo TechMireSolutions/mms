@@ -13,7 +13,10 @@ import {
   teacherOptionsForClass,
 } from '@/lib/teachers/teacherAssignment';
 import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "../../ui/FormSelect";
 
 const GENDER_COLORS: Record<string, string> = {
   male:   "bg-info/10 text-info border-info/20",
@@ -53,12 +56,12 @@ function ClassCard({ cls, teachers, onEdit, onDelete }: ClassCardProps) {
           </div>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button aria-label={`Edit ${cls.name}`} onClick={() => onEdit(cls)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+          <Button variant="ghost" size="icon" aria-label={`Edit ${cls.name}`} onClick={() => onEdit(cls)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-7 h-7">
             <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-          </button>
-          <button aria-label={`Delete ${cls.name}`} onClick={() => onDelete(cls.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+          </Button>
+          <Button variant="ghost" size="icon" aria-label={`Delete ${cls.name}`} onClick={() => onDelete(cls.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors w-7 h-7">
             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -170,51 +173,64 @@ function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="class-name">Class Name *</label>
-          <input id="class-name" className={FORM_INPUT} value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Hifz A" required />
+          <Input id="class-name" value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Hifz A" required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="class-min-age">Min Age</label>
-            <input id="class-min-age" type="number" className={FORM_INPUT} value={data.ageMin || ""} onChange={(e) => upd("ageMin", +e.target.value)} min={1} max={100} />
+            <Input id="class-min-age" type="number" value={data.ageMin || 0} onChange={(e) => upd("ageMin", +e.target.value)} min={1} max={100} />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="class-max-age">Max Age</label>
-            <input id="class-max-age" type="number" className={FORM_INPUT} value={data.ageMax || ""} onChange={(e) => upd("ageMax", +e.target.value)} min={1} max={100} />
+            <Input id="class-max-age" type="number" value={data.ageMax || 0} onChange={(e) => upd("ageMax", +e.target.value)} min={1} max={100} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="class-gender">Gender</label>
-            <select id="class-gender" className={`${FORM_INPUT} cursor-pointer`} value={data.gender || "any"} onChange={(e) => upd("gender", e.target.value as Class["gender"])}>
-              <option value="any">Any</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
+            <FormSelect
+              id="class-gender"
+              value={data.gender || "any"}
+              onChange={(val) => upd("gender", val as Class["gender"])}
+              options={[
+                { value: "any", label: "Any" },
+                { value: "male", label: "Male" },
+                { value: "female", label: "Female" },
+              ]}
+              className="w-full"
+            />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="class-capacity">Capacity</label>
-            <input id="class-capacity" type="number" className={FORM_INPUT} value={data.capacity || ""} onChange={(e) => upd("capacity", +e.target.value)} min={1} />
+            <Input id="class-capacity" type="number" value={data.capacity || 0} onChange={(e) => upd("capacity", +e.target.value)} min={1} />
           </div>
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="class-teacher">{t('sessions.classes.teacher')}</label>
-          <select id="class-teacher" className={`${FORM_INPUT} cursor-pointer`} value={data.teacherId || ""} onChange={(e) => handleTeacher(e.target.value)}>
-            <option value="">{t('sessions.classes.unassigned')}</option>
-            {teacherOptions.map((teacher) => (
-              <option key={teacher.id} value={teacher.id}>
-                {teacher.name}
-                {teacher.specialization ? ` · ${teacher.specialization}` : ''}
-                {teacher.status !== 'active' ? ` (${t(`teachers.status.${teacher.status}` as AppTranslationKey)})` : ''}
-              </option>
-            ))}
-          </select>
+          <FormSelect
+            id="class-teacher"
+            value={data.teacherId || ""}
+            onChange={handleTeacher}
+            options={[
+              { value: "", label: t('sessions.classes.unassigned') },
+              ...teacherOptions.map((teacher) => {
+                const spec = teacher.specialization ? ` · ${teacher.specialization}` : '';
+                const stat = teacher.status !== 'active' ? ` (${t(`teachers.status.${teacher.status}` as AppTranslationKey)})` : '';
+                return {
+                  value: teacher.id,
+                  label: `${teacher.name}${spec}${stat}`
+                };
+              })
+            ]}
+            className="w-full"
+          />
           {teacherOptions.length === 0 && (
             <p className="text-[11px] text-muted-foreground mt-1.5">{t('sessions.classes.noTeachersHint')}</p>
           )}
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="class-room">Room</label>
-          <input id="class-room" className={FORM_INPUT} value={data.room || ""} onChange={(e) => upd("room", e.target.value)} placeholder="e.g. Room A" />
+          <Input id="class-room" value={data.room || ""} onChange={(e) => upd("room", e.target.value)} placeholder="e.g. Room A" />
         </div>
       </div>
     </FormModal>
@@ -262,12 +278,12 @@ export default function ClassesTab({ session, onUpdate }: ClassesTabProps) {
     <section aria-label="Session Classes" className="space-y-4">
       <header className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground m-0">{session.classes?.length || 0} class{session.classes?.length !== 1 ? "es" : ""}</p>
-        <button
+        <Button
           onClick={() => { setEditCls(null); setShowModal(true); }}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Class
-        </button>
+        </Button>
       </header>
 
       {(!session.classes || session.classes.length === 0) ? (

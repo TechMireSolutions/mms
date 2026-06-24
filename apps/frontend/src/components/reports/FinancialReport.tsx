@@ -142,7 +142,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       </div>
 
       {/* Revenue trend */}
-      <div className="rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
+      <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
         <p className="text-sm font-semibold text-foreground mb-3">Monthly Collection vs Outstanding</p>
         <SafeResponsiveContainer width="100%" height={200}>
           <AreaChart data={feeCollection}>
@@ -164,7 +164,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
 
       {/* Two-column: collection table + discount pie */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
+        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Collection Rate by Month</p>
           <div className="space-y-2">
             {feeCollection.map((m) => (
@@ -179,7 +179,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
+        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">Discount Distribution</p>
           <SafeResponsiveContainer width="100%" height={180}>
             <PieChart>
@@ -213,7 +213,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       {invoices.length === 0 ? (
         <EmptyState icon={DollarSign} title="No invoices match filters" compact />
       ) : (
-        <div className="rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm">
+        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>

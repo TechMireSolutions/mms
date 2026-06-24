@@ -1,6 +1,7 @@
 import React from "react";
 import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
 import type { AttendanceStatus } from "@/lib/data/attendanceData";
+import { Button } from "../ui/button";
 
 interface StatusToggleProps {
   value: string;
@@ -25,20 +26,21 @@ export default function StatusToggle({ value, onChange }: StatusToggleProps) {
       className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold"
     >
       {statuses.map((s: AttendanceStatus) => (
-        <button
+        <Button
           key={s.id}
           type="button"
           onClick={() => onChange(s.id)}
           title={s.label}
           aria-pressed={value === s.id}
-          className={`px-2.5 py-1.5 transition-colors ${
+          variant="ghost"
+          className={`px-2.5 py-1.5 transition-colors rounded-none h-auto ${
             value === s.id
-              ? `${s.bg} ${s.text}`
+              ? `${s.bg} ${s.text} hover:${s.bg} hover:${s.text}`
               : "bg-card text-muted-foreground hover:bg-muted"
           }`}
         >
           {s.short}
-        </button>
+        </Button>
       ))}
     </div>
   );

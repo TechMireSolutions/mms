@@ -88,4 +88,94 @@ describe('backupTypes', () => {
       extractBackupRawKeys({ format: BACKUP_FORMAT_ID, keys: { bad: 1 } }),
     ).toBeNull();
   });
+
+  it('rejects prototype pollution in envelope and keys', () => {
+    const maliciousEnvelope = JSON.stringify({
+      format: BACKUP_FORMAT_ID,
+      version: 1,
+      exportedAt: '2026-06-23T00:00:00Z',
+      subdomain: 'demo',
+      stats: { keyCount: 1, collectionCount: 0, objectCount: 1, byteSize: 100 },
+      keys: {
+        'mms_t:demo:settings': '{"__proto__": {"polluted": true}}',
+      },
+    });
+    const res = validateWorkspaceBackupJson(maliciousEnvelope, PREFIX);
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.errorKey).toBe('backup.securityViolation');
+    }
+
+    const maliciousEnvelopePrototypeKey = JSON.stringify({
+      format: BACKUP_FORMAT_ID,
+      version: 1,
+      exportedAt: '2026-06-23T00:00:00Z',
+      subdomain: 'demo',
+      stats: { keyCount: 1, collectionCount: 0, objectCount: 1, byteSize: 100 },
+      keys: {
+        'mms_t:demo:__proto__': '{}',
+      },
+    });
+    const res2 = validateWorkspaceBackupJson(maliciousEnvelopePrototypeKey, PREFIX);
+    expect(res2.ok).toBe(false);
+    if (!res2.ok) {
+      expect(res2.errorKey).toBe('backup.securityViolation');
+    }
+  });
+
+  it('rejects restricted platform keys', () => {
+    const maliciousPlatformKey = JSON.stringify({
+      format: BACKUP_FORMAT_ID,
+      version: 1,
+      exportedAt: '2026-06-23T00:00:00Z',
+      subdomain: 'demo',
+      stats: { keyCount: 1, collectionCount: 0, objectCount: 1, byteSize: 100 },
+      keys: {
+        'mms_t:demo:workspaces': '[]',
+      },
+    });
+    const res = validateWorkspaceBackupJson(maliciousPlatformKey, PREFIX);
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.errorKey).toBe('backup.securityViolation');
+    }
+
+    const maliciousPlatformPrefixedKey = JSON.stringify({
+      format: BACKUP_FORMAT_ID,
+      version: 1,
+      exportedAt: '2026-06-23T00:00:00Z',
+      subdomain: 'demo',
+      stats: { keyCount: 1, collectionCount: 0, objectCount: 1, byteSize: 100 },
+      keys: {
+        'mms_t:demo:platform_super_users': '[]',
+      },
+    });
+    const res2 = validateWorkspaceBackupJson(maliciousPlatformPrefixedKey, PREFIX);
+    expect(res2.ok).toBe(false);
+    if (!res2.ok) {
+      expect(res2.errorKey).toBe('backup.securityViolation');
+    }
+  });
+
+  it('deduplicates collection items by id', () => {
+    const duplicateData = JSON.stringify({
+      format: BACKUP_FORMAT_ID,
+      version: 1,
+      exportedAt: '2026-06-23T00:00:00Z',
+      subdomain: 'demo',
+      stats: { keyCount: 1, collectionCount: 1, objectCount: 0, byteSize: 100 },
+      keys: {
+        'mms_t:demo:students': '[{"id":"1","name":"A"},{"id":"2","name":"B"},{"id":"1","name":"A-dup"}]',
+      },
+    });
+    const res = validateWorkspaceBackupJson(duplicateData, PREFIX);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      const parsedVal = JSON.parse(res.data[`${PREFIX}students`]);
+      expect(parsedVal).toEqual([
+        { id: '1', name: 'A' },
+        { id: '2', name: 'B' },
+      ]);
+    }
+  });
 });

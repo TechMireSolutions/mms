@@ -4,7 +4,11 @@ import { Plus, Trash2, Calendar, Clock, MapPin, Edit2 } from "lucide-react";
 import { EVENT_TYPES, Session, SessionEvent } from '@/lib/data/sessionsData';
 import { DatePicker } from "../../ui/DatePicker";
 import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import FormSelect from "../../ui/FormSelect";
 
 const TYPE_COLORS: Record<string, string> = {
   ceremony:   "bg-warning/10 text-warning border-warning/20",
@@ -47,7 +51,7 @@ function EventModal({ open, event, onClose, onSave }: EventModalProps) {
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="event-title">Title *</label>
-          <input id="event-title" className={FORM_INPUT} value={data.title || ""} onChange={(e) => upd("title", e.target.value)} placeholder="Event title" required />
+          <Input id="event-title" value={data.title || ""} onChange={(e) => upd("title", e.target.value)} placeholder="Event title" required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -61,24 +65,28 @@ function EventModal({ open, event, onClose, onSave }: EventModalProps) {
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="event-time">Time</label>
-            <input id="event-time" type="time" className={FORM_INPUT} value={data.time || ""} onChange={(e) => upd("time", e.target.value)} />
+            <Input id="event-time" type="time" value={data.time || ""} onChange={(e) => upd("time", e.target.value)} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="event-type">Type</label>
-            <select id="event-type" className={`${FORM_INPUT} cursor-pointer`} value={data.type || "meeting"} onChange={(e) => upd("type", e.target.value as SessionEvent["type"])}>
-              {EVENT_TYPES.map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
-            </select>
+            <FormSelect
+              id="event-type"
+              value={data.type || "meeting"}
+              onChange={(val) => upd("type", val as SessionEvent["type"])}
+              options={EVENT_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
+              className="w-full"
+            />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="event-location">Location</label>
-            <input id="event-location" className={FORM_INPUT} value={data.location || ""} onChange={(e) => upd("location", e.target.value)} placeholder="e.g. Main Hall" />
+            <Input id="event-location" value={data.location || ""} onChange={(e) => upd("location", e.target.value)} placeholder="e.g. Main Hall" />
           </div>
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="event-description">Description</label>
-          <textarea id="event-description" className={`${FORM_INPUT} min-h-[64px] resize-none`} value={data.description || ""} onChange={(e) => upd("description", e.target.value)} placeholder="Brief description…" />
+          <Textarea id="event-description" className="min-h-[64px] resize-none" value={data.description || ""} onChange={(e) => upd("description", e.target.value)} placeholder="Brief description…" />
         </div>
       </div>
     </FormModal>
@@ -115,12 +123,12 @@ export default function EventsTab({ session, onUpdate }: EventsTabProps) {
     <section aria-label="Session Events" className="space-y-4">
       <header className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground m-0">{events.length} event{events.length !== 1 ? "s" : ""}</p>
-        <button
+        <Button
           onClick={() => { setEditEvent(null); setShowModal(true); }}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Event
-        </button>
+        </Button>
       </header>
 
       {events.length === 0 ? (
@@ -152,18 +160,18 @@ export default function EventsTab({ session, onUpdate }: EventsTabProps) {
                       </span>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button aria-label={`Edit ${ev.title}`} onClick={() => { setEditEvent(ev); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
+                      <Button aria-label={`Edit ${ev.title}`} onClick={() => { setEditEvent(ev); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground w-8 h-8" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                      </button>
-                      <button aria-label={`Delete ${ev.title}`} onClick={() => handleDelete(ev.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                      </Button>
+                      <Button aria-label={`Delete ${ev.title}`} onClick={() => handleDelete(ev.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive w-8 h-8" variant="ghost" size="icon">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                      </button>
+                      </Button>
                     </div>
                   </header>
                   <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground mb-2">
-                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" aria-hidden="true" />{ev.date}</span>
-                    {ev.time && <span className="flex items-center gap-1"><Clock className="w-3 h-3" aria-hidden="true" />{ev.time}</span>}
-                    {ev.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" aria-hidden="true" />{ev.location}</span>}
+                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" />{ev.date}</span>
+                    {ev.time && <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />{ev.time}</span>}
+                    {ev.location && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" aria-hidden="true" />{ev.location}</span>}
                   </div>
                   {ev.description && <p className="text-[12px] text-muted-foreground leading-relaxed m-0">{ev.description}</p>}
                 </div>

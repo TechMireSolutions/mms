@@ -204,13 +204,7 @@ export function buildDynamicContactSchema(
     date: z.string()
   })).optional().nullable();
 
-  // 1. Basic Fields on 'basic' tab (top-level properties of Contact)
-  const basicFields = (fields.basic || []).filter((f) => f.enabled);
-  basicFields.forEach((field) => {
-    schemaObject[field.key] = buildCustomFieldSchema(field);
-  });
-
-  // 2. List Tabs (nested array properties of Contact)
+  // List Tabs (nested array properties of Contact)
   const listTabsMapping: Record<string, string> = {
     phones: "phones",
     emails: "emails",
@@ -219,6 +213,18 @@ export function buildDynamicContactSchema(
     emergency: "emergencyContacts",
   };
 
+  // 1. Fields for tabs that map to top-level properties of Contact (basic + custom tabs)
+  Object.keys(fields).forEach((tabId) => {
+    if (listTabsMapping[tabId]) return;
+    if (!enabledTabIds.has(tabId) && tabId !== "basic") return;
+
+    const tabFields = (fields[tabId] || []).filter((f) => f.enabled);
+    tabFields.forEach((field) => {
+      schemaObject[field.key] = buildCustomFieldSchema(field);
+    });
+  });
+
+  // 2. List Tabs (nested array properties of Contact)
   Object.entries(listTabsMapping).forEach(([tabId, propKey]) => {
     if (!enabledTabIds.has(tabId)) {
       return;

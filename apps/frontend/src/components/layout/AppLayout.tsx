@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import TopBarActions from "./TopBarActions";
@@ -39,8 +40,10 @@ export default function AppLayout(): React.JSX.Element {
 
       {/* Mobile Top Bar */}
       <div className="lg:hidden surface-glass fixed top-0 left-0 right-0 z-40 flex h-14 items-center gap-2 px-3 sm:px-4">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           aria-label="Open navigation menu"
           onClick={(e) => {
             e.stopPropagation();
@@ -49,7 +52,7 @@ export default function AppLayout(): React.JSX.Element {
           className="shrink-0 rounded-lg p-2 transition-colors hover:bg-muted"
         >
           <Menu className="h-5 w-5 text-foreground" />
-        </button>
+        </Button>
         <div className="flex min-w-0 flex-1 items-center gap-2">
           {branding.logoUrl ? (
             <img

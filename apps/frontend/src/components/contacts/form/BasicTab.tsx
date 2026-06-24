@@ -55,7 +55,7 @@ export default function BasicTab({
         const label = field.label as string;
         const required = isTabFieldRequired(tabId, field.key);
         return (
-          <Field key={field.key} label={label} required={required}>
+          <Field key={field.key} label={label} required={required} hint={field.description}>
             <CustomFieldInput
               field={field}
               value={data[field.key]}

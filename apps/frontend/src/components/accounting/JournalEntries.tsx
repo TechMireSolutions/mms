@@ -20,6 +20,9 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import useTranslation from "@/hooks/useTranslation";
 import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import FormSelect from "../ui/FormSelect";
 
 interface QuickActionType {
   id: string;
@@ -227,20 +230,26 @@ export default function JournalEntries({
   // ── Mode toggle bar ────────────────────────────────────────────────────────
   const ModeToggle = () => (
     <nav aria-label="View Mode" className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-muted/30">
-      <button 
+      <Button 
         type="button"
+        variant={mode === "simple" ? "default" : "ghost"}
+        size="sm"
         aria-pressed={mode === "simple"}
         onClick={() => setMode("simple")}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${mode === "simple" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
+      >
         <Sparkles className="w-3.5 h-3.5" aria-hidden="true" /> Simple
-      </button>
-      <button 
+      </Button>
+      <Button 
         type="button"
+        variant={mode === "advanced" ? "default" : "ghost"}
+        size="sm"
         aria-pressed={mode === "advanced"}
         onClick={() => setMode("advanced")}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${mode === "advanced" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
+      >
         <Layers className="w-3.5 h-3.5" aria-hidden="true" /> Advanced
-      </button>
+      </Button>
     </nav>
   );
 
@@ -278,18 +287,18 @@ export default function JournalEntries({
               <form onSubmit={handleNlSubmit} className="flex gap-2">
                 <div className="relative flex-1">
                   <label htmlFor="nl-input" className="sr-only">Natural Language Transaction Entry</label>
-                  <input id="nl-input" value={nlInput} onChange={(e) => handleNlChange(e.target.value)}
+                  <Input id="nl-input" value={nlInput} onChange={(e) => handleNlChange(e.target.value)}
                     placeholder="e.g. Paid electricity bill 12000 · Received donation 50000 · Collected Ahmad fee"
-                    className="w-full px-4 py-3 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                    className="w-full px-4 py-3" />
                   {nlSuggestion && (
                     <div className="absolute top-full left-0 mt-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold shadow-lg z-10 flex items-center gap-1.5" role="status">
                       <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> Auto-detected: {nlSuggestion.label} — press Enter
                     </div>
                   )}
                 </div>
-                <button type="submit" className="px-4 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap">
+                <Button type="submit" className="px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap h-auto">
                   Record
-                </button>
+                </Button>
               </form>
             </article>
 
@@ -300,16 +309,16 @@ export default function JournalEntries({
                 {QUICK_ACTIONS.map((qa) => {
                   const Icon = qa.icon;
                   return (
-                    <button key={qa.label} type="button" onClick={() => setSimpleModal({ prefillType: qa.type })}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted hover:border-primary/30 transition-all shadow-sm">
+                    <Button key={qa.label} type="button" variant="outline" onClick={() => setSimpleModal({ prefillType: qa.type })}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted hover:border-primary/30 transition-all shadow-sm h-auto">
                       <Icon className="w-4 h-4 text-primary" aria-hidden="true" /> {qa.label}
-                    </button>
+                    </Button>
                   );
                 })}
-                <button type="button" onClick={() => setSimpleModal({ prefillType: null })}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-primary/40 bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 transition-all">
+                <Button type="button" variant="ghost" onClick={() => setSimpleModal({ prefillType: null })}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-primary/40 bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 transition-all h-auto">
                   <Plus className="w-4 h-4" aria-hidden="true" /> Other Transaction
-                </button>
+                </Button>
               </nav>
             </section>
 
@@ -317,9 +326,9 @@ export default function JournalEntries({
             <section aria-label="Recent Transactions">
               <header className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">Recent Transactions</h3>
-                <button type="button" onClick={exportCSV} className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">
+                <Button type="button" variant="link" size="sm" onClick={exportCSV} className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors p-0 h-auto">
                   <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export
-                </button>
+                </Button>
               </header>
 
               {entries.length === 0 ? (
@@ -387,40 +396,42 @@ export default function JournalEntries({
         <div className="flex-1" />
         <div className="relative min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <input 
+          <Input 
             type="search"
             aria-label="Search entries"
             value={search} 
             onChange={(e) => setSearch(e.target.value)} 
             placeholder="Search by ref or description…"
-            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
+            className="pl-9 pr-4" 
           />
         </div>
-        <select 
+        <FormSelect 
           aria-label="Filter by status"
           value={statusFilter} 
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-        >
-          <option value="all">All Status</option>
-          <option value="posted">Posted</option>
-          <option value="draft">Draft</option>
-        </select>
-        <button 
+          onChange={setStatusFilter}
+          options={[
+            { value: "all", label: "All Status" },
+            { value: "posted", label: "Posted" },
+            { value: "draft", label: "Draft" }
+          ]}
+        />
+        <Button 
           type="button"
+          variant={showFilters ? "secondary" : "outline"}
           aria-pressed={showFilters}
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-semibold transition-colors ${showFilters ? "bg-primary/10 border-primary/20 text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
+          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
         >
           <Filter className="w-3.5 h-3.5" aria-hidden="true" /> Filters
-        </button>
-        <button 
+        </Button>
+        <Button 
           type="button"
+          variant="outline"
           onClick={exportCSV}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
+          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold text-muted-foreground"
         >
           <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export
-        </button>
+        </Button>
         {columnCustomizer && (
           <ModuleColumnCustomizer
             columnRegistry={columnCustomizer.columnRegistry}
@@ -428,13 +439,14 @@ export default function JournalEntries({
             labels={columnCustomizer.labels}
           />
         )}
-        <button 
+        <Button 
           type="button"
+          variant="default"
           onClick={() => { setSelected(null); setModal("new"); }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> New Entry
-        </button>
+        </Button>
       </nav>
 
       {showFilters && (
@@ -457,14 +469,22 @@ export default function JournalEntries({
           </div>
           <div>
             <label htmlFor="filter-tag" className="text-[10px] font-semibold text-muted-foreground uppercase">Tag</label>
-            <select id="filter-tag" value={tagFilter} onChange={(e) => setTagFilter(e.target.value)}
-              className="mt-1 block text-sm px-3 py-1.5 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20">
-              <option value="all">All Tags</option>
-              {JOURNAL_TAGS.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <FormSelect 
+              id="filter-tag" 
+              value={tagFilter} 
+              onChange={setTagFilter}
+              options={[{ value: "all", label: "All Tags" }, ...JOURNAL_TAGS]}
+            />
           </div>
-          <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); setTagFilter("all"); }}
-            className="self-end text-xs font-semibold text-muted-foreground hover:text-foreground px-2 py-1.5 transition-colors">Clear</button>
+          <Button 
+            type="button" 
+            variant="ghost"
+            size="sm"
+            onClick={() => { setDateFrom(""); setDateTo(""); setTagFilter("all"); }}
+            className="self-end text-xs font-semibold text-muted-foreground hover:text-foreground px-2 py-1.5 h-auto"
+          >
+            Clear
+          </Button>
         </div>
       )}
 
@@ -565,31 +585,61 @@ export default function JournalEntries({
                       )}
                       <td className="px-3 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button type="button" aria-label={`View entry ${entry.ref}`} onClick={() => { setSelected(entry); setModal("view"); }}
-                            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`View entry ${entry.ref}`}
+                            onClick={() => { setSelected(entry); setModal("view"); }}
+                            className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          >
                             <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                          </button>
+                          </Button>
                           {entry.status === "draft" && (
                             <>
-                              <button type="button" aria-label={`Edit entry ${entry.ref}`} onClick={() => { setSelected(entry); setModal("edit"); }}
-                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Edit entry ${entry.ref}`}
+                                onClick={() => { setSelected(entry); setModal("edit"); }}
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              >
                                 <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                              </button>
-                              <button type="button" aria-label={`Post entry ${entry.ref}`} onClick={() => handlePost(entry)}
-                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-success transition-colors">
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Post entry ${entry.ref}`}
+                                onClick={() => handlePost(entry)}
+                                className="h-8 w-8 text-muted-foreground hover:text-success"
+                              >
                                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-                              </button>
-                              <button type="button" aria-label={`Delete entry ${entry.ref}`} onClick={() => handleDelete(entry.id)}
-                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors">
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Delete entry ${entry.ref}`}
+                                onClick={() => handleDelete(entry.id)}
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              >
                                 <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                              </button>
+                              </Button>
                             </>
                           )}
                           {entry.status === "posted" && (
-                            <button type="button" aria-label={`Reverse entry ${entry.ref}`} onClick={() => handleReverse(entry)}
-                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-warning transition-colors">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Reverse entry ${entry.ref}`}
+                              onClick={() => handleReverse(entry)}
+                              className="h-8 w-8 text-muted-foreground hover:text-warning"
+                            >
                               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </td>

@@ -3,7 +3,10 @@ import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { DISTRIBUTION_TYPES, WakalaType, ObligationDistribution, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
 import FormModal from "@/components/ui/FormModal";
 import useTranslation from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
 
 export type DistributionType = "Income" | "Liability";
 
@@ -81,10 +84,10 @@ export default function WakalaTypeManager({ wakalaTypes, distributions, obligati
     <div className="space-y-4">
       <header className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground m-0">{wakalaTypes.length} Wakala Type{wakalaTypes.length !== 1 ? "s" : ""}</p>
-        <button type="button" onClick={() => setModal({ mode: "add", data: { mujtahid_representative_id: reps[0]?.id || "", obligation_type_id: obligationTypes[0]?.id || "" } })}
+        <Button type="button" onClick={() => setModal({ mode: "add", data: { mujtahid_representative_id: reps[0]?.id || "", obligation_type_id: obligationTypes[0]?.id || "" } })}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Wakala Type
-        </button>
+        </Button>
       </header>
 
       <section aria-label="Wakala Types List" className="space-y-3">
@@ -115,14 +118,16 @@ export default function WakalaTypeManager({ wakalaTypes, distributions, obligati
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isComplete ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`} aria-label={`Total distribution is ${total.toFixed(0)} percent`}>
                     {total.toFixed(0)}%
                   </span>
-                  <button type="button" aria-label={`Edit Wakala Type for ${obType?.name}`} onClick={() => setModal({ mode: "edit", data: { ...w } })}
-                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                  <Button type="button" aria-label={`Edit Wakala Type for ${obType?.name}`} onClick={() => setModal({ mode: "edit", data: { ...w } })}
+                    variant="ghost"
+                    className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                     <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                  </button>
-                  <button type="button" aria-label={`Delete Wakala Type for ${obType?.name}`} onClick={() => handleDeleteWakala(w.id)}
-                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors">
+                  </Button>
+                  <Button type="button" aria-label={`Delete Wakala Type for ${obType?.name}`} onClick={() => handleDeleteWakala(w.id)}
+                    variant="ghost"
+                    className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                  </button>
+                  </Button>
                 </div>
               </header>
 
@@ -158,14 +163,16 @@ export default function WakalaTypeManager({ wakalaTypes, distributions, obligati
                           <td className="px-4 py-2 font-mono font-semibold text-foreground">{d.percentage}%</td>
                           <td className="px-4 py-2 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <button type="button" aria-label={`Edit distribution ${d.name}`} onClick={() => setModal({ mode: "edit-dist", distMode: "edit", data: { ...d } })}
-                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                              <Button type="button" aria-label={`Edit distribution ${d.name}`} onClick={() => setModal({ mode: "edit-dist", distMode: "edit", data: { ...d } })}
+                                variant="ghost"
+                                className="h-auto p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                                 <Pencil className="w-3 h-3" aria-hidden="true" />
-                              </button>
-                              <button type="button" aria-label={`Delete distribution ${d.name}`} onClick={() => handleDeleteDist(d.id)}
-                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors">
+                              </Button>
+                              <Button type="button" aria-label={`Delete distribution ${d.name}`} onClick={() => handleDeleteDist(d.id)}
+                                variant="ghost"
+                                className="h-auto p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                                 <Trash2 className="w-3 h-3" aria-hidden="true" />
-                              </button>
+                              </Button>
                             </div>
                           </td>
                         </tr>
@@ -174,10 +181,11 @@ export default function WakalaTypeManager({ wakalaTypes, distributions, obligati
                   </table>
                 )}
                 <div className="px-4 py-2 border-t border-border">
-                  <button type="button" onClick={() => setModal({ mode: "add-dist", distMode: "add", data: { name: "", percentage: 0, wakala_type_id: w.id, type: "Liability" } })}
-                    className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+                  <Button type="button" onClick={() => setModal({ mode: "add-dist", distMode: "add", data: { name: "", percentage: 0, wakala_type_id: w.id, type: "Liability" } })}
+                    variant="ghost"
+                    className="flex items-center gap-1 h-auto p-0 text-xs font-semibold text-primary hover:text-primary/80 hover:bg-transparent shadow-none transition-colors">
                     <Plus className="w-3 h-3" aria-hidden="true" /> Add Distribution
-                  </button>
+                  </Button>
                 </div>
               </div>
             </article>
@@ -258,32 +266,26 @@ function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onSave, on
       <div className="space-y-4">
         <div>
           <label htmlFor="wakala-rep" className={FORM_LABEL}>Mujtahid Representative *</label>
-          <select
+          <FormSelect
             id="wakala-rep"
-            value={form.mujtahid_representative_id}
-            onChange={(e) => setForm({ ...form, mujtahid_representative_id: e.target.value })}
-            className={FORM_SELECT}
-            aria-invalid={!!errors.rep}
-          >
-            <option value="">Select representative…</option>
-            {reps.map((r) => {
+            value={form.mujtahid_representative_id || ""}
+            onChange={(val) => setForm({ ...form, mujtahid_representative_id: val })}
+            placeholder="Select representative…"
+            options={reps.map((r) => {
               const m = getMujtahidForRep(r.id);
-              return <option key={r.id} value={r.id}>{r.name} ({m?.name || "?"})</option>;
+              return { value: r.id, label: `${r.name} (${m?.name || "?"})` };
             })}
-          </select>
+          />
         </div>
         <div>
           <label htmlFor="wakala-type" className={FORM_LABEL}>Obligation Type *</label>
-          <select
+          <FormSelect
             id="wakala-type"
-            value={form.obligation_type_id}
-            onChange={(e) => setForm({ ...form, obligation_type_id: e.target.value })}
-            className={FORM_SELECT}
-            aria-invalid={!!errors.obType}
-          >
-            <option value="">Select type…</option>
-            {obligationTypes.map((ot) => <option key={ot.id} value={ot.id}>{ot.name}</option>)}
-          </select>
+            value={form.obligation_type_id || ""}
+            onChange={(val) => setForm({ ...form, obligation_type_id: val })}
+            placeholder="Select type…"
+            options={obligationTypes.map((ot) => ({ value: ot.id, label: ot.name }))}
+          />
         </div>
       </div>
     </FormModal>
@@ -333,7 +335,7 @@ function DistributionFormModal({ initial, onSave, onClose, title }: Distribution
       <div className="space-y-4">
         <div>
           <label htmlFor="dist-name" className={FORM_LABEL}>Name *</label>
-          <input
+          <Input
             id="dist-name"
             value={form.name || ""}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -343,18 +345,16 @@ function DistributionFormModal({ initial, onSave, onClose, title }: Distribution
         </div>
         <div>
           <label htmlFor="dist-type" className={FORM_LABEL}>Type *</label>
-          <select
+          <FormSelect
             id="dist-type"
-            value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value as DistributionType })}
-            className={FORM_SELECT}
-          >
-            {DISTRIBUTION_TYPES.map((dt) => <option key={dt} value={dt}>{dt}</option>)}
-          </select>
+            value={form.type || ""}
+            onChange={(val) => setForm({ ...form, type: val as DistributionType })}
+            options={DISTRIBUTION_TYPES}
+          />
         </div>
         <div>
           <label htmlFor="dist-pct" className={FORM_LABEL}>Percentage (%) *</label>
-          <input
+          <Input
             id="dist-pct"
             type="number"
             min="0.01"

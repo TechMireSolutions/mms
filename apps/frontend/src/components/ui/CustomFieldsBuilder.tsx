@@ -1,6 +1,10 @@
 import React, { useState, useCallback } from "react";
 import { Plus, Trash2, Check, X, Pencil, AlertTriangle, GripVertical } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import FormSelect from "@/components/ui/FormSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /** All supported custom field types with UI labels. */
 const FIELD_TYPES = [
@@ -51,7 +55,7 @@ function optionsToString(arr: string[]): string {
 }
 
 import { FieldDefinition } from "@mms/shared";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 
 export type CustomFieldConfig = FieldDefinition;
 
@@ -129,9 +133,8 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={FORM_LABEL} htmlFor={`label-${draft.key}`}>Field Name *</label>
-          <input
+          <Input
             id={`label-${draft.key}`}
-            className={FORM_INPUT}
             value={draft.label}
             onChange={(e) => upd("label", e.target.value)}
             placeholder="e.g. Father's Name"
@@ -146,18 +149,12 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor={`type-${draft.key}`}>Field Type</label>
-          <select
+          <FormSelect
             id={`type-${draft.key}`}
-            className={FORM_INPUT}
             value={draft.type}
-            onChange={(e) => upd("type", e.target.value as FieldDefinition["type"])}
-          >
-            {FIELD_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => upd("type", val as FieldDefinition["type"])}
+            options={FIELD_TYPES}
+          />
         </div>
       </div>
 
@@ -167,9 +164,8 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           <label className={FORM_LABEL} htmlFor={`desc-${draft.key}`}>
             Description <span className="normal-case font-normal text-muted-foreground/70">(admin note)</span>
           </label>
-          <input
+          <Input
             id={`desc-${draft.key}`}
-            className={FORM_INPUT}
             value={draft.description || ""}
             onChange={(e) => upd("description", e.target.value)}
             placeholder="What is this field for?"
@@ -177,9 +173,8 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor={`placeholder-${draft.key}`}>Placeholder</label>
-          <input
+          <Input
             id={`placeholder-${draft.key}`}
-            className={FORM_INPUT}
             value={draft.placeholder || ""}
             onChange={(e) => upd("placeholder", e.target.value)}
             placeholder="Hint shown inside the input"
@@ -193,9 +188,8 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           <label className={FORM_LABEL} htmlFor={`defVal-${draft.key}`}>
             Default Value <span className="normal-case font-normal text-muted-foreground/70">(optional, pre-filled in the form)</span>
           </label>
-          <input
+          <Input
             id={`defVal-${draft.key}`}
-            className={FORM_INPUT}
             value={(draft.defaultValue as string | number | undefined) || ""}
             onChange={(e) => upd("defaultValue", e.target.value)}
             placeholder="Leave blank for no default"
@@ -210,9 +204,8 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
             {draft.type === "tags" ? "Predefined Tags" : "Options"}{" "}
             <span className="normal-case font-normal text-muted-foreground/70">(comma-separated)</span>
           </label>
-          <input
+          <Input
             id={`opts-${draft.key}`}
-            className={FORM_INPUT}
             value={draft._optionsString}
             onChange={(e) => upd("_optionsString", e.target.value)}
             placeholder={draft.type === "tags" ? "e.g. Student, Alumni, Donor" : "Option A, Option B, Option C"}
@@ -227,11 +220,10 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor={`minlen-${draft.key}`}>Min Length</label>
-            <input
+            <Input
               id={`minlen-${draft.key}`}
               type="number"
               min={0}
-              className={FORM_INPUT}
               value={draft.minLength ?? ""}
               onChange={(e) => upd("minLength", e.target.value ? Number(e.target.value) : undefined)}
               placeholder="e.g. 2"
@@ -239,11 +231,10 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor={`maxlen-${draft.key}`}>Max Length</label>
-            <input
+            <Input
               id={`maxlen-${draft.key}`}
               type="number"
               min={1}
-              className={FORM_INPUT}
               value={draft.maxLength ?? ""}
               onChange={(e) => upd("maxLength", e.target.value ? Number(e.target.value) : undefined)}
               placeholder="e.g. 100"
@@ -256,10 +247,9 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
         <div className="grid grid-cols-3 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor={`min-${draft.key}`}>Min Value</label>
-            <input
+            <Input
               id={`min-${draft.key}`}
               type="number"
-              className={FORM_INPUT}
               value={draft.min ?? ""}
               onChange={(e) => upd("min", e.target.value ? Number(e.target.value) : undefined)}
               placeholder="e.g. 0"
@@ -267,10 +257,9 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor={`max-${draft.key}`}>Max Value</label>
-            <input
+            <Input
               id={`max-${draft.key}`}
               type="number"
-              className={FORM_INPUT}
               value={draft.max ?? ""}
               onChange={(e) => upd("max", e.target.value ? Number(e.target.value) : undefined)}
               placeholder="e.g. 999"
@@ -280,9 +269,8 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
             <label className={FORM_LABEL} htmlFor={`mask-${draft.key}`}>
               Input Mask <span className="normal-case font-normal text-muted-foreground/70">(optional)</span>
             </label>
-            <input
+            <Input
               id={`mask-${draft.key}`}
-              className={FORM_INPUT}
               value={draft.mask || ""}
               onChange={(e) => upd("mask", e.target.value)}
               placeholder="e.g. 99999-9999999-9"
@@ -294,49 +282,40 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {/* Row 5: Flags + action buttons */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-2 select-none text-sm font-medium text-foreground">
-          <button
-            type="button"
-            onClick={() => upd("required", !draft.required)}
+          <Checkbox
+            checked={draft.required}
+            onCheckedChange={() => upd("required", !draft.required)}
             aria-label="Toggle field required status"
-            className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
-              draft.required ? "bg-primary border-primary" : "border-border bg-background"
-            }`}
-          >
-            {draft.required && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
-          </button>
+          />
           <span>Required</span>
         </div>
         <div className="flex items-center gap-2 select-none text-sm font-medium text-foreground">
-          <button
-            type="button"
-            onClick={() => upd("unique", !draft.unique)}
+          <Checkbox
+            checked={draft.unique}
+            onCheckedChange={() => upd("unique", !draft.unique)}
             aria-label="Toggle field uniqueness guard"
-            className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
-              draft.unique ? "bg-primary border-primary" : "border-border bg-background"
-            }`}
-          >
-            {draft.unique && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
-          </button>
+          />
           <span>Unique</span>
         </div>
         <div className="flex-1" />
-        <button
+        <Button
           type="button"
           onClick={onCancel}
-          className="px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card"
+          variant="outline"
+          className="px-3 py-1.5 h-8 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
           aria-label="Cancel editing"
         >
           <X className="w-3.5 h-3.5" />
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={handleSave}
           disabled={!isValid}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-40 transition-colors hover:bg-primary/90"
+          className="flex items-center gap-1.5 px-4 py-1.5 h-8 bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-40 transition-colors hover:bg-primary/90 shadow-none"
         >
           <Check className="w-3.5 h-3.5" />
           <span>Save Field</span>
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -371,23 +350,25 @@ function FieldRow({
         <p className="flex-1 text-xs text-destructive dark:text-destructive font-medium">
           Delete <strong>{field.label}</strong>? This cannot be undone.
         </p>
-        <button
+        <Button
           type="button"
           onClick={() => setConfirming(false)}
-          className="px-2.5 py-1 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card"
+          variant="outline"
+          className="px-2.5 py-1 h-8 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() => {
             setConfirming(false);
             onDelete();
           }}
-          className="px-2.5 py-1 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors"
+          variant="destructive"
+          className="px-2.5 py-1 h-8 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors shadow-none"
         >
           Delete
-        </button>
+        </Button>
       </div>
     );
   }
@@ -434,22 +415,24 @@ function FieldRow({
       </div>
 
       {/* Actions */}
-      <button
+      <Button
         type="button"
         onClick={onEdit}
-        className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+        variant="ghost"
+        className="p-1.5 h-8 w-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
         aria-label={`Edit ${field.label}`}
       >
         <Pencil className="w-3.5 h-3.5" />
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         onClick={() => setConfirming(true)}
-        className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+        variant="ghost"
+        className="p-1.5 h-8 w-8 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shadow-none"
         aria-label={`Delete ${field.label}`}
       >
         <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      </Button>
     </div>
   );
 }
@@ -517,14 +500,14 @@ export default function CustomFieldsBuilder({
           </p>
         </div>
         {!adding && (
-          <button
+          <Button
             type="button"
             onClick={startAdd}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-2 h-9 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-none"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Field</span>
-          </button>
+          </Button>
         )}
       </div>
 

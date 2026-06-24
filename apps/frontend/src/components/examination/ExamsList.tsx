@@ -16,6 +16,8 @@ import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import type { Enrollment } from "@/lib/data/enrollmentData";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const STATUS_CLS: Record<string, string> = {
   upcoming: "bg-info/10 text-info border-info/20",
@@ -146,7 +148,7 @@ export default function ExamsList({
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <input
+          <Input
             id="search-exams"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -156,7 +158,7 @@ export default function ExamsList({
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
+            <Button
               type="button"
               className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
             >
@@ -168,7 +170,7 @@ export default function ExamsList({
                 </span>
               )}
               <ChevronDown className="w-3 h-3" aria-hidden="true" />
-            </button>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuLabel className="text-xs">{t("examinations.filter.status")}</DropdownMenuLabel>
@@ -188,13 +190,13 @@ export default function ExamsList({
               labels={columnCustomizer.labels}
             />
           )}
-          <button
+          <Button
             type="button"
             onClick={onNew}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap"
           >
             {t("examinations.newExam")}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -241,14 +243,15 @@ export default function ExamsList({
                         <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{exam.subject}</p>
                       )}
                     </div>
-                    <button
+                    <Button
+                      variant="ghost"
                       type="button"
                       onClick={() => onEdit(exam)}
                       aria-label={t("examinations.editExamAria", { name: exam.name })}
                       className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
                     >
                       <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
+                    </Button>
                   </div>
 
                   {exam.description && (
@@ -388,14 +391,15 @@ export default function ExamsList({
                           </td>
                         )}
                         <td className="px-4 py-3 text-right">
-                          <button
+                          <Button
+                            variant="ghost"
                             type="button"
                             onClick={() => onEdit(exam)}
                             aria-label={t("examinations.editExamAria", { name: exam.name })}
                             className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
                           >
                             <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                          </button>
+                          </Button>
                         </td>
                       </motion.tr>
                     );

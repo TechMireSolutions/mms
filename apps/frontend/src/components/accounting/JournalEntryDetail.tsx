@@ -1,5 +1,5 @@
-import React from "react";
 import { X, Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
+import { Button } from "../ui/button";
 import { motion } from "framer-motion";
 import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
 import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -53,16 +53,16 @@ export default function JournalEntryDetail({ entry, accounts, fmt, onClose, onEd
           </div>
           <div className="flex items-center gap-2">
             {entry.status === "draft" && (
-              <button type="button" onClick={onEdit} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border hover:bg-muted transition-colors">
+              <Button type="button" variant="outline" size="sm" onClick={onEdit} className="flex items-center gap-1 text-xs font-semibold">
                 <Pencil className="w-3 h-3" aria-hidden="true" /> Edit
-              </button>
+              </Button>
             )}
             {entry.status === "posted" && onReverse && (
-              <button type="button" onClick={onReverse} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border border-warning/30 text-warning hover:bg-warning/10 transition-colors">
+              <Button type="button" variant="outline" size="sm" onClick={onReverse} className="flex items-center gap-1 text-xs font-semibold border-warning/30 text-warning hover:bg-warning/10 hover:text-warning">
                 <RotateCcw className="w-3 h-3" aria-hidden="true" /> Reverse
-              </button>
+              </Button>
             )}
-            <button type="button" aria-label="Close details" onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"><X className="w-4 h-4" aria-hidden="true" /></button>
+            <Button type="button" variant="ghost" size="icon" aria-label="Close details" onClick={onClose} className="h-8 w-8 text-muted-foreground hover:text-foreground"><X className="w-4 h-4" aria-hidden="true" /></Button>
           </div>
         </header>
 

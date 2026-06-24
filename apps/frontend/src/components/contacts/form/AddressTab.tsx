@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { MapPin, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
 import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
@@ -130,14 +131,15 @@ export default function AddressTab({
         </motion.div>
       ))}
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => upd([...addresses, createNewAddress()])}
-        className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors mt-1"
+        className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors mt-1 p-0 justify-start"
       >
         <Plus className="w-4 h-4" />
         <span>{t("contacts.form.addAddress")}</span>
-      </button>
+      </Button>
     </div>
   );
 }

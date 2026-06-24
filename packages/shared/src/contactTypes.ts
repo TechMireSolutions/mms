@@ -210,7 +210,7 @@ export interface WhatsAppTemplate {
 export const CONFIG_VERSION = 2;
 
 
-export const DEFAULT_ENABLED_TABS = ["phones", "emails", "addresses", "socials", "emergency", "relationships"];
+export const DEFAULT_ENABLED_TABS = ["phones", "emails", "addresses", "socials", "emergency"];
 export const DEFAULT_REQUIRED_TABS: string[] = [];
 
 export const GENDERS = ["male", "female"];
@@ -302,7 +302,6 @@ export const TAB_REGISTRY: TabDefinition[] = [
   { key: "addresses", label: "Addresses",         description: "Manage address records", enabled: true, order: 3, isSystem: true },
   { key: "socials",   label: "Social Links",      description: "Social media profiles tab", enabled: true, order: 4, isSystem: true },
   { key: "emergency", label: "Emergency Contacts", description: "Emergency contact links tab", enabled: true, order: 5, isSystem: true },
-  { key: "relationships", label: "Relationships", description: "Bidirectional contact relationship links", enabled: true, order: 6, isSystem: true },
 ];
 
 // ── Default seed constants ────────────────────────────────────────────────────
@@ -366,7 +365,6 @@ export const DEFAULT_FORM_TABS: TabDefinition[] = [
   { key: "addresses", label: "Addresses",  enabled: true, order: 3, isSystem: true },
   { key: "socials",   label: "Socials",    enabled: true, order: 4, isSystem: true },
   { key: "emergency", label: "Emergency",  enabled: true, order: 5, isSystem: true },
-  { key: "relationships", label: "Relationships", enabled: true, order: 6, isSystem: true },
 ];
 
 export const DEFAULT_DETAIL_TABS: TabDefinition[] = [

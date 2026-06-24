@@ -20,6 +20,9 @@ import useGlobalSettings from "@/hooks/useGlobalSettings";
 import { useWorkspaceRoles } from "@/hooks/useWorkspaceRoles";
 import Modal from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
+import { Input as UiInput } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import FormSelect from "@/components/ui/FormSelect";
 import type { Contact } from "@mms/shared";
 import {
   getPasswordPolicyHintKey,
@@ -31,7 +34,7 @@ import ContactPicker from '@/components/contactLink/ContactPicker';
 import { getGlobalSettings } from "../../lib/db";
 import { useUsersConfig } from "@/hooks/useUsersConfig";
 import { DatePicker } from "../ui/DatePicker";
-import { FORM_INPUT, FORM_LABEL, FORM_INPUT_ICON, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL, FORM_TEXTAREA } from "@/components/ui/formStyles";
 
 const STEP_DEFS = [
   { id: 1, labelKey: "users.addStepContact" as const, icon: User },
@@ -129,9 +132,9 @@ function Input({ icon: Icon, className = "", ...props }: InputProps): JSX.Elemen
   return (
     <div className="relative">
       {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />}
-      <input
+      <UiInput
         {...props}
-        className={`${Icon ? FORM_INPUT_ICON : FORM_INPUT} ${className}`}
+        className={`${Icon ? "pl-9" : ""} ${className}`}
       />
     </div>
   );
@@ -163,13 +166,14 @@ function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Element {
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary">
               {workspaceRoleLabel(role, t)}
             </span>
-            <button
+            <Button
               type="button"
+              variant="link"
               onClick={(e) => { e.stopPropagation(); setShowPerms((v) => !v); }}
-              className="text-[10px] text-primary font-semibold flex items-center gap-0.5 hover:underline"
+              className="text-[10px] text-primary font-semibold flex items-center gap-0.5 hover:underline p-0 h-auto shadow-none"
             >
               <Info className="w-3 h-3" /> {showPerms ? t("users.addHidePermissions") : t("users.addShowPermissions")}
-            </button>
+            </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-1">{workspaceRoleDescription(role, t)}</p>
         </div>
@@ -247,6 +251,11 @@ function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
     }));
   };
 
+  const statusOptions = React.useMemo(() => USER_STATUS_VALUES.map((s) => ({
+    value: s,
+    label: t(`users.status.${s}`),
+  })), [t]);
+
   return (
     <div className="space-y-4">
       <div>
@@ -282,17 +291,11 @@ function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
 
       <div>
         <Label>{t("users.fieldStatus")}</Label>
-        <select
+        <FormSelect
           value={form.status}
-          onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as UserStatus }))}
-          className={FORM_SELECT}
-        >
-          {USER_STATUS_VALUES.map((s) => (
-            <option key={s} value={s}>
-              {t(`users.status.${s}`)}
-            </option>
-          ))}
-        </select>
+          onChange={(val) => setForm((f) => ({ ...f, status: val as UserStatus }))}
+          options={statusOptions}
+        />
       </div>
     </div>
   );
@@ -329,9 +332,8 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
       {/* Temporary role */}
       <div>
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={!!form.temporaryRole}
-            onChange={(e) => setForm((f) => ({ ...f, temporaryRole: e.target.checked, roleExpiry: "" }))}
-            className="rounded" />
+          <Checkbox checked={!!form.temporaryRole}
+            onCheckedChange={(checked) => setForm((f) => ({ ...f, temporaryRole: !!checked, roleExpiry: "" }))} />
           <div className="flex items-center gap-1.5">
             <CalendarClock className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs font-medium text-foreground">{t("users.addTemporaryRole")}</span>
@@ -369,33 +371,23 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                       required={field.required}
                     />
                   ) : field.type === "select" ? (
-                    <select
-                      className={FORM_SELECT}
+                    <FormSelect
                       value={value as string}
-                      onChange={(e) => upd(e.target.value)}
-                      required={field.required}
-                    >
-                      <option value="">{t("users.addSelectOption")}</option>
-                      {field.options?.map((opt: string) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={upd}
+                      options={field.options || []}
+                      placeholder={t("users.addSelectOption")}
+                    />
                   ) : field.type === "boolean" ? (
                     <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={!!value}
-                        onChange={(e) => upd(e.target.checked)}
-                        className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
+                        onCheckedChange={(checked) => upd(!!checked)}
                       />
                       <span className="text-xs font-medium text-foreground">{field.label}</span>
                     </label>
                   ) : field.type === "number" ? (
-                    <input
+                    <UiInput
                       type="number"
-                      className={FORM_INPUT}
                       value={value}
                       onChange={(e) => upd(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterNumber")}
@@ -408,9 +400,8 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                       required={field.required}
                     />
                   ) : (
-                    <input
+                    <UiInput
                       type="text"
-                      className={FORM_INPUT}
                       value={value as string}
                       onChange={(e) => upd(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterField", { label: field.label.toLowerCase() })}
@@ -457,16 +448,16 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
             const Icon = opt.icon;
             const active = form.setupMethod === opt.id;
             return (
-              <button type="button" key={opt.id} onClick={() => setForm((f) => ({ ...f, setupMethod: opt.id as "invite" | "password" }))}
-                className={`p-3 rounded-xl border-2 text-left transition-all ${
-                  active ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
+              <Button type="button" variant="ghost" key={opt.id} onClick={() => setForm((f) => ({ ...f, setupMethod: opt.id as "invite" | "password" }))}
+                className={`p-3 rounded-xl border-2 text-left transition-all h-auto flex flex-col items-start shadow-none ${
+                  active ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground" : "border-border bg-card hover:border-primary/40 text-muted-foreground hover:text-foreground"
                 }`}>
                 <div className="flex items-center gap-1.5 mb-1">
                   <Icon className={`w-3.5 h-3.5 ${active ? "text-primary" : "text-muted-foreground"}`} />
                   <span className={`text-[11px] font-bold ${active ? "text-primary" : "text-foreground"}`}>{t(opt.labelKey)}</span>
                 </div>
                 <p className="text-[10px] text-muted-foreground leading-snug">{t(opt.descKey)}</p>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -493,26 +484,26 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
               <Label required>{t("users.addTempPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <input
+                <UiInput
                   type={showPwd ? "text" : "password"}
                   placeholder={passwordHint}
                   value={form.password || ""}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  className={`${FORM_INPUT_ICON} pr-9`}
+                  className="pl-9.5 pr-9"
                 />
-                <button type="button" onClick={() => setShowPwd((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <Button type="button" variant="ghost" onClick={() => setShowPwd((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground h-auto p-0 hover:bg-transparent shadow-none"
+                >
                   {showPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
+                </Button>
               </div>
               <FieldError msg={errors.password} />
               <p className="mt-1 text-[10px] text-muted-foreground">{passwordHint}</p>
             </div>
 
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={form.forceReset !== false}
-                onChange={(e) => setForm((f) => ({ ...f, forceReset: e.target.checked }))}
-                className="rounded" />
+              <Checkbox checked={form.forceReset !== false}
+                onCheckedChange={(checked) => setForm((f) => ({ ...f, forceReset: !!checked }))} />
               <span className="text-xs font-medium text-foreground">{t("users.addForceReset")}</span>
             </label>
           </motion.div>
@@ -521,9 +512,8 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
 
       {/* 2FA option */}
       <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors">
-        <input type="checkbox" checked={!!form.twoFactorEnabled}
-          onChange={(e) => setForm((f) => ({ ...f, twoFactorEnabled: e.target.checked }))}
-          className="rounded" />
+        <Checkbox checked={!!form.twoFactorEnabled}
+          onCheckedChange={(checked) => setForm((f) => ({ ...f, twoFactorEnabled: !!checked }))} />
         <div>
           <span className="text-xs font-semibold text-foreground">{t("users.add2faTitle")}</span>
           <p className="text-[10px] text-muted-foreground">{t("users.add2faDesc")}</p>

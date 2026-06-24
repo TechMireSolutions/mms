@@ -10,6 +10,7 @@ import {
 } from "@mms/shared";
 import useTranslation from "@/hooks/useTranslation";
 import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { Button } from "@/components/ui/button";
 
 function pct(obtained: number, total: number): number {
   return total > 0 ? Math.round((obtained / total) * 100) : 0;
@@ -63,23 +64,24 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
 
   return (
     <div className="border-b border-border/50 last:border-0">
-      <button
+      <Button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label={t("questionBank.grading.showDetailAria", { name: result.studentName })}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/20"
+        variant="ghost"
+        className="flex w-full items-center justify-between gap-3 h-auto px-4 py-3 text-left transition-colors hover:bg-muted/20 shadow-none rounded-none"
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground">
             {result.studentName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
           </div>
-          <p className="text-[13px] font-semibold text-foreground">{result.studentName}</p>
+          <p className="text-[13px] font-semibold text-foreground m-0">{result.studentName}</p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-4">
           <div className="text-right">
-            <p className="text-[13px] font-bold text-foreground">{marksObtained}/{totalMarks}</p>
-            <p className="text-[10px] text-muted-foreground">{p}%</p>
+            <p className="text-[13px] font-bold text-foreground m-0">{marksObtained}/{totalMarks}</p>
+            <p className="text-[10px] text-muted-foreground m-0">{p}%</p>
           </div>
           <StatusBadge
             status={g.status}
@@ -91,7 +93,7 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
           )}
         </div>
-      </button>
+      </Button>
 
       <AnimatePresence>
         {open && (
@@ -132,17 +134,17 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
                       />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className={`font-semibold ${correct ? "text-success" : "text-destructive"}`}>
+                      <p className={`font-semibold m-0 ${correct ? "text-success" : "text-destructive"}`}>
                         {t("questionBank.grading.questionLabel", { n: i + 1, text: q.text })}
                       </p>
                       {!correct && q.type !== "short" && (
-                        <p className="mt-0.5 text-destructive">
+                        <p className="mt-0.5 text-destructive m-0">
                           {t("questionBank.grading.studentAnswer", { answer: studentAns || "—" })}{" "}
                           · {t("questionBank.grading.correctLabel", { answer: correctDisplay })}
                         </p>
                       )}
                       {q.type === "short" && (
-                        <p className="mt-0.5 italic text-muted-foreground">
+                        <p className="mt-0.5 italic text-muted-foreground m-0">
                           {t("questionBank.grading.shortAnswerManual")}
                         </p>
                       )}
@@ -201,19 +203,19 @@ export default function AutoGrading({ tests, results, questions }: AutoGradingPr
             const isSelected = selectedTest === item.id;
             const count = results.filter((r) => r.testId === item.id).length;
             return (
-              <button
+              <Button
                 key={item.id}
                 type="button"
                 role="radio"
                 aria-checked={isSelected}
                 onClick={() => setSelectedTest(item.id)}
-                className={`rounded-lg border px-3.5 py-2 text-[12px] font-semibold transition-all ${isSelected ? "border-primary bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
+                className={`rounded-lg border px-3.5 py-2 text-[12px] font-semibold transition-all h-auto shadow-none ${isSelected ? "border-primary bg-primary/5 text-primary hover:bg-primary/10" : "border-border bg-card text-foreground hover:bg-muted"}`}
               >
                 {item.name}
                 <span className="ml-1.5 text-[10px] text-muted-foreground">
                   ({t("questionBank.grading.resultsCount", { count })})
                 </span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -243,8 +245,8 @@ export default function AutoGrading({ tests, results, questions }: AutoGradingPr
                 return (
                   <div key={s.label} className="rounded-xl border border-border bg-card p-3.5">
                     <Icon className={`mb-1.5 h-4 w-4 ${s.cls}`} aria-hidden />
-                    <p className="text-[18px] font-bold text-foreground">{s.value}</p>
-                    <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                    <p className="text-[18px] font-bold text-foreground m-0">{s.value}</p>
+                    <p className="text-[10px] text-muted-foreground m-0">{s.label}</p>
                   </div>
                 );
               })}
@@ -253,7 +255,7 @@ export default function AutoGrading({ tests, results, questions }: AutoGradingPr
 
           <section className="overflow-hidden rounded-xl border border-border bg-card" aria-label={t("questionBank.grading.resultsTitle", { name: test.name })}>
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <h3 className="text-[13px] font-bold text-foreground">
+              <h3 className="text-[13px] font-bold text-foreground m-0">
                 {t("questionBank.grading.resultsTitle", { name: test.name })}
               </h3>
               <span className="text-[11px] text-muted-foreground">
