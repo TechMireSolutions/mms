@@ -99,7 +99,9 @@ export default function WelcomeBanner({ persona }: WelcomeBannerProps): React.JS
               {t(BADGE_BY_PERSONA[persona])}
             </span>
           </div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight m-0">{t(GREETING_BY_PERSONA[persona])}</h1>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight m-0">
+            {userName ? `Assalamu Alaikum, ${userName}` : t(GREETING_BY_PERSONA[persona])}
+          </h1>
           <p className="text-sm text-white/65 mt-1 max-w-lg mb-0">{subtitle}</p>
         </div>
 
