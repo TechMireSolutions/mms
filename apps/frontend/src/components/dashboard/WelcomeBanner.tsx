@@ -34,9 +34,12 @@ export default function WelcomeBanner({ persona }: WelcomeBannerProps): React.JS
   const { data: studentMetrics } = useStudentsMetrics({ enabled: persona === 'admin' });
 
   const locale = getIntlLocaleForLanguage(language);
+  const dayName = useMemo(() => {
+    return new Date().toLocaleDateString(locale, { weekday: 'long' });
+  }, [locale]);
+
   const gregDate = useMemo(() => {
     return new Date().toLocaleDateString(locale, {
-      weekday: 'long',
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -110,6 +113,11 @@ export default function WelcomeBanner({ persona }: WelcomeBannerProps): React.JS
             className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5`}
           >
             <Calendar className="w-4 h-4 text-white/70" aria-hidden="true" />
+            <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{dayName}</span>
+          </div>
+          <div
+            className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5`}
+          >
             <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{gregDate}</span>
           </div>
           {hijriDate && (
