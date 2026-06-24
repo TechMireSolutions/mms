@@ -109,21 +109,24 @@ export default function WelcomeBanner({ persona }: WelcomeBannerProps): React.JS
         </div>
 
         <div className="flex-shrink-0 flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          {/* Box 1: Weekday (Warning/Gold-tint frost) */}
           <div
-            className={`${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5`}
+            className="bg-warning/20 backdrop-blur-sm border border-warning/30 rounded-xl px-4 py-2.5"
           >
-            <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{dayName}</span>
+            <span className="text-[12px] font-bold text-white whitespace-nowrap">{dayName}</span>
           </div>
+          {/* Box 2: Gregorian Date (Info/Blue-tint frost) */}
           <div
-            className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5`}
+            className="bg-info/20 backdrop-blur-sm border border-info/30 rounded-xl px-4 py-2.5"
           >
-            <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{gregDate}</span>
+            <span className="text-[12px] font-bold text-white whitespace-nowrap">{gregDate}</span>
           </div>
+          {/* Box 3: Hijri Date (Secondary/Emerald-tint frost) */}
           {hijriDate && (
             <div
-              className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5`}
+              className="bg-secondary/20 backdrop-blur-sm border border-secondary/30 rounded-xl px-4 py-2.5"
             >
-              <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{hijriDate}</span>
+              <span className="text-[12px] font-bold text-white whitespace-nowrap">{hijriDate}</span>
             </div>
           )}
         </div>
