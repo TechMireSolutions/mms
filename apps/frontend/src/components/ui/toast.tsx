@@ -44,12 +44,12 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
+        default: "border-border bg-card text-foreground",
         destructive:
-          "border-destructive bg-destructive text-destructive-foreground",
-        success: "border-success/30 bg-success text-success-foreground",
-        warning: "border-warning/30 bg-warning text-warning-foreground",
-        info: "border-info/30 bg-info text-info-foreground",
+          "border-destructive/30 bg-destructive/10 text-destructive dark:text-red-400",
+        success: "border-success/30 bg-success/10 text-success",
+        warning: "border-warning/30 bg-warning/10 text-warning",
+        info: "border-info/30 bg-info/10 text-info",
       },
     },
     defaultVariants: {
