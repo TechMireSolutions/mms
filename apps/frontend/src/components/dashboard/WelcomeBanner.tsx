@@ -33,16 +33,27 @@ export default function WelcomeBanner({ persona }: WelcomeBannerProps): React.JS
   const sessions = useSessionsCollection({ enabled: true });
   const { data: studentMetrics } = useStudentsMetrics({ enabled: persona === 'admin' });
 
-  const today = useMemo(
-    () =>
-      new Date().toLocaleDateString(getIntlLocaleForLanguage(language), {
-        weekday: 'long',
+  const locale = getIntlLocaleForLanguage(language);
+  const gregDate = useMemo(() => {
+    return new Date().toLocaleDateString(locale, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }, [locale]);
+
+  const hijriDate = useMemo(() => {
+    try {
+      return new Date().toLocaleDateString(locale + '-u-ca-islamic', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
-      }),
-    [language],
-  );
+      });
+    } catch {
+      return '';
+    }
+  }, [locale]);
 
   const userId = user?.id ?? '';
   const userName = user?.name ?? '';
@@ -92,11 +103,20 @@ export default function WelcomeBanner({ persona }: WelcomeBannerProps): React.JS
           <p className="text-sm text-white/65 mt-1 max-w-lg mb-0">{subtitle}</p>
         </div>
 
-        <div
-          className={`flex-shrink-0 flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2.5 self-start sm:self-auto`}
-        >
-          <Calendar className="w-4 h-4 text-white/70" aria-hidden="true" />
-          <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{today}</span>
+        <div className="flex-shrink-0 flex flex-col items-start sm:items-end gap-1.5 self-start sm:self-auto">
+          <div
+            className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2 text-left sm:text-right`}
+          >
+            <Calendar className="w-3.5 h-3.5 text-white/70" aria-hidden="true" />
+            <span className="text-[11px] font-bold text-white/90 whitespace-nowrap">{gregDate}</span>
+          </div>
+          {hijriDate && (
+            <div
+              className={`flex items-center gap-2 ${BANNER_FROST_CHIP} rounded-xl px-4 py-2 text-left sm:text-right`}
+            >
+              <span className="text-[11px] font-bold text-white/90 whitespace-nowrap">{hijriDate}</span>
+            </div>
+          )}
         </div>
       </div>
     </motion.header>
