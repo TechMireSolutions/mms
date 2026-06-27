@@ -2,8 +2,8 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, Check, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { uploadCanvasImage } from "@/lib/imageUpload";
-import useBodyScrollLock from "../../hooks/useBodyScrollLock";
-import useTranslation from "@/hooks/useTranslation";
+import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 

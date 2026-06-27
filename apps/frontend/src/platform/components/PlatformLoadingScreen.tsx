@@ -1,9 +1,9 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 /** Centered apex loading state with accessible status text. */
-export default function PlatformLoadingScreen(): React.JSX.Element {
+export function PlatformLoadingScreen(): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

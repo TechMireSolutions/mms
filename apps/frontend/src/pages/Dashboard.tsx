@@ -8,7 +8,7 @@ import QuickActionsPanel from '@/components/dashboard/QuickActionsPanel';
 import NotificationsPanel from '@/components/dashboard/NotificationsPanel';
 import WelcomeBanner from '@/components/dashboard/WelcomeBanner';
 import { resolveDashboardPersona, widgetMatchesPersona, type DashboardPersona } from '@/lib/dashboardPersona';
-import usePermissions from '@/hooks/usePermissions';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   DashboardWidgets,
   CustomWidget,
@@ -17,9 +17,9 @@ import {
 import { computeCustomCard as computeCustomCardShared, type ReportCollection } from '@/components/reports/reportMetadata';
 import { computeContactsCustomCardValue, computeStudentsCustomCardValue, computeTeachersCustomCardValue } from '@/components/reports/pinnedWidgets/widgetDataUtils';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import useGlobalSettings from '@/hooks/useGlobalSettings';
-import ErrorBoundary from '@/components/ui/ErrorBoundary';
-import useTranslation from '@/hooks/useTranslation';
+import { useGlobalSettings } from '@/hooks/useGlobalSettings';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { buildDashboardNotifications } from '@/lib/buildDashboardNotifications';

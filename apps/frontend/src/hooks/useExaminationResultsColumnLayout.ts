@@ -4,19 +4,19 @@ import {
   applyModuleColumnOverlay,
   buildExaminationResultsWorkColumnRegistry,
   isModuleColumnVisible,
-  type ModuleColumnPref,
+  type ModuleColumnPreference,
   type ModuleColumnRegistryEntry,
 } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
-  loadModuleColumnPrefs,
-  saveModuleColumnPrefList,
+  loadModuleColumnPreferences,
+  saveModuleColumnPreferenceList,
   saveModuleColumnRegistry,
-} from '@/lib/columnPrefs/moduleColumnPrefsStorage';
+} from '@/lib/columnPreferences/moduleColumnPreferencesStorage';
 import {
-  useExaminationResultsColumnPrefs,
-  useExaminationResultsColumnPrefsMutation,
+  useExaminationResultsColumnPreferences,
+  useExaminationResultsColumnPreferencesMutation,
 } from '@/hooks/useExaminationsApi';
 
 const STORAGE_SUFFIX = 'results';
@@ -25,10 +25,10 @@ export function useExaminationResultsColumnLayout() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const userId = user?.id ? String(user.id) : '';
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useExaminationResultsColumnPrefs();
-  const { mutate: saveColumnPrefs } = useExaminationResultsColumnPrefsMutation();
+  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useExaminationResultsColumnPreferences();
+  const { mutate: saveColumnPrefs } = useExaminationResultsColumnPreferencesMutation();
   const migratedLocalColumnPrefs = useRef(false);
-  const [userOverlay, setUserOverlay] = useState<ModuleColumnPref[] | null>(null);
+  const [userOverlay, setUserOverlay] = useState<ModuleColumnPreference[] | null>(null);
 
   const storageModuleId = `${EXAMINATIONS_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`;
 
@@ -53,15 +53,15 @@ export function useExaminationResultsColumnLayout() {
       return;
     }
     if (!columnPrefsLoaded) {
-      setUserOverlay(loadModuleColumnPrefs(storageModuleId, userId));
+      setUserOverlay(loadModuleColumnPreferences(storageModuleId, userId));
       return;
     }
     if (serverColumnPrefs && serverColumnPrefs.length > 0) {
       setUserOverlay(serverColumnPrefs);
-      saveModuleColumnPrefList(storageModuleId, userId, serverColumnPrefs);
+      saveModuleColumnPreferenceList(storageModuleId, userId, serverColumnPrefs);
       return;
     }
-    const local = loadModuleColumnPrefs(storageModuleId, userId);
+    const local = loadModuleColumnPreferences(storageModuleId, userId);
     setUserOverlay(local);
     if (local?.length && !migratedLocalColumnPrefs.current) {
       migratedLocalColumnPrefs.current = true;
@@ -83,13 +83,13 @@ export function useExaminationResultsColumnLayout() {
     (cols: ModuleColumnRegistryEntry[]) => {
       if (!userId) return;
       saveModuleColumnRegistry(storageModuleId, userId, cols);
-      const prefs: ModuleColumnPref[] = cols.map(({ key, enabled, order }) => ({
+      const preferences: ModuleColumnPreference[] = cols.map(({ key, enabled, order }) => ({
         key,
         enabled,
         order,
       }));
-      setUserOverlay(prefs);
-      saveColumnPrefs(prefs);
+      setUserOverlay(preferences);
+      saveColumnPrefs(preferences);
     },
     [userId, saveColumnPrefs, storageModuleId],
   );

@@ -34,4 +34,3 @@ export function useModuleTierTabs(): ModuleTierTab[] {
   ];
 }
 
-export default useModuleTierTabs;

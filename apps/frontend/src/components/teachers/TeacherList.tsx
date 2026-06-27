@@ -4,9 +4,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import StatusBadge from '@/components/ui/StatusBadge';
-import EmptyState from '@/components/ui/EmptyState';
-import useTranslation from '@/hooks/useTranslation';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { formatDate } from '@/lib/db';
 import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey } from '@mms/shared';
@@ -43,7 +43,7 @@ export interface TeacherListProps {
   isColumnVisible?: (key: string) => boolean;
 }
 
-export default function TeacherList({
+export function TeacherList({
   teachers,
   onEdit,
   onDelete,

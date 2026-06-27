@@ -9,7 +9,7 @@ import {
   type AppTranslationKey,
   type DateFormatId,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';

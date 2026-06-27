@@ -1,6 +1,6 @@
 import React from 'react';
 import type { AppTranslationKey } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { FormMessage } from '@/components/ui/form';
 
 interface TranslatedFormMessageProps {

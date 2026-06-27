@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { canViewContactField, canEditContactField, type FieldDefinition } from '@mms/shared';
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import usePermissions from '@/hooks/usePermissions';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useSortedFields } from '@/hooks/useSortedFields';
 
 /** Registry fields visible to the current user (enabled + field permissions). */

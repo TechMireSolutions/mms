@@ -20,7 +20,7 @@ interface StepIndicatorProps {
  * @param props.current - The active step index.
  * @returns StepIndicator layout.
  */
-export default function StepIndicator({ steps, current }: StepIndicatorProps): React.ReactElement {
+export function StepIndicator({ steps, current }: StepIndicatorProps): React.ReactElement {
   return (
     <div className="flex items-center gap-0" role="list" aria-label="Enrollment progress steps">
       {steps.map((step, i) => {

@@ -2,8 +2,8 @@ import React, { useMemo } from "react";
 import { BookOpen, Calendar, Users, DollarSign } from "lucide-react";
 import { Session } from '@/lib/data/sessionsData';
 import { SEMANTIC_BADGE, WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
-import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import useTranslation from "@/hooks/useTranslation";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -32,7 +32,7 @@ interface Step2SelectSessionProps {
  * @param props.sessions - Dynamic list of active/inactive sessions.
  * @returns The Step2SelectSession component.
  */
-export default function Step2SelectSession({ value, onChange, sessions = [] }: Step2SelectSessionProps): React.ReactElement {
+export function Step2SelectSession({ value, onChange, sessions = [] }: Step2SelectSessionProps): React.ReactElement {
   const { t } = useTranslation();
   const sessionStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(
     () => ({

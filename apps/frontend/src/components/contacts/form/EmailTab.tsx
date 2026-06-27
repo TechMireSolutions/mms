@@ -2,27 +2,20 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Mail, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getDefaultFieldValue, Contact, EmailAddress } from "@mms/shared";
 
-import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
-import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import useTranslation from "@/hooks/useTranslation";
+import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { useVisibleContactFields } from "@/hooks/useVisibleContactFields";
+import { useContactConfig, type ValidationError } from '@/lib/contexts/ContactConfigContext';
+import { useTranslation } from "@/hooks/useTranslation";
 
-interface ContactEmail {
-  label: string;
-  address: string;
-  [key: string]: unknown;
-}
-
-interface ContactFormData {
-  emails?: ContactEmail[];
-  [key: string]: unknown;
-}
+type ContactEmail = EmailAddress & Record<string, unknown>;
 
 interface EmailTabProps {
-  data: ContactFormData;
-  onChange: (updatedData: ContactFormData) => void;
+  data: Partial<Contact>;
+  onChange: (updatedData: Partial<Contact>) => void;
   required?: boolean;
+  errors?: ValidationError[];
 }
 
 /**
@@ -34,6 +27,7 @@ export default function EmailTab({
   data,
   onChange,
   required = false,
+  errors = [],
 }: EmailTabProps): React.JSX.Element {
   const { emailLabels, updateEmailLabels } = useContactConfig();
   const { t } = useTranslation();
@@ -46,13 +40,13 @@ export default function EmailTab({
       if (f.key === "label") {
         item[f.key] = defaultEmailLabel;
       } else {
-        item[f.key] = f.defaultValue !== undefined ? f.defaultValue : "";
+        item[f.key] = getDefaultFieldValue(f);
       }
     });
     return item as ContactEmail;
   };
 
-  const emails = data.emails && data.emails.length > 0 ? data.emails : [createNewEmail()];
+  const emails = (data.emails || []) as ContactEmail[];
 
   const upd = (list: ContactEmail[]): void => {
     onChange({ ...data, emails: list });
@@ -102,15 +96,21 @@ export default function EmailTab({
 
           {bodyFields.length > 0 && (
             <div className={COLLECTION_BODY}>
-              {bodyFields.map((field) => (
-                <Field key={field.key} label={field.label} required={field.required} hint={field.description}>
-                  <CustomFieldInput
-                    field={field}
-                    value={e[field.key]}
-                    onChange={(val) => updateEmail(i, { [field.key]: val })}
-                  />
-                </Field>
-              ))}
+              {bodyFields.map((field) => {
+                const fieldError = errors.find(
+                  (err) => err.tabId === "emails" && err.index === i && err.fieldId === field.key
+                );
+                return (
+                  <Field key={field.key} id={`emails-${i}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
+                    <CustomFieldInput
+                      field={field}
+                      value={e[field.key]}
+                      onChange={(val) => updateEmail(i, { [field.key]: val })}
+                      error={!!fieldError}
+                    />
+                  </Field>
+                );
+              })}
             </div>
           )}
         </motion.div>

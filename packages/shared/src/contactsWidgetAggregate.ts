@@ -31,28 +31,28 @@ function matchesWidgetFilter(
   filterValue?: string,
 ): boolean {
   if (!filterField) return true;
-  const val = contactFieldValue(contact, filterField);
-  if (val === undefined || val === null) return false;
+  const fieldValue = contactFieldValue(contact, filterField);
+  if (fieldValue === undefined || fieldValue === null) return false;
 
-  const strVal = String(val).toLowerCase();
-  const strTargetVal = String(filterValue ?? '').toLowerCase();
+  const fieldValueText = String(fieldValue).toLowerCase();
+  const targetValueText = String(filterValue ?? '').toLowerCase();
 
   switch (filterOperator) {
     case 'equals':
-      return strVal === strTargetVal;
+      return fieldValueText === targetValueText;
     case 'contains':
-      return strVal.includes(strTargetVal);
+      return fieldValueText.includes(targetValueText);
     case 'gt':
-      return Number(val) > Number(filterValue);
+      return Number(fieldValue) > Number(filterValue);
     case 'lt':
-      return Number(val) < Number(filterValue);
+      return Number(fieldValue) < Number(filterValue);
     default:
       return true;
   }
 }
 
 function filterContactsForWidget(contacts: Contact[], query: ContactsWidgetQuery): Contact[] {
-  const active = contacts.filter((c) => !isContactDeleted(c));
+  const active = contacts.filter((contact) => !isContactDeleted(contact));
   return active.filter((contact) =>
     matchesWidgetFilter(contact, query.filterField, query.filterOperator, query.filterValue),
   );
@@ -81,23 +81,23 @@ function buildChartData(items: Contact[], query: ContactsWidgetQuery): { name: s
   const groups: Record<string, Contact[]> = {};
 
   items.forEach((item) => {
-    const keyVal = contactFieldValue(item, xAxis);
-    const key = keyVal === undefined || keyVal === null || keyVal === '' ? 'Unknown' : String(keyVal);
+    const groupValue = contactFieldValue(item, xAxis);
+    const key = groupValue === undefined || groupValue === null || groupValue === '' ? 'Unknown' : String(groupValue);
     if (!groups[key]) groups[key] = [];
     groups[key].push(item);
   });
 
-  const data = Object.entries(groups).map(([groupName, groupItems]) => {
-    let finalVal = 0;
+  const chartData = Object.entries(groups).map(([groupName, groupItems]) => {
+    let finalValue = 0;
     if (query.operation === 'count' || query.operation === 'percentage') {
-      finalVal = groupItems.length;
+      finalValue = groupItems.length;
     } else if (query.operation === 'sum' || query.operation === 'avg') {
-      finalVal = aggregateNumericField(groupItems, query.operation, query.targetField || '');
+      finalValue = aggregateNumericField(groupItems, query.operation, query.targetField || '');
     }
-    return { name: groupName, value: finalVal };
+    return { name: groupName, value: finalValue };
   });
 
-  return data.sort((a, b) => b.value - a.value).slice(0, 8);
+  return chartData.sort((a, b) => b.value - a.value).slice(0, 8);
 }
 
 /** Server/client widget aggregate for contacts collection (globle2 §10). */
@@ -105,7 +105,7 @@ export function computeContactsWidgetAggregate(
   contacts: Contact[],
   query: ContactsWidgetQuery,
 ): ContactsWidgetAggregateResult {
-  const active = contacts.filter((c) => !isContactDeleted(c));
+  const active = contacts.filter((contact) => !isContactDeleted(contact));
   const filtered = filterContactsForWidget(contacts, query);
   const totalCount = active.length;
 

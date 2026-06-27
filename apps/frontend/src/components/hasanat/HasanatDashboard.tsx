@@ -21,7 +21,7 @@ interface HasanatDashboardProps {
  *
  * @returns React element representing the Hasanat points dashboard.
  */
-export default function HasanatDashboard({
+export function HasanatDashboard({
   denoms = [],
   batches = [],
   distributions = [],

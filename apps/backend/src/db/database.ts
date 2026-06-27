@@ -1,11 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import pg from 'pg';
 import { sql, eq, like } from 'drizzle-orm';
-import { join, dirname } from 'path';
-import { mkdirSync } from 'fs';
-import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { join } from 'path';
+import { loadServerConfig } from '../config/serverConfig.js';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from './schema.js';
 import { resolveBackendRoot } from '../config/loadEnv.js';
 import { getMinimalCollectionsForSeed, getMinimalObjects } from './minimalSeeds.js';
@@ -37,8 +37,9 @@ import { runMigration016 } from './migrations/016_seed_session_config.js';
 import { runMigration017 } from './migrations/017_seed_attendance_config.js';
 import { runMigration018 } from './migrations/018_seed_overdue_obligations.js';
 import { runMigration019 } from './migrations/019_seed_question_bank.js';
-import { deleteTenantUsersByWorkspace } from './repositories/tenantUserRepository.js';
-import { purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
+import { runMigration020 } from './migrations/020_migrate_contacts_to_tables.js';
+import { deleteTenantUsersByWorkspace, type TenantUserRow } from './repositories/tenantUserRepository.js';
+import { deleteAuthArtifactsForWorkspace, purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { setDb } from './dbClient.js';
 
@@ -47,7 +48,7 @@ import { setDb } from './dbClient.js';
 // AsyncLocalStorage threads the active tx client through nested helper calls
 // so that saveCollection / getCollection inside a transaction actually use it.
 // ---------------------------------------------------------------------------
-type DbClient = BetterSQLite3Database<typeof schema>;
+type DbClient = NodePgDatabase<typeof schema>;
 const txStorage = new AsyncLocalStorage<DbClient>();
 
 /** Returns the active transaction client if inside runInTransaction, otherwise the root db. */
@@ -67,7 +68,7 @@ function resolveObjectStorageKey(key: string): string {
   return tenantObjectKey(tenant, key);
 }
 
-let sqliteDb: Database.Database;
+let pool: pg.Pool;
 let _rootDb: DbClient;
 
 function getRootDb(): DbClient {
@@ -77,18 +78,14 @@ function getRootDb(): DbClient {
 
 export async function initDb(): Promise<void> {
   try {
-    const dbPath = process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('postgres')
-      ? process.env.DATABASE_URL.replace(/^sqlite:\/\//, '')
-      : join(resolveBackendRoot(), 'mms.db');
+    const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/mms';
 
-    // Ensure database directory exists
-    mkdirSync(dirname(dbPath), { recursive: true });
+    pool = new pg.Pool({
+      connectionString,
+      max: loadServerConfig().pgPoolMax,
+    });
 
-    sqliteDb = new Database(dbPath);
-    sqliteDb.pragma('journal_mode = WAL');
-    sqliteDb.pragma('busy_timeout = 5000');
-
-    _rootDb = drizzle(sqliteDb, { schema });
+    _rootDb = drizzle(pool, { schema });
     setDb(_rootDb);
 
     // Run Drizzle migrations dynamically on start
@@ -96,25 +93,39 @@ export async function initDb(): Promise<void> {
     await migrate(_rootDb, { migrationsFolder });
 
     // Run pending data migrations — failures are fatal and halt startup
-    await runMigration001();
-    await runMigration002();
-    await runMigration003();
-    await runMigration004();
-    await runMigration005();
-    await runMigration006();
-    await runMigration007();
-    await runMigration008();
-    await runMigration009();
-    await runMigration010();
-    await runMigration011();
-    await runMigration012();
-    await runMigration013();
-    await runMigration014();
-    await runMigration015();
-    await runMigration016();
-    await runMigration017();
-    await runMigration018();
-    await runMigration019();
+    const dataMigrationsToRun = [
+      { id: '001', run: runMigration001 },
+      { id: '002', run: runMigration002 },
+      { id: '003', run: runMigration003 },
+      { id: '004', run: runMigration004 },
+      { id: '005', run: runMigration005 },
+      { id: '006', run: runMigration006 },
+      { id: '007', run: runMigration007 },
+      { id: '008', run: runMigration008 },
+      { id: '009', run: runMigration009 },
+      { id: '010', run: runMigration010 },
+      { id: '011', run: runMigration011 },
+      { id: '012', run: runMigration012 },
+      { id: '013', run: runMigration013 },
+      { id: '014', run: runMigration014 },
+      { id: '015', run: runMigration015 },
+      { id: '016', run: runMigration016 },
+      { id: '017', run: runMigration017 },
+      { id: '018', run: runMigration018 },
+      { id: '019', run: runMigration019 },
+      { id: '020', run: runMigration020 },
+    ];
+
+    const applied = await _rootDb.select().from(schema.dataMigrations);
+    const appliedSet = new Set(applied.map((m) => m.id));
+
+    for (const migration of dataMigrationsToRun) {
+      if (!appliedSet.has(migration.id)) {
+        console.log(`[Data Migration] Running pending data migration ${migration.id}...`);
+        await migration.run();
+        await _rootDb.insert(schema.dataMigrations).values({ id: migration.id });
+      }
+    }
     await purgeExpiredAuthArtifacts();
     await ensurePlatformSuperUserFromEnv();
 
@@ -175,7 +186,7 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
     const parsed = parseTenantScopedStorageKey(storageName);
     if (parsed && parsed.logicalKey === 'users') {
       const { replaceTenantUsersForWorkspace } = await import('./repositories/tenantUserRepository.js');
-      await replaceTenantUsersForWorkspace(parsed.subdomain, data as any[]);
+      await replaceTenantUsersForWorkspace(parsed.subdomain, data as TenantUserRow[]);
     }
   } catch (error) {
     console.error(`Error saving collection "${name}":`, error);
@@ -267,12 +278,13 @@ export async function purgeTenantDataBySubdomain(subdomain: string): Promise<voi
     throw new Error('Subdomain is required to purge tenant data');
   }
 
-  const prefix = `${tenant}::`;
+  const prefix = `t:${tenant}:`;
   const db = activeDb();
 
   await db.delete(schema.collections).where(like(schema.collections.name, `${prefix}%`));
   await db.delete(schema.objects).where(like(schema.objects.key, `${prefix}%`));
   await deleteTenantUsersByWorkspace(tenant);
+  await deleteAuthArtifactsForWorkspace(tenant);
 }
 
 /**
@@ -303,12 +315,14 @@ export async function resetTenantData(): Promise<void> {
 export async function resetDatabase(): Promise<void> {
   try {
     const db = activeDb();
-    await db.run(sql`DROP TABLE IF EXISTS tenant_users;`);
-    await db.run(sql`DROP TABLE IF EXISTS platform_users;`);
-    await db.run(sql`DROP TABLE IF EXISTS auth_artifacts;`);
-    await db.run(sql`DROP TABLE IF EXISTS collections;`);
-    await db.run(sql`DROP TABLE IF EXISTS objects;`);
-    await db.run(sql`DROP TABLE IF EXISTS __drizzle_migrations;`);
+    await db.execute(sql`DROP TABLE IF EXISTS tenant_users CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS platform_users CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS auth_artifacts CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS collections CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS objects CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS data_migrations CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS __drizzle_migrations CASCADE;`);
+    await db.execute(sql`DROP SCHEMA IF EXISTS drizzle CASCADE;`);
     await initDb();
   } catch (error) {
     console.error('Error resetting database:', error);
@@ -357,8 +371,8 @@ export async function getObjectByStorageKey(key: string): Promise<unknown | null
 /** Lightweight DB connectivity check for `/ready`. */
 export async function pingDatabase(): Promise<boolean> {
   try {
-    if (!sqliteDb) return false;
-    sqliteDb.prepare('SELECT 1').run();
+    if (!pool) return false;
+    await _rootDb.execute(sql`SELECT 1`);
     return true;
   } catch {
     return false;
@@ -367,8 +381,8 @@ export async function pingDatabase(): Promise<boolean> {
 
 /** Gracefully close the database on shutdown. */
 export async function closeDatabase(): Promise<void> {
-  if (sqliteDb) {
-    sqliteDb.close();
+  if (pool) {
+    await pool.end();
   }
 }
 
@@ -382,18 +396,7 @@ export async function runInTransaction<T>(cb: () => Promise<T>): Promise<T> {
   const existing = txStorage.getStore();
   if (existing) return cb();
 
-  sqliteDb.exec('BEGIN');
-  try {
-    const result = await txStorage.run(_rootDb, cb);
-    sqliteDb.exec('COMMIT');
-    return result;
-  } catch (error) {
-    try {
-      sqliteDb.exec('ROLLBACK');
-    } catch (rollbackError) {
-      console.error('Failed to rollback transaction:', rollbackError);
-    }
-    console.error('Database transaction rolled back due to error:', error);
-    throw error;
-  }
+  return await _rootDb.transaction(async (tx) => {
+    return await txStorage.run(tx, cb);
+  });
 }

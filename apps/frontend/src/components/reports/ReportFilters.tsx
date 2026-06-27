@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Filter, ChevronDown, ChevronUp, X, Calendar } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
 import { useSessionsCollection } from "@/hooks/useSessions";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const STATUSES: string[] = ["all", "active", "inactive", "completed"];
 
@@ -32,6 +33,7 @@ const CATEGORY_FILTERS: Record<string, (keyof ReportFilterFields)[]> = {
 };
 
 export default function ReportFilters({ category, filters, onChange }: ReportFiltersProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [open, setOpen] = useState<boolean>(true);
 
   const allowed = CATEGORY_FILTERS[category] || ["session", "class", "status", "dateFrom", "dateTo", "student"];
@@ -39,14 +41,14 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
   const rawSessions = useSessionsCollection();
 
   const sessions = useMemo(() => {
-    return [{ id: "all", name: "All Sessions" }, ...rawSessions.map(s => ({ id: s.id, name: s.name }))];
-  }, [rawSessions]);
+    return [{ id: "all", name: t("reports.filters.allSessions") }, ...rawSessions.map(s => ({ id: s.id, name: s.name }))];
+  }, [rawSessions, t]);
 
   const classes = useMemo(() => {
     const uniqueClasses = new Set<string>();
     rawSessions.forEach(s => (s.classes || []).forEach(c => uniqueClasses.add(c.name)));
-    return [{ id: "all", name: "All Classes" }, ...Array.from(uniqueClasses).map(name => ({ id: name, name }))];
-  }, [rawSessions]);
+    return [{ id: "all", name: t("reports.filters.allClasses") }, ...Array.from(uniqueClasses).map(name => ({ id: name, name }))];
+  }, [rawSessions, t]);
 
     const set = (key: keyof ReportFilterFields, value: string): void => {
 
@@ -82,7 +84,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
       >
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-semibold text-foreground">Filters</span>
+          <span className="text-sm font-semibold text-foreground">{t("reports.filters.title")}</span>
           {activeCount > 0 && (
             <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
               {activeCount}
@@ -99,7 +101,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1"
               type="button"
             >
-              <X className="w-3 h-3" /> Clear all
+              <X className="w-3 h-3" /> {t("reports.filters.clearAll")}
             </button>
           )}
           {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -120,7 +122,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               {/* Session */}
               {allowed.includes("session") && (
                 <div className="flex flex-col gap-1 text-left min-w-[140px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Session</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.session")}</label>
                   <select
                     value={filters.session}
                     onChange={(e) => set("session", e.target.value)}
@@ -136,7 +138,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               {/* Class */}
               {allowed.includes("class") && (
                 <div className="flex flex-col gap-1 text-left min-w-[140px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Class</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.class")}</label>
                   <select
                     value={filters.class}
                     onChange={(e) => set("class", e.target.value)}
@@ -152,14 +154,18 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               {/* Status */}
               {allowed.includes("status") && (
                 <div className="flex flex-col gap-1 text-left min-w-[120px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Status</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.status")}</label>
                   <select
                     value={filters.status}
                     onChange={(e) => set("status", e.target.value)}
                     className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     {STATUSES.map((s) => (
-                      <option key={s} value={s}>{s === "all" ? "All Statuses" : s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                      <option key={s} value={s}>
+                        {s === "all"
+                          ? t("reports.filters.allStatuses")
+                          : t(`reports.filters.status${s.charAt(0).toUpperCase() + s.slice(1)}` as any)}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -168,7 +174,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               {/* Date From */}
               {allowed.includes("dateFrom") && (
                 <div className="flex flex-col gap-1 text-left min-w-[130px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />From</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.from")}</label>
                   <DatePicker
                     value={filters.dateFrom}
                     onChange={(val) => set("dateFrom", val)}
@@ -179,7 +185,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               {/* Date To */}
               {allowed.includes("dateTo") && (
                 <div className="flex flex-col gap-1 text-left min-w-[130px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />To</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.to")}</label>
                   <DatePicker
                     value={filters.dateTo}
                     onChange={(val) => set("dateTo", val)}
@@ -190,12 +196,12 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               {/* Student */}
               {allowed.includes("student") && (
                 <div className="flex flex-col gap-1 text-left min-w-[150px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Student</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.student")}</label>
                   <input
                     type="text"
                     value={filters.student}
                     onChange={(e) => set("student", e.target.value)}
-                    placeholder="Search name…"
+                    placeholder={t("reports.filters.searchName")}
                     className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
                   />
                 </div>

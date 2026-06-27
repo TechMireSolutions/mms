@@ -2,16 +2,16 @@ import React from 'react';
 import {
   Calendar, Filter, CheckCircle2, Clock, XCircle, Users,
 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useSessionsMetrics } from '@/hooks/useSessions';
-import ModuleCommandMetricCard from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
 
 interface SessionsCommandMetricsProps {
   total: number;
   shown: number;
 }
 
-export default function SessionsCommandMetrics({
+export function SessionsCommandMetrics({
   total,
   shown,
 }: SessionsCommandMetricsProps): React.JSX.Element {

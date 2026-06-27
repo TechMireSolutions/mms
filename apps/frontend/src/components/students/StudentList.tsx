@@ -17,13 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import StatusBadge from "../ui/StatusBadge";
-import EmptyState from "../ui/EmptyState";
+import { StatusBadge } from "../ui/StatusBadge";
+import { EmptyState } from "../ui/EmptyState";
 import { calcAge, type Student } from '@/lib/data/studentsData';
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { formatDate } from "../../lib/db";
 import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AppTranslationKey, FieldDefinition } from "@mms/shared";
 import StudentDetail from "./StudentDetail";
 import { useStudentConfig } from "@/hooks/useStudentConfig";

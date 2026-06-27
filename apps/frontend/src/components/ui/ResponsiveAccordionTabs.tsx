@@ -104,7 +104,7 @@ function TabTrigger({
  * Responsive tab shell — mobile accordion (content under active heading),
  * desktop horizontal tabs or sidebar nav.
  */
-export default function ResponsiveAccordionTabs({
+export function ResponsiveAccordionTabs({
   tabs,
   activeTab,
   onTabChange,

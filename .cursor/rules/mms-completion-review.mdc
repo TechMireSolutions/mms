@@ -29,7 +29,7 @@ After **creating or editing code**, run a completion review **before** marking t
 | Type error | Fix and re-run typecheck |
 | ESLint error | Fix in changed files |
 | Failing test | Fix or revert — do not ship broken tests |
-| Hardcoded copy | Add `t()` keys — `mms-i18n.mdc` |
+| Hardcoded copy | Add `t()` keys — `mms-settings-i18n.mdc` |
 | Rule violation in touched code | Fix when inside the change boundary |
 
 ## Skip verification only when

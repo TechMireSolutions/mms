@@ -1,6 +1,6 @@
 import React from "react";
 import { getInitials, getAvatarColor, Contact } from "@mms/shared";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ContactAvatarProps {
   contact: Contact;

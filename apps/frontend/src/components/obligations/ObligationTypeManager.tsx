@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { DESIGNATED_FOR_OPTIONS, ObligationType } from '@/lib/data/obligationsData';
-import FormModal from "@/components/ui/FormModal";
-import useTranslation from "@/hooks/useTranslation";
+import { FormModal } from "@/components/ui/FormModal";
+import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { OBLIGATION_TYPE_BADGE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export type DesignatedFor = "Syed" | "Non-Syed" | "Both" | "None";
@@ -47,7 +47,7 @@ interface ModalState {
  * @param {ObligationTypeManagerProps} props
  * @returns {React.ReactElement}
  */
-export default function ObligationTypeManager({ types, onChange }: ObligationTypeManagerProps) {
+export function ObligationTypeManager({ types, onChange }: ObligationTypeManagerProps) {
   const [modal, setModal] = useState<ModalState | null>(null);
 
   const handleSave = (form: Partial<ObligationType>) => {

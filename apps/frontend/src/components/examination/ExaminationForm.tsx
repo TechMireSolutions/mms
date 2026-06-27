@@ -1,19 +1,24 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
+import { z } from "zod";
 import { BookOpen } from "lucide-react";
-import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL, FORM_TEXTAREA } from "@/components/ui/formStyles";
-import { calculateModuleFieldsCompleteness } from "@/lib/formCompleteness";
+import { MmsDynamicForm } from "@/components/ui/MmsDynamicForm";
+import { useMmsForm } from "@/hooks/useMmsForm";
 import { Exam } from '@/lib/data/examinationData';
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { toTitleCase } from "@mms/shared";
-
-
 import { useExaminationConfig } from "@/hooks/useExaminationConfig";
 import { DatePicker } from "../ui/DatePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
-import { Checkbox } from "@/components/ui/checkbox";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { Field, CustomFieldInput } from "@/components/ui/FormPrimitives";
+import { useTranslation } from "@/hooks/useTranslation";
+import { FORM_INPUT, FORM_TEXTAREA } from "@/components/ui/formStyles";
+import {
+  type FieldDefinition,
+  buildCustomFieldSchema,
+  getDefaultFieldValue,
+} from '@mms/shared';
 
 const SUBJECTS = ["Tajweed", "Hifz", "Islamic Studies", "Arabic", "Aqeedah", "Quran Recitation", "Fiqh"];
 
@@ -36,76 +41,161 @@ interface ExamFormProps {
   onSave: (exam: Exam) => void;
 }
 
-/**
- * Modal form dialog for creating or updating exam records.
- */
-export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFormProps): React.ReactElement {
-  const [data, setData] = useState<Partial<Exam>>(() => {
-    return exam ? { ...exam } : { ...EMPTY };
-  });
+interface ExamFormData {
+  name: string;
+  subject: string;
+  status: string;
+  totalMarks: number;
+  passingMarks: number;
+  duration: number;
+  date: string;
+  classIds: string[];
+  description: string;
+  [key: string]: unknown;
+}
+
+export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFormProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const { fields, customFields, orderedFields } = useExaminationConfig();
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
   const sessions = useSessionsCollection();
 
-  const { fields, customFields, orderedFields } = useExaminationConfig();
-
-  const completeness = useMemo(
-    () => calculateModuleFieldsCompleteness(data as Record<string, unknown>, orderedFields, fields),
-    [data, orderedFields, fields],
-  );
-
-  const upd = <K extends keyof Exam>(f: K, v: Exam[K]) => setData((d: Partial<Exam>) => ({ ...d, [f]: v }));
-  const toggleClass = (id: string) =>
-    setData((d: Partial<Exam>) => {
-      const classIds = d.classIds ? [...d.classIds] : [];
+  // Map configuration fields into FieldDefinitions
+  const fieldsList = useMemo<FieldDefinition[]>(() => {
+    return orderedFields.map((field, index) => {
+      const isEnabled = fields[field.id]?.enabled !== false;
       return {
-        ...d,
-        classIds: classIds.includes(id) ? classIds.filter((x) => x !== id) : [...classIds, id],
+        key: field.id,
+        label: field.label,
+        type: (field.type || "text") as any,
+        required: !!field.required,
+        enabled: isEnabled,
+        order: index,
+        placeholder: field.placeholder,
+        options: field.options,
       };
     });
+  }, [orderedFields, fields]);
 
-  const handleSave = async () => {
-    setError("");
-    if (!data.name) {
-      setError("Exam Name is required.");
-      return;
-    }
-    if (!data.date) {
-      setError("Exam Date is required.");
-      return;
-    }
-    if (!data.classIds || data.classIds.length === 0) {
-      setError("At least one Class must be assigned.");
-      return;
+  const fieldsByTab = useMemo<Record<string, FieldDefinition[]>>(() => {
+    return {
+      basic: fieldsList,
+    };
+  }, [fieldsList]);
+
+  const initialValues = useMemo<ExamFormData>(() => {
+    const initial: any = exam ? { ...exam } : { ...EMPTY };
+
+    fieldsList.forEach((field) => {
+      if (!["name", "subject", "status", "totalMarks", "passingMarks", "duration", "date", "classIds", "description"].includes(field.key)) {
+        if (initial[field.key] === undefined) {
+          initial[field.key] = getDefaultFieldValue(field) ?? "";
+        }
+      }
+    });
+
+    if (!initial.classIds) {
+      initial.classIds = [];
     }
 
-    // Validate default required fields
-    for (const key of Object.keys(fields)) {
-      if (fields[key].required && (data[key as keyof Exam] === undefined || data[key as keyof Exam] === "")) {
-        setError(`${key.charAt(0).toUpperCase() + key.slice(1)} is required.`);
+    return initial as ExamFormData;
+  }, [exam, fieldsList]);
+
+  const schema = useMemo(() => {
+    const shape: Record<string, z.ZodTypeAny> = {
+      name: z.string().min(1, "Exam Name is required."),
+      subject: z.string().optional().nullable(),
+      status: z.string().optional().nullable(),
+      totalMarks: z.coerce.number().min(1, "Total Marks must be at least 1."),
+      passingMarks: z.coerce.number().min(1, "Passing Marks must be at least 1."),
+      duration: z.coerce.number().min(5, "Duration must be at least 5 minutes."),
+      date: z.string().min(1, "Exam Date is required."),
+      classIds: z.array(z.string()).min(1, "At least one Class must be assigned."),
+      description: z.string().optional().nullable(),
+    };
+
+    // Override field required checks from config
+    fieldsList.forEach((field) => {
+      if (field.required && shape[field.key]) {
+        shape[field.key] = (shape[field.key] as any).min(1, `${field.label} is required.`);
+      }
+
+      // Dynamic custom fields validation
+      if (!["name", "subject", "status", "totalMarks", "passingMarks", "duration", "date", "classIds", "description"].includes(field.key)) {
+        shape[field.key] = buildCustomFieldSchema(field);
+      }
+    });
+
+    return z.object(shape).passthrough().refine(
+      (data: any) => data.passingMarks <= data.totalMarks,
+      {
+        message: "Passing Marks cannot exceed Total Marks.",
+        path: ["passingMarks"],
+      }
+    );
+  }, [fieldsList]);
+
+  const {
+    form,
+    tab,
+    errors,
+    handleSave,
+  } = useMmsForm<ExamFormData>({
+    schema,
+    fields: fieldsByTab,
+    initialData: initialValues,
+    t,
+  });
+
+  const data = form.watch();
+  const setValue = form.setValue;
+
+  const completeness = useMemo(() => {
+    let totalRequired = 0;
+    let filledRequired = 0;
+    let totalOptional = 0;
+    let filledOptional = 0;
+
+    fieldsList.forEach((field) => {
+      if (!field.enabled) return;
+      
+      // Skip booleans and ai_summary fields from completeness score
+      if (field.type === "boolean" || field.type === "ai_summary") {
         return;
       }
-    }
 
-    // Validate custom required fields
-    for (const cf of customFields) {
-      if (cf.required && !(data as Record<string, unknown>)[cf.id]) {
-        setError(`"${cf.label}" is required.`);
-        return;
+      const isRequired = !!field.required;
+      const val = data[field.key];
+      const isFilled = val !== undefined && val !== null && val !== "" && (!Array.isArray(val) || val.length > 0);
+
+      if (isRequired) {
+        totalRequired++;
+        if (isFilled) filledRequired++;
+      } else {
+        totalOptional++;
+        if (isFilled) filledOptional++;
       }
-    }
+    });
 
+    const reqRatio = totalRequired === 0 ? 0 : filledRequired / totalRequired;
+    const optRatio = totalOptional === 0 ? 0 : filledOptional / totalOptional;
+    const progress = (reqRatio * 0.7) + (optRatio * 0.3);
+
+    return Math.round(progress * 100);
+  }, [data, fieldsList]);
+
+  const onSubmit = useCallback(async (formData: ExamFormData) => {
     setSaving(true);
     await new Promise((r) => setTimeout(r, 600));
     onSave({
-      ...data,
-      name: toTitleCase(data.name || ""),
+      ...formData,
+      name: toTitleCase(formData.name || ""),
       id: exam?.id || `ex${Date.now()}`
-    } as Exam);
+    } as unknown as Exam);
     setSaving(false);
-  };
+    onClose();
+  }, [exam, onSave, onClose]);
 
-  const valid = !!(data.name && data.date && data.classIds && data.classIds.length > 0);
   const classes = useMemo(
     () => sessions.flatMap((session) =>
       (session.classes || []).map((cls) => ({
@@ -116,248 +206,238 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
     [sessions],
   );
 
+  const renderFieldByKey = (field: FieldDefinition): React.ReactNode => {
+    if (!field.enabled) return null;
+
+    const fieldError = errors.find((e) => e.fieldId === field.key);
+
+    if (field.key === "name") {
+      return (
+        <div key="name" className="sm:col-span-2">
+          <Field label="Exam Name" required={field.required} error={fieldError?.message}>
+            <Input
+              id="exam-name"
+              className={FORM_INPUT}
+              value={data.name || ""}
+              onChange={(e) => setValue("name", e.target.value, { shouldValidate: true, shouldDirty: true })}
+              placeholder="e.g. Tajweed Mid-Term"
+              required
+            />
+          </Field>
+        </div>
+      );
+    }
+
+    if (field.key === "subject") {
+      return (
+        <div key="subject">
+          <Field label="Subject" required={field.required} error={fieldError?.message}>
+            <FormSelect
+              id="exam-subject"
+              value={data.subject || ""}
+              onChange={(val: any) => setValue("subject", val, { shouldValidate: true, shouldDirty: true })}
+              placeholder="Select subject…"
+              options={SUBJECTS}
+            />
+          </Field>
+        </div>
+      );
+    }
+
+    if (field.key === "status") {
+      return (
+        <div key="status">
+          <Field label="Status" required={field.required} error={fieldError?.message}>
+            <FormSelect
+              id="exam-status"
+              value={data.status || "upcoming"}
+              onChange={(val: any) => setValue("status", val, { shouldValidate: true, shouldDirty: true })}
+              options={[
+                { value: "upcoming", label: "Upcoming" },
+                { value: "ongoing", label: "Ongoing" },
+                { value: "completed", label: "Completed" },
+              ]}
+            />
+          </Field>
+        </div>
+      );
+    }
+
+    if (field.key === "totalMarks") {
+      return (
+        <div key="totalMarks">
+          <Field label="Total Marks" required={field.required} error={fieldError?.message}>
+            <Input
+              id="exam-total"
+              type="number"
+              className={FORM_INPUT}
+              value={data.totalMarks ?? 100}
+              onChange={(e) => setValue("totalMarks", e.target.value === "" ? 0 : +e.target.value, { shouldValidate: true, shouldDirty: true })}
+              min={1}
+              required={field.required}
+            />
+          </Field>
+        </div>
+      );
+    }
+
+    if (field.key === "passingMarks") {
+      return (
+        <div key="passingMarks">
+          <Field label="Passing Marks" required={field.required} error={fieldError?.message}>
+            <Input
+              id="exam-passing"
+              type="number"
+              className={FORM_INPUT}
+              value={data.passingMarks ?? 50}
+              onChange={(e) => setValue("passingMarks", e.target.value === "" ? 0 : +e.target.value, { shouldValidate: true, shouldDirty: true })}
+              min={1}
+              max={data.totalMarks ?? 100}
+              required={field.required}
+            />
+          </Field>
+        </div>
+      );
+    }
+
+    if (field.key === "duration") {
+      return (
+        <div key="duration">
+          <Field label="Duration (min)" required={field.required} error={fieldError?.message}>
+            <Input
+              id="exam-duration"
+              type="number"
+              className={FORM_INPUT}
+              value={data.duration ?? 60}
+              onChange={(e) => setValue("duration", e.target.value === "" ? 0 : +e.target.value, { shouldValidate: true, shouldDirty: true })}
+              min={5}
+              required={field.required}
+            />
+          </Field>
+        </div>
+      );
+    }
+
+    if (field.key === "date") {
+      return (
+        <div key="date" className="sm:col-span-2">
+          <Field label="Exam Date" required={field.required} error={fieldError?.message}>
+            <DatePicker
+              id="exam-date"
+              value={data.date || ""}
+              onChange={(val) => setValue("date", val, { shouldValidate: true, shouldDirty: true })}
+              required
+            />
+          </Field>
+        </div>
+      );
+    }
+
+    if (field.key === "classIds") {
+      return (
+        <div key="classIds" className="sm:col-span-2">
+          <Field label="Assign to Classes" required={field.required} error={fieldError?.message}>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Assign to classes list">
+              {classes.map((cls) => {
+                const active = !!(data.classIds && (data.classIds as string[]).includes(cls.id));
+                return (
+                  <Button
+                    key={cls.id}
+                    type="button"
+                    onClick={() => {
+                      const classIds = data.classIds ? [...(data.classIds as string[])] : [];
+                      const nextClassIds = classIds.includes(cls.id) ? classIds.filter((x) => x !== cls.id) : [...classIds, cls.id];
+                      setValue("classIds", nextClassIds, { shouldValidate: true, shouldDirty: true });
+                    }}
+                    className={`px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all ${
+                      active
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border bg-muted hover:bg-muted/80 text-foreground"
+                    }`}
+                  >
+                    {cls.name}
+                  </Button>
+                );
+              })}
+            </div>
+          </Field>
+        </div>
+      );
+    }
+
+    if (field.key === "description") {
+      return (
+        <div key="description" className="sm:col-span-2">
+          <Field label="Description" required={field.required} error={fieldError?.message}>
+            <textarea
+              id="exam-desc"
+              className={FORM_TEXTAREA}
+              rows={2}
+              value={data.description || ""}
+              onChange={(e) => setValue("description", e.target.value, { shouldValidate: true, shouldDirty: true })}
+              placeholder="Optional notes about this exam…"
+              required={field.required}
+            />
+          </Field>
+        </div>
+      );
+    }
+
+    // Default custom field rendering
+    const value = data[field.key] ?? getDefaultFieldValue(field);
+    return (
+      <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
+        <Field label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
+          <CustomFieldInput
+            field={field}
+            value={value}
+            onChange={(next) => setValue(field.key as any, next, { shouldValidate: true, shouldDirty: true })}
+            error={!!fieldError}
+          />
+        </Field>
+      </div>
+    );
+  };
+
+  const renderBasicContent = () => {
+    return (
+      <div className="space-y-5 text-left">
+        <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {fieldsList.map((field) => renderFieldByKey(field))}
+          </div>
+        </section>
+      </div>
+    );
+  };
+
+  const valid = !!(data.name && data.date && data.classIds && (data.classIds as string[]).length > 0);
+
   return (
-    <FormModal
+    <MmsDynamicForm
       open={open}
       onClose={onClose}
       title={exam ? "Edit Exam" : "Create Exam"}
       icon={BookOpen}
       progress={completeness}
       progressLabel="Progress"
-      error={error}
+      showBuilderToggle={false}
+      isBuilderMode={false}
+      builderPanel={null}
+      tabs={[]}
+      activeTab={tab}
+      error={errors.map(e => e.message)}
       cancelLabel="Cancel"
       saveLabel={exam ? "Save Changes" : "Create Exam"}
-      onSave={() => void handleSave()}
+      onSave={() => void handleSave(onSubmit)()}
       saving={saving}
       saveDisabled={!valid}
-    >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {orderedFields.map((field) => {
-              const isEnabled = fields[field.id]?.enabled !== false;
-              if (!isEnabled) return null;
-
-              if (field.id === "name") {
-                return (
-                  <div key="name" className="sm:col-span-2">
-                    <label htmlFor="exam-name" className={FORM_LABEL}>Exam Name *</label>
-                    <Input
-                      id="exam-name"
-                      className={FORM_INPUT}
-                      value={data.name || ""}
-                      onChange={(e) => upd("name", e.target.value)}
-                      placeholder="e.g. Tajweed Mid-Term"
-                      required
-                    />
-                  </div>
-                );
-              }
-
-              if (field.id === "subject") {
-                return (
-                  <div key="subject">
-                    <label htmlFor="exam-subject" className={FORM_LABEL}>Subject {field.required ? "*" : ""}</label>
-                    <FormSelect
-                      id="exam-subject"
-                      value={data.subject || ""}
-                      onChange={(val) => upd("subject", val)}
-                      placeholder="Select subject…"
-                      options={SUBJECTS}
-                    />
-                  </div>
-                );
-              }
-
-              if (field.id === "status") {
-                return (
-                  <div key="status">
-                    <label htmlFor="exam-status" className={FORM_LABEL}>Status {field.required ? "*" : ""}</label>
-                    <FormSelect
-                      id="exam-status"
-                      value={data.status || "upcoming"}
-                      onChange={(val) => upd("status", val as Exam["status"])}
-                      options={[
-                        { value: "upcoming", label: "Upcoming" },
-                        { value: "ongoing", label: "Ongoing" },
-                        { value: "completed", label: "Completed" },
-                      ]}
-                    />
-                  </div>
-                );
-              }
-
-              if (field.id === "totalMarks") {
-                return (
-                  <div key="totalMarks">
-                    <label htmlFor="exam-total" className={FORM_LABEL}>Total Marks {field.required ? "*" : ""}</label>
-                    <Input
-                      id="exam-total"
-                      type="number"
-                      className={FORM_INPUT}
-                      value={data.totalMarks ?? 100}
-                      onChange={(e) => upd("totalMarks", +e.target.value)}
-                      min={1}
-                      required={field.required}
-                    />
-                  </div>
-                );
-              }
-
-              if (field.id === "passingMarks") {
-                return (
-                  <div key="passingMarks">
-                    <label htmlFor="exam-passing" className={FORM_LABEL}>Passing Marks {field.required ? "*" : ""}</label>
-                    <Input
-                      id="exam-passing"
-                      type="number"
-                      className={FORM_INPUT}
-                      value={data.passingMarks ?? 50}
-                      onChange={(e) => upd("passingMarks", +e.target.value)}
-                      min={1}
-                      max={data.totalMarks ?? 100}
-                      required={field.required}
-                    />
-                  </div>
-                );
-              }
-
-              if (field.id === "duration") {
-                return (
-                  <div key="duration">
-                    <label htmlFor="exam-duration" className={FORM_LABEL}>Duration (min) {field.required ? "*" : ""}</label>
-                    <Input
-                      id="exam-duration"
-                      type="number"
-                      className={FORM_INPUT}
-                      value={data.duration ?? 60}
-                      onChange={(e) => upd("duration", +e.target.value)}
-                      min={5}
-                      required={field.required}
-                    />
-                  </div>
-                );
-              }
-
-              if (field.id === "date") {
-                return (
-                  <div key="date" className="sm:col-span-2">
-                    <label htmlFor="exam-date" className={FORM_LABEL}>Exam Date *</label>
-                    <DatePicker
-                      id="exam-date"
-                      value={data.date || ""}
-                      onChange={(val) => upd("date", val)}
-                      required
-                    />
-                  </div>
-                );
-              }
-
-              if (field.id === "classIds") {
-                return (
-                  <div key="classIds" className="sm:col-span-2">
-                    <span className={FORM_LABEL}>Assign to Classes *</span>
-                    <div className="flex flex-wrap gap-2" role="group" aria-label="Assign to classes list">
-                      {classes.map((cls) => {
-                        const active = !!(data.classIds && data.classIds.includes(cls.id));
-                        return (
-                          <Button
-                            key={cls.id}
-                            type="button"
-                            onClick={() => toggleClass(cls.id)}
-                            className={`px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all ${
-                              active
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "border-border bg-muted hover:bg-muted/80 text-foreground"
-                            }`}
-                          >
-                            {cls.name}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              }
-
-              if (field.id === "description") {
-                return (
-                  <div key="description" className="sm:col-span-2">
-                    <label htmlFor="exam-desc" className={FORM_LABEL}>Description {field.required ? "*" : ""}</label>
-                    <textarea
-                      id="exam-desc"
-                      className={FORM_TEXTAREA}
-                      rows={2}
-                      value={data.description || ""}
-                      onChange={(e) => upd("description", e.target.value)}
-                      placeholder="Optional notes about this exam…"
-                      required={field.required}
-                    />
-                  </div>
-                );
-              }
-
-              // Custom field
-              if (!["name", "subject", "status", "totalMarks", "passingMarks", "duration", "date", "classIds", "description"].includes(field.id)) {
-                const val = (data as Record<string, unknown>)[field.id] ?? "";
-                return (
-                  <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
-                    <label className={FORM_LABEL}>
-                      {field.label} {field.required ? "*" : ""}
-                    </label>
-                    {field.type === "textarea" ? (
-                      <textarea
-                        className={FORM_TEXTAREA}
-                        value={val as string}
-                        onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
-                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
-                        required={field.required}
-                      />
-                    ) : field.type === "select" ? (
-                      <FormSelect
-                        value={val as string}
-                        onChange={(value) => setData((d) => ({ ...d, [field.id]: value }))}
-                        placeholder="Select option…"
-                        options={field.options || []}
-                      />
-                    ) : field.type === "boolean" ? (
-                      <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
-                        <Checkbox
-                          checked={!!val}
-                          onCheckedChange={(checked) => setData((d) => ({ ...d, [field.id]: !!checked }))}
-                        />
-                        <span className="text-xs font-medium text-foreground">{field.label}</span>
-                      </label>
-                    ) : field.type === "number" ? (
-                      <Input
-                        type="number"
-                        className={FORM_INPUT}
-                        value={val as number}
-                        onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
-                        placeholder={field.placeholder || `Enter number…`}
-                        required={field.required}
-                      />
-                    ) : field.type === "date" ? (
-                      <DatePicker
-                        value={val as string}
-                        onChange={(val) => setData((d) => ({ ...d, [field.id]: val }))}
-                        required={field.required}
-                      />
-                    ) : (
-                      <Input
-                        type={field.type === "email" ? "email" : field.type === "url" ? "url" : "text"}
-                        className={FORM_INPUT}
-                        value={val as string}
-                        onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
-                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
-                        required={field.required}
-                      />
-                    )}
-                  </div>
-                );
-              }
-
-              return null;
-            })}
-          </div>
-    </FormModal>
+      fields={fieldsList}
+      data={data}
+      setValue={(key, val, opts) => setValue(key as any, val, opts)}
+      errors={errors}
+      renderField={renderFieldByKey}
+      renderBasicContent={renderBasicContent}
+    />
   );
 }

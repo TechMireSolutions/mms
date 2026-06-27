@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { 
   LayoutDashboard, Pin, X, PinOff, Trash2,
   SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users, PieChart
@@ -66,6 +67,7 @@ function WidgetDrilldownModal({
   widget: CustomWidget;
   onClose: () => void;
 }): React.JSX.Element {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [collections, setCollections] = useState(() => getWidgetCollections());
 
@@ -146,8 +148,8 @@ function WidgetDrilldownModal({
         {/* Modal Header */}
         <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] text-primary uppercase font-black tracking-widest block">Metric Drilldown</span>
-            <h3 className="text-base font-black text-foreground">{widget.title} Records</h3>
+            <span className="text-[10px] text-primary uppercase font-black tracking-widest block">{t("reports.widgets.drilldownTitle")}</span>
+            <h3 className="text-base font-black text-foreground">{t("reports.widgets.records", { title: widget.title })}</h3>
           </div>
           <button
             onClick={onClose}
@@ -165,11 +167,11 @@ function WidgetDrilldownModal({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search records list..."
+            placeholder={t("reports.widgets.searchRecords")}
             className="flex-1 text-xs bg-transparent border-none outline-none text-foreground placeholder-muted-foreground font-semibold"
           />
           <span className="text-[10px] text-muted-foreground font-bold px-2 py-0.5 bg-muted rounded-full border border-border">
-            {filteredRecords.length} found
+            {t("reports.widgets.foundCount", { count: filteredRecords.length })}
           </span>
         </div>
 
@@ -178,54 +180,58 @@ function WidgetDrilldownModal({
           {filteredRecords.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground space-y-2">
               <EyeOff className="w-8 h-8 mx-auto opacity-40" />
-              <p className="text-xs font-bold uppercase tracking-wider">No Records Found</p>
+              <p className="text-xs font-bold uppercase tracking-wider">{t("reports.widgets.noRecords")}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border text-muted-foreground uppercase font-black text-[9px] tracking-wider text-left">
-                    <th className="pb-3">Reference/Name</th>
-                    <th className="pb-3">Primary Info</th>
-                    <th className="pb-3">Current Status</th>
-                    <th className="pb-3 text-right">Micro Action</th>
+                    <th className="pb-3">{t("reports.widgets.refName")}</th>
+                    <th className="pb-3">{t("reports.widgets.primaryInfo")}</th>
+                    <th className="pb-3">{t("reports.widgets.currentStatus")}</th>
+                    <th className="pb-3 text-right">{t("reports.widgets.microAction")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
                   {filteredRecords.map((item, idx) => {
-                    const recordId = String(item.id || idx);
+                    const record = item as any;
+                    const recordId = String(record.id || idx);
                     
                     // Format columns based on collection
-                    let name = String(item.name || item.studentName || item.invoiceNo || item.id);
+                    let name = String(record.name || record.studentName || record.invoiceNo || record.id);
                     let info = "";
-                    let status = String(item.status || item.lifecycleStage || "active");
+                    let status = String(record.status || record.lifecycleStage || "active");
                     let hasAction = true;
                     
                     if (widget.collection === "students") {
-                      name = String(item.name || "");
-                      info = `Age ${item.age || "N/A"} • ${item.gender || "any"}`;
+                      name = String(record.name || "");
+                      info = t("reports.widgets.ageText", {
+                        age: record.age || "N/A",
+                        gender: record.gender ? t(`reports.fields.${record.gender}` as any) || record.gender : t("reports.widgets.any")
+                      });
                     } else if (widget.collection === "finance_invoices") {
-                      name = `Invoice ${item.invoiceNo || item.id}`;
-                      const studentId = String(item.studentId || "");
-                      const studentName = studentNameMap.get(studentId) || `Student #${studentId}`;
-                      info = `${studentName} • ₨ ${Number(item.finalAmt || 0).toLocaleString()}`;
+                      name = t("reports.widgets.invoiceText", { invoiceNo: record.invoiceNo || record.id });
+                      const studentId = String(record.studentId || "");
+                      const studentName = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
+                      info = `${studentName} • ₨ ${Number(record.finalAmt || 0).toLocaleString()}`;
                     } else if (widget.collection === "attendance_records") {
-                      const studentId = String(item.studentId || "");
-                      name = studentNameMap.get(studentId) || `Student #${studentId}`;
-                      info = `${item.date} • ${item.className || "Class"}`;
+                      const studentId = String(record.studentId || "");
+                      name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
+                      info = t("reports.widgets.classText", { date: record.date, className: record.className || t("reports.widgets.class") });
                     } else if (widget.collection === "hasanat_distributions") {
-                      const studentId = String(item.studentId || "");
-                      name = studentNameMap.get(studentId) || `Student #${studentId}`;
-                      info = `${item.denominationName || "Standard"} • ${item.quantity || 1} qty`;
-                      status = `${item.points || 50} Points`;
+                      const studentId = String(record.studentId || "");
+                      name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
+                      info = t("reports.widgets.qtyText", { denomination: record.denominationName || "Standard", qty: record.quantity || 1 });
+                      status = t("reports.widgets.pointsText", { points: record.points || 50 });
                       hasAction = false; // deleting is the action instead of toggling status
                     } else if (widget.collection === "contacts") {
-                      name = String(item.name || "");
-                      info = `${item.email || "No Email"} • ${item.lifecycleStage || "lead"}`;
-                      status = String(item.lifecycleStage || "lead");
+                      name = String(record.name || "");
+                      info = `${record.email || t("reports.widgets.noEmail")} • ${t(`reports.status.${record.lifecycleStage}` as any) || record.lifecycleStage}`;
+                      status = String(record.lifecycleStage || "lead");
                     } else if (widget.collection === "sessions") {
-                      name = String(item.name || "");
-                      info = `Type: ${item.type || "Hifz"} • Room: ${item.room || "N/A"}`;
+                      name = String(record.name || "");
+                      info = t("reports.widgets.roomText", { type: record.type || "Hifz", room: record.room || "N/A" });
                     }
 
                     return (
@@ -240,7 +246,7 @@ function WidgetDrilldownModal({
                               ? "bg-destructive/10 text-destructive border-destructive/20"
                               : "bg-warning/10 text-warning border-warning/20"
                           }`}>
-                            {status}
+                            {t(`reports.status.${status.toLowerCase()}` as any) || status}
                           </span>
                         </td>
                         <td className="py-3.5 text-right">
@@ -250,7 +256,7 @@ function WidgetDrilldownModal({
                               className="p-1 rounded bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px]"
                               type="button"
                             >
-                              Delete
+                              {t("reports.widgets.delete")}
                             </button>
                           ) : hasAction ? (
                             <button
@@ -258,7 +264,7 @@ function WidgetDrilldownModal({
                               className="px-2.5 py-1 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px]"
                               type="button"
                             >
-                              Toggle Status
+                              {t("reports.widgets.toggleStatus")}
                             </button>
                           ) : null}
                         </td>
@@ -342,6 +348,7 @@ function CustomWidgetRenderer({
   onSwitchToggle: (widget: CustomWidget) => void;
   onMetricClick: (widget: CustomWidget) => void;
 }): React.JSX.Element {
+  const { t } = useTranslation();
   const palette = useBrandPalette();
   
   const wType = widget.widgetType || (["bar", "line", "area", "pie", "radar"].includes(widget.chartType || "") ? "chart" : "kpi");
@@ -393,7 +400,7 @@ function CustomWidgetRenderer({
           id: card.id,
           title: card.title,
           value: String(aggregateValue.finalValue),
-          sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+          sub: card.fixedSubText || t("reports.widgets.totalCountText", { count: aggregateValue.totalCount }),
           icon: card.icon,
           color: card.color,
           trend: card.trend || 0,
@@ -413,7 +420,7 @@ function CustomWidgetRenderer({
           id: card.id,
           title: card.title,
           value: String(aggregateValue.finalValue),
-          sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+          sub: card.fixedSubText || t("reports.widgets.totalCountText", { count: aggregateValue.totalCount }),
           icon: card.icon,
           color: card.color,
           trend: card.trend || 0,
@@ -433,7 +440,7 @@ function CustomWidgetRenderer({
           id: card.id,
           title: card.title,
           value: String(aggregateValue.finalValue),
-          sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+          sub: card.fixedSubText || t("reports.widgets.totalCountText", { count: aggregateValue.totalCount }),
           icon: card.icon,
           color: card.color,
           trend: card.trend || 0,
@@ -468,7 +475,7 @@ function CustomWidgetRenderer({
             {computed.value}
           </span>
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-            {widget.collection.replace("_", " ")}
+            {t(`reports.collections.${widget.collection}` as any)}
           </span>
         </button>
       );
@@ -537,7 +544,7 @@ function CustomWidgetRenderer({
               <ProgressRing percentage={value} colorHex={colorHex} isCompact />
             </div>
             <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-              {widget.collection.replace("_", " ")}
+              {t(`reports.collections.${widget.collection}` as any)}
             </span>
           </button>
         );
@@ -559,7 +566,7 @@ function CustomWidgetRenderer({
               {formattedValue}
             </span>
             <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-              {widget.collection.replace("_", " ")}
+              {t(`reports.collections.${widget.collection}` as any)}
             </span>
           </button>
         );
@@ -584,7 +591,7 @@ function CustomWidgetRenderer({
             {formattedValue}
           </span>
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-            {widget.collection.replace("_", " ")}
+            {t(`reports.collections.${widget.collection}` as any)}
           </span>
         </button>
       );
@@ -608,7 +615,7 @@ function CustomWidgetRenderer({
             <ProgressRing percentage={value} colorHex={colorHex} isCompact />
           </div>
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-            {widget.collection.replace("_", " ")}
+            {t(`reports.collections.${widget.collection}` as any)}
           </span>
         </button>
       );
@@ -636,7 +643,7 @@ function CustomWidgetRenderer({
           </button>
 
           <span className="text-[7px] font-black uppercase tracking-widest mb-0.5" style={{ color: isSwitchOn ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
-            {isSwitchOn ? (widget.switchLabelOn || "ON") : (widget.switchLabelOff || "OFF")}
+            {isSwitchOn ? (widget.switchLabelOn || t("reports.widgets.statusOn")) : (widget.switchLabelOff || t("reports.widgets.statusOff"))}
           </span>
         </div>
       );
@@ -688,14 +695,14 @@ function CustomWidgetRenderer({
             {widget.title}
           </span>
           <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
-            {widget.collection.replace("_", " ")} {wType !== "switch" ? `• ${widget.operation}` : ""}
+            {t(`reports.collections.${widget.collection}` as any)} {wType !== "switch" ? `• ${t(`reports.widgets.builder.formula${widget.operation.charAt(0).toUpperCase() + widget.operation.slice(1)}` as any) || widget.operation}` : ""}
           </p>
         </div>
         
         {isAlert && (
           <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-destructive bg-destructive/10 px-2 py-0.5 rounded-full border border-destructive/20 animate-pulse">
             <ShieldAlert className="w-2.5 h-2.5" />
-            Alert Level
+            {t("reports.widgets.alertLevel")}
           </span>
         )}
       </div>
@@ -713,7 +720,7 @@ function CustomWidgetRenderer({
               <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/35 group-hover/kpi:text-primary group-hover/kpi:translate-x-0.5 group-hover/kpi:-translate-y-0.5 transition-all" />
             </h4>
             <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider mt-1">
-              Click to view detailed records log
+              {t("reports.widgets.clickToViewRecords")}
             </p>
           </button>
         )}
@@ -726,11 +733,11 @@ function CustomWidgetRenderer({
               type="button"
             >
               <h4 className="text-sm font-black text-foreground flex items-center gap-1">
-                Progression
+                {t("reports.widgets.progression")}
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/prog:translate-x-0.5 transition-transform" />
               </h4>
               <p className="text-[9px] text-muted-foreground font-semibold mt-1">
-                Aggregated ratio calculation index
+                {t("reports.widgets.progressionDesc")}
               </p>
             </button>
             <ProgressRing percentage={value} colorHex={colorHex} />
@@ -741,10 +748,10 @@ function CustomWidgetRenderer({
           <div className="flex items-center justify-between w-full">
             <div className="text-left">
               <span className={`text-base font-black uppercase tracking-wider ${isSwitchOn ? "text-primary" : "text-muted-foreground"}`}>
-                {isSwitchOn ? (widget.switchLabelOn || "ACTIVE") : (widget.switchLabelOff || "LOCKED")}
+                {isSwitchOn ? (widget.switchLabelOn || t("reports.status.active")) : (widget.switchLabelOff || t("reports.status.locked"))}
               </span>
               <p className="text-[9px] text-muted-foreground font-semibold mt-1">
-                Click switch handle to toggle live state
+                {t("reports.widgets.clickToToggle")}
               </p>
             </div>
             
@@ -782,6 +789,7 @@ function CustomWidgetChartFallback({
   widget: CustomWidget;
   collections: ReturnType<typeof getWidgetCollections>;
 }): React.JSX.Element | null {
+  const { t } = useTranslation();
   const palette = useBrandPalette();
   const data = useMemo(() => {
     return computeWidgetChartData(widget, collections);
@@ -792,7 +800,7 @@ function CustomWidgetChartFallback({
   if (data.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border/40 rounded-xl bg-card/20">
-        <span className="text-[8px] font-bold uppercase tracking-wider">No chart data</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider">{t("reports.widgets.noChartData")}</span>
       </div>
     );
   }
@@ -849,6 +857,7 @@ export function DashboardWidgets({
   onEditWidget,
   onDeleteWidget
 }: DashboardWidgetsProps = {}): React.JSX.Element | null {
+  const { t } = useTranslation();
   const [localWidgets, setLocalWidgets] = useState<CustomWidget[]>([]);
   const [collections, setCollections] = useState(() => getWidgetCollections());
   
@@ -976,7 +985,7 @@ export function DashboardWidgets({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <LayoutDashboard className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">Pinned Analytics Panels</h3>
+          <h3 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.widgets.pinnedPanels")}</h3>
         </div>
         
         {/* Layout Density Controls */}
@@ -990,7 +999,7 @@ export function DashboardWidgets({
             }`}
             type="button"
           >
-            Comfortable
+            {t("reports.widgets.comfortable")}
           </button>
           <button
             onClick={() => handleToggleGridMode("compact")}
@@ -1001,7 +1010,7 @@ export function DashboardWidgets({
             }`}
             type="button"
           >
-            Compact 100px
+            {t("reports.widgets.compact")}
           </button>
         </div>
       </div>
@@ -1053,7 +1062,7 @@ export function DashboardWidgets({
                       onEditWidget(widget);
                     }}
                     className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all cursor-pointer"
-                    title="Edit widget"
+                    title={t("reports.widgets.editWidget")}
                     type="button"
                   >
                     <Pencil className="w-3 h-3" />
@@ -1066,7 +1075,7 @@ export function DashboardWidgets({
                       onDeleteWidget(widget.id);
                     }}
                     className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground transition-all cursor-pointer"
-                    title="Delete widget"
+                    title={t("reports.widgets.deleteWidget")}
                     type="button"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -1075,7 +1084,7 @@ export function DashboardWidgets({
                 <button
                   onClick={() => handleLocalUnpin(widget.id)}
                   className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all cursor-pointer"
-                  title="Unpin widget"
+                  title={t("reports.widgets.unpinWidget")}
                   type="button"
                 >
                   <PinOff className="w-3 h-3" />
@@ -1103,6 +1112,7 @@ export function DashboardWidgets({
  * PinnedWidgets Main Module Component. Exposes custom Widget builders.
  */
 export default function PinnedWidgets({ category }: { category: string }): React.JSX.Element {
+  const { t } = useTranslation();
   const [widgets, setWidgets] = useState<CustomWidget[]>(() => {
     return getOrInitializeCustomWidgets();
   });
@@ -1259,8 +1269,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
             <LayoutDashboard className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-black text-foreground leading-none tracking-tight">Analytical Widgets</h3>
-            <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-[0.2em] font-sans">Dashboard Panel Integrations</p>
+            <h3 className="text-sm font-black text-foreground leading-none tracking-tight">{t("reports.widgets.title")}</h3>
+            <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-[0.2em] font-sans">{t("reports.widgets.subtitle")}</p>
           </div>
         </div>
         
@@ -1281,7 +1291,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
           type="button"
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
-          {isBuilderOpen ? "Close Builder" : "Create Widget"}
+          {isBuilderOpen ? t("reports.widgets.closeBuilder") : t("reports.widgets.createWidget")}
         </button>
       </div>
 
@@ -1289,8 +1299,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
       {showControls && (
         <div className="bg-card/45 backdrop-blur-xl border border-border/50 p-5 rounded-2xl space-y-4 shadow-sm">
           <div>
-            <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">Dashboard Controls</h4>
-            <p className="text-[9px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">Configure what widgets display on the home dashboard</p>
+            <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.widgets.controlsTitle")}</h4>
+            <p className="text-[9px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.widgets.controlsSubtitle")}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {category === "students" && (
@@ -1303,8 +1313,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground">Total Students Card</p>
-                    <p className="text-[10px] text-muted-foreground">Show card with total active/inactive count</p>
+                    <p className="text-xs font-bold text-foreground">{t("reports.widgets.studentsCard")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.studentsCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
@@ -1315,8 +1325,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground">Enrollment Trends Chart</p>
-                    <p className="text-[10px] text-muted-foreground">Show student growth trends on main page</p>
+                    <p className="text-xs font-bold text-foreground">{t("reports.widgets.enrollmentChart")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.enrollmentChartDesc")}</p>
                   </div>
                 </label>
               </>
@@ -1332,8 +1342,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground">Active Sessions Card</p>
-                    <p className="text-[10px] text-muted-foreground">Show active session count stats</p>
+                    <p className="text-xs font-bold text-foreground">{t("reports.widgets.sessionsCard")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.sessionsCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
@@ -1344,8 +1354,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground">Active Classes Card</p>
-                    <p className="text-[10px] text-muted-foreground">Show active classes counts</p>
+                    <p className="text-xs font-bold text-foreground">{t("reports.widgets.classesCard")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.classesCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
@@ -1356,8 +1366,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground">Sessions List Table</p>
-                    <p className="text-[10px] text-muted-foreground">Show active classes/teachers list table</p>
+                    <p className="text-xs font-bold text-foreground">{t("reports.widgets.sessionsTable")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.sessionsTableDesc")}</p>
                   </div>
                 </label>
               </>
@@ -1373,8 +1383,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground">Attendance Today Card</p>
-                    <p className="text-[10px] text-muted-foreground">Show today's attendance percentage card</p>
+                    <p className="text-xs font-bold text-foreground">{t("reports.widgets.attendanceCard")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.attendanceCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
@@ -1385,8 +1395,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground">Attendance Rate Chart</p>
-                    <p className="text-[10px] text-muted-foreground">Show weekly average attendance charts</p>
+                    <p className="text-xs font-bold text-foreground">{t("reports.widgets.attendanceChart")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.attendanceChartDesc")}</p>
                   </div>
                 </label>
               </>
@@ -1402,8 +1412,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground">Fee Collection Card</p>
-                    <p className="text-[10px] text-muted-foreground">Show dynamic fee collections</p>
+                    <p className="text-xs font-bold text-foreground">{t("reports.widgets.feeCard")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.feeCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
@@ -1414,8 +1424,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground">Outstanding Payments Card</p>
-                    <p className="text-[10px] text-muted-foreground">Show overdue invoice counts and values</p>
+                    <p className="text-xs font-bold text-foreground">{t("reports.widgets.outstandingInvoicesCard")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.outstandingInvoicesCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
@@ -1426,8 +1436,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-foreground">Revenue & Expenses Chart</p>
-                    <p className="text-[10px] text-muted-foreground">Show monthly revenue/expenses bar chart</p>
+                    <p className="text-xs font-bold text-foreground">{t("reports.widgets.revenueChart")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.revenueChartDesc")}</p>
                   </div>
                 </label>
               </>
@@ -1469,8 +1479,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
       {filteredWidgets.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border/50 bg-card/10 backdrop-blur p-8 text-center">
           <LayoutDashboard className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-          <h4 className="text-sm font-black text-foreground uppercase tracking-widest">No Custom Widgets yet</h4>
-          <p className="text-xs text-muted-foreground mt-1">Open the widget builder to construct single-metric widgets.</p>
+          <h4 className="text-sm font-black text-foreground uppercase tracking-widest">{t("reports.widgets.emptyTitle")}</h4>
+          <p className="text-xs text-muted-foreground mt-1">{t("reports.widgets.emptyDescription")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1486,7 +1496,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   <div className="space-y-0.5">
                     <span className="text-[10px] font-black text-foreground uppercase tracking-widest leading-none block">{w.title}</span>
                     <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
-                      {w.widgetType || "kpi"} • {w.collection.replace("_", " ")}
+                      {w.widgetType || "kpi"} • {t(`reports.collections.${w.collection}` as any) || w.collection.replace("_", " ")}
                     </p>
                   </div>
                   
@@ -1499,7 +1509,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                           ? "border-primary bg-primary/10 text-primary" 
                           : "border-border text-muted-foreground hover:text-foreground"
                       }`}
-                      title={w.isPinnedToDashboard ? "Pinned to main dashboard" : "Pin to main dashboard"}
+                      title={w.isPinnedToDashboard ? t("reports.widgets.pinnedToDashboard") : t("reports.widgets.pinToDashboard")}
                       type="button"
                     >
                       {w.isPinnedToDashboard ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
@@ -1508,7 +1518,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     <button
                       onClick={() => handleEditClick(w)}
                       className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                      title="Edit Widget Settings"
+                      title={t("reports.widgets.editWidget")}
                       type="button"
                     >
                       <Pencil className="w-3.5 h-3.5" />
@@ -1517,7 +1527,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     <button
                       onClick={() => handleDeleteWidget(w.id)}
                       className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                      title="Delete Widget"
+                      title={t("reports.widgets.deleteWidget")}
                       type="button"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1564,6 +1574,7 @@ export function WidgetBuilder({
 }: WidgetBuilderProps): React.JSX.Element {
   const collections = useMemo(() => getWidgetCollections(), []);
   const palette = useBrandPalette();
+  const { t } = useTranslation();
   
   const [widgetType, setWidgetType] = useState<CustomWidget["widgetType"]>(() => {
     if (editWidgetConfig) return editWidgetConfig.widgetType || "kpi";
@@ -1754,14 +1765,14 @@ export function WidgetBuilder({
       {/* Builder Header Warning banner detailing Single-Metric rule */}
       <div className="pb-3 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h4 className="text-sm font-bold text-foreground font-sans">Dynamic Widget Architect</h4>
-          <p className="text-[11px] text-muted-foreground">Build high-impact widgets focused on a single live metric or togglable switch utility.</p>
+          <h4 className="text-sm font-bold text-foreground font-sans">{t("reports.widgets.builder.title")}</h4>
+          <p className="text-[11px] text-muted-foreground">{t("reports.widgets.builder.subtitle")}</p>
         </div>
         <div className="flex items-start gap-2 bg-primary/10 border border-primary/20 p-2.5 rounded-xl max-w-sm">
           <Info className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
           <p className="text-[9.5px] text-muted-foreground leading-normal">
-            <span className="font-black text-primary uppercase block mb-0.5">Single-Metric Rule Enforced</span>
-            To preserve legibility and scalability down to 100x100px grid tiles, widgets are physically constrained to exactly one conclusion.
+            <span className="font-black text-primary uppercase block mb-0.5">{t("reports.widgets.builder.singleMetricRule")}</span>
+            {t("reports.widgets.builder.singleMetricRuleDesc")}
           </p>
         </div>
       </div>
@@ -1772,33 +1783,33 @@ export function WidgetBuilder({
           
           {/* Visualizer Type selectors */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-foreground/80 uppercase tracking-wider block">Widget Focus Type</label>
+            <label className="text-[10px] font-black text-foreground/80 uppercase tracking-wider block">{t("reports.widgets.builder.focusType")}</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {(() => {
                 const base = [
-                  { id: "card", label: "Dashboard Card", desc: "KPI card with icon & trend" },
-                  { id: "kpi", label: "KPI Counter", desc: "Large metric tally" },
-                  { id: "progress", label: "Progress Ring", desc: "Radial percentage gauge" },
-                  { id: "switch", label: "Utility Switch", desc: "Toggle state controller" }
+                  { id: "card", label: t("reports.widgets.builder.typeCard"), desc: t("reports.widgets.builder.typeCardDesc") },
+                  { id: "kpi", label: t("reports.widgets.builder.typeKpi"), desc: t("reports.widgets.builder.typeKpiDesc") },
+                  { id: "progress", label: t("reports.widgets.builder.typeProgress"), desc: t("reports.widgets.builder.typeProgressDesc") },
+                  { id: "switch", label: t("reports.widgets.builder.typeSwitch"), desc: t("reports.widgets.builder.typeSwitchDesc") }
                 ];
                 if (builderCollection === "sessions") {
-                  base.push({ id: "sessions-list", label: "Sessions List", desc: "Today's sessions table" });
+                  base.push({ id: "sessions-list", label: t("reports.widgets.builder.typeSessionsList"), desc: t("reports.widgets.builder.typeSessionsListDesc") });
                 } else if (builderCollection === "attendance_records") {
                   base.push(
-                    { id: "attendance-summary", label: "Attendance Summary", desc: "Today's attendance rate" },
-                    { id: "attendance-rate", label: "Attendance Rate", desc: "This week's daily attendance" }
+                    { id: "attendance-summary", label: t("reports.widgets.builder.typeAttendanceSummary"), desc: t("reports.widgets.builder.typeAttendanceSummaryDesc") },
+                    { id: "attendance-rate", label: t("reports.widgets.builder.typeAttendanceRate"), desc: t("reports.widgets.builder.typeAttendanceRateDesc") }
                   );
                 } else if (builderCollection === "finance_invoices") {
                   base.push(
-                    { id: "fee-summary", label: "Fee Summary", desc: "Collection vs Target" },
-                    { id: "outstanding-list", label: "Outstanding List", desc: "Overdue bills list" },
-                    { id: "overdue-obligations", label: "Overdue Obligations", desc: "Islamic dues alerts" },
-                    { id: "revenue-expenses", label: "Revenue & Expenses", desc: "Monthly financial overview" }
+                    { id: "fee-summary", label: t("reports.widgets.builder.typeFeeSummary"), desc: t("reports.widgets.builder.typeFeeSummaryDesc") },
+                    { id: "outstanding-list", label: t("reports.widgets.builder.typeOutstandingList"), desc: t("reports.widgets.builder.typeOutstandingListDesc") },
+                    { id: "overdue-obligations", label: t("reports.widgets.builder.typeOverdueObligations"), desc: t("reports.widgets.builder.typeOverdueObligationsDesc") },
+                    { id: "revenue-expenses", label: t("reports.widgets.builder.typeRevenueExpenses"), desc: t("reports.widgets.builder.typeRevenueExpensesDesc") }
                   );
                 } else if (builderCollection === "students") {
-                  base.push({ id: "enrollment-trends", label: "Enrollment Trends", desc: "Student growth over time" });
+                  base.push({ id: "enrollment-trends", label: t("reports.widgets.builder.typeEnrollmentTrends"), desc: t("reports.widgets.builder.typeEnrollmentTrendsDesc") });
                 } else if (builderCollection === "hasanat_distributions") {
-                  base.push({ id: "hasanat-distribution", label: "Hasanat Distribution", desc: "Weekly points by category" });
+                  base.push({ id: "hasanat-distribution", label: t("reports.widgets.builder.typeHasanatDistribution"), desc: t("reports.widgets.builder.typeHasanatDistributionDesc") });
                 }
                 return base;
               })().map((type) => {
@@ -1830,27 +1841,27 @@ export function WidgetBuilder({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Title field */}
             <div className="space-y-1">
-              <label className={FORM_LABEL}>Widget Label Title</label>
+              <label className={FORM_LABEL}>{t("reports.widgets.builder.labelTitle")}</label>
               <input
                 type="text"
                 value={builderTitle}
                 onChange={(e) => setBuilderTitle(e.target.value)}
-                placeholder="e.g. Total Active Leads"
+                placeholder={t("reports.widgets.builder.placeholderTitle")}
                 className={FORM_INPUT_BUILDER}
               />
             </div>
 
             {widgetType === "card" && mode === "dashboard" && (
               <div className="space-y-1">
-                <label className={`${FORM_LABEL} block`}>Target Dashboard Role</label>
+                <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.dashboardRole")}</label>
                 <select
                   value={builderRole}
                   onChange={(e) => setBuilderRole(e.target.value)}
                   className={`${FORM_INPUT_BUILDER} font-sans`}
                 >
-                  <option value="admin" className="bg-background text-foreground">Admin Dashboard</option>
-                  <option value="teacher" className="bg-background text-foreground">Teacher Dashboard</option>
-                  <option value="accountant" className="bg-background text-foreground">Accountant Dashboard</option>
+                  <option value="admin" className="bg-background text-foreground">{t("reports.widgets.builder.roleAdmin")}</option>
+                  <option value="teacher" className="bg-background text-foreground">{t("reports.widgets.builder.roleTeacher")}</option>
+                  <option value="accountant" className="bg-background text-foreground">{t("reports.widgets.builder.roleAccountant")}</option>
                 </select>
               </div>
             )}
@@ -1859,7 +1870,7 @@ export function WidgetBuilder({
               <>
                 {/* Data collection select */}
                 <div className="space-y-1">
-                  <label className={FORM_LABEL}>Target Data Collection</label>
+                  <label className={FORM_LABEL}>{t("reports.widgets.builder.dataCollection")}</label>
                   <select
                     value={builderCollection}
                     onChange={(e) => setBuilderCollection(e.target.value as CustomWidget["collection"])}
@@ -1867,7 +1878,7 @@ export function WidgetBuilder({
                   >
                     {COLLECTION_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value} className="bg-background text-foreground">
-                        {opt.label}
+                        {t(`reports.collections.${opt.value}` as any) || opt.label}
                       </option>
                     ))}
                   </select>
@@ -1875,23 +1886,23 @@ export function WidgetBuilder({
 
                 {/* Operation type */}
                 <div className="space-y-1">
-                  <label className={FORM_LABEL}>Calculation Formula</label>
+                  <label className={FORM_LABEL}>{t("reports.widgets.builder.calcFormula")}</label>
                   <select
                     value={builderOperation}
                     onChange={(e) => setBuilderOperation(e.target.value as CustomWidget["operation"])}
                     className={FORM_INPUT_BUILDER}
                   >
-                    <option value="count" className="bg-background text-foreground">Count (Total Items)</option>
-                    <option value="percentage" className="bg-background text-foreground">Percentage Ratio (%)</option>
-                    <option value="sum" className="bg-background text-foreground">Sum (Cumulative Total)</option>
-                    <option value="avg" className="bg-background text-foreground">Average (Mean Value)</option>
+                    <option value="count" className="bg-background text-foreground">{t("reports.widgets.builder.formulaCount")}</option>
+                    <option value="percentage" className="bg-background text-foreground">{t("reports.widgets.builder.formulaPercentage")}</option>
+                    <option value="sum" className="bg-background text-foreground">{t("reports.widgets.builder.formulaSum")}</option>
+                    <option value="avg" className="bg-background text-foreground">{t("reports.widgets.builder.formulaAvg")}</option>
                   </select>
                 </div>
 
                 {/* Target fields for numeric values */}
                 <div className="space-y-1">
                   <label className={FORM_LABEL}>
-                    Target Field {["count", "percentage"].includes(builderOperation) && "(Deactivated)"}
+                    {t("reports.widgets.builder.targetField")} {["count", "percentage"].includes(builderOperation) && t("reports.widgets.builder.deactivated")}
                   </label>
                   <select
                     disabled={["count", "percentage"].includes(builderOperation)}
@@ -1900,11 +1911,11 @@ export function WidgetBuilder({
                     className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
                   >
                     {METADATA_FIELDS[builderCollection].numericFields.length === 0 ? (
-                      <option value="" className="bg-background text-foreground">No Numeric Fields Available</option>
+                      <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noNumericFields")}</option>
                     ) : (
                       METADATA_FIELDS[builderCollection].numericFields.map((field) => (
                         <option key={field.value} value={field.value} className="bg-background text-foreground">
-                          {field.label}
+                          {t(`reports.fields.${field.value}` as any) || field.label}
                         </option>
                       ))
                     )}
@@ -1913,16 +1924,16 @@ export function WidgetBuilder({
 
                 {/* Filter fields options */}
                 <div className="space-y-1">
-                  <label className={FORM_LABEL}>Query Filter field (Optional)</label>
+                  <label className={FORM_LABEL}>{t("reports.widgets.builder.filterField")}</label>
                   <select
                     value={builderFilterField}
                     onChange={(e) => setBuilderFilterField(e.target.value)}
                     className={FORM_INPUT_BUILDER}
                   >
-                    <option value="" className="bg-background text-foreground">-- No Filter (All Records) --</option>
+                    <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noFilter")}</option>
                     {METADATA_FIELDS[builderCollection].fields.map((field) => (
                       <option key={field.value} value={field.value} className="bg-background text-foreground">
-                        {field.label}
+                        {t(`reports.fields.${field.value}` as any) || field.label}
                       </option>
                     ))}
                   </select>
@@ -1931,27 +1942,27 @@ export function WidgetBuilder({
                 {/* Query filter condition inputs */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <label className={FORM_LABEL}>Operator</label>
+                    <label className={FORM_LABEL}>{t("reports.widgets.builder.operator")}</label>
                     <select
                       disabled={!builderFilterField}
                       value={builderFilterOperator}
                       onChange={(e) => setBuilderFilterOperator(e.target.value as CustomWidget["filterOperator"])}
                       className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
                     >
-                      <option value="equals" className="bg-background text-foreground">Equals</option>
-                      <option value="contains" className="bg-background text-foreground">Contains</option>
-                      <option value="gt" className="bg-background text-foreground">&gt; Greater Than</option>
-                      <option value="lt" className="bg-background text-foreground">&lt; Less Than</option>
+                      <option value="equals" className="bg-background text-foreground">{t("reports.widgets.builder.opEquals")}</option>
+                      <option value="contains" className="bg-background text-foreground">{t("reports.widgets.builder.opContains")}</option>
+                      <option value="gt" className="bg-background text-foreground">&gt; {t("reports.widgets.builder.opGt")}</option>
+                      <option value="lt" className="bg-background text-foreground">&lt; {t("reports.widgets.builder.opLt")}</option>
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className={FORM_LABEL}>Match Value</label>
+                    <label className={FORM_LABEL}>{t("reports.widgets.builder.matchValue")}</label>
                     <input
                       type="text"
                       disabled={!builderFilterField}
                       value={builderFilterValue}
                       onChange={(e) => setBuilderFilterValue(e.target.value)}
-                      placeholder="Value..."
+                      placeholder={t("reports.widgets.builder.placeholderValue")}
                       className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
                     />
                   </div>
@@ -1960,25 +1971,25 @@ export function WidgetBuilder({
                 {widgetType === "card" && (
                   <>
                     <div className="space-y-1">
-                      <label className={`${FORM_LABEL} block`}>Subtext Style</label>
+                      <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.subtextStyle")}</label>
                       <select
                         value={subTextType}
                         onChange={(e) => setSubTextType(e.target.value as "fixed" | "dynamic")}
                         className={`${FORM_INPUT_BUILDER} font-sans`}
                       >
-                        <option value="dynamic" className="bg-background text-foreground">Dynamic (Matched counts)</option>
-                        <option value="fixed" className="bg-background text-foreground">Fixed custom subtitle text</option>
+                        <option value="dynamic" className="bg-background text-foreground">{t("reports.widgets.builder.subtextDynamic")}</option>
+                        <option value="fixed" className="bg-background text-foreground">{t("reports.widgets.builder.subtextFixed")}</option>
                       </select>
                     </div>
 
                     {subTextType === "fixed" && (
                       <div className="space-y-1">
-                        <label className={`${FORM_LABEL} block`}>Fixed Custom Subtitle</label>
+                        <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.fixedSubtitle")}</label>
                         <input
                           type="text"
                           value={fixedSubText}
                           onChange={(e) => setFixedSubText(e.target.value)}
-                          placeholder="e.g. Registered this semester"
+                          placeholder={t("reports.widgets.builder.placeholderSubtitle")}
                           className={FORM_INPUT_BUILDER}
                         />
                       </div>
@@ -1986,7 +1997,7 @@ export function WidgetBuilder({
 
                     <div className="space-y-1 col-span-1 sm:col-span-2 border-t border-border/40 pt-3">
                       <label className={`${FORM_LABEL} block`}>
-                        Trend Percentage Source
+                        {t("reports.widgets.builder.trendSource")}
                       </label>
                       <div className="grid grid-cols-2 gap-2 bg-card/20 border border-border/60 p-1 rounded-xl max-w-sm">
                         <button
@@ -1998,7 +2009,7 @@ export function WidgetBuilder({
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
-                          Live Database
+                          {t("reports.widgets.builder.sourceDb")}
                         </button>
                         <button
                           type="button"
@@ -2009,7 +2020,7 @@ export function WidgetBuilder({
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
-                          Manual Override
+                          {t("reports.widgets.builder.sourceManual")}
                         </button>
                       </div>
                     </div>
@@ -2017,12 +2028,12 @@ export function WidgetBuilder({
                     <div className="space-y-1 col-span-1 sm:col-span-2">
                       {trendType === "database" ? (
                         <p className="text-[10px] text-muted-foreground italic leading-normal bg-primary/5 p-3 rounded-xl border border-primary/10">
-                          ⚡ <strong>Dynamic Mode:</strong> Automatically calculates card growth rate velocity comparing recent 30-day database records against preceding 30-day window.
+                          ⚡ {t("reports.widgets.builder.dynamicModeDesc")}
                         </p>
                       ) : (
                         <>
                           <div className="flex justify-between items-center select-none">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Manual Trend Percentage</label>
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.widgets.builder.manualTrend")}</label>
                             <span className={`text-[11px] font-black px-1.5 py-0.5 rounded-full ${
                               trend > 0 ? "bg-success/20 text-success" : trend < 0 ? "bg-destructive/20 text-destructive" : "bg-muted text-muted-foreground"
                             }`}>
@@ -2042,9 +2053,9 @@ export function WidgetBuilder({
                               type="button"
                               onClick={() => setTrend(0)}
                               className="px-2 py-1 text-[9px] font-bold uppercase tracking-wider bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg border border-border transition-colors cursor-pointer"
-                              title="Reset Trend"
+                              title={t("reports.widgets.builder.resetTrend")}
                             >
-                              Reset
+                              {t("reports.widgets.builder.reset")}
                             </button>
                           </div>
                         </>
@@ -2057,38 +2068,38 @@ export function WidgetBuilder({
               <>
                 {/* Switch options fields */}
                 <div className="space-y-1">
-                  <label className={FORM_LABEL}>Switch Action Target</label>
+                  <label className={FORM_LABEL}>{t("reports.widgets.builder.switchTarget")}</label>
                   <select
                     value={switchActionType}
                     onChange={(e) => setSwitchActionType(e.target.value as "app_setting" | "db_record")}
                     className={FORM_INPUT_BUILDER}
                   >
-                    <option value="app_setting" className="bg-background text-foreground">App Visibilities & Settings Toggle</option>
-                    <option value="db_record" className="bg-background text-foreground">Specific Database Record Toggle</option>
+                    <option value="app_setting" className="bg-background text-foreground">{t("reports.widgets.builder.switchTargetApp")}</option>
+                    <option value="db_record" className="bg-background text-foreground">{t("reports.widgets.builder.switchTargetDb")}</option>
                   </select>
                 </div>
 
                 {switchActionType === "app_setting" ? (
                   <div className="space-y-1">
-                    <label className={FORM_LABEL}>Select Control Parameter</label>
+                    <label className={FORM_LABEL}>{t("reports.widgets.builder.selectParameter")}</label>
                     <select
                       value={switchStateKey}
                       onChange={(e) => setSwitchStateKey(e.target.value)}
                       className={FORM_INPUT_BUILDER}
                     >
-                      <option value="section_enrollmentChart" className="bg-background text-foreground">Enrollment trends chart visibility</option>
-                      <option value="section_revenueChart" className="bg-background text-foreground">Revenue chart visibility</option>
-                      <option value="section_attendanceChart" className="bg-background text-foreground">Weekly attendance rate chart visibility</option>
-                      <option value="section_hasanatChart" className="bg-background text-foreground">Hasanat distribution chart visibility</option>
-                      <option value="section_sessionsTable" className="bg-background text-foreground">Classes list table visibility</option>
-                      <option value="app_setting_attendance_lock" className="bg-background text-foreground">Lock Attendance entries submission</option>
-                      <option value="app_setting_mute_notifications" className="bg-background text-foreground">Mute dashboard alerts/banners</option>
+                      <option value="section_enrollmentChart" className="bg-background text-foreground">{t("reports.widgets.builder.paramEnrollmentChart")}</option>
+                      <option value="section_revenueChart" className="bg-background text-foreground">{t("reports.widgets.builder.paramRevenueChart")}</option>
+                      <option value="section_attendanceChart" className="bg-background text-foreground">{t("reports.widgets.builder.paramAttendanceChart")}</option>
+                      <option value="section_hasanatChart" className="bg-background text-foreground">{t("reports.widgets.builder.paramHasanatChart")}</option>
+                      <option value="section_sessionsTable" className="bg-background text-foreground">{t("reports.widgets.builder.paramSessionsTable")}</option>
+                      <option value="app_setting_attendance_lock" className="bg-background text-foreground">{t("reports.widgets.builder.paramAttendanceLock")}</option>
+                      <option value="app_setting_mute_notifications" className="bg-background text-foreground">{t("reports.widgets.builder.paramMuteNotifications")}</option>
                     </select>
                   </div>
                 ) : (
                   <>
                     <div className="space-y-1">
-                      <label className={FORM_LABEL}>Record Collection</label>
+                      <label className={FORM_LABEL}>{t("reports.widgets.builder.recordCollection")}</label>
                       <select
                         value={switchCollection}
                         onChange={(e) => {
@@ -2098,20 +2109,20 @@ export function WidgetBuilder({
                         className={FORM_INPUT_BUILDER}
                       >
                         {COLLECTION_OPTIONS.map(opt => (
-                          <option key={opt.value} value={opt.value} className="bg-background text-foreground">{opt.label}</option>
+                          <option key={opt.value} value={opt.value} className="bg-background text-foreground">{t(`reports.collections.${opt.value}` as any) || opt.label}</option>
                         ))}
                       </select>
                     </div>
 
                     <div className="space-y-1">
-                      <label className={FORM_LABEL}>Select Target Record</label>
+                      <label className={FORM_LABEL}>{t("reports.widgets.builder.selectRecord")}</label>
                       <select
                         value={switchRecordId}
                         onChange={(e) => setSwitchRecordId(e.target.value)}
                         className={FORM_INPUT_BUILDER}
                       >
                         {dbRecordsList.length === 0 ? (
-                          <option value="" className="bg-background text-foreground">No records loaded</option>
+                          <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noRecordsLoaded")}</option>
                         ) : (
                           dbRecordsList.map(rec => (
                             <option key={rec.id} value={rec.id} className="bg-background text-foreground">{rec.label}</option>
@@ -2124,22 +2135,22 @@ export function WidgetBuilder({
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <label className={FORM_LABEL}>ON Toggle label</label>
+                    <label className={FORM_LABEL}>{t("reports.widgets.builder.labelOn")}</label>
                     <input
                       type="text"
                       value={switchLabelOn}
                       onChange={(e) => setSwitchLabelOn(e.target.value)}
-                      placeholder="e.g. Active"
+                      placeholder={t("reports.widgets.builder.placeholderActive")}
                       className={FORM_INPUT_BUILDER}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className={FORM_LABEL}>OFF Toggle label</label>
+                    <label className={FORM_LABEL}>{t("reports.widgets.builder.labelOff")}</label>
                     <input
                       type="text"
                       value={switchLabelOff}
                       onChange={(e) => setSwitchLabelOff(e.target.value)}
-                      placeholder="e.g. Inactive"
+                      placeholder={t("reports.widgets.builder.placeholderInactive")}
                       className={FORM_INPUT_BUILDER}
                     />
                   </div>
@@ -2158,43 +2169,43 @@ export function WidgetBuilder({
                   onChange={(e) => setThresholdEnabled(e.target.checked)}
                   className="rounded text-primary focus:ring-primary/20 cursor-pointer"
                 />
-                <span className="text-xs font-bold text-foreground">Enable Alerting Color Threshold</span>
+                <span className="text-xs font-bold text-foreground">{t("reports.widgets.builder.enableThreshold")}</span>
               </label>
 
               {thresholdEnabled && (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-in text-left">
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Trigger Condition</label>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.triggerCondition")}</label>
                     <select
                       value={thresholdCondition}
                       onChange={(e) => setThresholdCondition(e.target.value as "lt" | "gt" | "equals")}
                       className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
                     >
-                      <option value="lt" className="bg-background text-foreground">&lt; Drops Below</option>
-                      <option value="gt" className="bg-background text-foreground">&gt; Exceeds</option>
-                      <option value="equals" className="bg-background text-foreground">= Equals exactly</option>
+                      <option value="lt" className="bg-background text-foreground">&lt; {t("reports.widgets.builder.conditionLt")}</option>
+                      <option value="gt" className="bg-background text-foreground">&gt; {t("reports.widgets.builder.conditionGt")}</option>
+                      <option value="equals" className="bg-background text-foreground">= {t("reports.widgets.builder.conditionEquals")}</option>
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Threshold Value</label>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.thresholdValue")}</label>
                     <input
                       type="number"
                       value={thresholdValue}
                       onChange={(e) => setThresholdValue(e.target.value)}
-                      placeholder="e.g. 75"
+                      placeholder={t("reports.widgets.builder.placeholderThreshold")}
                       className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Alert Theme Color</label>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.alertColor")}</label>
                     <select
                       value={thresholdColor}
                       onChange={(e) => setThresholdColor(e.target.value as "red" | "amber" | "yellow")}
                       className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
                     >
-                      <option value="red" className="text-destructive bg-background">Critical Red</option>
-                      <option value="amber" className="text-warning bg-background">Warning Amber</option>
-                      <option value="yellow" className="text-warning bg-background">Notice Yellow</option>
+                      <option value="red" className="text-destructive bg-background">{t("reports.widgets.builder.colorRed")}</option>
+                      <option value="amber" className="text-warning bg-background">{t("reports.widgets.builder.colorAmber")}</option>
+                      <option value="yellow" className="text-warning bg-background">{t("reports.widgets.builder.colorYellow")}</option>
                     </select>
                   </div>
                 </div>
@@ -2204,7 +2215,7 @@ export function WidgetBuilder({
 
           {/* Theme Palette selecting color */}
           <div className="space-y-1.5 text-left font-sans">
-            <label className={`${FORM_LABEL} block`}>Default Theme Color</label>
+            <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.defaultColor")}</label>
             <div className="flex flex-wrap gap-2">
               {["emerald", "blue", "violet", "amber", "red"].map((colorName) => {
                 const isSelected = builderColor === colorName;
@@ -2233,13 +2244,13 @@ export function WidgetBuilder({
             <div className="space-y-2 pt-3 border-t border-border/45 relative z-10">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                  Card Visual Icon Selector
+                  {t("reports.widgets.builder.iconSelector")}
                 </label>
                 <div className="relative max-w-xs w-full">
                   <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground pointer-events-none" style={{ width: 14, height: 14 }} />
                   <input
                     type="text"
-                    placeholder="Search icons..."
+                    placeholder={t("reports.widgets.builder.searchIcons")}
                     value={iconSearch}
                     onChange={(e) => setIconSearch(e.target.value)}
                     className="w-full pl-8 pr-3 py-1.5 text-[11px] rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in"
@@ -2259,7 +2270,7 @@ export function WidgetBuilder({
                         : "bg-card/30 border-border/50 text-muted-foreground hover:text-foreground hover:bg-card/50"
                     }`}
                   >
-                    {tab}
+                    {t(`reports.widgets.builder.cat${tab.charAt(0).toUpperCase() + tab.slice(1)}` as any) || tab}
                   </button>
                 ))}
               </div>
@@ -2279,7 +2290,7 @@ export function WidgetBuilder({
                     return ICON_CATEGORIES[activeIconTab]?.includes(name) || false;
                   });
                   if (filteredIcons.length === 0) {
-                    return <p className="text-[10px] text-muted-foreground italic col-span-full py-2 text-center font-sans">No matching icons found.</p>;
+                    return <p className="text-[10px] text-muted-foreground italic col-span-full py-2 text-center font-sans">{t("reports.widgets.builder.noIconsFound")}</p>;
                   }
                   return filteredIcons.map((iconName) => {
                     const Icon = ICONS_LIST[iconName];
@@ -2310,13 +2321,13 @@ export function WidgetBuilder({
         <div className="p-4 rounded-2xl border border-border bg-card/10 backdrop-blur-xl flex flex-col justify-between relative min-h-[350px]">
           <div className="space-y-4">
             <div className="flex items-center justify-between text-left">
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">Scalability Tester Preview</span>
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">{t("reports.widgets.builder.testerPreview")}</span>
               <span className="text-[9px] text-primary font-bold">{scalerSize}x{scalerSize}px</span>
             </div>
 
             {/* Size slider widget scalability demonstrator */}
             <div className="space-y-1 bg-card/30 p-2.5 rounded-xl border border-border/50">
-              <label className="text-[8px] font-black uppercase tracking-wider text-muted-foreground block">Drag to test dimension scaling</label>
+              <label className="text-[8px] font-black uppercase tracking-wider text-muted-foreground block">{t("reports.widgets.builder.dragToScale")}</label>
               <input
                 type="range"
                 min={100}
@@ -2350,7 +2361,7 @@ export function WidgetBuilder({
               onClick={onCancelEdit}
               className="flex-1 py-2.5 rounded-xl border border-border bg-card/50 hover:bg-muted text-foreground font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer font-sans"
             >
-              Cancel
+              {t("reports.widgets.builder.cancel")}
             </button>
             <button
               type="button"
@@ -2390,7 +2401,7 @@ export function WidgetBuilder({
               }}
               className="flex-[2] py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-[11px] uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg hover:shadow-primary/20 shadow-primary/10 cursor-pointer font-sans"
             >
-              {editWidgetConfig ? "Update Widget" : "Create Widget"}
+              {editWidgetConfig ? t("reports.widgets.builder.updateWidget") : t("reports.widgets.builder.createWidget")}
             </button>
           </div>
         </div>

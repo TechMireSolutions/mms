@@ -1,0 +1,95 @@
+---
+description: Local dev setup, environment variables, Docker, backend ports, health endpoints, Linux compatibility, and CI expectations.
+paths:
+  - "package.json"
+  - "pnpm-workspace.yaml"
+  - "turbo.json"
+  - "apps/backend/Dockerfile"
+  - "restart_servers.sh"
+  - ".env*"
+  - "apps/backend/.env.example"
+  - "scripts/**/*.sh"
+  - "scripts/apache/**"
+  - "apps/backend/src/index.ts"
+  - ".github/workflows/**"
+---
+
+# MMS Operations & Infrastructure
+
+Canonical operational and deployment standards for the Madrasa Management System (MMS) monorepo.
+
+## 1. Prerequisites & Environment Setup
+- **Node.js**: Version **26+** is required (as defined in the root `package.json` `engines`).
+- **pnpm**: Version **11.8+** (utilizing Corepack `corepack enable`).
+
+### Workspace Commands (from repo root)
+```bash
+pnpm install          # Install all dependencies across workspaces
+pnpm dev              # Start frontend + backend concurrently via Turbo
+pnpm build            # Build shared package and applications
+pnpm typecheck        # Run typechecking across the entire monorepo
+pnpm test             # Run Vitest suites for all workspaces
+```
+
+### Local Dev Helper Scripts
+```bash
+./restart_servers.sh              # Start dev servers in GNU screen (PostgreSQL + health check)
+./restart_servers.sh status       # Check status of screen session
+./restart_servers.sh stop         # Stop screen session and running servers
+./restart_servers.sh --foreground # Run servers in foreground (blocking)
+```
+
+---
+
+## 2. Environment Variables & Ports Configuration
+
+### Local vs Production Ports
+- **Production Backend**: **`5002`** (defined as `MMS_PRODUCTION_BACKEND_PORT`).
+- **Local Dev Backend**: `3000` (defined as `MMS_BACKEND_PORT`).
+- **Local Dev Frontend**: `5173` (Vite dev server).
+
+> [!CRITICAL]
+> Under `NODE_ENV=production`, binding to ports `3000` or `3001` is strictly forbidden. The server **must exit** if these ports are set.
+
+### Local Subdomain Resolution
+- Local tenant subdomains (e.g. `dar-ul-quran.localhost:5173`) are proxied through Vite's dev server configuration.
+- The dev server configuration maps requests to the backend (`127.0.0.1:3000`) while preserving host headers via proxy rules (forwarding through the `X-Forwarded-Host` header). AsyncLocalStorage parses this header to resolve tenant contexts in dev mode.
+
+### Environment Schema
+| Variable | App | Purpose / Requirements |
+|----------|-----|------------------------|
+| `VITE_API_URL` | Frontend | API URL; proxies `/api` to `:3000` in dev. |
+| `DATABASE_URL` | Backend | PostgreSQL connection string. Required. |
+| `JWT_SECRET` | Backend | Authentication token signature secret. Required. |
+| `PORT` | Backend | Port binding (`5002` in production; `3000` or custom in dev). |
+| `ALLOWED_ORIGIN` | Backend | Production CORS host. Must explicitly match frontend. |
+| `NODE_ENV` | Backend | Run environment (`production` restricts CORS / cookie options). |
+
+---
+
+## 3. Linux & Ubuntu VPS Compatibility
+To ensure seamless deployments on Ubuntu systems:
+- **Case-Sensitive Imports**: Every import path must match the exact directory and file casing on disk. Verify using `pnpm typecheck`.
+- **Line Endings (LF)**: Shell scripts (`.sh` files) must use Unix-style LF (`\n`) line endings. Configure git with `git config core.autocrlf input`.
+- **Path Formatting**: Always use forward slashes `/` or `node:path` utilities (`join`, `resolve`). Never hardcode backslashes `\`.
+- **Non-Root Execution**: PM2 and Node processes must run under a non-privileged system user (`node`, `www-data`, or the deploy user `syedaalin`).
+- **Write Limits**: Limit write access exclusively to `/var/www/mmsv2/data` and `/var/www/mmsv2/.logs`. Keep all application source files read-only.
+
+---
+
+## 4. CI/CD & Deploy Procedures
+The GitHub Actions workflow (`.github/workflows/ci.yml`) executes on every push/PR to `main`:
+1. **pnpm install --frozen-lockfile**
+2. **pnpm typecheck**
+3. **pnpm lint** (frontend & backend)
+4. **pnpm test**
+
+### Health Checks
+- **Liveness**: `GET /health` -> 200 (server up).
+- **Readiness**: `GET /ready` -> 200 (pings PostgreSQL; returns 503 if down).
+- PM2 deployments must curl `/ready` post-restart.
+
+### Deploy Guidelines
+- Merge configs using `scripts/merge-backend-env.sh` (always sets `PORT=5002`).
+- Configure Apache upstreams via `scripts/fix-apache-upstream.sh` to forward to `:5002`.
+- Run health checks locally on the production host using `curl http://127.0.0.1:5002/health`.

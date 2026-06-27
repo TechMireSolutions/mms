@@ -1,11 +1,11 @@
 ---
 name: mms-background-jobs
-description: Implements or reviews MMS background jobs and queued processing from globle.md section 8: large exports, imports, bulk operations, dedup scans, progress UI, download artifacts, tenant/user scoping, RBAC, and audit.
+description: Implements or reviews MMS background jobs and queued processing from mms-module-architecture.md §5: large exports, imports, bulk operations, dedup scans, progress UI, download artifacts, tenant/user scoping, RBAC, and audit.
 ---
 
 # MMS Background Jobs Workflow
 
-Source: `globle.md` section 8. Rules: `mms-background-jobs.mdc`, `mms-module-crosscutting.mdc`, `mms-security.mdc`, `mms-rbac.mdc`.
+Source: `mms-module-architecture.md` §5. Rules: `mms-module-architecture.md`, `mms-auth-security.md`.
 
 Use this skill when adding or changing background processing, export/download artifacts, bulk operation progress, job tray UX, or queued sync recovery.
 
@@ -13,7 +13,7 @@ Use this skill when adding or changing background processing, export/download ar
 
 - Backend routes: `apps/backend/src/routes/backgroundJobs.ts`
 - Worker registry: `apps/backend/src/services/backgroundJobWorkerService.ts`
-- Runners: `apps/backend/src/services/backgroundJobRunners.ts`
+- Runners: `apps/backend/src/services/backgroundJobRunnerService.ts`
 - Artifacts: `apps/backend/src/services/exportArtifactService.ts`
 - Frontend API/store: `apps/frontend/src/lib/backgroundJobs/`
 - Tray: `apps/frontend/src/components/ui/BackgroundJobsTray.tsx`

@@ -5,16 +5,16 @@ import {
 } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES } from '@mms/shared';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import useDebounce from "../../hooks/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
 import { useMergedObligationContacts } from "../../hooks/useObligationLookups";
-import useTranslation from "@/hooks/useTranslation";
-import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 
-const PrintInvoiceModal = lazy(() => import("./invoice/PrintInvoiceModal"));
+const PrintInvoiceModal = lazy(() => import("./invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
 function fmtAmount(amount: string | number, currencyId: string, currencies: any[]): string {
   const cur = currencies.find((c) => c.id === currencyId);
@@ -51,7 +51,7 @@ export interface ObligationCollectionListProps {
   columnCustomizer?: ColumnCustomizerProps;
 }
 
-export default function ObligationCollectionList({
+export function ObligationCollectionList({
   collections,
   obligationTypes,
   reps,

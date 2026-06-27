@@ -2,28 +2,20 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Share2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getDefaultFieldValue, Contact, SocialLink, FieldDefinition } from "@mms/shared";
 
-import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
-import { FieldDefinition } from "@mms/shared";
-import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import useTranslation from "@/hooks/useTranslation";
+import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { useVisibleContactFields } from "@/hooks/useVisibleContactFields";
+import { useContactConfig, type ValidationError } from '@/lib/contexts/ContactConfigContext';
+import { useTranslation } from "@/hooks/useTranslation";
 
-interface ContactSocial {
-  platform: string;
-  url: string;
-  [key: string]: unknown;
-}
-
-interface ContactFormData {
-  socials?: ContactSocial[];
-  [key: string]: unknown;
-}
+type ContactSocial = SocialLink & Record<string, unknown>;
 
 interface SocialTabProps {
-  data: ContactFormData;
-  onChange: (updatedData: ContactFormData) => void;
+  data: Partial<Contact>;
+  onChange: (updatedData: Partial<Contact>) => void;
   required?: boolean;
+  errors?: ValidationError[];
 }
 
 /**
@@ -35,6 +27,7 @@ export default function SocialTab({
   data,
   onChange,
   required = false,
+  errors = [],
 }: SocialTabProps): React.JSX.Element {
   const { socialPlatforms, socialPlaceholders, updateSocialPlatforms } = useContactConfig();
   const { t } = useTranslation();
@@ -47,13 +40,13 @@ export default function SocialTab({
       if (f.key === "platform") {
         item[f.key] = defaultSocialPlatform;
       } else {
-        item[f.key] = f.defaultValue !== undefined ? f.defaultValue : "";
+        item[f.key] = getDefaultFieldValue(f);
       }
     });
     return item as ContactSocial;
   };
 
-  const socials = data.socials && data.socials.length > 0 ? data.socials : [createNewSocial()];
+  const socials = (data.socials || []) as ContactSocial[];
 
   const upd = (list: ContactSocial[]): void => {
     onChange({ ...data, socials: list });
@@ -110,15 +103,21 @@ export default function SocialTab({
 
           {bodyFields.length > 0 && (
             <div className={COLLECTION_BODY}>
-              {bodyFields.map((field) => (
-                <Field key={field.key} label={field.label} required={field.required} hint={field.description}>
-                  <CustomFieldInput
-                    field={{ ...field, placeholder: getPlaceholder(field, s.platform || defaultSocialPlatform) }}
-                    value={s[field.key]}
-                    onChange={(val) => updateSocial(i, { [field.key]: val })}
-                  />
-                </Field>
-              ))}
+              {bodyFields.map((field) => {
+                const fieldError = errors.find(
+                  (err) => err.tabId === "socials" && err.index === i && err.fieldId === field.key
+                );
+                return (
+                  <Field key={field.key} id={`socials-${i}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
+                    <CustomFieldInput
+                      field={{ ...field, placeholder: getPlaceholder(field, s.platform || defaultSocialPlatform) }}
+                      value={s[field.key]}
+                      onChange={(val) => updateSocial(i, { [field.key]: val })}
+                      error={!!fieldError}
+                    />
+                  </Field>
+                );
+              })}
             </div>
           )}
         </motion.div>

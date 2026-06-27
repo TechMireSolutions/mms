@@ -1,0 +1,68 @@
+---
+description: Folder structure, colocation, file size limits, naming conventions for symbols/files, and database-to-UI name alignments.
+paths:
+  - "apps/**/*.ts"
+  - "apps/**/*.tsx"
+  - "packages/**/*.ts"
+  - "scripts/**/*.ts"
+  - "scripts/**/*.sh"
+  - "e2e/**"
+  - "apps/**"
+  - "packages/**"
+---
+
+# MMS File Structure & Naming Conventions
+
+Governs code layout, file colocation, splitting thresholds, casing conventions, and naming consistency across the monorepo workspaces.
+
+---
+
+## 1. Monorepo & Directory Structure
+MMS uses a strict `pnpm` workspace monorepo layout:
+- `apps/frontend/`: React single page application (SPA).
+- `apps/backend/`: Fastify API backend.
+- `packages/shared/`: `@mms/shared` types, defaults, and I/O-free utilities.
+- `scripts/`: Operational scripts and deployment helpers.
+- `e2e/`: Playwright end-to-end integration tests.
+
+### Casing & Folder Names
+- Folders under `apps/frontend/src/components/` must use single lowercase words or `camelCase` (e.g. `contacts/`, `questionBank/`).
+- Feature routes are mapped in `apps/frontend/src/pages/` (PascalCase: `Students.tsx`).
+- Components for a single feature must be colocated inside that feature's directory (`components/{module}/`), not spread across global folders.
+- Backend routes are mapped in `apps/backend/src/routes/` (camelCase: `contacts.ts`, `platformAuth.ts`).
+
+---
+
+## 2. Naming Conventions
+
+### Case Conventions Reference
+| Target | Convention | Example |
+|--------|------------|---------|
+| React Pages & Components | `PascalCase` | `Students.tsx`, `StudentForm.tsx` |
+| Custom React Hooks | `use` + `PascalCase` | `useStudents.ts`, `useModuleTierTabs.ts` |
+| Functions, Methods, Variables | `camelCase` (verb-first) | `parsePhoneNumber`, `buildApp` |
+| Static Constants | `SCREAMING_SNAKE` | `DEFAULT_GLOBAL_SETTINGS` |
+| TypeScript Types & Interfaces | `PascalCase` (no `I` prefix) | `Contact`, `StudentCreateInput` |
+| JSON API properties | `camelCase` | `{ firstName, loginEmail }` |
+| DB tables, JSON keys, fields | `snake_case` | `contact_roles`, `global_settings` |
+| URL route paths | `kebab-case` | `/api/students`, `/api/platform/workspaces` |
+| Translation & permission keys | `dot.notation` | `students.actions.add`, `students.write` |
+| Script files | `kebab-case.sh` | `sync-skills.sh`, `deploy-on-server.sh` |
+
+### Casing Alignment across Layers (Strict UI-DB Casing)
+All internal naming (variables, parameters, types) and database naming (tables, columns, index fields) must strictly align with the UI representation, regardless of position (prefix/suffix).
+- *Example*: If the UI displays "Contact Role", the database column must be `contact_role`, the TS variable `contactRole` / `ContactRole` (e.g. `contactRoleId`). Using custom abbreviations like `cntct_rl` or generic names like `role` is forbidden.
+
+---
+
+## 3. Code Organization & Splitting Thresholds
+To prevent monolithic components and maintain clean boundaries:
+- **Max File Size**: Files exceeding **~300 lines** must be split by concern (e.g., extracting hooks, sub-components, or pure utilities).
+- **Separation of Concerns**: If a component has $> 3$ distinct responsibilities, split it.
+- **Dry-run Refactoring**: Extract duplicated JSX elements appearing $\ge 2$ times into reusable layout helpers.
+- **Named Exports**: Always use named exports for helper utilities, components, and hooks. Default exports are only allowed for lazy-loaded pages (`pages/*.tsx`).
+
+### Banned Symbols & Names
+- Do not use generic words like `data`, `info`, `helper`, or `util` as a sole variable or class name (use `contactFieldUtils` instead).
+- Do not use legacy terms (e.g., `persona` or `Persona`).
+- Prune `tmp`, `old`, `new`, or `copy` suffixes from files and directories on touch.

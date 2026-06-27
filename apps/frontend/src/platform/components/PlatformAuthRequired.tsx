@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { ROUTES } from '@/lib/config/routes';
-import PlatformLoadingScreen from '@/platform/components/PlatformLoadingScreen';
+import { PlatformLoadingScreen } from '@/platform/components/PlatformLoadingScreen';
 import ApexPageNotFound from '@/platform/components/ApexPageNotFound';
 
 /**

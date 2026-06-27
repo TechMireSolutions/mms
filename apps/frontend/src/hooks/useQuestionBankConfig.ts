@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { getObject, saveObject } from '@/lib/db';
 import {
   DEFAULT_QUESTION_BANK_FIELD_DEFS,

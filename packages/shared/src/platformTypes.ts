@@ -4,11 +4,14 @@ export const PLATFORM_SUPER_USERS_OBJECT_KEY = 'platform_super_users';
 /** Idle minutes before apex platform console auto sign-out. */
 export const PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES = 30;
 
+export type PlatformRole = 'super_user' | 'admin';
+
 /** Public platform operator — separate from tenant `User`. */
 export interface PlatformUser {
   id: string;
   email: string;
   name: string;
+  role: PlatformRole;
 }
 
 /** Platform super-user profile returned from `/api/platform/auth/me`. */

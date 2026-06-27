@@ -51,3 +51,9 @@ export const workspaceEnabledPatchBodySchema = z.object({
 export const workspaceDeleteBodySchema = z.object({
   password: z.string().min(1),
 });
+
+export const platformCreateAdminBodySchema = z.object({
+  name: z.string().min(2),
+  email: z.string().min(3),
+  password: z.string().min(PLATFORM_MIN_PASSWORD_LENGTH),
+});

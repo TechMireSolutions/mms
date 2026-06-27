@@ -1,5 +1,5 @@
 import React from 'react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Skeleton shell shown while tenant branding loads — matches auth card layout. */
 export default function AuthLoadingShell(): React.JSX.Element {

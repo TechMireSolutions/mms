@@ -4,10 +4,10 @@ import { entityResolveBodySchema } from './commonSchemas.js';
 
 const studentCoreSchema = z.object({
   id: z.union([z.string(), z.number()]),
-  contactId: z.union([z.string(), z.number()]).optional(),
-  fatherContactId: z.union([z.string(), z.number()]).optional(),
-  motherContactId: z.union([z.string(), z.number()]).optional(),
-  guardianContactId: z.union([z.string(), z.number()]).optional(),
+  contactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
+  fatherContactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
+  motherContactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
+  guardianContactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
   studentId: z.string().optional(),
   status: z.string().optional(),
   enrollmentDate: z.string().optional(),

@@ -7,7 +7,7 @@ import {
 } from '../../components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useQuestionBankConfig } from '@/hooks/useQuestionBankConfig';
 import {
   formatQuestionSourcesCitation,
@@ -20,7 +20,7 @@ import {
   type QuestionBankQuestion as Question,
   type ModuleColumnRegistryEntry,
 } from '@mms/shared';
-import ModuleColumnCustomizer from '../ui/ModuleColumnCustomizer';
+import { ModuleColumnCustomizer } from '../ui/ModuleColumnCustomizer';
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
@@ -49,7 +49,7 @@ interface QuestionBankProps {
   columnCustomizer?: ColumnCustomizerProps;
 }
 
-export default function QuestionBank({
+export function QuestionBank({
   questions,
   onUpdate,
   modalOpen: controlledOpen,

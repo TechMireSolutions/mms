@@ -7,7 +7,7 @@ interface PlatformPageShellProps {
 }
 
 /** Shared apex platform page layout (LTR card shell). */
-export default function PlatformPageShell({
+export function PlatformPageShell({
   children,
   width = "lg",
 }: PlatformPageShellProps): React.JSX.Element {

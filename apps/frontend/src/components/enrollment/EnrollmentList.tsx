@@ -2,14 +2,14 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Search, Eye, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { ENROLLMENT_STATUSES, STATUS_MAP, Enrollment, EnrollmentStatus } from '@/lib/data/enrollmentData';
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsByIds } from "@/hooks/useStudents";
-import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "../ui/FormSelect";
+import { FormSelect } from "../ui/FormSelect";
 
 const PAGE_SIZE = 12;
 
@@ -39,7 +39,7 @@ interface EnrollmentListProps {
 /**
  * Renders a paginated, filterable table list of enrollment records.
  */
-export default function EnrollmentList({
+export function EnrollmentList({
   enrollments,
   canWrite,
   onView,

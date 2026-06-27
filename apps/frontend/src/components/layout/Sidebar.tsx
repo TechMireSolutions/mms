@@ -3,10 +3,10 @@ import { Link, useLocation } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import useBranding from "@/hooks/useBranding";
+import { useBranding } from "@/hooks/useBranding";
 
-import useGlobalSettings from "@/hooks/useGlobalSettings";
-import useTranslation from "@/hooks/useTranslation";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
+import { useTranslation } from "@/hooks/useTranslation";
 import { NAV_ITEMS } from "@/lib/config/navConfig";
 import { isNavPathActive, ROUTES } from "@/lib/config/routes";
 import { prefetchRoute } from "@/lib/routing/routePrefetch";

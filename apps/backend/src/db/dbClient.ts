@@ -1,13 +1,13 @@
-import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from './schema.js';
 
-let _db: BetterSQLite3Database<typeof schema> | null = null;
+let _db: NodePgDatabase<typeof schema> | null = null;
 
-export function setDb(instance: BetterSQLite3Database<typeof schema>): void {
+export function setDb(instance: NodePgDatabase<typeof schema>): void {
   _db = instance;
 }
 
-export function getDb(): BetterSQLite3Database<typeof schema> {
+export function getDb(): NodePgDatabase<typeof schema> {
   if (!_db) {
     throw new Error('Database not initialized');
   }

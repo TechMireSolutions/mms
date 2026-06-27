@@ -11,14 +11,13 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [antigravity-workspace](antigravity-workspace/SKILL.md) | Antigravity orientation, rules/skills sync |
 | [mms-dev-setup](mms-dev-setup/SKILL.md) | Install, run servers, env, typecheck |
 | [mms-frontend](mms-frontend/SKILL.md) | Frontend pages, hooks, apiClient, Vite, FE tests |
-| [mms-module-page](mms-module-page/SKILL.md) | New module or three-tier page — `globle.md` |
-| [mms-module-work](mms-module-work/SKILL.md) | Command centre and Work tier — metrics, directory, drawer, bulk actions (`globle.md` §2–§3) |
-| [mms-module-setup](mms-module-setup/SKILL.md) | Module Setup tier — Fields, Preferences, audit, field guards (`globle.md` §5–§7) |
-| [mms-background-jobs](mms-background-jobs/SKILL.md) | Queued processing — large exports, imports, bulk ops, dedup scans, progress, artifacts (`globle.md` §8) |
-| [mms-contacts](mms-contacts/SKILL.md) | Contact CRM — **globle.md reference module** (contract, dedup, soft delete, RBAC, sync outbox) |
+| [mms-module-page](mms-module-page/SKILL.md) | New module or three-tier page — `mms-module-architecture.mdc` |
+| [mms-module-work](mms-module-work/SKILL.md) | Command centre and Work tier — metrics, directory, drawer, bulk actions (`mms-module-architecture.mdc` §2–§3) |
+| [mms-module-setup](mms-module-setup/SKILL.md) | Module Setup tier — Fields, Preferences, audit, field guards (`mms-module-architecture.mdc` §4, `mms-fields.mdc`) |
+| [mms-background-jobs](mms-background-jobs/SKILL.md) | Queued processing — large exports, imports, bulk ops, dedup scans, progress, artifacts (`mms-module-architecture.mdc` §5) |
+| [mms-form-architecture](mms-form-architecture/SKILL.md) | Blueprint schemas, branded IDs, IEEE 754 math bypass, tenant RLS transaction, JSONB deep merge, React 19 inputs, S3 uploads |
 | [mms-fields-registry](mms-fields-registry/SKILL.md) | Custom fields, tabs, column registry |
 | [mms-data-sync](mms-data-sync/SKILL.md) | db.ts, sync API (admin GET), REST vs collections, Query cache |
-| [mms-auth-users](mms-auth-users/SKILL.md) | Cookies, auth artifacts, 2FA, `authenticateTenant`, users |
 | [mms-shared-package](mms-shared-package/SKILL.md) | `@mms/shared` types and utils |
 | [mms-backend-api](mms-backend-api/SKILL.md) | Fastify routes, middleware, Zod, migrations, inject tests |
 | [mms-backend-security](mms-backend-security/SKILL.md) | Tenant isolation, RBAC, cookies, auth artifacts, rate limits |
@@ -32,12 +31,12 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 
 | Layer | Location | Behavior |
 |-------|----------|----------|
-| **Rules** | `.cursor/rules/*.mdc` | Auto-applied (always or by glob) |
+| **Rules** | `.cursor/rules/*.md` | Auto-applied (always or by glob) |
 | **Skills** | `.cursor/skills/*/SKILL.md` | Invoked when description matches task |
 
-Always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-dependencies`, `mms-dry`.
+Always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-dependencies`, `mms-dry`, `mms-completion-review`.
 
-Frontend work: rules `mms-frontend`, `mms-query`, `mms-hooks`, `mms-ui-*`, `mms-settings-navigation`, `mms-config` + skill **`mms-frontend`** (includes `/settings` page patterns).
+Frontend work: rules `mms-api-interface`, `mms-data-layer`, `mms-hooks`, `mms-ui-ux-design`, `mms-settings-i18n` + skill **`mms-frontend`** (includes `/settings` page patterns).
 
 ## Verify setup
 

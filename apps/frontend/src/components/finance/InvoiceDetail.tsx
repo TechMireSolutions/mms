@@ -29,7 +29,7 @@ interface InvoiceDetailProps {
  * @param {InvoiceDetailProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps) {
+export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps) {
   const sCfg = STATUS_CFG[invoice.status] || STATUS_CFG.pending;
   const StatusIcon = sCfg.icon;
 

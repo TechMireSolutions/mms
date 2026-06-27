@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { DISTRIBUTION_TYPES, WakalaType, ObligationDistribution, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
-import FormModal from "@/components/ui/FormModal";
-import useTranslation from "@/hooks/useTranslation";
+import { FormModal } from "@/components/ui/FormModal";
+import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 
 export type DistributionType = "Income" | "Liability";
 
@@ -32,7 +32,7 @@ interface ModalState {
  * @param {WakalaTypeManagerProps} props
  * @returns {React.ReactElement}
  */
-export default function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes, reps, mujtahids, onChangeWakala, onChangeDistributions }: WakalaTypeManagerProps) {
+export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes, reps, mujtahids, onChangeWakala, onChangeDistributions }: WakalaTypeManagerProps) {
   const [modal, setModal] = useState<ModalState | null>(null);
 
   const getRep = (id: string) => reps.find((r) => r.id === id);

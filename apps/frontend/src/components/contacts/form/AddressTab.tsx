@@ -2,33 +2,23 @@ import React from "react";
 import { motion } from "framer-motion";
 import { MapPin, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getDefaultFieldValue, Contact, Address } from "@mms/shared";
 
-import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "./FormPrimitives";
-import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import useTranslation from "@/hooks/useTranslation";
+import { Field, FormEmptyState, RequiredBanner, CustomFieldInput, EditableSelect, COLLECTION_CARD, COLLECTION_BODY, CardTypeLabel, CardRemoveButton, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { useVisibleContactFields } from "@/hooks/useVisibleContactFields";
+import { useContactConfig, type ValidationError } from '@/lib/contexts/ContactConfigContext';
+import { useTranslation } from "@/hooks/useTranslation";
 
-interface ContactAddress {
-  label?: string;
-  line1?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  [key: string]: unknown;
-}
-
-interface ContactFormData {
-  addresses?: ContactAddress[];
-  [key: string]: unknown;
-}
+type ContactAddress = Address & Record<string, unknown>;
 
 interface AddressTabProps {
-  data: ContactFormData;
-  onChange: (updatedData: ContactFormData) => void;
+  data: Partial<Contact>;
+  onChange: (updatedData: Partial<Contact>) => void;
   required?: boolean;
   defaultCountry: string;
   defaultCity: string;
   defaultProvince: string;
+  errors?: ValidationError[];
 }
 
 /**
@@ -43,6 +33,7 @@ export default function AddressTab({
   defaultCountry,
   defaultCity,
   defaultProvince,
+  errors = [],
 }: AddressTabProps): React.JSX.Element {
   const { addressLabels, updateAddressLabels } = useContactConfig();
   const { t } = useTranslation();
@@ -61,13 +52,13 @@ export default function AddressTab({
       } else if (f.key === "country") {
         item[f.key] = defaultCountry;
       } else {
-        item[f.key] = f.defaultValue !== undefined ? f.defaultValue : "";
+        item[f.key] = getDefaultFieldValue(f);
       }
     });
     return item as ContactAddress;
   };
 
-  const addresses = data.addresses && data.addresses.length > 0 ? data.addresses : [createNewAddress()];
+  const addresses = (data.addresses || []) as ContactAddress[];
 
   const upd = (list: ContactAddress[]): void => {
     onChange({ ...data, addresses: list });
@@ -117,15 +108,21 @@ export default function AddressTab({
 
           {bodyFields.length > 0 && (
             <div className={COLLECTION_BODY}>
-              {bodyFields.map((field) => (
-                <Field key={field.key} label={field.label} required={field.required} hint={field.description}>
-                  <CustomFieldInput
-                    field={field}
-                    value={a[field.key]}
-                    onChange={(val) => updateAddress(i, { [field.key]: val })}
-                  />
-                </Field>
-              ))}
+              {bodyFields.map((field) => {
+                const fieldError = errors.find(
+                  (err) => err.tabId === "addresses" && err.index === i && err.fieldId === field.key
+                );
+                return (
+                  <Field key={field.key} id={`addresses-${i}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
+                    <CustomFieldInput
+                      field={field}
+                      value={a[field.key]}
+                      onChange={(val) => updateAddress(i, { [field.key]: val })}
+                      error={!!fieldError}
+                    />
+                  </Field>
+                );
+              })}
             </div>
           )}
         </motion.div>

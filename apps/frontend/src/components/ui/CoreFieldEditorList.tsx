@@ -192,7 +192,7 @@ interface CoreFieldEditorListProps {
   };
 }
 
-export default function CoreFieldEditorList({
+export function CoreFieldEditorList({
   tabId,
   fields,
   enabledSet,

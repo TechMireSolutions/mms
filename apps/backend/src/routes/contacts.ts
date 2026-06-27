@@ -17,7 +17,7 @@ import {
 import { getLinkedContactId } from '../services/auth/userService.js';
 import {
   contactBulkDeleteSchema,
-  contactColumnPrefsBodySchema,
+  contactColumnPreferencesBodySchema,
   contactDeleteBodySchema,
   contactExportAuditSchema,
   contactGoogleSyncAuditSchema,
@@ -39,7 +39,7 @@ import {
 import { resourceIdParamsSchema } from '../validation/commonSchemas.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
-import { registerDefaultBackgroundJobRunners } from '../services/backgroundJobRunners.js';
+import { registerDefaultBackgroundJobRunners } from '../services/backgroundJobRunnerService.js';
 import { countContactDuplicateMatches } from '../services/contactDuplicateScanService.js';
 import { enqueueBackgroundJob } from '../services/backgroundJobWorkerService.js';
 import { recordAudit } from '../services/auditService.js';
@@ -76,11 +76,12 @@ import {
 import {
   createContactsSavedReport,
   deleteContactsSavedReport,
-  getUserColumnPrefs,
+  getUserColumnPreferences,
   listContactsSavedReports,
-  setUserColumnPrefs,
+  setUserColumnPreferences,
   touchContactsSavedReportRun,
-} from '../services/contactPrefsService.js';
+} from '../services/contactPreferencesService.js';
+import { validateContactDynamic } from '../services/contactValidationService.js';
 
 import { sendForbidden } from '../lib/httpErrors.js';
 
@@ -101,20 +102,20 @@ function savedReportViewer(user: User): ContactsSavedReportViewer {
 }
 
 async function sanitizeForUser(contacts: Contact[], user: User): Promise<Contact[]> {
-  const cfg = await loadContactFieldConfig();
-  if (!cfg) return contacts;
+  const fieldConfig = await loadContactFieldConfig();
+  if (!fieldConfig) return contacts;
   return sanitizeContactsForViewer(contacts, user.role, {
-    fields: cfg.fields,
-    tabs: cfg.formTabs ?? [],
+    fields: fieldConfig.fields,
+    tabs: fieldConfig.formTabs ?? [],
   });
 }
 
 async function sanitizeOneForUser(contact: Contact, user: User): Promise<Contact> {
-  const cfg = await loadContactFieldConfig();
-  if (!cfg) return contact;
+  const fieldConfig = await loadContactFieldConfig();
+  if (!fieldConfig) return contact;
   return sanitizeContactForViewer(contact, user.role, {
-    fields: cfg.fields,
-    tabs: cfg.formTabs ?? [],
+    fields: fieldConfig.fields,
+    tabs: fieldConfig.formTabs ?? [],
   });
 }
 
@@ -137,7 +138,7 @@ async function auditContact(
 /**
  * Server-first contact resource routes (TanStack Query on FE).
  */
-export default async function contactRoutes(
+export async function contactRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
@@ -150,21 +151,21 @@ export default async function contactRoutes(
     const queryParsed = parseRequest(contactsListQuerySchema, request.query);
     if (!queryParsed.ok) return replyValidationError(reply, queryParsed.message);
     try {
-      const q = queryParsed.data;
-      const includeDeleted = q.includeDeleted === 'true';
+      const contactsListQuery = queryParsed.data;
+      const includeDeleted = contactsListQuery.includeDeleted === 'true';
       if (includeDeleted && !canDeleteContacts(user)) {
         return sendForbidden(reply);
       }
-      if (q.page != null) {
+      if (contactsListQuery.page != null) {
         const page = await loadContactsPage({
-          page: q.page,
-          limit: q.limit ?? CONTACTS_MODULE_CONTRACT.defaultPageSize,
-          search: q.search,
-          lifecycleStage: q.lifecycleStage,
-          gender: q.gender,
+          page: contactsListQuery.page,
+          limit: contactsListQuery.limit ?? CONTACTS_MODULE_CONTRACT.defaultPageSize,
+          search: contactsListQuery.search,
+          lifecycleStage: contactsListQuery.lifecycleStage,
+          gender: contactsListQuery.gender,
           includeDeleted,
-          sortField: q.sortField,
-          sortDir: q.sortDir,
+          sortField: contactsListQuery.sortField,
+          sortDir: contactsListQuery.sortDir,
         });
         return reply.send({
           ...page,
@@ -309,25 +310,25 @@ export default async function contactRoutes(
     return reply.status(202).send({ job });
   });
 
-  fastify.get('/column-prefs', async (request, reply) => {
+  fastify.get('/column-preferences', async (request, reply) => {
     const user = request.user as User;
     if (!canReadContacts(user)) return sendForbidden(reply);
     try {
-      const prefs = await getUserColumnPrefs(String(user.id));
-      return reply.send({ prefs });
+      const preferences = await getUserColumnPreferences(String(user.id));
+      return reply.send({ preferences });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
     }
   });
 
-  fastify.put('/column-prefs', async (request, reply) => {
+  fastify.put('/column-preferences', async (request, reply) => {
     const user = request.user as User;
     if (!canReadContacts(user)) return sendForbidden(reply);
-    const parsed = parseRequest(contactColumnPrefsBodySchema, request.body);
+    const parsed = parseRequest(contactColumnPreferencesBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      await setUserColumnPrefs(String(user.id), parsed.data.prefs);
-      return reply.send({ success: true, prefs: parsed.data.prefs });
+      await setUserColumnPreferences(String(user.id), parsed.data.preferences);
+      return reply.send({ success: true, preferences: parsed.data.preferences });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
     }
@@ -452,9 +453,9 @@ export default async function contactRoutes(
       );
       await auditContact(user, 'contact.google_sync.oauth_connected', 'Google account connected via OAuth', 'google-sync');
       return reply.send({ config });
-    } catch (err) {
-      if (err instanceof GoogleOAuthExchangeError) {
-        return reply.status(400).send({ type: 'oauth_error', message: err.message });
+    } catch (error) {
+      if (error instanceof GoogleOAuthExchangeError) {
+        return reply.status(400).send({ type: 'oauth_error', message: error.message });
       }
       return reply.status(500).send({ type: 'database_error', message: 'Failed to exchange OAuth code' });
     }
@@ -472,12 +473,12 @@ export default async function contactRoutes(
         'google-sync',
       );
       return reply.send(result);
-    } catch (err) {
-      if (err instanceof GoogleSyncError) {
-        if (err.code === 'session_expired') {
+    } catch (error) {
+      if (error instanceof GoogleSyncError) {
+        if (error.code === 'session_expired') {
           await clearGoogleSyncTokens(String(user.id));
         }
-        return reply.status(400).send({ type: err.code, message: err.message });
+        return reply.status(400).send({ type: error.code, message: error.message });
       }
       return reply.status(500).send({ type: 'database_error', message: 'Failed to sync Google contacts' });
     }
@@ -519,12 +520,27 @@ export default async function contactRoutes(
     }
   });
 
-  fastify.post('/', async (request, reply) => {
+  fastify.post('/', {
+    bodyLimit: 1048576, // 1MB limit for dynamic payloads (Rule 16.2)
+    schema: { body: { type: 'object', additionalProperties: true } },
+  }, async (request, reply) => {
     const user = request.user as User;
     if (!canWriteContacts(user)) return sendForbidden(reply);
 
     const parsed = parseRequest(contactRecordSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
+    const tenant = getRequestTenant();
+    if (!tenant) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
+    }
+
+    try {
+      const lang = (request.headers['accept-language'] as string) || 'en';
+      await validateContactDynamic(tenant, parsed.data, lang, user.role);
+    } catch (error) {
+      return replyValidationError(reply, error instanceof Error ? error.message : String(error));
+    }
 
     try {
       const { contact, created, restoredFromDelete } = await upsertContact(parsed.data as Contact);
@@ -542,8 +558,8 @@ export default async function contactRoutes(
         .status(created ? 201 : 200)
         .send({ success: true, contact: await sanitizeOneForUser(contact, user) });
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Failed to save contact record';
-      return reply.status(500).send({ type: 'database_error', message: msg });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save contact record';
+      return reply.status(500).send({ type: 'database_error', message: errorMessage });
     }
   });
 
@@ -563,7 +579,10 @@ export default async function contactRoutes(
     }
   });
 
-  fastify.put('/:id', async (request, reply) => {
+  fastify.put('/:id', {
+    bodyLimit: 1048576, // 1MB limit for dynamic payloads (Rule 16.2)
+    schema: { body: { type: 'object', additionalProperties: true } },
+  }, async (request, reply) => {
     const user = request.user as User;
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
@@ -576,6 +595,18 @@ export default async function contactRoutes(
     }
     const body = parseRequest(contactRecordSchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
+
+    const tenant = getRequestTenant();
+    if (!tenant) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
+    }
+
+    try {
+      const lang = (request.headers['accept-language'] as string) || 'en';
+      await validateContactDynamic(tenant, body.data, lang, user.role);
+    } catch (error) {
+      return replyValidationError(reply, error instanceof Error ? error.message : String(error));
+    }
 
     try {
       const before = await getContactById(params.data.id);
@@ -590,8 +621,8 @@ export default async function contactRoutes(
       await auditContact(user, 'contact.update', diff, params.data.id);
       return reply.send({ contact: await sanitizeOneForUser(updated, user) });
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Failed to update contact';
-      return reply.status(500).send({ type: 'database_error', message: msg });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update contact';
+      return reply.status(500).send({ type: 'database_error', message: errorMessage });
     }
   });
 

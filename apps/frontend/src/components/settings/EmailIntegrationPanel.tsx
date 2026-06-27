@@ -7,14 +7,14 @@ import {
   type EmailIntegrationConfig,
   type EmailProviderId,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import {
   fetchEmailIntegration,
   saveEmailIntegration,
   testEmailIntegration,
 } from '@/lib/emailIntegrationApi';
-import FormSelect from '@/components/ui/FormSelect';
+import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';

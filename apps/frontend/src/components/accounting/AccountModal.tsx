@@ -3,8 +3,8 @@ import { BookOpen } from "lucide-react";
 import { ACCOUNT_TYPES, ACCOUNT_SUBTYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
 import { useAccountingConfig } from "@/hooks/useAccountingConfig";
 import { DatePicker } from "../ui/DatePicker";
-import FormModal from "../ui/FormModal";
-import useTranslation from "@/hooks/useTranslation";
+import { FormModal } from "../ui/FormModal";
+import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "../ui/formStyles";
 
 interface AccountModalProps {
@@ -14,7 +14,7 @@ interface AccountModalProps {
   existingCodes: string[];
 }
 
-export default function AccountModal({ initial, onSave, onClose, existingCodes }: AccountModalProps) {
+export function AccountModal({ initial, onSave, onClose, existingCodes }: AccountModalProps) {
   const { t } = useTranslation();
   const isEdit = !!initial?.id;
   const [form, setForm] = useState<Partial<Account>>(initial || { code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true });

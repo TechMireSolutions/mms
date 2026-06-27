@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import type { SystemUser } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 
@@ -14,7 +14,7 @@ export interface UserActorSelectProps {
   allowEmpty?: boolean;
 }
 
-export default function UserActorSelect({
+export function UserActorSelect({
   value,
   onChange,
   label,

@@ -5,7 +5,7 @@ import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid } from '@/l
 import { DEFAULT_CURRENCIES } from '@mms/shared';
 import { useLiveCollection } from "../../../hooks/useLiveCollection";
 import { useMergedObligationContacts, useMergedObligationUsers } from "../../../hooks/useObligationLookups";
-import InvoicePrintPreview from "./InvoicePrintPreview";
+import { InvoicePrintPreview } from "./InvoicePrintPreview";
 import { Button } from "@/components/ui/button";
 
 export interface PrintInvoiceModalProps {
@@ -24,7 +24,7 @@ export interface PrintInvoiceModalProps {
  * @param {PrintInvoiceModalProps} props
  * @returns {React.ReactElement}
  */
-export default function PrintInvoiceModal({
+export function PrintInvoiceModal({
   collection,
   obligationTypes = [],
   reps = [],

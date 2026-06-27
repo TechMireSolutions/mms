@@ -10,7 +10,7 @@ export interface ContactFieldDependencyIssue {
 }
 
 const SEED_FIELD_KEYS = new Set(
-  Object.values(INITIAL_FIELD_SEED).flatMap((fields) => fields.map((f) => f.key)),
+  Object.values(INITIAL_FIELD_SEED).flatMap((fields) => fields.map((field) => field.key)),
 );
 
 export function isContactSeedFieldKey(fieldKey: string): boolean {
@@ -20,7 +20,7 @@ export function isContactSeedFieldKey(fieldKey: string): boolean {
 export interface ContactFieldDependencyInput {
   fieldKey: string;
   columnRegistry: ColumnRegistryEntry[];
-  prefs: Pick<ContactPreferences, 'duplicateDetectionFields'>;
+  preferences: Pick<ContactPreferences, 'duplicateDetectionFields'>;
   contacts?: Contact[];
 }
 
@@ -30,7 +30,7 @@ export interface ContactFieldDependencyInput {
 export function getContactFieldRemovalIssues(
   input: ContactFieldDependencyInput,
 ): ContactFieldDependencyIssue[] {
-  const { fieldKey, columnRegistry, prefs, contacts = [] } = input;
+  const { fieldKey, columnRegistry, preferences, contacts = [] } = input;
   const issues: ContactFieldDependencyIssue[] = [];
 
   if (isContactSeedFieldKey(fieldKey)) {
@@ -41,7 +41,7 @@ export function getContactFieldRemovalIssues(
     return issues;
   }
 
-  const column = columnRegistry.find((c) => c.key === fieldKey && c.enabled);
+  const column = columnRegistry.find((col) => col.key === fieldKey && col.enabled);
   if (column) {
     issues.push({
       area: 'column',
@@ -49,7 +49,7 @@ export function getContactFieldRemovalIssues(
     });
   }
 
-  if (prefs.duplicateDetectionFields?.includes(fieldKey)) {
+  if (preferences.duplicateDetectionFields?.includes(fieldKey)) {
     issues.push({
       area: 'duplicateDetection',
       messageKey: 'contacts.setup.fieldUsedInDuplicateDetection',
@@ -57,10 +57,10 @@ export function getContactFieldRemovalIssues(
   }
 
   const dataCount = contacts.filter((contact) => {
-    const val = contact[fieldKey as keyof Contact];
-    if (val === undefined || val === null) return false;
-    if (typeof val === 'string') return val.trim().length > 0;
-    if (Array.isArray(val)) return val.length > 0;
+    const value = contact[fieldKey as keyof Contact];
+    if (value === undefined || value === null) return false;
+    if (typeof value === 'string') return value.trim().length > 0;
+    if (Array.isArray(value)) return value.length > 0;
     return true;
   }).length;
 
@@ -78,10 +78,10 @@ export function getContactFieldRemovalIssues(
 /** Count active contacts with a non-empty value for a custom field key. */
 export function countContactsWithFieldValue(contacts: Contact[], fieldKey: string): number {
   return contacts.filter((contact) => {
-    const val = contact[fieldKey as keyof Contact];
-    if (val === undefined || val === null) return false;
-    if (typeof val === 'string') return val.trim().length > 0;
-    if (Array.isArray(val)) return val.length > 0;
+    const value = contact[fieldKey as keyof Contact];
+    if (value === undefined || value === null) return false;
+    if (typeof value === 'string') return value.trim().length > 0;
+    if (Array.isArray(value)) return value.length > 0;
     return true;
   }).length;
 }

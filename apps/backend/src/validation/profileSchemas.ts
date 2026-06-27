@@ -24,6 +24,7 @@ export const ownContactPatchBodySchema = z.object({
   gender: z.string().optional(),
   dob: z.string().optional(),
   city: z.string().optional(),
+  avatar: z.string().optional(),
   phones: z
     .array(
       z.object({

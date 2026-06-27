@@ -9,7 +9,7 @@ import { getGlobalSettings, saveGlobalSettingsAsync } from '@/lib/db';
 import { clearGlobalSettingsPreview, previewGlobalSettings } from '@/lib/settingsPreview';
 import { serverSyncErrorKey } from '@/lib/serverSyncErrors';
 import { notify } from '@/lib/notify';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import {
   isEnabledModulesDraftDirty,

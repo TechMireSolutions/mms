@@ -49,7 +49,7 @@ app.ts
    ```
 3. Register in `app.ts`: `app.register(xRoutes, { prefix: '/api/{resource}' })`
 4. **Tests** — `app.inject()` with `host: 'tenant.localhost'` header
-5. **Frontend** — `useQuery` / `useMutation` + invalidation (`mms-query.mdc`)
+5. **Frontend** — `useQuery` / `useMutation` + invalidation (`mms-data-layer.mdc`)
 
 Reference implementations:
 
@@ -120,7 +120,13 @@ Do not use `authenticateTenant` on apex-only public routes.
 - No secrets in logs
 - `unknown` + narrowing — not `any`
 
-Details: `mms-security.mdc`, `mms-rbac.mdc`
+## Dynamic Form Backend Architecture
+
+All backend API routes, repository queries, validation, and schema definitions for dynamic forms must follow **`mms-form-architecture.mdc`** (or the corresponding Cursor rule `mms-form-architecture.mdc`). Specifically:
+- **Fastify Zod Asymmetry:** Builder routes use `zodToJsonSchema` for AJV performance; dynamic data entry routes bypass AJV and run Zod validation manually inside the handler.
+- **ORM & GIN Indexes:** Custom data uses native `JSONB` columns with PostgreSQL GIN indexing.
+- **Poisoning Prevention:** Row-level security config parameters must be set strictly inside transaction scopes (`SET LOCAL`).
+- **Data Destruction Prevention:** Payload updates use PostgreSQL `||` with `COALESCE` to prevent overwriting/deleting fields the user is unauthorized to write.
 
 ## Verify
 
@@ -142,11 +148,11 @@ await app.inject({
 
 ## Rules
 
-`.cursor/rules/mms-backend.mdc`, `mms-database.mdc`, `mms-security.mdc`, `mms-rbac.mdc`, `mms-testing.mdc`
+`.cursor/rules/mms-api-interface.mdc`, `mms-data-layer.mdc`, `mms-auth-security.mdc`, `mms-auth-security.mdc`, `mms-testing-observability.mdc`
 
 ## Related skills
 
-- `mms-auth-users` — sessions, cookies, 2FA, refresh
+- `mms-backend-security` — tenant isolation, RBAC, cookies, rate limits
 - `mms-backend-security` — threat model, tenant isolation audit
 - `mms-data-sync` — `/api/db` contract
 - `mms-shared-package` — types used in validation

@@ -7,11 +7,11 @@ import {
   type PermissionAction,
   type SystemUser,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
-import useGlobalSettings from '@/hooks/useGlobalSettings';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useGlobalSettings } from '@/hooks/useGlobalSettings';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
-import Modal from '@/components/ui/Modal';
+import { Modal } from '@/components/ui/Modal';
 import { UserRoleBadge, UserStatusBadge } from '@/components/users/UserBadges';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 
@@ -54,7 +54,7 @@ export interface UserDetailModalProps {
   onClose: () => void;
 }
 
-export default function UserDetailModal({
+export function UserDetailModal({
   user,
   onClose,
 }: UserDetailModalProps): React.JSX.Element | null {

@@ -1,4 +1,4 @@
-import type { PlatformUserProfile } from '@mms/shared';
+import type { PlatformUserProfile, StoredPlatformUser } from '@mms/shared';
 import { validatePlatformSetupName, validatePlatformSetupPassword } from '@mms/shared';
 import {
   changePlatformUserPassword,
@@ -23,17 +23,12 @@ export class PlatformProfileError extends Error {
   }
 }
 
-export function toPlatformUserProfile(stored: {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: string;
-  emailVerifiedAt?: string;
-}): PlatformUserProfile {
+export function toPlatformUserProfile(stored: StoredPlatformUser): PlatformUserProfile {
   return {
     id: stored.id,
     email: stored.email,
     name: stored.name,
+    role: stored.role,
     createdAt: stored.createdAt,
     emailVerifiedAt: stored.emailVerifiedAt,
   };

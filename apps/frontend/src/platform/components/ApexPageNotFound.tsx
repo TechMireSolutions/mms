@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { ROUTES } from "@/lib/config/routes";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 /** 404 page for platform apex routes only — no tenant auth/RBAC coupling. */
 export default function ApexPageNotFound(): React.JSX.Element {

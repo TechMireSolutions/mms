@@ -5,11 +5,11 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
-import { Invoice } from '@/lib/data/financeData';
-import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useFinanceInvoicesCollection } from "@/hooks/useFinanceApi";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
-import EmptyState from "../ui/EmptyState";
+import { EmptyState } from "../ui/EmptyState";
 
 import RevenueChart from "@/components/widgets/charts/RevenueChart";
 import FeeCollectionSummary from "@/components/widgets/FeeCollectionSummary";
@@ -54,12 +54,13 @@ const STATUS_COLOR: Record<InvoiceStatus, string> = {
  * @returns The FinancialReport component.
  */
 export default function FinancialReport({ filters }: FinancialReportProps): React.JSX.Element {
+  const { t } = useTranslation();
   const palette = useBrandPalette();
   const PIE_COLORS = useMemo(
     () => [palette.primary, palette.secondary, palette.charts[2], palette.charts[3], palette.charts[0]],
     [palette],
   );
-  const financeInvoices = useLiveCollection<Invoice>("finance_invoices");
+  const financeInvoices = useFinanceInvoicesCollection();
 
   const feeCollection = useMemo(() => {
     // Generate monthly aggregation
@@ -135,15 +136,15 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={DollarSign}  label="Total Collected"  value={PKR(totalCollected)}                   color="green"   />
-        <ReportSummaryCard icon={AlertCircle} label="Outstanding"      value={PKR(totalOutstanding)}                 color="red"     />
-        <ReportSummaryCard icon={TrendingUp}  label="Net Revenue"      value={PKR(totalCollected - totalOutstanding)} color="primary" />
-        <ReportSummaryCard icon={Tag}         label="Total Discounted" value={PKR(totalDiscounted)}                  color="amber"   />
+        <ReportSummaryCard icon={DollarSign}  label={t("finance.report.totalCollected")}  value={PKR(totalCollected)}                   color="green"   />
+        <ReportSummaryCard icon={AlertCircle} label={t("finance.report.outstanding")}     value={PKR(totalOutstanding)}                 color="red"     />
+        <ReportSummaryCard icon={TrendingUp}  label={t("finance.report.netRevenue")}      value={PKR(totalCollected - totalOutstanding)} color="primary" />
+        <ReportSummaryCard icon={Tag}         label={t("finance.report.totalDiscounted")} value={PKR(totalDiscounted)}                  color="amber"   />
       </div>
 
       {/* Revenue trend */}
       <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
-        <p className="text-sm font-semibold text-foreground mb-3">Monthly Collection vs Outstanding</p>
+        <p className="text-sm font-semibold text-foreground mb-3">{t("finance.report.chartTitle")}</p>
         <SafeResponsiveContainer width="100%" height={200}>
           <AreaChart data={feeCollection}>
             <defs>
@@ -156,8 +157,8 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `${v / 1000}k`} />
             <Tooltip formatter={(v) => v !== undefined ? PKR(Number(v)) : ""} />
-            <Area type="monotone" dataKey="collected"   stroke="hsl(var(--primary))" fill="url(#colorCollected)" strokeWidth={2} name="Collected"   />
-            <Area type="monotone" dataKey="outstanding" stroke={palette.charts[0]} fill="transparent" strokeWidth={2} strokeDasharray="4 2" name="Outstanding" />
+            <Area type="monotone" dataKey="collected"   stroke="hsl(var(--primary))" fill="url(#colorCollected)" strokeWidth={2} name={t("finance.report.collected")}   />
+            <Area type="monotone" dataKey="outstanding" stroke={palette.charts[0]} fill="transparent" strokeWidth={2} strokeDasharray="4 2" name={t("finance.report.outstandingLabel")} />
           </AreaChart>
         </SafeResponsiveContainer>
       </div>
@@ -165,7 +166,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       {/* Two-column: collection table + discount pie */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">Collection Rate by Month</p>
+          <p className="text-sm font-semibold text-foreground mb-3">{t("finance.report.collectionRateTitle")}</p>
           <div className="space-y-2">
             {feeCollection.map((m) => (
               <div key={m.month} className="flex items-center gap-3">
@@ -180,7 +181,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">Discount Distribution</p>
+          <p className="text-sm font-semibold text-foreground mb-3">{t("finance.report.discountDistributionTitle")}</p>
           <SafeResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie
@@ -206,18 +207,36 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
 
       {/* Invoice table */}
       <ReportExportBar 
-        title="Invoice Report" 
+        title={t("finance.report.invoiceReportTitle")} 
         data={invoices}
-        headers={["Invoice", "Student", "Class", "Base Fee", "Discount", "Final", "Due Date", "Status"]}
+        headers={[
+          t("finance.columns.invoice"),
+          t("finance.columns.student"),
+          t("finance.report.classColumn"),
+          t("finance.columns.baseFee"),
+          t("finance.columns.discount"),
+          t("finance.columns.final"),
+          t("finance.columns.dueDate"),
+          t("finance.columns.status"),
+        ]}
       />
       {invoices.length === 0 ? (
-        <EmptyState icon={DollarSign} title="No invoices match filters" compact />
+        <EmptyState icon={DollarSign} title={t("finance.report.noInvoicesMatch")} compact />
       ) : (
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
-                {["Invoice", "Student", "Class", "Base Fee", "Discount", "Final", "Due Date", "Status"].map((h) => (
+                {[
+                  t("finance.columns.invoice"),
+                  t("finance.columns.student"),
+                  t("finance.report.classColumn"),
+                  t("finance.columns.baseFee"),
+                  t("finance.columns.discount"),
+                  t("finance.columns.final"),
+                  t("finance.columns.dueDate"),
+                  t("finance.columns.status"),
+                ].map((h) => (
                   <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -234,7 +253,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                   <td className="px-3 py-2.5 text-muted-foreground">{inv.dueDate}</td>
                   <td className="px-3 py-2.5">
                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${STATUS_COLOR[inv.status as InvoiceStatus] ?? "bg-muted text-muted-foreground"}`}>
-                      {inv.status}
+                      {t(`finance.invoiceStatus.${inv.status as InvoiceStatus}` as any)}
                     </span>
                   </td>
                 </tr>
@@ -247,8 +266,8 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       {/* Dashboard widgets preview */}
       <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-left">
         <div>
-          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Dashboard Main Widgets</h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">Preview of widgets rendering on the main landing dashboard</p>
+          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("finance.report.dashboardWidgetsTitle")}</h3>
+          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("finance.report.dashboardWidgetsSubtitle")}</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <RevenueChart />

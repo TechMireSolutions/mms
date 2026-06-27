@@ -1,4 +1,31 @@
 import type { Permission } from './permissions.js';
+import { z } from 'zod';
+
+export const examRecordSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  subject: z.string(),
+  totalMarks: z.number(),
+  passingMarks: z.number(),
+  date: z.string(),
+  duration: z.number(),
+  classIds: z.array(z.string()),
+  status: z.enum(["completed", "scheduled", "cancelled", "upcoming", "ongoing"]),
+  description: z.string(),
+});
+
+export type Exam = z.infer<typeof examRecordSchema>;
+export const examListSchema = z.array(examRecordSchema);
+
+export const examResultRecordSchema = z.object({
+  id: z.string(),
+  examId: z.string(),
+  studentId: z.string(),
+  marksObtained: z.number(),
+});
+
+export type ExamResult = z.infer<typeof examResultRecordSchema>;
+export const examResultListSchema = z.array(examResultRecordSchema);
 
 /** Examinations module contract — aligns with globle1 universal module architecture. */
 export const EXAMINATIONS_MODULE_CONTRACT = {
@@ -7,8 +34,8 @@ export const EXAMINATIONS_MODULE_CONTRACT = {
   collectionKey: 'exams',
   resultsCollectionKey: 'exam_results',
   settingsObjectKey: 'examinations_settings',
-  examColumnPrefsObjectKey: 'examination_exam_user_column_prefs',
-  resultsColumnPrefsObjectKey: 'examination_results_user_column_prefs',
+  examColumnPreferencesObjectKey: 'examination_exam_user_column_preferences',
+  resultsColumnPreferencesObjectKey: 'examination_results_user_column_preferences',
   restBasePath: '/api/examinations',
   analyticsCategory: 'examinations',
   tiers: ['work', 'reports', 'setup'] as const,

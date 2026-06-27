@@ -1,22 +1,27 @@
 import React, { useState } from "react";
-import { Check, Save, Info, Users, Layout, GripVertical } from "lucide-react";
+import { Save, Info, Users, Layout, GripVertical, Plus, Trash2 } from "lucide-react";
 import {
-  TAB_REGISTRY, DEFAULT_ENABLED_TABS, DEFAULT_REQUIRED_TABS,
+  DEFAULT_ENABLED_TABS, DEFAULT_REQUIRED_TABS,
   FieldConfig, ContactPreferences, TabDefinition,
   CONFIG_VERSION,
   FieldDefinition, toTitleCase as sharedToTitleCase,
   DEFAULT_COLUMN_REGISTRY,
   getContactFieldRemovalIssues,
+  DEFAULT_FORM_TABS,
 } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import CoreFieldEditorList from "../ui/CoreFieldEditorList";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
-import useTranslation from "@/hooks/useTranslation";
+import { CustomFieldsBuilder, CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useContactMutations } from "@/hooks/useContacts";
 import { apiJson } from "@/lib/apiClient";
 import { CONTACTS_MODULE_CONTRACT } from "@mms/shared";
 import { notify } from "@/lib/notify";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 
 const toTitleCase = (str: string): string => sharedToTitleCase(str) as string;
 
@@ -40,16 +45,11 @@ function Toggle({ label, description, value, onChange, ariaLabel }: ToggleProps)
         <p className="text-[13px] font-semibold text-foreground">{label}</p>
         {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
       </div>
-      <button
-        type="button"
-        onClick={() => onChange(!value)}
-        className="relative flex items-center justify-center w-11 h-11 flex-shrink-0"
+      <Switch
+        checked={value}
+        onCheckedChange={onChange}
         aria-label={ariaLabel || label}
-      >
-        <div className="relative rounded-full transition-colors" style={{ width: 40, height: 22, backgroundColor: value ? "hsl(var(--primary))" : "hsl(var(--border))" }}>
-          <span style={{ width: 17, height: 17, top: 2.5, left: value ? 19 : 3, position: "absolute", borderRadius: "50%", background: "white", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
-        </div>
-      </button>
+      />
     </div>
   );
 }
@@ -91,46 +91,182 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   const [enabledTabs, setEnabledTabs] = useState<Set<string>>(() => new Set(config.enabledTabs || DEFAULT_ENABLED_TABS));
   const [requiredTabs, setRequiredTabs] = useState<Set<string>>(() => new Set(config.requiredTabs || DEFAULT_REQUIRED_TABS));
 
-  const ALL_TABS = TAB_REGISTRY.map(t => t.key);
+  const [formTabs, setFormTabs] = useState<TabDefinition[]>(() => {
+    return config.formTabs && config.formTabs.length > 0
+      ? config.formTabs
+      : DEFAULT_FORM_TABS;
+  });
+
+  const [newTabName, setNewTabName] = useState("");
+
+  const getInitialTabs = (): TabDefinition[] => {
+    return config.formTabs && config.formTabs.length > 0 ? config.formTabs : DEFAULT_FORM_TABS;
+  };
 
   const [tabFields, setTabFields] = useState<Record<string, FieldDefinition[]>>(() => {
-    return Object.fromEntries(ALL_TABS.map(tabId => [tabId, config.fields?.[tabId] || []]));
+    return Object.fromEntries(getInitialTabs().map(tab => [tab.key, config.fields?.[tab.key] || []]));
   });
 
   const [tabFieldEnabled, setTabFieldEnabled] = useState<Record<string, Set<string>>>(() => {
-    return Object.fromEntries(ALL_TABS.map(tabId => [tabId, new Set((config.fields?.[tabId] || []).filter(f => f.enabled).map(f => f.key))]));
+    return Object.fromEntries(getInitialTabs().map(tab => [
+      tab.key,
+      new Set((config.fields?.[tab.key] || []).filter(f => f.enabled).map(f => f.key))
+    ]));
   });
 
   const [tabFieldRequired, setTabFieldRequired] = useState<Record<string, Set<string>>>(() => {
-    return Object.fromEntries(ALL_TABS.map(tabId => [tabId, new Set((config.fields?.[tabId] || []).filter(f => f.required).map(f => f.key))]));
+    return Object.fromEntries(getInitialTabs().map(tab => [
+      tab.key,
+      new Set((config.fields?.[tab.key] || []).filter(f => f.required).map(f => f.key))
+    ]));
   });
 
   const [tabFieldUnique, setTabFieldUnique] = useState<Record<string, Set<string>>>(() => {
-    return Object.fromEntries(ALL_TABS.map(tabId => [tabId, new Set((config.fields?.[tabId] || []).filter(f => f.unique).map(f => f.key))]));
+    return Object.fromEntries(getInitialTabs().map(tab => [
+      tab.key,
+      new Set((config.fields?.[tab.key] || []).filter(f => f.unique).map(f => f.key))
+    ]));
   });
 
   const [tabFieldDefaultValues, setTabFieldDefaultValues] = useState<Record<string, Record<string, unknown>>>(() => {
-    return Object.fromEntries(ALL_TABS.map(tabId => [
-      tabId,
-      Object.fromEntries((config.fields?.[tabId] || []).filter(f => f.defaultValue !== undefined).map(f => [f.key, f.defaultValue]))
+    return Object.fromEntries(getInitialTabs().map(tab => [
+      tab.key,
+      Object.fromEntries((config.fields?.[tab.key] || []).filter(f => f.defaultValue !== undefined).map(f => [f.key, f.defaultValue]))
     ]));
   });
 
   const [tabFieldPermissions, setTabFieldPermissions] = useState<Record<string, Record<string, string[]>>>(() => {
-    return Object.fromEntries(ALL_TABS.map(tabId => [
-      tabId,
-      Object.fromEntries((config.fields?.[tabId] || []).filter(f => f.permissions).map(f => [f.key, f.permissions as string[]]))
+    return Object.fromEntries(getInitialTabs().map(tab => [
+      tab.key,
+      Object.fromEntries((config.fields?.[tab.key] || []).filter(f => f.permissions).map(f => [f.key, f.permissions as string[]]))
     ]));
   });
 
   const [tabFieldOrder, setTabFieldOrder] = useState<Record<string, string[]>>(() => {
-    return Object.fromEntries(ALL_TABS.map(tabId => {
-      const orderArray = (config.fields?.[tabId] || []).map(f => f.key);
-      return [tabId, orderArray];
+    return Object.fromEntries(getInitialTabs().map(tab => {
+      const orderArray = (config.fields?.[tab.key] || []).map(f => f.key);
+      return [tab.key, orderArray];
     }));
   });
 
   const [prefs, setPrefs] = useState<ContactPreferences>(() => contextPrefs);
+
+  const handleAddTab = () => {
+    const name = newTabName.trim();
+    if (!name) return;
+
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    
+    const generatedId = `custom_${slug}`;
+    
+    if (!slug) {
+      notify.error("Invalid tab name. Must contain alphanumeric characters.");
+      return;
+    }
+
+    if (formTabs.some((t) => t.key === generatedId)) {
+      notify.error("A tab with this name or ID already exists.");
+      return;
+    }
+
+    const newTab: TabDefinition = {
+      key: generatedId,
+      label: name,
+      enabled: true,
+      order: formTabs.length,
+      isSystem: false,
+    };
+
+    setFormTabs((prev) => [...prev, newTab]);
+    setTabFields((prev) => ({ ...prev, [generatedId]: [] }));
+    setTabFieldEnabled((prev) => ({ ...prev, [generatedId]: new Set() }));
+    setTabFieldRequired((prev) => ({ ...prev, [generatedId]: new Set() }));
+    setTabFieldUnique((prev) => ({ ...prev, [generatedId]: new Set() }));
+    setTabFieldDefaultValues((prev) => ({ ...prev, [generatedId]: {} }));
+    setTabFieldPermissions((prev) => ({ ...prev, [generatedId]: {} }));
+    setTabFieldOrder((prev) => ({ ...prev, [generatedId]: [] }));
+    setEnabledTabs((prev) => {
+      const next = new Set(prev);
+      next.add(generatedId);
+      return next;
+    });
+
+    setNewTabName("");
+    setSaved(false);
+    notify.success(`Tab "${name}" created successfully.`);
+  };
+
+  const handleDeleteTab = (tabId: string) => {
+    const tab = formTabs.find((t) => t.key === tabId);
+    if (!tab) return;
+    if (tab.isSystem) {
+      notify.error("System tabs cannot be deleted.");
+      return;
+    }
+
+    const tabDefs = tabFields[tabId] || [];
+    if (tabDefs.length > 0) {
+      notify.error(t("contacts.setup.removeTabFieldsFirst"));
+      return;
+    }
+
+    if (!window.confirm(t("contacts.setup.deleteCustomTab", { tab: tab.label }))) {
+      return;
+    }
+
+    setFormTabs((prev) => prev.filter((t) => t.key !== tabId));
+    setTabFields((prev) => {
+      const next = { ...prev };
+      delete next[tabId];
+      return next;
+    });
+    setTabFieldEnabled((prev) => {
+      const next = { ...prev };
+      delete next[tabId];
+      return next;
+    });
+    setTabFieldRequired((prev) => {
+      const next = { ...prev };
+      delete next[tabId];
+      return next;
+    });
+    setTabFieldUnique((prev) => {
+      const next = { ...prev };
+      delete next[tabId];
+      return next;
+    });
+    setTabFieldDefaultValues((prev) => {
+      const next = { ...prev };
+      delete next[tabId];
+      return next;
+    });
+    setTabFieldPermissions((prev) => {
+      const next = { ...prev };
+      delete next[tabId];
+      return next;
+    });
+    setTabFieldOrder((prev) => {
+      const next = { ...prev };
+      delete next[tabId];
+      return next;
+    });
+    setEnabledTabs((prev) => {
+      const next = new Set(prev);
+      next.delete(tabId);
+      return next;
+    });
+    setRequiredTabs((prev) => {
+      const next = new Set(prev);
+      next.delete(tabId);
+      return next;
+    });
+
+    setSaved(false);
+    notify.success(`Tab "${tab.label}" deleted.`);
+  };
 
   const [saved, setSaved] = useState<boolean>(false);
   const updPref = <K extends keyof ContactPreferences>(k: K, v: ContactPreferences[K]): void => {
@@ -230,7 +366,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
     const issues = getContactFieldRemovalIssues({
       fieldKey: fieldId,
       columnRegistry: config.columnRegistry || DEFAULT_COLUMN_REGISTRY,
-      prefs: contextPrefs,
+      preferences: contextPrefs,
     });
     if (issues.length > 0) {
       const issue = issues[0];
@@ -265,7 +401,8 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
 
   const buildFieldsMap = (): Record<string, FieldDefinition[]> => {
     const newFields: Record<string, FieldDefinition[]> = {};
-    ALL_TABS.forEach(tabId => {
+    formTabs.forEach(tabDef => {
+      const tabId = tabDef.key;
       const combined = (tabFields[tabId] || []).map(f => {
         const fieldKey = f.key || (f as { id?: string }).id || "";
         const enabled = tabFieldEnabled[tabId]?.has(fieldKey) ?? f.enabled ?? false;
@@ -302,7 +439,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
       requiredTabs: Array.from(requiredTabs),
       fields: buildFieldsMap(),
       pageTabs: applyTitleCaseToTabs(config.pageTabs || []),
-      formTabs: applyTitleCaseToTabs(config.formTabs || []),
+      formTabs: applyTitleCaseToTabs(formTabs),
       detailTabs: applyTitleCaseToTabs(config.detailTabs || []),
       settingsSubTabs: applyTitleCaseToTabs(config.settingsSubTabs || []),
       columnRegistry: config.columnRegistry,
@@ -348,21 +485,23 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
 
           
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Layout className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-bold text-foreground">{t('contacts.setup.fieldsByTab')}</h3>
-              <span className="text-xs text-muted-foreground ml-1 flex items-center gap-1">
-                <span>— {t('contacts.setup.dragToReorder')} </span>
-                <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 inline align-middle" />
-                <span>{t('contacts.setup.toReorder')}</span>
-              </span>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Layout className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-bold text-foreground">{t('contacts.setup.fieldsByTab')}</h3>
+                <span className="text-xs text-muted-foreground ml-1 flex items-center gap-1">
+                  <span>— {t('contacts.setup.dragToReorder')} </span>
+                  <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 inline align-middle" />
+                  <span>{t('contacts.setup.toReorder')}</span>
+                </span>
+              </div>
             </div>
 
-            
-            {TAB_REGISTRY.map((tab) => {
+
+            {formTabs.map((tab) => {
               const tabId = tab.key;
               const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
-              const tabDesc = tab.description;
+              const tabDesc = tab.description || (tab.isSystem === false ? t("contacts.setup.customTabDescription") : "");
               const tabDefs = tabFields[tabId] || [];
               const enabledSet = tabFieldEnabled[tabId] || new Set();
               const requiredSet = tabFieldRequired[tabId] || new Set();
@@ -372,21 +511,14 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
               return (
                 <section key={tabId} className="rounded-xl border border-border bg-card overflow-hidden">
                   <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
-                    <button
-                      type="button"
-                      onClick={tabId !== "basic" ? () => toggleTabEnabled(tabId) : undefined}
-                      className={`w-11 h-11 flex-shrink-0 flex items-center justify-center transition-all ${
-                        tabId === "basic" ? "cursor-default" : "cursor-pointer"
-                      }`}
-                      aria-label={`${t('contacts.setup.enableTab')} ${tabLabel}`}
-                      disabled={tabId === "basic"}
-                    >
-                      <div className={`w-5 h-5 rounded flex-shrink-0 border-2 flex items-center justify-center transition-all ${
-                        isOn ? "bg-primary border-primary" : "border-border bg-background"
-                      }`}>
-                        {isOn && <Check className="w-3 h-3 text-primary-foreground" />}
-                      </div>
-                    </button>
+                    <div className="flex-shrink-0 flex items-center justify-center w-11 h-11">
+                      <Checkbox
+                        checked={isOn}
+                        onCheckedChange={tabId !== "basic" ? () => toggleTabEnabled(tabId) : undefined}
+                        disabled={tabId === "basic"}
+                        aria-label={`${t('contacts.setup.enableTab')} ${tabLabel}`}
+                      />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-foreground">{tabLabel}</span>
@@ -397,18 +529,26 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                       {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
                     </span>
                     {tabId !== "basic" && isOn && (
-                      <button
+                      <Button
                         type="button"
+                        variant={isReq ? "destructive" : "outline"}
                         onClick={() => toggleTabRequired(tabId)}
-                        className={`flex-shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all
-                          ${
-                            isReq
-                              ? "bg-destructive/10 border-destructive/30 text-destructive"
-                              : "bg-muted border-border text-muted-foreground hover:text-foreground"
-                          }`}
+                        className="flex-shrink-0 h-7 px-2.5 rounded-lg text-[10px] font-bold"
                       >
                         {isReq ? t('contacts.setup.fieldRequired') : t('contacts.setup.fieldOptional')}
-                      </button>
+                      </Button>
+                    )}
+                    {tab.isSystem === false && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => handleDeleteTab(tabId)}
+                        className="flex-shrink-0 h-7 w-7 p-0 text-destructive hover:bg-destructive/10 rounded-lg ml-1"
+                        title={t("contacts.setup.deleteCustomTab", { tab: tabLabel })}
+                        aria-label={`${t("contacts.setup.deleteCustomTab", { tab: tabLabel })}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     )}
                   </div>
 
@@ -439,9 +579,9 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                       />
                       <div className="border-t border-border pt-3">
                         <CustomFieldsBuilder
-                          fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
-                          droppableId={`custom-fields-${tabId}`}
-                          onChange={(f) => handleCustomFieldsChange(tabId, f)}
+                           fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                           droppableId={`custom-fields-${tabId}`}
+                           onChange={(f) => handleCustomFieldsChange(tabId, f)}
                         />
                       </div>
                     </div>
@@ -449,6 +589,25 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                 </section>
               );
             })}
+
+            {/* Create Custom Tab Inline Form */}
+            <div className="flex items-center gap-2 p-3 bg-muted/20 border border-border rounded-xl mt-4">
+              <Input
+                placeholder={t("contacts.setup.addCustomTabPlaceholder")}
+                value={newTabName}
+                onChange={(e) => setNewTabName(e.target.value)}
+                className="h-9 max-w-xs text-sm bg-card"
+                aria-label={t("contacts.setup.customTabName")}
+              />
+              <Button
+                type="button"
+                onClick={handleAddTab}
+                className="flex items-center gap-1.5 h-9 text-xs font-bold uppercase tracking-wider"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t("common.add")}</span>
+              </Button>
+            </div>
           </div>
         </>
       )}
@@ -465,9 +624,8 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className={FORM_LABEL} htmlFor="defaultCountry">{t('contacts.setup.defaultCountry')}</label>
-                  <input
+                  <Input
                     id="defaultCountry"
-                    className={FORM_INPUT}
                     value={prefs.defaultCountry || ""}
                     onChange={(e) => updPref("defaultCountry", e.target.value)}
                     placeholder={t('contacts.setup.defaultCountryPlaceholder')}
@@ -475,9 +633,8 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                 </div>
                 <div>
                   <label className={FORM_LABEL} htmlFor="defaultProvince">{t('contacts.setup.defaultProvince')}</label>
-                  <input
+                  <Input
                     id="defaultProvince"
-                    className={FORM_INPUT}
                     value={prefs.defaultProvince || ""}
                     onChange={(e) => updPref("defaultProvince", e.target.value)}
                     placeholder={t('contacts.setup.defaultProvincePlaceholder')}
@@ -485,9 +642,8 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                 </div>
                 <div>
                   <label className={FORM_LABEL} htmlFor="defaultCity">{t('contacts.setup.defaultCity')}</label>
-                  <input
+                  <Input
                     id="defaultCity"
-                    className={FORM_INPUT}
                     value={prefs.defaultCity || ""}
                     onChange={(e) => updPref("defaultCity", e.target.value)}
                     placeholder={t('contacts.setup.defaultCityPlaceholder')}
@@ -500,14 +656,14 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
       )}
 
       <div className="flex items-center gap-3 pt-2 border-t border-border sticky bottom-0 bg-background pb-2 flex-wrap">
-        <button
+        <Button
           type="button"
           onClick={handleSave}
-          className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 px-5 min-h-[44px]"
         >
           <Save className="w-4 h-4" />
           <span>{saved ? t('contacts.form.saved') : t('contacts.setup.saveAndApply')}</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

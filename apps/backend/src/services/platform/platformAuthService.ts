@@ -17,7 +17,7 @@ export function issuePlatformSession(
   const accessToken = jwtSigner.sign(
     {
       ...user,
-      role: 'platform_super',
+      role: user.role,
       tokenType: 'platform_access',
     },
     { expiresIn: PLATFORM_ACCESS_TTL },

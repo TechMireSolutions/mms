@@ -22,7 +22,7 @@ import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHea
 import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/platform/components/PlatformOtpInput";
 import { Button } from "@/components/ui/button";
 import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
 import { apiJson, ApiError } from "@/lib/apiClient";
 import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";

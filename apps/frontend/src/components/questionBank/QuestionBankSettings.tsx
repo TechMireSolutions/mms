@@ -8,22 +8,22 @@ import {
   QUESTION_BANK_TAB_REGISTRY,
   INITIAL_QUESTION_BANK_FIELD_SEED,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsDraft } from '@/hooks/useSettingsDraft';
 import { useQuestionBankConfig } from '@/hooks/useQuestionBankConfig';
 import { useModuleFieldsEditor } from '@/hooks/useModuleFieldsEditor';
 import { notify } from '@/lib/notify';
-import CustomFieldsBuilder, { type CustomFieldConfig } from '../ui/CustomFieldsBuilder';
-import CoreFieldEditorList from '../ui/CoreFieldEditorList';
-import SettingsFormActions from '../ui/SettingsFormActions';
+import { CustomFieldsBuilder, type CustomFieldConfig } from '../ui/CustomFieldsBuilder';
+import { CoreFieldEditorList } from '../ui/CoreFieldEditorList';
+import { SettingsFormActions } from '../ui/SettingsFormActions';
 import { Switch } from '../ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '../ui/checkbox';
 import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
-import CategoryManager from './CategoryManager';
+import { CategoryManager } from "./CategoryManager";
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
-import Modal from '../ui/Modal';
+import { Modal } from '../ui/Modal';
 
 interface QuestionBankSettingsProps {
   mode?: 'fields' | 'preferences';
@@ -41,7 +41,7 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
-export default function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React.JSX.Element {
+export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { settings, updateSettings } = useQuestionBankConfig();
 

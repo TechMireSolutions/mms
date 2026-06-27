@@ -1,26 +1,26 @@
 import React, { useState, useCallback, useMemo } from "react";
-import useConfigSubTabs from "@/hooks/useConfigSubTabs";
-import useTranslation from "@/hooks/useTranslation";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
+import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCheck, ClipboardEdit, BookOpen, BarChart2,
   ShieldCheck, ClipboardList,
 } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
-import PageHeader from "../components/ui/PageHeader";
-import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
-import SubTabBar from "@/components/ui/SubTabBar";
-import AttendanceFilters from "../components/attendance/AttendanceFilters";
-import MarkAttendance from "../components/attendance/MarkAttendance";
-import AttendanceRecords from "../components/attendance/AttendanceRecords";
-import AttendanceAnalytics from "../components/attendance/AttendanceAnalytics";
-import AttendanceSettings from "../components/attendance/AttendanceSettings";
-import AuditLog from "../components/attendance/AuditLog";
-import AttendanceCommandMetrics from "../components/attendance/AttendanceCommandMetrics";
+import { PageHeader } from "../components/ui/PageHeader";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { AttendanceFilters } from "../components/attendance/AttendanceFilters";
+import { MarkAttendance } from "../components/attendance/MarkAttendance";
+import { AttendanceRecords } from "../components/attendance/AttendanceRecords";
+import { AttendanceAnalytics } from "../components/attendance/AttendanceAnalytics";
+import { AttendanceSettings } from "../components/attendance/AttendanceSettings";
+import { AuditLog } from "../components/attendance/AuditLog";
+import { AttendanceCommandMetrics } from "../components/attendance/AttendanceCommandMetrics";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
-import ErrorBoundary from "../components/ui/ErrorBoundary";
+import { ErrorBoundary } from "../components/ui/ErrorBoundary";
 import { saveCollection } from "../lib/db";
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import {
@@ -31,7 +31,7 @@ import {
 import { useAttendanceColumnLayout } from '@/hooks/useAttendanceColumnLayout';
 import { useQueryClient } from '@tanstack/react-query';
 import { useViewerRole } from "@/hooks/useViewerRole";
-import usePermissions from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const DEFAULT_FILTERS = {
   sessionId: "",

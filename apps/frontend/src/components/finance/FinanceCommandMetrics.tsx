@@ -1,14 +1,14 @@
 import React from "react";
 import { ReceiptText, AlertTriangle, CheckCircle2, Clock, CreditCard, PieChart } from "lucide-react";
-import useTranslation from "@/hooks/useTranslation";
-import { useFinanceMetrics } from "@/hooks/useFinanceColumnPrefs";
-import ModuleCommandMetricCard from "@/components/ui/ModuleCommandMetricCard";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useFinanceMetrics } from "@/hooks/useFinanceColumnPreferences";
+import { ModuleCommandMetricCard } from "@/components/ui/ModuleCommandMetricCard";
 
 interface FinanceCommandMetricsProps {
   invoiceTotal: number;
 }
 
-export default function FinanceCommandMetrics({
+export function FinanceCommandMetrics({
   invoiceTotal,
 }: FinanceCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();

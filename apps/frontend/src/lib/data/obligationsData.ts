@@ -1,52 +1,20 @@
-export interface ObligationType {
-  id: string;
-  name: string;
-  quantity_based: boolean;
-  designated_for: "Syed" | "Non-Syed" | "Both" | "None";
-  created_at: string;
-  updated_at: string;
-}
+import type {
+  ObligationType,
+  Mujtahid,
+  MujtahidRep,
+  WakalaType,
+  ObligationDistribution,
+  ObligationCollection,
+} from '@mms/shared';
 
-export interface Mujtahid {
-  id: string;
-  name: string;
-}
-
-export interface MujtahidRep {
-  id: string;
-  name: string;
-  mujtahid_id: string;
-}
-
-export interface WakalaType {
-  id: string;
-  mujtahid_representative_id: string;
-  obligation_type_id: string;
-}
-
-export interface ObligationDistribution {
-  id: string;
-  name: string;
-  percentage: number;
-  wakala_type_id: string;
-  type: "Liability" | "Income";
-}
-
-export interface ObligationCollection {
-  id: string;
-  receipt_no: string;
-  received_date: string;
-  sender_id: string;
-  reference_id: string | null;
-  amount: number;
-  currency_id: string;
-  payment_mode: "Cash" | "Online";
-  obligation_type_id: string;
-  mujtahid_representative_id: string;
-  received_by: string;
-  created_at: string;
-  updated_at: string;
-}
+export type {
+  ObligationType,
+  Mujtahid,
+  MujtahidRep,
+  WakalaType,
+  ObligationDistribution,
+  ObligationCollection,
+};
 
 export const OBLIGATION_TYPES: ObligationType[] = [];
 

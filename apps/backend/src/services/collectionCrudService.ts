@@ -9,8 +9,8 @@ export function defineCollectionCrudService<T extends IdentifiedRecord>(
   normalize: (record: T) => T,
 ) {
   async function load(): Promise<T[]> {
-    const data = await fetchCollection(collectionName);
-    const parsed = listSchema.safeParse(data ?? []);
+    const collectionRows = await fetchCollection(collectionName);
+    const parsed = listSchema.safeParse(collectionRows ?? []);
     return parsed.success ? parsed.data : [];
   }
 

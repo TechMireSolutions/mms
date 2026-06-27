@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Plus, Trash2, Edit2, Users, GraduationCap } from "lucide-react";
 import { Session, Class } from '@/lib/data/sessionsData';
 import type { Teacher, AppTranslationKey } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useTeachersByIds, useTeachersPaginated } from '@/hooks/useTeachers';
 import { TEACHERS_MODULE_CONTRACT } from '@mms/shared';
 import { collectTeacherIdsFromClasses } from '@/lib/registryResolve';
@@ -12,11 +12,11 @@ import {
   teacherNameById,
   teacherOptionsForClass,
 } from '@/lib/teachers/teacherAssignment';
-import FormModal from "@/components/ui/FormModal";
+import { FormModal } from "@/components/ui/FormModal";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "../../ui/FormSelect";
+import { FormSelect } from "../../ui/FormSelect";
 
 const GENDER_COLORS: Record<string, string> = {
   male:   "bg-info/10 text-info border-info/20",
@@ -247,7 +247,7 @@ interface ClassesTabProps {
  *
  * Renders the classes tab for a session, allowing managing individual classes.
  */
-export default function ClassesTab({ session, onUpdate }: ClassesTabProps) {
+export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
   const teacherIds = useMemo(
     () => collectTeacherIdsFromClasses(session.classes),
     [session.classes],

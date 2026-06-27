@@ -2,12 +2,12 @@ import React, { useMemo, useState, lazy, Suspense, useCallback, useEffect, useRe
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2, Trash2, RotateCcw } from "lucide-react";
-import ConfirmAlertDialog from "@/components/ui/ConfirmAlertDialog";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { getPrimaryPhone, hasWhatsApp, Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab } from "@mms/shared";
 import type { AppTranslationKey } from "@mms/shared";
-import useTranslation from "@/hooks/useTranslation";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
-import usePermissions from "@/hooks/usePermissions";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useContacts, useContactsCollection, useContactsPaginated, useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/hooks/useContacts";
 import { useContactsSyncOutbox } from "@/hooks/useContactsSyncOutbox";
 import { useContactsPageActions } from "@/hooks/useContactsPageActions";
@@ -15,10 +15,10 @@ import { useContactsPageState } from "@/hooks/useContactsPageState";
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
-import PageHeader from "../components/ui/PageHeader";
-import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
-import SubTabBar from "@/components/ui/SubTabBar";
-import ActionButton from "../components/ui/ActionButton";
+import { PageHeader } from "../components/ui/PageHeader";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ActionButton } from "../components/ui/ActionButton";
 import ContactsTable from "../components/contacts/ContactsTable";
 import ContactCards from "../components/contacts/ContactCards";
 import ContactsToolbar from "../components/contacts/ContactsToolbar";
@@ -26,7 +26,7 @@ import ContactsCommandMetrics from "../components/contacts/ContactsCommandMetric
 import ContactsDataBanner from "../components/contacts/ContactsDataBanner";
 import ContactsSyncConflictPanel from "../components/contacts/ContactsSyncConflictPanel";
 import ContactsListPagination from "../components/contacts/ContactsListPagination";
-import ErrorBoundary from "../components/ui/ErrorBoundary";
+import { ErrorBoundary } from "../components/ui/ErrorBoundary";
 import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
 import { notify } from "@/lib/notify";
@@ -115,7 +115,7 @@ function SettingsPanel({ contacts, onImport, canWrite, canEditSetup }: SettingsP
       .sort((a, b) => a.order - b.order);
   }, [fieldConfig.settingsSubTabs, t]);
 
-  const [sub, setSub] = useState(() => {
+  const [sub, setSub] = useState<string>(() => {
     if (shouldOpenContactsSyncSetup()) return 'sync';
     return settingsSubTabs[0]?.key || "fields";
   });

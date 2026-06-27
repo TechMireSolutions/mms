@@ -15,7 +15,7 @@ export interface ErrorStateProps {
  * @param {ErrorStateProps} props - The component props.
  * @returns {React.ReactElement} The rendered ErrorState component.
  */
-export default function ErrorState({
+export function ErrorState({
   title,
   description,
   onRetry,

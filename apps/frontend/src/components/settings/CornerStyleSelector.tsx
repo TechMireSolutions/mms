@@ -4,7 +4,7 @@ import {
   BRANDING_CORNER_STYLE_OPTIONS,
   type BrandingCornerStyle,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 

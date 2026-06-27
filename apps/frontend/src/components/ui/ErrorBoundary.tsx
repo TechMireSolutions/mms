@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import ErrorState from "./ErrorState";
+import { ErrorState } from "./ErrorState";
 import { reportClientError } from "@/lib/clientErrorReporting";
 
 interface ErrorBoundaryProps {
@@ -16,7 +16,7 @@ interface ErrorBoundaryState {
  * ErrorBoundary component that catches runtime errors in child components
  * and displays a fallback user interface instead of crashing the application.
  */
-export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public override state: ErrorBoundaryState = {
     hasError: false,
     error: null,

@@ -1,36 +1,36 @@
 import React, { useState, useMemo } from "react";
-import useConfigSubTabs from "@/hooks/useConfigSubTabs";
-import useTranslation from "@/hooks/useTranslation";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
+import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Calendar, Users, BookOpen,
   DollarSign, ChevronRight, Filter, ChevronDown,
 } from "lucide-react";
-import PageHeader from "../components/ui/PageHeader";
-import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
-import SubTabBar from "@/components/ui/SubTabBar";
-import SearchBar from "../components/ui/SearchBar";
-import FilterChips from "../components/ui/FilterChips";
-import ActionButton from "../components/ui/ActionButton";
-import EmptyState from "../components/ui/EmptyState";
+import { PageHeader } from "../components/ui/PageHeader";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { SearchBar } from "../components/ui/SearchBar";
+import { FilterChips } from "../components/ui/FilterChips";
+import { ActionButton } from "../components/ui/ActionButton";
+import { EmptyState } from "../components/ui/EmptyState";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import SessionForm from "../components/sessions/SessionForm";
-import SessionDetail from "../components/sessions/SessionDetail";
-import SessionsSettings from "../components/sessions/SessionsSettings";
+import { SessionForm } from "../components/sessions/SessionForm";
+import { SessionDetail } from "../components/sessions/SessionDetail";
+import { SessionsSettings } from "../components/sessions/SessionsSettings";
 import ModuleReports from "../components/reports/ModuleReports";
-import ErrorBoundary from "../components/ui/ErrorBoundary";
+import { ErrorBoundary } from "../components/ui/ErrorBoundary";
 import KPISummary from "../components/reports/KPISummary";
 import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
 import { formatDate } from "../lib/db";
 import { useSessionsCollection, useSessionMutations } from "@/hooks/useSessions";
 import { useSessionColumnLayout } from "@/hooks/useSessionColumnLayout";
 import { useSessionConfig } from "@/hooks/useSessionConfig";
-import SessionsCommandMetrics from "@/components/sessions/SessionsCommandMetrics";
-import ModuleColumnCustomizer from "@/components/ui/ModuleColumnCustomizer";
+import { SessionsCommandMetrics } from "@/components/sessions/SessionsCommandMetrics";
+import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { type AppTranslationKey } from "@mms/shared";
 
 type SessionStatus = string;

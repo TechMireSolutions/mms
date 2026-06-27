@@ -1,5 +1,5 @@
 /** Cross-module background job record (globle2 §8). */
-export type BackgroundJobStatus = 'running' | 'completed' | 'failed';
+export type BackgroundJobStatus = 'pending' | 'running' | 'completed' | 'failed';
 
 export interface BackgroundJobRecord {
   id: string;

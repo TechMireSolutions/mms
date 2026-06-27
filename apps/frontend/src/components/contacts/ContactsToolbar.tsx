@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ColumnCustomizer from "./ColumnCustomizer";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ContactsToolbarProps {
   search: string;

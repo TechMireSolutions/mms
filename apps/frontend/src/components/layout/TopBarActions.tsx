@@ -26,13 +26,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import SyncStatusBadge from "./SyncStatusBadge";
-import BackgroundJobsTray from "@/components/ui/BackgroundJobsTray";
+import { BackgroundJobsTray } from "@/components/ui/BackgroundJobsTray";
 
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { resolveDashboardPersona } from "@/lib/dashboardPersona";
-import usePermissions from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import { buildDashboardNotifications } from "@/lib/buildDashboardNotifications";
 
 export interface TopBarActionsProps {

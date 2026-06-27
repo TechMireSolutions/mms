@@ -11,7 +11,7 @@ import {
   mark2FAVerified,
 } from "@/lib/twoFactor";
 import { requiresTwoFactor } from "@mms/shared";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { FORM_ERROR, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";

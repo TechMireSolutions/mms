@@ -8,16 +8,16 @@ import {
 } from "@mms/shared";
 import { useSessionConfig } from "@/hooks/useSessionConfig";
 import { SESSION_TYPES } from "../../lib/data/sessionsData";
-import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { CustomFieldsBuilder, CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import FormSelect from "../ui/FormSelect";
+import { FormSelect } from "../ui/FormSelect";
 import { Switch } from "../ui/switch";
-import Modal from "../ui/Modal";
-import useTranslation from "@/hooks/useTranslation";
+import { Modal } from "../ui/Modal";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Checkbox } from "../ui/checkbox";
 
 interface ToggleProps {
@@ -59,7 +59,7 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
-export default function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Element {
+export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { settings, types, updateSettings } = useSessionConfig();
   const [saved, setSaved] = useState<boolean>(false);

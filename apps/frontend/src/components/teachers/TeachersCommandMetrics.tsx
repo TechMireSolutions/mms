@@ -1,15 +1,15 @@
 import React from "react";
 import { School, Filter, UserCheck, UserX, CalendarClock, CalendarPlus } from "lucide-react";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useTeachersMetrics } from "@/hooks/useTeachers";
-import ModuleCommandMetricCard from "@/components/ui/ModuleCommandMetricCard";
+import { ModuleCommandMetricCard } from "@/components/ui/ModuleCommandMetricCard";
 
 interface TeachersCommandMetricsProps {
   total: number;
   shown: number;
 }
 
-export default function TeachersCommandMetrics({
+export function TeachersCommandMetrics({
   total,
   shown,
 }: TeachersCommandMetricsProps): React.JSX.Element {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { createQuestionCategory, type QuestionCategory } from '@mms/shared';
 import { FORM_INPUT } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ interface CategoryManagerProps {
   onChange: (categories: QuestionCategory[]) => void;
 }
 
-export default function CategoryManager({
+export function CategoryManager({
   categories,
   onChange,
 }: CategoryManagerProps): React.JSX.Element {

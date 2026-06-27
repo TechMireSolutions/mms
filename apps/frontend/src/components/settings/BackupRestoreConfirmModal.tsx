@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { formatBackupSize, type WorkspaceBackupSummary } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
-import Modal from '@/components/ui/Modal';
+import { useTranslation } from '@/hooks/useTranslation';
+import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

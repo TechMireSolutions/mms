@@ -15,7 +15,7 @@ interface StatusBadgeProps {
  * @param {StatusBadgeProps} props - The component props.
  * @returns {React.ReactElement | null} The rendered badge or null if status is invalid.
  */
-export default function StatusBadge({ status, size = "sm" }: StatusBadgeProps) {
+export function StatusBadge({ status, size = "sm" }: StatusBadgeProps) {
   const { statuses } = useAttendanceConfig();
   const s = getAttendanceStatusInfo(status, statuses);
   

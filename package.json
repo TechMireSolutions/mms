@@ -10,11 +10,9 @@
     "dev": "turbo run dev --filter=mms-frontend --filter=mms-backend",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
-    "test:e2e": "playwright test"
+    "test": "turbo run test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.0",
     "turbo": "^2.9.18"
   }
 }

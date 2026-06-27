@@ -3,8 +3,8 @@ import { defineConfig } from 'drizzle-kit';
 export default defineConfig({
   schema: './src/db/schema.ts',
   out: './src/db/migrations_drizzle',
-  dialect: 'sqlite',
+  dialect: 'postgresql',
   dbCredentials: {
-    url: 'mms.db',
+    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/mms',
   },
 });

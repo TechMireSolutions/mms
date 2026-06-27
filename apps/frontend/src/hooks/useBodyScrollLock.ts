@@ -13,7 +13,7 @@ let previousPaddingRight = "";
  *
  * @param active - When false, the lock is not applied (e.g. an animated dialog that is closed).
  */
-export default function useBodyScrollLock(active: boolean = true): void {
+export function useBodyScrollLock(active: boolean = true): void {
   useEffect(() => {
     if (!active || typeof document === "undefined") return;
 

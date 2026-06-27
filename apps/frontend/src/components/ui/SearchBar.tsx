@@ -14,7 +14,7 @@ export interface SearchBarProps {
  * @param {SearchBarProps} props - The component props.
  * @returns {React.ReactElement} The rendered SearchBar component.
  */
-export default function SearchBar({
+export function SearchBar({
   value,
   onChange,
   placeholder = "Search…",

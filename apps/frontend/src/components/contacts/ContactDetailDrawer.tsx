@@ -11,10 +11,10 @@ import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, calcAge } from "@mms/shared";
 import { formatDate } from "@mms/shared";
 import { useAuth } from '@/lib/contexts/AuthContext';
-import usePermissions from '@/hooks/usePermissions';
-import useTranslation from '@/hooks/useTranslation';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ACTIVITY_TYPE_I18N } from '@/lib/contacts/contactI18n';
-import useBodyScrollLock from "../../hooks/useBodyScrollLock";
+import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
 import { apiJson } from "@/lib/apiClient";
 import { getCollection } from "@/lib/db";
 import { Button } from "@/components/ui/button";
@@ -727,7 +727,7 @@ export default function ContactDetailDrawer({
                                      {target ? target.name.charAt(0) : "?"}
                                   </div>
                                   <div className="min-w-0">
-                                     <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{rel.type}</span>
+                                     <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{rel.relationship}</span>
                                      <h5 className="text-sm font-bold text-foreground truncate">{target ? target.name : `${t('contacts.table.contactIdPrefix')}${rel.contactId}`}</h5>
                                   </div>
                                </div>

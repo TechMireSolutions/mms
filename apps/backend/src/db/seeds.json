@@ -33396,7 +33396,10 @@
         "accounting": true,
         "hasanat": true,
         "users": true
-      }
+      },
+      "llmProvider": "none",
+      "llmApiKey": "",
+      "llmConfigs": []
     },
     "accounting_settings": {
       "currency": "PKR",

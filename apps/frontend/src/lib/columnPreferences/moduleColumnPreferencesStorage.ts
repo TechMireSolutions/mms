@@ -55,3 +55,7 @@ export function saveModuleColumnRegistry(
   }));
   saveModuleColumnPrefList(moduleId, userId, prefs);
 }
+
+export const loadModuleColumnPreferences = loadModuleColumnPrefs;
+export const saveModuleColumnPreferenceList = saveModuleColumnPrefList;
+

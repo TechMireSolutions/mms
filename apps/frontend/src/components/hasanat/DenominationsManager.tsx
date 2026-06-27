@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, CreditCard } from "lucide-react";
 import { Denomination } from '@/lib/data/hasanatData';
-import FormModal from "@/components/ui/FormModal";
+import { FormModal } from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { DEFAULT_DENOMINATION_COLOR, getDenominationPresetColors } from "@/lib/denominationColors";
 import { Button } from "@/components/ui/button";
@@ -123,7 +123,7 @@ export interface DenominationsManagerProps {
  * @param props - Component properties.
  * @returns React element representing the reward card denominations manager UI.
  */
-export default function DenominationsManager({ denoms, onUpdate }: DenominationsManagerProps) {
+export function DenominationsManager({ denoms, onUpdate }: DenominationsManagerProps) {
   const [showModal, setShowModal] = useState(false);
   const [editDenom, setEditDenom] = useState<Denomination | null>(null);
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { AlertTriangle, Upload, FileJson } from 'lucide-react';
-import SectionCard from '@/components/ui/SectionCard';
+import { SectionCard } from '@/components/ui/SectionCard';
 import { SettingsCallout } from '@/components/ui/SettingsShell';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BackupImportSectionProps {
   dragActive: boolean;

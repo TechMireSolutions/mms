@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import useBodyScrollLock from "@/hooks/useBodyScrollLock";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 export interface ModalProps {
   open: boolean;
@@ -12,6 +12,8 @@ export interface ModalProps {
   size?: "sm" | "md" | "lg" | "xl";
   /** Extra block below the title row (e.g. progress bar). */
   headerExtra?: React.ReactNode;
+  /** Custom action elements rendered in the header (e.g. builder switch). */
+  headerActions?: React.ReactNode;
   /** Applied to the dialog panel (e.g. fixed height for tabbed forms). */
   panelClassName?: string;
   footer?: React.ReactNode;
@@ -33,7 +35,7 @@ const SIZE = {
  * @param {ModalProps} props - The component props.
  * @returns {React.ReactElement} The rendered Modal component.
  */
-export default function Modal({
+export function Modal({
   open,
   onClose,
   title,
@@ -41,6 +43,7 @@ export default function Modal({
   icon: Icon,
   size = "md",
   headerExtra,
+  headerActions,
   panelClassName,
   footer,
   priority = false,
@@ -79,14 +82,17 @@ export default function Modal({
                     {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  aria-label="Close"
-                  className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {headerActions}
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="Close"
+                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
               {headerExtra ? <div className="mt-3">{headerExtra}</div> : null}
             </div>

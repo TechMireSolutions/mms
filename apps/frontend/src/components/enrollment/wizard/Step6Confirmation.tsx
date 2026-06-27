@@ -62,7 +62,7 @@ interface Step6ConfirmationProps {
 /**
  * Step 6 component for verifying all selected configuration details.
  */
-export default function Step6Confirmation({
+export function Step6Confirmation({
   student,
   session,
   classInfo,

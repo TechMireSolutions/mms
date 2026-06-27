@@ -6,7 +6,7 @@ export const TEACHERS_MODULE_CONTRACT = {
   entityType: 'Teacher',
   collectionKey: 'teachers',
   settingsObjectKey: 'teachers_settings',
-  columnPrefsObjectKey: 'teacher_user_column_prefs',
+  columnPreferencesObjectKey: 'teacher_user_column_preferences',
   restBasePath: '/api/teachers',
   analyticsCategory: 'teachers',
   tiers: ['work', 'reports', 'setup'] as const,

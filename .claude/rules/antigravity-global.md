@@ -16,7 +16,7 @@ description: Antigravity agent cognition, behaviour, output economy, security, a
 - **Focus:** Edit in-scope files only. Ask before deletions or large removals.
 - **Style:** Terse, functional code. No boilerplate or filler comments.
 - **Precision:** Prefer targeted patches — altered functions/blocks, not whole files unless requested.
-- **Names:** Semantic identifiers — full policy in `mms-naming.md`
+- **Names:** Semantic identifiers — full policy in `mms-structure-naming.md`
 
 ## Communication (two modes)
 
@@ -30,7 +30,7 @@ Do not echo file contents already in context.
 ## Output economy
 
 - **Edits:** `search_replace` / small writes — not full-file rewrites.
-- **Tests:** Only when requested, or for pure logic in `packages/shared` with no UI — see `mms-testing.md`.
+- **Tests:** Only when requested, or for pure logic in `packages/shared` with no UI — see `mms-testing-observability.md`.
 - **JSDoc:** Required on **public exports** in `packages/shared` only. Optional elsewhere; do not add narrating comments to app code.
 
 ## Security & state
@@ -38,7 +38,7 @@ Do not echo file contents already in context.
 - **Validation:** Zero-trust DTOs — Zod (frontend) or Fastify JSON Schema (backend).
 - **State:** Prefer unidirectional flow; pure helpers for transforms.
 - **Resilience:** Error boundaries on heavy module sections; degrade gracefully on API failure.
-- **Secrets:** Never log tokens, passwords, or PII — `mms-security.md`, `mms-observability.md`.
+- **Secrets:** Never log tokens, passwords, or PII — `mms-auth-security.md`, `mms-testing-observability.md`.
 
 ## Standards
 

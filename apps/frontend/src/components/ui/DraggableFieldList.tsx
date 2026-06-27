@@ -112,7 +112,7 @@ interface DraggableFieldListProps {
  * @param props Component properties.
  * @returns React element.
  */
-export default function DraggableFieldList({
+export function DraggableFieldList({
   tabId,
   fields,
   enabledSet,

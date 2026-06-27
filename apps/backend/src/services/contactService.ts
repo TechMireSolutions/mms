@@ -23,10 +23,15 @@ import {
   type ContactsWidgetQuery,
   type FieldConfig,
 } from '@mms/shared';
-import { fetchCollection, persistCollection } from './dbSyncService.js';
-import { contactListSchema } from '../validation/contactSchemas.js';
+import { fetchCollection } from './dbSyncService.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
 import { invalidateDuplicateScanCache } from './contactDuplicateScanService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  listContactsByWorkspace,
+  findContactById,
+  saveContact,
+} from '../db/repositories/contactRepository.js';
 
 export interface ContactRuntimeDefaults {
   defaultPhoneCountryCode: string;
@@ -36,10 +41,10 @@ export interface ContactRuntimeDefaults {
 }
 
 export async function loadContacts(options?: { includeDeleted?: boolean }): Promise<Contact[]> {
-  const data = await fetchCollection('contacts');
-  const parsed = contactListSchema.safeParse(data ?? []);
-  const all = parsed.success ? (parsed.data as Contact[]) : [];
-  return options?.includeDeleted ? all : filterActiveContacts(all);
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  const contactsList = await listContactsByWorkspace(tenant);
+  return options?.includeDeleted ? contactsList : filterActiveContacts(contactsList);
 }
 
 export async function loadContactsPage(query: ContactsListQuery): Promise<ContactsListPageResult> {
@@ -47,8 +52,8 @@ export async function loadContactsPage(query: ContactsListQuery): Promise<Contac
   return paginateContacts(all, query);
 }
 
-function metricsFieldConfig(cfg: FieldConfig | null): FieldConfig {
-  if (cfg?.fields && cfg.formTabs) return cfg;
+function metricsFieldConfig(fieldConfig: FieldConfig | null): FieldConfig {
+  if (fieldConfig?.fields && fieldConfig.formTabs) return fieldConfig;
   return {
     version: 1,
     enabledTabs: [...DEFAULT_ENABLED_TABS],
@@ -60,8 +65,8 @@ function metricsFieldConfig(cfg: FieldConfig | null): FieldConfig {
 
 export async function loadContactsCommandMetrics(): Promise<ContactsCommandMetricsSnapshot> {
   const contacts = await loadContacts();
-  const cfg = metricsFieldConfig(await loadContactFieldConfig());
-  return computeContactsCommandMetrics(contacts, { fieldConfig: cfg });
+  const fieldConfig = metricsFieldConfig(await loadContactFieldConfig());
+  return computeContactsCommandMetrics(contacts, { fieldConfig });
 }
 
 function firstString(value: unknown): string {
@@ -79,8 +84,8 @@ function firstCountryCode(rows: unknown[] | null): string {
   return first?.code ?? '';
 }
 
-async function resolveDefaultLifecycleStage(cfg: FieldConfig): Promise<string> {
-  const field = (cfg.fields?.basic ?? []).find((f) => f.key === 'lifecycleStage');
+async function resolveDefaultLifecycleStage(fieldConfig: FieldConfig): Promise<string> {
+  const field = (fieldConfig.fields?.basic ?? []).find((fieldItem) => fieldItem.key === 'lifecycleStage');
   return (
     field?.options?.[0]
     || firstCollectionString(await fetchCollection('lifecycleStages'))
@@ -108,8 +113,8 @@ export async function loadContactsReportAnalytics(options?: {
   compareYears?: number[];
 }): Promise<{ analytics: ContactsReportAnalyticsSnapshot; monthlyByYear?: ContactsMonthlyYearCounts[] }> {
   const contacts = await loadContacts();
-  const cfg = metricsFieldConfig(await loadContactFieldConfig());
-  const defaultStage = await resolveDefaultLifecycleStage(cfg);
+  const fieldConfig = metricsFieldConfig(await loadContactFieldConfig());
+  const defaultStage = await resolveDefaultLifecycleStage(fieldConfig);
   const analytics = computeContactsReportAnalytics(contacts, { defaultStage });
 
   const years = options?.compareYears?.filter(Boolean) ?? [];
@@ -154,7 +159,7 @@ export async function loadContactDuplicatePairsPage(query: {
 
 export async function getContactById(id: string, includeDeleted = false): Promise<Contact | null> {
   const all = await loadContacts({ includeDeleted: true });
-  const found = all.find((c) => String(c.id) === id);
+  const found = all.find((contact) => String(contact.id) === id);
   if (!found) return null;
   if (!includeDeleted && found.deletedAt) return null;
   return found;
@@ -167,12 +172,12 @@ export async function normalizeContactPhones(contact: Contact): Promise<Contact>
   const { defaultPhoneCountryCode } = await loadContactRuntimeDefaults();
   return {
     ...contact,
-    phones: contact.phones.map((p) => {
-      const fallbackCode = p.countryCode || defaultPhoneCountryCode;
-      const e164 = normalizeToE164(fallbackCode, p.number);
+    phones: contact.phones.map((phone) => {
+      const fallbackCode = phone.countryCode || defaultPhoneCountryCode;
+      const e164 = normalizeToE164(fallbackCode, phone.number);
       const parsed = parsePhoneNumber(e164, fallbackCode);
       return {
-        ...p,
+        ...phone,
         countryCode: parsed.countryCode,
         number: parsed.number,
       };
@@ -191,46 +196,43 @@ export async function upsertContact(contact: Contact): Promise<{
   created: boolean;
   restoredFromDelete?: boolean;
 }> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const contactWithId = await prepareContactRecord(contact, contact.id);
-  const data = await fetchCollection('contacts');
-  const parsed = contactListSchema.safeParse(data ?? []);
-  const contacts = parsed.success ? (parsed.data as Contact[]) : [];
-  const index = contacts.findIndex((c) => String(c.id) === String(contactWithId.id));
-  const created = index < 0;
-  const restoredFromDelete = !created && Boolean(contacts[index]?.deletedAt);
+  const existing = await findContactById(tenant, String(contactWithId.id));
+  const created = !existing;
+  const restoredFromDelete = existing && Boolean(existing.deletedAt);
+
+  let saved: Contact;
   if (created) {
-    contacts.push(contactWithId);
+    saved = contactWithId;
   } else {
-    contacts[index] = { ...contacts[index], ...contactWithId, deletedAt: undefined, deletedBy: undefined };
+    saved = { ...existing, ...contactWithId, deletedAt: undefined, deletedBy: undefined };
   }
-  const saved = contacts[index >= 0 ? index : contacts.length - 1];
-  await persistCollection('contacts', contacts);
+
+  await saveContact(tenant, saved);
   await invalidateDuplicateScanCache();
   return { contact: saved, created, restoredFromDelete: restoredFromDelete || undefined };
 }
 
 export async function updateContactById(id: string, contact: Contact): Promise<Contact | null> {
-  const contactWithId = await prepareContactRecord({ ...contact, id }, id);
-  const data = await fetchCollection('contacts');
-  const parsed = contactListSchema.safeParse(data ?? []);
-  const contacts = parsed.success ? (parsed.data as Contact[]) : [];
-  const index = contacts.findIndex((c) => String(c.id) === id && !c.deletedAt);
-  if (index < 0) {
+  const tenant = getRequestTenant();
+  if (!tenant) return null;
+  const existing = await findContactById(tenant, id);
+  if (!existing || existing.deletedAt) {
     return null;
   }
-  contacts[index] = contactWithId;
-  await persistCollection('contacts', contacts);
+  const contactWithId = await prepareContactRecord({ ...contact, id }, id);
+  await saveContact(tenant, contactWithId);
   await invalidateDuplicateScanCache();
   return contactWithId;
 }
 
 export async function restoreContactById(id: string, _restoredBy: string): Promise<Contact | null> {
-  const data = await fetchCollection('contacts');
-  const parsed = contactListSchema.safeParse(data ?? []);
-  const contacts = parsed.success ? (parsed.data as Contact[]) : [];
-  const index = contacts.findIndex((c) => String(c.id) === id);
-  if (index < 0) return null;
-  const existing = contacts[index];
+  const tenant = getRequestTenant();
+  if (!tenant) return null;
+  const existing = await findContactById(tenant, id);
+  if (!existing) return null;
   if (!existing.deletedAt) return existing;
 
   const now = new Date().toISOString();
@@ -241,8 +243,7 @@ export async function restoreContactById(id: string, _restoredBy: string): Promi
     deletionReason: undefined,
     updatedAt: now,
   };
-  contacts[index] = restored;
-  await persistCollection('contacts', contacts);
+  await saveContact(tenant, restored);
   await invalidateDuplicateScanCache();
   return restored;
 }
@@ -251,30 +252,30 @@ export async function bulkRestoreContacts(
   ids: string[],
   _restoredBy: string,
 ): Promise<{ succeeded: number; failed: number }> {
-  const data = await fetchCollection('contacts');
-  const parsed = contactListSchema.safeParse(data ?? []);
-  const contacts = parsed.success ? (parsed.data as Contact[]) : [];
+  const tenant = getRequestTenant();
+  if (!tenant) return { succeeded: 0, failed: ids.length };
   let succeeded = 0;
-  const idSet = new Set(ids.map(String));
+  let failed = 0;
   const now = new Date().toISOString();
 
-  for (let i = 0; i < contacts.length; i++) {
-    const contact = contacts[i];
-    if (!idSet.has(String(contact.id)) || !contact.deletedAt) continue;
-    contacts[i] = {
-      ...contact,
-      deletedAt: undefined,
-      deletedBy: undefined,
-      deletionReason: undefined,
-      updatedAt: now,
-    };
-    succeeded += 1;
-    idSet.delete(String(contact.id));
+  for (const id of ids) {
+    const existing = await findContactById(tenant, id);
+    if (existing && existing.deletedAt) {
+      const restored: Contact = {
+        ...existing,
+        deletedAt: undefined,
+        deletedBy: undefined,
+        deletionReason: undefined,
+        updatedAt: now,
+      };
+      await saveContact(tenant, restored);
+      succeeded += 1;
+    } else {
+      failed += 1;
+    }
   }
-  const failed = idSet.size;
 
   if (succeeded > 0) {
-    await persistCollection('contacts', contacts);
     await invalidateDuplicateScanCache();
   }
   return { succeeded, failed };
@@ -285,21 +286,20 @@ export async function softDeleteContactById(
   deletedBy: string,
   deletionReason?: string,
 ): Promise<boolean> {
-  const data = await fetchCollection('contacts');
-  const parsed = contactListSchema.safeParse(data ?? []);
-  const contacts = parsed.success ? (parsed.data as Contact[]) : [];
-  const index = contacts.findIndex((c) => String(c.id) === id && !c.deletedAt);
-  if (index < 0) {
+  const tenant = getRequestTenant();
+  if (!tenant) return false;
+  const existing = await findContactById(tenant, id);
+  if (!existing || existing.deletedAt) {
     return false;
   }
   const trimmedReason = deletionReason?.trim();
-  contacts[index] = {
-    ...contacts[index],
+  const updated: Contact = {
+    ...existing,
     deletedAt: new Date().toISOString(),
     deletedBy,
     deletionReason: trimmedReason || undefined,
   };
-  await persistCollection('contacts', contacts);
+  await saveContact(tenant, updated);
   await invalidateDuplicateScanCache();
   return true;
 }
@@ -309,26 +309,30 @@ export async function bulkSoftDeleteContacts(
   deletedBy: string,
   deletionReason?: string,
 ): Promise<{ succeeded: number; failed: number }> {
-  const data = await fetchCollection('contacts');
-  const parsed = contactListSchema.safeParse(data ?? []);
-  const contacts = parsed.success ? (parsed.data as Contact[]) : [];
+  const tenant = getRequestTenant();
+  if (!tenant) return { succeeded: 0, failed: ids.length };
   let succeeded = 0;
-  const idSet = new Set(ids.map(String));
+  let failed = 0;
   const now = new Date().toISOString();
   const trimmedReason = deletionReason?.trim();
 
-  for (const contact of contacts) {
-    if (!idSet.has(String(contact.id)) || contact.deletedAt) continue;
-    contact.deletedAt = now;
-    contact.deletedBy = deletedBy;
-    contact.deletionReason = trimmedReason || undefined;
-    succeeded += 1;
-    idSet.delete(String(contact.id));
+  for (const id of ids) {
+    const existing = await findContactById(tenant, id);
+    if (existing && !existing.deletedAt) {
+      const updated: Contact = {
+        ...existing,
+        deletedAt: now,
+        deletedBy,
+        deletionReason: trimmedReason || undefined,
+      };
+      await saveContact(tenant, updated);
+      succeeded += 1;
+    } else {
+      failed += 1;
+    }
   }
-  const failed = idSet.size;
 
   if (succeeded > 0) {
-    await persistCollection('contacts', contacts);
     await invalidateDuplicateScanCache();
   }
   return { succeeded, failed };

@@ -1,19 +1,19 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Gift, Plus, Star } from "lucide-react";
-import { REDEMPTIONS, Redemption, Distribution } from '@/lib/data/hasanatData';
+import { Redemption, Distribution } from '@/lib/data/hasanatData';
 import { DatePicker } from "../ui/DatePicker";
-import FormModal from "@/components/ui/FormModal";
-import UserActorSelect from "@/components/ui/UserActorSelect";
+import { FormModal } from "@/components/ui/FormModal";
+import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
-import { saveCollection } from "@/lib/db";
-import useTranslation from "@/hooks/useTranslation";
-import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
-import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
+import type { ModuleColumnRegistryEntry, SystemUser } from "@mms/shared";
+import { useHasanatRedemptionsCollection, useHasanatMutations } from "@/hooks/useHasanatApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
@@ -38,6 +38,7 @@ interface RedeemModalProps {
 function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps) {
   const { t } = useTranslation();
   const activeDistr = distributions.filter((d) => d.status === "active");
+  const users = useLiveCollection<SystemUser>("users");
   const [data, setData] = useState<Partial<Redemption>>({
     distributionId: activeDistr[0]?.id || "",
     reward: "",
@@ -71,10 +72,14 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
       onSave={() => {
+        const selectedUser = users.find((u) => u.id === data.approvedByUserId);
+        const approvedBy = selectedUser ? selectedUser.name : (data.approvedByUserId ? `User #${data.approvedByUserId}` : '');
         onSave({
           ...data,
           id: `red${Date.now()}`,
           pointsUsed: Number(data.pointsUsed),
+          studentName: selected?.recipientName || "",
+          approvedBy,
         } as Redemption);
       }}
       saveDisabled={!data.distributionId || !data.reward || !data.pointsUsed}
@@ -133,7 +138,7 @@ export interface RedemptionTrackerProps {
   columnCustomizer?: ColumnCustomizerProps;
 }
 
-export default function RedemptionTracker({
+export function RedemptionTracker({
   distributions,
   onUpdateDistributions,
   onFilteredCountChange,
@@ -141,7 +146,8 @@ export default function RedemptionTracker({
   columnCustomizer,
 }: RedemptionTrackerProps) {
   const { t } = useTranslation();
-  const redemptions = useLiveCollection<Redemption>("hasanat_redemptions", REDEMPTIONS);
+  const redemptions = useHasanatRedemptionsCollection();
+  const { replaceRedemptions } = useHasanatMutations();
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
@@ -149,8 +155,8 @@ export default function RedemptionTracker({
   }, [redemptions.length, onFilteredCountChange]);
 
   const saveRedemptions = useCallback((next: Redemption[]) => {
-    saveCollection("hasanat_redemptions", next);
-  }, []);
+    replaceRedemptions.mutate(next);
+  }, [replaceRedemptions]);
 
   const totalPts = redemptions.reduce((s: number, r: Redemption) => s + r.pointsUsed, 0);
 

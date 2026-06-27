@@ -48,4 +48,4 @@ If used in 2+ modules OR frontend + backend:
 
 ## Rules
 
-`.cursor/rules/mms-shared-dry.mdc`
+`.cursor/rules/mms-dry.md`

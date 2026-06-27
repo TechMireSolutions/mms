@@ -37,6 +37,7 @@ import {
 } from '../validation/dbSchemas.js';
 import { resourceKeyParamsSchema, resourceNameParamsSchema } from '../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
+import { validateContactDynamic } from '../services/contactValidationService.js';
 
 /**
  * Register database sync and CRUD routes on the Fastify instance.
@@ -123,6 +124,17 @@ export default async function dbRoutes(
           });
         }
         if (payload.collections?.contacts) {
+          const tenant = getRequestTenant();
+          if (!tenant) {
+            return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
+          }
+          try {
+            const lang = (request.headers['accept-language'] as string) || 'en';
+            await validateContactDynamic(tenant, payload.collections.contacts, lang, user.role);
+          } catch (err) {
+            return replyValidationError(reply, err instanceof Error ? err.message : String(err));
+          }
+
           payload.collections.contacts = payload.collections.contacts.map((item) =>
             applyTitleCaseToContact(item as Record<string, unknown>),
           );
@@ -209,7 +221,10 @@ export default async function dbRoutes(
   });
 
   // Save/Overwrite a specific collection
-  fastify.post('/collections/:name', async (request, reply) => {
+  fastify.post(
+    '/collections/:name',
+    { bodyLimit: SYNC_MAX_BODY_BYTES },
+    async (request, reply) => {
     const params = parseRequest(resourceNameParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     const { name } = params.data;
@@ -226,6 +241,17 @@ export default async function dbRoutes(
       let data = normalizeCollectionSaveBody(bodyParsed.data);
 
       if (name === 'contacts') {
+        const tenant = getRequestTenant();
+        if (!tenant) {
+          return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
+        }
+        try {
+          const lang = (request.headers['accept-language'] as string) || 'en';
+          await validateContactDynamic(tenant, data, lang, user.role);
+        } catch (err) {
+          return replyValidationError(reply, err instanceof Error ? err.message : String(err));
+        }
+
         data = data.map((item) => applyTitleCaseToContact(item as Record<string, unknown>));
       }
 

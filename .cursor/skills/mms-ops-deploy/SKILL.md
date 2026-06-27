@@ -54,7 +54,7 @@ bash scripts/check-workspace.sh <subdomain> apps/backend/.env
 
 **First-time VPS:** `sudo bash scripts/production/bootstrap-ubuntu-vps.sh`  
 **PM2 boot persistence:** `bash scripts/production/setup-pm2-startup.sh`  
-**DB backups:** `bash scripts/production/backup-sqlite.sh` (cron daily)
+**DB backups:** `bash scripts/production/backup-postgres.sh` (cron daily)
 
 Process manager: `ecosystem.config.cjs` — single `mmsv2-backend` (SPA served by Fastify; no separate frontend PM2).
 
@@ -91,7 +91,7 @@ curl -fsS "https://dar-ul-quran.${MMS_APP_DOMAIN}/health"            # replace s
 
 ## Rules
 
-`.cursor/rules/mms-ops.mdc`, `mms-production-ports.mdc`, `mms-security.mdc`
+`.cursor/rules/mms-ops-infrastructure.mdc`, `mms-ops-infrastructure.mdc`, `mms-auth-security.mdc`
 
 ## Related skills
 

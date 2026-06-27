@@ -23,7 +23,7 @@ interface Step4ClassAssignmentProps {
  * @param props.onChange - Callback on class selection change.
  * @returns The Step4ClassAssignment component.
  */
-export default function Step4ClassAssignment({ session, student, suggestedClass, value, onChange }: Step4ClassAssignmentProps): React.ReactElement {
+export function Step4ClassAssignment({ session, student, suggestedClass, value, onChange }: Step4ClassAssignmentProps): React.ReactElement {
   const [override, setOverride] = useState<boolean>(false);
   const classes = session?.classes || [];
 

@@ -2,7 +2,7 @@ import React from "react";
 import { ShieldAlert } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
 import { apexUrl, getAppDomain } from "@/lib/config/tenantConfig";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface WorkspaceDisabledScreenProps {
   madrasaName: string;

@@ -2,16 +2,16 @@ import React from 'react';
 import {
   BookOpen, Filter, CheckCircle2, FileEdit, Layers, EyeOff, TrendingUp,
 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useAccountingMetrics } from '@/hooks/useAccountingApi';
-import ModuleCommandMetricCard from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
 
 interface AccountingCommandMetricsProps {
   entryTotal: number;
   shown: number;
 }
 
-export default function AccountingCommandMetrics({
+export function AccountingCommandMetrics({
   entryTotal,
   shown,
 }: AccountingCommandMetricsProps): React.JSX.Element {

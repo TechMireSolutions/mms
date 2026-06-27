@@ -1,9 +1,9 @@
 import React from 'react';
 import { WifiOff, AlertCircle, CloudUpload, AlertTriangle } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useContacts } from '@/hooks/useContacts';
 import { useContactsSyncOutbox } from '@/hooks/useContactsSyncOutbox';
-import ConfirmAlertDialog from '@/components/ui/ConfirmAlertDialog';
+import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { Button } from '@/components/ui/button';
 
 interface ContactsDataBannerProps {

@@ -21,7 +21,7 @@ function syncOptionsInConfig(cfg: FieldConfig, tabId: string, fieldKey: string, 
 
 const PREFS_KEY = "mms_contact_prefs";
 const CONFIG_KEY = "mms_contact_field_config";
-const PREFS_OBJECT_KEY = CONTACTS_MODULE_CONTRACT.prefsObjectKey;
+const PREFS_OBJECT_KEY = CONTACTS_MODULE_CONTRACT.preferencesObjectKey;
 
 function parseLocalPrefs(): Partial<ContactPreferences> {
   try {

@@ -4,15 +4,18 @@ import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { BarChart2, ClipboardList, FileCheck2, Target, Users } from "lucide-react";
 import type {
   QuestionBankQuestion,
-  QuestionBankResult,
   QuestionBankTest,
 } from "@mms/shared";
 import { getQuestionCategoryIds } from "@mms/shared";
-import { useLiveCollection } from "../../hooks/useLiveCollection";
-import useTranslation from "@/hooks/useTranslation";
+import {
+  useQuestionBankQuestionsCollection,
+  useQuestionBankTestsCollection,
+  useQuestionBankResultsCollection,
+} from "@/hooks/useQuestionBankApi";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useQuestionBankConfig } from "@/hooks/useQuestionBankConfig";
 import ReportSummaryCard from "./ReportSummaryCard";
-import EmptyState from "../ui/EmptyState";
+import { EmptyState } from "../ui/EmptyState";
 
 function sumScores(scores: Record<string, number>): number {
   return Object.values(scores).reduce((sum, value) => sum + value, 0);
@@ -27,9 +30,9 @@ function testTotalMarks(test: QuestionBankTest, questions: QuestionBankQuestion[
 
 export default function QuestionBankReport(): React.JSX.Element {
   const { t } = useTranslation();
-  const questions = useLiveCollection<QuestionBankQuestion>("questions", []);
-  const tests = useLiveCollection<QuestionBankTest>("tests", []);
-  const results = useLiveCollection<QuestionBankResult>("assessment_results", []);
+  const questions = useQuestionBankQuestionsCollection();
+  const tests = useQuestionBankTestsCollection();
+  const results = useQuestionBankResultsCollection();
   const config = useQuestionBankConfig(questions);
 
   const avgScore = useMemo(() => {

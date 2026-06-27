@@ -135,3 +135,24 @@ export async function deleteRefreshTokensForUser(userId: string): Promise<void> 
     }
   }
 }
+
+/** Deletes all authentication and session artifacts associated with a workspace subdomain. */
+export async function deleteAuthArtifactsForWorkspace(subdomain: string): Promise<void> {
+  const normalized = subdomain.trim().toLowerCase();
+  const rows = await db().select().from(authArtifacts);
+  for (const row of rows) {
+    try {
+      const payload = JSON.parse(row.payload) as Record<string, unknown>;
+      const userObj = payload.user && typeof payload.user === 'object' ? (payload.user as Record<string, unknown>) : null;
+      if (
+        payload.workspaceSubdomain === normalized ||
+        payload.subdomain === normalized ||
+        (userObj && userObj.workspaceSubdomain === normalized)
+      ) {
+        await db().delete(authArtifacts).where(eq(authArtifacts.id, row.id));
+      }
+    } catch {
+      // ignore invalid JSON payloads
+    }
+  }
+}

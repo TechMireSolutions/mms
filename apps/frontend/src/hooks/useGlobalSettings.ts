@@ -28,4 +28,3 @@ export function useGlobalSettings(): GlobalSettings {
   return settings;
 }
 
-export default useGlobalSettings;

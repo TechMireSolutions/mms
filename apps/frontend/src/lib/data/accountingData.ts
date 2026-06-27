@@ -17,47 +17,17 @@ export const ACCOUNT_TYPE_META = {
   Expense:   { normalBalance: "debit",  color: "bg-warning/15 text-warning border-warning/30",     group: "Income Statement", icon: "📉" },
 };
 
-export interface Account {
-  id: string;
-  code: string;
-  name: string;
-  type: AccountType;
-  subtype: string;
-  description: string;
-  isActive: boolean;
-}
+import {
+  type Account,
+  type JournalLine,
+  type JournalEntry,
+  type FiscalYear,
+  type AccountingSettings,
+  DEFAULT_ACCOUNTING_SETTINGS as DEFAULT_SETTINGS
+} from "@mms/shared";
 
-export interface JournalLine {
-  id: string;
-  account_id: string;
-  debit: number;
-  credit: number;
-  description: string;
-}
-
-export interface JournalEntry {
-  id: string;
-  date: string;
-  ref: string;
-  description: string;
-  status: "posted" | "draft";
-  created_by: string;
-  tags: string[];
-  attachments: string[];
-  fiscal_year: string;
-  lines: JournalLine[];
-  transaction_type?: string;
-  reversed_ref?: string | null;
-  simple_mode?: boolean;
-}
-
-export interface FiscalYear {
-  id: string;
-  label: string;
-  startDate: string;
-  endDate: string;
-  status: "active" | "closed" | "upcoming";
-}
+export type { Account, JournalLine, JournalEntry, FiscalYear, AccountingSettings };
+export { DEFAULT_SETTINGS };
 
 export interface Currency {
   id: string;
@@ -65,10 +35,6 @@ export interface Currency {
   name: string;
   symbol: string;
 }
-
-import { type AccountingSettings, DEFAULT_ACCOUNTING_SETTINGS as DEFAULT_SETTINGS } from "@mms/shared";
-export type { AccountingSettings };
-export { DEFAULT_SETTINGS };
 
 export const CHART_OF_ACCOUNTS: Account[] = [];
 export const JOURNAL_TAGS = ["Payroll", "Fees", "Donation", "Obligation", "Utilities", "Rent", "Capital", "Adjustment", "Reversal", "Opening"];

@@ -6,8 +6,8 @@ import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import TopBarActions from "./TopBarActions";
 import MobileSidebar from "./MobileSidebar";
-import useBranding from "@/hooks/useBranding";
-import useSessionTimeout from "@/hooks/useSessionTimeout";
+import { useBranding } from "@/hooks/useBranding";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 
 /**

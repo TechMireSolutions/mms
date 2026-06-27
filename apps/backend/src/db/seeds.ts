@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { hashPassword } from '../services/auth/passwordService.js';
 
@@ -34,15 +35,22 @@ interface StoredSeedUser {
 let cachedSeeds: SeedsData | null = null;
 
 /**
- * Lazily loads seed data from seeds.json file.
+ * Lazily loads seed data from seeds.json.gz (or falls back to seeds.json).
  *
  * @returns {SeedsData} The parsed seeds data.
  */
 function loadSeeds(): SeedsData {
   if (!cachedSeeds) {
-    const jsonPath = path.join(__dirname, 'seeds.json');
-    const raw = fs.readFileSync(jsonPath, 'utf8');
-    cachedSeeds = JSON.parse(raw) as SeedsData;
+    const gzPath = path.join(__dirname, 'seeds.json.gz');
+    if (fs.existsSync(gzPath)) {
+      const compressed = fs.readFileSync(gzPath);
+      const decompressed = zlib.gunzipSync(compressed);
+      cachedSeeds = JSON.parse(decompressed.toString('utf8')) as SeedsData;
+    } else {
+      const jsonPath = path.join(__dirname, 'seeds.json');
+      const raw = fs.readFileSync(jsonPath, 'utf8');
+      cachedSeeds = JSON.parse(raw) as SeedsData;
+    }
   }
   return cachedSeeds;
 }

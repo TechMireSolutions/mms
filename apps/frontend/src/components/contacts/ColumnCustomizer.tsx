@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import useTranslation from "@/hooks/useTranslation";
-import ModuleColumnCustomizer from "@/components/ui/ModuleColumnCustomizer";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 
 /**
  * ColumnCustomizer component rendering a popover that enables users to toggle column visibility

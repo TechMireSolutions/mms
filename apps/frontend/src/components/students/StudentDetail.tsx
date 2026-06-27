@@ -13,7 +13,7 @@ import {
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useContactsByIds } from '@/hooks/useContacts';
 import { calcAge, type Student } from '@/lib/data/studentsData';
-import StatusBadge from "../ui/StatusBadge";
+import { StatusBadge } from "../ui/StatusBadge";
 import { AVATAR_GRADIENT_ROTATION } from "@/lib/semanticTone";
 import { useStudentConfig } from "@/hooks/useStudentConfig";
 

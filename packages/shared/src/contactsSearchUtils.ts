@@ -17,7 +17,7 @@ export function getContactSearchHaystack(contact: Contact): string {
 }
 
 export function contactMatchesSearch(contact: Contact, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  return getContactSearchHaystack(contact).includes(q);
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return true;
+  return getContactSearchHaystack(contact).includes(normalizedQuery);
 }

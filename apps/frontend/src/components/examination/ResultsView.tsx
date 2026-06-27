@@ -8,10 +8,10 @@ import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import { getGrade } from "./gradeUtils";
-import StudentResultCard, { StudentResultItem } from "./StudentResultCard";
-import CertificatePreview from "./CertificatePreview";
-import useTranslation from "@/hooks/useTranslation";
-import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import { StudentResultCard, StudentResultItem } from "./StudentResultCard";
+import { CertificatePreview } from "./CertificatePreview";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 
@@ -48,7 +48,7 @@ const RANK_ICONS = ["🥇", "🥈", "🥉"];
 /**
  * Rankings view component summarizing examination results and score distributions.
  */
-export default function ResultsView({
+export function ResultsView({
   exams,
   results,
   onFilteredCountChange,

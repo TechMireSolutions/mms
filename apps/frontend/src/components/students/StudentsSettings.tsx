@@ -9,12 +9,12 @@ import {
   DEFAULT_STUDENT_COLUMN_REGISTRY,
   INITIAL_STUDENT_FIELD_SEED,
 } from "@mms/shared";
-import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { CustomFieldsBuilder, CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useStudentConfig } from "@/hooks/useStudentConfig";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
-import Modal from "../ui/Modal";
+import { Modal } from "../ui/Modal";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";

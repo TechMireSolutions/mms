@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { parseSessionTimeoutMinutes, translateApp } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import useGlobalSettings from "./useGlobalSettings";
+import { useGlobalSettings } from "./useGlobalSettings";
 import { notify } from "@/lib/notify";
 
 /**
@@ -38,4 +38,3 @@ export function useSessionTimeout(): void {
   }, [isAuthenticated, minutes, logout, language]);
 }
 
-export default useSessionTimeout;

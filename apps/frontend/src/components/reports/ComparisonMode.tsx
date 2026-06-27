@@ -3,17 +3,22 @@ import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { GitCompare, X } from "lucide-react";
 import { DatePicker } from "../ui/DatePicker";
 import { Button } from "@/components/ui/button";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsReportAnalytics } from '@/hooks/useContacts';
 import { computeContactsStageComparison } from '@mms/shared';
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import { useLiveCollection } from "@/hooks/useLiveCollection";
+import { useEnrollmentsCollection } from "@/hooks/useEnrollmentsApi";
+import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
+import { useFinanceInvoicesCollection } from "@/hooks/useFinanceApi";
+import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/hooks/useHasanatApi";
+import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/hooks/useExaminationsApi";
 import type { Session } from "@/lib/data/sessionsData";
 
 interface ComparisonDataItem {
@@ -46,6 +51,7 @@ function computeDynamicSessionComparison(
   denoms: any[],
   targetA: string,
   targetB: string,
+  t: (key: any) => string,
 ): ComparisonDataItem[] {
   const sessA = sessions.find(s => s.id === targetA);
   const sessB = sessions.find(s => s.id === targetB);
@@ -118,11 +124,11 @@ function computeDynamicSessionComparison(
   const metricsB = getMetrics(sessB);
 
   return [
-    { metric: "Enrollment",   a: metricsA.enrollment,     b: metricsB.enrollment },
-    { metric: "Attendance%",  a: metricsA.attendancePct,  b: metricsB.attendancePct },
-    { metric: "Fee Collected",a: metricsA.feeCollected,   b: metricsB.feeCollected },
-    { metric: "Pass Rate%",   a: metricsA.passRatePct,    b: metricsB.passRatePct },
-    { metric: "Hasanat",      a: metricsA.hasanat,        b: metricsB.hasanat },
+    { metric: t("reports.comparison.metricEnrollment"),   a: metricsA.enrollment,     b: metricsB.enrollment },
+    { metric: t("reports.comparison.metricAttendance"),  a: metricsA.attendancePct,  b: metricsB.attendancePct },
+    { metric: t("reports.comparison.metricFeeCollected"),a: metricsA.feeCollected,   b: metricsB.feeCollected },
+    { metric: t("reports.comparison.metricPassRate"),   a: metricsA.passRatePct,    b: metricsB.passRatePct },
+    { metric: t("reports.comparison.metricHasanat"),      a: metricsA.hasanat,        b: metricsB.hasanat },
   ];
 }
 
@@ -321,6 +327,7 @@ interface ComparisonModeProps {
  * @returns React.JSX.Element
  */
 export default function ComparisonMode({ category, onClose }: ComparisonModeProps): React.JSX.Element {
+  const { t } = useTranslation();
   const { primary, secondary } = useBrandPalette();
   const { fieldConfig } = useContactConfig();
   const isContacts = category.toLowerCase() === "contacts";
@@ -345,13 +352,13 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const sessions = useSessionsCollection();
   const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(() => sessions.filter((s) => s.id !== "all").map(s => ({ id: s.id, name: s.name })), [sessions]);
 
-  const enrollments = useLiveCollection("enrollments");
-  const attendanceRecords = useLiveCollection("attendance_records");
-  const financeInvoices = useLiveCollection("finance_invoices");
-  const hasanatDistributions = useLiveCollection("hasanat_distributions");
-  const examResults = useLiveCollection("exam_results");
-  const exams = useLiveCollection("exams");
-  const denoms = useLiveCollection("hasanat_denoms");
+  const enrollments = useEnrollmentsCollection();
+  const attendanceRecords = useAttendanceRecordsCollection();
+  const financeInvoices = useFinanceInvoicesCollection();
+  const hasanatDistributions = useHasanatDistributionsCollection();
+  const examResults = useExaminationsResultsCollection();
+  const exams = useExaminationsExamsCollection();
+  const denoms = useHasanatDenomsCollection();
 
   const LIFECYCLE_OPTIONS = useMemo(() => {
     const field = (fieldConfig.fields?.basic || []).find((f) => f.key === "lifecycleStage");
@@ -393,6 +400,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         denoms,
         valA,
         valB,
+        t,
       );
     }
     if (isContacts) {
@@ -427,7 +435,31 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     exams,
     denoms,
     category,
+    t,
   ]);
+
+  const translatedData = useMemo(() => {
+    const translateMetricName = (name: string): string => {
+      switch (name) {
+        case "Total Volume": return t("reports.comparison.metricTotalVolume");
+        case "Conversion%": return t("reports.comparison.metricConversionPct");
+        case "Engagement": return t("reports.comparison.metricEngagement");
+        case "Active Status": return t("reports.comparison.metricActiveStatus");
+        case "Enrollment": return t("reports.comparison.metricEnrollment");
+        case "Attendance%": return t("reports.comparison.metricAttendance");
+        case "Fee Collected": return t("reports.comparison.metricFeeCollected");
+        case "Pass Rate%": return t("reports.comparison.metricPassRate");
+        case "Hasanat": return t("reports.comparison.metricHasanat");
+        default: return name;
+      }
+    };
+
+    if (mode !== "sessions") return data;
+    return (data as ComparisonDataItem[]).map((row) => ({
+      ...row,
+      metric: translateMetricName(row.metric),
+    }));
+  }, [data, mode, t]);
 
   return (
     <motion.div
@@ -440,7 +472,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       <div className="flex items-center justify-between px-4 py-3 bg-primary/5 border-b border-border/50 text-left">
         <div className="flex items-center gap-2">
           <GitCompare className="w-4 h-4 text-primary" />
-          <span className="text-sm font-bold text-foreground">Comparison Mode</span>
+          <span className="text-sm font-bold text-foreground">{t("reports.comparison.title")}</span>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex rounded-lg border border-border/50 overflow-hidden text-xs font-semibold">
@@ -450,7 +482,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
               className={`px-3 py-1.5 h-auto text-xs font-semibold rounded-none ${mode === "sessions" ? "bg-primary text-primary-foreground hover:bg-primary/95" : "bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
               type="button"
             >
-              {isContacts ? "Stages" : "Sessions"}
+              {isContacts ? t("reports.comparison.stages") : t("reports.comparison.sessions")}
             </Button>
             <Button
               onClick={() => setMode("daterange")}
@@ -458,7 +490,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
               className={`px-3 py-1.5 h-auto text-xs font-semibold rounded-none ${mode === "daterange" ? "bg-primary text-primary-foreground hover:bg-primary/95" : "bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
               type="button"
             >
-              Date Ranges
+              {t("reports.comparison.dateRanges")}
             </Button>
           </div>
           <Button
@@ -467,7 +499,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
             size="icon"
             className="h-8 w-8 p-0 rounded-lg hover:bg-muted transition-colors"
             type="button"
-            aria-label="Close comparison"
+            aria-label={t("reports.comparison.closeLabel")}
           >
             <X className="w-4 h-4 text-muted-foreground" />
           </Button>
@@ -483,7 +515,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
               { label: "B", val: valB, set: setValB, color: "text-warning" }
             ].map(({ label, val, set, color }) => (
               <div key={label} className="flex flex-col gap-1">
-                <label className={`text-[11px] font-bold uppercase tracking-wide ${color}`}>{isContacts ? "Stage" : "Session"} {label}</label>
+                <label className={`text-[11px] font-bold uppercase tracking-wide ${color}`}>{isContacts ? t("reports.comparison.stage") : t("reports.comparison.session")} {label}</label>
                 <FormSelect
                   value={val}
                   onChange={(newVal) => set(newVal)}
@@ -496,8 +528,8 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         ) : (
           <div className="grid grid-cols-2 gap-4 text-left">
             {[
-              { label: "Range A", range: rangeA, set: setRangeA, color: "text-primary" },
-              { label: "Range B", range: rangeB, set: setRangeB, color: "text-warning" }
+              { label: t("reports.comparison.rangeA"), range: rangeA, set: setRangeA, color: "text-primary" },
+              { label: t("reports.comparison.rangeB"), range: rangeB, set: setRangeB, color: "text-warning" }
             ].map(({ label, range, set, color }) => (
               <div key={label} className="space-y-2">
                 <p className={`text-[11px] font-bold uppercase tracking-wide ${color}`}>{label}</p>
@@ -521,11 +553,11 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         {/* Chart */}
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm text-left">
           <p className="text-xs text-muted-foreground mb-3">
-            Comparing: <span className="font-semibold text-primary">{labelA}</span> vs <span className="font-semibold text-warning">{labelB}</span>
+            {t("reports.comparison.comparing")} <span className="font-semibold text-primary">{labelA}</span> {t("reports.comparison.vs")} <span className="font-semibold text-warning">{labelB}</span>
           </p>
           <div className="h-[220px] w-full">
             <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
-              <BarChart data={data as Array<ComparisonDataItem | DateRangeDataItem>} barSize={22}>
+              <BarChart data={translatedData as Array<ComparisonDataItem | DateRangeDataItem>} barSize={22}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey={mode === "sessions" ? "metric" : "month"} tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
@@ -544,14 +576,14 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/50">
                 <tr>
-                  <th className="px-3 py-2 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Metric</th>
-                  <th className="px-3 py-2 text-left text-[11px] font-bold text-primary uppercase tracking-widest">{isContacts ? "Target A" : "Session A"}</th>
-                  <th className="px-3 py-2 text-left text-[11px] font-bold text-warning uppercase tracking-widest">{isContacts ? "Target B" : "Session B"}</th>
-                  <th className="px-3 py-2 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Δ Diff</th>
+                  <th className="px-3 py-2 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.comparison.metric")}</th>
+                  <th className="px-3 py-2 text-left text-[11px] font-bold text-primary uppercase tracking-widest">{isContacts ? t("reports.comparison.targetA") : t("reports.comparison.sessionA")}</th>
+                  <th className="px-3 py-2 text-left text-[11px] font-bold text-warning uppercase tracking-widest">{isContacts ? t("reports.comparison.targetB") : t("reports.comparison.sessionB")}</th>
+                  <th className="px-3 py-2 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.comparison.diff")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50 text-left bg-transparent">
-                {(data as ComparisonDataItem[]).map((row) => {
+                {(translatedData as ComparisonDataItem[]).map((row) => {
                   const diff = parseFloat((row.a - row.b).toFixed(1));
                   return (
                     <tr key={row.metric} className="hover:bg-muted/30 transition-colors">

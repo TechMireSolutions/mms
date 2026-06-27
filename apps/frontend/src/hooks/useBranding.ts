@@ -11,7 +11,7 @@ import { isEntryPath } from "@/lib/config/routes";
  *
  * @returns {BrandingSettings} The active branding settings object.
  */
-export default function useBranding(): BrandingSettings {
+export function useBranding(): BrandingSettings {
   const [branding, setBranding] = useState<BrandingSettings>(() => getScopedBrandingSettings());
 
   useEffect(() => {

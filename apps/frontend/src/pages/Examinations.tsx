@@ -1,29 +1,32 @@
 import React, { useState, useMemo, useEffect } from "react";
-import useConfigSubTabs from "@/hooks/useConfigSubTabs";
-import useTranslation from "@/hooks/useTranslation";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
+import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, FileText, PenTool, Layers } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
-import PageHeader from "../components/ui/PageHeader";
-import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
-import SubTabBar from "@/components/ui/SubTabBar";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import Modal from "@/components/ui/Modal";
+import { PageHeader } from "../components/ui/PageHeader";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { Modal } from "@/components/ui/Modal";
 import ExamsList from "../components/examination/ExamsList";
 import ExamForm from "../components/examination/ExamForm";
-import EnterMarks from "../components/examination/EnterMarks";
-import ResultsView from "../components/examination/ResultsView";
-import ExaminationsSettings from "../components/examination/ExaminationsSettings";
-import ExaminationsCommandMetrics from "../components/examination/ExaminationsCommandMetrics";
+import { EnterMarks } from "../components/examination/EnterMarks";
+import { ResultsView } from "../components/examination/ResultsView";
+import { ExaminationsSettings } from "../components/examination/ExaminationsSettings";
+import { ExaminationsCommandMetrics } from "../components/examination/ExaminationsCommandMetrics";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import { Exam, ExamResult } from '@/lib/data/examinationData';
-import { saveCollection } from "../lib/db";
-import { useLiveCollection } from "../hooks/useLiveCollection";
 import { useExaminationExamColumnLayout } from "@/hooks/useExaminationExamColumnLayout";
 import { useExaminationResultsColumnLayout } from "@/hooks/useExaminationResultsColumnLayout";
 import { useExaminationConfig } from "@/hooks/useExaminationConfig";
+import {
+  useExaminationsExamsCollection,
+  useExaminationsResultsCollection,
+  useExaminationsMutations,
+} from "@/hooks/useExaminationsApi";
 
 /**
  * Examinations — formal exams, marking, and results. Work | Reports | Setup.
@@ -43,8 +46,9 @@ export default function Examinations(): React.JSX.Element {
   const [activeSubTab, setActiveSubTab] = useState("exams");
   const [configSubTab, setConfigSubTab] = useState<"fields" | "preferences">("fields");
 
-  const exams = useLiveCollection("exams");
-  const examResults = useLiveCollection("exam_results");
+  const exams = useExaminationsExamsCollection();
+  const examResults = useExaminationsResultsCollection();
+  const { replaceExams, replaceExamResults } = useExaminationsMutations();
   const { settings } = useExaminationConfig();
   const examColumnLayout = useExaminationExamColumnLayout();
   const resultsColumnLayout = useExaminationResultsColumnLayout();
@@ -57,8 +61,7 @@ export default function Examinations(): React.JSX.Element {
 
   const handleSaveExam = (exam: Exam): void => {
     const exists = exams.find((e) => e.id === exam.id);
-    saveCollection(
-      "exams",
+    replaceExams.mutate(
       exists ? exams.map((e) => (e.id === exam.id ? exam : e)) : [...exams, exam],
     );
     setShowExamForm(false);
@@ -66,7 +69,7 @@ export default function Examinations(): React.JSX.Element {
   };
 
   const handleSaveResults = (examId: string, newResults: ExamResult[]): void => {
-    saveCollection("exam_results", [
+    replaceExamResults.mutate([
       ...examResults.filter((r) => r.examId !== examId),
       ...newResults,
     ]);

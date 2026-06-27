@@ -16,6 +16,21 @@ const claudeSkillsDir = ".claude/skills";
 
 fs.mkdirSync(claudeRulesDir, { recursive: true });
 
+// Prune orphaned rule files in claudeRulesDir
+const cursorRules = new Set(
+  fs.readdirSync(cursorDir)
+    .filter((f) => f.endsWith(".mdc"))
+    .map((f) => f.replace(/\.mdc$/, ""))
+);
+
+for (const file of fs.readdirSync(claudeRulesDir).filter((f) => f.endsWith(".md") && f !== "README.md")) {
+  const base = file.replace(/\.md$/, "");
+  if (!cursorRules.has(base)) {
+    fs.unlinkSync(path.join(claudeRulesDir, file));
+    console.log(`pruned orphaned claude rule: ${file}`);
+  }
+}
+
 for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) {
   const base = file.replace(/\.mdc$/, "");
   const src = fs.readFileSync(path.join(cursorDir, file), "utf8");
@@ -46,6 +61,19 @@ for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) 
 }
 SCRIPT
 
+# Prune orphaned skill directories in .claude/skills
+if [[ -d "$ROOT/.claude/skills" ]]; then
+  for dir in "$ROOT/.claude/skills"/*/; do
+    if [[ -d "$dir" ]]; then
+      name="$(basename "$dir")"
+      if [[ ! -d "$ROOT/.agent/skills/$name" ]]; then
+        rm -rf "$dir"
+        echo "pruned orphaned claude skill: $name"
+      fi
+    fi
+  done
+fi
+
 for dir in "$ROOT/.agent/skills"/*/; do
   name="$(basename "$dir")"
   mkdir -p "$ROOT/.claude/skills/$name"
@@ -60,6 +88,7 @@ for dir in "$ROOT/.agent/skills"/*/; do
   fi
 done
 
+cp "$ROOT/.agent/rules/README.md" "$ROOT/.claude/rules/README.md" 2>/dev/null || true
 cp "$ROOT/.agent/skills/README.md" "$ROOT/.claude/skills/README.md"
 
 mkdir -p "$ROOT/.claude/docs/workflows"

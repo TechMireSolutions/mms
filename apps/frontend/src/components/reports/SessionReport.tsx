@@ -7,10 +7,11 @@ import {
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import type { Enrollment } from '@/lib/data/enrollmentData';
+import type { Enrollment } from '@mms/shared';
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
-import EmptyState from "../ui/EmptyState";
+import { EmptyState } from "../ui/EmptyState";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import SessionsTable from "@/components/widgets/SessionsTable";
 
@@ -69,6 +70,7 @@ function utilisationColour(rate: number): string {
  * @returns The SessionReport component.
  */
 export default function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
+  const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const enrollments = useLiveCollection<Enrollment>("enrollments");
 
@@ -142,37 +144,37 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={CalendarCheck} label="Active Sessions"  value={activeSessionsCount} color="primary" />
-        <ReportSummaryCard icon={Users}         label="Total Enrolled"   value={totalEnrolled}    color="blue"    />
-        <ReportSummaryCard icon={BarChart2}     label="Total Capacity"   value={totalCapacity}    color="violet"  />
-        <ReportSummaryCard icon={TrendingUp}    label="Avg Utilisation"  value={`${avgUtil}%`}    color="green"   />
+        <ReportSummaryCard icon={CalendarCheck} label={t("sessions.report.activeSessions")}  value={activeSessionsCount} color="primary" />
+        <ReportSummaryCard icon={Users}         label={t("sessions.report.totalEnrolled")}   value={totalEnrolled}    color="blue"    />
+        <ReportSummaryCard icon={BarChart2}     label={t("sessions.report.totalCapacity")}   value={totalCapacity}    color="violet"  />
+        <ReportSummaryCard icon={TrendingUp}    label={t("sessions.report.avgUtilisation")}  value={`${avgUtil}%`}    color="green"   />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">Capacity Utilisation by Class</p>
+          <p className="text-sm font-semibold text-foreground mb-3">{t("sessions.report.capacityByClass")}</p>
           <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={barData} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="class" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="enrolled"  fill="hsl(var(--primary))" stackId="a" name="Enrolled"  radius={[0, 0, 0, 0]} />
-              <Bar dataKey="available" fill="hsl(var(--muted))"   stackId="a" name="Available" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="enrolled"  fill="hsl(var(--primary))" stackId="a" name={t("sessions.report.enrolledLabel")}  radius={[0, 0, 0, 0]} />
+              <Bar dataKey="available" fill="hsl(var(--muted))"   stackId="a" name={t("sessions.report.availableLabel")} radius={[4, 4, 0, 0]} />
             </BarChart>
           </SafeResponsiveContainer>
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">Enrollment Trend</p>
+          <p className="text-sm font-semibold text-foreground mb-3">{t("sessions.report.enrollmentTrend")}</p>
           <SafeResponsiveContainer width="100%" height={180}>
             <LineChart data={enrollmentTrends}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Line type="monotone" dataKey="students" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} name="Students" />
+              <Line type="monotone" dataKey="students" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} name={t("sessions.report.studentsLabel")} />
             </LineChart>
           </SafeResponsiveContainer>
         </div>
@@ -180,18 +182,32 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
 
       {/* Table */}
       <ReportExportBar 
-        title="Session Capacity Report" 
+        title={t("sessions.report.capacityReportTitle")} 
         data={capacityData}
-        headers={["Session", "Class", "Enrolled", "Capacity", "Utilisation", "Status"]}
+        headers={[
+          t("sessions.report.colSession"),
+          t("sessions.report.colClass"),
+          t("sessions.report.colEnrolled"),
+          t("sessions.report.colCapacity"),
+          t("sessions.report.colUtilisation"),
+          t("sessions.report.colStatus"),
+        ]}
       />
       {capacityData.length === 0 ? (
-        <EmptyState icon={CalendarCheck} title="No session data for selected filters" compact />
+        <EmptyState icon={CalendarCheck} title={t("sessions.report.noData")} compact />
       ) : (
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
-                {["Session", "Class", "Enrolled", "Capacity", "Utilisation", "Status"].map((h) => (
+                {[
+                  t("sessions.report.colSession"),
+                  t("sessions.report.colClass"),
+                  t("sessions.report.colEnrolled"),
+                  t("sessions.report.colCapacity"),
+                  t("sessions.report.colUtilisation"),
+                  t("sessions.report.colStatus"),
+                ].map((h) => (
                   <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -229,8 +245,8 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
       {/* Dashboard widgets preview */}
       <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-left">
         <div>
-          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Dashboard Main Widget</h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">Preview of widget rendering on the main landing dashboard</p>
+          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("sessions.report.dashboardWidgetTitle")}</h3>
+          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("sessions.report.dashboardWidgetSubtitle")}</p>
         </div>
         <SessionsTable />
       </div>

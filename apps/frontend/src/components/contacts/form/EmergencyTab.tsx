@@ -2,46 +2,20 @@ import React from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Heart, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Field, FormEmptyState, RequiredBanner, EditableSelect, CustomFieldInput, COLLECTION_CARD, COLLECTION_BODY, CardRemoveButton } from "./FormPrimitives";
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
-import useTranslation from "@/hooks/useTranslation";
+import { getDefaultFieldValue, Contact, EmergencyContact } from "@mms/shared";
+import { Field, FormEmptyState, RequiredBanner, EditableSelect, CustomFieldInput, COLLECTION_CARD, COLLECTION_BODY, CardRemoveButton } from "@/components/ui/FormPrimitives";
+import { useContactConfig, type ValidationError } from '@/lib/contexts/ContactConfigContext';
+import { useVisibleContactFields } from "@/hooks/useVisibleContactFields";
+import { useTranslation } from "@/hooks/useTranslation";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 
-interface ContactPhone {
-  label: string;
-  number: string;
-  countryCode?: string;
-}
-
-interface ContactEmail {
-  label: string;
-  address: string;
-}
-
-interface Contact {
-  id: string | number;
-  name?: string;
-  phones?: ContactPhone[];
-  emails?: ContactEmail[];
-  [key: string]: unknown;
-}
-
-interface EmergencyContact {
-  contactId?: string | number;
-  relationship?: string;
-  [key: string]: unknown;
-}
-
-interface ContactFormData extends Omit<Contact, "id"> {
-  id?: string | number;
-  emergencyContacts?: EmergencyContact[];
-}
+type ContactEmergency = EmergencyContact & Record<string, unknown>;
 
 interface EmergencyTabProps {
-  data: ContactFormData;
-  onChange: (updatedData: ContactFormData) => void;
+  data: Partial<Contact>;
+  onChange: (updatedData: Partial<Contact>) => void;
   required?: boolean;
+  errors?: ValidationError[];
 }
 
 /**
@@ -51,22 +25,23 @@ export default function EmergencyTab({
   data,
   onChange,
   required = false,
+  errors = [],
 }: EmergencyTabProps): React.JSX.Element {
   const { relationships, updateRelationships } = useContactConfig();
   const { t } = useTranslation();
   const enabledFields = useVisibleContactFields("emergency");
 
-  const createNewEmergency = (): EmergencyContact => {
+  const createNewEmergency = (): ContactEmergency => {
     const item: Record<string, unknown> = {};
     enabledFields.forEach((f) => {
-      item[f.key] = f.defaultValue !== undefined ? f.defaultValue : "";
+      item[f.key] = getDefaultFieldValue(f);
     });
-    return item as EmergencyContact;
+    return item as ContactEmergency;
   };
 
-  const list = data.emergencyContacts && data.emergencyContacts.length > 0 ? data.emergencyContacts : [createNewEmergency()];
+  const list = (data.emergencyContacts || []) as ContactEmergency[];
 
-  const upd = (l: EmergencyContact[]): void => {
+  const upd = (l: ContactEmergency[]): void => {
     onChange({ ...data, emergencyContacts: l });
   };
 
@@ -79,7 +54,7 @@ export default function EmergencyTab({
     return linked;
   };
 
-  const updateEmergency = (i: number, patch: Partial<EmergencyContact>): void => {
+  const updateEmergency = (i: number, patch: Partial<ContactEmergency>): void => {
     upd(list.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   };
 
@@ -112,9 +87,13 @@ export default function EmergencyTab({
           {enabledFields.length > 0 && (
             <div className={COLLECTION_BODY}>
               {enabledFields.map((field) => {
+                const fieldError = errors.find(
+                  (err) => err.tabId === "emergency" && err.index === i && err.fieldId === field.key
+                );
+
                 if (field.key === "contactId") {
                   return (
-                    <div key={field.key}>
+                    <div key={field.key} id={`emergencyContacts-${i}-contactId`} data-field-key={`emergencyContacts-${i}-contactId`}>
                       <ContactPicker
                         label={`${field.label}${field.required ? " *" : ""}`}
                         value={ec.contactId ?? null}
@@ -125,14 +104,18 @@ export default function EmergencyTab({
                         allowCreate={false}
                         searchPlaceholder={t("contacts.form.searchByNamePhone")}
                         emptyTitle={t("contacts.form.noContactsFound")}
+                        error={!!fieldError}
                       />
+                      {fieldError && (
+                        <p className="text-[10px] text-destructive mt-1 font-medium">{fieldError.message}</p>
+                      )}
                     </div>
                   );
                 }
 
                 if (field.key === "relationship") {
                   return (
-                    <Field key={field.key} label={field.label} required={field.required} hint={field.description}>
+                    <Field key={field.key} id={`emergencyContacts-${i}-relationship`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
                       <EditableSelect
                         options={relationships || []}
                         value={ec.relationship || ""}
@@ -146,11 +129,12 @@ export default function EmergencyTab({
                 }
 
                 return (
-                  <Field key={field.key} label={field.label} required={field.required} hint={field.description}>
+                  <Field key={field.key} id={`emergencyContacts-${i}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
                     <CustomFieldInput
                       field={field}
                       value={(ec[field.key] as string | number | boolean | undefined) ?? ""}
                       onChange={(val) => updateEmergency(i, { [field.key]: val })}
+                      error={!!fieldError}
                     />
                   </Field>
                 );

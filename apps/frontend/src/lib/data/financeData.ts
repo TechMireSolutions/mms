@@ -1,33 +1,5 @@
-export interface Invoice {
-  id: string;
-  studentId: string;
-  studentName: string;
-  class: string;
-  session: string;
-  baseFee: number;
-  discountType: string | null;
-  discountValue: number;
-  discountAmt: number;
-  finalAmt: number;
-  status: "paid" | "pending" | "overdue" | "partial" | "cancelled";
-  dueDate: string;
-  paidDate: string | null;
-  method: string | null;
-  paidAmt?: number;
-}
-
-export interface Payment {
-  id: string;
-  invoiceId: string;
-  studentId?: string;
-  studentName?: string;
-  amount: number;
-  date: string;
-  method: string;
-  receivedByUserId?: string;
-  receivedBy?: string;
-  note: string;
-}
+import type { Invoice, Payment } from '@mms/shared';
+export type { Invoice, Payment };
 
 export interface HasanatPayout {
   id: string;

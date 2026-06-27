@@ -26,7 +26,7 @@ main.tsx → App.tsx → AppProviders (providers/AppProviders.tsx)
 
 ## Before editing
 
-1. Read scoped rules for the area: `mms-frontend.mdc`, `mms-query.mdc`, `mms-hooks.mdc`, `mms-ui-*`, `mms-i18n.mdc`, `mms-rbac.mdc`
+1. Read scoped rules for the area: `mms-api-interface.md`, `mms-data-layer.md`, `mms-hooks.md`, `mms-ui-ux-design.md`, `mms-settings-i18n.md`, `mms-auth-security.md`
 2. Run quality gate after substantive changes:
 
 ```bash
@@ -76,10 +76,10 @@ Reference: `hooks/useStudents.ts`, `hooks/useContacts.ts`, `pages/Students.tsx`.
 - [ ] Three-tier tabs: useModuleTierTabs + ResponsiveAccordionTabs
 - [ ] PageHeader actions unconditional (not gated on activeTab)
 - [ ] ErrorBoundary on Work/Reports
-- [ ] Copy via t() — mms-i18n.mdc (no new uiStrings outside Contacts)
+- [ ] Copy via t() — mms-settings-i18n.md (no new uiStrings outside Contacts)
 - [ ] Internal API via apiClient
-- [ ] RBAC via can() — not role === (mms-rbac.mdc)
-- [ ] Status via StatusBadge — not text-green-500 (mms-ui-visual.mdc)
+- [ ] RBAC via can() — not role === (mms-auth-security.md)
+- [ ] Status via StatusBadge — not text-green-500 (mms-ui-ux-design.md)
 ```
 
 Full module pattern: skill `mms-module-page`.
@@ -101,7 +101,7 @@ hooks/useSavedFlash.ts      → post-save footer flash
 hooks/useApplyLogoColors.ts → logo → primary/secondary
 ```
 
-Rules: `mms-settings-navigation.mdc`, `mms-config.mdc`, `mms-hooks.mdc`.
+Rules: `mms-settings-i18n.md`, `mms-settings-i18n.md`, `mms-hooks.md`.
 
 New section checklist: add to `SETTINGS_SECTIONS`, `SETTINGS_NAV`, `SETTINGS_SECTION_COMPONENTS`; use `SettingsPanel` + `SettingsFormActions`; preview via `settingsPreview.ts`; all copy via `t()`.
 
@@ -150,7 +150,7 @@ Re-export from the original entry file for stable imports.
 | Inline `role ===` | Dashboard widget role filter only |
 | Inline status colours | Chart color maps — KPI/PinnedWidgets palettes |
 
-Full register: `mms-migration-status.mdc`. Skill: `mms-migration-fixes`.
+Full register: `mms-migration-status.md`. Skill: `mms-migration-fixes`.
 
 ## Testing
 
@@ -167,24 +167,24 @@ Full register: `mms-migration-status.mdc`. Skill: `mms-migration-fixes`.
 
 | Topic | Rule |
 |-------|------|
-| Shell, apiClient, layout | `mms-frontend.mdc` |
-| TanStack Query | `mms-query.mdc` |
-| Hooks inventory | `mms-hooks.mdc` |
-| Tabs, PageHeader | `mms-ui-tabs.mdc` |
-| Forms, tables, notify | `mms-ui-rendering.mdc` |
-| Entity modals | `mms-ui-forms.mdc` |
-| Colours, StatusBadge | `mms-ui-visual.mdc` |
-| i18n | `mms-i18n.mdc` |
-| RBAC UI | `mms-rbac.mdc` |
-| localStorage sync | `mms-data-layer.mdc` |
-| Apex/tenant | `mms-tenant.mdc` |
-| a11y | `mms-a11y.mdc` |
-| Tests | `mms-testing.mdc` |
+| Shell, apiClient, layout | `mms-api-interface.md` |
+| TanStack Query | `mms-data-layer.md` |
+| Hooks inventory | `mms-hooks.md` |
+| Tabs, PageHeader | `mms-ui-ux-design.md` |
+| Forms, tables, notify | `mms-ui-ux-design.md` |
+| Entity modals | `mms-ui-ux-design.md` |
+| Colours, StatusBadge | `mms-ui-ux-design.md` |
+| i18n | `mms-settings-i18n.md` |
+| RBAC UI | `mms-auth-security.md` |
+| localStorage sync | `mms-data-layer.md` |
+| Apex/tenant | `mms-auth-security.md` |
+| a11y | `mms-ui-ux-design.md` |
+| Tests | `mms-testing-observability.md` |
 
 ## Related skills
 
 - `mms-module-page` — three-tier module layout
 - `mms-data-sync` — localStorage / db.ts / hybrid cache
-- `mms-contacts` — CRM + `/api/contacts`
+- `mms-form-architecture` — dynamic forms & blueprints
 - `mms-code-review` — PR checklist
 - `mms-migration-fixes` — open debt items

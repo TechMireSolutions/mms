@@ -20,4 +20,3 @@ export function useTeacherCount() {
   });
 }
 
-export default useTeacherCount;

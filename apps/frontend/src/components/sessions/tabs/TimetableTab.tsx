@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Clock, MapPin, Trash2 } from "lucide-react";
 import { DAYS, ACTIVITY_TYPES, Session, TimetableItem } from '@/lib/data/sessionsData';
-import FormModal from "@/components/ui/FormModal";
+import { FormModal } from "@/components/ui/FormModal";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "../../ui/FormSelect";
+import { FormSelect } from "../../ui/FormSelect";
 
 const TYPE_CONFIG: Record<string, { color: string, dot: string }> = {
   class:      { color: "bg-success/15 text-success border-success/30", dot: "bg-success" },
@@ -141,7 +141,7 @@ interface TimetableTabProps {
  * @param {TimetableTabProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function TimetableTab({ session, onUpdate }: TimetableTabProps) {
+export function TimetableTab({ session, onUpdate }: TimetableTabProps) {
   const [showModal, setShowModal] = useState(false);
   const timetable = session.timetable || [];
 

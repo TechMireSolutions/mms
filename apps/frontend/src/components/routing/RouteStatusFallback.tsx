@@ -1,6 +1,6 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface RouteStatusFallbackProps {
   /** Use full viewport height (boot gates) vs in-route Suspense fallback. */

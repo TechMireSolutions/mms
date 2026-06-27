@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { extractLogoBrandColors } from '@/lib/extractLogoBrandColors';
 import { notify } from '@/lib/notify';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface UseApplyLogoColorsOptions {
   logoUrl: string;

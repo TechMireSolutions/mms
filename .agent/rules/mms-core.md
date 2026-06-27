@@ -10,7 +10,7 @@ Madrasa Management System monorepo — applies on every task.
 
 ```
 apps/frontend/     React 19 + Vite 8
-apps/backend/      Fastify 5 + SQLite
+apps/backend/      Fastify 5 + PostgreSQL
 packages/shared/   @mms/shared
 ```
 
@@ -29,7 +29,7 @@ packages/shared/   @mms/shared
 
 ## Stack (fixed)
 
-- **BE:** Fastify + tsx · Drizzle + SQLite · no raw SQL
+- **BE:** Fastify + tsx · Drizzle + PostgreSQL · no raw SQL
 - **FE:** React 19 · Vite · Tailwind v4 · Radix/shadcn · TanStack Query · Framer Motion · Recharts · Lucide
 - **Icons:** Lucide only · **Animations:** Framer Motion only
 
@@ -44,8 +44,8 @@ packages/shared/   @mms/shared
 
 | Phase | Pattern | Owner |
 |-------|---------|--------|
-| **Current** | `localStorage` + sync to SQLite JSON documents | `mms-data-layer.md` |
-| **New REST features** | Server authoritative + TanStack Query cache | `mms-query.md` |
+| **Current** | `localStorage` + sync to PostgreSQL JSON documents | `mms-data-layer.md` |
+| **New REST features** | Server authoritative + TanStack Query cache | `mms-data-layer.md` |
 | **Target** | Per-entity API resources; localStorage as offline cache only | `mms-migration-status.md` |
 
 ## Platform rules (modern app)
@@ -53,13 +53,12 @@ packages/shared/   @mms/shared
 | Topic | Owner |
 |-------|--------|
 | Dependencies & latest stack | `mms-dependencies.md` |
-| File structure | `mms-structure.md` |
-| Naming (files, symbols, routes) | `mms-naming.md` |
+| File structure & naming | `mms-structure-naming.md` |
 | DRY / single source of truth | `mms-dry.md` |
-| Security, rate limits, tenant isolation | `mms-security.md` |
-| Testing & CI tests | `mms-testing.md` |
-| Logging, health, error boundaries | `mms-observability.md` |
-| Accessibility baseline | `mms-a11y.md` |
+| Security, rate limits, tenant isolation | `mms-auth-security.md` |
+| Testing & CI tests | `mms-testing-observability.md` |
+| Logging, health, error boundaries | `mms-testing-observability.md` |
+| Accessibility baseline | `mms-ui-ux-design.md` |
 
 ## MMS edit discipline
 
@@ -88,16 +87,16 @@ No hardcoded user-facing strings, labels, colours, formats, or statuses.
 
 | Kind | Owner |
 |------|--------|
-| App copy (nav, toasts, modals, settings) | **`mms-i18n.md`** — `t('key')` |
-| Field/tab/status labels | Registries + `labelKey` / `StatusBadge` — **`mms-fields.md`**, **`mms-i18n.md`** |
-| Theme colours | `branding` / CSS variables — **`mms-ui-visual.md`** |
-| Module prefs & formats | `@mms/shared` `DEFAULT_*` + settings getters — **`mms-config.md`** |
+| App copy (nav, toasts, modals, settings) | **`mms-settings-i18n.md`** — `t('key')` |
+| Field/tab/status labels | Registries + `labelKey` / `StatusBadge` — **`mms-fields.md`**, **`mms-settings-i18n.md`** |
+| Theme colours | `branding` / CSS variables — **`mms-ui-ux-design.md`** |
+| Module prefs & formats | `@mms/shared` `DEFAULT_*` + settings getters — **`mms-settings-i18n.md`** |
 
 Contacts legacy `uiStrings` is migration debt — new copy uses `appTranslations` (`mms-migration-status.md`).
 
 ## Domain
 
-- **Contact-first persons:** See **`mms-contact-link.md`** — `contacts` canonical; module rows link by id; hydrate on read, strip on save.
+- **Contact-first persons:** `contacts` canonical; module rows link by id; hydrate on read, strip on save.
 - **`persona`:** Purged everywhere — residual = migration defect.
 - **Phones:** E.164 on save (`parsePhoneNumber` from `@mms/shared`; backend contacts route too).
 - **WhatsApp:** Only `PuppeteerWhatsAppProvider.getNumberId` — no manual toggles in UI.
@@ -106,6 +105,6 @@ Contacts legacy `uiStrings` is migration debt — new copy uses `appTranslations
 
 Three tiers only — details split by concern:
 
-- **Shell & universal behaviour:** `mms-module-architecture.md` (`globle.md`) · Setup: `mms-module-setup.md` (`globle.md`)
-- **Shell components:** `mms-ui-tabs.md` (`useModuleTierTabs`, `ResponsiveAccordionTabs`, PageHeader)
-- **Content scope:** `mms-module-isolation.md` (what belongs in `work` / `reports` / `setup`)
+- **Shell & universal behaviour:** `mms-module-architecture.md`
+- **Shell components:** `mms-ui-ux-design.md` (`useModuleTierTabs`, `ResponsiveAccordionTabs`, PageHeader)
+- **Content scope:** `mms-module-architecture.md` (what belongs in `work` / `reports` / `setup`)

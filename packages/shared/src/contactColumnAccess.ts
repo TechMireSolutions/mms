@@ -12,15 +12,15 @@ function findField(
   tabId: string,
   fieldId: string,
 ): FieldDefinition | null {
-  return (fields[tabId] || []).find((f) => f.key === fieldId) ?? null;
+  return (fields[tabId] || []).find((field) => field.key === fieldId) ?? null;
 }
 
 /** Maps a Work table column key to its governing field definition (if any). */
 export function resolveContactColumnField(
   columnKey: string,
-  ctx: ContactColumnFieldContext,
+  columnFieldContext: ContactColumnFieldContext,
 ): FieldDefinition | null {
-  const { fields, enabledTabIds, isTabFieldEnabled } = ctx;
+  const { fields, enabledTabIds, isTabFieldEnabled } = columnFieldContext;
 
   if (columnKey === 'name') {
     return isTabFieldEnabled('basic', 'firstName') ? findField(fields, 'basic', 'firstName') : null;
@@ -101,7 +101,7 @@ export function resolveContactColumnField(
   for (const [tabId, tabFields] of Object.entries(fields)) {
     const tabEnabled = tabId === 'basic' || enabledTabIds.has(tabId);
     if (!tabEnabled) continue;
-    const field = tabFields.find((f) => f.key === columnKey);
+    const field = tabFields.find((tabField) => tabField.key === columnKey);
     if (field) return field;
   }
   return null;
@@ -111,9 +111,9 @@ export function resolveContactColumnField(
 export function canViewContactColumn(
   viewerRole: string,
   columnKey: string,
-  ctx: ContactColumnFieldContext,
+  columnFieldContext: ContactColumnFieldContext,
 ): boolean {
-  const field = resolveContactColumnField(columnKey, ctx);
+  const field = resolveContactColumnField(columnKey, columnFieldContext);
   if (!field?.enabled) return false;
   return canViewContactField(viewerRole, field);
 }

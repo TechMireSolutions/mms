@@ -19,4 +19,14 @@ export const onboardBodySchema = z.object({
   adminPhone: z.string().optional(),
   website: z.string().optional(),
   footerText: z.string().optional(),
+  // Extended Institution Fields
+  faviconUrl: z.string().optional(),
+  legalName: z.string().optional(),
+  registrationNumber: z.string().optional(),
+  addressLine1: z.string().optional(),
+  addressLine2: z.string().optional(),
+  city: z.string().optional(),
+  region: z.string().optional(),
+  postalCode: z.string().optional(),
+  socialLinks: z.array(z.object({ platform: z.string(), url: z.string() })).optional(),
 });

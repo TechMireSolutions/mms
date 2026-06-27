@@ -40,8 +40,8 @@ const QUALIFICATIONS = [
   'Tajweed certification',
 ] as const;
 
-function pad(n: number, digits: number): string {
-  return String(n).padStart(digits, '0');
+function pad(value: number, digits: number): string {
+  return String(value).padStart(digits, '0');
 }
 
 function slug(value: string): string {
@@ -87,24 +87,24 @@ function phoneSuffix(seed: number): string {
 /** Builds faculty contact profiles (ids 1…{@link DEMO_TEACHER_COUNT}). */
 export function buildDemoTeacherContacts(): Contact[] {
   const contacts: Contact[] = [];
-  for (let i = 1; i <= DEMO_TEACHER_COUNT; i += 1) {
-    const female = i % 5 === 0 || i % 7 === 0;
+  for (let index = 1; index <= DEMO_TEACHER_COUNT; index += 1) {
+    const female = index % 5 === 0 || index % 7 === 0;
     const firstPool = female ? FEMALE_FIRST : MALE_FIRST;
-    const title = female ? pick(TEACHER_FEMALE_TITLES, i) : pick(TEACHER_MALE_TITLES, i);
-    const firstName = pick(firstPool, i);
-    const lastName = pick(LAST_NAMES, i + 3);
+    const title = female ? pick(TEACHER_FEMALE_TITLES, index) : pick(TEACHER_MALE_TITLES, index);
+    const firstName = pick(firstPool, index);
+    const lastName = pick(LAST_NAMES, index + 3);
     const name = `${title} ${firstName} ${lastName}`;
     const email = `${slug(`${firstName}.${lastName}`)}@madrasa.app`;
-    const phone = `+92 300 ${phoneSuffix(i)}`;
-    const city = pick(CITIES, i);
+    const phone = `+92 300 ${phoneSuffix(index)}`;
+    const city = pick(CITIES, index);
 
     contacts.push({
-      id: i,
+      id: index,
       name,
       firstName: title,
       lastName: `${firstName} ${lastName}`,
       gender: female ? 'female' : 'male',
-      dob: teacherDob(i),
+      dob: teacherDob(index),
       email,
       phone,
       city,
@@ -125,17 +125,17 @@ export function buildDemoTeacherContacts(): Contact[] {
 /** Builds demo teacher rows linked to {@link buildDemoTeacherContacts}. */
 export function buildDemoTeachers(): Teacher[] {
   const teachers: Teacher[] = [];
-  for (let i = 1; i <= DEMO_TEACHER_COUNT; i += 1) {
+  for (let index = 1; index <= DEMO_TEACHER_COUNT; index += 1) {
     const status: Teacher['status'] =
-      i % 11 === 0 ? 'inactive' : i % 9 === 0 ? 'on_leave' : 'active';
+      index % 11 === 0 ? 'inactive' : index % 9 === 0 ? 'on_leave' : 'active';
     teachers.push({
-      id: `tch${i}`,
-      contactId: i,
-      employeeId: `TCH-${pad(i, 4)}`,
-      specialization: pick([...TEACHER_SPECIALIZATION_VALUES], i),
+      id: `tch${index}`,
+      contactId: index,
+      employeeId: `TCH-${pad(index, 4)}`,
+      specialization: pick([...TEACHER_SPECIALIZATION_VALUES], index),
       status,
-      joinDate: joinDate(i),
-      qualification: pick(QUALIFICATIONS, i),
+      joinDate: joinDate(index),
+      qualification: pick(QUALIFICATIONS, index),
     });
   }
   return teachers;
@@ -144,15 +144,15 @@ export function buildDemoTeachers(): Teacher[] {
 /** Builds parent contacts for demo students (ids 2001…). */
 export function buildDemoStudentParentContacts(): Contact[] {
   const contacts: Contact[] = [];
-  for (let i = 1; i <= DEMO_STUDENT_COUNT; i += 1) {
-    const firstName = pick(FEMALE_FIRST, i + 11);
-    const lastName = pick(LAST_NAMES, i + 7);
+  for (let index = 1; index <= DEMO_STUDENT_COUNT; index += 1) {
+    const firstName = pick(FEMALE_FIRST, index + 11);
+    const lastName = pick(LAST_NAMES, index + 7);
     const name = `${firstName} ${lastName}`;
     const email = `${slug(`${firstName}.${lastName}`)}@parent.com`;
-    const phone = `+92 300 ${phoneSuffix(2000 + i)}`;
+    const phone = `+92 300 ${phoneSuffix(2000 + index)}`;
 
     contacts.push({
-      id: DEMO_PARENT_CONTACT_ID_START + i - 1,
+      id: DEMO_PARENT_CONTACT_ID_START + index - 1,
       name,
       firstName,
       lastName,
@@ -172,32 +172,32 @@ export function buildDemoStudentParentContacts(): Contact[] {
 /** Builds student contact profiles (ids 1001…). */
 export function buildDemoStudentContacts(): Contact[] {
   const contacts: Contact[] = [];
-  for (let i = 1; i <= DEMO_STUDENT_COUNT; i += 1) {
-    const female = i % 4 === 0;
-    const firstName = female ? pick(FEMALE_FIRST, i) : pick(MALE_FIRST, i);
-    const lastName = pick(LAST_NAMES, i);
+  for (let index = 1; index <= DEMO_STUDENT_COUNT; index += 1) {
+    const female = index % 4 === 0;
+    const firstName = female ? pick(FEMALE_FIRST, index) : pick(MALE_FIRST, index);
+    const lastName = pick(LAST_NAMES, index);
     const name = `${firstName} ${lastName}`;
     const email = `${slug(`${firstName}.${lastName}`)}@student.com`;
-    const phone = `+92 333 ${phoneSuffix(1000 + i)}`;
-    const parentId = DEMO_PARENT_CONTACT_ID_START + i - 1;
+    const phone = `+92 333 ${phoneSuffix(1000 + index)}`;
+    const parentId = DEMO_PARENT_CONTACT_ID_START + index - 1;
 
     contacts.push({
-      id: DEMO_STUDENT_CONTACT_ID_START + i - 1,
+      id: DEMO_STUDENT_CONTACT_ID_START + index - 1,
       name,
       firstName,
       lastName,
       gender: female ? 'female' : 'male',
-      dob: studentDob(i),
+      dob: studentDob(index),
       email,
       phone,
-      city: pick(CITIES, i + 2),
+      city: pick(CITIES, index + 2),
       country: 'Pakistan',
       lifecycleStage: 'Student',
       createdAt: DEMO_STUDENT_DATE,
       updatedAt: DEMO_STUDENT_DATE,
       phones: [{ label: 'Mobile', number: phone }],
       emails: [{ label: 'Personal', address: email }],
-      relationships: [{ contactId: parentId, type: 'Mother' }],
+      relationships: [{ contactId: parentId, relationship: 'Mother' }],
       activities: [],
     });
   }
@@ -207,17 +207,17 @@ export function buildDemoStudentContacts(): Contact[] {
 /** Builds demo student rows linked to {@link buildDemoStudentContacts}. */
 export function buildDemoStudents(): Student[] {
   const students: Student[] = [];
-  for (let i = 1; i <= DEMO_STUDENT_COUNT; i += 1) {
+  for (let index = 1; index <= DEMO_STUDENT_COUNT; index += 1) {
     const status: Student['status'] =
-      i % 13 === 0 ? 'suspended' : i % 9 === 0 ? 'inactive' : 'active';
+      index % 13 === 0 ? 'suspended' : index % 9 === 0 ? 'inactive' : 'active';
     students.push({
-      id: `st${i}`,
-      contactId: DEMO_STUDENT_CONTACT_ID_START + i - 1,
-      motherContactId: DEMO_PARENT_CONTACT_ID_START + i - 1,
-      grNumber: `${pad(i, 4)}-2026`,
+      id: `st${index}`,
+      contactId: DEMO_STUDENT_CONTACT_ID_START + index - 1,
+      motherContactId: DEMO_PARENT_CONTACT_ID_START + index - 1,
+      grNumber: `${pad(index, 4)}-2026`,
       status,
-      registeredDate: registeredDate(i),
-      enrolledSessions: i % 3 === 0 ? ['s1'] : [],
+      registeredDate: registeredDate(index),
+      enrolledSessions: index % 3 === 0 ? ['s1'] : [],
     });
   }
   return students;

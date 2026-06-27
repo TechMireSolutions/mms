@@ -1,33 +1,8 @@
 import { Student } from "./studentsData";
 import { Session, Class, Discount } from "./sessionsData";
 
-export interface EnrollmentTimelineItem {
-  ts: string;
-  event: string;
-  by: string;
-}
-
-export interface Enrollment {
-  id: string;
-  studentId: string;
-  studentName: string;
-  sessionId: string;
-  sessionName: string;
-  classId: string;
-  className: string;
-  enrolledDate: string;
-  baseFee: number;
-  discountType: string;
-  discountLabel: string;
-  discountPct: number;
-  discountAmt: number;
-  finalFee: number;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
-  invoiceId: string | null;
-  paymentStatus: "paid" | "pending" | "none";
-  notes: string;
-  timeline: EnrollmentTimelineItem[];
-}
+import type { Enrollment, EnrollmentTimelineItem } from '@mms/shared';
+export type { Enrollment, EnrollmentTimelineItem };
 
 export const ENROLLMENT_STATUSES = [
   { id: "pending",   label: "Pending",   color: "bg-warning/10 text-warning border-warning/30" },

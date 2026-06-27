@@ -4,13 +4,13 @@ import {
   User, BookOpen, CheckCircle2, Layers, DollarSign, ClipboardCheck,
   ArrowRight, ArrowLeft, X,
 } from "lucide-react";
-import StepIndicator, { Step } from "./wizard/StepIndicator";
-import Step1SelectStudent from "./wizard/Step1SelectStudent";
-import Step2SelectSession from "./wizard/Step2SelectSession";
-import Step3Eligibility from "./wizard/Step3Eligibility";
-import Step4ClassAssignment from "./wizard/Step4ClassAssignment";
-import Step5FeeCalculation from "./wizard/Step5FeeCalculation";
-import Step6Confirmation from "./wizard/Step6Confirmation";
+import { StepIndicator, Step } from "./wizard/StepIndicator";
+import { Step1SelectStudent } from "./wizard/Step1SelectStudent";
+import { Step2SelectSession } from "./wizard/Step2SelectSession";
+import { Step3Eligibility } from "./wizard/Step3Eligibility";
+import { Step4ClassAssignment } from "./wizard/Step4ClassAssignment";
+import { Step5FeeCalculation } from "./wizard/Step5FeeCalculation";
+import { Step6Confirmation } from "./wizard/Step6Confirmation";
 import { suggestClass, runFullEligibility, Enrollment, CalculatedFee } from '@/lib/data/enrollmentData';
 import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
@@ -40,7 +40,7 @@ interface EnrollmentWizardProps {
  * @param props.onCancel - Callback when the wizard is cancelled.
  * @returns The EnrollmentWizard component.
  */
-export default function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps): React.ReactElement {
+export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps): React.ReactElement {
   const sessions = useSessionsCollection();
   const [step, setStep] = useState<number>(0);
   const [student, setStudent]       = useState<Student | null>(null);

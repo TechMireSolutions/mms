@@ -51,7 +51,7 @@ export interface InvoicePrintPreviewProps {
  * InvoicePrintPreview component.
  * @param {InvoicePrintPreviewProps} props
  */
-export default function InvoicePrintPreview({
+export function InvoicePrintPreview({
   template,
   collection = null,
   lookups = {},

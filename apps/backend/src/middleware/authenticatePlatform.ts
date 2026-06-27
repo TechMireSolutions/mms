@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import type { PlatformUser } from '@mms/shared';
+import type { PlatformUser, PlatformRole } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { attachPlatformTokenFromCookie } from '../services/platform/platformCookieService.js';
 
@@ -49,5 +49,6 @@ export async function authenticatePlatform(
     id: payload.id,
     email: payload.email,
     name: payload.name,
+    role: payload.role as PlatformRole,
   };
 }

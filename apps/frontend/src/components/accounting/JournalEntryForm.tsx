@@ -2,10 +2,10 @@ import React, { useState, useMemo } from "react";
 import { Plus, Trash2, AlertCircle, CheckCircle2, Tag, BookOpen } from "lucide-react";
 import { ACCOUNT_TYPE_META, JOURNAL_TAGS, generateJERef, Account, JournalEntry, FiscalYear, JournalLine } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
-import FormModal from "../ui/FormModal";
+import { FormModal } from "../ui/FormModal";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import FormSelect from "../ui/FormSelect";
+import { FormSelect } from "../ui/FormSelect";
 import { FORM_LABEL } from "../ui/formStyles";
 import { hasFieldValue } from "@/lib/formCompleteness";
 
@@ -37,7 +37,7 @@ interface JournalEntryFormProps {
  * @param {JournalEntryFormProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function JournalEntryForm({ accounts, entries, onSave, onClose, initial, fiscalYears }: JournalEntryFormProps) {
+export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, fiscalYears }: JournalEntryFormProps) {
   const isEdit = !!initial?.id;
   const activeFY = (fiscalYears || []).find((f) => f.status === "active")?.label || "";
 
@@ -62,8 +62,8 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const totalDebit  = form.lines.reduce((s, l) => s + (typeof l.debit === "string" ? parseFloat(l.debit) || 0 : l.debit), 0);
-  const totalCredit = form.lines.reduce((s, l) => s + (typeof l.credit === "string" ? parseFloat(l.credit) || 0 : l.credit), 0);
+  const totalDebit = form.lines.reduce((s, l) => s + (Number(l.debit) || 0), 0);
+  const totalCredit = form.lines.reduce((s, l) => s + (Number(l.credit) || 0), 0);
   const isBalanced  = Math.abs(totalDebit - totalCredit) < 0.01 && totalDebit > 0;
 
   const completeness = useMemo(() => {
@@ -237,10 +237,10 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                 <caption className="sr-only">Journal Entry Lines</caption>
                 <thead className="bg-muted/60 border-b border-border">
                   <tr>
-                    <th scope="col" className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">Account</th>
-                    <th scope="col" className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden md:table-cell">Line Note</th>
-                    <th scope="col" className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase w-28">Debit</th>
-                    <th scope="col" className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase w-28">Credit</th>
+                    <th scope="col" className="px-3 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">Account</th>
+                    <th scope="col" className="px-3 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase hidden md:table-cell">Line Note</th>
+                    <th scope="col" className="px-3 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase w-28">Debit</th>
+                    <th scope="col" className="px-3 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase w-28">Credit</th>
                     <th scope="col" className="px-3 py-2 w-8"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
@@ -282,7 +282,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                             value={line.debit}
                             placeholder="0.00"
                             onChange={(e) => updateLine(idx, "debit", e.target.value)}
-                            className="h-8 py-1 px-2 text-xs text-right bg-info/5 focus:ring-info/30 font-mono"
+                            className="h-8 py-1 px-2 text-xs text-end bg-info/5 focus:ring-info/30 font-mono"
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -294,7 +294,7 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                             value={line.credit}
                             placeholder="0.00"
                             onChange={(e) => updateLine(idx, "credit", e.target.value)}
-                            className="h-8 py-1 px-2 text-xs text-right bg-success/5 focus:ring-success/30 font-mono"
+                            className="h-8 py-1 px-2 text-xs text-end bg-success/5 focus:ring-success/30 font-mono"
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -317,8 +317,8 @@ export default function JournalEntryForm({ accounts, entries, onSave, onClose, i
                 <tfoot className="border-t-2 border-border bg-muted/30">
                   <tr>
                     <td colSpan={2} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">Totals</td>
-                    <td className="px-3 py-2 text-right font-mono font-bold text-info">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    <td className="px-3 py-2 text-right font-mono font-bold text-success">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-2 text-end font-mono font-bold text-info">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-2 text-end font-mono font-bold text-success">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     <td></td>
                   </tr>
                 </tfoot>

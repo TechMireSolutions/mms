@@ -7,5 +7,5 @@ export function isContactDeleted(contact: Contact): boolean {
 
 /** Active directory rows — excludes soft-deleted records from Work by default. */
 export function filterActiveContacts(contacts: Contact[]): Contact[] {
-  return contacts.filter((c) => !isContactDeleted(c));
+  return contacts.filter((contact) => !isContactDeleted(contact));
 }

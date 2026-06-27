@@ -9,12 +9,31 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./translations/en": {
+      "import": "./dist/appTranslationsEn.js",
+      "types": "./dist/appTranslationsEn.d.ts"
+    },
+    "./translations/ar": {
+      "import": "./dist/appTranslationsAr.js",
+      "types": "./dist/appTranslationsAr.d.ts"
+    },
+    "./translations/ur": {
+      "import": "./dist/appTranslationsUr.js",
+      "types": "./dist/appTranslationsUr.d.ts"
+    },
+    "./translations/fa": {
+      "import": "./dist/appTranslationsFa.js",
+      "types": "./dist/appTranslationsFa.d.ts"
     }
   },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "typescript": "^6.0.3",

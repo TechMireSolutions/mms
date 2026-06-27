@@ -20,4 +20,3 @@ export function useStudentCount() {
   });
 }
 
-export default useStudentCount;

@@ -1,24 +1,24 @@
 ---
 name: mms-module-page
-description: Creates or modifies MMS module pages per globle.md — Work, Reports, Setup tiers, module contract, PageHeader command centre, and settings panels. Use when adding a module, three-tier page, or aligning an existing module to universal architecture.
+description: Creates or modifies MMS module pages per mms-module-architecture.mdc — Work, Reports, Setup tiers, module contract, PageHeader command centre, and settings panels. Use when adding a module, three-tier page, or aligning an existing module to universal architecture.
 ---
 
 # MMS Module Page Pattern
 
-**Source:** [`globle.md`](../../globle.md) (§1–§14) · Rule: `mms-module-architecture.mdc`
+**Source:** Rule: `mms-module-architecture.mdc`
 
-## globle.md section map
+## Module Architecture Section Map
 
-| § | Topic | MMS rule / skill |
+| Section | Topic | MMS rule / skill |
 |---|--------|------------------|
-| 1 | Global foundation (contract, RBAC, audit, offline, soft delete, integrity) | `mms-module-architecture.mdc`, `mms-rbac.mdc`, `mms-security.mdc` |
-| 2 | Command centre (metrics, dedup, export, create) | `mms-ui-tabs.mdc` PageHeader, `mms-contacts.mdc` |
-| 3 | Work directory | `mms-module-isolation.mdc`, `mms-ui-rendering.mdc` |
+| 1 | Global foundation (contract, RBAC, audit, offline, soft delete, integrity) | `mms-module-architecture.mdc`, `mms-auth-security.mdc` |
+| 2 | Command centre (metrics, dedup, export, create) | `mms-ui-ux-design.mdc` PageHeader, `mms-module-architecture.mdc` |
+| 3 | Work directory | `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc` |
 | 4 | Reports analytics | `mms-reports.mdc`, skill `mms-reports-export` |
-| 5–7 | Setup tab | `mms-module-setup.mdc`, skill **`mms-module-setup`** |
+| 5 | Setup tab | `mms-module-architecture.mdc`, skill **`mms-module-setup`** |
 | 6 | Fields/tabs | `mms-fields.mdc`, skill `mms-fields-registry` |
-| 7 | Preferences | `mms-config.mdc` |
-| 8–14 | Jobs, errors, perf, a11y, security | `mms-module-crosscutting.mdc` |
+| 7 | Preferences | `mms-settings-i18n.mdc` |
+| 8-14 | Jobs, errors, perf, a11y, security | `mms-module-architecture.mdc` |
 
 ## Required structure
 
@@ -36,7 +36,7 @@ work  |  reports  |  setup
 | Students | REST + three-tier shell | REST + Query | `useStudents`, `useStudentMutations` |
 | Finance | Legacy collection | localStorage | `useLiveCollection` |
 
-**Before building a new module:** read `Contacts.tsx`, `contactsModuleContract.ts`, and skill `mms-contacts`.
+**Before building a new module:** read `ContactsPage.tsx`, `contactsModuleContract.ts`, and skill `mms-module-work`.
 
 ## Module contract (§1.1 — required for new modules)
 
@@ -120,9 +120,9 @@ Reference: `ContactsCommandMetrics.tsx`.
 - Saved reports: logic not snapshot — per-module REST (Contacts shipped; generic `SavedReports` empty until wired)
 - CustomReportBuilder contacts fields: `contactsReportFields.ts` + `t()`
 
-## Setup tier (§5–§7 — globle2.md)
+## Setup tier (Fields & Preferences)
 
-Skill: **`mms-module-setup`** · Rule: `mms-module-setup.mdc`
+Skill: **`mms-module-setup`** · Rule: `mms-module-architecture.mdc`
 
 - Fields + Preferences sub-tabs via `SubTabBar`
 - Module extras registered in contract `setupSubTabs`
@@ -132,7 +132,7 @@ Skill: **`mms-module-setup`** · Rule: `mms-module-setup.mdc`
 
 ## Module isolation
 
-Each tier is **module-scoped only** (`mms-module-isolation.mdc`):
+Each tier is **module-scoped only** (`mms-module-architecture.mdc`):
 
 | Tier (id) | User label | Content |
 |-----------|------------|---------|
@@ -145,7 +145,7 @@ Each tier is **module-scoped only** (`mms-module-isolation.mdc`):
 
 ## Responsive tabs
 
-`ResponsiveAccordionTabs` — `mms-ui-tabs.mdc`. Inner setup uses `SubTabBar`.
+`ResponsiveAccordionTabs` — `mms-ui-ux-design.mdc`. Inner setup uses `SubTabBar`.
 
 ## Do not
 
@@ -156,12 +156,12 @@ Each tier is **module-scoped only** (`mms-module-isolation.mdc`):
 - Duplicate data paths (Query mutations + parallel `saveCollection` for same entity)
 - Nest `ContactConfigProvider` on module pages
 - Hard-delete when contract specifies soft delete
-- Reference removed `globlestructure.md` — use `globle.md`
+- Reference removed `globlestructure.md` or `globle.md` — use `mms-module-architecture.mdc`
 
 ## Rules
 
-`mms-module-architecture.mdc`, `mms-module-isolation.mdc`, `mms-ui-tabs.mdc`, `mms-config.mdc`, `mms-query.mdc`, `mms-frontend.mdc`
+`mms-module-architecture.mdc`, `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`, `mms-data-layer.mdc`, `mms-api-interface.mdc`
 
 ## Related skills
 
-`mms-contacts` (reference implementation), `mms-module-setup`, `mms-fields-registry`, `mms-reports-export`, `mms-data-sync`
+`mms-module-work` (reference implementation), `mms-module-setup`, `mms-fields-registry`, `mms-reports-export`, `mms-data-sync`

@@ -8,7 +8,7 @@ export interface ModuleCommandMetricCardProps {
 }
 
 /** Single metric tile for module command centres (globle1 §2.1). */
-export default function ModuleCommandMetricCard({
+export function ModuleCommandMetricCard({
   icon: Icon,
   label,
   value,

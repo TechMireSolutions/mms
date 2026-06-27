@@ -7,6 +7,7 @@ export interface SubTab<K extends string = string> {
   key: K;
   label: string;
   description?: string;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 interface SubTabBarProps<K extends string> {
@@ -141,4 +142,3 @@ export function SubTabBar<K extends string>({
   );
 }
 
-export default SubTabBar;

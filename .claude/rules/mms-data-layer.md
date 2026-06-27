@@ -1,116 +1,93 @@
 ---
-description: localStorage, db.ts, seeds, sync API, and document-store patterns
+description: Data Layer — PostgreSQL, Drizzle schema, migrations, database transactions, localStorage cache, sync API, and TanStack Query fetching.
 paths:
+  - "apps/backend/src/db/**"
+  - "apps/backend/drizzle.config.ts"
+  - "apps/backend/src/db/migrations/**"
   - "apps/frontend/src/lib/db.ts"
-  - "apps/frontend/src/lib/*Data.ts"
   - "apps/frontend/src/hooks/useLiveCollection.ts"
   - "apps/backend/src/routes/db.ts"
   - "apps/backend/src/services/dbSyncService.ts"
-  - "apps/backend/src/db/database.ts"
+  - "apps/frontend/src/hooks/**"
+  - "apps/frontend/src/pages/**"
+  - "apps/frontend/src/lib/query-client.ts"
 ---
 
-# MMS Data Layer
+# MMS Data Layer & Caching System
 
-## Architecture
+Authoritative standards for backend databases, migrations, caching architectures, and client fetching strategies in the MMS monorepo.
 
-| Layer | Storage |
-|-------|---------|
-| Backend | SQLite tables `collections` (JSON arrays), `objects` (JSON singletons) |
-| Frontend | `localStorage` keys `mms_*` via `apps/frontend/src/lib/db.ts` |
+---
 
-### Server-first trajectory (modern target)
+## 1. Database & ORM Stack (PostgreSQL + Drizzle)
+- **Database Engine**: PostgreSQL is the unified relational database. Ensure connection secrets are configured via `DATABASE_URL`.
+- **Drizzle ORM**: Defines schemas in `apps/backend/src/db/schema.ts`. Circular imports are avoided via `dbClient.ts` dependencies.
+- **Access Pattern**: Controllers must not import direct database connection drivers or raw `pg` client pools. Route operations through `dbSyncService` or REST repositories.
 
-| When | Pattern |
-|------|---------|
-| **Existing module CRUD** | Keep `useLiveCollection` + `saveCollection` until intentionally migrated |
-| **Dedicated REST resource** (students, contacts) | Backend route → Query on FE; optional `saveCollection` cache sync after fetch — `mms-query.md` |
-| **Target end state** | SQLite authoritative; browser cache invalidates via Query/WebSocket — not full-array local RMW |
+### Transaction-Scoped Tenant RLS (Pool Poisoning Prevention)
+- Enforce strict transaction boundaries on pooled connections. Global PG configurations are prohibited. Context settings must use `LOCAL` parameters (destroyed on commit/rollback):
+  ```typescript
+  await db.transaction(async (tx) => {
+    // 'true' indicates SET LOCAL
+    await tx.execute(sql`SELECT set_config('app.current_tenant', ${tenantId}, true)`);
+    // safe scoped queries execute here...
+  });
+  ```
 
-Do not add new features that write only to React state or localStorage without a SQLite path (`mms-fields.md` gate).
+### Data Migrations & Schema DDL
+- **DDL Changes**: Generate Drizzle migrations and ensure journal tracking (`meta/_journal.json`) is committed in the same change.
+- **TypeScript Transforms**: Implement idempotent data updates in `migrations/00N_*.ts` to execute on server startup.
+- **GIN & JSONB Indexes**: Dynamic fields are stored in a native `JSONB` column (`custom_data`). Search indexing uses `GIN` definitions or Expression Indexes in Drizzle migrations.
+- **RBAC JSONB Merging**: To prevent destroying data omitted from partial frontend payloads, always write custom fields using `||` concatenation with `COALESCE`:
+  ```typescript
+  await tx.update(students)
+    .set({ customData: sql`COALESCE(${students.customData}, '{}'::jsonb) || ${incomingPayload}::jsonb` })
+    .where(eq(students.id, studentId));
+  ```
 
-## Read / write
+---
 
-```ts
-const rows = getCollection<Contact>('contacts', CONTACTS);
-await saveCollection('contacts', updated);
-await saveObject('global_settings', settings);
-const live = useLiveCollection('students', STUDENTS); // preferred in components
+## 2. Client Persistence & Synchronization (`db.ts`)
+
+### Local Storage Caching
+- **Schema Mapping**: Map collections and singletons locally using `getCollection`, `saveCollection`, and the live event hook `useLiveCollection('name')`.
+- **Event Bus Refreshes**: Trigger window-level events on local state writes:
+  ```typescript
+  window.dispatchEvent(new Event('local-database-update'));
+  ```
+- **Sync Endpoints**: Sync operations route through `/api/db/sync` (bulk snapshot GET/POST), `/api/db/collections/:name`, and `/api/db/reset` (admin-only tenant reset).
+
+### Settings Singletons
+Settings singletons (`branding`, `global_settings`) must survive authentication syncs:
+- **Save Actions**: Await backend resolution (`POST /api/db/objects/:key`) before UI success feedback. Raw `saveObject` is prohibited; utilize typed helpers.
+- **Secrets Protection**: Server-only configuration properties (e.g. `email_integration_secrets`) must be filtered out of sync reads and client objects.
+
+---
+
+## 3. TanStack Query (Server-Authoritative REST)
+
+### Query client defaults
+- Set default client options: `refetchOnWindowFocus: false`, `retry: 1`. List responses use a default `staleTime: 30_000`.
+
+### Fetching Standards
+- **Tuple Keys**: Export query keys as named tuple constants from the hook file.
+- **Auth Gate**: Gate tenant-specific queries using `enabled: isAuthenticated` from the authentication context.
+- **Mutations**: Hook success handlers must invalidate list and count query keys simultaneously.
+- **Errors**: Propagate errors through `notify.error()`. Expose loading screens via `isPending` or `isFetching`.
+
+### Hybrid Trajectory
+When legacy analytics widgets require local storage but the module is REST-migrated, synchronize values inside the query loader:
+```typescript
+async function fetchContacts(): Promise<Contact[] | unknown[]> {
+  const body = await apiJson<{ contacts: Contact[] }>('/api/contacts');
+  saveCollection('contacts', body.contacts);
+  return body.contacts;
+}
+
+export function useContactsCollection(): Contact[] | unknown[] {
+  const { data: fromQuery = [] } = useContacts();
+  const fromLocal = useLiveCollection<Contact>('contacts');
+  return fromQuery.length > 0 ? fromQuery : fromLocal;
+}
 ```
-
-After local writes that should refresh other views:
-
-```ts
-window.dispatchEvent(new Event('local-database-update'));
-```
-
-## Sync API (JWT/cookie + `authenticateTenant`)
-
-| Method | Path | RBAC | Purpose |
-|--------|------|------|---------|
-| GET | `/api/db/sync` | **Admin only** | Full tenant snapshot download |
-| POST | `/api/db/sync` | **Admin only** | Bulk upsert |
-| GET/POST | `/api/db/collections/:name` | Auth + write RBAC on POST | One collection |
-| GET/POST | `/api/db/objects/:key` | Auth + write RBAC on POST | One object |
-| POST | `/api/db/reset` | **Admin only** | Tenant-scoped reset to minimal seeds |
-
-Dedicated REST (e.g. `/api/students`, `/api/contacts`) bypasses generic collection routes — prefer for new modules.
-
-## Seeds
-
-| Location | When |
-|----------|------|
-| `minimalSeeds.ts` + `getMinimalObjects()` | **New tenant onboard** and tenant reset — empty collections |
-| `seeds.json` | Legacy full demo — initial empty-DB seed only if used |
-| `apps/frontend/src/lib/*Data.ts` | **Deprecated** for auto-seed — use `[]` defaults (`getCollection` skips empty seed push) |
-
-Keep shapes aligned with `@mms/shared` and `userService` (`users` need `role` + `passwordHash`).
-
-## Student hydration
-
-Contact-first person linking (students, teachers, users, actors, downstream `studentId` rows) — full policy in **`mms-contact-link.md`**. `db.ts` + `collectionSync.ts` hydrate on read and strip duplicate fields on save — extend `LINK_MANAGED_COLLECTIONS` when adding person-linked collections.
-
-## Concurrency
-
-Collection saves are read-modify-write on the full array. Merge concurrent edits or serialize writes to the same collection.
-
-## Field persistence
-
-New/changed fields → full checklist in **`mms-fields.md`** only.
-
-## Singleton settings persistence (required)
-
-App-wide singletons (`branding`, `global_settings`) must **survive login sync** and land in SQLite — not local-only.
-
-| Key | Read helper | Save helper | Merge in `@mms/shared` |
-|-----|-------------|-------------|------------------------|
-| `branding` | `getBrandingSettings()` | `await saveBrandingSettings()` | `mergeBrandingSettings` |
-| `global_settings` | `getGlobalSettings()` | `saveGlobalSettings()` (prefer async variant when user confirms save) | `mergeGlobalSettings` |
-
-### Frontend rules
-
-1. **Never** call raw `saveObject('branding', …)` from settings UI — use typed helpers in `db.ts`.
-2. User-facing **Save** actions must **await** server sync (`POST /api/db/objects/:key`) and only show success after `ok: true`.
-3. On failure, show `notify.error` (401 re-auth, 403 admin-only, network) — do not claim “saved”.
-4. Always merge with defaults **before** local write and API payload.
-5. Tenant hosts: keys are scoped via `tenantLocalStoragePrefix` / `t:{subdomain}:{key}` on the server (Vite proxy must send `x-forwarded-host`).
-
-### Backend rules
-
-1. `POST /api/db/objects/branding` — normalize with `mergeBrandingSettings` before `persistObject`.
-2. After branding save, call `syncWorkspaceFromBranding` so apex workspace list (`madrasaName`, `tagline`) stays aligned.
-3. RBAC: `branding` and `global_settings` writes are **admin only** (`rbacService.canWriteObject`).
-
-### New singleton object checklist
-
-- [ ] Type + `DEFAULT_*` + merge helper in `@mms/shared`
-- [ ] `getX()` / `saveX()` (async, awaits sync) in `db.ts`
-- [ ] Backend merge on persist if shape is user-edited
-- [ ] Settings UI: saving state, success/error toasts, no false “saved”
-
-## Tenant scoping
-
-On tenant hosts, server persists `objects`/`collections` under `t:{subdomain}:{key}`. Vite dev proxy must forward `x-forwarded-host` so backend resolves the correct tenant (`mms-tenant.md`).
-
-## Future
-
-Custom fields/tabs will provision real columns/tables (see `mms-fields.md`). Until then, custom values live inside JSON documents + field registries in `objects`.
+*Constraint*: Never use `useLiveCollection` for an entity that is already fetched via Query on the same viewport.

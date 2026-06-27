@@ -61,9 +61,9 @@ function base64ToBytes(value: string): Uint8Array<ArrayBuffer> {
 }
 
 function asArrayBuffer(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
-  const copy = new Uint8Array(bytes.length);
-  copy.set(bytes);
-  return copy;
+  const arrayBufferBytes = new Uint8Array(bytes.length);
+  arrayBufferBytes.set(bytes);
+  return arrayBufferBytes;
 }
 
 /** Normalizes admin email + password into KDF input (never persisted). */

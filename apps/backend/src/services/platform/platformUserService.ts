@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { PlatformUser, StoredPlatformUser } from '@mms/shared';
+import type { PlatformUser, StoredPlatformUser, PlatformRole } from '@mms/shared';
 import {
   countPlatformUserRows,
   findPlatformUserRowByEmail,
@@ -21,17 +21,22 @@ export async function createVerifiedPlatformUser(input: {
   email: string;
   name: string;
   passwordHash: string;
+  role?: PlatformRole;
 }): Promise<StoredPlatformUser> {
   const existing = await findPlatformUserByEmail(input.email);
   if (existing) {
     throw new Error('Platform user already exists');
   }
 
+  const count = await countPlatformUsers();
+  const role = input.role ?? (count === 0 ? 'super_user' : 'admin');
+
   const user: StoredPlatformUser = {
     id: randomBytes(8).toString('hex'),
     email: input.email.toLowerCase(),
     name: input.name,
     passwordHash: input.passwordHash,
+    role,
     createdAt: new Date().toISOString(),
     emailVerifiedAt: new Date().toISOString(),
   };
@@ -108,7 +113,7 @@ export async function validatePlatformCredentials(
   if (!stored) return null;
   const ok = await verifyPassword(password, stored.passwordHash);
   if (!ok) return null;
-  return { id: stored.id, email: stored.email, name: stored.name };
+  return { id: stored.id, email: stored.email, name: stored.name, role: stored.role };
 }
 
 /**
@@ -139,6 +144,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     email: email.toLowerCase(),
     name,
     passwordHash: await hashPassword(password),
+    role: 'super_user',
     createdAt: new Date().toISOString(),
   };
   await insertPlatformUser(user);

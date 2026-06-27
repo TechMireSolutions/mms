@@ -13,15 +13,15 @@ import {
   type UsersSettings,
   type WorkspaceRole,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
-import useGlobalSettings from '@/hooks/useGlobalSettings';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useGlobalSettings } from '@/hooks/useGlobalSettings';
 import { useIsAdminViewer } from '@/hooks/useViewerRole';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { getObject, saveObject } from '@/lib/db';
 import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import FormModal from '@/components/ui/FormModal';
+import { FormModal } from '@/components/ui/FormModal';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { UserRoleBadge } from './UserBadges';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
@@ -313,7 +313,7 @@ function PermissionMatrix({
   );
 }
 
-export default function RolesPermissions(): React.JSX.Element {
+export function RolesPermissions(): React.JSX.Element {
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
   const isAdmin = useIsAdminViewer();

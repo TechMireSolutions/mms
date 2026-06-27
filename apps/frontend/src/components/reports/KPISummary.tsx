@@ -6,7 +6,14 @@ import {
   Target, Zap, Activity, SlidersHorizontal,
   Plus, Trash2, ShieldCheck, Receipt, CalendarCheck
 } from "lucide-react";
-import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useFinanceInvoicesCollection } from "@/hooks/useFinanceApi";
+import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/hooks/useExaminationsApi";
+import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/hooks/useHasanatApi";
+import {
+  useQuestionBankQuestionsCollection,
+  useQuestionBankTestsCollection,
+  useQuestionBankResultsCollection,
+} from "@/hooks/useQuestionBankApi";
 import { getObject, saveObject } from "../../lib/db";
 import { useContactsReportAnalytics, useContactsWidgetAggregates } from "@/hooks/useContacts";
 import { useStudentsMetrics, useStudentsWidgetAggregates } from "../../hooks/useStudents";
@@ -23,8 +30,8 @@ import { type Distribution } from '@/lib/data/hasanatData';
 import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from "@mms/shared";
 import { computeCustomCard as computeCustomCardShared, CustomCard } from "./reportMetadata";
 import DynamicCardBuilder from "./DynamicCardBuilder";
-import usePermissions from "@/hooks/usePermissions";
-import useTranslation from "@/hooks/useTranslation";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface KPIItem {
   icon: LucideIcon;
@@ -87,6 +94,7 @@ const TREND: Record<string, TrendScheme> = {
 // render, which triggers Radix ref callbacks → setState → infinite loop).
 // ---------------------------------------------------------------------------
 function SubtextDisplay({ text }: { text: string }): React.JSX.Element {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const isLong = text.length > 30;
   if (!isLong) return <span className="truncate block font-semibold">{text}</span>;
@@ -98,26 +106,13 @@ function SubtextDisplay({ text }: { text: string }): React.JSX.Element {
         onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
         className="ml-1 text-primary hover:underline font-extrabold inline-block cursor-pointer bg-transparent border-0 p-0 text-[9px]"
       >
-        {expanded ? "Show less" : "Read more"}
+        {expanded ? t("common.showLess") : t("common.readMore")}
       </button>
     </span>
   );
 }
 
-const CATEGORY_NAMES: Record<string, string> = {
-  contacts: "Contacts",
-  students: "Students",
-  attendance: "Attendance",
-  financial: "Financial",
-  hasanat: "Hasanat",
-  sessions: "Sessions",
-  examinations: "Examinations",
-  questionBank: "Question Bank",
-  enrollments: "Enrollments",
-  faculty: "Faculty",
-  teachers: "Teachers",
-  accounting: "Accounting",
-};
+
 
 interface KPISummaryProps {
   category: string;
@@ -317,15 +312,15 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   const auxiliaryStudentMetrics = category === "enrollments" ? studentMetrics : crossStudentMetrics;
   const auxiliaryTeacherMetrics = category === "enrollments" ? teacherMetrics : crossTeacherMetrics;
   const records = useAttendanceRecordsCollection();
-  const invoices = useLiveCollection("finance_invoices");
-  const exams = useLiveCollection("exams");
-  const examResults = useLiveCollection("exam_results");
+  const invoices = useFinanceInvoicesCollection();
+  const exams = useExaminationsExamsCollection();
+  const examResults = useExaminationsResultsCollection();
   const sessions = useSessionsCollection();
-  const distributions = useLiveCollection("hasanat_distributions");
-  const denoms = useLiveCollection("hasanat_denoms");
-  const qbQuestions = useLiveCollection("questions");
-  const qbTests = useLiveCollection("tests");
-  const qbResults = useLiveCollection("assessment_results");
+  const distributions = useHasanatDistributionsCollection();
+  const denoms = useHasanatDenomsCollection();
+  const qbQuestions = useQuestionBankQuestionsCollection();
+  const qbTests = useQuestionBankTestsCollection();
+  const qbResults = useQuestionBankResultsCollection();
 
   const computedKPIs = useMemo(() => {
     // 1. Total Students
@@ -958,7 +953,26 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
 
   const visible = possibleCards.filter(kpi => selectedLabels.includes(kpi.label));
 
-  const moduleLabel = category === "contacts" ? t("nav.contacts") : (CATEGORY_NAMES[category] || category);
+  const getCategoryLabelKey = (cat: string): string => {
+    switch (cat) {
+      case "contacts": return "nav.contacts";
+      case "students": return "nav.students";
+      case "attendance": return "nav.attendance";
+      case "financial": return "nav.finance";
+      case "hasanat": return "nav.hasanatCards";
+      case "sessions": return "nav.sessions";
+      case "examinations": return "nav.examinations";
+      case "questionBank": return "nav.questionBank";
+      case "enrollments": return "nav.enrollments";
+      case "faculty":
+      case "teachers": return "nav.teachers";
+      case "accounting": return "nav.accounting";
+      default: return "";
+    }
+  };
+
+  const key = getCategoryLabelKey(category);
+  const moduleLabel = key ? t(key as any) : category;
 
   return (
     <div className="space-y-3 w-full">
@@ -988,17 +1002,17 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
           >
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-border">
               <div>
-                <h4 className="text-sm font-bold text-foreground">Dashboard Cards Settings</h4>
+                <h4 className="text-sm font-bold text-foreground">{t("reports.kpiSettingsTitle")}</h4>
                 <p className="text-[11px] text-muted-foreground">
-                  Choose which metric cards to display in this module.
+                  {t("reports.kpiSettingsDesc")}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-success/10 text-success font-bold border border-success/20 flex items-center gap-1">
-                  Selected: {selectedLabels.length} Cards
+                  {t("reports.kpiSelectedCount", { count: selectedLabels.length })}
                 </span>
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold border border-primary/20">
-                  Data Volume: {primaryVolume} Records
+                  {t("reports.kpiDataVolume", { count: primaryVolume })}
                 </span>
               </div>
             </div>
@@ -1020,11 +1034,11 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
               <div className="rounded-2xl border border-border/50 bg-card/25 p-5 shadow-inner space-y-4 text-left flex flex-col justify-between">
                 <div>
                   <div className="pb-2 border-b border-border">
-                    <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">Card Visibility</h4>
+                    <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.kpiVisibility")}</h4>
                   </div>
 
                   <p className="text-[10px] text-muted-foreground mt-1.5 font-sans">
-                    Toggle which metrics appear on the active dashboard panel.
+                    {t("reports.kpiVisibilityDesc")}
                   </p>
 
                   <div className="space-y-1.5 mt-3 max-h-[320px] overflow-y-auto pr-1">
@@ -1050,9 +1064,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                               </p>
                               <p className="text-[9px] text-muted-foreground leading-none mt-0.5 flex items-center gap-1 font-semibold">
                                 {isCustom ? (
-                                  <span className="text-primary">Custom Card</span>
+                                  <span className="text-primary">{t("reports.kpiCustomCard")}</span>
                                 ) : (
-                                  <span className="text-success">● Active Data</span>
+                                  <span className="text-success">{t("reports.kpiActiveData")}</span>
                                 )}
                               </p>
                             </div>
@@ -1062,7 +1076,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                             <button
                               onClick={() => handleEditCard(kpi.label)}
                               className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-                              title="Edit Card Configuration"
+                              title={t("reports.kpiEditConfig")}
                               type="button"
                             >
                               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -1072,7 +1086,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                               <button
                                 onClick={() => handleDeleteCustomCard(kpi.label)}
                                 className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
-                                title="Delete Custom Card"
+                                title={t("reports.kpiDeleteConfig")}
                                 type="button"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1087,8 +1101,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
 
                 <div className="pt-3 border-t border-border mt-3">
                   <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground">
-                    <span>Active Selection:</span>
-                    <span className="text-foreground">{selectedLabels.length} of {possibleCards.length}</span>
+                    <span>{t("reports.kpiActiveSelection")}</span>
+                    <span className="text-foreground">{t("reports.kpiSelectionRatio", { current: selectedLabels.length, total: possibleCards.length })}</span>
                   </div>
                 </div>
               </div>
@@ -1102,7 +1116,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 font-sans">
         {visible.map((kpi, i: number) => {
           const c = COLOR[kpi.color] || COLOR.primary;
-          const t = TREND[kpi.trend] || TREND.flat;
+          const trendInfo = TREND[kpi.trend] || TREND.flat;
           const Icon = kpi.icon;
 
           return (
@@ -1133,8 +1147,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
               {/* Footer Zone: Subtitle metadata and trend arrow */}
               <footer className="mt-2 pt-1.5 border-t border-border/20 text-[9px] text-muted-foreground min-w-0">
                 <div className="flex items-center gap-1 font-sans mb-0.5 select-none">
-                  <span className={`text-[9px] font-black ${t.cls}`}>{t.arrow} {kpi.velocity || ""}</span>
-                  {kpi.velocity && <span className="text-[8px] text-muted-foreground font-medium opacity-60">vs prev</span>}
+                  <span className={`text-[9px] font-black ${trendInfo.cls}`}>{trendInfo.arrow} {kpi.velocity || ""}</span>
+                  {kpi.velocity && <span className="text-[8px] text-muted-foreground font-medium opacity-60">{t("reports.kpiVsPrev")}</span>}
                 </div>
                 <SubtextDisplay text={kpi.sub} />
               </footer>
@@ -1154,7 +1168,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
           className="rounded-2xl border border-dashed border-border/85 hover:border-primary/50 bg-card/25 hover:bg-primary/5 hover:text-primary transition-all duration-300 flex flex-col items-center justify-center p-3 text-muted-foreground min-h-[100px] text-center cursor-pointer"
         >
           <Plus className="w-5 h-5 mb-1 text-muted-foreground hover:text-primary" />
-          <span className="text-[10px] font-bold">Add Custom Metric</span>
+          <span className="text-[10px] font-bold">{t("reports.kpiAddCustom")}</span>
         </motion.button>
       </div>
     </div>

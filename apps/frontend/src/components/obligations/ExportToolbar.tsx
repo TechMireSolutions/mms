@@ -104,7 +104,7 @@ async function downloadPDF(columns: ExportColumn[], rows: Record<string, unknown
  * @param {ExportToolbarProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function ExportToolbar({
+export function ExportToolbar({
   title,
   columns,
   rows,

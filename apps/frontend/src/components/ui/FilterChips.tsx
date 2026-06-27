@@ -19,7 +19,7 @@ interface FilterChipsProps {
  * @param {FilterChipsProps} props - The component props.
  * @returns {React.ReactElement | null} The rendered filter chips or null.
  */
-export default function FilterChips({
+export function FilterChips({
   chips = [],
   onClearAll,
 }: FilterChipsProps): React.ReactElement | null {

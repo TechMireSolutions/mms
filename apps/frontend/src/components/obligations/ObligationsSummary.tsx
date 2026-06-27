@@ -5,15 +5,15 @@ import {
 } from "lucide-react";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { useMergedObligationUsers } from "../../hooks/useObligationLookups";
-import ExportToolbar from "./ExportToolbar";
+import { ExportToolbar } from "./ExportToolbar";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
-import useDebounce from "../../hooks/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
 import { DatePicker } from "../ui/DatePicker";
 import { KPI_TONE } from "@/lib/semanticTone";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 
 function fmt(amount: string | number | null | undefined, code = "PKR"): string {
   return `${code} ${parseFloat(amount as string || "0").toLocaleString()}`;
@@ -96,7 +96,7 @@ export interface ObligationsSummaryProps {
  * @param {ObligationsSummaryProps} props
  * @returns {React.ReactElement}
  */
-export default function ObligationsSummary({
+export function ObligationsSummary({
   collections, obligationTypes, reps, mujtahids, wakalaTypes, distributions
 }: ObligationsSummaryProps) {
   const users = useMergedObligationUsers();

@@ -2,9 +2,9 @@ import React from 'react';
 import {
   ClipboardList, Filter, UserCheck, UserX, Clock, CalendarClock, CalendarDays,
 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useAttendanceMetrics } from '@/hooks/useAttendance';
-import ModuleCommandMetricCard from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
 
 interface AttendanceCommandMetricsProps {
   total: number;
@@ -12,7 +12,7 @@ interface AttendanceCommandMetricsProps {
   selectedDate: string;
 }
 
-export default function AttendanceCommandMetrics({
+export function AttendanceCommandMetrics({
   total,
   shown,
   selectedDate,

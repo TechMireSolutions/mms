@@ -1,11 +1,12 @@
 import type { FastifyInstance } from 'fastify';
 import authRoutes from './auth.js';
-import contactRoutes from './contacts.js';
+import { contactRoutes } from './contacts.js';
 import dbRoutes from './db.js';
 import emailRoutes from './email.js';
 import healthRoutes from './health.js';
 import platformAuthRoutes from './platformAuth.js';
 import platformWorkspaceRoutes from './platformWorkspaces.js';
+import platformUsersRoutes from './platformUsers.js';
 import publicRoutes from './public.js';
 import studentsRoutes from './students.js';
 import teachersRoutes from './teachers.js';
@@ -16,11 +17,13 @@ import accountingRoutes from './accounting.js';
 import hasanatRoutes from './hasanat.js';
 import examinationsRoutes from './examinations.js';
 import questionBankRoutes from './questionBank.js';
+import usersRoutes from './users.js';
 import attendanceRoutes from './attendance.js';
 import sessionsRoutes from './sessions.js';
 import backgroundJobRoutes from './backgroundJobs.js';
 import uploadRoutes from './uploads.js';
 import workspaceRoutes from './workspace.js';
+import aiRoutes from './ai.js';
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(healthRoutes);
@@ -28,6 +31,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(platformAuthRoutes, { prefix: '/api/platform/auth' });
   await app.register(platformWorkspaceRoutes, { prefix: '/api/platform/workspaces' });
+  await app.register(platformUsersRoutes, { prefix: '/api/platform/users' });
   await app.register(workspaceRoutes, { prefix: '/api/workspace' });
   await app.register(uploadRoutes, { prefix: '/api/uploads' });
   await app.register(dbRoutes, { prefix: '/api/db' });
@@ -42,7 +46,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(hasanatRoutes, { prefix: '/api/hasanat' });
   await app.register(examinationsRoutes, { prefix: '/api/examinations' });
   await app.register(questionBankRoutes, { prefix: '/api/question-bank' });
+  await app.register(usersRoutes, { prefix: '/api/users' });
   await app.register(attendanceRoutes, { prefix: '/api/attendance' });
   await app.register(sessionsRoutes, { prefix: '/api/sessions' });
   await app.register(backgroundJobRoutes, { prefix: '/api/background-jobs' });
+  await app.register(aiRoutes, { prefix: '/api/ai' });
 }

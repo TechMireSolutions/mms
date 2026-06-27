@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, Contact, formatDate } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactCellValue } from '@/lib/contacts/contactI18n';
 
 function GenderIcon({ gender }: { gender?: string }): React.JSX.Element | null {

@@ -122,6 +122,16 @@ export default async function authRoutes(
           adminPhone: body.adminPhone,
           website: body.website,
           footerText: body.footerText,
+          // Extended fields
+          faviconUrl: body.faviconUrl,
+          legalName: body.legalName,
+          registrationNumber: body.registrationNumber,
+          addressLine1: body.addressLine1,
+          addressLine2: body.addressLine2,
+          city: body.city,
+          region: body.region,
+          postalCode: body.postalCode,
+          socialLinks: body.socialLinks,
         });
         return reply.send(result);
       } catch (error: unknown) {

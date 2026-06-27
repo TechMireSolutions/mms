@@ -2,16 +2,16 @@ import React from 'react';
 import {
   BookOpen, Filter, Clock, PlayCircle, CheckCircle2, FileText, ClipboardList,
 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useExaminationsMetrics } from '@/hooks/useExaminationsApi';
-import ModuleCommandMetricCard from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
 
 interface ExaminationsCommandMetricsProps {
   shown: number;
   total: number;
 }
 
-export default function ExaminationsCommandMetrics({
+export function ExaminationsCommandMetrics({
   shown,
   total,
 }: ExaminationsCommandMetricsProps): React.JSX.Element {

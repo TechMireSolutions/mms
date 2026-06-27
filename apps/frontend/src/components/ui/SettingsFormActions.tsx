@@ -17,7 +17,7 @@ export interface SettingsFormActionsProps {
 /**
  * Consistent Save action for `/settings` panels.
  */
-export default function SettingsFormActions({
+export function SettingsFormActions({
   saveLabel,
   savingLabel,
   onSave,

@@ -17,11 +17,11 @@ import {
   requeueAllContactsSyncConflicts,
   requeueContactsSyncConflict,
 } from '@/lib/contacts/contactsSyncOutbox';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useContactsSyncOutbox } from '@/hooks/useContactsSyncOutbox';
 import { useContactById, useContactMutations } from '@/hooks/useContacts';
-import FormModal from '@/components/ui/FormModal';
-import ConfirmAlertDialog from '@/components/ui/ConfirmAlertDialog';
+import { FormModal } from '@/components/ui/FormModal';
+import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { Button } from '@/components/ui/button';
 import { notify } from '@/lib/notify';
 

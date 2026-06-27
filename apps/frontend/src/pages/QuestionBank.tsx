@@ -1,30 +1,34 @@
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import useConfigSubTabs from '@/hooks/useConfigSubTabs';
-import useTranslation from '@/hooks/useTranslation';
-import useModuleTierTabs from '@/hooks/useModuleTierTabs';
+import { useConfigSubTabs } from '@/hooks/useConfigSubTabs';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useModuleTierTabs } from '@/hooks/useModuleTierTabs';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useQuestionBankConfig } from '@/hooks/useQuestionBankConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, ClipboardList, Sparkles, Plus } from 'lucide-react';
 import { resolveModuleTierTab } from '@mms/shared';
-import PageHeader from '../components/ui/PageHeader';
-import ResponsiveAccordionTabs from '@/components/ui/ResponsiveAccordionTabs';
-import SubTabBar from '@/components/ui/SubTabBar';
-import ErrorBoundary from '@/components/ui/ErrorBoundary';
+import { PageHeader } from '../components/ui/PageHeader';
+import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
+import { SubTabBar } from '@/components/ui/SubTabBar';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Button } from '@/components/ui/button';
-import QuestionsPanel from '../components/questionBank/QuestionBank';
-import QuestionForm from '../components/questionBank/QuestionForm';
-import GenerateTest from '../components/questionBank/GenerateTest';
-import PerformanceAnalytics from '../components/questionBank/PerformanceAnalytics';
-import AutoGrading from '../components/questionBank/AutoGrading';
-import QuestionBankSettings from '../components/questionBank/QuestionBankSettings';
-import QuestionBankCommandMetrics from '../components/questionBank/QuestionBankCommandMetrics';
+import { QuestionBank as QuestionsPanel } from "../components/questionBank/QuestionBank";
+import { QuestionForm } from "../components/questionBank/QuestionForm";
+import { GenerateTest } from "../components/questionBank/GenerateTest";
+import { PerformanceAnalytics } from "../components/questionBank/PerformanceAnalytics";
+import { AutoGrading } from "../components/questionBank/AutoGrading";
+import { QuestionBankSettings } from "../components/questionBank/QuestionBankSettings";
+import { QuestionBankCommandMetrics } from "../components/questionBank/QuestionBankCommandMetrics";
 import ModuleReports from '../components/reports/ModuleReports';
 import KPISummary from '../components/reports/KPISummary';
 import type { QuestionBankQuestion, QuestionBankTest } from '@mms/shared';
-import { saveCollection } from '../lib/db';
-import { useLiveCollection } from '../hooks/useLiveCollection';
 import { useQuestionBankColumnLayout } from '@/hooks/useQuestionBankColumnLayout';
+import {
+  useQuestionBankQuestionsCollection,
+  useQuestionBankTestsCollection,
+  useQuestionBankResultsCollection,
+  useQuestionBankMutations,
+} from '@/hooks/useQuestionBankApi';
 
 /**
  * Question Bank — Work | Reports | Setup.
@@ -33,9 +37,9 @@ export default function QuestionBankPage(): React.JSX.Element {
   const PAGE_TABS = useModuleTierTabs();
   const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
-  const questions = useLiveCollection('questions');
-  const tests = useLiveCollection('tests');
-  const results = useLiveCollection('assessment_results');
+  const questions = useQuestionBankQuestionsCollection();
+  const tests = useQuestionBankTestsCollection();
+  const results = useQuestionBankResultsCollection();
   const { settings, categories } = useQuestionBankConfig(questions);
   const OPS_SUB_TABS = useMemo(
     () => [
@@ -56,12 +60,14 @@ export default function QuestionBankPage(): React.JSX.Element {
   const columnLayout = useQuestionBankColumnLayout();
   const listLayout = (settings.defaultViewLayout || 'list') === 'list';
 
+  const { replaceQuestions, replaceTests } = useQuestionBankMutations();
+
   const setQuestions = useCallback(
     (updater: typeof questions | ((prev: typeof questions) => typeof questions)) => {
       const next = typeof updater === 'function' ? updater(questions) : updater;
-      saveCollection('questions', next);
+      replaceQuestions.mutate(next);
     },
-    [questions],
+    [questions, replaceQuestions],
   );
 
   const openAddQuestion = useCallback((): void => {
@@ -197,7 +203,7 @@ export default function QuestionBankPage(): React.JSX.Element {
                   questions={questions}
                   tests={tests}
                   onCreateTest={(test: QuestionBankTest) =>
-                    saveCollection('tests', [...tests, test])
+                    replaceTests.mutate([...tests, test])
                   }
                 />
               )}

@@ -15,7 +15,7 @@ interface EmptyStateProps {
  * @param {EmptyStateProps} props - The component props.
  * @returns {React.ReactElement} The rendered EmptyState component.
  */
-export default function EmptyState({
+export function EmptyState({
   icon: Icon = Inbox,
   title = "Nothing here yet",
   description = "",

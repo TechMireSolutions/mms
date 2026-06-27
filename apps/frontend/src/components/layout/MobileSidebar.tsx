@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { X, ChevronRight, LogOut } from "lucide-react";
-import useBranding from "@/hooks/useBranding";
+import { useBranding } from "@/hooks/useBranding";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
-import useGlobalSettings from "@/hooks/useGlobalSettings";
-import useTranslation from "@/hooks/useTranslation";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
+import { useTranslation } from "@/hooks/useTranslation";
 import { NAV_ITEMS } from "@/lib/config/navConfig";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { isNavPathActive, ROUTES } from "@/lib/config/routes";

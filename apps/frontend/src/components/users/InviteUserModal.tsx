@@ -3,10 +3,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { USER_STATUS_VALUES, toTitleCase, type SystemUser } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { useContactById } from '@/hooks/useContacts';
-import FormModal from '@/components/ui/FormModal';
+import { FormModal } from '@/components/ui/FormModal';
 import ContactPicker from '@/components/contactLink/ContactPicker';
 import { Button } from '@/components/ui/button';
 import { FORM_SELECT } from '@/components/ui/formStyles';
@@ -27,7 +27,7 @@ export interface InviteUserModalProps {
   existingContactIds?: (string | number)[];
 }
 
-export default function InviteUserModal({
+export function InviteUserModal({
   onClose,
   onInvite,
   existingContactIds = [],

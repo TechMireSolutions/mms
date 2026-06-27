@@ -8,8 +8,8 @@ import {
   isContactDeleted,
   CONTACTS_MODULE_CONTRACT,
 } from "@mms/shared";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
-import useTranslation from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
+import { useTranslation } from "@/hooks/useTranslation";
 import { downloadContactsCsv, downloadContactsCsvChunked } from "@/lib/contacts/exportContactsCsv";
 import {
   completeContactsBackgroundJob,

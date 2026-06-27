@@ -8,7 +8,7 @@ import {
 import { useContactMutations, CONTACTS_QUERY_KEY } from '@/hooks/useContacts';
 import { queryClientInstance } from '@/lib/query-client';
 import { notify } from '@/lib/notify';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function useContactsSyncOutbox() {
   const { t } = useTranslation();

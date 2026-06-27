@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { type AppTranslationKey } from "@mms/shared";
 import { UserRole } from '@/lib/data/dashboardData';
-import useGlobalSettings from "@/hooks/useGlobalSettings";
-import useTranslation from "@/hooks/useTranslation";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ActionSetItem {
   labelKey: AppTranslationKey;

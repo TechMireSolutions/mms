@@ -24,7 +24,7 @@ interface CertificatePreviewProps {
  * @param props.onClose - Action callback to close modal.
  * @returns The CertificatePreview component.
  */
-export default function CertificatePreview({ result, exam, onClose }: CertificatePreviewProps): React.ReactElement {
+export function CertificatePreview({ result, exam, onClose }: CertificatePreviewProps): React.ReactElement {
   const certRef = useRef<HTMLDivElement | null>(null);
   const { primary, secondary } = useBrandPalette();
 

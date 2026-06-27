@@ -21,8 +21,8 @@ import { useStudentsByIds } from '@/hooks/useStudents';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import type { Student } from "@/lib/data/studentsData";
 import type { Enrollment } from "@/lib/data/enrollmentData";
-import usePermissions from "@/hooks/usePermissions";
-import StatusToggle from "./StatusToggle";
+import { usePermissions } from "@/hooks/usePermissions";
+import { StatusToggle } from "./StatusToggle";
 import { AttendanceFilterState } from "./AttendanceFilters";
 import {
   type ModuleCustomField,
@@ -265,7 +265,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
 /**
  * MarkAttendance
  */
-export default function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
+export function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
   const { settings, statuses, fields, customFields, orderedFields } = useAttendanceConfig();
   const { can } = usePermissions();
   const sessions = useSessionsCollection();

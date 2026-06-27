@@ -1,8 +1,12 @@
+import { and, eq } from 'drizzle-orm';
 import type { BackgroundJobRecord } from '@mms/shared';
-import { runWithTenant } from '../lib/tenantContext.js';
+import { runWithTenant, getRequestTenant } from '../lib/tenantContext.js';
+import { getDb } from '../db/dbClient.js';
+import { backgroundJobs } from '../db/schema.js';
 import {
-  listUserBackgroundJobs,
+  rowToJobRecord,
   upsertUserBackgroundJob,
+  createDatabaseBackgroundJob,
 } from './backgroundJobService.js';
 
 export interface BackgroundJobRunContext {
@@ -16,7 +20,7 @@ export interface BackgroundJobRunContext {
 
 export type BackgroundJobRunner = (
   payload: unknown,
-  ctx: BackgroundJobRunContext,
+  runContext: BackgroundJobRunContext,
 ) => Promise<void>;
 
 const runners = new Map<string, BackgroundJobRunner>();
@@ -25,57 +29,61 @@ export function registerBackgroundJobRunner(key: string, runner: BackgroundJobRu
   runners.set(key, runner);
 }
 
-function runnerKey(job: BackgroundJobRecord): string {
-  return `${job.moduleId}:${job.kind}`;
-}
-
 async function patchJob(
   userId: string,
   jobId: string,
   patch: Partial<BackgroundJobRecord>,
 ): Promise<BackgroundJobRecord> {
-  const jobs = await listUserBackgroundJobs(userId);
-  const existing = jobs.find((j) => j.id === jobId);
-  if (!existing) {
+  const db = getDb();
+  const tenantId = getRequestTenant();
+  if (!tenantId) throw new Error('Tenant context is required to patch background job');
+
+  const rows = await db.select()
+    .from(backgroundJobs)
+    .where(and(
+      eq(backgroundJobs.tenantId, tenantId),
+      eq(backgroundJobs.userId, userId),
+      eq(backgroundJobs.id, jobId)
+    ))
+    .limit(1);
+
+  const row = rows[0];
+  if (!row) {
     throw new Error(`Background job not found: ${jobId}`);
   }
+
+  const existing = rowToJobRecord(row);
   const updated: BackgroundJobRecord = { ...existing, ...patch };
   return upsertUserBackgroundJob(userId, updated);
 }
 
-async function executeJob(
+export async function executeJob(
   tenant: string,
   userId: string,
-  job: BackgroundJobRecord,
+  jobId: string,
+  moduleId: string,
+  kind: string,
   payload: unknown,
 ): Promise<void> {
-  const key = runnerKey(job);
+  const key = `${moduleId}:${kind}`;
   const runner = runners.get(key);
-  if (!runner) {
-    await patchJob(userId, job.id, {
-      status: 'failed',
-      error: `No runner registered for ${key}`,
-      completedAt: new Date().toISOString(),
-    });
-    return;
-  }
 
-  const ctx: BackgroundJobRunContext = {
+  const runContext: BackgroundJobRunContext = {
     tenant,
     userId,
-    jobId: job.id,
+    jobId,
     updateProgress: async (current, total) => {
-      await patchJob(userId, job.id, { progress: { current, total } });
+      await patchJob(userId, jobId, { progress: { current, total } });
     },
     complete: async (patch) => {
-      await patchJob(userId, job.id, {
+      await patchJob(userId, jobId, {
         status: 'completed',
         completedAt: new Date().toISOString(),
         ...patch,
       });
     },
     fail: async (error) => {
-      await patchJob(userId, job.id, {
+      await patchJob(userId, jobId, {
         status: 'failed',
         error,
         completedAt: new Date().toISOString(),
@@ -83,25 +91,28 @@ async function executeJob(
     },
   };
 
+  if (!runner) {
+    await runContext.fail(`No runner registered for ${key}`);
+    return;
+  }
+
   try {
-    await runner(payload, ctx);
+    await runner(payload, runContext);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Background job failed';
-    await ctx.fail(message);
+    await runContext.fail(message);
   }
 }
 
-/** Persists a running job and executes the registered runner off-request. */
+/** Persists a running job and delegates execution to the out-of-process worker queue. */
 export async function enqueueBackgroundJob(
   tenant: string,
   userId: string,
   job: BackgroundJobRecord,
   payload: unknown,
 ): Promise<BackgroundJobRecord> {
-  await runWithTenant(tenant, () => upsertUserBackgroundJob(userId, job));
-  setImmediate(() => {
-    void runWithTenant(tenant, () => executeJob(tenant, userId, job, payload));
-  });
+  // Create job with 'pending' status in PostgreSQL
+  await runWithTenant(tenant, () => createDatabaseBackgroundJob(tenant, userId, job, payload));
   return job;
 }
 
@@ -109,6 +120,19 @@ export async function getUserBackgroundJob(
   userId: string,
   jobId: string,
 ): Promise<BackgroundJobRecord | null> {
-  const jobs = await listUserBackgroundJobs(userId);
-  return jobs.find((j) => j.id === jobId) ?? null;
+  const db = getDb();
+  const tenantId = getRequestTenant();
+  if (!tenantId) return null;
+
+  const rows = await db.select()
+    .from(backgroundJobs)
+    .where(and(
+      eq(backgroundJobs.tenantId, tenantId),
+      eq(backgroundJobs.userId, userId),
+      eq(backgroundJobs.id, jobId)
+    ))
+    .limit(1);
+
+  const row = rows[0];
+  return row ? rowToJobRecord(row) : null;
 }

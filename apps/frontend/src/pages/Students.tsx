@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
-import useConfigSubTabs from "@/hooks/useConfigSubTabs";
-import useTranslation from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
+import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
+import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserPlus, GraduationCap, Filter, ChevronDown, Users,
@@ -10,13 +10,13 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import PageHeader from "../components/ui/PageHeader";
-import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
-import SubTabBar from "@/components/ui/SubTabBar";
-import SearchBar from "../components/ui/SearchBar";
-import FilterChips from "../components/ui/FilterChips";
-import ActionButton from "../components/ui/ActionButton";
-import ErrorBoundary from "../components/ui/ErrorBoundary";
+import { PageHeader } from "../components/ui/PageHeader";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { SearchBar } from "../components/ui/SearchBar";
+import { FilterChips } from "../components/ui/FilterChips";
+import { ActionButton } from "../components/ui/ActionButton";
+import { ErrorBoundary } from "../components/ui/ErrorBoundary";
 
 import StudentList from "../components/students/StudentList";
 import StudentForm from "../components/students/StudentForm";
@@ -27,10 +27,10 @@ import { type StudentsSettings, STUDENTS_MODULE_CONTRACT } from "@mms/shared";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
 import { saveCollection } from "../lib/db";
-import useStudentCount from "@/hooks/useStudentCount";
+import { useStudentCount } from "@/hooks/useStudentCount";
 import { useStudentsPaginated, useStudentMutations, fetchAllStudentsForQuery, type StudentRecord } from "@/hooks/useStudents";
 import { useStudentColumnLayout } from "@/hooks/useStudentColumnLayout";
-import ModuleColumnCustomizer from "@/components/ui/ModuleColumnCustomizer";
+import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import StudentsCommandMetrics from "@/components/students/StudentsCommandMetrics";
 import StudentsListPagination from "@/components/students/StudentsListPagination";
 import { useStudentConfig } from "@/hooks/useStudentConfig";
@@ -426,9 +426,9 @@ export default function Students() {
       <AnimatePresence>
         {showStudentForm && (
           <StudentForm
-            student={editStudent ?? undefined}
+            student={editStudent as any}
             onClose={() => { setShowStudentForm(false); setEditStudent(null); }}
-            onSave={handleSaveStudent as (data: object) => void}
+            onSave={handleSaveStudent as (data: any) => void}
           />
         )}
       </AnimatePresence>

@@ -28,10 +28,14 @@ import {
   ColumnRegistryEntry,
   canViewContactColumn,
   canViewContactTab,
+  buildDynamicContactSchema,
+  formatZodIssues,
+  type ValidationError,
 } from "@mms/shared";
 import { getCollection, getWorkspaceLocalStoragePrefix, saveCollection, getObject, saveObject } from "../db";
-import useGlobalSettings from "@/hooks/useGlobalSettings";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   applyUserColumnOverlay,
   loadUserColumnPrefs,
@@ -49,11 +53,6 @@ import {
   syncOptionsInConfig,
 } from "../contactConfig/prefsStorage";
 import {
-  buildDynamicContactSchema,
-  formatZodIssues,
-  type ValidationError,
-} from "../contactConfig/validationSchema";
-import {
   CONTACT_CONFIG_COLLECTION_KEYS,
   CONTACT_CONFIG_OBJECT_KEYS,
   contactWhatsappTemplatesKey,
@@ -68,7 +67,7 @@ export {
   buildDynamicContactSchema,
   formatZodIssues,
   type ValidationError,
-} from "../contactConfig/validationSchema";
+} from "@mms/shared";
 
 // ── Context Interface ─────────────────────────────────────────────────────────
 export interface ContactConfigContextType {
@@ -696,6 +695,8 @@ export function useContactColumns(): Array<{ id: string; label: string; sortFiel
 export function useContactValidation() {
   const { fieldConfig, enabledTabIds, requiredTabIds, fields } = useContactConfig();
   const settings = useGlobalSettings();
+  const { role } = usePermissions();
+  const viewerRole = role ?? '';
 
   return useCallback(
     (data: unknown): ValidationError[] => {
@@ -705,6 +706,7 @@ export function useContactValidation() {
         requiredTabIds,
         fields,
         settings.language,
+        viewerRole,
       );
       const result = schema.safeParse(data);
       if (result.success) {
@@ -712,6 +714,6 @@ export function useContactValidation() {
       }
       return formatZodIssues(result.error, data, fields);
     },
-    [fieldConfig, enabledTabIds, requiredTabIds, fields, settings.language],
+    [fieldConfig, enabledTabIds, requiredTabIds, fields, settings.language, viewerRole],
   );
 }

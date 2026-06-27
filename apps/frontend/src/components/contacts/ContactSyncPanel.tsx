@@ -16,7 +16,7 @@ import {
   useContactGoogleSyncConfig,
   useContactGoogleSyncMutations,
 } from '@/hooks/useContacts';
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Contact, normalizeToE164, parsePhoneNumber } from "@mms/shared";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { isApiError } from "@/lib/apiClient";

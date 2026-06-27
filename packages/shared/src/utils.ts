@@ -27,8 +27,8 @@ export function toTitleCase(str: unknown): unknown {
   return str
     .trim()
     .split(/\s+/)
-    .map((word, i) => {
-      if (i === 0 || !LOWERCASE_WORDS.has(word.toLowerCase())) {
+    .map((word, index) => {
+      if (index === 0 || !LOWERCASE_WORDS.has(word.toLowerCase())) {
         return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
       }
       return word.toLowerCase();
@@ -64,56 +64,56 @@ export function applyTitleCaseToContact(contact: Record<string, unknown>): Recor
   ];
 
   directFields.forEach((field) => {
-    const val = result[field];
-    if (typeof val === "string") {
-      result[field] = toTitleCase(val) as string;
+    const value = result[field];
+    if (typeof value === "string") {
+      result[field] = toTitleCase(value) as string;
     }
   });
 
   if (Array.isArray(result.phones)) {
-    result.phones = result.phones.map((p: Record<string, unknown>) => ({
-      ...p,
-      label: typeof p.label === "string" ? (toTitleCase(p.label) as string) : p.label,
+    result.phones = result.phones.map((phone: Record<string, unknown>) => ({
+      ...phone,
+      label: typeof phone.label === "string" ? (toTitleCase(phone.label) as string) : phone.label,
     }));
   }
 
   if (Array.isArray(result.emails)) {
-    result.emails = result.emails.map((e: Record<string, unknown>) => ({
-      ...e,
-      label: typeof e.label === "string" ? (toTitleCase(e.label) as string) : e.label,
+    result.emails = result.emails.map((email: Record<string, unknown>) => ({
+      ...email,
+      label: typeof email.label === "string" ? (toTitleCase(email.label) as string) : email.label,
     }));
   }
 
   if (Array.isArray(result.addresses)) {
-    result.addresses = result.addresses.map((a: Record<string, unknown>) => ({
-      ...a,
-      line1: typeof a.line1 === "string" ? (toTitleCase(a.line1) as string) : a.line1,
-      city: typeof a.city === "string" ? (toTitleCase(a.city) as string) : a.city,
-      state: typeof a.state === "string" ? (toTitleCase(a.state) as string) : a.state,
-      country: typeof a.country === "string" ? (toTitleCase(a.country) as string) : a.country,
-      label: typeof a.label === "string" ? (toTitleCase(a.label) as string) : a.label,
+    result.addresses = result.addresses.map((address: Record<string, unknown>) => ({
+      ...address,
+      line1: typeof address.line1 === "string" ? (toTitleCase(address.line1) as string) : address.line1,
+      city: typeof address.city === "string" ? (toTitleCase(address.city) as string) : address.city,
+      state: typeof address.state === "string" ? (toTitleCase(address.state) as string) : address.state,
+      country: typeof address.country === "string" ? (toTitleCase(address.country) as string) : address.country,
+      label: typeof address.label === "string" ? (toTitleCase(address.label) as string) : address.label,
     }));
   }
 
   if (Array.isArray(result.socials)) {
-    result.socials = result.socials.map((s: Record<string, unknown>) => ({
-      ...s,
-      platform: typeof s.platform === "string" ? (toTitleCase(s.platform) as string) : s.platform,
+    result.socials = result.socials.map((social: Record<string, unknown>) => ({
+      ...social,
+      platform: typeof social.platform === "string" ? (toTitleCase(social.platform) as string) : social.platform,
     }));
   }
 
   if (Array.isArray(result.emergencyContacts)) {
-    result.emergencyContacts = result.emergencyContacts.map((ec: Record<string, unknown>) => ({
-      ...ec,
-      name: typeof ec.name === "string" ? (toTitleCase(ec.name) as string) : ec.name,
-      relationship: typeof ec.relationship === "string" ? (toTitleCase(ec.relationship) as string) : ec.relationship,
+    result.emergencyContacts = result.emergencyContacts.map((emergencyContact: Record<string, unknown>) => ({
+      ...emergencyContact,
+      name: typeof emergencyContact.name === "string" ? (toTitleCase(emergencyContact.name) as string) : emergencyContact.name,
+      relationship: typeof emergencyContact.relationship === "string" ? (toTitleCase(emergencyContact.relationship) as string) : emergencyContact.relationship,
     }));
   }
 
   if (Array.isArray(result.relationships)) {
-    result.relationships = result.relationships.map((r: Record<string, unknown>) => ({
-      ...r,
-      type: typeof r.type === "string" ? (toTitleCase(r.type) as string) : r.type,
+    result.relationships = result.relationships.map((relationship: Record<string, unknown>) => ({
+      ...relationship,
+      relationship: typeof relationship.relationship === "string" ? (toTitleCase(relationship.relationship) as string) : relationship.relationship,
     }));
   }
 
@@ -139,16 +139,16 @@ export function applyTitleCaseToContact(contact: Record<string, unknown>): Recor
 
   Object.keys(result).forEach((key) => {
     if (!excludedKeys.has(key)) {
-      const val = result[key];
-      if (typeof val === "string") {
+      const value = result[key];
+      if (typeof value === "string") {
         if (
-          !val.includes("@") &&
-          !val.startsWith("http://") &&
-          !val.startsWith("https://") &&
-          !/^\d{4}-\d{2}-\d{2}$/.test(val) &&
-          !val.startsWith("data:")
+          !value.includes("@") &&
+          !value.startsWith("http://") &&
+          !value.startsWith("https://") &&
+          !/^\d{4}-\d{2}-\d{2}$/.test(value) &&
+          !value.startsWith("data:")
         ) {
-          result[key] = toTitleCase(val) as string;
+          result[key] = toTitleCase(value) as string;
         }
       }
     }
@@ -193,7 +193,7 @@ export function getInitials(name: string | null | undefined, length = 2): string
   return name
     .split(" ")
     .filter(Boolean)
-    .map((n) => n[0])
+    .map((namePart) => namePart[0])
     .join("")
     .slice(0, length)
     .toUpperCase() || "?";
@@ -243,13 +243,13 @@ export function normalizeToE164(countryCode: string, number: string): string {
  * @returns The formatted primary phone number or null.
  */
 export function getPrimaryPhone(contact: Partial<Contact>): string | null {
-  const p = (contact.phones || [])[0] || (contact.phone ? { number: contact.phone as string } : null);
-  if (!p) return null;
-  const code = p.countryCode ? p.countryCode.trim() : "";
-  const num = p.number ? p.number.trim() : "";
-  if (!code) return num || null;
-  if (num.startsWith("+") || num.startsWith(code)) return num;
-  return `${code} ${num}`.trim() || null;
+  const phone = (contact.phones || [])[0] || (contact.phone ? { number: contact.phone as string } : null);
+  if (!phone) return null;
+  const code = phone.countryCode ? phone.countryCode.trim() : "";
+  const phoneNumber = phone.number ? phone.number.trim() : "";
+  if (!code) return phoneNumber || null;
+  if (phoneNumber.startsWith("+") || phoneNumber.startsWith(code)) return phoneNumber;
+  return `${code} ${phoneNumber}`.trim() || null;
 }
 
 /**
@@ -310,36 +310,36 @@ export const normalizeEmail = (email: unknown): string => {
   return String(email).trim().toLowerCase();
 };
 
-export const normalizePhoneForComparison = (num: unknown): string => {
-  if (!num) return "";
-  const digits = String(num).replace(/[^\d]/g, "");
+export const normalizePhoneForComparison = (phoneNumber: unknown): string => {
+  if (!phoneNumber) return "";
+  const digits = String(phoneNumber).replace(/[^\d]/g, "");
   return digits.length >= 10 ? digits.slice(-10) : digits;
 };
 
-export const getPhoneNumbers = (c: Contact): string[] => {
-  const nums: string[] = [];
-  if (c.phone) {
-    nums.push(normalizePhoneForComparison(c.phone));
+export const getPhoneNumbers = (contact: Contact): string[] => {
+  const phoneNumbers: string[] = [];
+  if (contact.phone) {
+    phoneNumbers.push(normalizePhoneForComparison(contact.phone));
   }
-  if (c.phones) {
-    c.phones.forEach((p) => {
-      if (p.number) {
-        nums.push(normalizePhoneForComparison(p.number));
+  if (contact.phones) {
+    contact.phones.forEach((phone) => {
+      if (phone.number) {
+        phoneNumbers.push(normalizePhoneForComparison(phone.number));
       }
     });
   }
-  return Array.from(new Set(nums.filter(Boolean)));
+  return Array.from(new Set(phoneNumbers.filter(Boolean)));
 };
 
-export const getEmails = (c: Contact): string[] => {
+export const getEmails = (contact: Contact): string[] => {
   const emails: string[] = [];
-  if (c.email) {
-    emails.push(normalizeEmail(c.email));
+  if (contact.email) {
+    emails.push(normalizeEmail(contact.email));
   }
-  if (c.emails) {
-    c.emails.forEach((e) => {
-      if (e.address) {
-        emails.push(normalizeEmail(e.address));
+  if (contact.emails) {
+    contact.emails.forEach((email) => {
+      if (email.address) {
+        emails.push(normalizeEmail(email.address));
       }
     });
   }
@@ -406,12 +406,12 @@ export const mergeContacts = (
   const seenNumbers = new Set<string>();
   const mergedPhones: ContactPhone[] = [];
 
-  const addPhone = (p: ContactPhone | undefined): void => {
-    if (!p || !p.number) return;
-    const norm = p.number.replace(/[^\d]/g, "");
-    if (!seenNumbers.has(norm)) {
-      seenNumbers.add(norm);
-      mergedPhones.push({ ...p });
+  const addPhone = (phone: ContactPhone | undefined): void => {
+    if (!phone || !phone.number) return;
+    const normalizedNumber = phone.number.replace(/[^\d]/g, "");
+    if (!seenNumbers.has(normalizedNumber)) {
+      seenNumbers.add(normalizedNumber);
+      mergedPhones.push({ ...phone });
     }
   };
 
@@ -423,12 +423,12 @@ export const mergeContacts = (
   const seenEmails = new Set<string>();
   const mergedEmails: ContactEmail[] = [];
 
-  const addEmail = (e: ContactEmail | undefined): void => {
-    if (!e || !e.address) return;
-    const norm = e.address.trim().toLowerCase();
-    if (!seenEmails.has(norm)) {
-      seenEmails.add(norm);
-      mergedEmails.push({ ...e });
+  const addEmail = (email: ContactEmail | undefined): void => {
+    if (!email || !email.address) return;
+    const normalizedAddress = email.address.trim().toLowerCase();
+    if (!seenEmails.has(normalizedAddress)) {
+      seenEmails.add(normalizedAddress);
+      mergedEmails.push({ ...email });
     }
   };
 
@@ -440,15 +440,15 @@ export const mergeContacts = (
   const seenAddresses = new Set<string>();
   const mergedAddresses: ContactAddress[] = [];
 
-  const addAddress = (a: ContactAddress | undefined): void => {
-    if (!a) return;
-    const key = [a.line1, a.city, a.state, a.country]
+  const addAddress = (address: ContactAddress | undefined): void => {
+    if (!address) return;
+    const key = [address.line1, address.city, address.state, address.country]
       .filter(Boolean)
-      .map((s) => s!.trim().toLowerCase())
+      .map((segment) => segment!.trim().toLowerCase())
       .join("|");
     if (!seenAddresses.has(key)) {
       seenAddresses.add(key);
-      mergedAddresses.push({ ...a });
+      mergedAddresses.push({ ...address });
     }
   };
 
@@ -460,12 +460,12 @@ export const mergeContacts = (
   const seenSocials = new Set<string>();
   const mergedSocials: ContactSocial[] = [];
 
-  const addSocial = (s: ContactSocial | undefined): void => {
-    if (!s || !s.url) return;
-    const norm = s.url.trim().toLowerCase();
-    if (!seenSocials.has(norm)) {
-      seenSocials.add(norm);
-      mergedSocials.push({ ...s });
+  const addSocial = (social: ContactSocial | undefined): void => {
+    if (!social || !social.url) return;
+    const normalizedUrl = social.url.trim().toLowerCase();
+    if (!seenSocials.has(normalizedUrl)) {
+      seenSocials.add(normalizedUrl);
+      mergedSocials.push({ ...social });
     }
   };
 
@@ -477,12 +477,12 @@ export const mergeContacts = (
   const seenEmergency = new Set<string>();
   const mergedEmergency: EmergencyContact[] = [];
 
-  const addEmergency = (ec: EmergencyContact | undefined): void => {
-    if (!ec || !ec.contactId) return;
-    const key = `${ec.contactId}-${ec.relationship}`;
+  const addEmergency = (emergencyContact: EmergencyContact | undefined): void => {
+    if (!emergencyContact || !emergencyContact.contactId) return;
+    const key = `${emergencyContact.contactId}-${emergencyContact.relationship}`;
     if (!seenEmergency.has(key)) {
       seenEmergency.add(key);
-      mergedEmergency.push({ ...ec });
+      mergedEmergency.push({ ...emergencyContact });
     }
   };
 

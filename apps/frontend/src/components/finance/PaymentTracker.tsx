@@ -4,8 +4,8 @@ import { CreditCard } from "lucide-react";
 import { Payment } from '@/lib/data/financeData';
 import { PAYMENT_METHOD_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
-import useTranslation from "@/hooks/useTranslation";
-import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 
 const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
@@ -29,7 +29,7 @@ interface PaymentTrackerProps {
   columnCustomizer?: ColumnCustomizerProps;
 }
 
-export default function PaymentTracker({
+export function PaymentTracker({
   payments,
   isColumnVisible,
   columnCustomizer,

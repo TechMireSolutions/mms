@@ -11,7 +11,7 @@ interface Step5FeeCalculationProps {
   onFeeResult: (fee: CalculatedFee) => void;
 }
 
-export default function Step5FeeCalculation({ student, session, feeResult, onFeeResult }: Step5FeeCalculationProps): React.ReactElement {
+export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }: Step5FeeCalculationProps): React.ReactElement {
   const baseFee = session?.baseFee || 0;
 
   const fee = React.useMemo<CalculatedFee>(() => {

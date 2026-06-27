@@ -3,7 +3,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { requiresTwoFactor } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { DEFAULT_AUTH_REDIRECT } from "@/lib/config/routes";
-import useGlobalSettings from "@/hooks/useGlobalSettings";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { is2FAVerified } from "@/lib/twoFactor";
 
 /**

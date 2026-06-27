@@ -11,7 +11,7 @@ describe('contactFieldDependencies', () => {
     const issues = getContactFieldRemovalIssues({
       fieldKey: 'firstName',
       columnRegistry: DEFAULT_COLUMN_REGISTRY,
-      prefs: { duplicateDetectionFields: [] },
+      preferences: { duplicateDetectionFields: [] },
     });
     expect(issues.some((i) => i.area === 'systemField')).toBe(true);
   });
@@ -20,7 +20,7 @@ describe('contactFieldDependencies', () => {
     const issues = getContactFieldRemovalIssues({
       fieldKey: 'name',
       columnRegistry: DEFAULT_COLUMN_REGISTRY,
-      prefs: { duplicateDetectionFields: [] },
+      preferences: { duplicateDetectionFields: [] },
     });
     expect(issues.some((i) => i.area === 'column')).toBe(true);
   });
@@ -29,7 +29,7 @@ describe('contactFieldDependencies', () => {
     const issues = getContactFieldRemovalIssues({
       fieldKey: 'customNotes',
       columnRegistry: [],
-      prefs: { duplicateDetectionFields: [] },
+      preferences: { duplicateDetectionFields: [] },
       contacts: [{ id: '1', name: 'A', customNotes: 'hello' } as never],
     });
     expect(issues.some((i) => i.area === 'contactData')).toBe(true);

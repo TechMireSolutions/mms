@@ -11,17 +11,17 @@ import {
   DEFAULT_HASANAT_FIELD_DEFS,
 } from "@mms/shared";
 import { DatePicker } from "../ui/DatePicker";
-import FormModal from "@/components/ui/FormModal";
+import { FormModal } from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
-import RegistryPersonSelect from "@/components/ui/RegistryPersonSelect";
-import UserActorSelect from "@/components/ui/UserActorSelect";
-import useTranslation from "@/hooks/useTranslation";
+import { RegistryPersonSelect } from "@/components/ui/RegistryPersonSelect";
+import { UserActorSelect } from "@/components/ui/UserActorSelect";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const STATUS_CLS: Record<string, string> = {
@@ -384,7 +384,7 @@ export interface DistributionManagerProps {
  * @param props - Component properties.
  * @returns React element representing the card distribution manager UI.
  */
-export default function DistributionManager({
+export function DistributionManager({
   distributions,
   denoms,
   batches,

@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertTriangle, GitMerge, Check, Loader2 } from "lucide-react";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import useBodyScrollLock from "../../hooks/useBodyScrollLock";
-import useTranslation from "@/hooks/useTranslation";
+import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsDuplicatePairs } from "@/hooks/useContacts";
 import { DUPLICATE_FIELD_I18N, DUPLICATE_REASON_I18N } from "@/lib/contacts/contactI18n";
 import {

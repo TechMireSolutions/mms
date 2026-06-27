@@ -12,7 +12,7 @@
  *   "enrollments_settings"  → EnrollmentsSettings
  *   "students_settings"     → StudentsSettings
  *   "teachers_settings"     → TeachersSettings
- *   "contact_prefs"         → ContactPrefs
+ *   "contact_preferences"   → ContactPreferencesSettings
  *   "accounting_settings"   → AccountingSettings
  */
 import {
@@ -96,12 +96,12 @@ export function getSortedFields(
   fieldsConfig: Record<string, ModuleFieldConfig> | undefined,
   customFields: ModuleCustomField[] | undefined
 ): ModuleFieldDef[] {
-  const defaults = defaultDefs.map((f) => {
-    const cfg = fieldsConfig?.[f.id] || { enabled: true, required: !!f.required };
+  const defaults = defaultDefs.map((fieldDefinition) => {
+    const fieldConfig = fieldsConfig?.[fieldDefinition.id] || { enabled: true, required: !!fieldDefinition.required };
     return {
-      ...f,
-      enabled: cfg.enabled,
-      required: cfg.required,
+      ...fieldDefinition,
+      enabled: fieldConfig.enabled,
+      required: fieldConfig.required,
     };
   });
 
@@ -156,7 +156,20 @@ export interface GlobalSettings {
   theme: "light" | "dark" | "system";
   /** Map of module IDs to their enabled status. */
   enabledModules: Record<string, boolean>;
+  /** The chosen LLM provider. */
+  llmProvider: "gemini" | "openai" | "anthropic" | "deepseek" | "openrouter" | "groq" | "alibaba" | "none";
+  /** The user's LLM API key. */
+  llmApiKey: string;
+  /** Dynamic list of multiple LLM configurations. */
+  llmConfigs: LlmConfig[];
 }
+
+import {
+  type LlmConfig,
+  type LlmProviderType,
+  LLM_PROVIDERS_META,
+} from "./llmSettingsTypes.js";
+
 
 /** Definition for an application module. */
 export interface ModuleDefinition {
@@ -250,6 +263,9 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
     hasanat: true,
     users: true,
   },
+  llmProvider: "none",
+  llmApiKey: "",
+  llmConfigs: [],
 };
 
 /**
@@ -320,6 +336,9 @@ export function mergeGlobalSettings(
     sessionTimeout,
     passwordPolicy,
     enabledModules: normalizeEnabledModules(partial?.enabledModules),
+    llmProvider: partial?.llmProvider ?? DEFAULT_GLOBAL_SETTINGS.llmProvider,
+    llmApiKey: partial?.llmApiKey ?? DEFAULT_GLOBAL_SETTINGS.llmApiKey,
+    llmConfigs: Array.isArray(partial?.llmConfigs) ? partial.llmConfigs : DEFAULT_GLOBAL_SETTINGS.llmConfigs,
   };
 }
 
@@ -873,7 +892,7 @@ export const DEFAULT_STUDENTS_SETTINGS: StudentsSettings = {
   defaultViewLayout: "list",
   fields: {
     gender: { enabled: true, required: true },
-    dob: { enabled: true, required: false },
+    dob: { enabled: true, required: true },
     fatherLink: { enabled: true, required: false },
     motherLink: { enabled: true, required: false },
     guardianLink: { enabled: true, required: false },
@@ -894,11 +913,11 @@ export interface StudentFieldDef {
 }
 
 export const DEFAULT_STUDENT_FIELD_DEFS: StudentFieldDef[] = [
-  { id: "gender", label: "Gender (contact)" },
-  { id: "dob", label: "Date of birth (contact)" },
-  { id: "fatherLink", label: "Father Link / Name" },
-  { id: "motherLink", label: "Mother Link / Name" },
-  { id: "guardianLink", label: "Guardian (other)" },
+  { id: "gender", label: "Gender" },
+  { id: "dob", label: "Date of Birth" },
+  { id: "fatherLink", label: "Father" },
+  { id: "motherLink", label: "Mother" },
+  { id: "guardianLink", label: "Guardian" },
   { id: "registeredDate", label: "Registration Date" },
 ];
 
@@ -929,12 +948,12 @@ export function getSortedStudentFields(
   fieldsConfig: Record<string, StudentFieldConfig> | undefined,
   customFields: StudentCustomField[] | undefined
 ): StudentFieldDef[] {
-  const defaults = DEFAULT_STUDENT_FIELD_DEFS.map((f) => {
-    const cfg = fieldsConfig?.[f.id] || { enabled: true, required: false };
+  const defaults = DEFAULT_STUDENT_FIELD_DEFS.map((fieldDefinition) => {
+    const studentFieldConfig = fieldsConfig?.[fieldDefinition.id] || { enabled: true, required: false };
     return {
-      ...f,
-      enabled: cfg.enabled,
-      required: cfg.required,
+      ...fieldDefinition,
+      enabled: studentFieldConfig.enabled,
+      required: studentFieldConfig.required,
       isCustom: false,
     };
   });
@@ -1035,12 +1054,12 @@ export function getSortedTeacherFields(
   fieldsConfig: Record<string, TeacherFieldConfig> | undefined,
   customFields: TeacherCustomField[] | undefined,
 ): TeacherFieldDef[] {
-  const defaults = DEFAULT_TEACHER_FIELD_DEFS.map((f) => {
-    const cfg = fieldsConfig?.[f.id] || { enabled: true, required: false };
+  const defaults = DEFAULT_TEACHER_FIELD_DEFS.map((fieldDefinition) => {
+    const teacherFieldConfig = fieldsConfig?.[fieldDefinition.id] || { enabled: true, required: false };
     return {
-      ...f,
-      enabled: cfg.enabled,
-      required: cfg.required,
+      ...fieldDefinition,
+      enabled: teacherFieldConfig.enabled,
+      required: teacherFieldConfig.required,
     };
   });
 
@@ -1069,9 +1088,9 @@ export function getSortedTeacherFields(
 
 /**
  * Contact module preferences.
- * Stored under the key "contact_prefs".
+ * Stored under the key "contact_preferences".
  */
-export interface ContactPrefs {
+export interface ContactPreferencesSettings {
   /** Whether contacts with duplicate names/phones are allowed. */
   allowDuplicates: boolean;
   /** Whether a phone number is required when adding a contact. */
@@ -1088,8 +1107,8 @@ export interface ContactPrefs {
   duplicateDetectionFields?: string[];
 }
 
-/** Authoritative default values for ContactPrefs. */
-export const DEFAULT_CONTACT_PREFS: ContactPrefs = {
+/** Authoritative default values for ContactPreferencesSettings. */
+export const DEFAULT_CONTACT_PREFERENCES_SETTINGS: ContactPreferencesSettings = {
   allowDuplicates: false,
   requirePhone: true,
   autoMergeSuggestions: true,
@@ -1501,11 +1520,11 @@ export function getFlatFieldsConfig(
         }
       }
     } else if (list && typeof list === "object") {
-      for (const [key, cfg] of Object.entries(list)) {
-        if (cfg && typeof cfg === "object") {
+      for (const [key, moduleFieldConfig] of Object.entries(list)) {
+        if (moduleFieldConfig && typeof moduleFieldConfig === "object") {
           result[key] = {
-            enabled: (cfg as any).enabled !== false,
-            required: !!(cfg as any).required,
+            enabled: (moduleFieldConfig as any).enabled !== false,
+            required: !!(moduleFieldConfig as any).required,
           };
         }
       }
@@ -1528,16 +1547,16 @@ export const STUDENT_TAB_REGISTRY: TabDefinition[] = [
 
 export const INITIAL_STUDENT_FIELD_SEED: Record<string, FieldDefinition[]> = {
   basic: [
-    { key: "gender", label: "Gender", type: "select", options: ["Male", "Female"], enabled: true, order: 0, required: true },
-    { key: "dob", label: "Date of Birth", type: "date", enabled: true, order: 1, required: false },
+    { key: "gender", label: "Gender", type: "select", options: ["Male", "Female"], enabled: true, order: 0, required: true, description: "Must be defined (not empty) on the linked contact profile." },
+    { key: "dob", label: "Date of Birth", type: "date", enabled: true, order: 1, required: true, description: "Must be provided (not empty) on the linked contact profile." },
   ],
   guardian: [
-    { key: "fatherLink", label: "Father Link", type: "text", enabled: true, order: 0, required: false },
-    { key: "motherLink", label: "Mother Link", type: "text", enabled: true, order: 1, required: false },
-    { key: "guardianLink", label: "Guardian Link", type: "text", enabled: true, order: 2, required: false },
+    { key: "fatherLink", label: "Father", type: "text", enabled: true, order: 0, required: false, description: "Dropdown linking a Male contact from the database." },
+    { key: "motherLink", label: "Mother", type: "text", enabled: true, order: 1, required: false, description: "Dropdown linking a Female contact from the database." },
+    { key: "guardianLink", label: "Guardian", type: "text", enabled: true, order: 2, required: false, description: "Dropdown linking any contact from the database (no gender filter)." },
   ],
   academic: [
-    { key: "registeredDate", label: "Registration Date", type: "date", enabled: true, order: 0, required: true },
+    { key: "registeredDate", label: "Registration Date", type: "date", enabled: true, order: 0, required: true, description: "Date/Time field indicating when the student profile was registered." },
   ],
   health: [
     { key: "bloodGroup", label: "Blood Group", type: "select", options: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], enabled: true, order: 0, required: false },
@@ -1728,5 +1747,3 @@ export const INITIAL_ATTENDANCE_FIELD_SEED: Record<string, FieldDefinition[]> = 
     { key: "notes", label: "Notes / Comments", type: "textarea", enabled: true, order: 3, required: false },
   ]
 };
-
-

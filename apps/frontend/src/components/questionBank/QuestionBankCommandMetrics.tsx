@@ -2,16 +2,16 @@ import React from 'react';
 import {
   HelpCircle, Filter, Sparkles, FileCheck, BarChart3, Layers, ClipboardList,
 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useQuestionBankMetrics } from '@/hooks/useQuestionBankApi';
-import ModuleCommandMetricCard from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
 
 interface QuestionBankCommandMetricsProps {
   shown: number;
   total: number;
 }
 
-export default function QuestionBankCommandMetrics({
+export function QuestionBankCommandMetrics({
   shown,
   total,
 }: QuestionBankCommandMetricsProps): React.JSX.Element {

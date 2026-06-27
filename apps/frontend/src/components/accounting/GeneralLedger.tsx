@@ -4,7 +4,7 @@ import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeLedger, Account, JournalEntry,
 import { DatePicker } from "../ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { Button } from "../ui/button";
-import FormSelect from "../ui/FormSelect";
+import { FormSelect } from "../ui/FormSelect";
 
 interface GeneralLedgerProps {
   accounts: Account[];
@@ -20,7 +20,7 @@ interface GeneralLedgerProps {
  * @param {GeneralLedgerProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function GeneralLedger({ accounts, entries, fmt }: GeneralLedgerProps) {
+export function GeneralLedger({ accounts, entries, fmt }: GeneralLedgerProps) {
   const [selectedAccount, setSelectedAccount] = useState("");
   const [typeFilter,      setTypeFilter]      = useState<AccountType | "all">("all");
   const [dateFrom,        setDateFrom]        = useState("");

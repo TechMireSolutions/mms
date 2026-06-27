@@ -7,22 +7,22 @@ import {
   TrendingUp
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import JournalEntryForm from "./JournalEntryForm";
-import JournalEntryDetail from "./JournalEntryDetail";
-import SimpleTransactionWizard from "./SimpleTransactionWizard";
-import CashbookView from "./CashbookView";
+import { JournalEntryForm } from "./JournalEntryForm";
+import { JournalEntryDetail } from "./JournalEntryDetail";
+import { SimpleTransactionWizard } from "./SimpleTransactionWizard";
+import { CashbookView } from "./CashbookView";
 import { createReversalEntry, JOURNAL_TAGS, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
-import SubTabBar from "../ui/SubTabBar";
-import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SubTabBar } from "../ui/SubTabBar";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import useTranslation from "@/hooks/useTranslation";
-import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import FormSelect from "../ui/FormSelect";
+import { FormSelect } from "../ui/FormSelect";
 
 interface QuickActionType {
   id: string;
@@ -91,7 +91,7 @@ interface JournalEntriesProps {
  * @param {JournalEntriesProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function JournalEntries({
+export function JournalEntries({
   entries,
   accounts,
   settings,

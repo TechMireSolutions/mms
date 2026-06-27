@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { Plus, Package } from "lucide-react";
 import { Denomination, StockBatch } from '@/lib/data/hasanatData';
 import { DatePicker } from "../ui/DatePicker";
-import FormModal from "@/components/ui/FormModal";
-import UserActorSelect from "@/components/ui/UserActorSelect";
+import { FormModal } from "@/components/ui/FormModal";
+import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 
 interface AddBatchModalProps {
   open: boolean;
@@ -119,7 +119,7 @@ export interface StockManagerProps {
  * @param props - Component properties.
  * @returns React element representing the stock manager UI.
  */
-export default function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
+export function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
   const [showModal, setShowModal] = useState(false);
 
   const handleAdd = (batch: StockBatch) => { onUpdate([...batches, batch]); setShowModal(false); };

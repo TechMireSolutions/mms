@@ -14,6 +14,7 @@ export interface User {
 }
 
 export * from './settingsTypes.js';
+export * from './llmSettingsTypes.js';
 export * from './globalSettingsUtils.js';
 export * from './languageUtils.js';
 export * from './timezoneUtils.js';
@@ -36,7 +37,7 @@ export * from './contactsReportFields.js';
 export * from './contactTypes.js';
 export * from './contactDuplicateUtils.js';
 export * from './contactsModuleContract.js';
-export * from './contactsPrefsTypes.js';
+export * from './contactsPreferencesTypes.js';
 export * from './contactsSearchUtils.js';
 export * from './contactsMetricsUtils.js';
 export * from './contactsReportAnalytics.js';
@@ -90,7 +91,7 @@ export * from './examinationsModuleContract.js';
 export * from './questionBankModuleContract.js';
 export * from './usersModuleContract.js';
 export * from './moduleCommandMetrics.js';
-export * from './moduleColumnPrefs.js';
+export * from './moduleColumnPreferences.js';
 export * from './studentUtils.js';
 export * from './contactLinkPolicy.js';
 export * from './linkedCollectionUtils.js';
@@ -100,6 +101,8 @@ export * from './platformTypes.js';
 export * from './platformSetupValidation.js';
 export * from './serverPorts.js';
 export * from './tenantAuthTypes.js';
+export * from './contactValidation.js';
+export { buildDynamicStudentSchema, formatStudentZodIssues } from './studentValidation.js';
 
 export const DEFAULT_CURRENCIES = [
   { id: "cur1", code: "PKR", name: "Pakistani Rupee", symbol: "₨" },

@@ -6,7 +6,8 @@ import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
 import { useSessionsCollection } from "@/hooks/useSessions";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
-import EmptyState from "../ui/EmptyState";
+import { EmptyState } from "../ui/EmptyState";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import { AttendanceChart } from "@/components/widgets/charts/AttendanceChart";
 import TodayAttendanceWidget from "@/components/widgets/TodayAttendanceWidget";
@@ -45,6 +46,7 @@ export interface StudentAttendanceItem {
  * @returns React.JSX.Element
  */
 export default function AttendanceReport({ filters }: AttendanceReportProps): React.JSX.Element {
+  const { t } = useTranslation();
   const records = useAttendanceRecordsCollection();
 
   const sessions = useSessionsCollection();
@@ -149,16 +151,16 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
   return (
     <div className="space-y-4 text-left">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={UserCheck} label="Avg Attendance" value={`${avgRate}%`} color="green" />
-        <ReportSummaryCard icon={Users} label="Classes" value={summary.length} color="primary" />
-        <ReportSummaryCard icon={Award} label="Perfect Attendance" value={perfect} color="amber" />
-        <ReportSummaryCard icon={AlertTriangle} label="Below 75%" value={belowThreshold} color="red" />
+        <ReportSummaryCard icon={UserCheck} label={t("attendance.report.avgAttendance")} value={`${avgRate}%`} color="green" />
+        <ReportSummaryCard icon={Users} label={t("attendance.report.classesCount")} value={summary.length} color="primary" />
+        <ReportSummaryCard icon={Award} label={t("attendance.report.perfectAttendance")} value={perfect} color="amber" />
+        <ReportSummaryCard icon={AlertTriangle} label={t("attendance.report.belowThreshold")} value={belowThreshold} color="red" />
       </div>
 
       {/* Chart */}
       {summary.length > 0 && (
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">Attendance Rate by Class</p>
+          <p className="text-sm font-semibold text-foreground mb-3">{t("attendance.report.rateByClass")}</p>
           <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={summary} barSize={36}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -173,18 +175,30 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
 
       {/* Class Summary Table */}
       <ReportExportBar 
-        title="Attendance Summary" 
+        title={t("attendance.report.summaryTitle")} 
         data={summary}
-        headers={["Class", "Total Students", "Avg Rate", "Perfect Attendance", "Below 75%"]}
+        headers={[
+          t("attendance.report.colClass"),
+          t("attendance.report.colTotalStudents"),
+          t("attendance.report.colAvgRate"),
+          t("attendance.report.colPerfectAttendance"),
+          t("attendance.report.colBelowThreshold"),
+        ]}
       />
       {summary.length === 0 ? (
-        <EmptyState icon={UserCheck} title="No attendance data" description="Adjust filters to view data." compact />
+        <EmptyState icon={UserCheck} title={t("attendance.report.noData")} description={t("attendance.report.adjustFilters")} compact />
       ) : (
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
-                {["Class", "Total Students", "Avg Rate", "Perfect Attendance", "Below 75%"].map((h) => (
+                {[
+                  t("attendance.report.colClass"),
+                  t("attendance.report.colTotalStudents"),
+                  t("attendance.report.colAvgRate"),
+                  t("attendance.report.colPerfectAttendance"),
+                  t("attendance.report.colBelowThreshold"),
+                ].map((h) => (
                   <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -210,21 +224,37 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
 
       {/* Student Attendance */}
       <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
-        <h3 className="text-sm font-semibold text-foreground">Student Attendance Detail</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t("attendance.report.studentDetailTitle")}</h3>
         <ReportExportBar 
-          title="Student Attendance Detail" 
+          title={t("attendance.report.studentDetailTitle")} 
           data={studentAtt}
-          headers={["Student", "Class", "Present", "Absent", "Late", "Total", "Rate"]}
+          headers={[
+            t("attendance.report.colStudent"),
+            t("attendance.report.colStudentClass"),
+            t("attendance.report.colPresent"),
+            t("attendance.report.colAbsent"),
+            t("attendance.report.colLate"),
+            t("attendance.report.colTotal"),
+            t("attendance.report.colRate"),
+          ]}
         />
       </div>
       {studentAtt.length === 0 ? (
-        <EmptyState icon={Users} title="No student records" compact />
+        <EmptyState icon={Users} title={t("attendance.report.noStudentRecords")} compact />
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
-                {["Student", "Class", "Present", "Absent", "Late", "Total", "Rate"].map((h) => (
+                {[
+                  t("attendance.report.colStudent"),
+                  t("attendance.report.colStudentClass"),
+                  t("attendance.report.colPresent"),
+                  t("attendance.report.colAbsent"),
+                  t("attendance.report.colLate"),
+                  t("attendance.report.colTotal"),
+                  t("attendance.report.colRate"),
+                ].map((h) => (
                   <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -249,8 +279,8 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
       {/* Dashboard widgets preview */}
       <div className="border-t border-border/50 pt-6 mt-6 space-y-4">
         <div>
-          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Dashboard Main Widgets</h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">Preview of widgets rendering on the main landing dashboard</p>
+          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("attendance.report.dashboardWidgetsTitle")}</h3>
+          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("attendance.report.dashboardWidgetsSubtitle")}</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <AttendanceChart />

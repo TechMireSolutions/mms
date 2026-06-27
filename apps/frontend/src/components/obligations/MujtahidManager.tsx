@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
-import FormModal from "@/components/ui/FormModal";
-import useTranslation from "@/hooks/useTranslation";
+import { FormModal } from "@/components/ui/FormModal";
+import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +35,7 @@ interface ModalState {
  * @param {MujtahidManagerProps} props
  * @returns {React.ReactElement}
  */
-export default function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeReps }: MujtahidManagerProps) {
+export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeReps }: MujtahidManagerProps) {
   const [modal, setModal] = useState<ModalState | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 

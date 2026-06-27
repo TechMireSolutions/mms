@@ -1,76 +1,51 @@
 ---
-description: DRY policy — single source of truth, extraction thresholds, and duplication bans
+description: DRY (Don't Repeat Yourself) guidelines, extraction thresholds, boundaries, and @mms/shared exports standards.
 ---
 
-# DRY Policy
+# MMS DRY & Shared Package Policy
 
-**Don't Repeat Yourself** — one authoritative definition per concept. `@mms/shared` specifics: `mms-shared-dry.md`.
+**Don't Repeat Yourself (DRY)** — every piece of knowledge, logic, and configuration must have a single, unambiguous, authoritative representation within the Madrasa Management System (MMS).
 
-## Single source of truth
+---
 
-| Concern | Owner | Never duplicate in |
-|---------|-------|-------------------|
-| Types & DTOs | `@mms/shared` | FE lib copies, inline route types |
-| Defaults & settings | `@mms/shared` `DEFAULT_*` + getters | Component literals |
-| User-facing copy | `appTranslations` + `t()` | Hardcoded strings (`mms-i18n.md`) |
-| Status colours/labels | Registries + `StatusBadge` | Inline hex / Tailwind maps |
-| Permission checks | `can()` + `@mms/shared` matrix | `role === 'admin'` |
-| Phone normalize | `parsePhoneNumber` (`@mms/shared`) | Local regex |
-| Date/number format | Shared formatters + settings | `toLocaleDateString` ad hoc |
-| API calls | `apiClient` | Raw `fetch('/api/...')` |
-| Validation | Zod schema — share FE/BE shape via `@mms/shared` where possible | Parallel hand-written checks |
-| Module tier tabs | `useModuleTierTabs()` | Inline tab arrays per page |
+## 1. Proactive Search & Duplication Audits
+- **Search First**: BEFORE writing any helper function, component, validation schema, utility hook, or CSS style, search `@mms/shared`, `apps/frontend/src/hooks/`, and `apps/frontend/src/components/ui/` for existing equivalents.
+- **Extend, Don't Fork**: If an existing helper almost fits your use case, extend its parameters rather than copying it or creating a near-duplicate function.
+- **Scan & Refactor**: When editing code, actively scan the surrounding files for duplicate blocks and refactor them into a unified local utility.
 
-## Extraction threshold
+---
 
-Extract to shared helper/hook/component when **any** is true:
+## 2. Extraction Thresholds & Strategy
+Extract logic to a shared layer (e.g., `@mms/shared` or a local hook/component) if **any** of the following conditions are met:
+1. **Logic Repetition**: The same logic appears $\ge 2$ times across different files.
+2. **Multi-Module / Boundary Cross**: The logic crosses feature boundaries or the frontend ↔ backend boundary.
+3. **Complexity & Length**: A block of code is $> 15$ lines of identical or parametrically identical implementation.
 
-1. Same logic appears **≥2 times** (copy-paste or near-duplicate)
-2. Used in **2+ modules** or **frontend + backend**
-3. **Business rule** would diverge if edited in one place only
-4. **>15 lines** of identical or parametrically identical code
+*Constraint*: Keep code inlined if it is truly unique and used only once. Premature abstraction is prohibited.
 
-Until threshold met, **inline once** — premature abstraction is banned.
+---
 
-## Layer rules
+## 3. Monorepo Layer Boundaries
+Ensure clear separation of concerns to prevent domain logic from leaking into infrastructure:
 
 ```
-@mms/shared     pure types, constants, formatters, validation shapes
-apps/*/services hooks, components, routes — orchestration only
+@mms/shared     Pure validation schemas, types, constants, default configs, and I/O-free formatters.
+apps/*/services Hooks, UI components, API route controllers, and database schemas/queries.
 ```
 
-| Put in shared | Keep local |
-|---------------|------------|
-| Pure functions, no I/O | React components |
-| Types crossing FE/BE | Route handlers |
-| Constants & enums | DB access |
-| i18n dictionaries | Browser APIs / DOM |
+### Shared Package (`@mms/shared`) Standards
+- **Exports Map**:
+  - `contactTypes.ts` / `userTypes.ts` / `settingsTypes.ts`: Domain models and default configs (e.g. `DEFAULT_*`).
+  - `appTranslations.ts`: Global i18n dictionaries and translation helpers.
+  - `brandingTheme.ts` / `logoBrandColors.ts`: CSS color math and accessibility contrast logic.
+  - `utils.ts`: Pure helpers (`formatDate`, `getDisplayName`, `parsePhoneNumber`, `getInitials`, `toTitleCase`).
+- **Import Rule**: Always use named exports from `@mms/shared` (e.g., `import { Contact } from '@mms/shared'`). Subpath imports are forbidden.
+- **Do NOT Put in Shared**: React components, direct Fastify/DB query code, or browser APIs (like `localStorage` or DOM properties).
 
-## Module boundaries
+---
 
-- **No** cross-import between `components/{moduleA}/` and `components/{moduleB}/`
-- **Yes** shared UI in `components/ui/`, shared hooks in `hooks/`, shared logic in `@mms/shared`
-- Inter-module data: `local-database-update` event or Query invalidation — not imported singletons
-
-## Config-driven UI
-
-Prefer registries over branching (`mms-fields.md`):
-
-```tsx
-// ❌ Repeated field lists per form
-// ✅ FIELD_REGISTRY + map render
-```
-
-## When touching duplication
-
-1. Search codebase for existing owner (`grep` / semantic search)
-2. Extend owner — do not fork
-3. Delete superseded copies in the same PR
-4. Run `pnpm typecheck` after moving symbols
-
-## Anti-patterns
-
-- “Utility” files that re-export unchanged third-party APIs
-- Wrapper components that only pass props through with no behaviour
-- Duplicate Zod schemas in FE and BE with drift
-- Copy-paste tier tab definitions across module pages
+## 4. Quality Bar & Code Cleanup
+- **Strict Typing**: Strict TypeScript mode is mandatory. Use `unknown` and type narrowing. The use of `any` is forbidden.
+- **JSDoc**: Required on **public exports** in `packages/shared` only. Omit elsewhere; do not add narrating comments to application code.
+- **Unit Testing**: All non-trivial pure logic helper utilities added to `@mms/shared` must include unit tests.
+- **Dead Code**: Actively prune unused imports, dead variables, and legacy shims within your change boundary.

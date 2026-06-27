@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "../../lib/db";
-import useTranslation from "@/hooks/useTranslation";
-import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { useSessionsCollection } from "@/hooks/useSessions";
 import { useLiveCollection } from "@/hooks/useLiveCollection";

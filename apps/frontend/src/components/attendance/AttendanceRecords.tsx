@@ -7,11 +7,11 @@ import { Input } from "../ui/input";
 import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
 import { useSessionsCollection } from '@/hooks/useSessions';
-import usePermissions from "@/hooks/usePermissions";
-import useTranslation from "@/hooks/useTranslation";
-import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
-import StatusBadge from "./StatusBadge";
-import StatusToggle from "./StatusToggle";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
+import { StatusBadge } from "./StatusBadge";
+import { StatusToggle } from "./StatusToggle";
 import { AttendanceFilterState } from "./AttendanceFilters";
 import type { AppTranslationKey, ModuleColumnRegistryEntry } from "@mms/shared";
 
@@ -39,7 +39,7 @@ interface AttendanceRecordsProps {
   columnCustomizer?: ColumnCustomizerProps;
 }
 
-export default function AttendanceRecords({
+export function AttendanceRecords({
   filters,
   role: _role,
   records,

@@ -56,7 +56,7 @@ interface AttendanceAnalyticsProps {
  * @param {AttendanceAnalyticsProps} props - The component props.
  * @returns {React.ReactElement} The rendered analytics dashboard.
  */
-export default function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsProps) {
+export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsProps) {
   const { statuses } = useAttendanceConfig();
   const { primary, secondary, charts } = useBrandPalette();
   const COLORS = useMemo(

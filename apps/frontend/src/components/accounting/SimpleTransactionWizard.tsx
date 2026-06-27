@@ -6,11 +6,11 @@ import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { generateJERef, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
-import Modal from "../ui/Modal";
+import { Modal } from "../ui/Modal";
 import { FORM_INPUT, FORM_LABEL } from "../ui/formStyles";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import FormSelect from "../ui/FormSelect";
+import { FormSelect } from "../ui/FormSelect";
 
 // ── Transaction Type Definitions ──────────────────────────────────────────────
 
@@ -357,7 +357,7 @@ interface SimpleTransactionWizardProps {
  * @param props - The properties for the component.
  * @returns React element representing the transaction wizard modal.
  */
-export default function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, onSave, onClose, prefillType }: SimpleTransactionWizardProps) {
+export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, onSave, onClose, prefillType }: SimpleTransactionWizardProps) {
   const [step, setStep] = useState(prefillType ? 2 : 1);
   const [selectedType, setSelectedType] = useState<QuickActionType | null>(prefillType || null);
   const [showAdvanced, setShowAdvanced] = useState(false);

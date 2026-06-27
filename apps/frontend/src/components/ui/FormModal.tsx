@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2, Loader2, Save } from 'lucide-react';
-import Modal from './Modal';
-import FormProgressBar from './FormProgressBar';
-import SubTabBar, { type SubTab } from './SubTabBar';
+import { AlertCircle, CheckCircle2, Loader2, Save, Settings, Eye } from 'lucide-react';
+import { Modal } from './Modal';
+import * as TabsPrimitive from "@radix-ui/react-tabs";
+import { FormProgressBar } from './FormProgressBar';
+import { SubTabBar, type SubTab } from './SubTabBar';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export type { SubTab as FormModalTab };
 
@@ -37,6 +39,9 @@ export interface FormModalProps<K extends string = string> {
   saved?: boolean;
   savedLabel?: string;
   footerStart?: React.ReactNode;
+  showBuilderToggle?: boolean;
+  builderMode?: boolean;
+  onBuilderModeChange?: (active: boolean) => void;
   children: React.ReactNode;
 }
 
@@ -57,7 +62,7 @@ function FormErrorBanner({ errors }: { errors: readonly string[] }): React.JSX.E
 /**
  * Canonical add/edit entity dialog — `Modal` + optional `SubTabBar` + error banner + footer actions.
  */
-export default function FormModal<K extends string = string>({
+export function FormModal<K extends string = string>({
   open,
   onClose,
   title,
@@ -83,15 +88,19 @@ export default function FormModal<K extends string = string>({
   saved = false,
   savedLabel,
   footerStart,
+  showBuilderToggle = false,
+  builderMode = false,
+  onBuilderModeChange,
   children,
 }: FormModalProps<K>): React.JSX.Element {
+  const { t } = useTranslation();
   const errors = useMemo(() => {
     if (!error) return [];
     return (Array.isArray(error) ? error : [error]).filter(Boolean);
   }, [error]);
 
   const panelClassName = tall ? 'h-[88vh] max-h-[700px]' : undefined;
-  const hasTabs = tabs && tabs.length > 1 && activeTab !== undefined && onTabChange;
+  const hasTabs = !builderMode && tabs && tabs.length > 1 && activeTab !== undefined && onTabChange;
 
   const effectiveSize = useMemo((): NonNullable<FormModalProps<K>['size']> => {
     const requested = size ?? 'lg';
@@ -112,30 +121,81 @@ export default function FormModal<K extends string = string>({
     );
   }, [headerExtra, progress, progressLabel]);
 
+  const headerActions = useMemo(() => {
+    if (!showBuilderToggle || !onBuilderModeChange) return null;
+    return (
+      <Button
+        type="button"
+        variant={builderMode ? 'default' : 'outline'}
+        onClick={() => onBuilderModeChange(!builderMode)}
+        className="text-[11px] h-8 px-2.5 flex items-center gap-1.5 font-bold uppercase tracking-wider transition-all duration-300"
+      >
+        {builderMode ? (
+          <>
+            <Eye className="w-3.5 h-3.5" />
+            <span>{t('contacts.form.viewForm')}</span>
+          </>
+        ) : (
+          <>
+            <Settings className="w-3.5 h-3.5" />
+            <span>{t('contacts.form.editForm')}</span>
+          </>
+        )}
+      </Button>
+    );
+  }, [showBuilderToggle, builderMode, onBuilderModeChange, t]);
+
   const body = (
-    <div lang={lang} dir={dir}>
+    <div lang={lang} dir={dir} className="h-full">
       <FormErrorBanner errors={errors} />
       {hasTabs ? (
-        <>
-          <SubTabBar
-            tabs={tabs}
-            value={activeTab}
-            onChange={onTabChange}
-            panelIdPrefix={tabPanelIdPrefix}
-            className="mb-4"
-          />
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={String(activeTab)}
-              initial={{ opacity: 0, x: 6 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -6 }}
-              transition={{ duration: 0.13 }}
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
-        </>
+        <TabsPrimitive.Root
+          value={activeTab}
+          onValueChange={(val) => onTabChange(val as K)}
+          orientation="vertical"
+          dir={dir}
+          className="flex flex-col md:flex-row gap-6 h-full items-stretch"
+        >
+          <TabsPrimitive.List
+            className="flex flex-row md:flex-col shrink-0 h-auto bg-muted/20 p-1 rounded-xl gap-1 border border-border overflow-x-auto md:overflow-x-visible md:border-e md:border-t-0 md:border-b-0 md:border-s-0 md:pe-4"
+            style={{ minWidth: "180px" }}
+          >
+            {tabs.map((tab) => {
+              const active = activeTab === tab.key;
+              const Icon = tab.icon;
+              return (
+                <TabsPrimitive.Trigger
+                  key={tab.key}
+                  value={tab.key}
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-xs font-semibold transition-all whitespace-nowrap md:w-full justify-start cursor-pointer",
+                    active
+                      ? "bg-card text-foreground shadow-sm border border-border/80"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  {Icon && <Icon className="w-3.5 h-3.5 flex-shrink-0" />}
+                  <span>{tab.label}</span>
+                </TabsPrimitive.Trigger>
+              );
+            })}
+          </TabsPrimitive.List>
+          
+          <div className="flex-1 min-w-0 overflow-y-auto">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={String(activeTab)}
+                initial={{ opacity: 0, x: 6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.13 }}
+                className="h-full"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </TabsPrimitive.Root>
       ) : (
         children
       )}
@@ -151,44 +211,47 @@ export default function FormModal<K extends string = string>({
       icon={icon}
       size={effectiveSize}
       headerExtra={resolvedHeaderExtra}
+      headerActions={headerActions}
       panelClassName={panelClassName}
       footer={
-        <div
-          className={cn(
-            'flex w-full items-center gap-2.5',
-            footerStart ? 'justify-between' : 'justify-end',
-          )}
-        >
-          {footerStart ? <div className="hidden min-w-0 sm:block">{footerStart}</div> : null}
-          <div className="ml-auto flex items-center gap-2.5">
-            <Button type="button" variant="outline" onClick={onClose}>
-              {cancelLabel}
-            </Button>
-            <Button
-              type="button"
-              onClick={onSave}
-              disabled={saving || saveDisabled || saved}
-              className="min-w-[120px]"
-            >
-              {saved ? (
-                <>
-                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                  {savedLabel ?? saveLabel}
-                </>
-              ) : saving ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                  {saveLabel}
-                </>
-              ) : (
-                <>
-                  <Save className="h-3.5 w-3.5" aria-hidden />
-                  {saveLabel}
-                </>
-              )}
-            </Button>
+        builderMode ? null : (
+          <div
+            className={cn(
+              'flex w-full items-center gap-2.5',
+              footerStart ? 'justify-between' : 'justify-end',
+            )}
+          >
+            {footerStart ? <div className="hidden min-w-0 sm:block">{footerStart}</div> : null}
+            <div className="ml-auto flex items-center gap-2.5">
+              <Button type="button" variant="outline" onClick={onClose}>
+                {cancelLabel}
+              </Button>
+              <Button
+                type="button"
+                onClick={onSave}
+                disabled={saving || saveDisabled || saved}
+                className="min-w-[120px]"
+              >
+                {saved ? (
+                  <>
+                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                    {savedLabel ?? saveLabel}
+                  </>
+                ) : saving ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                    {saveLabel}
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-3.5 w-3.5" aria-hidden />
+                    {saveLabel}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
-        </div>
+        )
       }
     >
       {body}

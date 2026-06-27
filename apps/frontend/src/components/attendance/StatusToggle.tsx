@@ -16,7 +16,7 @@ interface StatusToggleProps {
  * @param {StatusToggleProps} props - The component props.
  * @returns {React.ReactElement} The rendered toggle component.
  */
-export default function StatusToggle({ value, onChange }: StatusToggleProps) {
+export function StatusToggle({ value, onChange }: StatusToggleProps) {
   const { statuses } = useAttendanceConfig();
   
   return (

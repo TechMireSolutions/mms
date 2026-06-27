@@ -7,7 +7,7 @@ import {
   type ActivityAction,
   type UserStatus,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 

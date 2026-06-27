@@ -13,7 +13,7 @@ export interface SectionCardProps {
 }
 
 /** Section card — semantic tokens + `cn()` for class merging. */
-export default function SectionCard({
+export function SectionCard({
   title,
   subtitle,
   icon: Icon,

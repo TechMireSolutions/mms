@@ -1,0 +1,50 @@
+---
+trigger: model_decision
+---
+
+# MMS Settings, Navigation & Internationalization
+
+Governs application-wide configuration tabs, live settings preview states, sidebar navigation rules, and localization copy mappings across English, Arabic, Urdu, and Persian.
+
+---
+
+## 1. App-Wide Settings (`/settings` URL Scope)
+- **Single URL Structure**: All application-wide settings panels must reside on the `/settings` route. Use in-page active tab tracking (`setActiveTab()` from `SettingsTabContext`) for sidebar jumping. Do not configure individual section routes.
+- **Valid Settings Sections**: Only the following five section IDs are registered under `SETTINGS_SECTIONS` on `/settings`:
+  1. `global`: System languages, timezone format, date formats, and notifications.
+  2. `modules`: System module toggles (`enabledModules` map).
+  3. `branding`: Identity parameters (name, tagline, address, logo).
+  4. `theme`: Color configurations, display mode, and footer overrides.
+  5. `backup`: Backup triggers and database export lists.
+- **Module Settings Separation**: Do NOT add module-specific settings panels (e.g., student cutoff times or grading systems) to `/settings`. Place them inside each module's respective **Setup → Preferences** tab.
+
+---
+
+## 2. Systems Modules Navigation Registry
+- **Sidebar Integration**: The sidebar layout retrieves navigation links from `NAV_ITEMS` in `navConfig.tsx`.
+- **Academics Grouping**: Academics must render as a dropdown submenu containing `students`, `teachers`, `sessions`, `attendance`, `enrollment`, `hasanat`, and `examination`.
+- **Registry & Defaults**: Toggles reside in `SystemModulesSettings` which maps the `SYSTEM_MODULE_NAV` configuration. Standalone modules render in pairs, and the Academics group displays as a bordered panel with a `BookOpen` icon.
+
+---
+
+## 3. Live Previews & Settings Drafts
+- **In-Memory Drafts**: Panel parameters must remain in component states via `useSettingsDraft` (or `useBrandingDraft` / `useThemeSettingsDraft`) and must not commit to PostgreSQL or local storage until the user clicks an explicit **Save**.
+- **Live Preview Trigger**: Call `onPreview(draft)` on draft changes (e.g., locale switch, theme update) to dynamically update the active page surfaces.
+- **Cleanup**: Revert preview patches when navigating away from the Settings viewport using `revertSettingsPreviews()`.
+
+---
+
+## 4. Internationalization & Locale Dictionary
+
+### Locale Support & Coverage
+MMS supports four languages configured in `languageUtils.ts` (`APP_LANGUAGES`):
+- **English (`en`)**: Source of truth map defined in `appTranslations.ts` (determines `AppTranslationKey`).
+- **Arabic (`ar`)**: Full Arabic translation object (RTL).
+- **Urdu (`ur`)**: Full Urdu translation object in `appTranslationsUr.ts` (RTL).
+- **Persian (`fa`)**: Persian override pack in `appTranslationsFa.ts` merging overrides with Farsi fallbacks (`{ ...ar, ...APP_TRANSLATIONS_FA }`).
+
+### Text & Chrome Standards
+- **No Hardcoded Strings**: All user-facing UI texts must use translation keys via `t('key')`. Hardcoded strings are forbidden.
+- **Registry Keys**: Field labels, table column headers, and statuses must declare a `labelKey: AppTranslationKey` which resolves to `t(labelKey)` at render time.
+- **RTL Layout Styling**: RTL locales (`ar`, `ur`, `fa`) use logical CSS parameters (e.g., `text-start`, `ms-*`, `ps-*`, `border-s-*`) instead of hardcoded directional styles (such as `left`, `right`, `ml-*`).
+- **Error Codes Mapping**: APIs return stable error strings (e.g. `type: 'forbidden'`), which the frontend resolves via `t('errors.{type}')`.

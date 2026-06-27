@@ -1,6 +1,6 @@
 import React from 'react';
 import { ListChecks, ShieldAlert, Trash2 } from 'lucide-react';
-import SectionCard from '@/components/ui/SectionCard';
+import { SectionCard } from '@/components/ui/SectionCard';
 import BackupRestoreConfirmModal from '@/components/settings/BackupRestoreConfirmModal';
 import BackupCredentialsModal from '@/components/settings/BackupCredentialsModal';
 import BackupClearHistoryModal from '@/components/settings/backup/BackupClearHistoryModal';
@@ -12,7 +12,7 @@ import { useBackupRestore } from '@/hooks/useBackupRestore';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 
 /**

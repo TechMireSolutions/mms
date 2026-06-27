@@ -11,6 +11,21 @@ const path = require("path");
 const cursorDir = ".cursor/rules";
 const agentsDir = ".agent/rules";
 
+// Prune orphaned rule files in agentsDir
+const cursorRules = new Set(
+  fs.readdirSync(cursorDir)
+    .filter((f) => f.endsWith(".mdc"))
+    .map((f) => f.replace(/\.mdc$/, ""))
+);
+
+for (const file of fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md") && f !== "README.md")) {
+  const base = file.replace(/\.md$/, "");
+  if (!cursorRules.has(base)) {
+    fs.unlinkSync(path.join(agentsDir, file));
+    console.log(`pruned orphaned rule: ${file}`);
+  }
+}
+
 for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) {
   const base = file.replace(/\.mdc$/, "");
   const src = fs.readFileSync(path.join(cursorDir, file), "utf8");
@@ -23,6 +38,15 @@ for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) 
   const out = `---\ntrigger: ${trigger}\n---\n\n${agentBody}`;
   fs.writeFileSync(path.join(agentsDir, `${base}.md`), out.endsWith("\n") ? out : `${out}\n`);
   console.log(`synced ${base}.md`);
+}
+
+// Sync README.md from .cursor/rules/README.md to .agent/rules/README.md
+const readmePath = path.join(cursorDir, "README.md");
+if (fs.existsSync(readmePath)) {
+  const readmeContent = fs.readFileSync(readmePath, "utf8");
+  const translatedReadme = readmeContent.replace(/\.mdc\b/g, ".md");
+  fs.writeFileSync(path.join(agentsDir, "README.md"), translatedReadme, "utf8");
+  console.log("synced README.md");
 }
 SCRIPT
 

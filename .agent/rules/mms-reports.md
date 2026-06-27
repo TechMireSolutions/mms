@@ -4,7 +4,7 @@ trigger: model_decision
 
 # MMS Reports & Analytics
 
-**Placement & per-module categories** → `mms-module-isolation.md`. Universal reporting behaviour → **`mms-module-architecture.md` §4**. This file covers report **implementation** only.
+**Placement & per-module categories** → `mms-module-architecture.md`. Universal reporting behaviour → **`mms-module-architecture.md` §4**. This file covers report **implementation** only.
 
 ## Data
 
@@ -28,7 +28,7 @@ trigger: model_decision
 
 ## Visual
 
-Glassmorphism containers · Recharts charts · semantic colours from config (`StatusBadge` patterns). Export/print button labels via `t()` — `mms-i18n.md`.
+Glassmorphism containers · Recharts charts · semantic colours from config (`StatusBadge` patterns). Export/print button labels via `t()` — `mms-settings-i18n.md`.
 
 ## Dashboard widgets
 
@@ -41,13 +41,13 @@ Hide irrelevant filters per module context — do not show finance filters on at
 ## Export safety
 
 - CSV/Excel exports: escape formula-prefix cells (`=`, `+`, `-`, `@`) to prevent spreadsheet injection
-- Large exports: stream or chunk — avoid blocking main thread; keep dynamic `import()` for `xlsx`/`jspdf` (`mms-frontend.md`)
+- Large exports: stream or chunk — avoid blocking main thread; keep dynamic `import()` for `xlsx`/`jspdf` (`mms-api-interface.md`)
 
 ## Permissions & export policy
 
 Exports must respect active filters, search, field visibility, soft-deletion policy (when shipped), and `can()` — same boundary as Work tab (`mms-module-architecture.md` §2.3, §4).
 
-Audit large or sensitive exports (target — `mms-security.md`).
+Audit large or sensitive exports (target — `mms-auth-security.md`).
 
 ## Drill-down (target)
 

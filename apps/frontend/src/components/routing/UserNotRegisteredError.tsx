@@ -1,5 +1,5 @@
 import React from 'react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Shown when auth succeeds but the user is not registered in the tenant. */
 export default function UserNotRegisteredError(): React.JSX.Element {

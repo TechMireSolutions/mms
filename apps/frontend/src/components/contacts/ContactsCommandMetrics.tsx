@@ -1,9 +1,9 @@
 import React from "react";
 import { Users, Filter, MessageCircle, AlertCircle, GitMerge, Clock, CalendarPlus, AlertTriangle } from "lucide-react";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsSyncOutbox } from "@/hooks/useContactsSyncOutbox";
 import { useContactsMetrics } from "@/hooks/useContacts";
-import ModuleCommandMetricCard from "@/components/ui/ModuleCommandMetricCard";
+import { ModuleCommandMetricCard } from "@/components/ui/ModuleCommandMetricCard";
 
 interface ContactsCommandMetricsProps {
   total: number;

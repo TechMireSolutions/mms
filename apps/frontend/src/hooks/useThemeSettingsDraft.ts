@@ -17,7 +17,7 @@ import {
 import { clearGlobalSettingsPreview, previewGlobalSettings } from '@/lib/settingsPreview';
 import { serverSyncErrorKey } from '@/lib/serverSyncErrors';
 import { notify } from '@/lib/notify';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsBrandingDraft } from '@/lib/contexts/SettingsBrandingDraftContext';
 
 export interface UseThemeSettingsDraftResult {

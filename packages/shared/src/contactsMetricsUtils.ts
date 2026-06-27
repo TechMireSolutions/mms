@@ -35,7 +35,7 @@ export function computeContactsCommandMetrics(
   contacts: Contact[],
   options: {
     fieldConfig: FieldConfig;
-    prefs?: Pick<
+    duplicateDetectionPreferences?: Pick<
       ContactPreferences,
       | 'namePrefixesToIgnore'
       | 'duplicateDetectionScoreDefault'
@@ -56,6 +56,6 @@ export function computeContactsCommandMetrics(
     newThisPeriod: countContactsCreatedSince(active, periodDays),
     whatsappCount: active.filter((c) => hasWhatsApp(c)).length,
     incompleteCount: active.filter((c) => calculateProfileCompleteness(c, options.fieldConfig) < 100).length,
-    duplicatePairCount: findContactDuplicatePairs(active, options.prefs ?? {}).length,
+    duplicatePairCount: findContactDuplicatePairs(active, options.duplicateDetectionPreferences ?? {}).length,
   };
 }

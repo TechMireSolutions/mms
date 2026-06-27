@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Edit2, Tag, ToggleLeft, ToggleRight } from "lucide-react";
 import { Session, Discount } from '@/lib/data/sessionsData';
-import FormModal from "@/components/ui/FormModal";
+import { FormModal } from "@/components/ui/FormModal";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import FormSelect from "../../ui/FormSelect";
+import { FormSelect } from "../../ui/FormSelect";
 
 const EMPTY: Partial<Discount> = { name: "", type: "percentage", value: 0, conditions: "", active: true };
 
@@ -90,7 +90,7 @@ interface DiscountsTabProps {
  * @param {DiscountsTabProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
+export function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
   const [showModal, setShowModal] = useState(false);
   const [editDiscount, setEditDiscount] = useState<Discount | null>(null);
   const discounts = session.discounts || [];

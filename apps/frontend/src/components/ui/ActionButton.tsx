@@ -27,7 +27,7 @@ const SIZES = {
  * @param {ActionButtonProps} props - The component props.
  * @returns {React.ReactElement} The rendered action button.
  */
-export default function ActionButton({
+export function ActionButton({
   variant = "secondary",
   size = "md",
   icon: Icon = null,

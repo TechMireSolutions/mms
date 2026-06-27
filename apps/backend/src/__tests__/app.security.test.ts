@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
   pingDatabase: vi.fn().mockResolvedValue(true),
+  saveCollection: vi.fn().mockResolvedValue(undefined),
+  getCollection: vi.fn().mockResolvedValue([]),
+  saveObject: vi.fn().mockResolvedValue(undefined),
+  getObject: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('../services/auth/authArtifactService.js', () => ({
@@ -215,6 +219,31 @@ describe('tenant JWT binding', () => {
       });
       expect(res.statusCode).toBe(403);
       expect(res.json()).toMatchObject({ type: 'forbidden' });
+      await app.close();
+    });
+
+    it('allows admin to save collection backups', async () => {
+      const app = await buildApp();
+      const token = app.jwt.sign({
+        id: 'u-admin',
+        email: 'admin@test.com',
+        name: 'Admin',
+        role: 'admin',
+        workspaceSubdomain: 'demo',
+        twoFactorVerified: true,
+        tokenType: 'access',
+      });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/db/collections/backups',
+        headers: {
+          host: 'demo.localhost',
+          authorization: `Bearer ${token}`,
+        },
+        payload: [],
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({ success: true });
       await app.close();
     });
 

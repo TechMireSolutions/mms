@@ -9,7 +9,7 @@ import ContactCreateModal, {
   type ContactCreateDefaults,
 } from '@/components/contacts/ContactCreateModal';
 import { FORM_LABEL } from '@/components/ui/formStyles';
-import useDebounce from '@/hooks/useDebounce';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useContactById, useContactsPaginated } from '@/hooks/useContacts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,7 @@ export interface ContactPickerProps {
   emptyHint?: string;
   createLabel?: string;
   createWithQueryLabel?: (query: string) => string;
+  error?: boolean;
 }
 
 export default function ContactPicker({
@@ -49,6 +50,7 @@ export default function ContactPicker({
   emptyHint = 'Try adjusting your search terms or create a new contact below.',
   createLabel = 'Create New Contact',
   createWithQueryLabel,
+  error = false,
 }: ContactPickerProps): React.JSX.Element {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -185,7 +187,7 @@ export default function ContactPicker({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/75 pointer-events-none" />
         <Input
-          className="pl-9.5 pr-8.5"
+          className={cn("pl-9.5 pr-8.5", error && "border-destructive focus-visible:ring-destructive")}
           placeholder={searchPlaceholder ?? `Search ${label.toLowerCase()}…`}
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}

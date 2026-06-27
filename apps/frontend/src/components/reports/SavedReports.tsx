@@ -2,8 +2,8 @@ import React, { useMemo } from "react";
 import { Bookmark, Trash2, Play, Plus, Clock, User } from "lucide-react";
 import { saveCollection } from "../../lib/db";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
-import EmptyState from "../ui/EmptyState";
-import useTranslation from "@/hooks/useTranslation";
+import { EmptyState } from "../ui/EmptyState";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface SavedReportItem {
   id: string;

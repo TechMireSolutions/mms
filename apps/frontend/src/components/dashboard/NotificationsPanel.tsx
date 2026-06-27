@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, AlertTriangle, Calendar, User, DollarSign, X } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { DashboardNotificationItem } from '@/lib/buildDashboardNotifications';
 import { Button } from '@/components/ui/button';
 

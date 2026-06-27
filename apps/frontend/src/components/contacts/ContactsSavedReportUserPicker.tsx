@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import type { SystemUser } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface ContactsSavedReportUserPickerProps {
   value: string[];
@@ -42,11 +43,9 @@ export default function ContactsSavedReportUserPicker({
               key={user.id}
               className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50"
             >
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={value.includes(String(user.id))}
-                onChange={() => toggle(String(user.id))}
-                className="rounded border-border"
+                onCheckedChange={() => toggle(String(user.id))}
               />
               <span className="truncate">{user.name || user.email}</span>
             </label>

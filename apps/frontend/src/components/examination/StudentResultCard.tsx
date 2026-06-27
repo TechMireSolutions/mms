@@ -40,7 +40,7 @@ interface StudentResultCardProps {
  * @param props.onCertificate - Trigger graduation certificate view.
  * @returns The StudentResultCard component.
  */
-export default function StudentResultCard({ result, exam, allResults, onClose, onCertificate }: StudentResultCardProps): React.ReactElement {
+export function StudentResultCard({ result, exam, allResults, onClose, onCertificate }: StudentResultCardProps): React.ReactElement {
   const pct = result.pct;
   const grade = result.grade;
   const circumference = 2 * Math.PI * 42;

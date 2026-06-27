@@ -68,7 +68,7 @@ async function getRawUsers(): Promise<PersistedUser[]> {
   return raw as PersistedUser[];
 }
 
-async function getHydratedUsers(): Promise<PersistedUser[]> {
+export async function getHydratedUsers(): Promise<PersistedUser[]> {
   const contacts = await getContacts();
   const users = await getRawUsers();
   return users.map((user) =>
@@ -116,7 +116,7 @@ function toPublicUser(authUser: StoredUser): PublicUser {
   };
 }
 
-async function saveUsers(next: PersistedUser[]): Promise<void> {
+export async function saveUsers(next: PersistedUser[]): Promise<void> {
   const subdomain = requireTenantSubdomain();
   await replaceTenantUsersForWorkspace(subdomain, next as TenantUserRow[]);
   await saveCollection(COLLECTION, next);

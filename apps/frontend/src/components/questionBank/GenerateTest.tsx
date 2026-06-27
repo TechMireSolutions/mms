@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Sparkles, X, Save, CheckCircle2, AlertCircle } from "lucide-react";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useQuestionBankConfig } from "@/hooks/useQuestionBankConfig";
 import {
   getQuestionCategoryIds,
@@ -11,7 +11,7 @@ import {
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 
 
@@ -95,7 +95,7 @@ interface GenerateTestProps {
  * @param props.onCreateTest - Callback when test is generated and saved.
  * @returns The GenerateTest component.
  */
-export default function GenerateTest({ questions, onCreateTest }: GenerateTestProps): React.ReactElement {
+export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): React.ReactElement {
   const { t } = useTranslation();
   const qbConfig = useQuestionBankConfig(questions);
   const [step, setStep] = useState<string>("config"); // config | generating | preview | done

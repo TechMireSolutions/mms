@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Download, Loader2, CheckCircle2, AlertCircle, RefreshCw, X } from "lucide-react";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useBackgroundJobs } from "@/hooks/useBackgroundJobs";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
-import FormModal from "@/components/ui/FormModal";
+import { FormModal } from "@/components/ui/FormModal";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { AppTranslationKey } from "@mms/shared";
@@ -31,7 +31,7 @@ function moduleLabel(moduleId: string, t: (key: AppTranslationKey) => string): s
 }
 
 /** Global download / background job centre (globle1 §8). */
-export default function BackgroundJobsTray({
+export function BackgroundJobsTray({
   compact = false,
   className,
 }: BackgroundJobsTrayProps): React.JSX.Element | null {

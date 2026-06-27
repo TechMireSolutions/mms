@@ -1,29 +1,36 @@
 import React, { useState, useMemo, useEffect } from "react";
-import useTranslation from "@/hooks/useTranslation";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Scale, ClipboardList, 
   Shield, BookOpen, Plus
 } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
-import PageHeader from "../components/ui/PageHeader";
-import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
-import SubTabBar from "@/components/ui/SubTabBar";
-import ActionButton from "../components/ui/ActionButton";
-import ObligationsSummaryComponent from "../components/obligations/ObligationsSummary";
-import ObligationCollectionList from "../components/obligations/ObligationCollectionList";
-import ObligationCollectionForm from "../components/obligations/ObligationCollectionForm";
-import ObligationCollectionDetail from "../components/obligations/ObligationCollectionDetail";
-import ObligationTypeManager from "../components/obligations/ObligationTypeManager";
-import MujtahidManager from "../components/obligations/MujtahidManager";
-import WakalaTypeManager from "../components/obligations/WakalaTypeManager";
+import { PageHeader } from "../components/ui/PageHeader";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ActionButton } from "../components/ui/ActionButton";
+import { ObligationsSummary as ObligationsSummaryComponent } from "../components/obligations/ObligationsSummary";
+import { ObligationCollectionList } from "../components/obligations/ObligationCollectionList";
+import { ObligationCollectionForm } from "../components/obligations/ObligationCollectionForm";
+import { ObligationCollectionDetail } from "../components/obligations/ObligationCollectionDetail";
+import { ObligationTypeManager } from "../components/obligations/ObligationTypeManager";
+import { MujtahidManager } from "../components/obligations/MujtahidManager";
+import { WakalaTypeManager } from "../components/obligations/WakalaTypeManager";
 import { ObligationCollection
 } from '@/lib/data/obligationsData';
-import { saveCollection } from "../lib/db";
-import { useLiveCollection } from "../hooks/useLiveCollection";
-import ErrorBoundary from "../components/ui/ErrorBoundary";
-import ObligationsCommandMetrics from "../components/obligations/ObligationsCommandMetrics";
+import {
+  useObligationsTypesCollection,
+  useObligationsMujtahidsCollection,
+  useObligationsRepsCollection,
+  useObligationsWakalaCollection,
+  useObligationsDistributionsCollection,
+  useObligationsCollectionsCollection,
+  useObligationsMutations,
+} from "@/hooks/useObligationsApi";
+import { ErrorBoundary } from "../components/ui/ErrorBoundary";
+import { ObligationsCommandMetrics } from "../components/obligations/ObligationsCommandMetrics";
 import { useObligationColumnLayout } from "@/hooks/useObligationColumnLayout";
 
 /**
@@ -45,12 +52,20 @@ export default function Obligations() {
   const [activeTab, setActiveTab] = useState("work");
   const [activeConfigTab, setActiveConfigTab] = useState("types");
 
-  const obligationTypes = useLiveCollection("obligation_types");
-  const mujtahids = useLiveCollection("mujtahids");
-  const reps = useLiveCollection("mujtahid_reps");
-  const wakalaTypes = useLiveCollection("wakala_types");
-  const distributions = useLiveCollection("obligation_distributions");
-  const collections = useLiveCollection("obligation_collections");
+  const obligationTypes = useObligationsTypesCollection();
+  const mujtahids = useObligationsMujtahidsCollection();
+  const reps = useObligationsRepsCollection();
+  const wakalaTypes = useObligationsWakalaCollection();
+  const distributions = useObligationsDistributionsCollection();
+  const collections = useObligationsCollectionsCollection();
+  const {
+    replaceTypes,
+    replaceMujtahids,
+    replaceReps,
+    replaceWakala,
+    replaceDistributions,
+    replaceCollections,
+  } = useObligationsMutations();
 
   const [showForm, setShowForm] = useState(false);
   const [viewCollection, setViewCollection] = useState<ObligationCollection | null>(null);
@@ -63,8 +78,7 @@ export default function Obligations() {
 
   const handleSaveCollection = (data: ObligationCollection) => {
     const exists = collections.find((c) => c.id === data.id);
-    saveCollection(
-      "obligation_collections",
+    replaceCollections.mutate(
       exists ? collections.map((c) => (c.id === data.id ? data : c)) : [data, ...collections],
     );
     setShowForm(false);
@@ -151,15 +165,15 @@ export default function Obligations() {
           )}
 
           {effectiveTab === "setup" && effectiveConfigTab === "types" && (
-            <ObligationTypeManager types={obligationTypes} onChange={(t) => saveCollection("obligation_types", t)} />
+            <ObligationTypeManager types={obligationTypes} onChange={(t) => replaceTypes.mutate(t)} />
           )}
 
           {effectiveTab === "setup" && effectiveConfigTab === "mujtahids" && (
             <MujtahidManager 
               mujtahids={mujtahids} 
               reps={reps} 
-              onChangeMujtahids={(m) => saveCollection("mujtahids", m)}
-              onChangeReps={(r) => saveCollection("mujtahid_reps", r)}
+              onChangeMujtahids={(m) => replaceMujtahids.mutate(m)}
+              onChangeReps={(r) => replaceReps.mutate(r)}
             />
           )}
 
@@ -170,8 +184,8 @@ export default function Obligations() {
               obligationTypes={obligationTypes}
               reps={reps}
               mujtahids={mujtahids}
-              onChangeWakala={(w) => saveCollection("wakala_types", w)}
-              onChangeDistributions={(d) => saveCollection("obligation_distributions", d)}
+              onChangeWakala={(w) => replaceWakala.mutate(w)}
+              onChangeDistributions={(d) => replaceDistributions.mutate(d)}
             />
           )}
           </ErrorBoundary>

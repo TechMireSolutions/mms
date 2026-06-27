@@ -1,27 +1,31 @@
 import React, { useState, useEffect, useMemo } from "react";
-import useTranslation from "@/hooks/useTranslation";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutDashboard, Star, Package, Send, Gift } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
-import PageHeader from "../components/ui/PageHeader";
-import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
-import SubTabBar from "@/components/ui/SubTabBar";
-import useConfigSubTabs from "@/hooks/useConfigSubTabs";
-import HasanatDashboard from "../components/hasanat/HasanatDashboard";
-import DenominationsManager from "../components/hasanat/DenominationsManager";
-import StockManager from "../components/hasanat/StockManager";
-import DistributionManager from "../components/hasanat/DistributionManager";
-import RedemptionTracker from "../components/hasanat/RedemptionTracker";
-import HasanatSettings from "../components/hasanat/HasanatSettings";
+import { PageHeader } from "../components/ui/PageHeader";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
+import { HasanatDashboard } from "../components/hasanat/HasanatDashboard";
+import { DenominationsManager } from "../components/hasanat/DenominationsManager";
+import { StockManager } from "../components/hasanat/StockManager";
+import { DistributionManager } from "../components/hasanat/DistributionManager";
+import { RedemptionTracker } from "../components/hasanat/RedemptionTracker";
+import { HasanatSettings } from "../components/hasanat/HasanatSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
-import ErrorBoundary from "../components/ui/ErrorBoundary";
-import HasanatCommandMetrics from "../components/hasanat/HasanatCommandMetrics";
+import { ErrorBoundary } from "../components/ui/ErrorBoundary";
+import { HasanatCommandMetrics } from "../components/hasanat/HasanatCommandMetrics";
 import { useHasanatDistributionColumnLayout } from "@/hooks/useHasanatDistributionColumnLayout";
 import { useHasanatRedemptionColumnLayout } from "@/hooks/useHasanatRedemptionColumnLayout";
-import { saveCollection } from "../lib/db";
-import { useLiveCollection } from "../hooks/useLiveCollection";
+import {
+  useHasanatDenomsCollection,
+  useHasanatBatchesCollection,
+  useHasanatDistributionsCollection,
+  useHasanatMutations,
+} from "@/hooks/useHasanatApi";
 
 /**
  * Hasanat Cards — denominations, stock, and redemptions. Work | Reports | Setup.
@@ -51,9 +55,10 @@ export default function HasanatCards() {
   const [activeTab, setActiveTab] = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [configSubTab, setConfigSubTab] = useState<"denominations" | "fields" | "preferences">("denominations");
-  const denoms = useLiveCollection("hasanat_denoms");
-  const batches = useLiveCollection("hasanat_batches");
-  const distributions = useLiveCollection("hasanat_distributions");
+  const denoms = useHasanatDenomsCollection();
+  const batches = useHasanatBatchesCollection();
+  const distributions = useHasanatDistributionsCollection();
+  const { replaceDenoms, replaceBatches, replaceDistributions } = useHasanatMutations();
   const [filteredCount, setFilteredCount] = useState(0);
   const distributionColumnLayout = useHasanatDistributionColumnLayout();
   const redemptionColumnLayout = useHasanatRedemptionColumnLayout();
@@ -120,20 +125,20 @@ export default function HasanatCards() {
                 value={configSubTab}
                 onChange={(key) => setConfigSubTab(key as typeof configSubTab)}
               />
-              {configSubTab === "denominations" && <DenominationsManager denoms={denoms} onUpdate={(d) => saveCollection("hasanat_denoms", d)} />}
+              {configSubTab === "denominations" && <DenominationsManager denoms={denoms} onUpdate={(d) => replaceDenoms.mutate(d)} />}
               {configSubTab === "fields" && <HasanatSettings mode="fields" />}
               {configSubTab === "preferences" && <HasanatSettings mode="preferences" />}
             </div>
           )}
           
           {effectiveTab === "work" && effectiveSubTab === "overview"     && <HasanatDashboard denoms={denoms} batches={batches} distributions={distributions} />}
-          {effectiveTab === "work" && effectiveSubTab === "stock"         && <StockManager batches={batches} denoms={denoms} onUpdate={(b) => saveCollection("hasanat_batches", b)} />}
+          {effectiveTab === "work" && effectiveSubTab === "stock"         && <StockManager batches={batches} denoms={denoms} onUpdate={(b) => replaceBatches.mutate(b)} />}
           {effectiveTab === "work" && effectiveSubTab === "distribute"    && (
             <DistributionManager
               distributions={distributions}
               denoms={denoms}
               batches={batches}
-              onUpdate={(d) => saveCollection("hasanat_distributions", d)}
+              onUpdate={(d) => replaceDistributions.mutate(d)}
               onFilteredCountChange={setFilteredCount}
               isColumnVisible={distributionColumnLayout.isColumnVisible}
               columnCustomizer={{
@@ -146,7 +151,7 @@ export default function HasanatCards() {
           {effectiveTab === "work" && effectiveSubTab === "redemptions"   && (
             <RedemptionTracker
               distributions={distributions}
-              onUpdateDistributions={(d) => saveCollection("hasanat_distributions", d)}
+              onUpdateDistributions={(d) => replaceDistributions.mutate(d)}
               onFilteredCountChange={setFilteredCount}
               isColumnVisible={redemptionColumnLayout.isColumnVisible}
               columnCustomizer={{

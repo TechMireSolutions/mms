@@ -71,7 +71,7 @@ interface EnrollmentDetailProps {
  * @param props.canWrite - Whether the viewer may change enrollment status.
  * @returns The EnrollmentDetail component.
  */
-export default function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite }: EnrollmentDetailProps): React.ReactElement | null {
+export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite }: EnrollmentDetailProps): React.ReactElement | null {
   const { data: resolvedStudents = [] } = useStudentsByIds(enrollment ? [enrollment.studentId] : []);
   const student = resolvedStudents[0];
 

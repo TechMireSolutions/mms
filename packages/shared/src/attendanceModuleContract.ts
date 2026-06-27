@@ -6,7 +6,7 @@ export const ATTENDANCE_MODULE_CONTRACT = {
   entityType: 'AttendanceRecord',
   collectionKey: 'attendance_records',
   settingsObjectKey: 'attendance_settings',
-  columnPrefsObjectKey: 'attendance_user_column_prefs',
+  columnPreferencesObjectKey: 'attendance_user_column_preferences',
   restBasePath: '/api/attendance',
   analyticsCategory: 'attendance',
   tiers: ['work', 'reports', 'setup'] as const,

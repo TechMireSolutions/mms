@@ -17,13 +17,13 @@ import type { User } from '@mms/shared';
 import { TEACHERS_MODULE_CONTRACT, computeTeachersCommandMetrics } from '@mms/shared';
 import { sendForbidden } from '../lib/httpErrors.js';
 import { resourceIdParamsSchema } from '../validation/commonSchemas.js';
-import { moduleColumnPrefsBodySchema } from '../validation/moduleColumnPrefsSchemas.js';
+import { moduleColumnPreferencesBodySchema } from '../validation/moduleColumnPreferencesSchemas.js';
 import { teacherRecordSchema, teachersListQuerySchema, teachersResolveBodySchema, teachersWidgetAggregatesBodySchema, teachersNextEmployeeIdQuerySchema, teachersLinkedContactIdsQuerySchema } from '../validation/teacherSchemas.js';
 import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
 import {
-  getUserColumnPrefsForModule,
-  setUserColumnPrefsForModule,
-} from '../services/userColumnPrefsService.js';
+  getUserColumnPreferencesForModule,
+  setUserColumnPreferencesForModule,
+} from '../services/userColumnPreferencesService.js';
 
 /**
  * Server-first teacher resource routes (TanStack Query on FE).
@@ -147,32 +147,32 @@ export default async function teachersRoutes(
     }
   });
 
-  fastify.get('/column-prefs', async (request, reply) => {
+  fastify.get('/column-preferences', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
     try {
-      const prefs = await getUserColumnPrefsForModule(
-        TEACHERS_MODULE_CONTRACT.columnPrefsObjectKey,
+      const preferences = await getUserColumnPreferencesForModule(
+        TEACHERS_MODULE_CONTRACT.columnPreferencesObjectKey,
         String(user.id),
       );
-      return reply.send({ prefs });
+      return reply.send({ preferences });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
     }
   });
 
-  fastify.put('/column-prefs', async (request, reply) => {
+  fastify.put('/column-preferences', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPrefsBodySchema, request.body);
+    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      await setUserColumnPrefsForModule(
-        TEACHERS_MODULE_CONTRACT.columnPrefsObjectKey,
+      await setUserColumnPreferencesForModule(
+        TEACHERS_MODULE_CONTRACT.columnPreferencesObjectKey,
         String(user.id),
-        parsed.data.prefs,
+        parsed.data.preferences,
       );
-      return reply.send({ success: true, prefs: parsed.data.prefs });
+      return reply.send({ success: true, preferences: parsed.data.preferences });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
     }

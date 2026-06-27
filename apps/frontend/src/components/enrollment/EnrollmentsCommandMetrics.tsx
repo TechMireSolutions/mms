@@ -2,16 +2,16 @@ import React from 'react';
 import {
   ClipboardList, Filter, CheckCircle2, Clock, XCircle, CalendarPlus, Banknote,
 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useEnrollmentsMetrics } from '@/hooks/useEnrollmentsApi';
-import ModuleCommandMetricCard from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
 
 interface EnrollmentsCommandMetricsProps {
   total: number;
   shown: number;
 }
 
-export default function EnrollmentsCommandMetrics({
+export function EnrollmentsCommandMetrics({
   total,
   shown,
 }: EnrollmentsCommandMetricsProps): React.JSX.Element {

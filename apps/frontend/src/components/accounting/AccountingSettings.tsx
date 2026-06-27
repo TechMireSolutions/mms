@@ -13,18 +13,18 @@ import {
 } from "@mms/shared";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useAccountingConfig } from "@/hooks/useAccountingConfig";
-import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { CustomFieldsBuilder, CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { DatePicker } from "../ui/DatePicker";
-import FormModal from "../ui/FormModal";
+import { FormModal } from "../ui/FormModal";
 import { FORM_LABEL } from "../ui/formStyles";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import FormSelect from "../ui/FormSelect";
+import { FormSelect } from "../ui/FormSelect";
 import { Switch } from "../ui/switch";
 import { Checkbox } from "../ui/checkbox";
-import Modal from "../ui/Modal";
+import { Modal } from "../ui/Modal";
 
 const DATE_FORMATS = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"];
 const DECIMAL_SEPARATORS = [
@@ -210,7 +210,7 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
-export default function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, mode }: AccountingSettingsProps) {
+export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, mode }: AccountingSettingsProps) {
   const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
   const { settings, updateSettings } = useAccountingConfig();
   const [saved, setSaved] = useState(false);

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ModuleColumnPref, FinanceCommandMetricsSnapshot } from '@mms/shared';
+import type { ModuleColumnPreference, FinanceCommandMetricsSnapshot } from '@mms/shared';
 import { FINANCE_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
@@ -8,16 +8,16 @@ const FINANCE_API = FINANCE_MODULE_CONTRACT.restBasePath;
 
 export const FINANCE_METRICS_QUERY_KEY = [FINANCE_MODULE_CONTRACT.moduleId, 'metrics'] as const;
 
-export const FINANCE_INVOICE_COLUMN_PREFS_QUERY_KEY = [
+export const FINANCE_INVOICE_COLUMN_PREFERENCES_QUERY_KEY = [
   FINANCE_MODULE_CONTRACT.moduleId,
   'invoices',
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
-export const FINANCE_PAYMENT_COLUMN_PREFS_QUERY_KEY = [
+export const FINANCE_PAYMENT_COLUMN_PREFERENCES_QUERY_KEY = [
   FINANCE_MODULE_CONTRACT.moduleId,
   'payments',
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
 export function useFinanceMetrics() {
@@ -33,56 +33,56 @@ export function useFinanceMetrics() {
   });
 }
 
-export function useFinanceInvoiceColumnPrefs() {
+export function useFinanceInvoiceColumnPreferences() {
   const { isAuthenticated } = useAuth();
   return useQuery({
-    queryKey: FINANCE_INVOICE_COLUMN_PREFS_QUERY_KEY,
+    queryKey: FINANCE_INVOICE_COLUMN_PREFERENCES_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${FINANCE_API}/invoices/column-prefs`);
-      return body.prefs;
+      const body = await apiJson<{ preferences: ModuleColumnPreference[] }>(`${FINANCE_API}/invoices/column-preferences`);
+      return body.preferences;
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
   });
 }
 
-export function useFinanceInvoiceColumnPrefsMutation() {
+export function useFinanceInvoiceColumnPreferencesMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${FINANCE_API}/invoices/column-prefs`, {
+    mutationFn: async (preferences: ModuleColumnPreference[]) =>
+      apiJson<{ success: boolean; preferences: ModuleColumnPreference[] }>(`${FINANCE_API}/invoices/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: JSON.stringify({ preferences }),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(FINANCE_INVOICE_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(FINANCE_INVOICE_COLUMN_PREFERENCES_QUERY_KEY, data.preferences);
     },
   });
 }
 
-export function useFinancePaymentColumnPrefs() {
+export function useFinancePaymentColumnPreferences() {
   const { isAuthenticated } = useAuth();
   return useQuery({
-    queryKey: FINANCE_PAYMENT_COLUMN_PREFS_QUERY_KEY,
+    queryKey: FINANCE_PAYMENT_COLUMN_PREFERENCES_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${FINANCE_API}/payments/column-prefs`);
-      return body.prefs;
+      const body = await apiJson<{ preferences: ModuleColumnPreference[] }>(`${FINANCE_API}/payments/column-preferences`);
+      return body.preferences;
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
   });
 }
 
-export function useFinancePaymentColumnPrefsMutation() {
+export function useFinancePaymentColumnPreferencesMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${FINANCE_API}/payments/column-prefs`, {
+    mutationFn: async (preferences: ModuleColumnPreference[]) =>
+      apiJson<{ success: boolean; preferences: ModuleColumnPreference[] }>(`${FINANCE_API}/payments/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: JSON.stringify({ preferences }),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(FINANCE_PAYMENT_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(FINANCE_PAYMENT_COLUMN_PREFERENCES_QUERY_KEY, data.preferences);
     },
   });
 }

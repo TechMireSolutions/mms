@@ -1,4 +1,4 @@
-import type { ContactsSavedReport, ContactsWorkDrillDown } from './contactsPrefsTypes.js';
+import type { ContactsSavedReport, ContactsWorkDrillDown } from './contactsPreferencesTypes.js';
 
 export type ContactsSavedReportShareScope = 'private' | 'roles' | 'users' | 'global';
 

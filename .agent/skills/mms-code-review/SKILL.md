@@ -59,7 +59,7 @@ E2E when touching auth/routing: `pnpm exec playwright test`
 
 ### Field persistence (new/changed fields)
 - [ ] Field on `@mms/shared` type + `DEFAULT_*` + merge helper
-- [ ] Write reaches SQLite
+- [ ] Write reaches PostgreSQL
 - [ ] UI control bound to save path — not orphaned `useState`
 
 ### Auth / security
@@ -95,7 +95,7 @@ E2E when touching auth/routing: `pnpm exec playwright test`
 
 ## References
 
-- Frontend: `mms-frontend.mdc`, `mms-query.mdc`, `mms-hooks.mdc`, `mms-ui-*`, `mms-rbac.mdc`
-- Backend: `mms-backend.mdc`, `mms-security.mdc`, `mms-database.mdc`
-- Debt: `mms-migration-status.mdc`
-- Skills: `mms-backend-api`, `mms-auth-users`, `mms-data-sync`, `mms-frontend`
+- Frontend: `mms-api-interface.md`, `mms-data-layer.md`, `mms-hooks.md`, `mms-ui-ux-design.md`, `mms-auth-security.md`
+- Backend: `mms-api-interface.md`, `mms-auth-security.md`, `mms-data-layer.md`
+- Debt: `mms-migration-status.md`
+- Skills: `mms-backend-api`, `mms-backend-security`, `mms-data-sync`, `mms-frontend`

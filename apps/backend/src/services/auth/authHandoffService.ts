@@ -4,7 +4,7 @@ import { putAuthArtifact, takeAuthArtifact, createArtifactId } from './authArtif
 const HANDOFF_TTL_MS = 2 * 60 * 1000;
 
 /**
- * One-time auth handoff stored in PostgreSQL (survives restarts, multi-instance safe).
+ * One-time auth handoff stored in the database (survives restarts, multi-instance safe).
  */
 export async function createAuthHandoff(result: AuthResult): Promise<string> {
   const code = createArtifactId();

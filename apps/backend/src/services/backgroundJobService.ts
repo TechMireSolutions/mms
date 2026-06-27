@@ -1,63 +1,144 @@
+import { and, eq, ne, desc } from 'drizzle-orm';
 import {
   BACKGROUND_JOBS_MAX_PER_USER,
   type BackgroundJobRecord,
+  type BackgroundJobStatus,
 } from '@mms/shared';
-import { fetchObject, persistObject } from './dbSyncService.js';
+import { getDb } from '../db/dbClient.js';
+import { backgroundJobs } from '../db/schema.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 
-const STORAGE_KEY = 'user_background_jobs';
-
-type UserJobMap = Record<string, BackgroundJobRecord[]>;
-
-async function loadMap(): Promise<UserJobMap> {
-  const raw = await fetchObject(STORAGE_KEY);
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-    return raw as UserJobMap;
-  }
-  return {};
-}
-
-async function saveMap(map: UserJobMap): Promise<void> {
-  await persistObject(STORAGE_KEY, map);
+export function rowToJobRecord(row: typeof backgroundJobs.$inferSelect): BackgroundJobRecord {
+  return {
+    id: row.id,
+    moduleId: row.moduleId,
+    kind: row.kind,
+    status: row.status as BackgroundJobStatus,
+    label: row.label,
+    progress: (row.progressCurrent !== null && row.progressTotal !== null)
+      ? { current: row.progressCurrent, total: row.progressTotal }
+      : undefined,
+    error: row.error ?? undefined,
+    hasDownload: row.hasDownload,
+    createdAt: row.createdAt.toISOString(),
+    completedAt: row.completedAt ? row.completedAt.toISOString() : undefined,
+  };
 }
 
 export async function listUserBackgroundJobs(userId: string): Promise<BackgroundJobRecord[]> {
-  const map = await loadMap();
-  return (map[userId] ?? []).slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const db = getDb();
+  const tenantId = getRequestTenant();
+  if (!tenantId) return [];
+
+  const rows = await db.select()
+    .from(backgroundJobs)
+    .where(and(
+      eq(backgroundJobs.tenantId, tenantId),
+      eq(backgroundJobs.userId, userId)
+    ))
+    .orderBy(desc(backgroundJobs.createdAt))
+    .limit(BACKGROUND_JOBS_MAX_PER_USER);
+
+  return rows.map(rowToJobRecord);
 }
 
 export async function upsertUserBackgroundJob(
   userId: string,
   job: BackgroundJobRecord,
 ): Promise<BackgroundJobRecord> {
-  const map = await loadMap();
-  const list = map[userId] ?? [];
-  const idx = list.findIndex((j) => j.id === job.id);
-  if (idx >= 0) {
-    list[idx] = job;
-  } else {
-    list.unshift(job);
-  }
-  map[userId] = list.slice(0, BACKGROUND_JOBS_MAX_PER_USER);
-  await saveMap(map);
+  const db = getDb();
+  const tenantId = getRequestTenant();
+  if (!tenantId) throw new Error('Tenant context is required to upsert background job');
+
+  const values = {
+    id: job.id,
+    tenantId,
+    userId,
+    moduleId: job.moduleId,
+    kind: job.kind,
+    status: job.status,
+    label: job.label,
+    payload: '{}',
+    progressCurrent: job.progress?.current ?? null,
+    progressTotal: job.progress?.total ?? null,
+    artifactId: null,
+    hasDownload: job.hasDownload ?? false,
+    error: job.error ?? null,
+    completedAt: job.completedAt ? new Date(job.completedAt) : null,
+    updatedAt: new Date(),
+  };
+
+  await db.insert(backgroundJobs)
+    .values(values)
+    .onConflictDoUpdate({
+      target: backgroundJobs.id,
+      set: {
+        status: job.status,
+        label: job.label,
+        progressCurrent: job.progress?.current ?? null,
+        progressTotal: job.progress?.total ?? null,
+        hasDownload: job.hasDownload ?? false,
+        error: job.error ?? null,
+        completedAt: job.completedAt ? new Date(job.completedAt) : null,
+        updatedAt: new Date(),
+      }
+    });
+
   return job;
 }
 
+export async function createDatabaseBackgroundJob(
+  tenantId: string,
+  userId: string,
+  job: BackgroundJobRecord,
+  payload: unknown,
+): Promise<void> {
+  const db = getDb();
+  await db.insert(backgroundJobs).values({
+    id: job.id,
+    tenantId,
+    userId,
+    moduleId: job.moduleId,
+    kind: job.kind,
+    status: job.status,
+    label: job.label,
+    payload: JSON.stringify(payload),
+    progressCurrent: job.progress?.current ?? null,
+    progressTotal: job.progress?.total ?? null,
+    hasDownload: job.hasDownload ?? false,
+    error: job.error ?? null,
+    completedAt: job.completedAt ? new Date(job.completedAt) : null,
+  });
+}
+
 export async function dismissUserBackgroundJob(userId: string, jobId: string): Promise<boolean> {
-  const map = await loadMap();
-  const list = map[userId] ?? [];
-  const next = list.filter((j) => j.id !== jobId);
-  if (next.length === list.length) return false;
-  map[userId] = next;
-  await saveMap(map);
-  return true;
+  const db = getDb();
+  const tenantId = getRequestTenant();
+  if (!tenantId) throw new Error('Tenant context is required to dismiss background job');
+
+  const deleted = await db.delete(backgroundJobs)
+    .where(and(
+      eq(backgroundJobs.tenantId, tenantId),
+      eq(backgroundJobs.userId, userId),
+      eq(backgroundJobs.id, jobId)
+    ))
+    .returning({ id: backgroundJobs.id });
+
+  return deleted.length > 0;
 }
 
 export async function clearFinishedUserBackgroundJobs(userId: string): Promise<number> {
-  const map = await loadMap();
-  const list = map[userId] ?? [];
-  const next = list.filter((j) => j.status === 'running');
-  const removed = list.length - next.length;
-  map[userId] = next;
-  await saveMap(map);
-  return removed;
+  const db = getDb();
+  const tenantId = getRequestTenant();
+  if (!tenantId) throw new Error('Tenant context is required to clear background jobs');
+
+  const cleared = await db.delete(backgroundJobs)
+    .where(and(
+      eq(backgroundJobs.tenantId, tenantId),
+      eq(backgroundJobs.userId, userId),
+      ne(backgroundJobs.status, 'running')
+    ))
+    .returning({ id: backgroundJobs.id });
+
+  return cleared.length;
 }

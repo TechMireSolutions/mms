@@ -51,7 +51,7 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
     const ownerId = collectionName.split(':')[1];
     return ownerId === String(user.id);
   }
-  if (collectionName === 'users') {
+  if (collectionName === 'users' || collectionName === 'backups') {
     return user.role === 'admin';
   }
   return WRITE_ROLES.has(user.role);

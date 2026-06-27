@@ -24,7 +24,7 @@ const SELECT_CLASS =
 /**
  * Native select with a visible chevron — clearly reads as a dropdown before interaction.
  */
-export default function FormSelect({
+export function FormSelect({
   value,
   onChange,
   options,

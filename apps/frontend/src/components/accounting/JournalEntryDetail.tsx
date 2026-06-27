@@ -2,9 +2,9 @@ import { X, Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
 import { Button } from "../ui/button";
 import { motion } from "framer-motion";
 import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
-import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface JournalEntryDetailProps {
   entry: JournalEntry;
@@ -23,7 +23,7 @@ interface JournalEntryDetailProps {
  * @param {JournalEntryDetailProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function JournalEntryDetail({ entry, accounts, fmt, onClose, onEdit, onReverse }: JournalEntryDetailProps) {
+export function JournalEntryDetail({ entry, accounts, fmt, onClose, onEdit, onReverse }: JournalEntryDetailProps) {
   const { t } = useTranslation();
   const journalStatusConfig: Record<string, StatusBadgeConfigItem> = {
     posted: { label: t("accounting.journal.status.posted"), cls: SEMANTIC_BADGE.successStrong },

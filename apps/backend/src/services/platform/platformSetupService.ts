@@ -201,5 +201,5 @@ export async function verifyPlatformSetup(
 }
 
 export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
-  return { id: user.id, email: user.email, name: user.name };
+  return { id: user.id, email: user.email, name: user.name, role: user.role };
 }

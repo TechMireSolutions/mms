@@ -1,11 +1,11 @@
 ---
 name: mms-module-setup
-description: Implements or modifies module Setup tier per globle.md — Fields sub-tab, Preferences sub-tab, field dependency checks, setup audit, prefs cascade. Use when editing ContactsSettingsPanel, CustomFieldsBuilder, module preferences, or Setup sub-tabs.
+description: Implements or modifies module Setup tier per mms-module-architecture.mdc — Fields sub-tab, Preferences sub-tab, field dependency checks, setup audit, prefs cascade. Use when editing ContactsSettingsPanel, CustomFieldsBuilder, module preferences, or Setup sub-tabs.
 ---
 
 # MMS Module Setup Workflow
 
-**Source:** [`globle.md`](../../globle.md) §5–§7, §13 · Rules: `mms-module-setup.mdc`, `mms-fields.mdc`, `mms-config.mdc`
+**Source:** Rules: `mms-module-architecture.mdc`, `mms-fields.mdc`, `mms-settings-i18n.mdc`
 
 ## When to use
 
@@ -21,8 +21,8 @@ For full module page shell, use skill **`mms-module-page`**. For field types/reg
 ```
 Setup (tier id: setup)
 ├── SubTabBar
-│   ├── fields       ← §6 globle.md
-│   ├── preferences  ← §7 globle.md
+│   ├── fields       ← Fields Customization
+│   ├── preferences  ← Module Preferences
 │   └── {contract.setupSubTabs extras}
 ```
 
@@ -30,18 +30,18 @@ Register sub-tab ids in `{Module}ModuleContract.setupSubTabs`.
 
 ## Contacts reference map
 
-| globle.md | Component / file |
-|-----------|------------------|
-| §5 audit | `logSetupAudit` → `POST /api/contacts/setup-audit` |
-| §6 Fields | `ContactsSettingsPanel.tsx` (mode `fields`) |
-| §6.6 delete guard | `getContactFieldRemovalIssues()` in `@mms/shared` |
-| §7 Preferences | `ContactsSettingsPanel.tsx` (mode `preferences`) |
-| §7.1 defaults | `prefsStorage.ts`, `updatePrefs` |
-| §7.2 visual | Lifecycle stage colours in prefs |
-| §7.3 workflow | Kanban stage changes → REST update |
-| Sync extra tab | `ContactSyncPanel.tsx` |
-| Config store | `contact_field_config`, `contact_prefs` objects |
-| Provider | `ContactConfigProvider` — **App.tsx only** |
+| Requirement | Component / file |
+|-------------|------------------|
+| Setup Audit | `logSetupAudit` → `POST /api/contacts/setup-audit` |
+| Fields UI | `ContactsSettingsPanel.tsx` (mode `fields`) |
+| Field delete guard | `getContactFieldRemovalIssues()` in `@mms/shared` |
+| Preferences UI | `ContactsSettingsPanel.tsx` (mode `preferences`) |
+| Default Preferences | `preferencesStorage.ts`, `updatePreferences` |
+| Stage/Visual Colours | Lifecycle stage colours in prefs |
+| Workflow Prefs | Kanban stage changes → REST update |
+| Sync settings extra tab | `ContactSyncPanel.tsx` |
+| Config DB store | `contact_field_config`, `contact_preferences` objects |
+| Context Provider | `ContactConfigProvider` — **App.tsx only** |
 
 ## Workflow: add Setup Fields capability
 
@@ -56,11 +56,13 @@ Register sub-tab ids in `{Module}ModuleContract.setupSubTabs`.
 
 1. Add to module prefs type + `DEFAULT_*` in `@mms/shared` or module prefs storage
 2. Bind control in Preferences sub-tab
-3. If pref affects Work UI: preview before save (`useSettingsDraft` pattern or `updatePrefs` live preview)
+3. If preference affects Work UI: preview before save (`useSettingsDraft` pattern or `updatePreferences` live preview)
 4. Audit on save where applicable
 
-## Workflow: remove custom field (§6.6)
+## Workflow: deactivate or remove custom field
 
+1. **Soft-Delete / Deactivation:** Prefer deactivating or hiding fields/tabs in the blueprint configuration instead of erasing schema definitions (to preserve historical analytics data), as detailed in [mms-form-architecture.mdc](../rules/mms-form-architecture.mdc).
+2. **Hard-Delete Check (if requested):** Use dependency checking before removing:
 ```typescript
 const issues = getContactFieldRemovalIssues({
   fieldKey,
@@ -89,15 +91,18 @@ After hiding/disabling a tab or field, verify absent from:
 ## Do not
 
 - Mount module Setup under `/settings`
-- Auto-save structural field config without audit
+- Auto-save general Setup preferences or default values without an explicit "Save" action and audit logs. (Form builder mode layout changes must auto-save immediately on change via `/api/db/objects` to sync live).
 - Delete seed/predefined fields without guard
 - Branch UI on `isSystem` — metadata only
 - Reintroduce Setup `uiStrings` editor
+- Expose builder tools to standard users (restrict strictly to Tenant Admins with `setupWrite` permissions)
+- Switch into builder mode using nested/double modals (use React 19 concurrent transitions `useTransition` inline)
+- Swallow form validation errors or fail to direct the user to the invalid field (intelligently guide users to specific tabs containing validation errors)
 
 ## Rules
 
-`mms-module-setup.mdc`, `mms-fields.mdc`, `mms-config.mdc`, `mms-module-architecture.mdc`, `mms-contacts.mdc`
+`mms-module-architecture.mdc`, `mms-fields.mdc`, `mms-settings-i18n.mdc`, `mms-module-architecture.mdc`, `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`
 
 ## Related skills
 
-`mms-module-page`, `mms-fields-registry`, `mms-contacts`, `mms-config` (via `mms-frontend` for `/settings`)
+`mms-module-page`, `mms-fields-registry`, `mms-form-architecture`, `mms-settings-i18n` (via `mms-frontend` for `/settings`)

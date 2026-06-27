@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import useTranslation from '@/hooks/useTranslation';
-import useModuleTierTabs from '@/hooks/useModuleTierTabs';
-import useConfigSubTabs from '@/hooks/useConfigSubTabs';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useModuleTierTabs } from '@/hooks/useModuleTierTabs';
+import { useConfigSubTabs } from '@/hooks/useConfigSubTabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Users as UsersIcon, Activity, UserPlus } from 'lucide-react';
 import {
@@ -11,24 +11,27 @@ import {
   type SystemUser,
   type UserStatus,
 } from '@mms/shared';
-import PageHeader from '../components/ui/PageHeader';
-import ResponsiveAccordionTabs from '@/components/ui/ResponsiveAccordionTabs';
+import { PageHeader } from '../components/ui/PageHeader';
+import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { Button } from '@/components/ui/button';
-import UsersList from '../components/users/UsersList';
-import UserDetailModal from '../components/users/UserDetailModal';
-import InviteUserModal from '../components/users/InviteUserModal';
-import EditUserModal from '../components/users/EditUserModal';
-import AddUserModal from '../components/users/AddUserModal';
-import RolesPermissions from '../components/users/RolesPermissions';
-import UsersSettingsPanel from '../components/users/UsersSettingsPanel';
-import ActivityLogs from '../components/users/ActivityLogs';
+import { UsersList } from "../components/users/UsersList";
+import { UserDetailModal } from "../components/users/UserDetailModal";
+import { InviteUserModal } from "../components/users/InviteUserModal";
+import { EditUserModal } from "../components/users/EditUserModal";
+import { AddUserModal } from "../components/users/AddUserModal";
+import { RolesPermissions } from "../components/users/RolesPermissions";
+import { UsersSettingsPanel } from "../components/users/UsersSettingsPanel";
+import { ActivityLogs } from "../components/users/ActivityLogs";
 import ModuleReports from '../components/reports/ModuleReports';
-import SubTabBar from '@/components/ui/SubTabBar';
-import { saveCollection } from '../lib/db';
-import { useLiveCollection } from '../hooks/useLiveCollection';
+import { SubTabBar } from '@/components/ui/SubTabBar';
 import { useIsAdminViewer, useViewerRole } from '@/hooks/useViewerRole';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
-import ErrorBoundary from '@/components/ui/ErrorBoundary';
+import {
+  useUsersCollection,
+  useActivityLogsCollection,
+  useUsersMutations,
+} from '@/hooks/useUsersApi';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { notify } from '@/lib/notify';
 
@@ -62,27 +65,29 @@ export default function Users(): React.JSX.Element {
   );
   const viewerRole = useViewerRole();
   const isAdmin = useIsAdminViewer();
-  const rawUsers = useLiveCollection('users');
+  const rawUsers = useUsersCollection();
   const users = useMemo(
     () => rawUsers.map((u) => normalizeWorkspaceUser(u as Partial<SystemUser> & { roles?: string[]; role?: string })),
     [rawUsers],
   );
-  const logs = useLiveCollection('user_activity_logs');
+  const logs = useActivityLogsCollection();
+
+  const { replaceUsers, replaceLogs } = useUsersMutations();
 
   const saveUsers = useCallback(
     (updater: SystemUser[] | ((prev: SystemUser[]) => SystemUser[])) => {
       const next = typeof updater === 'function' ? updater(users) : updater;
-      saveCollection('users', next);
+      replaceUsers.mutate(next);
     },
-    [users],
+    [users, replaceUsers],
   );
 
   const saveLogs = useCallback(
     (updater: ActivityLog[] | ((prev: ActivityLog[]) => ActivityLog[])) => {
       const next = typeof updater === 'function' ? updater(logs) : updater;
-      saveCollection('user_activity_logs', next);
+      replaceLogs.mutate(next);
     },
-    [logs],
+    [logs, replaceLogs],
   );
 
   useEffect(() => {

@@ -2,7 +2,7 @@ import React, { memo, useEffect, useState } from "react";
 import { ExternalLink, Loader2, Trash2 } from "lucide-react";
 import type { PlatformWorkspaceRow } from "@mms/shared";
 import { getAppDomain, tenantUrl } from "@/lib/config/tenantConfig";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   useDeleteWorkspace,
   usePlatformWorkspaces,

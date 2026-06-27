@@ -1,9 +1,9 @@
 import React, { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Loader2, LogOut, Plus, UserCircle } from "lucide-react";
-import PlatformPageShell, { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
+import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
 

@@ -18,7 +18,7 @@ import {
   questionAccuracyBarClass,
   questionAccuracyTextClass,
 } from "@mms/shared";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useQuestionBankConfig } from "@/hooks/useQuestionBankConfig";
 
 function pct(obtained: number, total: number): number {
@@ -62,7 +62,7 @@ interface CategoryPerformance {
   total: number;
 }
 
-export default function PerformanceAnalytics({
+export function PerformanceAnalytics({
   tests,
   results,
   questions,

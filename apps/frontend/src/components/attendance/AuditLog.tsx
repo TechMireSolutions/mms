@@ -60,7 +60,7 @@ function describeEntry(e: AuditEntry, studentNameFor: (id?: string) => string): 
  * @param {AuditLogProps} props - The component props.
  * @returns {React.ReactElement} The rendered audit log component.
  */
-export default function AuditLog({ filters }: AuditLogProps) {
+export function AuditLog({ filters }: AuditLogProps) {
   const sessions = useSessionsCollection();
   const [log, setLog] = useState<AuditEntry[]>([]);
   const studentIds = useMemo(() => uniqueRegistryIds(log.map((entry) => entry.studentId)), [log]);

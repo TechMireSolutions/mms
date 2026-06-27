@@ -55,7 +55,7 @@ interface EnrollmentConfirmationProps {
  * @param props.onBack - Callback to return to previous step.
  * @returns The EnrollmentConfirmation component.
  */
-export default function EnrollmentConfirmation({ student, session, onConfirm, onBack }: EnrollmentConfirmationProps): React.ReactElement {
+export function EnrollmentConfirmation({ student, session, onConfirm, onBack }: EnrollmentConfirmationProps): React.ReactElement {
   const { discountTypes } = useStudentConfig();
   const [discountType, setDiscountType] = useState<string>(student.discountType || "none");
   const [submitting, setSubmitting] = useState<boolean>(false);

@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { Plus, Trash2, Calendar, Clock, MapPin, Edit2 } from "lucide-react";
 import { EVENT_TYPES, Session, SessionEvent } from '@/lib/data/sessionsData';
 import { DatePicker } from "../../ui/DatePicker";
-import FormModal from "@/components/ui/FormModal";
+import { FormModal } from "@/components/ui/FormModal";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import FormSelect from "../../ui/FormSelect";
+import { FormSelect } from "../../ui/FormSelect";
 
 const TYPE_COLORS: Record<string, string> = {
   ceremony:   "bg-warning/10 text-warning border-warning/20",
@@ -106,7 +106,7 @@ interface EventsTabProps {
  * @param {EventsTabProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function EventsTab({ session, onUpdate }: EventsTabProps) {
+export function EventsTab({ session, onUpdate }: EventsTabProps) {
   const [showModal, setShowModal] = useState(false);
   const [editEvent, setEditEvent] = useState<SessionEvent | null>(null);
   const events = (session.events || []).sort((a, b) => a.date.localeCompare(b.date));

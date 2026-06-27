@@ -14,4 +14,3 @@ export function useConfigSubTabs(): ConfigSubTab[] {
   ];
 }
 
-export default useConfigSubTabs;

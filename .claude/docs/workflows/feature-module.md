@@ -16,4 +16,4 @@ description: Add or extend an MMS module with Work, Reports, and Setup tabs
 
 ## Rules
 
-`rules/mms-ui-tabs.md`, `rules/mms-config.md`, `rules/mms-fields.md`
+`rules/mms-ui-ux-design.md`, `rules/mms-settings-i18n.md`, `rules/mms-fields.md`

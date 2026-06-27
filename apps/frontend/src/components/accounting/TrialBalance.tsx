@@ -20,7 +20,7 @@ interface TrialBalanceProps {
  * @param {TrialBalanceProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function TrialBalance({ accounts, entries, fiscalYears, fmt }: TrialBalanceProps) {
+export function TrialBalance({ accounts, entries, fiscalYears, fmt }: TrialBalanceProps) {
   const activeFY   = (fiscalYears || []).find((f) => f.status === "active");
   const [dateFrom, setDateFrom] = useState(activeFY?.startDate || "");
   const [dateTo,   setDateTo]   = useState(activeFY?.endDate   || "");

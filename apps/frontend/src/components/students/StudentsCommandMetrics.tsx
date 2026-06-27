@@ -1,8 +1,8 @@
 import React from "react";
 import { GraduationCap, Filter, UserCheck, UserX, UserMinus, CalendarPlus } from "lucide-react";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsMetrics } from "@/hooks/useStudents";
-import ModuleCommandMetricCard from "@/components/ui/ModuleCommandMetricCard";
+import { ModuleCommandMetricCard } from "@/components/ui/ModuleCommandMetricCard";
 
 interface StudentsCommandMetricsProps {
   total: number;

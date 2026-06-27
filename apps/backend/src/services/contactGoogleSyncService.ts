@@ -3,7 +3,7 @@ import { normalizeToE164, parsePhoneNumber } from '@mms/shared';
 import { loadContactRuntimeDefaults, loadContacts, type ContactRuntimeDefaults } from './contactService.js';
 import { fetchObject, persistObject } from './dbSyncService.js';
 
-const STORAGE_KEY = 'contact_google_sync_by_user';
+const CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY = 'contact_google_sync_by_user';
 const GOOGLE_PEOPLE_FIELDS =
   'names,emailAddresses,phoneNumbers,organizations,birthdays,addresses,biographies';
 
@@ -55,20 +55,20 @@ export interface GoogleContactsSyncRunResult {
   skipped: number;
 }
 
-async function loadMap(): Promise<UserGoogleSyncMap> {
-  const raw = await fetchObject(STORAGE_KEY);
+async function loadContactGoogleSyncConfigMap(): Promise<UserGoogleSyncMap> {
+  const raw = await fetchObject(CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY);
   if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
     return raw as UserGoogleSyncMap;
   }
   return {};
 }
 
-async function saveMap(map: UserGoogleSyncMap): Promise<void> {
-  await persistObject(STORAGE_KEY, map);
+async function saveContactGoogleSyncConfigMap(map: UserGoogleSyncMap): Promise<void> {
+  await persistObject(CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY, map);
 }
 
 export async function getContactGoogleSyncConfig(userId: string): Promise<ContactGoogleSyncConfig> {
-  const map = await loadMap();
+  const map = await loadContactGoogleSyncConfigMap();
   return map[userId] ?? {};
 }
 
@@ -76,20 +76,20 @@ export async function setContactGoogleSyncConfig(
   userId: string,
   config: ContactGoogleSyncConfig,
 ): Promise<ContactGoogleSyncConfig> {
-  const map = await loadMap();
+  const map = await loadContactGoogleSyncConfigMap();
   const next: ContactGoogleSyncConfig = {
     ...config,
     updatedAt: new Date().toISOString(),
   };
   map[userId] = next;
-  await saveMap(map);
+  await saveContactGoogleSyncConfigMap(map);
   return next;
 }
 
 export async function clearContactGoogleSyncConfig(userId: string): Promise<void> {
-  const map = await loadMap();
+  const map = await loadContactGoogleSyncConfigMap();
   delete map[userId];
-  await saveMap(map);
+  await saveContactGoogleSyncConfigMap(map);
 }
 
 export async function clearGoogleSyncTokens(userId: string): Promise<ContactGoogleSyncConfigClient> {
@@ -162,22 +162,22 @@ async function refreshGoogleAccessToken(userId: string): Promise<string> {
     grant_type: 'refresh_token',
   });
 
-  const data = await requestGoogleToken(params);
-  if (data.error || !data.access_token) {
+  const tokenResponse = await requestGoogleToken(params);
+  if (tokenResponse.error || !tokenResponse.access_token) {
     await clearGoogleSyncTokens(userId);
     throw new GoogleSyncError(
-      data.error_description || data.error || 'Google session expired',
+      tokenResponse.error_description || tokenResponse.error || 'Google session expired',
       'session_expired',
     );
   }
 
   await setContactGoogleSyncConfig(userId, {
     ...config,
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token ?? config.refreshToken,
+    accessToken: tokenResponse.access_token,
+    refreshToken: tokenResponse.refresh_token ?? config.refreshToken,
   });
 
-  return data.access_token;
+  return tokenResponse.access_token;
 }
 
 /** Exchange authorization code server-side so client secret never leaves the backend. */
@@ -203,19 +203,19 @@ export async function exchangeGoogleContactsOAuthCode(
     grant_type: 'authorization_code',
   });
 
-  const data = await requestGoogleToken(params);
+  const tokenResponse = await requestGoogleToken(params);
 
-  if (data.error) {
-    throw new GoogleOAuthExchangeError(data.error_description || data.error, data.error);
+  if (tokenResponse.error) {
+    throw new GoogleOAuthExchangeError(tokenResponse.error_description || tokenResponse.error, tokenResponse.error);
   }
-  if (!data.access_token) {
+  if (!tokenResponse.access_token) {
     throw new GoogleOAuthExchangeError('No access token returned from Google');
   }
 
   const saved = await setContactGoogleSyncConfig(userId, {
     ...existing,
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token ?? existing.refreshToken,
+    accessToken: tokenResponse.access_token,
+    refreshToken: tokenResponse.refresh_token ?? existing.refreshToken,
   });
 
   return redactGoogleSyncConfigForClient(saved);
@@ -288,12 +288,12 @@ async function fetchGoogleConnectionsPage(
     throw new GoogleSyncError('Google access token expired', 'session_expired');
   }
 
-  const data = (await res.json()) as GooglePeopleResponse;
-  if (data.error?.message) {
-    throw new GoogleSyncError(data.error.message, 'api_error');
+  const peopleResponse = (await res.json()) as GooglePeopleResponse;
+  if (peopleResponse.error?.message) {
+    throw new GoogleSyncError(peopleResponse.error.message, 'api_error');
   }
 
-  return data;
+  return peopleResponse;
 }
 
 async function fetchAllGoogleConnections(accessToken: string): Promise<GoogleConnection[]> {
@@ -301,9 +301,9 @@ async function fetchAllGoogleConnections(accessToken: string): Promise<GoogleCon
   let pageToken = '';
 
   do {
-    const data = await fetchGoogleConnectionsPage(accessToken, pageToken || undefined);
-    all.push(...(data.connections || []));
-    pageToken = data.nextPageToken || '';
+    const connectionsPage = await fetchGoogleConnectionsPage(accessToken, pageToken || undefined);
+    all.push(...(connectionsPage.connections || []));
+    pageToken = connectionsPage.nextPageToken || '';
   } while (pageToken);
 
   return all;

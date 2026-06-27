@@ -114,7 +114,7 @@ try {
           updatedAt: '2025-01-01',
           phones: [{ label: 'Mobile', number: `+92 333 ${pad(2000000 + idx * 911, 7)}` }],
           emails: [{ label: 'Personal', address: `${studentFirst.toLowerCase()}.${lastName.toLowerCase()}@student.com` }],
-          relationships: [{ contactId: parentContactId, type: 'Father' }],
+          relationships: [{ contactId: parentContactId, relationship: 'Father' }],
           activities: [],
         });
 

@@ -2,14 +2,14 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Pencil, Search, Download, EyeOff, Eye } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
-import AccountModal from "./AccountModal";
+import { AccountModal } from "./AccountModal";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
-import useTranslation from "@/hooks/useTranslation";
-import ModuleColumnCustomizer from "../ui/ModuleColumnCustomizer";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import FormSelect from "../ui/FormSelect";
+import { FormSelect } from "../ui/FormSelect";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
@@ -40,7 +40,7 @@ interface ChartOfAccountsProps {
  * @param {ChartOfAccountsProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function ChartOfAccounts({
+export function ChartOfAccounts({
   accounts,
   onChange,
   onFilteredCountChange,

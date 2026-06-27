@@ -6,12 +6,12 @@ import {
 } from "lucide-react";
 import { formatDate } from "../../lib/db";
 
-import ClassesTab from "./tabs/ClassesTab";
-import TimetableTab from "./tabs/TimetableTab";
-import DiscountsTab from "./tabs/DiscountsTab";
-import BudgetTab from "./tabs/BudgetTab";
-import EventsTab from "./tabs/EventsTab";
-import TabarrukTab from "./tabs/TabarrukTab";
+import { ClassesTab } from "./tabs/ClassesTab";
+import { TimetableTab } from "./tabs/TimetableTab";
+import { DiscountsTab } from "./tabs/DiscountsTab";
+import { BudgetTab } from "./tabs/BudgetTab";
+import { EventsTab } from "./tabs/EventsTab";
+import { TabarrukTab } from "./tabs/TabarrukTab";
 
 import { Session } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ interface SessionDetailProps {
  * @param {SessionDetailProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDetailProps) {
+export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDetailProps) {
   const [tab, setTab] = useState("classes");
   const TabContent = TAB_COMPONENTS[tab];
 

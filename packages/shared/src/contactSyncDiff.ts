@@ -41,9 +41,9 @@ function snapshotValue(contact: Contact, field: (typeof SYNC_DIFF_FIELDS)[number
     case 'city':
       return contact.addresses?.[0]?.city || String(contact.city || '') || '—';
     default: {
-      const val = contact[field as keyof Contact];
-      if (val === undefined || val === null || val === '') return '—';
-      return String(val);
+      const fieldValue = contact[field as keyof Contact];
+      if (fieldValue === undefined || fieldValue === null || fieldValue === '') return '—';
+      return String(fieldValue);
     }
   }
 }
@@ -97,8 +97,8 @@ function applySyncFieldValue(target: Contact, source: Contact, field: (typeof SY
       else if (source.city) target.city = source.city;
       break;
     default: {
-      const val = source[field as keyof Contact];
-      if (val !== undefined) (target as Record<string, unknown>)[field] = val;
+      const fieldValue = source[field as keyof Contact];
+      if (fieldValue !== undefined) (target as Record<string, unknown>)[field] = fieldValue;
     }
   }
 }
@@ -129,6 +129,6 @@ export function mergeContactForSync(
 
 export function defaultSyncFieldPicks(diffs: ContactFieldDiff[]): Record<string, SyncFieldPick> {
   const picks: Record<string, SyncFieldPick> = {};
-  for (const d of diffs) picks[d.field] = 'local';
+  for (const diff of diffs) picks[diff.field] = 'local';
   return picks;
 }

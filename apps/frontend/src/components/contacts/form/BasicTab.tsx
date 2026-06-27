@@ -1,25 +1,16 @@
 import React from "react";
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import { Field, CustomFieldInput } from "./FormPrimitives";
-import { useVisibleContactFields } from "../../../hooks/useVisibleContactFields";
-import useTranslation from "@/hooks/useTranslation";
-
-interface ContactFormData {
-  firstName?: string;
-  lastName?: string;
-  name?: string;
-  avatar?: string | null;
-  gender?: string;
-  dob?: string;
-  isSyed?: boolean;
-  [key: string]: unknown;
-}
+import { useContactConfig, type ValidationError } from '@/lib/contexts/ContactConfigContext';
+import { Field, CustomFieldInput } from "@/components/ui/FormPrimitives";
+import { useVisibleContactFields } from "@/hooks/useVisibleContactFields";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Contact } from "@mms/shared";
 
 interface BasicTabProps {
-  data: ContactFormData;
-  onChange: (updatedData: ContactFormData) => void;
+  data: Partial<Contact>;
+  onChange: (updatedData: Partial<Contact>) => void;
   tabId?: string;
   readOnlyFieldKeys?: string[];
+  errors?: ValidationError[];
 }
 
 /**
@@ -32,6 +23,7 @@ export default function BasicTab({
   onChange,
   tabId = "basic",
   readOnlyFieldKeys = [],
+  errors = [],
 }: BasicTabProps): React.JSX.Element {
   const { isTabFieldRequired } = useContactConfig();
   const { t } = useTranslation();
@@ -54,13 +46,15 @@ export default function BasicTab({
       {enabledFields.map((field) => {
         const label = field.label as string;
         const required = isTabFieldRequired(tabId, field.key);
+        const fieldError = errors.find((e) => e.fieldId === field.key && e.tabId === tabId);
         return (
-          <Field key={field.key} label={label} required={required} hint={field.description}>
+          <Field key={field.key} id={field.key} label={label} required={required} hint={field.description} error={fieldError?.message}>
             <CustomFieldInput
               field={field}
               value={data[field.key]}
               onChange={(val) => upd(field.key, val)}
               disabled={readOnlyFieldKeys.includes(field.key)}
+              error={!!fieldError}
             />
           </Field>
         );

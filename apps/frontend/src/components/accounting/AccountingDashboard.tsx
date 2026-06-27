@@ -60,7 +60,7 @@ interface AccountingDashboardProps {
  * @param {AccountingDashboardProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function AccountingDashboard({ accounts, entries, settings, fiscalYears, fmt }: AccountingDashboardProps) {
+export function AccountingDashboard({ accounts, entries, settings, fiscalYears, fmt }: AccountingDashboardProps) {
   const { primary, secondary, charts } = useBrandPalette();
   const pieColors = useMemo(() => [...charts], [charts]);
 

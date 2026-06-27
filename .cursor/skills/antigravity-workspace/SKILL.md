@@ -23,11 +23,11 @@ Keep in sync when editing: `bash .agent/scripts/sync-all.sh`
 
 | File | Purpose |
 |------|---------|
-| `rules/antigravity-global.md` | Agent cognition, output, security |
-| `rules/mms-core.md` | MMS stack & boundaries |
-| `rules/mms-migration-status.md` | Known tech debt — don't fix opportunistically |
-| `rules/mms-dependencies.md` | Node/pnpm/workspace dependency upgrades |
-| `rules/mms-dry.md` | DRY policy and extraction thresholds |
+| `rules/antigravity-global.mdc` | Agent cognition, output, security |
+| `rules/mms-core.mdc` | MMS stack & boundaries |
+| `rules/mms-migration-status.mdc` | Known tech debt — don't fix opportunistically |
+| `rules/mms-dependencies.mdc` | Node/pnpm/workspace dependency upgrades |
+| `rules/mms-dry.mdc` | DRY policy and extraction thresholds |
 
 ## Skills index
 
@@ -45,12 +45,12 @@ bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 
 When changing standards:
 
-1. Update `.cursor/rules/*.mdc` (Cursor) or `.agent/skills/*/SKILL.md` (skills)
+1. Update `.cursor/rules/*.md` (Cursor) or `.agent/skills/*/SKILL.md` (skills)
 2. Run `bash .agent/scripts/sync-all.sh` to mirror **Antigravity**, **Cursor**, and **Claude Code**
 
 | Target | Path | Frontmatter |
 |--------|------|-------------|
-| Cursor | `.cursor/rules/*.mdc` | `globs` + `alwaysApply` |
+| Cursor | `.cursor/rules/*.md` | `globs` + `alwaysApply` |
 | Antigravity | `.agent/rules/*.md` | `trigger: always_on \| model_decision` |
 | Claude Code | `.claude/rules/*.md` | `paths:` (scoped) or none (always-on) |
 

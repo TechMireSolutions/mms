@@ -3,7 +3,7 @@ import { Plus, Trash2, Check, X, Pencil, AlertTriangle, GripVertical } from "luc
 import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 
 /** All supported custom field types with UI labels. */
@@ -449,7 +449,7 @@ interface CustomFieldsBuilderProps {
  * @param props Component properties.
  * @returns React element.
  */
-export default function CustomFieldsBuilder({
+export function CustomFieldsBuilder({
   fields = [],
   droppableId = "custom-fields",
   onChange

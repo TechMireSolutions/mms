@@ -1,6 +1,6 @@
 import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
-import { requiresTwoFactor } from '@mms/shared';
+import { requiresTwoFactor, type BrandingSocialLink } from '@mms/shared';
 import { validateCredentials, createUser, type PublicUser } from './userService.js';
 import { createWorkspace, assertWorkspaceActive } from '../workspaceService.js';
 import { createAuthHandoff } from './authHandoffService.js';
@@ -39,6 +39,16 @@ export interface OnboardInput {
   adminPhone?: string;
   website?: string;
   footerText?: string;
+  // Extended fields
+  faviconUrl?: string;
+  legalName?: string;
+  registrationNumber?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+  socialLinks?: BrandingSocialLink[];
 }
 
 export interface OnboardResult extends AuthResult {
@@ -145,7 +155,22 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
       website: input.website,
       footerText: input.footerText,
     });
-    await saveObject('branding', { ...branding, subdomain: workspace.subdomain });
+    
+    // Save standard and extended fields specifically
+    const fullBranding = {
+      ...branding,
+      faviconUrl: input.faviconUrl ?? branding.faviconUrl,
+      legalName: input.legalName ?? branding.legalName,
+      registrationNumber: input.registrationNumber ?? branding.registrationNumber,
+      addressLine1: input.addressLine1 ?? branding.addressLine1,
+      addressLine2: input.addressLine2 ?? branding.addressLine2,
+      city: input.city ?? branding.city,
+      region: input.region ?? branding.region,
+      postalCode: input.postalCode ?? branding.postalCode,
+      socialLinks: input.socialLinks ?? branding.socialLinks,
+      subdomain: workspace.subdomain,
+    };
+    await saveObject('branding', fullBranding);
 
     await assertPasswordMeetsPolicy(input.password);
     await createUser(input.email, input.adminName, input.password, 'admin', workspace.subdomain);

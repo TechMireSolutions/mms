@@ -20,4 +20,3 @@ export function usePermissions(): UsePermissionsResult {
   return useMemo(() => ({ role, can }), [role, can]);
 }
 
-export default usePermissions;

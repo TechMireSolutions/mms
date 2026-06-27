@@ -3,8 +3,8 @@ import { z } from 'zod';
 const jsonRecord = z.record(z.string(), z.unknown());
 
 export const syncPayloadSchema = z.object({
-  collections: z.record(z.string(), z.array(jsonRecord)).optional(),
-  objects: z.record(z.string(), jsonRecord).optional(),
+  collections: z.record(z.string(), z.array(z.unknown())).optional(),
+  objects: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const collectionSaveBodySchema = z.union([

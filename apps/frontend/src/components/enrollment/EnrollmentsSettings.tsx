@@ -7,16 +7,16 @@ import {
   INITIAL_ENROLLMENTS_FIELD_SEED,
   type FieldDefinition,
 } from "@mms/shared";
-import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { CustomFieldsBuilder, CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";
 import { Checkbox } from "../ui/checkbox";
-import Modal from "../ui/Modal";
-import useTranslation from "@/hooks/useTranslation";
+import { Modal } from "../ui/Modal";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ToggleProps {
   label: string;
@@ -57,7 +57,7 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
-export default function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.JSX.Element {
+export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { settings, updateSettings } = useEnrollmentConfig();
   const [saved, setSaved] = useState<boolean>(false);

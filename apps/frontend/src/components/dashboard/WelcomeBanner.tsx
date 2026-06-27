@@ -1,13 +1,12 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Calendar } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { getIntlLocaleForLanguage } from '@mms/shared';
 import type { AppTranslationKey } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useStudentsMetrics } from '@/hooks/useStudents';
-import useTranslation from '@/hooks/useTranslation';
-import { BANNER_FROST_CHIP } from '@/lib/semanticTone';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { DashboardPersona } from '@/lib/dashboardPersona';
 
 interface WelcomeBannerProps {

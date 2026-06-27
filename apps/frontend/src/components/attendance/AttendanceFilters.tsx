@@ -3,12 +3,12 @@ import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
 import { Button } from "../ui/button";
-import FormSelect from "../ui/FormSelect";
+import { FormSelect } from "../ui/FormSelect";
 import { useSessionsCollection } from '@/hooks/useSessions';
 import { useTeachersPaginated } from '@/hooks/useTeachers';
 import { TEACHERS_MODULE_CONTRACT } from '@mms/shared';
 import { activeTeachersForAssignment } from '@/lib/teachers/teacherAssignment';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface AttendanceFilterState {
   sessionId: string;
@@ -44,7 +44,7 @@ interface Session {
  * @param {AttendanceFiltersProps} props - The component props.
  * @returns {React.ReactElement} The rendered filters component.
  */
-export default function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps) {
+export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   const sessions = useSessionsCollection();

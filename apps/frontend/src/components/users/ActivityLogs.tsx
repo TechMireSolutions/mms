@@ -6,13 +6,13 @@ import {
   type ActivityLog,
   type SystemUser,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
-import useGlobalSettings from '@/hooks/useGlobalSettings';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useGlobalSettings } from '@/hooks/useGlobalSettings';
 import { DatePicker } from '../ui/DatePicker';
 import { ActivityActionBadge } from '@/components/users/UserBadges';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import FormSelect from '@/components/ui/FormSelect';
+import { FormSelect } from '@/components/ui/FormSelect';
 
 const PAGE_SIZE = 15;
 
@@ -21,7 +21,7 @@ export interface ActivityLogsProps {
   users: SystemUser[];
 }
 
-export default function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Element {
+export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Element {
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
   const [search, setSearch] = useState('');

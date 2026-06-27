@@ -1,6 +1,6 @@
 ---
 name: mms-dev-setup
-description: Sets up and runs the MMS monorepo (pnpm, Node 26+, SQLite, backend :3000, frontend :5173, typecheck, lint, tests). Use when installing dependencies, starting dev servers, fixing env issues, or onboarding to the project.
+description: Sets up and runs the MMS monorepo (pnpm, Node 26+, PostgreSQL, backend :3000, frontend :5173, typecheck, lint, tests). Use when installing dependencies, starting dev servers, fixing env issues, or onboarding to the project.
 ---
 
 # MMS Dev Setup
@@ -24,7 +24,7 @@ pnpm install
 ```bash
 bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 curl http://localhost:3000/health
-curl http://localhost:3000/ready    # 503 if SQLite down
+curl http://localhost:3000/ready    # 503 if PostgreSQL down
 ```
 
 ## Required env (backend)
@@ -34,7 +34,7 @@ Create `apps/backend/.env` (never commit):
 | Variable | Notes |
 |----------|-------|
 | `JWT_SECRET` | **Required** — server exits without it (e.g. `dev-local-change-me`) |
-| `DATABASE_URL` | Default `sqlite://mms.db` |
+| `DATABASE_URL` | Default `postgresql://postgres:postgres@localhost:5432/mms` |
 | `PLATFORM_ADMIN_EMAIL` | First platform super-user (apex only) — seeded when no platform users exist |
 | `PLATFORM_ADMIN_PASSWORD` | Platform super-user password (`SEED_DEV_PASSWORD` fallback) |
 
@@ -42,12 +42,12 @@ Create `apps/backend/.env` (never commit):
 
 Frontend uses Vite proxy `/api` → `:3000` with `credentials: 'include'` for cookie auth.
 
-## SQLite
+## PostgreSQL
 
-SQLite is used as a local file database (default `mms.db`). No external docker service or postgres container is required.
+PostgreSQL is used as the relational database. Ensure a PostgreSQL instance is running and reachable via `DATABASE_URL`.
 
-- Empty DB may seed from `seeds.json` (legacy demo)
-- New tenant onboard uses `minimalSeeds.ts` — not 30k-line demo data
+- Empty DB seeds minimal defaults via `minimalSeeds.ts` (using `getMinimalCollectionsForSeed()` and `getMinimalObjects()`)
+- Legacy `seeds.json` is not used for automatic empty-DB seeding
 
 ## Drizzle migration gotcha
 
@@ -66,14 +66,14 @@ cd apps/backend && pnpm typecheck && pnpm test && pnpm lint
 
 ```
 apps/frontend/   React 19 + Vite (:5173)
-apps/backend/    Fastify 5 + SQLite (:3000)
+apps/backend/    Fastify 5 + PostgreSQL (:3000)
 packages/shared/ @mms/shared
 ```
 
 ## Rules reference
 
-`.cursor/rules/mms-ops.mdc`, `mms-core.mdc`, `mms-backend.mdc`
+`.cursor/rules/mms-ops-infrastructure.md`, `mms-core.md`, `mms-api-interface.md`
 
 ## Related skills
 
-`mms-backend-api`, `mms-auth-users`, `mms-data-sync`
+`mms-backend-api`, `mms-backend-security`, `mms-data-sync`

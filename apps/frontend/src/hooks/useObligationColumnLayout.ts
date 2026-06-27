@@ -4,29 +4,29 @@ import {
   applyModuleColumnOverlay,
   buildObligationCollectionWorkColumnRegistry,
   isModuleColumnVisible,
-  type ModuleColumnPref,
+  type ModuleColumnPreference,
   type ModuleColumnRegistryEntry,
 } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
-  loadModuleColumnPrefs,
-  saveModuleColumnPrefList,
+  loadModuleColumnPreferences,
+  saveModuleColumnPreferenceList,
   saveModuleColumnRegistry,
-} from '@/lib/columnPrefs/moduleColumnPrefsStorage';
+} from '@/lib/columnPreferences/moduleColumnPreferencesStorage';
 import {
-  useObligationColumnPrefs,
-  useObligationColumnPrefsMutation,
+  useObligationColumnPreferences,
+  useObligationColumnPreferencesMutation,
 } from '@/hooks/useObligationsApi';
 
 export function useObligationColumnLayout() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const userId = user?.id ? String(user.id) : '';
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useObligationColumnPrefs();
-  const { mutate: saveColumnPrefs } = useObligationColumnPrefsMutation();
+  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useObligationColumnPreferences();
+  const { mutate: saveColumnPrefs } = useObligationColumnPreferencesMutation();
   const migratedLocalColumnPrefs = useRef(false);
-  const [userOverlay, setUserOverlay] = useState<ModuleColumnPref[] | null>(null);
+  const [userOverlay, setUserOverlay] = useState<ModuleColumnPreference[] | null>(null);
 
   const tenantRegistry = useMemo(
     () =>
@@ -49,15 +49,15 @@ export function useObligationColumnLayout() {
       return;
     }
     if (!columnPrefsLoaded) {
-      setUserOverlay(loadModuleColumnPrefs(OBLIGATIONS_MODULE_CONTRACT.moduleId, userId));
+      setUserOverlay(loadModuleColumnPreferences(OBLIGATIONS_MODULE_CONTRACT.moduleId, userId));
       return;
     }
     if (serverColumnPrefs && serverColumnPrefs.length > 0) {
       setUserOverlay(serverColumnPrefs);
-      saveModuleColumnPrefList(OBLIGATIONS_MODULE_CONTRACT.moduleId, userId, serverColumnPrefs);
+      saveModuleColumnPreferenceList(OBLIGATIONS_MODULE_CONTRACT.moduleId, userId, serverColumnPrefs);
       return;
     }
-    const local = loadModuleColumnPrefs(OBLIGATIONS_MODULE_CONTRACT.moduleId, userId);
+    const local = loadModuleColumnPreferences(OBLIGATIONS_MODULE_CONTRACT.moduleId, userId);
     setUserOverlay(local);
     if (local?.length && !migratedLocalColumnPrefs.current) {
       migratedLocalColumnPrefs.current = true;
@@ -79,13 +79,13 @@ export function useObligationColumnLayout() {
     (cols: ModuleColumnRegistryEntry[]) => {
       if (!userId) return;
       saveModuleColumnRegistry(OBLIGATIONS_MODULE_CONTRACT.moduleId, userId, cols);
-      const prefs: ModuleColumnPref[] = cols.map(({ key, enabled, order }) => ({
+      const preferences: ModuleColumnPreference[] = cols.map(({ key, enabled, order }) => ({
         key,
         enabled,
         order,
       }));
-      setUserOverlay(prefs);
-      saveColumnPrefs(prefs);
+      setUserOverlay(preferences);
+      saveColumnPrefs(preferences);
     },
     [userId, saveColumnPrefs],
   );

@@ -6,25 +6,27 @@ import {
 } from './settingsTypes.js';
 
 /** Per-user Work directory column layout (globle1 §3.4). */
-export interface ModuleColumnPref {
+export interface ModuleColumnPreference {
   key: string;
   enabled: boolean;
   order: number;
 }
 
-export interface ModuleColumnRegistryEntry extends ModuleColumnPref {
+export type ModuleColumnPref = ModuleColumnPreference;
+
+export interface ModuleColumnRegistryEntry extends ModuleColumnPreference {
   label: string;
   fixed?: boolean;
 }
 
-export type UserModuleColumnPrefsMap = Record<string, ModuleColumnPref[]>;
+export type UserModuleColumnPreferencesMap = Record<string, ModuleColumnPreference[]>;
 
 export function applyModuleColumnOverlay(
   registry: ModuleColumnRegistryEntry[],
-  prefs: ModuleColumnPref[] | null,
+  preferences: ModuleColumnPreference[] | null,
 ): ModuleColumnRegistryEntry[] {
-  if (!prefs?.length) return registry;
-  const map = new Map(prefs.map((p) => [p.key, p]));
+  if (!preferences?.length) return registry;
+  const map = new Map(preferences.map((p) => [p.key, p]));
   return registry.map((col) => {
     const pref = map.get(col.key);
     if (!pref) return col;

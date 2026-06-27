@@ -1,31 +1,36 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import useTranslation from "@/hooks/useTranslation";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, List, BookMarked, Scale,
   BookOpen, LayoutDashboard,
 } from "lucide-react";
-import PageHeader from "../components/ui/PageHeader";
-import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
-import SubTabBar from "@/components/ui/SubTabBar";
-import useConfigSubTabs from "@/hooks/useConfigSubTabs";
-import ChartOfAccounts from "../components/accounting/ChartOfAccounts";
-import JournalEntries from "../components/accounting/JournalEntries";
-import GeneralLedger from "../components/accounting/GeneralLedger";
-import TrialBalance from "../components/accounting/TrialBalance";
-import FinancialReports from "../components/accounting/FinancialReports";
-import AccountingSettings from "../components/accounting/AccountingSettings";
-import AccountingDashboard from "../components/accounting/AccountingDashboard";
+import { PageHeader } from "../components/ui/PageHeader";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
+import { ChartOfAccounts } from "../components/accounting/ChartOfAccounts";
+import { JournalEntries } from "../components/accounting/JournalEntries";
+import { GeneralLedger } from "../components/accounting/GeneralLedger";
+import { TrialBalance } from "../components/accounting/TrialBalance";
+import { FinancialReports } from "../components/accounting/FinancialReports";
+import { AccountingSettings } from "../components/accounting/AccountingSettings";
+import { AccountingDashboard } from "../components/accounting/AccountingDashboard";
 import KPISummary from "../components/reports/KPISummary";
-import ErrorBoundary from "../components/ui/ErrorBoundary";
-import AccountingCommandMetrics from "../components/accounting/AccountingCommandMetrics";
+import { ErrorBoundary } from "../components/ui/ErrorBoundary";
+import { AccountingCommandMetrics } from "../components/accounting/AccountingCommandMetrics";
 import { useAccountingJournalColumnLayout } from "@/hooks/useAccountingJournalColumnLayout";
 import { useAccountingAccountColumnLayout } from "@/hooks/useAccountingAccountColumnLayout";
-import { saveCollection } from "../lib/db";
 import { useLiveCollection } from "../hooks/useLiveCollection";
 import { useAccountingConfig } from "@/hooks/useAccountingConfig";
 import { DEFAULT_CURRENCIES } from "@mms/shared";
+import {
+  useAccountingAccountsCollection,
+  useAccountingEntriesCollection,
+  useAccountingFiscalYearsCollection,
+  useAccountingMutations,
+} from "@/hooks/useAccountingApi";
 
 const SUB_TAB_IDS = ["overview", "journal", "ledger", "trial", "coa"] as const;
 type SubTabId = (typeof SUB_TAB_IDS)[number];
@@ -66,29 +71,31 @@ export default function Accounting() {
   const [activeTab, setActiveTab]     = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [configSubTab, setConfigSubTab] = useState<"fields" | "preferences">("fields");
-  const accounts = useLiveCollection("accounting_accounts");
-  const entries = useLiveCollection("accounting_entries");
-  const fiscalYears = useLiveCollection("accounting_fiscal_years");
+  const accounts = useAccountingAccountsCollection();
+  const entries = useAccountingEntriesCollection();
+  const fiscalYears = useAccountingFiscalYearsCollection();
   const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
   const { settings } = useAccountingConfig();
   const [filteredCount, setFilteredCount] = useState(0);
   const journalColumnLayout = useAccountingJournalColumnLayout();
   const accountColumnLayout = useAccountingAccountColumnLayout();
 
+  const { replaceAccounts, replaceEntries, replaceFiscalYears } = useAccountingMutations();
+
   const setAccounts = useCallback((updater: typeof accounts | ((prev: typeof accounts) => typeof accounts)) => {
     const next = typeof updater === "function" ? updater(accounts) : updater;
-    saveCollection("accounting_accounts", next);
-  }, [accounts]);
+    replaceAccounts.mutate(next);
+  }, [accounts, replaceAccounts]);
 
   const setEntries = useCallback((updater: typeof entries | ((prev: typeof entries) => typeof entries)) => {
     const next = typeof updater === "function" ? updater(entries) : updater;
-    saveCollection("accounting_entries", next);
-  }, [entries]);
+    replaceEntries.mutate(next);
+  }, [entries, replaceEntries]);
 
   const setFiscalYears = useCallback((updater: typeof fiscalYears | ((prev: typeof fiscalYears) => typeof fiscalYears)) => {
     const next = typeof updater === "function" ? updater(fiscalYears) : updater;
-    saveCollection("accounting_fiscal_years", next);
-  }, [fiscalYears]);
+    replaceFiscalYears.mutate(next);
+  }, [fiscalYears, replaceFiscalYears]);
 
   useEffect(() => {
     if (activeSubTab === 'journal' || activeSubTab === 'coa') return;

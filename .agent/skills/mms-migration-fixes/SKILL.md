@@ -5,7 +5,7 @@ description: Addresses known MMS technical debt from mms-migration-status — re
 
 # MMS Migration Fixes
 
-Only implement items **in scope** for the current task. Full register: `.cursor/rules/mms-migration-status.mdc`.
+Only implement items **in scope** for the current task. Full register: `.cursor/rules/mms-migration-status.md`.
 
 ## Resolved (do not reintroduce)
 
@@ -35,7 +35,7 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 
 **Fix:** Add REST route + Query hooks per module (**students** and **contacts** pilots done).
 
-**Skills:** `mms-backend-api`, `mms-data-sync`, `mms-query`
+**Skills:** `mms-backend-api`, `mms-data-sync`, `mms-frontend`
 
 ### P1 — Read RBAC (evaluate)
 
@@ -47,19 +47,19 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 
 **Problem:** Inline `role ===` checks remain (~8 files: Dashboard, KPI, Attendance, WelcomeBanner).
 
-**Fix:** Wire `usePermissions()` / `can()` when touching modules (`mms-rbac.mdc`).
+**Fix:** Wire `usePermissions()` / `can()` when touching modules (`mms-auth-security.md`).
 
 ### P2 — Sentry / client error reporting
 
 **Problem:** Console/toasts only.
 
-**Fix:** Wire in `main.tsx` per `mms-observability.mdc`.
+**Fix:** Wire in `main.tsx` per `mms-testing-observability.md`.
 
 ### P3 — Relational custom fields
 
 **Problem:** Document store only for custom tabs.
 
-**Fix:** `pgTable` + migration per `mms-fields.mdc`.
+**Fix:** `pgTable` + migration per `mms-fields.md`.
 
 ## After each fix
 
@@ -69,11 +69,11 @@ cd apps/backend && pnpm lint   # if BE touched
 cd apps/frontend && pnpm lint  # if FE touched
 ```
 
-Update `mms-migration-status.mdc` **Recently resolved** row when fully done.
+Update `mms-migration-status.md` **Recently resolved** row when fully done.
 
 ## Rules sync
 
-After changing standards: edit `.cursor/rules/*.mdc`, then:
+After changing standards: edit `.cursor/rules/*.md`, then:
 
 ```bash
 bash .agent/scripts/sync-rules.sh

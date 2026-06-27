@@ -5,6 +5,7 @@ import {
   WORKSPACES_COLLECTION,
   type StoredPlatformUser,
   type Workspace,
+  type PlatformRole,
 } from '@mms/shared';
 import {
   getCollectionByStorageName,
@@ -58,6 +59,7 @@ export async function runMigration012(): Promise<void> {
           email: user.email.toLowerCase(),
           name: user.name ?? 'Platform Admin',
           passwordHash: user.passwordHash,
+          role: (user.role ?? 'super_user') as PlatformRole,
           createdAt: user.createdAt ?? new Date().toISOString(),
           emailVerifiedAt: user.emailVerifiedAt,
         });

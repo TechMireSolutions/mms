@@ -61,8 +61,8 @@ export function filterContactExportColumnsForViewer(
   viewerRole: string,
 ): ContactExportColumn[] {
   if (!fieldConfig?.fields) return columns;
-  const ctx = buildColumnFieldContext(fieldConfig, viewerRole);
-  return columns.filter((column) => canViewContactColumn(viewerRole, column.id, ctx));
+  const columnFieldContext = buildColumnFieldContext(fieldConfig, viewerRole);
+  return columns.filter((column) => canViewContactColumn(viewerRole, column.id, columnFieldContext));
 }
 
 function cellValue(
@@ -85,9 +85,9 @@ function cellValue(
   if (columnId === 'country') {
     return (contact.addresses || [])[0]?.country || (contact.country as string) || '';
   }
-  const val = contact[columnId as keyof Contact];
-  if (val === undefined || val === null) return '';
-  return String(val);
+  const cellValue = contact[columnId as keyof Contact];
+  if (cellValue === undefined || cellValue === null) return '';
+  return String(cellValue);
 }
 
 /** Builds CSV rows (header + data) for the given contacts and visible columns. */
@@ -96,9 +96,9 @@ export function buildContactsExportRows(
   columns: ContactExportColumn[],
   labels: ContactExportLabels,
 ): unknown[][] {
-  const header = columns.map((c) => c.label);
-  const data = contacts.map((contact) =>
+  const header = columns.map((column) => column.label);
+  const rows = contacts.map((contact) =>
     columns.map(({ id }) => cellValue(contact, id, labels)),
   );
-  return [header, ...data];
+  return [header, ...rows];
 }

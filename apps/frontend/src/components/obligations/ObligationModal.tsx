@@ -1,5 +1,5 @@
 import React from "react";
-import Modal from "@/components/ui/Modal";
+import { Modal } from "@/components/ui/Modal";
 
 export interface ObligationModalProps {
   title: string;
@@ -10,7 +10,7 @@ export interface ObligationModalProps {
 /**
  * Shared modal shell for obligations configuration forms.
  */
-export default function ObligationModal({
+export function ObligationModal({
   title,
   children,
   onClose,

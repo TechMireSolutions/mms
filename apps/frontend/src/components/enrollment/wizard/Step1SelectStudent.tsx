@@ -5,7 +5,7 @@ import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session } from '@/lib/data/sessionsData';
 import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
 import { useStudentsByIds, useStudentsPaginated } from "@/hooks/useStudents";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -18,7 +18,7 @@ interface Step1SelectStudentProps {
 /**
  * Step 1 component for selecting a student to enroll.
  */
-export default function Step1SelectStudent({ value, onChange, sessions = [] }: Step1SelectStudentProps): React.ReactElement {
+export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1SelectStudentProps): React.ReactElement {
   const { t } = useTranslation();
   const [search, setSearch] = useState<string>("");
 

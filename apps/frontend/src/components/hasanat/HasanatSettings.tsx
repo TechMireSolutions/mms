@@ -7,15 +7,15 @@ import {
   type FieldDefinition,
 } from "@mms/shared";
 import { useHasanatConfig } from "@/hooks/useHasanatConfig";
-import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { CustomFieldsBuilder, CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";
 import { Checkbox } from "../ui/checkbox";
-import Modal from "../ui/Modal";
+import { Modal } from "../ui/Modal";
 
 interface ToggleProps {
   label: string;
@@ -56,7 +56,7 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
-export default function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElement {
+export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElement {
   const { settings, updateSettings } = useHasanatConfig();
   const [saved, setSaved] = useState<boolean>(false);
 

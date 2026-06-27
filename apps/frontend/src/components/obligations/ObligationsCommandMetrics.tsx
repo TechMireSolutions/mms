@@ -2,16 +2,16 @@ import React from 'react';
 import {
   Receipt, Filter, Banknote, Wallet, Globe, CalendarPlus, ClipboardList,
 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useObligationsMetrics } from '@/hooks/useObligationsApi';
-import ModuleCommandMetricCard from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
 
 interface ObligationsCommandMetricsProps {
   total: number;
   shown: number;
 }
 
-export default function ObligationsCommandMetrics({
+export function ObligationsCommandMetrics({
   total,
   shown,
 }: ObligationsCommandMetricsProps): React.JSX.Element {

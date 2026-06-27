@@ -26,4 +26,3 @@ export function useTenantBranding(): { ready: boolean } {
   return { ready };
 }
 
-export default useTenantBranding;

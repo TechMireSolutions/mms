@@ -3,8 +3,8 @@ import { TrendingUp, TrendingDown, Scale, DollarSign, Download } from "lucide-re
 import { computeFinancials, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
 import { DatePicker } from "../ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
-import SubTabBar from "../ui/SubTabBar";
-import useTranslation from "@/hooks/useTranslation";
+import { SubTabBar } from "../ui/SubTabBar";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "../ui/button";
 
 interface StatCardProps {
@@ -114,7 +114,7 @@ interface FinancialReportsProps {
  * @param {FinancialReportsProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function FinancialReports({ accounts, entries, fiscalYears, settings, fmt }: FinancialReportsProps) {
+export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt }: FinancialReportsProps) {
   const { t } = useTranslation();
   const reportViews = useMemo(
     () => [

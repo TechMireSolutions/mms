@@ -19,7 +19,7 @@ export interface ModuleColumnCustomizerProps {
 }
 
 /** Per-user Work directory column layout picker (globle1 §3.4). */
-export default function ModuleColumnCustomizer({
+export function ModuleColumnCustomizer({
   columnRegistry,
   updateUserColumnLayout,
   labels,

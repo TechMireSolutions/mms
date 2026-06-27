@@ -5,7 +5,7 @@ import {
 } from '@mms/shared';
 import { useStudentsPaginated } from '@/hooks/useStudents';
 import { useTeachersPaginated } from '@/hooks/useTeachers';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 
 export interface RegistryPersonSelectProps {
@@ -18,7 +18,7 @@ export interface RegistryPersonSelectProps {
   id?: string;
 }
 
-export default function RegistryPersonSelect({
+export function RegistryPersonSelect({
   kind,
   value,
   onChange,

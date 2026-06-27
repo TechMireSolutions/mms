@@ -1,7 +1,7 @@
 import React from 'react';
 import { Building2, Mail, MapPin, Phone } from 'lucide-react';
 import { formatBrandingAddress, type BrandingSettings } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BrandingIdentityPreviewProps {
   data: BrandingSettings;

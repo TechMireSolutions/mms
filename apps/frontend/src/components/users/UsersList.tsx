@@ -9,8 +9,8 @@ import {
   type SystemUser,
   workspaceRoleLabel,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
-import useGlobalSettings from '@/hooks/useGlobalSettings';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useGlobalSettings } from '@/hooks/useGlobalSettings';
 import { useIsAdminViewer } from '@/hooks/useViewerRole';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
@@ -40,7 +40,7 @@ export interface UsersListProps {
   onAddUser: () => void;
 }
 
-export default function UsersList({
+export function UsersList({
   users,
   onView,
   onEdit,

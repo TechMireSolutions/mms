@@ -1,13 +1,13 @@
 import React from 'react';
 import { Mail, Phone, Globe, MapPin, Share2, Building2, Type,
 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { useSettingsBrandingDraft } from '@/lib/contexts/SettingsBrandingDraftContext';
-import SectionCard from '@/components/ui/SectionCard';
+import { SectionCard } from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import SettingsFormActions from '@/components/ui/SettingsFormActions';
+import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import BrandingIdentityPreview from '@/components/branding/BrandingIdentityPreview';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
 import {

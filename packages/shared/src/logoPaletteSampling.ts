@@ -127,31 +127,31 @@ function centerPixelWeight(
  * and favours saturated centre pixels over flat backgrounds.
  */
 export function extractDominantSwatchesFromRgba(
-  data: Uint8ClampedArray,
+  rgbaPixels: Uint8ClampedArray,
   width: number,
   height: number,
   options?: LogoPaletteSamplingOptions,
 ): string[] {
-  const opts = { ...DEFAULT_SAMPLING, ...options };
-  const background = parseHexRgb(opts.flattenOnto) ?? { r: 255, g: 255, b: 255 };
+  const samplingOptions = { ...DEFAULT_SAMPLING, ...options };
+  const background = parseHexRgb(samplingOptions.flattenOnto) ?? { r: 255, g: 255, b: 255 };
   const buckets = new Map<string, ColorBucket>();
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
       const i = (y * width + x) * 4;
-      const a = data[i + 3];
-      if (a < opts.minAlpha) continue;
+      const a = rgbaPixels[i + 3];
+      if (a < samplingOptions.minAlpha) continue;
 
-      const flat = flattenPixel(data[i], data[i + 1], data[i + 2], a, background);
-      if (isSampleNeutral(flat.r, flat.g, flat.b, opts)) continue;
+      const flat = flattenPixel(rgbaPixels[i], rgbaPixels[i + 1], rgbaPixels[i + 2], a, background);
+      if (isSampleNeutral(flat.r, flat.g, flat.b, samplingOptions)) continue;
 
-      const qr = quantizeChannel(flat.r, opts.quantizeBits);
-      const qg = quantizeChannel(flat.g, opts.quantizeBits);
-      const qb = quantizeChannel(flat.b, opts.quantizeBits);
+      const qr = quantizeChannel(flat.r, samplingOptions.quantizeBits);
+      const qg = quantizeChannel(flat.g, samplingOptions.quantizeBits);
+      const qb = quantizeChannel(flat.b, samplingOptions.quantizeBits);
       const key = `${qr}|${qg}|${qb}`;
 
       const pixelWeight =
-        centerPixelWeight(x, y, width, height, opts.centerWeight) * chromaWeight(flat.r, flat.g, flat.b);
+        centerPixelWeight(x, y, width, height, samplingOptions.centerWeight) * chromaWeight(flat.r, flat.g, flat.b);
 
       const existing = buckets.get(key);
       if (existing) {
@@ -185,8 +185,8 @@ export function extractDominantSwatchesFromRgba(
   const palette: string[] = [];
 
   for (const entry of ranked) {
-    if (palette.length >= opts.maxSwatches) break;
-    const tooClose = picked.some((rgb) => rgbDistance(rgb, entry.rgb) < opts.minSwatchDistance);
+    if (palette.length >= samplingOptions.maxSwatches) break;
+    const tooClose = picked.some((rgb) => rgbDistance(rgb, entry.rgb) < samplingOptions.minSwatchDistance);
     if (tooClose) continue;
     picked.push(entry.rgb);
     palette.push(entry.hex);

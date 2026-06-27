@@ -101,20 +101,6 @@
       ]
     },
     {
-      "name": "mms-contacts",
-      "path": "skills/mms-contacts",
-      "keywords": [
-        "contacts",
-        "crm",
-        "whatsapp",
-        "phone",
-        "kanban",
-        "avatar",
-        "globle1",
-        "sync outbox"
-      ]
-    },
-    {
       "name": "mms-fields-registry",
       "path": "skills/mms-fields-registry",
       "keywords": [
@@ -135,21 +121,6 @@
         "collections",
         "admin sync",
         "students api"
-      ]
-    },
-    {
-      "name": "mms-auth-users",
-      "path": "skills/mms-auth-users",
-      "keywords": [
-        "auth",
-        "login",
-        "cookies",
-        "2fa",
-        "refresh token",
-        "auth artifacts",
-        "authenticateTenant",
-        "users",
-        "rbac"
       ]
     },
     {
@@ -250,6 +221,23 @@
         "line endings",
         "permissions",
         "pm2"
+      ]
+    },
+    {
+      "name": "mms-form-architecture",
+      "path": "skills/mms-form-architecture",
+      "keywords": [
+        "dynamic form",
+        "form architecture",
+        "blueprint",
+        "branded id",
+        "validation",
+        "ieee 754 bypass",
+        "rls",
+        "jsonb merge",
+        "react 19 state",
+        "s3 upload",
+        "fastify"
       ]
     }
   ],

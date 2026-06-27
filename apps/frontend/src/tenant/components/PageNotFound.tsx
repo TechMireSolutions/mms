@@ -1,9 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import React from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import usePermissions from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import { ROUTES } from "@/lib/config/routes";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 /** Tenant-only 404 — mounted only on madrasa subdomain routes. */
 export default function PageNotFound(): React.JSX.Element {

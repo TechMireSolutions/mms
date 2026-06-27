@@ -44,7 +44,7 @@ Legacy unmapped collections: read allowed for staff write roles until per-module
 
 ## Ephemeral auth state
 
-Store in SQLite `auth_artifacts` via `authArtifactService` — **never** in-memory `Map`:
+Store in PostgreSQL `auth_artifacts` via `authArtifactService` — **never** in-memory `Map`:
 
 | kind | TTL |
 |------|-----|
@@ -103,8 +103,8 @@ cd apps/backend && pnpm test
 
 ## Rules
 
-`mms-security.mdc`, `mms-auth.mdc`, `mms-rbac.mdc`, `mms-backend.mdc`, `mms-tenant.mdc`
+`mms-auth-security.mdc`, `mms-auth-security.mdc`, `mms-auth-security.mdc`, `mms-api-interface.mdc`, `mms-auth-security.mdc`
 
 ## Related skills
 
-`mms-backend-api`, `mms-auth-users`, `mms-code-review`
+`mms-backend-api`, `mms-backend-security`, `mms-code-review`

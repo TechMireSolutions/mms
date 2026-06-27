@@ -29,7 +29,7 @@ function ensureSize(items: string[], size: number): string[] {
   return next.slice(0, Math.max(size, 0));
 }
 
-export default function QuestionTypeAnswerFields({
+export function QuestionTypeAnswerFields({
   questionType,
   text,
   options,

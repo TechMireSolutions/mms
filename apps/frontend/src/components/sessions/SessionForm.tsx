@@ -1,17 +1,24 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { Calendar } from "lucide-react";
-import FormModal from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
-import { calculateModuleFieldsCompleteness } from "@/lib/formCompleteness";
-import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
-import { toTitleCase, type AppTranslationKey } from "@mms/shared";
-import useTranslation from "@/hooks/useTranslation";
+import React, { useState, useMemo, useCallback, useTransition } from "react";
+import { z } from "zod";
+import { Calendar, DollarSign, BookOpen } from "lucide-react";
+import { MmsDynamicForm } from "@/components/ui/MmsDynamicForm";
+import { useMmsForm } from "@/hooks/useMmsForm";
 import { useSessionConfig } from "@/hooks/useSessionConfig";
-
-
-import { DatePicker } from "../ui/DatePicker";
-
-const EMPTY: Partial<Session> = { name: "", type: "Hifz", status: "active", startDate: "", endDate: "", baseFee: 0, currency: "PKR", description: "" };
+import { SessionsSettings } from "./SessionsSettings";
+import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
+import { useTranslation } from "@/hooks/useTranslation";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePermissions } from "@/hooks/usePermissions";
+import {
+  toTitleCase,
+  type AppTranslationKey,
+  type FieldDefinition,
+  type TabDefinition,
+  buildCustomFieldSchema,
+  SESSIONS_TAB_REGISTRY,
+  INITIAL_SESSIONS_FIELD_SEED,
+  SESSIONS_MODULE_CONTRACT,
+} from "@mms/shared";
 
 interface SessionFormProps {
   open?: boolean;
@@ -20,96 +27,311 @@ interface SessionFormProps {
   onSave: (session: Session) => void;
 }
 
-/**
- * SessionForm Component
- *
- * A modal form for creating or editing a session.
- */
-export default function SessionForm({ open = true, session, onClose, onSave }: SessionFormProps): React.JSX.Element {
+const ICON_MAP: Record<string, typeof Calendar> = {
+  basic: Calendar,
+  financial: DollarSign,
+};
+
+export function SessionForm({ open = true, session, onClose, onSave }: SessionFormProps): React.JSX.Element {
   const { t } = useTranslation();
-  const [data, setData] = useState<Partial<Session>>(() => (session ? { ...session } : { ...EMPTY }));
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const { can } = usePermissions();
+  const canEditSetup = can(SESSIONS_MODULE_CONTRACT.permissions.setupWrite);
+  const queryClient = useQueryClient();
+  const [isBuilderMode, setIsBuilderMode] = useState(false);
+  const [, startTransition] = useTransition();
 
-  const { settings, statuses, types, fields, customFields, orderedFields } = useSessionConfig();
-
+  const { settings, statuses, types, customFields } = useSessionConfig();
   const statusOptions = statuses.length > 0 ? statuses : ["active", "upcoming", "completed", "cancelled"];
   const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
 
-  const upd = <K extends keyof Session>(f: K, v: Session[K]) => setData((d) => ({ ...d, [f]: v }));
+  // Construct fields mapped by tabs
+  const fieldsByTab = useMemo<Record<string, FieldDefinition[]>>(() => {
+    const rawFields = settings.fields || {};
+    const hasTabbedFields = Object.values(rawFields).some(val => Array.isArray(val));
+    
+    const base = hasTabbedFields
+      ? (rawFields as Record<string, FieldDefinition[]>)
+      : INITIAL_SESSIONS_FIELD_SEED;
 
-  useEffect(() => {
-    if (!session && !data.status && statusOptions[0]) {
-      upd("status", statusOptions[0]);
-    }
-  }, [statusOptions, session, data.status]);
+    const mapped: Record<string, FieldDefinition[]> = {};
 
-  useEffect(() => {
-    if (!session && !data.type && typeOptions[0]) {
-      upd("type", typeOptions[0]);
-    }
-  }, [typeOptions, session, data.type]);
+    Object.entries(base).forEach(([tabId, list]) => {
+      mapped[tabId] = list.map((f) => {
+        if (f.key === "type") {
+          return { ...f, options: typeOptions };
+        }
+        if (f.key === "status") {
+          return { ...f, options: statusOptions };
+        }
+        if (f.key === "currency") {
+          return { ...f, options: ["PKR", "USD", "GBP", "AED", "SAR"] };
+        }
+        return f;
+      });
+    });
 
-  const completeness = useMemo(
-    () => calculateModuleFieldsCompleteness(data as Record<string, unknown>, orderedFields, fields),
-    [data, orderedFields, fields],
-  );
+    // If it was the flat setup, append custom fields to basic tab
+    if (!hasTabbedFields && customFields && customFields.length > 0) {
+      const basicFields = [...(mapped.basic || [])];
+      const fieldOrder = settings.fieldOrder || [];
+      customFields.forEach(cf => {
+        if (!basicFields.some(f => f.key === cf.id)) {
+          const orderIdx = fieldOrder.indexOf(cf.id);
+          basicFields.push({
+            key: cf.id,
+            label: cf.label,
+            type: cf.type as any,
+            required: !!cf.required,
+            enabled: true,
+            order: orderIdx >= 0 ? orderIdx : 99,
+            placeholder: cf.placeholder,
+            options: cf.options,
+          });
+        }
+      });
+      mapped.basic = basicFields.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+    }
 
-  const handleSave = async () => {
-    // Validate required default fields
-    if (!data.name) {
-      setError("Session Name is required.");
-      return;
-    }
-    if (!data.startDate) {
-      setError("Start Date is required.");
-      return;
-    }
-    if (!data.endDate) {
-      setError("End Date is required.");
-      return;
-    }
+    return mapped;
+  }, [settings.fields, settings.fieldOrder, customFields, typeOptions, statusOptions]);
 
-    for (const key of Object.keys(fields)) {
-      if (fields[key].required && (data[key as keyof Session] === undefined || data[key as keyof Session] === "")) {
-        setError(`${key.charAt(0).toUpperCase() + key.slice(1)} is required.`);
+  // Construct initial values conforming to Rule 15.1
+  const initialValues = useMemo<Partial<Session>>(() => {
+    const initial: Record<string, any> = {
+      name: "",
+      type: typeOptions[0] || "Hifz",
+      status: statusOptions[0] || "active",
+      startDate: null,
+      endDate: null,
+      baseFee: null,
+      currency: "PKR",
+      description: "",
+      classes: [],
+      timetable: [],
+      discounts: [],
+      budget: { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
+      events: [],
+      tabarruk: [],
+    };
+
+    const draft = queryClient.getQueryData<Partial<Session>>(['builder_draft', 'session', session?.id || 'new']);
+    const target = draft || session || {};
+    
+    return {
+      ...initial,
+      ...target,
+    } as Partial<Session>;
+  }, [session, queryClient, typeOptions, statusOptions]);
+
+  // Setup Zod Validation Schema
+  const schema = useMemo(() => {
+    const shape: Record<string, z.ZodTypeAny> = {
+      id: z.string().optional(),
+      classes: z.array(z.any()).default([]),
+      timetable: z.array(z.any()).default([]),
+      discounts: z.array(z.any()).default([]),
+      budget: z.any().optional(),
+      events: z.array(z.any()).default([]),
+      tabarruk: z.array(z.any()).default([]),
+      _blueprintId: z.string().optional(),
+    };
+
+    const enabledTabIds = settings.enabledTabs && settings.enabledTabs.length > 0 
+      ? new Set(settings.enabledTabs) 
+      : new Set(["basic", "financial"]);
+
+    Object.keys(fieldsByTab).forEach((tabId) => {
+      if (tabId !== "basic" && !enabledTabIds.has(tabId)) {
         return;
       }
-    }
 
-    // Validate custom fields
-    for (const cf of customFields) {
-      if (cf.required && !(data as Record<string, unknown>)[cf.id]) {
-        setError(`"${cf.label}" is required.`);
+      const tabFields = fieldsByTab[tabId] || [];
+      tabFields.forEach((field) => {
+        if (!field.enabled) return;
+        shape[field.key] = buildCustomFieldSchema(field);
+      });
+    });
+
+    return z.object(shape).passthrough();
+  }, [fieldsByTab, settings.enabledTabs]);
+
+  const {
+    form,
+    tab,
+    setTab,
+    saving,
+    errors,
+    handleSave,
+  } = useMmsForm<Session>({
+    schema,
+    fields: fieldsByTab,
+    initialData: initialValues,
+    t,
+  });
+
+  const data = form.watch();
+  const setValue = form.setValue;
+
+  const handleToggleBuilderMode = useCallback((active: boolean) => {
+    if (active) {
+      queryClient.setQueryData(['builder_draft', 'session', session?.id || 'new'], form.getValues());
+    }
+    startTransition(() => {
+      setIsBuilderMode(active);
+    });
+  }, [queryClient, session?.id, form]);
+
+  const completeness = useMemo(() => {
+    let totalRequired = 0;
+    let filledRequired = 0;
+    let totalOptional = 0;
+    let filledOptional = 0;
+
+    const enabledTabIds = settings.enabledTabs && settings.enabledTabs.length > 0 
+      ? new Set(settings.enabledTabs) 
+      : new Set(["basic", "financial"]);
+
+    Object.keys(fieldsByTab).forEach((tabId) => {
+      if (tabId !== "basic" && !enabledTabIds.has(tabId)) {
         return;
       }
-    }
 
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 700));
-    const saved = { ...data, name: toTitleCase(data.name || "") };
-    onSave({
-      ...saved,
-      id: session?.id || `s${Date.now()}`,
-      name: saved.name || "Untitled Session",
-      type: saved.type || typeOptions[0] || "Hifz",
-      status: saved.status || statusOptions[0] || "active",
-      startDate: saved.startDate || "",
-      endDate: saved.endDate || "",
-      baseFee: Number(saved.baseFee) || 0,
-      currency: saved.currency || "PKR",
+      const tabFields = fieldsByTab[tabId] || [];
+      tabFields.forEach((field) => {
+        if (!field.enabled) return;
+        
+        // Skip booleans and ai_summary fields from completeness score
+        if (field.type === "boolean" || field.type === "ai_summary") {
+          return;
+        }
+
+        const isRequired = !!field.required;
+        const val = (data as Record<string, any>)[field.key];
+        const isFilled = val !== undefined && val !== null && val !== "";
+
+        if (isRequired) {
+          totalRequired++;
+          if (isFilled) filledRequired++;
+        } else {
+          totalOptional++;
+          if (isFilled) filledOptional++;
+        }
+      });
+    });
+
+    const reqRatio = totalRequired === 0 ? 0 : filledRequired / totalRequired;
+    const optRatio = totalOptional === 0 ? 0 : filledOptional / totalOptional;
+    const progress = (reqRatio * 0.7) + (optRatio * 0.3);
+
+    return Math.round(progress * 100);
+  }, [data, fieldsByTab, settings.enabledTabs]);
+
+  const visibleTabs = useMemo(() => {
+    const tabsFromConfig = (settings.formTabs && settings.formTabs.length > 0 
+      ? settings.formTabs 
+      : SESSIONS_TAB_REGISTRY) as TabDefinition[];
+    const enabledTabIds = settings.enabledTabs && settings.enabledTabs.length > 0 
+      ? new Set(settings.enabledTabs) 
+      : new Set(["basic", "financial"]);
+
+    return [...tabsFromConfig]
+      .sort((a, b) => a.order - b.order)
+      .filter((tabDef) => {
+        if (tabDef.key === "basic") return true;
+        if (!enabledTabIds.has(tabDef.key)) return false;
+        
+        // Ghost Tab Prevention
+        const tabFields = fieldsByTab[tabDef.key] || [];
+        const hasVisibleFields = tabFields.some((field) => field.enabled);
+        if (!hasVisibleFields) return false;
+
+        return true;
+      });
+  }, [settings.formTabs, settings.enabledTabs, fieldsByTab]);
+
+  const formTabs = useMemo(() => {
+    return visibleTabs.map((t) => ({
+      key: t.key,
+      label: t.label,
+      icon: ICON_MAP[t.key] || BookOpen,
+    }));
+  }, [visibleTabs]);
+
+  const prepareSessionData = useCallback((formData: Session): Session => {
+    const name = toTitleCase(formData.name?.trim() || "") as string;
+    
+    return {
+      ...formData,
+      id: session?.id || formData.id || `s${Date.now()}`,
+      name: name || "Untitled Session",
+      type: formData.type || typeOptions[0] || "Hifz",
+      status: formData.status || statusOptions[0] || "active",
+      startDate: formData.startDate || "",
+      endDate: formData.endDate || "",
+      baseFee: Number(formData.baseFee) || 0,
+      currency: formData.currency || "PKR",
       classes: session?.classes || [],
       timetable: session?.timetable || [],
       discounts: session?.discounts || [],
       budget: session?.budget || { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
       events: session?.events || [],
       tabarruk: session?.tabarruk || [],
-    } as Session);
-    setSaving(false);
-  };
+      _blueprintId: "1.0",
+    } as Session;
+  }, [session, typeOptions, statusOptions]);
+
+  const onSubmit = useCallback(async (formData: Session) => {
+    const dataToSave = prepareSessionData(formData);
+    onSave(dataToSave);
+  }, [prepareSessionData, onSave]);
+
+  const renderField = useCallback((field: FieldDefinition) => {
+    if (field.key === "status") {
+      const fieldError = errors.find((e) => e.fieldId === field.key);
+      return (
+        <div key="status">
+          <label className="text-xs font-semibold text-muted-foreground mb-1 block">
+            {field.label} {field.required ? "*" : ""}
+          </label>
+          <select
+            id="sessionStatus"
+            className={`w-full px-3 py-2 bg-card border rounded-lg text-sm transition-all focus:outline-none focus:ring-1 focus:ring-primary ${
+              fieldError ? "border-destructive focus:ring-destructive" : "border-border focus:border-primary"
+            }`}
+            value={data.status || "active"}
+            onChange={(e) => setValue("status", e.target.value, { shouldValidate: true, shouldDirty: true })}
+            required={field.required}
+          >
+            {statusOptions.map((s) => {
+              const translationKey = `sessions.status.${s}` as AppTranslationKey;
+              const translated = t(translationKey);
+              const label = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+              return (
+                <option key={s} value={s}>{label}</option>
+              );
+            })}
+          </select>
+          {fieldError && <p className="text-[10px] font-medium text-destructive mt-1">{fieldError.message}</p>}
+        </div>
+      );
+    }
+    return null;
+  }, [data.status, statusOptions, t, errors, setValue]);
+
+  const footerStart = data.name ? (
+    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      <span className="font-semibold text-foreground">{data.name}</span>
+      <div className="flex items-center gap-2 border-s border-border ps-3">
+        <span>{data.type}</span>
+        <span className="border-s border-border ps-2">{data.status}</span>
+      </div>
+    </div>
+  ) : (
+    <span className="text-xs text-destructive">Session Name is required</span>
+  );
 
   return (
-    <FormModal
+    <MmsDynamicForm
       open={open}
       onClose={onClose}
       title={session ? "Edit Session" : "New Session"}
@@ -117,185 +339,28 @@ export default function SessionForm({ open = true, session, onClose, onSave }: S
       icon={Calendar}
       progress={completeness}
       progressLabel="Progress"
-      error={error}
+      showBuilderToggle={canEditSetup}
+      isBuilderMode={isBuilderMode}
+      onBuilderModeChange={handleToggleBuilderMode}
+      tabs={formTabs}
+      activeTab={tab}
+      onTabChange={setTab}
+      tabPanelIdPrefix="session-form-tab"
+      error={errors.map(e => e.message)}
       cancelLabel="Cancel"
       saveLabel={session ? "Update" : "Create Session"}
-      onSave={() => void handleSave()}
+      onSave={() => void handleSave(onSubmit)()}
       saving={saving}
-      saveDisabled={!data.name || !data.startDate || !data.endDate}
-    >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {orderedFields.map((field) => {
-              const isEnabled = fields[field.id]?.enabled !== false;
-              if (!isEnabled) return null;
-
-              if (field.id === "name") {
-                return (
-                  <div key="name" className="sm:col-span-2">
-                    <label className={FORM_LABEL} htmlFor="sessionName">Session Name *</label>
-                    <input id="sessionName" className={FORM_INPUT} value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Summer Hifz Programme 2025" required />
-                  </div>
-                );
-              }
-
-              if (field.id === "type") {
-                return (
-                  <div key="type">
-                    <label className={FORM_LABEL} htmlFor="sessionType">Type {field.required ? "*" : ""}</label>
-                    <select id="sessionType" className={FORM_SELECT} value={data.type || "Hifz"} onChange={(e) => upd("type", e.target.value as Session["type"])} required={field.required}>
-                      {typeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
-                );
-              }
-
-              if (field.id === "status") {
-                return (
-                  <div key="status">
-                    <label className={FORM_LABEL} htmlFor="sessionStatus">Status {field.required ? "*" : ""}</label>
-                    <select id="sessionStatus" className={FORM_SELECT} value={data.status || "active"} onChange={(e) => upd("status", e.target.value as Session["status"])} required={field.required}>
-                      {statusOptions.map((s) => {
-                        const translationKey = `sessions.status.${s}` as AppTranslationKey;
-                        const translated = t(translationKey);
-                        const label = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
-                        return (
-                          <option key={s} value={s}>{label}</option>
-                        );
-                      })}
-                    </select>
-                  </div>
-                );
-              }
-
-              if (field.id === "startDate") {
-                return (
-                  <div key="startDate">
-                    <label className={FORM_LABEL} htmlFor="sessionStartDate">Start Date *</label>
-                    <DatePicker
-                      id="sessionStartDate"
-                      value={data.startDate || ""}
-                      onChange={(val) => upd("startDate", val)}
-                      required
-                    />
-                  </div>
-                );
-              }
-
-              if (field.id === "endDate") {
-                return (
-                  <div key="endDate">
-                    <label className={FORM_LABEL} htmlFor="sessionEndDate">End Date *</label>
-                    <DatePicker
-                      id="sessionEndDate"
-                      value={data.endDate || ""}
-                      onChange={(val) => upd("endDate", val)}
-                      required
-                    />
-                  </div>
-                );
-              }
-
-              if (field.id === "baseFee") {
-                return (
-                  <div key="baseFee">
-                    <label className={FORM_LABEL} htmlFor="sessionBaseFee">Base Fee {field.required ? "*" : ""}</label>
-                    <input id="sessionBaseFee" type="number" min="0" className={FORM_INPUT} value={data.baseFee || ""} onChange={(e) => upd("baseFee", Number(e.target.value))} placeholder="0" required={field.required} />
-                  </div>
-                );
-              }
-
-              if (field.id === "currency") {
-                return (
-                  <div key="currency">
-                    <label className={FORM_LABEL} htmlFor="sessionCurrency">Currency {field.required ? "*" : ""}</label>
-                    <select id="sessionCurrency" className={FORM_SELECT} value={data.currency || "PKR"} onChange={(e) => upd("currency", e.target.value)} required={field.required}>
-                      {["PKR", "USD", "GBP", "AED", "SAR"].map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                );
-              }
-
-              if (field.id === "description") {
-                return (
-                  <div key="description" className="sm:col-span-2">
-                    <label className={FORM_LABEL} htmlFor="sessionDescription">Description {field.required ? "*" : ""}</label>
-                    <textarea id="sessionDescription" className={FORM_INPUT + " min-h-[80px] resize-none"} value={data.description || ""} onChange={(e) => upd("description", e.target.value)} placeholder="Brief description of this session…" required={field.required} />
-                  </div>
-                );
-              }
-
-              // Custom field
-              if (!["name", "type", "status", "startDate", "endDate", "baseFee", "currency", "description"].includes(field.id)) {
-                const val = (data as Record<string, unknown>)[field.id] ?? "";
-                return (
-                  <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
-                    <label className={FORM_LABEL}>
-                      {field.label} {field.required ? "*" : ""}
-                    </label>
-                    {field.type === "textarea" ? (
-                      <textarea
-                        className={FORM_INPUT + " min-h-[80px] py-2 resize-none"}
-                        value={val as string}
-                        onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
-                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
-                        required={field.required}
-                      />
-                    ) : field.type === "select" ? (
-                      <select
-                        className={FORM_SELECT}
-                        value={val as string}
-                        onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
-                        required={field.required}
-                      >
-                        <option value="">Select option…</option>
-                        {field.options?.map((opt) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
-                    ) : field.type === "boolean" ? (
-                      <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={!!val}
-                          onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.checked }))}
-                          className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
-                        />
-                        <span className="text-xs font-medium text-foreground">{field.label}</span>
-                      </label>
-                    ) : field.type === "number" ? (
-                      <input
-                        type="number"
-                        className={FORM_INPUT}
-                        value={val as number}
-                        onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
-                        placeholder={field.placeholder || `Enter number…`}
-                        required={field.required}
-                      />
-                    ) : field.type === "date" ? (
-                      <DatePicker
-                        value={val as string}
-                        onChange={(val) => setData((d) => ({ ...d, [field.id]: val }))}
-                        required={field.required}
-                      />
-                    ) : (
-                      <input
-                        type={field.type === "email" ? "email" : field.type === "url" ? "url" : "text"}
-                        className={FORM_INPUT}
-                        value={val as string}
-                        onChange={(e) => setData((d) => ({ ...d, [field.id]: e.target.value }))}
-                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
-                        required={field.required}
-                      />
-                    )}
-                  </div>
-                );
-              }
-
-              return null;
-            })}
-          </div>
-    </FormModal>
+      saveDisabled={!data.name?.trim() || !data.startDate || !data.endDate}
+      footerStart={footerStart}
+      fields={fieldsByTab[tab] || []}
+      data={data}
+      setValue={(key, val, opts) => setValue(key as any, val, opts)}
+      errors={errors}
+      renderField={renderField}
+      builderPanel={
+        <SessionsSettings mode="fields" />
+      }
+    />
   );
 }

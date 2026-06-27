@@ -321,26 +321,6 @@ export const ACTIVITY_ACTION_REGISTRY: readonly {
   { id: 'role_change', labelKey: 'users.action.roleChange', badgeVariant: 'primary' },
 ] as const;
 
-/** @deprecated Use `DEFAULT_WORKSPACE_ROLES`. */
-export const DEFAULT_ROLES = DEFAULT_WORKSPACE_ROLES;
-
-/** @deprecated Use `RBAC_MODULE_REGISTRY`. */
-export const MODULES = RBAC_MODULE_REGISTRY;
-
-/** @deprecated Use `PERMISSION_ACTIONS`. */
-export const ACTIONS = PERMISSION_ACTIONS;
-
-/** @deprecated Use `USER_STATUS_VALUES`. */
-export const STATUS_OPTIONS = USER_STATUS_VALUES;
-
-/** @deprecated Use `ACTIVITY_ACTION_VALUES`. */
-export const ACTION_TYPES = ACTIVITY_ACTION_VALUES;
-
-/** @deprecated Use `DEFAULT_WORKSPACE_USERS`. */
-export const SAMPLE_USERS = DEFAULT_WORKSPACE_USERS;
-
-/** @deprecated Use `DEFAULT_USER_ACTIVITY_LOGS`. */
-export const SAMPLE_ACTIVITY_LOGS = DEFAULT_USER_ACTIVITY_LOGS;
 
 /**
  * Normalizes stored/API user payloads to the workspace UI model (singular `role`).
@@ -386,8 +366,6 @@ export function normalizeWorkspaceUser(
   };
 }
 
-/** @deprecated Use `normalizeWorkspaceUser`. */
-export const normalizeSystemUser = normalizeWorkspaceUser;
 
 /** Clones default system roles for editable local state. */
 export function cloneDefaultWorkspaceRoles(): WorkspaceRole[] {

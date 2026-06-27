@@ -29,11 +29,11 @@ describe('contactsMetricsUtils', () => {
   it('countContactsCreatedSince respects rolling window', () => {
     const recent = new Date();
     recent.setDate(recent.getDate() - 5);
-    const old = new Date();
-    old.setDate(old.getDate() - 60);
+    const olderThanWindowDate = new Date();
+    olderThanWindowDate.setDate(olderThanWindowDate.getDate() - 60);
     const contacts = [
       base({ createdAt: recent.toISOString().slice(0, 10) }),
-      base({ id: 2, createdAt: old.toISOString().slice(0, 10) }),
+      base({ id: 2, createdAt: olderThanWindowDate.toISOString().slice(0, 10) }),
       base({ id: 3, deletedAt: '2026-06-01', createdAt: recent.toISOString().slice(0, 10) }),
     ];
     expect(countContactsCreatedSince(contacts, CONTACT_METRICS_DEFAULT_PERIOD_DAYS)).toBe(1);

@@ -9,7 +9,7 @@ import {
   normalizeTimezone,
   type AppTranslationKey,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { notify } from '@/lib/notify';
 import { detectTimezoneFromLocation } from '@/lib/detectTimezoneFromLocation';

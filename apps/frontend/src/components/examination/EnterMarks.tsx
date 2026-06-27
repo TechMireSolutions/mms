@@ -28,7 +28,7 @@ interface EnterMarksProps {
  * @param props.onSaveResults - Callback to save scoring entries.
  * @returns The EnterMarks component.
  */
-export default function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): React.ReactElement {
+export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): React.ReactElement {
   const [selectedExam, setSelectedExam] = useState<string>(exams[0]?.id || "");
   const [marks, setMarks] = useState<Record<string, number | string>>({});
   const [saved, setSaved] = useState<boolean>(false);

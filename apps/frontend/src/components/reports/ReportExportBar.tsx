@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Printer, FileSpreadsheet, FileText, Settings as SettingsIcon } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ReportExportBarProps {
   title: string;
@@ -16,6 +17,7 @@ interface ReportExportBarProps {
  * @returns React.JSX.Element
  */
 export default function ReportExportBar({ title, onPrint, data, headers }: ReportExportBarProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [orientation, setOrientation] = useState<"p" | "l">("p");
   const [format, setFormat]           = useState<string>("a4");
   const [showPdfSettings, setShowPdfSettings] = useState<boolean>(false);
@@ -72,40 +74,44 @@ export default function ReportExportBar({ title, onPrint, data, headers }: Repor
 
   return (
     <div className="flex items-center justify-between gap-3 flex-wrap py-2 text-left relative">
-      <p className="text-xs text-muted-foreground">Export <span className="font-semibold text-foreground">{title}</span></p>
+      <p className="text-xs text-muted-foreground">
+        {t("reports.export.title").split("{name}")[0]}
+        <span className="font-semibold text-foreground">{title}</span>
+        {t("reports.export.title").split("{name}")[1]}
+      </p>
       
       <div className="flex items-center gap-2">
         {/* PDF Settings Popover (Simple) */}
         {showPdfSettings && (
           <div className="absolute right-0 bottom-full mb-2 bg-card border border-border rounded-xl p-3 shadow-xl z-50 flex flex-col gap-3 min-w-[200px]">
              <div className="space-y-1.5">
-               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Orientation</label>
+               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.orientation")}</label>
                <div className="flex gap-1 p-1 bg-muted rounded-lg">
                  <button 
                   onClick={() => setOrientation("p")}
                   className={`flex-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all ${orientation === "p" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                  >
-                   Portrait
+                   {t("reports.export.portrait")}
                  </button>
                  <button 
                   onClick={() => setOrientation("l")}
                   className={`flex-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all ${orientation === "l" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                  >
-                   Landscape
+                   {t("reports.export.landscape")}
                  </button>
                </div>
              </div>
              <div className="space-y-1.5">
-               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Page Size</label>
+               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.pageSize")}</label>
                <select 
                 value={format}
                 onChange={(e) => setFormat(e.target.value)}
                 className="w-full text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20"
                >
-                 <option value="a4">A4 (Standard)</option>
-                 <option value="letter">Letter</option>
-                 <option value="a3">A3 (Wide)</option>
-                 <option value="legal">Legal</option>
+                 <option value="a4">{t("reports.builder.formatA4")}</option>
+                 <option value="letter">{t("reports.builder.formatLetter")}</option>
+                 <option value="a3">{t("reports.builder.formatA3")}</option>
+                 <option value="legal">{t("reports.builder.formatLegal")}</option>
                </select>
              </div>
           </div>
@@ -117,7 +123,7 @@ export default function ReportExportBar({ title, onPrint, data, headers }: Repor
           type="button"
         >
           <Printer className="w-3.5 h-3.5" />
-          Print
+          {t("reports.export.print")}
         </button>
         <button 
           onClick={handleExcel}
@@ -126,7 +132,7 @@ export default function ReportExportBar({ title, onPrint, data, headers }: Repor
           type="button"
         >
           <FileSpreadsheet className="w-3.5 h-3.5 text-success" />
-          Excel
+          {t("reports.export.excel")}
         </button>
         
         <div className="flex rounded-lg border border-border bg-card overflow-hidden">
@@ -137,12 +143,12 @@ export default function ReportExportBar({ title, onPrint, data, headers }: Repor
             type="button"
           >
             <FileText className="w-3.5 h-3.5 text-destructive" />
-            PDF
+            {t("reports.export.pdf")}
           </button>
           <button 
             onClick={() => setShowPdfSettings(!showPdfSettings)}
             className={`px-2 py-1.5 hover:bg-muted transition-colors ${showPdfSettings ? "text-primary bg-primary/5" : "text-muted-foreground"}`}
-            title="PDF Export Settings"
+            title={t("reports.export.settings")}
             type="button"
           >
             <SettingsIcon className="w-3.5 h-3.5" />

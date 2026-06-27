@@ -31,7 +31,7 @@ const DEFAULT_CONFIG: Record<string, StatusBadgeConfigItem> = {
   draft:     { label: "Draft",     cls: SEMANTIC_BADGE.muted },
 };
 
-export default function StatusBadge({
+export function StatusBadge({
   status,
   config = {},
   size = "md",

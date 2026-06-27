@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { BookOpen, Plus, Trash2 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   QUESTION_SOURCE_FIELD_TO_KEY,
   createQuestionSourceBook,
@@ -18,11 +18,11 @@ import {
   persistQuestionSourceBook,
   removeQuestionSourceBook,
 } from '@/lib/data/questionBankSourceBooks';
-import FormModal from '@/components/ui/FormModal';
+import { FormModal } from '@/components/ui/FormModal';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import FormSelect from '@/components/ui/FormSelect';
+import { FormSelect } from '@/components/ui/FormSelect';
 
 
 type TranslateFn = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
@@ -75,7 +75,7 @@ function renderSourceInput(
   );
 }
 
-export default function QuestionSourcesTab({
+export function QuestionSourcesTab({
   sourceBooks,
   citations,
   availableFieldIds,

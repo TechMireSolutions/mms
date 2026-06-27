@@ -26,4 +26,4 @@ description: Install dependencies, verify environment, and start MMS dev servers
 
 ## Rules
 
-`rules/mms-ops.md`, `rules/mms-core.md`
+`rules/mms-ops-infrastructure.md`, `rules/mms-core.md`

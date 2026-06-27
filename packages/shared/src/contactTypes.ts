@@ -56,7 +56,7 @@ export interface EmergencyContact {
 
 export interface ContactRelationship {
   contactId: string | number;
-  type: string;
+  relationship?: string;
 }
 
 export interface ContactActivity {
@@ -98,7 +98,7 @@ export interface Contact {
   emergencyContacts?: EmergencyContact[];
   notes?: string;
   occupation?: string;
-  communicationPref?: string;
+  communicationPreference?: string;
   phone?: string;
   email?: string;
   lifecycleStage?: string;
@@ -113,7 +113,7 @@ export interface Contact {
 export interface FieldDefinition {
   key: string;
   label: string;
-  type: "text" | "textarea" | "number" | "date" | "select" | "multiselect" | "tags" | "boolean" | "url" | "email" | "file" | "location" | "ai_summary";
+  type: "text" | "textarea" | "number" | "date" | "datetime" | "select" | "multiselect" | "single_select" | "multi_select" | "tags" | "boolean" | "url" | "email" | "file" | "location" | "ai_summary" | "currency";
   enabled: boolean;
   order: number;
   options?: string[];
@@ -129,6 +129,7 @@ export interface FieldDefinition {
   min?: number;
   max?: number;
   mask?: string;
+  precision?: number;
 }
 
 export interface FieldGroup {
@@ -288,13 +289,6 @@ export const RELATIONSHIPS = [
   "Guardian", "Spouse", "Other",
 ];
 
-export const DEFAULT_ENABLED_FIELDS = [
-  "name", "gender", "isSyed", "dob",
-  "city", "state", "country",
-];
-
-export const DEFAULT_REQUIRED_FIELDS = ["name"];
-
 export const TAB_REGISTRY: TabDefinition[] = [
   { key: "basic",     label: "Identity",          description: "Core identity fields + custom fields", enabled: true, order: 0, isSystem: true },
   { key: "phones",    label: "Phone Numbers",     description: "Phone numbers tab", enabled: true, order: 1, isSystem: true },
@@ -321,7 +315,6 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
   phones: [
     { key: "label",    label: "Phone Type / Label",               type: "select", description: "Select type of phone number (e.g. Mobile, Home, Work).", options: ["Mobile", "Home", "Work", "Other"], defaultValue: "Mobile", permissions: [], enabled: true, order: 0, required: false },
     { key: "number",   label: "Phone Number",                     type: "text",   description: "Phone number input. Primary channel for direct communication.", defaultValue: "", permissions: [], enabled: true, order: 1, required: true },
-    { key: "countryCode", label: "Country Code",                  type: "text",   description: "Country dial code (e.g. +92).", defaultValue: "+92", permissions: [], enabled: true, order: 2, required: false },
   ],
   emails: [
     { key: "label",   label: "Email Type / Label", type: "select", description: "Select type of email address (e.g. Personal, Work, School).", options: ["Personal", "Work", "Other"], defaultValue: "Personal", permissions: [], enabled: true, order: 0, required: false },
@@ -350,7 +343,7 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
  * drawer read them directly), but must never be re-rendered as form inputs.
  * `sanitizeConfig` strips these from any persisted field config.
  */
-export const REMOVED_FORM_FIELD_KEYS: readonly string[] = ["lifecycleStage", "rating"];
+export const REMOVED_FORM_FIELD_KEYS: readonly string[] = ["lifecycleStage", "rating", "countryCode"];
 
 export const DEFAULT_PAGE_TABS: TabDefinition[] = [
   { key: "work",    label: DEFAULT_MODULE_TIER_TAB_LABELS.work,    enabled: true, order: 0, isSystem: true },
@@ -400,4 +393,3 @@ export interface Message {
   body: string;
   sentAt: string;
 }
-

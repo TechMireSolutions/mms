@@ -8,16 +8,16 @@ import {
   type TabDefinition,
 } from "@mms/shared";
 import { useUsersConfig } from "@/hooks/useUsersConfig";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
-import CustomFieldsBuilder, { type CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { CustomFieldsBuilder, type CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { Switch } from "../ui/switch";
 import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import Modal from "../ui/Modal";
+import { Modal } from "../ui/Modal";
 import { cn } from "@/lib/utils";
 
 interface ToggleProps {
@@ -59,7 +59,7 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
-export default function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX.Element {
+export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const { settings, updateSettings } = useUsersConfig();
   const [saved, setSaved] = useState<boolean>(false);

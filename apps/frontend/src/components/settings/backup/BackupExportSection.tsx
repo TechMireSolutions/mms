@@ -1,8 +1,8 @@
 import React from 'react';
 import { Database, Download, RefreshCw, Layers, Settings, HardDrive, CheckCircle2, Users, DollarSign, BookOpen } from 'lucide-react';
-import SectionCard from '@/components/ui/SectionCard';
+import { SectionCard } from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BackupExportSectionProps {
   adminEmail: string;

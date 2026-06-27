@@ -1,26 +1,25 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import useConfigSubTabs from "@/hooks/useConfigSubTabs";
-import useTranslation from "@/hooks/useTranslation";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
+import React, { useState, useEffect, useMemo } from "react";
+import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClipboardList, Plus, UserCheck } from "lucide-react";
-import PageHeader from "../components/ui/PageHeader";
-import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
-import SubTabBar from "@/components/ui/SubTabBar";
-import usePermissions from "@/hooks/usePermissions";
-import EnrollmentWizard from "../components/enrollment/EnrollmentWizard";
-import EnrollmentList from "../components/enrollment/EnrollmentList";
-import EnrollmentsCommandMetrics from "../components/enrollment/EnrollmentsCommandMetrics";
-import EnrollmentDetail from "../components/enrollment/EnrollmentDetail";
-import EligibilityCheck from "../components/enrollment/EligibilityCheck";
-import EnrollmentReports from "../components/enrollment/EnrollmentReports";
-import EnrollmentsSettings from "../components/enrollment/EnrollmentsSettings";
+import { PageHeader } from "../components/ui/PageHeader";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { usePermissions } from "@/hooks/usePermissions";
+import { EnrollmentWizard } from "../components/enrollment/EnrollmentWizard";
+import { EnrollmentList } from "../components/enrollment/EnrollmentList";
+import { EnrollmentsCommandMetrics } from "../components/enrollment/EnrollmentsCommandMetrics";
+import { EnrollmentDetail } from "../components/enrollment/EnrollmentDetail";
+import { EligibilityCheck } from "../components/enrollment/EligibilityCheck";
+import { EnrollmentReports } from "../components/enrollment/EnrollmentReports";
+import { EnrollmentsSettings } from "../components/enrollment/EnrollmentsSettings";
 import KPISummary from "../components/reports/KPISummary";
-import ErrorBoundary from "../components/ui/ErrorBoundary";
-import Modal from "../components/ui/Modal";
+import { ErrorBoundary } from "../components/ui/ErrorBoundary";
+import { Modal } from "../components/ui/Modal";
 import { Enrollment } from '@/lib/data/enrollmentData';
-import { saveCollection } from "../lib/db";
-import { useLiveCollection } from "../hooks/useLiveCollection";
+import { useEnrollmentsCollection, useEnrollmentMutations } from "@/hooks/useEnrollmentsApi";
 import { useStudentMutations, type StudentRecord } from "../hooks/useStudents";
 import { apiJson } from "@/lib/apiClient";
 import { STUDENTS_MODULE_CONTRACT } from "@mms/shared";
@@ -48,18 +47,14 @@ export default function Enrollments() {
   const role = useEnrollmentViewerRole();
   const { can } = usePermissions();
   const canWriteEnrollments = can("enrollments.write");
-  const enrollments = useLiveCollection("enrollments");
+  const enrollments = useEnrollmentsCollection();
+  const { createEnrollment, updateEnrollment } = useEnrollmentMutations();
   const { updateStudent } = useStudentMutations();
   const [viewing, setViewing]         = useState<Enrollment | null>(null);
   const [subTab, setSubTab]           = useState("fields");
   const [showWizard, setShowWizard]   = useState(false);
   const [filteredCount, setFilteredCount] = useState(0);
   const columnLayout = useEnrollmentColumnLayout();
-
-  const saveEnrollments = useCallback((updater: Enrollment[] | ((prev: Enrollment[]) => Enrollment[])) => {
-    const next = typeof updater === "function" ? updater(enrollments) : updater;
-    saveCollection("enrollments", next);
-  }, [enrollments]);
 
   // Reset activeSubTab to list if role changes to accountant (since new and eligibility are restricted)
   useEffect(() => {
@@ -69,49 +64,64 @@ export default function Enrollments() {
   }, [canWriteEnrollments, activeSubTab]);
 
   const handleComplete = async (enrollment: Enrollment) => {
-    saveEnrollments((prev) => [enrollment, ...prev]);
-
-    try {
-      const body = await apiJson<{ students: StudentRecord[] }>(
-        `${STUDENTS_MODULE_CONTRACT.restBasePath}/resolve`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ ids: [String(enrollment.studentId)] }),
-        },
-      );
-      const student = body.students[0];
-      if (student) {
-        const enrolled = (student.enrolledSessions as string[] | undefined) ?? [];
-        if (!enrolled.includes(enrollment.sessionId)) {
-          updateStudent.mutate({
-            id: String(student.id),
-            student: { ...student, enrolledSessions: [...enrolled, enrollment.sessionId] },
-          });
+    createEnrollment.mutate(enrollment, {
+      onSuccess: async () => {
+        try {
+          const body = await apiJson<{ students: StudentRecord[] }>(
+            `${STUDENTS_MODULE_CONTRACT.restBasePath}/resolve`,
+            {
+              method: 'POST',
+              body: JSON.stringify({ ids: [String(enrollment.studentId)] }),
+            },
+          );
+          const student = body.students[0];
+          if (student) {
+            const enrolled = (student.enrolledSessions as string[] | undefined) ?? [];
+            if (!enrolled.includes(enrollment.sessionId)) {
+              updateStudent.mutate({
+                id: String(student.id),
+                student: { ...student, enrolledSessions: [...enrolled, enrollment.sessionId] },
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Failed to update student enrolled sessions', err);
         }
+        setShowWizard(false);
+        setActiveSubTab("list");
       }
-    } catch (err) {
-      console.error('Failed to update student enrolled sessions', err);
-    }
-
-    setShowWizard(false);
-    setActiveSubTab("list");
+    });
   };
 
   const handleCancel = (id: string) => {
-    saveEnrollments((prev) => prev.map((e) =>
-      e.id === id
-        ? { ...e, status: "cancelled" as const, timeline: [...(e.timeline || []), { ts: new Date().toISOString(), event: "Enrollment cancelled", by: role }] }
-        : e
-    ));
+    const e = enrollments.find((x) => x.id === id);
+    if (!e) return;
+    updateEnrollment.mutate({
+      id,
+      enrollment: {
+        ...e,
+        status: "cancelled" as const,
+        timeline: [...(e.timeline || []), { ts: new Date().toISOString(), event: "Enrollment cancelled", by: role }]
+      }
+    });
   };
 
   const handleStatusChange = (id: string, newStatus: Enrollment["status"]) => {
-    saveEnrollments((prev) => prev.map((e) =>
-      e.id === id
-        ? { ...e, status: newStatus, timeline: [...(e.timeline || []), { ts: new Date().toISOString(), event: `Status → ${newStatus}`, by: role }] }
-        : e
-    ));
-    if (viewing?.id === id) setViewing((v) => v ? { ...v, status: newStatus } : v);
+    const e = enrollments.find((x) => x.id === id);
+    if (!e) return;
+    const updated: Enrollment = {
+      ...e,
+      status: newStatus,
+      timeline: [...(e.timeline || []), { ts: new Date().toISOString(), event: `Status → ${newStatus}`, by: role }]
+    };
+    updateEnrollment.mutate({
+      id,
+      enrollment: updated,
+    }, {
+      onSuccess: () => {
+        if (viewing?.id === id) setViewing(updated);
+      }
+    });
   };
 
   // Stats bar — server metrics via EnrollmentsCommandMetrics; filtered count from list

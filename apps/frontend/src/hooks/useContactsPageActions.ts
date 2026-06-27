@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import type { Contact } from '@mms/shared';
 import { notify } from '@/lib/notify';
 import { reportClientError } from '@/lib/clientErrorReporting';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useContactMutations } from '@/hooks/useContacts';
 
 export function useContactsPageActions() {

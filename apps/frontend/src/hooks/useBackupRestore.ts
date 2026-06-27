@@ -21,9 +21,9 @@ import { triggerBackupDownload } from '@/lib/backup/backupDownload';
 import { isBackupErrorKey } from '@/lib/backup/backupErrors';
 import type { BackupCredentials, PendingDecrypt, PendingRestore } from '@/lib/backup/backupRestoreTypes';
 import { notify } from '@/lib/notify';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
-import useBranding from '@/hooks/useBranding';
+import { useBranding } from '@/hooks/useBranding';
 
 export interface UseBackupRestoreOptions {
   subdomain: string | null | undefined;

@@ -6,7 +6,7 @@ import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHea
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { ApiError } from "@/lib/apiClient";
 import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import { ROUTES } from "@/lib/config/routes";

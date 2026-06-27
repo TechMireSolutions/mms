@@ -9,7 +9,7 @@ import {
   type TeachersSettings,
 } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   loadModuleColumnPrefs,
   saveModuleColumnPrefList,

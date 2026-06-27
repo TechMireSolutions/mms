@@ -1,27 +1,30 @@
 import React, { useMemo, useState } from "react";
-import useModuleTierTabs from "@/hooks/useModuleTierTabs";
-import useConfigSubTabs from "@/hooks/useConfigSubTabs";
-import useTranslation from "@/hooks/useTranslation";
+import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
+import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
+import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReceiptText, CreditCard, Plus, DollarSign } from "lucide-react";
-import PageHeader from "../components/ui/PageHeader";
-import ActionButton from "../components/ui/ActionButton";
-import ResponsiveAccordionTabs from "@/components/ui/ResponsiveAccordionTabs";
-import SubTabBar from "@/components/ui/SubTabBar";
-import InvoiceList from "../components/finance/InvoiceList";
-import InvoiceDetail from "../components/finance/InvoiceDetail";
-import PaymentForm from "../components/finance/PaymentForm";
-import PaymentTracker from "../components/finance/PaymentTracker";
-import FinanceSettings from "../components/finance/FinanceSettings";
+import { PageHeader } from "../components/ui/PageHeader";
+import { ActionButton } from "../components/ui/ActionButton";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { InvoiceList } from "../components/finance/InvoiceList";
+import { InvoiceDetail } from "../components/finance/InvoiceDetail";
+import { PaymentForm } from "../components/finance/PaymentForm";
+import { PaymentTracker } from "../components/finance/PaymentTracker";
+import { FinanceSettings } from "../components/finance/FinanceSettings";
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
-import ErrorBoundary from "../components/ui/ErrorBoundary";
+import { ErrorBoundary } from "../components/ui/ErrorBoundary";
 import { Invoice, Payment } from '@/lib/data/financeData';
-import { saveCollection } from "../lib/db";
-import { useLiveCollection } from "../hooks/useLiveCollection";
+import {
+  useFinanceInvoicesCollection,
+  useFinancePaymentsCollection,
+  useFinanceMutations,
+} from "@/hooks/useFinanceApi";
 import { useFinanceInvoiceColumnLayout } from "@/hooks/useFinanceInvoiceColumnLayout";
 import { useFinancePaymentColumnLayout } from "@/hooks/useFinancePaymentColumnLayout";
-import FinanceCommandMetrics from "@/components/finance/FinanceCommandMetrics";
+import { FinanceCommandMetrics } from "@/components/finance/FinanceCommandMetrics";
 
 /**
  * Finance — invoices and payments. Work | Reports | Setup.
@@ -42,8 +45,9 @@ export default function Finance() {
   const [activeTab, setActiveTab] = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("invoices");
   const [subTab, setSubTab] = useState("fields");
-  const invoices = useLiveCollection("finance_invoices");
-  const payments = useLiveCollection("finance_payments");
+  const invoices = useFinanceInvoicesCollection();
+  const payments = useFinancePaymentsCollection();
+  const { createPayment } = useFinanceMutations();
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const [recordInvoice, setRecordInvoice] = useState<Invoice | null>(null);
 
@@ -51,13 +55,11 @@ export default function Finance() {
   const paymentColumnLayout = useFinancePaymentColumnLayout();
 
   const handleRecordPayment = (paymentData: Payment) => {
-    saveCollection("finance_payments", [...payments, paymentData]);
-    saveCollection("finance_invoices", invoices.map((inv) => {
-      if (inv.id !== paymentData.invoiceId) return inv;
-      const newPaid = (inv.paidAmt || 0) + paymentData.amount;
-      return { ...inv, status: newPaid >= inv.finalAmt ? "paid" : "partial", paidAmt: newPaid, paidDate: paymentData.date, method: paymentData.method };
-    }));
-    setRecordInvoice(null);
+    createPayment.mutate(paymentData, {
+      onSuccess: () => {
+        setRecordInvoice(null);
+      },
+    });
   };
 
   return (

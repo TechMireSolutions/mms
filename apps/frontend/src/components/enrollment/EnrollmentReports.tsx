@@ -50,7 +50,7 @@ interface SessionDataPoint {
  * @param props.enrollments - Current enrollment list context.
  * @returns The EnrollmentReports component.
  */
-export default function EnrollmentReports({ enrollments }: EnrollmentReportsProps): React.ReactElement {
+export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): React.ReactElement {
   const palette = useBrandPalette();
   const COLORS = useMemo(
     () => [palette.primary, palette.secondary, palette.charts[0], palette.charts[3]],

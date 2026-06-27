@@ -6,7 +6,7 @@ export const SESSIONS_MODULE_CONTRACT = {
   entityType: 'Session',
   collectionKey: 'sessions',
   settingsObjectKey: 'sessions_settings',
-  columnPrefsObjectKey: 'session_user_column_prefs',
+  columnPreferencesObjectKey: 'session_user_column_preferences',
   restBasePath: '/api/sessions',
   analyticsCategory: 'sessions',
   tiers: ['work', 'reports', 'setup'] as const,

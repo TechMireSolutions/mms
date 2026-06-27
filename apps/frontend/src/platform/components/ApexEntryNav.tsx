@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/config/routes";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ApexEntryNavProps {
   /** Show link to apex forgot-password workspace picker */

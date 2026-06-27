@@ -47,4 +47,4 @@ Use `ReportExportBar` pattern:
 
 ## Rules
 
-`.cursor/rules/mms-reports.mdc`, `mms-ui-visual.mdc`
+`.cursor/rules/mms-reports.md`, `mms-ui-ux-design.md`

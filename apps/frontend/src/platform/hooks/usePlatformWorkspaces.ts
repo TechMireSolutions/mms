@@ -3,7 +3,7 @@ import type { PlatformWorkspaceListResponse, PlatformWorkspaceRow } from '@mms/s
 import { apiJson, isApiError } from '@/lib/apiClient';
 import { WORKSPACE_REGISTRY_QUERY_KEY } from '@/platform/hooks/useWorkspaceRegistry';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 
 export const PLATFORM_WORKSPACES_QUERY_KEY = ['platform', 'workspaces'] as const;

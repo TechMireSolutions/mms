@@ -10,7 +10,7 @@ import {
 import { getPrintBrandingTokens, PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const SNAP = 4; // px grid snap
@@ -77,7 +77,7 @@ export interface InvoiceTemplateEditorProps {
  * InvoiceTemplateEditor component.
  * @param {InvoiceTemplateEditorProps} props
  */
-export default function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTemplateEditorProps) {
+export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTemplateEditorProps) {
   const printTokens = getPrintBrandingTokens();
   const [template, setTemplate] = useState<InvoiceTemplate>(() => loadTemplate());
   const [selectedId, setSelectedId] = useState<string | null>(null);

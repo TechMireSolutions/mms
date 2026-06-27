@@ -8,7 +8,7 @@ import {
 } from '@mms/shared';
 import { contactListSchema } from '../validation/contactSchemas.js';
 import { deletePersistedObject, fetchCollection, fetchObject, persistObject } from './dbSyncService.js';
-import { loadContactPrefs } from './contactPrefsService.js';
+import { loadContactPreferences } from './contactPreferencesService.js';
 
 const CACHE_KEY = 'contacts_duplicate_scan_cache';
 
@@ -20,10 +20,10 @@ export interface ContactDuplicateScanCache {
 }
 
 async function loadActiveContacts(): Promise<Contact[]> {
-  const data = await fetchCollection('contacts');
-  const parsed = contactListSchema.safeParse(data ?? []);
-  const all = parsed.success ? (parsed.data as Contact[]) : [];
-  return filterActiveContacts(all);
+  const contactCollection = await fetchCollection('contacts');
+  const parsedContacts = contactListSchema.safeParse(contactCollection ?? []);
+  const allContacts = parsedContacts.success ? (parsedContacts.data as Contact[]) : [];
+  return filterActiveContacts(allContacts);
 }
 
 export async function getDuplicateScanCache(): Promise<ContactDuplicateScanCache | null> {
@@ -50,8 +50,8 @@ export async function runContactsDuplicateScan(
   const total = contacts.length;
   await onProgress?.(0, total);
 
-  const prefs = (await loadContactPrefs()) ?? {};
-  const pairs = findContactDuplicatePairs(contacts, prefs);
+  const preferences = (await loadContactPreferences()) ?? {};
+  const pairs = findContactDuplicatePairs(contacts, preferences);
 
   const cache: ContactDuplicateScanCache = {
     computedAt: new Date().toISOString(),
@@ -72,8 +72,8 @@ export async function loadDuplicatePairsPage(query: {
   let pairs = await getCachedDuplicatePairs();
   if (!pairs) {
     const contacts = await loadActiveContacts();
-    const prefs = (await loadContactPrefs()) ?? {};
-    pairs = findContactDuplicatePairs(contacts, prefs);
+    const preferences = (await loadContactPreferences()) ?? {};
+    pairs = findContactDuplicatePairs(contacts, preferences);
   }
   return paginateContactDuplicatePairs(pairs, query.page ?? 1, query.limit ?? 50);
 }
@@ -81,9 +81,9 @@ export async function loadDuplicatePairsPage(query: {
 /** Count duplicate matches for a draft contact (globle2 §10 — server-side, no client full list). */
 export async function countContactDuplicateMatches(contact: Contact): Promise<number> {
   const contacts = await loadActiveContacts();
-  const prefs = (await loadContactPrefs()) ?? {};
+  const preferences = (await loadContactPreferences()) ?? {};
   const peers = contacts.filter((row) => String(row.id) !== String(contact.id));
-  const pairs = findContactDuplicatePairs([...peers, contact], prefs);
+  const pairs = findContactDuplicatePairs([...peers, contact], preferences);
   return pairs.filter((pair) =>
     pair.contacts.some((row) => String(row.id) === String(contact.id)),
   ).length;

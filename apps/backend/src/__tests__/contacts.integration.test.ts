@@ -37,8 +37,8 @@ const mockSoftDeleteContactById = vi.fn();
 const mockRestoreContactById = vi.fn();
 const mockBulkSoftDeleteContacts = vi.fn();
 const mockBulkRestoreContacts = vi.fn();
-const mockGetUserColumnPrefs = vi.fn();
-const mockSetUserColumnPrefs = vi.fn();
+const mockGetUserColumnPreferences = vi.fn();
+const mockSetUserColumnPreferences = vi.fn();
 const mockListContactsSavedReports = vi.fn();
 const mockCreateContactsSavedReport = vi.fn();
 const mockDeleteContactsSavedReport = vi.fn();
@@ -58,9 +58,9 @@ vi.mock('../services/contactService.js', () => ({
   bulkRestoreContacts: (...args: unknown[]) => mockBulkRestoreContacts(...args),
 }));
 
-vi.mock('../services/contactPrefsService.js', () => ({
-  getUserColumnPrefs: (...args: unknown[]) => mockGetUserColumnPrefs(...args),
-  setUserColumnPrefs: (...args: unknown[]) => mockSetUserColumnPrefs(...args),
+vi.mock('../services/contactPreferencesService.js', () => ({
+  getUserColumnPreferences: (...args: unknown[]) => mockGetUserColumnPreferences(...args),
+  setUserColumnPreferences: (...args: unknown[]) => mockSetUserColumnPreferences(...args),
   listContactsSavedReports: (...args: unknown[]) => mockListContactsSavedReports(...args),
   createContactsSavedReport: (...args: unknown[]) => mockCreateContactsSavedReport(...args),
   deleteContactsSavedReport: (...args: unknown[]) => mockDeleteContactsSavedReport(...args),
@@ -163,8 +163,8 @@ describe('contacts REST routes', () => {
     mockRestoreContactById.mockReset().mockResolvedValue({ ...sampleContact, deletedAt: undefined });
     mockBulkSoftDeleteContacts.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
     mockBulkRestoreContacts.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
-    mockGetUserColumnPrefs.mockReset().mockResolvedValue([]);
-    mockSetUserColumnPrefs.mockReset().mockResolvedValue(undefined);
+    mockGetUserColumnPreferences.mockReset().mockResolvedValue([]);
+    mockSetUserColumnPreferences.mockReset().mockResolvedValue(undefined);
     mockListContactsSavedReports.mockReset().mockResolvedValue([]);
     mockCreateContactsSavedReport.mockReset().mockResolvedValue({
       id: 'csr_test',
@@ -603,38 +603,38 @@ describe('contacts REST routes', () => {
     await app.close();
   });
 
-  it('GET /api/contacts/column-prefs returns user layout', async () => {
-    mockGetUserColumnPrefs.mockResolvedValue([{ key: 'name', enabled: true, order: 0 }]);
+  it('GET /api/contacts/column-preferences returns user layout', async () => {
+    mockGetUserColumnPreferences.mockResolvedValue([{ key: 'name', enabled: true, order: 0 }]);
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
-      url: '/api/contacts/column-prefs',
+      url: '/api/contacts/column-preferences',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${teacherToken(app)}`,
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ prefs: [{ key: 'name', enabled: true, order: 0 }] });
-    expect(mockGetUserColumnPrefs).toHaveBeenCalledWith('u-teacher');
+    expect(res.json()).toEqual({ preferences: [{ key: 'name', enabled: true, order: 0 }] });
+    expect(mockGetUserColumnPreferences).toHaveBeenCalledWith('u-teacher');
     await app.close();
   });
 
-  it('PUT /api/contacts/column-prefs persists layout', async () => {
-    const prefs = [{ key: 'email', enabled: false, order: 2 }];
+  it('PUT /api/contacts/column-preferences persists layout', async () => {
+    const preferences = [{ key: 'email', enabled: false, order: 2 }];
     const app = await buildApp();
     const res = await app.inject({
       method: 'PUT',
-      url: '/api/contacts/column-prefs',
+      url: '/api/contacts/column-preferences',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${teacherToken(app)}`,
       },
-      payload: { prefs },
+      payload: { preferences },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ success: true, prefs });
-    expect(mockSetUserColumnPrefs).toHaveBeenCalledWith('u-teacher', prefs);
+    expect(res.json()).toEqual({ success: true, preferences });
+    expect(mockSetUserColumnPreferences).toHaveBeenCalledWith('u-teacher', preferences);
     await app.close();
   });
 

@@ -4,11 +4,11 @@ import { Contact, getPrimaryPhone, Message } from '@mms/shared';
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { openDeviceSmsComposer } from '@/lib/deviceSms';
 import { notify } from '@/lib/notify';
-import FormModal from '@/components/ui/FormModal';
+import { FormModal } from '@/components/ui/FormModal';
 import { Button } from '@/components/ui/button';
-import { FormSelect } from './form/FormPrimitives';
+import { FormSelect } from '@/components/ui/FormPrimitives';
 import { FORM_LABEL, FORM_TEXTAREA } from '@/components/ui/formStyles';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { getCollection, saveCollection } from '@/lib/db';
 

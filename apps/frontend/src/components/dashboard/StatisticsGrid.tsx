@@ -7,7 +7,7 @@ import {
   Award, Clock, Heart, Briefcase, Activity, CheckCircle2, PieChart,
   Zap, BarChart2
 } from "lucide-react";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 
 const MotionButton = motion(Button);

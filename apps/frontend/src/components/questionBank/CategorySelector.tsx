@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { createQuestionCategory, type AppTranslationKey, type QuestionCategory } from '@mms/shared';
 import { persistQuestionCategory } from '@/lib/data/questionBankCategories';
 import { FORM_INPUT } from '@/components/ui/formStyles';
@@ -23,7 +23,7 @@ function toSelectedIds(value: string | string[]): string[] {
   return value ? [value] : [];
 }
 
-export default function CategorySelector({
+export function CategorySelector({
   categories,
   multiple = false,
   value,

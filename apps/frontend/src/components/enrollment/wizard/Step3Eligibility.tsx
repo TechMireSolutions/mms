@@ -28,7 +28,7 @@ interface Step3EligibilityProps {
   suggestedClass: Class | null;
 }
 
-export default function Step3Eligibility({ student, session, suggestedClass }: Step3EligibilityProps): React.ReactElement {
+export function Step3Eligibility({ student, session, suggestedClass }: Step3EligibilityProps): React.ReactElement {
   const checks = useMemo<CheckResult[]>(() =>
     runFullEligibility(student, session, suggestedClass, []),
     [student, session, suggestedClass]

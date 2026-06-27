@@ -10,7 +10,7 @@ export interface FormProgressBarProps {
 /**
  * Header progress indicator for entity forms (0–100%).
  */
-export default function FormProgressBar({
+export function FormProgressBar({
   value,
   label,
   className,

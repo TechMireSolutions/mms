@@ -14,7 +14,7 @@ export interface PageHeaderProps {
  * @param {PageHeaderProps} props - The component props.
  * @returns {React.ReactElement} The rendered PageHeader component.
  */
-export default function PageHeader({
+export function PageHeader({
   icon: Icon = null,
   title,
   subtitle = "",

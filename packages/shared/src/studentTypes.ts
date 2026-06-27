@@ -1,5 +1,5 @@
 /** Active enrollment status for a student profile. */
-export const STUDENT_STATUS_VALUES = ['active', 'inactive', 'suspended'] as const;
+export const STUDENT_STATUS_VALUES = ['active', 'inactive', 'suspended', 'graduated', 'transferred'] as const;
 export type StudentStatus = (typeof STUDENT_STATUS_VALUES)[number];
 
 /**

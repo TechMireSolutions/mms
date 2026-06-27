@@ -9,7 +9,7 @@ import {
   type SystemModuleNavEntry,
 } from '@mms/shared';
 import { resolveModuleIcon } from '@/lib/config/moduleIcons';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Switch } from '@/components/ui/switch';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 

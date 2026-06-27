@@ -16,11 +16,6 @@ cd "$ROOT_DIR"
 
 BACKEND_PORT="${MMS_BACKEND_PORT:-3000}"
 FRONTEND_PORT="${MMS_FRONTEND_PORT:-5173}"
-PG_CONTAINER="${MMS_PG_CONTAINER:-mms-postgres}"
-PG_IMAGE="${MMS_PG_IMAGE:-postgres:17-alpine}"
-PG_USER="${MMS_PG_USER:-postgres}"
-PG_PASSWORD="${MMS_PG_PASSWORD:-postgres}"
-PG_DB="${MMS_PG_DB:-mms}"
 LOG_DIR="$ROOT_DIR/.logs"
 SCREEN_SESSION="${MMS_DEV_SCREEN_SESSION:-mms-dev}"
 MAX_LOG_BYTES="${MMS_MAX_LOG_BYTES:-52428800}"
@@ -36,14 +31,13 @@ MMS restart_servers.sh — local development stack (single source of truth)
 
 Commands:
   (none)|start|restart   Start dev servers (default: GNU screen)
-  status                 Postgres, screen session, ports, recent logs
+  status                 Screen session, ports, recent logs
   stop                   Stop screen session and free ports
 
 Options:
   --foreground           Run backend + frontend in this terminal (blocks; Ctrl+C stops)
   --turbo                Legacy: detached turbo (fragile — prefer default screen mode)
   --quick                Skip Vite cache clear / shorten health wait
-  --no-docker            Skip PostgreSQL container start
   --help                 Show this help
 
 URLs:
@@ -180,6 +174,7 @@ kill_repo_dev_processes() {
     case "$cmd" in
       *"turbo"*"run dev"*|*"$ROOT_DIR"*"pnpm dev"*|\
       *"pnpm"*"--filter"*"mms-frontend"*"dev"*|*"pnpm"*"--filter"*"mms-backend"*"dev"*|\
+      *"pnpm"*"--filter"*"mms-backend"*"worker"*|\
       *"$ROOT_DIR/apps/frontend"*"vite"*|*"$ROOT_DIR/apps/backend"*"tsx"*)
         log "Stopping orphan dev process (pid $pid)..."
         kill -TERM "$pid" 2>/dev/null || true
@@ -194,6 +189,7 @@ kill_repo_dev_processes() {
     case "$cmd" in
       *"turbo"*"run dev"*|*"$ROOT_DIR"*"pnpm dev"*|\
       *"pnpm"*"--filter"*"mms-frontend"*"dev"*|*"pnpm"*"--filter"*"mms-backend"*"dev"*|\
+      *"pnpm"*"--filter"*"mms-backend"*"worker"*|\
       *"$ROOT_DIR/apps/frontend"*"vite"*|*"$ROOT_DIR/apps/backend"*"tsx"*)
         kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
         ;;
@@ -251,47 +247,7 @@ wait_for_http() {
   return 1
 }
 
-ensure_docker_daemon() {
-  command -v docker &>/dev/null || { warn "docker not installed — ensure PostgreSQL is on localhost:5432"; return 1; }
-  docker info >/dev/null 2>&1 && return 0
-  log "Docker daemon not running — starting Docker Desktop..."
-  if [[ "$(uname -s)" == "Darwin" ]]; then
-    open -a Docker >/dev/null 2>&1 || true
-    local i=1
-    while [ "$i" -le 30 ]; do
-      docker info >/dev/null 2>&1 && { ok "Docker daemon ready"; return 0; }
-      sleep 2
-      i=$((i + 1))
-    done
-  fi
-  warn "Docker daemon unavailable — start Docker Desktop manually"
-  return 1
-}
 
-ensure_postgres_container() {
-  if [ -f "apps/backend/.env" ] && grep -q '^DATABASE_URL=sqlite://' apps/backend/.env 2>/dev/null; then
-    NO_DOCKER=true
-  fi
-  if [ "$NO_DOCKER" = true ]; then
-    log "Skipping Docker (SQLite configured or --no-docker)"
-    return 0
-  fi
-  ensure_docker_daemon || return 0
-  if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$PG_CONTAINER"; then
-    ok "PostgreSQL container '$PG_CONTAINER' running"
-    return 0
-  fi
-  if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "$PG_CONTAINER"; then
-    log "Starting container '$PG_CONTAINER'..."
-    docker start "$PG_CONTAINER" >/dev/null
-  else
-    log "Creating container '$PG_CONTAINER' ($PG_IMAGE)..."
-    docker run -d --name "$PG_CONTAINER" \
-      -e "POSTGRES_USER=$PG_USER" -e "POSTGRES_PASSWORD=$PG_PASSWORD" -e "POSTGRES_DB=$PG_DB" \
-      -p "5432:5432" "$PG_IMAGE" >/dev/null
-  fi
-  wait_for_port 5432 "PostgreSQL" 30 || die "PostgreSQL not available — backend cannot start"
-}
 
 check_prerequisites() {
   [ -f "pnpm-workspace.yaml" ] || die "Run from repo root"
@@ -339,6 +295,7 @@ run_dev_foreground() {
   echo ""
   trap 'kill 0 2>/dev/null; exit 0' INT TERM
   pnpm --filter mms-backend dev &
+  pnpm --filter mms-backend worker &
   pnpm --filter mms-frontend dev &
   wait
 }
@@ -384,7 +341,6 @@ start_servers_screen() {
   stop_servers true
   maybe_clear_vite_cache
   check_prerequisites
-  ensure_postgres_container
 
   log "Starting dev in screen session '$SCREEN_SESSION'..."
   screen -dmS "$SCREEN_SESSION" bash -lc \
@@ -402,7 +358,6 @@ start_servers_foreground() {
   stop_servers true
   maybe_clear_vite_cache
   check_prerequisites
-  ensure_postgres_container
   run_dev_foreground
 }
 
@@ -414,30 +369,22 @@ show_status() {
     warn "Screen session '$SCREEN_SESSION' not running"
   fi
 
-  local is_sqlite=false
-  if [ -f "apps/backend/.env" ] && grep -q '^DATABASE_URL=sqlite://' apps/backend/.env 2>/dev/null; then
-    is_sqlite=true
+  local db_file="apps/backend/mms.db"
+  if [ -f "apps/backend/.env" ]; then
+    local configured_db
+    configured_db="$(grep '^DATABASE_URL=' apps/backend/.env | sed 's/DATABASE_URL=//' | sed 's/sqlite:\/\///')"
+    if [ -n "$configured_db" ]; then
+      db_file="$configured_db"
+      if [[ "$db_file" != /* ]]; then
+        db_file="apps/backend/$db_file"
+      fi
+    fi
   fi
 
-  if [ "$is_sqlite" = true ]; then
-    local db_file
-    db_file="$(grep '^DATABASE_URL=sqlite://' apps/backend/.env | sed 's/DATABASE_URL=sqlite:\/\///')"
-    if [[ "$db_file" != /* ]]; then
-      db_file="apps/backend/$db_file"
-    fi
-    if [ -f "$db_file" ]; then
-      ok "SQLite: database file exists ($db_file, $(stat -f%z "$db_file" 2>/dev/null || stat -c%s "$db_file" 2>/dev/null) bytes)"
-    else
-      warn "SQLite: database file not found ($db_file)"
-    fi
+  if [ -f "$db_file" ]; then
+    ok "SQLite: database file exists ($db_file, $(stat -f%z "$db_file" 2>/dev/null || stat -c%s "$db_file" 2>/dev/null) bytes)"
   else
-    if command -v docker &>/dev/null && docker info >/dev/null 2>&1; then
-      docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$PG_CONTAINER" \
-        && ok "PostgreSQL: $PG_CONTAINER running" \
-        || warn "PostgreSQL: container '$PG_CONTAINER' not running"
-    else
-      warn "Docker: not available"
-    fi
+    warn "SQLite: database file not found ($db_file)"
   fi
 
   local be fe
@@ -502,7 +449,6 @@ EOF
 main() {
   if [ "${MMS_FOREGROUND_WORKER:-}" = "1" ]; then
     check_prerequisites
-    ensure_postgres_container
     run_dev_foreground
     exit 0
   fi
@@ -516,7 +462,6 @@ main() {
         foreground) start_servers_foreground ;;
         turbo)
           check_prerequisites
-          ensure_postgres_container
           start_servers_turbo
           print_summary
           ;;

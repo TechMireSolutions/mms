@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_LABEL, FORM_TEXTAREA } from "@/components/ui/formStyles";
 
 export interface ConfirmAlertDialogOptionalReason {
@@ -31,7 +31,7 @@ export interface ConfirmAlertDialogProps {
 }
 
 /** Accessible confirmation dialog — replaces `window.confirm` in module flows. */
-export default function ConfirmAlertDialog({
+export function ConfirmAlertDialog({
   open,
   onOpenChange,
   title,

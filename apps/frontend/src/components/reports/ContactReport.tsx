@@ -5,7 +5,7 @@ import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import type { ContactsWorkDrillDown } from "@mms/shared";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { useContactsReportAnalytics } from "@/hooks/useContacts";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
 import ContactsSavedReports from "@/components/contacts/ContactsSavedReports";
 import ReportSummaryCard from "./ReportSummaryCard";

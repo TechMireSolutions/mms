@@ -2,15 +2,15 @@ import React from 'react';
 import {
   Layers, Filter, Package, Star, Gift, TrendingUp, RotateCcw,
 } from 'lucide-react';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useHasanatMetrics } from '@/hooks/useHasanatApi';
-import ModuleCommandMetricCard from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
 
 interface HasanatCommandMetricsProps {
   shown: number;
 }
 
-export default function HasanatCommandMetrics({
+export function HasanatCommandMetrics({
   shown,
 }: HasanatCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();

@@ -1,11 +1,11 @@
 ---
 name: mms-module-work
-description: Implements or reviews MMS module command centres and Work tabs from globle.md sections 2-3: metrics, create/export actions, search/filter/sort directories, detail drawers, mobile views, column prefs, templates, and bulk actions.
+description: Implements or reviews MMS module command centres and Work tabs from mms-module-architecture.md: metrics, create/export actions, search/filter/sort directories, detail drawers, mobile views, column prefs, templates, and bulk actions.
 ---
 
 # MMS Module Work Workflow
 
-Source: `globle.md` sections 2-3. Rules: `mms-module-work.mdc`, `mms-module-architecture.mdc`, `mms-module-isolation.mdc`, `mms-rbac.mdc`, `mms-query.mdc`.
+Source: `mms-module-architecture.md` §2-§3. Rules: `mms-module-architecture.md`, `mms-auth-security.md`, `mms-data-layer.md`.
 
 Use this skill when changing a module command centre, Work tab, directory, row actions, bulk actions, filters, detail drawer, mobile cards, or column preferences.
 
@@ -52,4 +52,4 @@ Use this skill when changing a module command centre, Work tab, directory, row a
 - Write the same entity through both Query mutations and `saveCollection`.
 - Show forbidden actions as disabled clutter when they should be omitted.
 
-Related skills: `mms-module-page`, `mms-contacts`, `mms-data-sync`, `mms-background-jobs`.
+Related skills: `mms-module-page`, `mms-form-architecture`, `mms-data-sync`, `mms-background-jobs`.

@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import type { StoredPlatformUser } from '@mms/shared';
+import type { StoredPlatformUser, PlatformRole } from '@mms/shared';
 import { getDb } from '../dbClient.js';
 import { platformUsers } from '../schema.js';
 
@@ -9,6 +9,7 @@ function rowToStored(row: typeof platformUsers.$inferSelect): StoredPlatformUser
     email: row.email,
     name: row.name,
     passwordHash: row.passwordHash,
+    role: row.role as PlatformRole,
     createdAt: row.createdAt.toISOString(),
     emailVerifiedAt: row.emailVerifiedAt?.toISOString(),
   };
@@ -46,6 +47,7 @@ export async function insertPlatformUser(user: StoredPlatformUser): Promise<void
     email: user.email.toLowerCase(),
     name: user.name,
     passwordHash: user.passwordHash,
+    role: user.role,
     emailVerifiedAt: user.emailVerifiedAt ? new Date(user.emailVerifiedAt) : null,
     createdAt: new Date(user.createdAt),
   });
@@ -53,7 +55,7 @@ export async function insertPlatformUser(user: StoredPlatformUser): Promise<void
 
 export async function updatePlatformUserRow(
   userId: string,
-  patch: Partial<Pick<StoredPlatformUser, 'name' | 'passwordHash' | 'emailVerifiedAt'>>,
+  patch: Partial<Pick<StoredPlatformUser, 'name' | 'passwordHash' | 'emailVerifiedAt' | 'role'>>,
 ): Promise<StoredPlatformUser | null> {
   const existing = await findPlatformUserRowById(userId);
   if (!existing) return null;
@@ -68,6 +70,7 @@ export async function updatePlatformUserRow(
     .set({
       name: next.name,
       passwordHash: next.passwordHash,
+      role: next.role,
       emailVerifiedAt: next.emailVerifiedAt ? new Date(next.emailVerifiedAt) : null,
     })
     .where(eq(platformUsers.id, userId));

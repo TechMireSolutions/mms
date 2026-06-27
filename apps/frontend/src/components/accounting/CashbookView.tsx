@@ -76,7 +76,7 @@ interface CashbookViewProps {
  * @param {CashbookViewProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function CashbookView({ entries, accounts, fmt }: CashbookViewProps) {
+export function CashbookView({ entries, accounts, fmt }: CashbookViewProps) {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<EntryType | "all">("all");
 

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import usePermissions from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import { resolveDashboardPersona } from "@/lib/dashboardPersona";
 
 export type ViewerRole = "admin" | "teacher" | "accountant";

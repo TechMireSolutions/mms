@@ -1,12 +1,33 @@
 {
   "version": "7",
-  "dialect": "sqlite",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1782205710826,
-      "tag": "0000_lowly_pride",
+      "version": "7",
+      "when": 1782385927297,
+      "tag": "0000_smart_the_captain",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782396599868,
+      "tag": "0001_secret_lady_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782465821677,
+      "tag": "0002_hot_ben_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782494073740,
+      "tag": "0003_awesome_felicia_hardy",
       "breakpoints": true
     }
   ]

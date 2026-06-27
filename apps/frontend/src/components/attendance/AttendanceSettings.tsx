@@ -8,17 +8,17 @@ import {
   type TabDefinition,
 } from "@mms/shared";
 import { useAttendanceConfig } from "@/hooks/useAttendanceConfig";
-import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { CustomFieldsBuilder, CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
-import Modal from "../ui/Modal";
+import { Modal } from "../ui/Modal";
 
 interface AttendanceSettingsProps {
   role: string;
@@ -69,7 +69,7 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
-export default function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
+export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
   const { t } = useTranslation();
   const { settings, updateSettings } = useAttendanceConfig();
   const [saved, setSaved] = useState(false);

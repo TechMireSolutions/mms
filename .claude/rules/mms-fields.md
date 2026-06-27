@@ -9,26 +9,26 @@ paths:
   - "apps/frontend/src/components/**/settings/**"
   - "packages/shared/src/contactTypes.ts"
   - "packages/shared/src/contactFieldDependencies.ts"
-  - "globle.md"
 ---
 
 # MMS Fields & Tabs Registry
 
-Setup **Fields** tier behaviour: **`mms-module-setup.md`** (globle.md §6) · persistence: below · workflow: skills `mms-fields-registry`, `mms-module-setup`.
+Setup **Fields** tier behaviour: **`mms-module-architecture.md`** · persistence: below · workflow: skills `mms-fields-registry`, `mms-module-setup`.
 
 ## Universal schemas (in `@mms/shared`)
 
-**Field:** `{ key, label, labelKey?, type, enabled, order, options, permissions, defaultValue }`
+**Field:** `{ key, label, labelKey?, type, enabled, order, options, permissions, defaultValue, required?, unique?, placeholder?, description? }`
 
 **Tab:** `{ key, label, labelKey?, icon, enabled, order, permissions, description, color, isSystem }`
 
-- Prefer **`labelKey: AppTranslationKey`** for new fields/tabs — resolve with `t(labelKey)` at render (`mms-i18n.md`).
+- Prefer **`labelKey: AppTranslationKey`** for new fields/tabs — resolve with `t(labelKey)` at render (`mms-settings-i18n.md`).
 - Plain `label` is allowed for seed defaults; user-edited labels persist in registry JSON.
 
 - One schema for default + custom — no parallel contacts-only types.
 - `isSystem` = origin metadata only — **never branch behaviour on it**.
 
-## globle.md §6 — fields and tabs (summary)
+## Fields and Tabs Registry Rules Summary
+
 
 | § | Rule | Contacts |
 |---|------|----------|
@@ -39,7 +39,7 @@ Setup **Fields** tier behaviour: **`mms-module-setup.md`** (globle.md §6) · pe
 | 6.5 | Required enforced on create/edit/import/bulk; guide to tab on error | Zod + `ContactForm` |
 | 6.6 | Archive preferred; delete only after dependency check | `getContactFieldRemovalIssues()` |
 
-Full detail: **`mms-module-setup.md`**.
+Full detail: **`mms-module-architecture.md`**.
 
 ## Configuration/Fields tab
 
@@ -72,9 +72,9 @@ Drag-drop reorder · Lucide icon picker · user colour · per-role `permissions`
 | Action | Must provision atomically |
 |--------|---------------------------|
 | Custom field | Column + registry entry + form/table binding |
-| Custom tab | Table + Drizzle migration + registry + CRUD routes + tab view |
+| Custom tab | Registry layout entry + frontend tab views (PostgreSQL is unaware of tabs) |
 | Delete field | Dependency check + registry + UI references — **Contacts:** `contactFieldDependencies.ts` |
-| Delete tab | Cascade table, data, routes, config |
+| Delete tab | Dependency check (ensure tab is empty) + registry update |
 | Disable | Hide UI only — preserve data |
 
 ## Current vs target
@@ -88,7 +88,7 @@ Drag-drop reorder · Lucide icon picker · user colour · per-role `permissions`
 
 ## Field persistence gate (required — create & review)
 
-Any PR that **adds or changes a stored field** must prove the value reaches **SQLite** (via `/api/db/*`), not UI-only or local-only state.
+Any PR that **adds or changes a stored field** must prove the value reaches **PostgreSQL** (via `/api/db/*` or REST API), not UI-only or local-only state.
 
 ### Checklist (every new/changed field)
 
@@ -125,7 +125,16 @@ Any PR that **adds or changes a stored field** must prove the value reaches **SQ
 
 If none exists, block the change until wired.
 
+## Dynamic Blueprint & Field Governance
+
+Field and tab registry, configuration, and rendering must follow the detailed specifications defined in **`mms-form-architecture.md`**:
+- **ESM Boundaries:** Keep all schemas and validation in `@mms/shared`.
+- **Branded IDs:** Use compilation-branded types (e.g. `FieldId`, `TabId`) via factory validation.
+- **Two-Layer Validation:** Enforce runtime constraints using Zod, with dynamic error message interpolation.
+- **Taxonomy:** Map each field type strictly to its Shadcn UI / Radix primitive.
+- **Field Governance:** Enforce draft blueprint mutability and publish immutability. Use soft-delete/deactivation for custom fields to preserve historical analytical data.
+
 ## Validation
 
 - Dynamic contact fields: Zod via `ContactConfigContext` / `buildCustomFieldSchema`
-- Other modules: Zod or shared pure validators in `@mms/shared` before save (`mms-testing.md` for non-trivial validators)
+- Other modules: Zod or shared pure validators in `@mms/shared` before save (`mms-testing-observability.md` for non-trivial validators)

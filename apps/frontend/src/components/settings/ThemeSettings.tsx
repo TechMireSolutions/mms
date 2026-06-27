@@ -1,15 +1,15 @@
 import React from 'react';
 import { Palette, Monitor, Wand2, ImageIcon, Loader2, Box } from 'lucide-react';
 import { cornerStyleLabelKey, normalizeBrandingCornerStyle, normalizeThemeMode } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useApplyLogoColors } from '@/hooks/useApplyLogoColors';
 import { useThemeSettingsDraft } from '@/hooks/useThemeSettingsDraft';
 import { useSettingsTab } from '@/lib/contexts/SettingsTabContext';
-import SectionCard from '@/components/ui/SectionCard';
+import { SectionCard } from '@/components/ui/SectionCard';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import SettingsFormActions from '@/components/ui/SettingsFormActions';
+import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import BrandColorPanel from '@/components/branding/BrandColorPanel';
 import ThemeModeSelector from '@/components/settings/ThemeModeSelector';
 import CornerStyleSelector from '@/components/settings/CornerStyleSelector';

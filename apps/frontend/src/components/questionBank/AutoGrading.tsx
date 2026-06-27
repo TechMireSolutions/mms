@@ -8,8 +8,8 @@ import {
   type QuestionBankResult,
   type QuestionBankTest,
 } from "@mms/shared";
-import useTranslation from "@/hooks/useTranslation";
-import StatusBadge, { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { useTranslation } from "@/hooks/useTranslation";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 
 function pct(obtained: number, total: number): number {
@@ -175,7 +175,7 @@ interface StatsSummary {
   lowest: number;
 }
 
-export default function AutoGrading({ tests, results, questions }: AutoGradingProps): React.ReactElement {
+export function AutoGrading({ tests, results, questions }: AutoGradingProps): React.ReactElement {
   const { t } = useTranslation();
   const [selectedTest, setSelectedTest] = useState<string>(tests[0]?.id || "");
   const test = tests.find((item) => item.id === selectedTest);

@@ -8,17 +8,17 @@ import {
   type FieldDefinition,
 } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useTeacherConfig";
-import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { CustomFieldsBuilder, CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import FormSelect from "../ui/FormSelect";
+import { FormSelect } from "../ui/FormSelect";
 import { Switch } from "../ui/switch";
 import { Checkbox } from "../ui/checkbox";
-import Modal from "../ui/Modal";
-import useTranslation from "@/hooks/useTranslation";
+import { Modal } from "../ui/Modal";
+import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 
 interface ToggleProps {
@@ -56,7 +56,7 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
-export default function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }): React.JSX.Element {
+export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }): React.JSX.Element {
   const { t } = useTranslation();
   const { settings, specializations, updateSettings } = useTeacherConfig();
   const [saved, setSaved] = useState<boolean>(false);

@@ -43,7 +43,7 @@ const emergencyContactSchema = z
 
 const relationshipSchema = z.object({
   contactId: z.union([z.string(), z.number()]),
-  type: z.string(),
+  relationship: z.string().optional(),
 });
 
 const activitySchema = z
@@ -121,14 +121,14 @@ export const contactMergeAuditSchema = z.object({
   mergedName: z.string().optional(),
 });
 
-export const contactColumnPrefSchema = z.object({
+export const contactColumnPreferenceSchema = z.object({
   key: z.string().min(1),
   enabled: z.boolean(),
   order: z.number().int().min(0),
 });
 
-export const contactColumnPrefsBodySchema = z.object({
-  prefs: z.array(contactColumnPrefSchema),
+export const contactColumnPreferencesBodySchema = z.object({
+  preferences: z.array(contactColumnPreferenceSchema),
 });
 
 export const contactsWorkDrillDownSchema = z.object({
@@ -202,12 +202,12 @@ export const contactsReportAnalyticsQuerySchema = z.object({
   years: z
     .string()
     .optional()
-    .transform((val) =>
-      val
-        ? val
+    .transform((value) =>
+      value
+        ? value
             .split(',')
-            .map((y) => Number.parseInt(y.trim(), 10))
-            .filter((y) => Number.isFinite(y) && y >= 1900 && y <= 2100)
+            .map((year) => Number.parseInt(year.trim(), 10))
+            .filter((year) => Number.isFinite(year) && year >= 1900 && year <= 2100)
         : [],
     ),
 });

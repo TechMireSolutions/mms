@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useMemo } from "react";
 import type { Contact } from "@mms/shared";
 import { notify } from "@/lib/notify";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useContactMutations } from "@/hooks/useContacts";
 
 const ContactForm = lazy(() => import("./ContactForm"));

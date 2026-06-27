@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { usePlatformSetupStatus } from "@/platform/hooks/usePlatformSetupStatus";
-import PlatformLoadingScreen from "@/platform/components/PlatformLoadingScreen";
+import { PlatformLoadingScreen } from "@/platform/components/PlatformLoadingScreen";
 
 const PlatformSignIn = lazy(() => import("@/platform/pages/auth/PlatformSignIn"));
 const PlatformSetup = lazy(() => import("@/platform/pages/auth/PlatformSetup"));

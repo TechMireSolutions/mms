@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { normalizeEnabledModules, SYSTEM_MODULES_BY_ID } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContext';
-import SettingsFormActions from '@/components/ui/SettingsFormActions';
+import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import ModuleSettingsNavGrid from '@/components/settings/modules/ModuleSettingsNavGrid';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
 

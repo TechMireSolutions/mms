@@ -6,11 +6,11 @@ import {
   PieChart, Pie, Cell,
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
-import { Distribution } from '@/lib/data/hasanatData';
-import { useLiveCollection } from "../../hooks/useLiveCollection";
+import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/hooks/useHasanatApi";
 import ReportSummaryCard from "./ReportSummaryCard";
 import ReportExportBar from "./ReportExportBar";
-import EmptyState from "../ui/EmptyState";
+import { EmptyState } from "../ui/EmptyState";
+import { useTranslation } from "@/hooks/useTranslation";
 
 /** Active filter state passed down from the parent report view. */
 import { HasanatChart } from "@/components/widgets/charts/AttendanceChart";
@@ -66,13 +66,14 @@ interface PieDatum {
  * @returns The HasanatReport component.
  */
 export default function HasanatReport({ filters }: HasanatReportProps): React.JSX.Element {
+  const { t } = useTranslation();
   const palette = useBrandPalette();
   const PIE_COLORS = useMemo(
     () => [palette.primary, palette.secondary, palette.charts[2]],
     [palette],
   );
-  const distributions = useLiveCollection<Distribution>("hasanat_distributions");
-  const denoms = useLiveCollection<any>("hasanat_denoms");
+  const distributions = useHasanatDistributionsCollection();
+  const denoms = useHasanatDenomsCollection();
 
   const { distributionData, hasanatByFaculty } = useMemo(() => {
     const studentMap: Record<string, HasanatReportItem> = {};
@@ -157,37 +158,37 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
   }, [hasanatByFaculty]);
 
   const pieData: PieDatum[] = [
-    { name: "Redeemed", value: totalRedeemed },
-    { name: "Balance",  value: totalBalance  },
+    { name: t("hasanat.report.redeemedPieLabel"), value: totalRedeemed },
+    { name: t("hasanat.report.balancePieLabel"),  value: totalBalance  },
   ];
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={Star}         label="Total Distributed" value={totalDistributed.toLocaleString()} color="primary" />
-        <ReportSummaryCard icon={Gift}         label="Total Redeemed"    value={totalRedeemed.toLocaleString()}    color="green"   />
-        <ReportSummaryCard icon={TrendingDown} label="Balance"           value={totalBalance.toLocaleString()}     color="amber"   />
-        <ReportSummaryCard icon={Users}        label="Redemption Rate"   value={`${redemptionRate}%`}             color="blue"    />
+        <ReportSummaryCard icon={Star}         label={t("hasanat.report.totalDistributed")} value={totalDistributed.toLocaleString()} color="primary" />
+        <ReportSummaryCard icon={Gift}         label={t("hasanat.report.totalRedeemed")}    value={totalRedeemed.toLocaleString()}    color="green"   />
+        <ReportSummaryCard icon={TrendingDown} label={t("hasanat.report.balance")}           value={totalBalance.toLocaleString()}     color="amber"   />
+        <ReportSummaryCard icon={Users}        label={t("hasanat.report.redemptionRate")}   value={`${redemptionRate}%`}             color="blue"    />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">Distribution by Faculty</p>
+          <p className="text-sm font-semibold text-foreground mb-3">{t("hasanat.report.distributionByFaculty")}</p>
           <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={facultyData} barSize={22}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="faculty" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="distributed" fill="hsl(var(--primary))"  name="Distributed" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="redeemed"    fill="hsl(var(--chart-2))"  name="Redeemed"    radius={[4, 4, 0, 0]} />
+              <Bar dataKey="distributed" fill="hsl(var(--primary))"  name={t("hasanat.report.distributed")} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="redeemed"    fill="hsl(var(--chart-2))"  name={t("hasanat.report.redeemed")}    radius={[4, 4, 0, 0]} />
             </BarChart>
           </SafeResponsiveContainer>
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">Redeemed vs Balance</p>
+          <p className="text-sm font-semibold text-foreground mb-3">{t("hasanat.report.redeemedVsBalance")}</p>
           <div className="flex items-center gap-4">
             <SafeResponsiveContainer width="60%" height={160}>
               <PieChart>
@@ -223,18 +224,32 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
 
       {/* Distribution table */}
       <ReportExportBar 
-        title="Hasanat Distribution" 
+        title={t("hasanat.report.distributionTitle")} 
         data={distribution}
-        headers={["Student", "Class", "Faculty", "Distributed", "Redeemed", "Balance"]}
+        headers={[
+          t("hasanat.report.colStudent"),
+          t("hasanat.report.colClass"),
+          t("hasanat.report.colFaculty"),
+          t("hasanat.report.colDistributed"),
+          t("hasanat.report.colRedeemed"),
+          t("hasanat.report.colBalance"),
+        ]}
       />
       {distribution.length === 0 ? (
-        <EmptyState icon={Star} title="No Hasanat data for selected filters" compact />
+        <EmptyState icon={Star} title={t("hasanat.report.noData")} compact />
       ) : (
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
-                {["Student", "Class", "Faculty", "Distributed", "Redeemed", "Balance"].map((h) => (
+                {[
+                  t("hasanat.report.colStudent"),
+                  t("hasanat.report.colClass"),
+                  t("hasanat.report.colFaculty"),
+                  t("hasanat.report.colDistributed"),
+                  t("hasanat.report.colRedeemed"),
+                  t("hasanat.report.colBalance"),
+                ].map((h) => (
                   <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -262,8 +277,8 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       {/* Dashboard widgets preview */}
       <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-left">
         <div>
-          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Dashboard Main Widget</h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">Preview of widget rendering on the main landing dashboard</p>
+          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("hasanat.report.dashboardWidgetTitle")}</h3>
+          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("hasanat.report.dashboardWidgetSubtitle")}</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <HasanatChart />

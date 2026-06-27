@@ -131,10 +131,10 @@ export function getContactReportCellValue(
   const contact = item as Contact;
   if (isCustomContactReportFieldId(fieldId)) {
     const key = customContactReportFieldKey(fieldId);
-    const val = contact[key];
-    if (val === undefined || val === null || val === '') return '—';
-    if (typeof val === 'boolean') return val ? labels.yes : labels.no;
-    return String(val);
+    const value = contact[key];
+    if (value === undefined || value === null || value === '') return '—';
+    if (typeof value === 'boolean') return value ? labels.yes : labels.no;
+    return String(value);
   }
 
   switch (fieldId) {
@@ -180,9 +180,9 @@ export function getContactReportCellValue(
       return (notes?.length ? 1 : 0) + noteActivities.length;
     }
     default: {
-      const val = contact[fieldId as keyof Contact];
-      if (val === undefined || val === null) return '—';
-      return String(val);
+      const value = contact[fieldId as keyof Contact];
+      if (value === undefined || value === null) return '—';
+      return String(value);
     }
   }
 }

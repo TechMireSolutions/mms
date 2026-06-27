@@ -18,14 +18,14 @@ else
   echo "WARN: apps/backend/.env not found (JWT_SECRET required at runtime)"
 fi
 
-if grep -q '^DATABASE_URL=sqlite://' apps/backend/.env 2>/dev/null; then
-  echo "OK: SQLite configured via DATABASE_URL"
+if grep -qE '^DATABASE_URL=postgres(ql)?://' apps/backend/.env 2>/dev/null; then
+  echo "OK: PostgreSQL configured via DATABASE_URL"
 elif command -v docker >/dev/null && docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^mms-postgres$'; then
   echo "OK: mms-postgres container running"
 elif command -v docker >/dev/null; then
   echo "INFO: mms-postgres not running (use local PostgreSQL or docker start mms-postgres)"
 else
-  echo "INFO: docker not available — ensure PostgreSQL or SQLite is reachable via DATABASE_URL"
+  echo "INFO: docker not available — ensure PostgreSQL is reachable via DATABASE_URL"
 fi
 
 if [ -d "node_modules" ]; then

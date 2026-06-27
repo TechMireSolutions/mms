@@ -54,8 +54,6 @@ CLAUDE.md            # Session entry (points here + sync commands)
 
 Engineering layout & naming (file-scoped): `mms-structure.md`, `mms-naming.md`.
 
-## Skills (18)
-
 | Skill | Purpose |
 |-------|---------|
 | `antigravity-workspace` | Where rules/skills live; sync policy |
@@ -65,10 +63,10 @@ Engineering layout & naming (file-scoped): `mms-structure.md`, `mms-naming.md`.
 | `mms-module-work` | Command centre and Work tab — metrics, directory, drawer, bulk actions |
 | `mms-module-setup` | Module Setup tier — Fields, Preferences, audit (`globle.md` §5–§7) |
 | `mms-background-jobs` | Queued processing — exports, imports, dedup scans, progress, artifacts |
-| `mms-contacts` | Contact CRM — `globle.md` reference module |
+| `mms-form-architecture` | Blueprint schemas, branded IDs, IEEE 754 math bypass, tenant RLS transaction, JSONB deep merge, React 19 inputs, S3 uploads |
 | `mms-fields-registry` | Fields & tabs |
 | `mms-data-sync` | db.ts & API sync |
-| `mms-auth-users` | Auth & users |
+| `mms-linux-compatibility` | Linux & Ubuntu VPS compatibility check (casing, line endings, PM2) |
 | `mms-shared-package` | `@mms/shared` |
 | `mms-backend-api` | Fastify backend |
 | `mms-backend-security` | Tenant isolation, RBAC, cookies, rate limits |
@@ -109,7 +107,7 @@ bash .agent/scripts/sync-all.sh
 
 Individual targets: `sync-rules.sh` (→ Antigravity), `sync-skills.sh` (→ Cursor), `sync-claude.sh` (→ Claude).
 
-**42 rules** (6 always-on + 36 scoped): product (`mms-ui-*`, `mms-fields`, `mms-module-architecture`, `mms-module-work`, `mms-module-setup`, `mms-module-crosscutting`, `mms-background-jobs`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-security`, …). Index: `.cursor/rules/README.md`.
+**19 rules** (6 always-on + 13 scoped): product (`mms-ui-ux-design`, `mms-fields`, `mms-module-architecture`, `mms-form-architecture`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-auth-security`, ...). Index: `.cursor/rules/README.md`.
 
 **Rule index:** [.cursor/rules/README.md](.cursor/rules/README.md) — canonical owner per topic (avoids duplicating tier/isolation/i18n prose).
 

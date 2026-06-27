@@ -45,5 +45,5 @@ Prefer **one coherent upgrade PR** over scattered partial bumps.
 ## After upgrade
 
 - Remove deprecated API usage — do not wrap obsolete calls indefinitely
-- Update skills/rules if commands or ports change (`mms-ops.md`, `mms-dev-setup`)
+- Update skills/rules if commands or ports change (`mms-ops-infrastructure.md`, `mms-dev-setup`)
 - Do **not** commit or push unless the user asks

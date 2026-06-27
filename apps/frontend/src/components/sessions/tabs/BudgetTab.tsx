@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { Plus, Trash2, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, Session, BudgetIncome, BudgetExpense } from '@/lib/data/sessionsData';
 import { DatePicker } from "../../ui/DatePicker";
-import FormModal from "@/components/ui/FormModal";
+import { FormModal } from "@/components/ui/FormModal";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "../../ui/FormSelect";
+import { FormSelect } from "../../ui/FormSelect";
 
 /** A single income or expense transaction entry. */
 interface TransactionEntry {
@@ -95,7 +95,7 @@ interface BudgetTabProps {
  * @param {BudgetTabProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function BudgetTab({ session, onUpdate }: BudgetTabProps) {
+export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
   const [addType, setAddType] = useState<"income" | "expense" | null>(null);
   const budget = session.budget || { totalRevenue: 0, collected: 0, expenses: [], incomes: [] };
 

@@ -8,16 +8,16 @@ import {
   type TabDefinition,
   type FieldDefinition,
 } from "@mms/shared";
-import CustomFieldsBuilder, { CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import CoreFieldEditorList from "../ui/CoreFieldEditorList";
+import { CustomFieldsBuilder, CustomFieldConfig } from "../ui/CustomFieldsBuilder";
+import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { Switch } from "../ui/switch";
 import { Checkbox } from "../ui/checkbox";
-import Modal from "../ui/Modal";
+import { Modal } from "../ui/Modal";
 
 interface ToggleProps {
   label: string;
@@ -58,7 +58,7 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
-export default function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElement {
+export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElement {
   const { settings, updateSettings } = useFinanceConfig();
   const [saved, setSaved] = useState<boolean>(false);
 

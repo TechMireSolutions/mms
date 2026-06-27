@@ -40,11 +40,11 @@ function normalizeListQuery(query: ContactsExportQueryInput): ContactsListQuery 
 }
 
 async function sanitizeForRole(contacts: Contact[], role: string): Promise<Contact[]> {
-  const cfg = await loadContactFieldConfig();
-  if (!cfg?.fields) return contacts;
-  const fieldConfig: FieldConfig = cfg.formTabs
-    ? cfg
-    : { ...cfg, formTabs: [], enabledTabs: [], requiredTabs: [], version: cfg.version ?? 1 };
+  const config = await loadContactFieldConfig();
+  if (!config?.fields) return contacts;
+  const fieldConfig: FieldConfig = config.formTabs
+    ? config
+    : { ...config, formTabs: [], enabledTabs: [], requiredTabs: [], version: config.version ?? 1 };
   return sanitizeContactsForViewer(contacts, role, {
     fields: fieldConfig.fields,
     tabs: fieldConfig.formTabs ?? [],
@@ -72,11 +72,11 @@ export async function buildContactsCsvExport(
 
   const requestedColumns =
     options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
-  const cfg = await loadContactFieldConfig();
-  const fieldConfig = cfg?.fields
-    ? (cfg.formTabs
-        ? cfg
-        : { ...cfg, formTabs: [], enabledTabs: [], requiredTabs: [], version: cfg.version ?? 1 })
+  const config = await loadContactFieldConfig();
+  const fieldConfig = config?.fields
+    ? (config.formTabs
+        ? config
+        : { ...config, formTabs: [], enabledTabs: [], requiredTabs: [], version: config.version ?? 1 })
     : null;
   const columns = filterContactExportColumnsForViewer(requestedColumns, fieldConfig, options.viewerRole);
   const csv = buildCsvContent(buildContactsExportRows(rows, columns, EXPORT_LABELS));

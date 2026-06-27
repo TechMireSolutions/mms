@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { type Contact, formatDate } from "@mms/shared";
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp } from "@mms/shared";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,

@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Loader2, Mail, CheckCircle2 } from "lucide-react
 import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { ROUTES } from '@/lib/config/routes';
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_ERROR, FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 

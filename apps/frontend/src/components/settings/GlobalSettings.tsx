@@ -18,12 +18,12 @@ import {
   type DateFormatId,
   type PasswordPolicyLevel,
 } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContext';
-import FormSelect from '@/components/ui/FormSelect';
+import { FormSelect } from '@/components/ui/FormSelect';
 import { Label } from '@/components/ui/label';
-import SectionCard from '@/components/ui/SectionCard';
-import SettingsFormActions from '@/components/ui/SettingsFormActions';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import DateFormatSelect from '@/components/settings/DateFormatSelect';
 import EmailIntegrationPanel from '@/components/settings/EmailIntegrationPanel';
 import TimezoneSelect from '@/components/settings/TimezoneSelect';

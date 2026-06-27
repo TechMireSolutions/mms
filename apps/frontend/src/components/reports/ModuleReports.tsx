@@ -4,7 +4,7 @@ import {
   BarChart2, GitCompare, Wrench, LayoutDashboard, Sparkles, CreditCard 
 } from "lucide-react";
 
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import ReportFilters from "./ReportFilters";
 import ComparisonMode from "./ComparisonMode";
 import CustomReportBuilder from "./CustomReportBuilder";

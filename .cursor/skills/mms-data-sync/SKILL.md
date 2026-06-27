@@ -1,6 +1,6 @@
 ---
 name: mms-data-sync
-description: Works with MMS localStorage layer (db.ts), useLiveCollection, TanStack Query cache sync, backend /api/db sync, tenant-scoped storage, and collection/object persistence. Use when reading or writing app data, fixing stale UI, or syncing frontend with SQLite.
+description: Works with MMS localStorage layer (db.ts), useLiveCollection, TanStack Query cache sync, backend /api/db sync, tenant-scoped storage, and collection/object persistence. Use when reading or writing app data, fixing stale UI, or syncing frontend with PostgreSQL.
 ---
 
 # MMS Data Sync Workflow
@@ -48,7 +48,7 @@ import {
 |---------|----------|
 | `useLiveCollection` + `saveCollection` | Legacy module CRUD via `/api/db/collections/*` |
 | TanStack Query + `apiJson` | Dedicated REST (`/api/students`, `/api/contacts`, `/api/teachers`, workspace) |
-| Paginated Work + resolve | `useStudentsPaginated`, `useContactsPaginated`, `useXxxByIds` — no full-list fetch (globle.md §10) |
+| Paginated Work + resolve | `useStudentsPaginated`, `useContactsPaginated`, `useXxxByIds` — no full-list fetch |
 | Metrics / aggregates | KPI, dashboard, reports — `useStudentsMetrics`, `useContactsReportAnalytics`, widget-aggregates |
 
 **Writes on REST modules:** use `useXxxMutations()` only — mutations invalidate Query; do not also `saveCollection` in the page for the same entity.
@@ -99,12 +99,12 @@ Full-array read-modify-write — merge concurrent edits to same collection.
 | Do | Don't |
 |----|-------|
 | `await saveBrandingSettings()` / `saveGlobalSettings()` | local-only save with false "saved" UI |
-| Server merge via `@mms/shared` helpers | Skip SQLite on login sync |
+| Server merge via `@mms/shared` helpers | Skip PostgreSQL sync logic on login sync |
 
 ## Rules
 
-`mms-data-layer.mdc`, `mms-query.mdc`, `mms-frontend.mdc`
+`mms-data-layer.mdc`, `mms-data-layer.mdc`, `mms-api-interface.mdc`
 
 ## Related skills
 
-`mms-backend-api`, `mms-frontend`, `mms-contacts` (contacts REST pilot)
+`mms-backend-api`, `mms-frontend`, `mms-form-architecture`

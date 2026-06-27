@@ -3,10 +3,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { USER_STATUS_VALUES, toTitleCase, type SystemUser } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/hooks/useWorkspaceRoles';
 import { useContactById } from '@/hooks/useContacts';
-import FormModal from '@/components/ui/FormModal';
+import { FormModal } from '@/components/ui/FormModal';
 import ContactPicker from '@/components/contactLink/ContactPicker';
 import { Button } from '@/components/ui/button';
 import { FORM_SELECT } from '@/components/ui/formStyles';
@@ -31,7 +31,7 @@ function resolveContactId(user: SystemUser): string | number | null {
   return user.contactId ?? null;
 }
 
-export default function EditUserModal({ user, onClose, onSave }: EditUserModalProps): React.JSX.Element {
+export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const workspaceRoles = useWorkspaceRoles();
   const initialContactId = useMemo(() => resolveContactId(user), [user]);

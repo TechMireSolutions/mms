@@ -16,10 +16,10 @@ import { applyBrandingTheme } from "@/lib/brandingTheme";
 import CreateMadrasa from "./steps/CreateMadrasa";
 import AdminSetup from "./steps/AdminSetup";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { isApiError } from "@/lib/apiClient";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
-import PlatformLoadingScreen from "@/platform/components/PlatformLoadingScreen";
+import { PlatformLoadingScreen } from "@/platform/components/PlatformLoadingScreen";
 
 export interface OnboardingData {
   name: string;

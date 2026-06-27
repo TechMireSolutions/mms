@@ -6,7 +6,7 @@ import WorkspaceRegistryList from "@/platform/components/WorkspaceRegistryList";
 import ApexEntryNav from "@/platform/components/ApexEntryNav";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { ROUTES } from "@/lib/config/routes";
-import useTranslation from "@/hooks/useTranslation";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 
 export type ApexGateVariant = "forgotPassword" | "twoFactor" | "tenantOnly";

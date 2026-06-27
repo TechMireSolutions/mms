@@ -8,8 +8,8 @@ import { DEFAULT_CURRENCIES } from '@mms/shared';
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import ContactPicker from '@/components/contactLink/ContactPicker';
 import { useMergedObligationUsers } from "../../hooks/useObligationLookups";
-import FormModal from "@/components/ui/FormModal";
-import useTranslation from "@/hooks/useTranslation";
+import { FormModal } from "@/components/ui/FormModal";
+import { useTranslation } from "@/hooks/useTranslation";
 import { DatePicker } from "../ui/DatePicker";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_ERROR } from "@/components/ui/formStyles";
 import { calculateKeyedUnitsCompleteness } from "@/lib/formCompleteness";
@@ -58,7 +58,7 @@ export interface ObligationCollectionFormProps {
  * @param {ObligationCollectionFormProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export default function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
+export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
   const { t } = useTranslation();
   const users = useMergedObligationUsers();
   const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);

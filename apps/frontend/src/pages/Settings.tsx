@@ -1,9 +1,9 @@
 import React, { Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings as SettingsIcon } from 'lucide-react';
-import PageHeader from '@/components/ui/PageHeader';
-import useTranslation from '@/hooks/useTranslation';
-import ResponsiveAccordionTabs, { type AccordionTabItem } from '@/components/ui/ResponsiveAccordionTabs';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { useTranslation } from '@/hooks/useTranslation';
+import { ResponsiveAccordionTabs, type AccordionTabItem } from '@/components/ui/ResponsiveAccordionTabs';
 import { isSettingsSection, type SettingsSection } from '@/lib/config/routes';
 import { SETTINGS_NAV } from '@/lib/config/settingsNavConfig';
 import { SETTINGS_SECTION_COMPONENTS } from '@/lib/config/settingsSectionComponents';

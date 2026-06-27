@@ -1,34 +1,34 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import useModuleTierTabs from '@/hooks/useModuleTierTabs';
-import useConfigSubTabs from '@/hooks/useConfigSubTabs';
-import useTranslation from '@/hooks/useTranslation';
-import usePermissions from '@/hooks/usePermissions';
+import { useModuleTierTabs } from '@/hooks/useModuleTierTabs';
+import { useConfigSubTabs } from '@/hooks/useConfigSubTabs';
+import { useTranslation } from '@/hooks/useTranslation';
+import { usePermissions } from '@/hooks/usePermissions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, School, Filter, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import PageHeader from '@/components/ui/PageHeader';
-import ResponsiveAccordionTabs from '@/components/ui/ResponsiveAccordionTabs';
-import SubTabBar from '@/components/ui/SubTabBar';
-import SearchBar from '@/components/ui/SearchBar';
-import FilterChips from '@/components/ui/FilterChips';
-import ActionButton from '@/components/ui/ActionButton';
-import ErrorBoundary from '@/components/ui/ErrorBoundary';
-import TeacherList from '@/components/teachers/TeacherList';
-import TeacherForm from '@/components/teachers/TeacherForm';
-import TeachersSettingsPanel from '@/components/teachers/TeachersSettings';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
+import { SubTabBar } from '@/components/ui/SubTabBar';
+import { SearchBar } from '@/components/ui/SearchBar';
+import { FilterChips } from '@/components/ui/FilterChips';
+import { ActionButton } from '@/components/ui/ActionButton';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { TeacherList } from "@/components/teachers/TeacherList";
+import { TeacherForm } from "@/components/teachers/TeacherForm";
+import { TeachersSettings as TeachersSettingsPanel } from "@/components/teachers/TeachersSettings";
 import type { Teacher } from '@/lib/data/teachersData';
 import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_CONTRACT, type AppTranslationKey } from '@mms/shared';
 import ModuleReports from '@/components/reports/ModuleReports';
 import KPISummary from '@/components/reports/KPISummary';
-import useTeacherCount from '@/hooks/useTeacherCount';
+import { useTeacherCount } from '@/hooks/useTeacherCount';
 import { useTeachersPaginated, useTeacherMutations, type TeacherRecord } from '@/hooks/useTeachers';
 import { useTeacherColumnLayout } from '@/hooks/useTeacherColumnLayout';
-import ModuleColumnCustomizer from '@/components/ui/ModuleColumnCustomizer';
-import TeachersCommandMetrics from '@/components/teachers/TeachersCommandMetrics';
-import TeachersListPagination from '@/components/teachers/TeachersListPagination';
+import { ModuleColumnCustomizer } from '@/components/ui/ModuleColumnCustomizer';
+import { TeachersCommandMetrics } from "@/components/teachers/TeachersCommandMetrics";
+import { TeachersListPagination } from "@/components/teachers/TeachersListPagination";
 import { useTeacherConfig } from '@/hooks/useTeacherConfig';
 import { notify } from '@/lib/notify';
 

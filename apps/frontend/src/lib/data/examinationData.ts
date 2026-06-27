@@ -1,22 +1,5 @@
-export interface Exam {
-  id: string;
-  name: string;
-  subject: string;
-  totalMarks: number;
-  passingMarks: number;
-  date: string;
-  duration: number;
-  classIds: string[];
-  status: "completed" | "scheduled" | "cancelled" | "upcoming" | "ongoing";
-  description: string;
-}
-
-export interface ExamResult {
-  id: string;
-  examId: string;
-  studentId: string;
-  marksObtained: number;
-}
+import type { Exam, ExamResult } from '@mms/shared';
+export type { Exam, ExamResult };
 
 export interface ExamClass {
   id: string;

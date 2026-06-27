@@ -1,7 +1,7 @@
 import React from 'react';
 import { Monitor, Moon, Sun } from 'lucide-react';
 import { THEME_MODE_OPTIONS, type ThemeMode } from '@mms/shared';
-import useTranslation from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 

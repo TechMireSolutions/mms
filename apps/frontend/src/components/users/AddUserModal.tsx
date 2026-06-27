@@ -15,14 +15,14 @@ import {
   type SystemUser,
   type UserStatus,
 } from "@mms/shared";
-import useTranslation from "@/hooks/useTranslation";
-import useGlobalSettings from "@/hooks/useGlobalSettings";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { useWorkspaceRoles } from "@/hooks/useWorkspaceRoles";
-import Modal from "@/components/ui/Modal";
+import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
 import { Input as UiInput } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 import type { Contact } from "@mms/shared";
 import {
   getPasswordPolicyHintKey,
@@ -537,7 +537,7 @@ export interface AddUserModalProps {
  * @param props - AddUserModal properties.
  * @returns The modal dialog element.
  */
-export default function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserModalProps): JSX.Element {
+export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserModalProps): JSX.Element {
   const { t } = useTranslation();
   const { settings, customFields } = useUsersConfig();
   const [step, setStep] = useState(1);

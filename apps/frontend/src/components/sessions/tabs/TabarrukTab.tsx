@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Plus, Trash2, Gift, Edit2 } from "lucide-react";
 import { Session, TabarrukItem } from '@/lib/data/sessionsData';
 import { DatePicker } from "../../ui/DatePicker";
-import FormModal from "@/components/ui/FormModal";
+import { FormModal } from "@/components/ui/FormModal";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,7 +86,7 @@ interface TabarrukTabProps {
  * @param props - Component properties.
  * @returns React element representing the Tabarruk tracking tab UI.
  */
-export default function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
+export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
   const [showModal, setShowModal] = useState(false);
   const [editEntry, setEditEntry] = useState<TabarrukItem | null>(null);
   const items = session.tabarruk || [];

@@ -28,6 +28,14 @@ export default async function platformWorkspaceRoutes(
   });
 
   fastify.patch('/:subdomain', async (request, reply) => {
+    const { platformUser } = request as PlatformAuthenticatedRequest;
+    if (platformUser.role !== 'super_user') {
+      return reply.status(403).send({
+        type: 'forbidden',
+        message: 'Only platform super-users can modify workspaces',
+      });
+    }
+
     const params = parseRequest(subdomainParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     const body = parseRequest(workspaceEnabledPatchBodySchema, request.body);
@@ -43,12 +51,19 @@ export default async function platformWorkspaceRoutes(
   });
 
   fastify.delete('/:subdomain', async (request, reply) => {
+    const { platformUser } = request as PlatformAuthenticatedRequest;
+    if (platformUser.role !== 'super_user') {
+      return reply.status(403).send({
+        type: 'forbidden',
+        message: 'Only platform super-users can delete workspaces',
+      });
+    }
+
     const params = parseRequest(subdomainParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     const body = parseRequest(workspaceDeleteBodySchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
 
-    const { platformUser } = request as PlatformAuthenticatedRequest;
     const passwordOk = await verifyPlatformUserPassword(platformUser.id, body.data.password);
     if (!passwordOk) {
       return reply.status(401).send({

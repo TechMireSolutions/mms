@@ -3,14 +3,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical, Plus, Check, Trash2, FileSpreadsheet, FileText, Settings, Database, Sliders } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FormSelect from "@/components/ui/FormSelect";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { useContactsPaginated } from '@/hooks/useContacts';
 import { useStudentsPaginated } from '@/hooks/useStudents';
 import { CONTACTS_MODULE_CONTRACT, STUDENTS_MODULE_CONTRACT } from '@mms/shared';
 import { useSessionsCollection } from '@/hooks/useSessions';
-import { useLiveCollection } from "../../hooks/useLiveCollection";
-import useTranslation from "@/hooks/useTranslation";
-import usePermissions from "@/hooks/usePermissions";
+import { useFinanceInvoicesCollection } from "@/hooks/useFinanceApi";
+import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
+import { useHasanatDistributionsCollection } from "@/hooks/useHasanatApi";
+import { useExaminationsResultsCollection } from "@/hooks/useExaminationsApi";
+import { useTranslation } from "@/hooks/useTranslation";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import type { AppTranslationKey } from "@mms/shared";
 import {
@@ -33,6 +36,68 @@ const ALL_FIELDS: Record<Exclude<DataSource, "contacts">, readonly string[]> = {
   hasanat:    ["Student Name", "Class", "Faculty", "Distributed", "Redeemed", "Balance", "Reason", "Last Awarded"],
   sessions:   ["Session", "Class", "Type", "Teacher", "Room", "Time", "Days", "Enrolled", "Capacity", "Utilisation %", "Status", "Start Date", "End Date"],
   faculty:    ["Faculty Name", "Classes", "Sessions", "Total Students", "Hours/Week", "Specialization"],
+};
+
+/** Map of legacy selectable fields to translation keys. */
+const FIELD_KEY_MAP: Record<string, string> = {
+  "Name": "reports.fields.name",
+  "Gender": "reports.fields.gender",
+  "Class": "reports.fields.className",
+  "Session": "reports.fields.sessionName",
+  "City": "reports.fields.city",
+  "Age": "reports.fields.age",
+  "Status": "reports.fields.status",
+  "Registration Date": "reports.fields.registeredDate",
+  "CNIC": "reports.fields.cnic",
+  "Discount Type": "reports.fields.discountType",
+  "Discount %": "reports.fields.discountPct",
+  "Roll No": "reports.fields.rollNo",
+  "Blood Group": "reports.fields.bloodGroup",
+  "Student Name": "reports.fields.studentName",
+  "Present": "reports.fields.present",
+  "Absent": "reports.fields.absent",
+  "Late": "reports.fields.late",
+  "Excused": "reports.fields.excused",
+  "Total Days": "reports.fields.totalDays",
+  "Rate %": "reports.fields.rate",
+  "Last Marked": "reports.fields.lastMarked",
+  "Invoice ID": "reports.fields.invoiceId",
+  "Base Fee": "reports.fields.baseFee",
+  "Discount": "reports.fields.discountAmt",
+  "Tax": "reports.fields.tax",
+  "Final Amount": "reports.fields.finalAmt",
+  "Due Date": "reports.fields.dueDate",
+  "Payment Method": "reports.fields.paymentMethod",
+  "Issued Date": "reports.fields.issuedDate",
+  "Subject": "reports.fields.subject",
+  "Marks": "reports.fields.marks",
+  "Total": "reports.fields.total",
+  "Grade": "reports.fields.grade",
+  "Rank": "reports.fields.rank",
+  "Exam Name": "reports.fields.examName",
+  "Date": "reports.fields.date",
+  "Faculty": "reports.fields.faculty",
+  "Distributed": "reports.fields.distributed",
+  "Redeemed": "reports.fields.redeemed",
+  "Balance": "reports.fields.balance",
+  "Reason": "reports.fields.reason",
+  "Last Awarded": "reports.fields.lastAwarded",
+  "Type": "reports.fields.type",
+  "Teacher": "reports.fields.teacherName",
+  "Room": "reports.fields.room",
+  "Time": "reports.fields.time",
+  "Days": "reports.fields.days",
+  "Enrolled": "reports.fields.enrolled",
+  "Capacity": "reports.fields.capacity",
+  "Utilisation %": "reports.fields.utilisationPct",
+  "Start Date": "reports.fields.startDate",
+  "End Date": "reports.fields.endDate",
+  "Faculty Name": "reports.fields.facultyName",
+  "Classes": "reports.fields.classes",
+  "Sessions": "reports.fields.sessions",
+  "Total Students": "reports.fields.totalStudents",
+  "Hours/Week": "reports.fields.hoursWeek",
+  "Specialization": "reports.fields.specialization"
 };
 
 /** Available aggregate function options. */
@@ -71,6 +136,7 @@ function DraggableField({
   isFirst,
   isLast,
 }: DraggableFieldProps): React.JSX.Element {
+  const { t } = useTranslation();
   return (
     <motion.div
       layout
@@ -91,7 +157,7 @@ function DraggableField({
           variant="ghost"
           className="w-5 h-5 flex items-center justify-center p-0 rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
           type="button"
-          title="Move Up"
+          title={t("reports.builder.moveUp")}
         >
           ▲
         </Button>
@@ -101,7 +167,7 @@ function DraggableField({
           variant="ghost"
           className="w-5 h-5 flex items-center justify-center p-0 rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
           type="button"
-          title="Move Down"
+          title={t("reports.builder.moveDown")}
         >
           ▼
         </Button>
@@ -110,7 +176,7 @@ function DraggableField({
           variant="ghost"
           className="w-5 h-5 flex items-center justify-center p-0 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-all"
           type="button"
-          title="Remove field"
+          title={t("reports.builder.removeField")}
         >
           <X className="w-3 h-3" />
         </Button>
@@ -165,10 +231,10 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
   const studentsColl = (studentsPreviewPage?.students ?? []) as unknown as Record<string, unknown>[];
   const sessionsFromQuery = useSessionsCollection();
   const sessionsColl = sessionsFromQuery as unknown as Record<string, unknown>[];
-  const financialColl = useLiveCollection<Record<string, unknown>>("finance_invoices", []);
-  const attendanceColl = useLiveCollection<Record<string, unknown>>("attendance_records", []);
-  const hasanatColl = useLiveCollection<Record<string, unknown>>("hasanat_distributions", []);
-  const academicColl = useLiveCollection<Record<string, unknown>>("exam_results", []);
+  const financialColl = useFinanceInvoicesCollection() as unknown as Record<string, unknown>[];
+  const attendanceColl = useAttendanceRecordsCollection() as unknown as Record<string, unknown>[];
+  const hasanatColl = useHasanatDistributionsCollection() as unknown as Record<string, unknown>[];
+  const academicColl = useExaminationsResultsCollection() as unknown as Record<string, unknown>[];
 
   const [selectedFields, setSelectedFields] = useState<string[]>(() => {
     if (initialSource === "contacts") return ["fullName", "lifecycleStage", "city"];
@@ -185,12 +251,16 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
   const [groupBy, setGroupBy]             = useState<string>("");
   const [orientation, setOrientation]     = useState<"p" | "l">("p");
   const [pageSize, setPageSize]           = useState<string>("a4");
-  const [reportName, setReportName]       = useState<string>("My Custom Report");
+  const [reportName, setReportName]       = useState<string>(() => t("reports.builder.defaultName"));
   const [previewData, setPreviewData]     = useState<PreviewRow[]>([]);
 
   const resolveFieldLabel = (field: string): string => {
     if (source === "contacts") {
       return resolveContactReportFieldLabel(field, fieldConfig.fields, (key) => t(key as AppTranslationKey));
+    }
+    const key = FIELD_KEY_MAP[field];
+    if (key) {
+      return t(key as AppTranslationKey);
     }
     return field;
   };
@@ -440,8 +510,8 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
             <Sliders className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-black text-foreground uppercase tracking-wider leading-none">Interactive Report Builder</h3>
-            <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">Dynamic column schemas and real-time computation</p>
+            <h3 className="text-sm font-black text-foreground uppercase tracking-wider leading-none">{t("reports.builder.title")}</h3>
+            <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.builder.subtitle")}</p>
           </div>
         </div>
         <Button
@@ -463,13 +533,13 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           {/* Report name */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
-              Report Title Label
+              {t("reports.builder.reportTitleLabel")}
             </label>
             <Input
               type="text"
               value={reportName}
               onChange={(e) => setReportName(e.target.value)}
-              placeholder="e.g. Active Students Roll"
+              placeholder={t("reports.builder.placeholderName")}
               className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-4 py-2.5 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all text-foreground h-auto"
             />
           </div>
@@ -477,7 +547,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           {/* Data source */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
-              Query Data Source
+              {t("reports.builder.queryDataSource")}
             </label>
             <FormSelect
               value={source}
@@ -494,14 +564,14 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 else setSelectedFields(["Name", "Class", "Session", "Status"]);
               }}
               options={[
-                { value: "students", label: "Students Database" },
+                { value: "students", label: t("reports.builder.sourceStudents") },
                 { value: "contacts", label: t("contacts.reportBuilder.sourceLabel") },
-                { value: "attendance", label: "Attendance Ledger" },
-                { value: "financial", label: "Financial Invoices" },
-                { value: "academic", label: "Academic Examinations" },
-                { value: "hasanat", label: "Hasanat Rewards Ledger" },
-                { value: "sessions", label: "Sessions & Classrooms" },
-                { value: "faculty", label: "Faculty Workload Registry" },
+                { value: "attendance", label: t("reports.builder.sourceAttendance") },
+                { value: "financial", label: t("reports.builder.sourceFinancial") },
+                { value: "academic", label: t("reports.builder.sourceAcademic") },
+                { value: "hasanat", label: t("reports.builder.sourceHasanat") },
+                { value: "sessions", label: t("reports.builder.sourceSessions") },
+                { value: "faculty", label: t("reports.builder.sourceFaculty") },
               ]}
               className="w-full"
             />
@@ -511,15 +581,15 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           <div className="space-y-1.5">
             <div className="flex justify-between items-center ml-1">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
-                Schema Fields Picker
+                {t("reports.builder.schemaFieldsPicker")}
               </label>
-              <span className="text-[9px] text-muted-foreground font-black uppercase bg-primary/10 px-1.5 py-0.5 rounded-md text-primary">{available.length} Available</span>
+              <span className="text-[9px] text-muted-foreground font-black uppercase bg-primary/10 px-1.5 py-0.5 rounded-md text-primary">{t("reports.builder.availableCount", { count: available.length })}</span>
             </div>
             <div className="rounded-2xl border border-border bg-background/30 p-2.5 space-y-1 max-h-52 overflow-y-auto custom-scrollbar">
               {available.length === 0 ? (
                 <div className="text-center py-6 text-muted-foreground italic text-xs flex flex-col items-center gap-1">
                   <Check className="w-5 h-5 text-success" />
-                  All fields selected in schema
+                  {t("reports.builder.allFieldsSelected")}
                 </div>
               ) : (
                 available.map((f) => (
@@ -542,25 +612,34 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           <div className="grid grid-cols-2 gap-3 text-left">
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
-                Aggregator Function
+                {t("reports.builder.aggregatorFunction")}
               </label>
               <FormSelect
                 value={aggregate}
                 onChange={(val) => setAggregate(val)}
-                options={AGGREGATE_FNS.map((a) => ({ value: a, label: a }))}
+                options={AGGREGATE_FNS.map((a) => {
+                  let label = a;
+                  if (a === "None") label = t("reports.builder.noGrouping");
+                  else if (a === "Sum") label = t("reports.visualizer.opSum");
+                  else if (a === "Average") label = t("reports.visualizer.opAvg");
+                  else if (a === "Count") label = t("reports.visualizer.opCount");
+                  else if (a === "Max") label = t("reports.visualizer.opMax");
+                  else if (a === "Min") label = t("reports.visualizer.opMin");
+                  return { value: a, label };
+                })}
                 className="w-full"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
-                Group Category (X)
+                {t("reports.builder.groupCategory")}
               </label>
               <FormSelect
                 value={groupBy}
                 disabled={aggregate === "None"}
                 onChange={(val) => setGroupBy(val)}
                 options={[
-                  { value: "", label: "No Grouping" },
+                  { value: "", label: t("reports.builder.noGrouping") },
                   ...selectedFields.map((f) => ({ value: f, label: resolveFieldLabel(f) }))
                 ]}
                 className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
@@ -572,7 +651,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           <div className="grid grid-cols-2 gap-3 text-left">
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
-                Document Alignment
+                {t("reports.builder.docAlignment")}
               </label>
               <div className="flex gap-1 p-1 bg-muted/30 border border-border/50 rounded-xl">
                  <Button 
@@ -581,7 +660,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   className={`flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer h-auto ${orientation === "p" ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground" : "text-sidebar-muted-foreground hover:text-foreground hover:bg-muted"}`}
                   type="button"
                  >
-                   Portrait
+                   {t("reports.builder.portrait")}
                  </Button>
                  <Button 
                   onClick={() => setOrientation("l")}
@@ -589,22 +668,22 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   className={`flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer h-auto ${orientation === "l" ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground" : "text-sidebar-muted-foreground hover:text-foreground hover:bg-muted"}`}
                   type="button"
                  >
-                   Landscape
+                   {t("reports.builder.landscape")}
                  </Button>
                </div>
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
-                Export Layout Format
+                {t("reports.builder.exportLayoutFormat")}
               </label>
               <FormSelect
                 value={pageSize}
                 onChange={(val) => setPageSize(val)}
                 options={[
-                  { value: "a4", label: "A4 (Standard)" },
-                  { value: "letter", label: "Letter" },
-                  { value: "a3", label: "A3 (Wide Ledger)" },
-                  { value: "legal", label: "Legal Page" }
+                  { value: "a4", label: t("reports.builder.formatA4") },
+                  { value: "letter", label: t("reports.builder.formatLetter") },
+                  { value: "a3", label: t("reports.builder.formatA3") },
+                  { value: "legal", label: t("reports.builder.formatLegal") }
                 ]}
                 className="w-full animate-none"
               />
@@ -620,7 +699,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           <div className="space-y-2">
             <div className="flex justify-between items-center ml-1">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
-                Selected Columns Schema ({selectedFields.length})
+                {t("reports.builder.selectedColumns", { count: selectedFields.length })}
               </label>
               {selectedFields.length > 0 && (
                 <Button
@@ -629,7 +708,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   className="text-[9px] font-bold uppercase tracking-wider text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1 cursor-pointer h-auto p-0 hover:no-underline"
                   type="button"
                 >
-                  <Trash2 className="w-3.5 h-3.5" /> Clear Columns
+                  <Trash2 className="w-3.5 h-3.5" /> {t("reports.builder.clearColumns")}
                 </Button>
               )}
             </div>
@@ -637,7 +716,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               {selectedFields.length === 0 ? (
                 <div className="text-center py-6 text-xs text-muted-foreground italic flex flex-col items-center justify-center gap-1.5">
                   <Database className="w-6 h-6 opacity-40 text-muted-foreground" />
-                  Select schema fields from the left picker to construct columns
+                  {t("reports.builder.emptyColumns")}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar text-left">
@@ -664,13 +743,15 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
             <div className="flex items-center justify-between ml-1">
               <div className="flex items-center gap-2">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
-                  Live Visualizer Preview ({previewData.length} records)
+                  {t("reports.builder.liveVisualizer", { count: previewData.length })}
                 </label>
                 {groupBy && (
-                  <span className="text-[9px] font-bold uppercase bg-primary/15 text-primary px-1.5 py-0.5 rounded-md">Grouped</span>
+                  <span className="text-[9px] font-bold uppercase bg-primary/15 text-primary px-1.5 py-0.5 rounded-md">{t("reports.builder.groupedBadge")}</span>
                 )}
                 {aggregate !== "None" && (
-                  <span className="text-[9px] font-bold uppercase bg-success/15 text-success px-1.5 py-0.5 rounded-md">{aggregate}</span>
+                  <span className="text-[9px] font-bold uppercase bg-success/15 text-success px-1.5 py-0.5 rounded-md">
+                    {t(`reports.visualizer.op${aggregate === "Average" ? "Avg" : aggregate}` as any)}
+                  </span>
                 )}
               </div>
               
@@ -682,18 +763,18 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                     variant="outline"
                     className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-success hover:text-success px-3 py-1.5 rounded-xl border border-success/30 bg-success/10 hover:bg-success/15 transition-all shadow-sm cursor-pointer h-auto"
                     type="button"
-                    title="Export data to Excel Sheet"
+                    title={t("reports.builder.exportExcelTooltip")}
                   >
-                    <FileSpreadsheet className="w-3.5 h-3.5" /> Sheet
+                    <FileSpreadsheet className="w-3.5 h-3.5" /> {t("reports.builder.sheet")}
                   </Button>
                   <Button 
                     onClick={handleExportPdf}
                     variant="outline"
                     className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-destructive hover:text-destructive px-3 py-1.5 rounded-xl border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all shadow-sm cursor-pointer h-auto"
                     type="button"
-                    title="Export layout to PDF document"
+                    title={t("reports.builder.exportPdfTooltip")}
                   >
-                    <FileText className="w-3.5 h-3.5" /> Document
+                    <FileText className="w-3.5 h-3.5" /> {t("reports.builder.document")}
                   </Button>
                 </div>
               )}
@@ -703,7 +784,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               {previewData.length === 0 ? (
                 <div className="w-full h-full flex flex-col justify-center items-center gap-2 py-12 text-muted-foreground text-xs italic">
                   <Settings className="w-7 h-7 animate-spin text-muted-foreground opacity-30" />
-                  Waiting for columns configuration to map dataset...
+                  {t("reports.builder.waitingData")}
                 </div>
               ) : (
                 <div className="overflow-auto max-h-72 custom-scrollbar">
@@ -736,8 +817,8 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
             
             {previewData.length > 0 && (
               <div className="flex items-center justify-between px-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                <span>Auto-fetched 20 records for visualizer preview</span>
-                <span>{groupBy ? `Grouped by: ${groupBy}` : "Flat layout model"}</span>
+                <span>{t("reports.builder.autoFetched")}</span>
+                <span>{groupBy ? t("reports.builder.groupedBy", { field: resolveFieldLabel(groupBy) }) : t("reports.builder.flatLayout")}</span>
               </div>
             )}
           </div>
