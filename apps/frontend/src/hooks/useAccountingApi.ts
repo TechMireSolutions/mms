@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 const ACCOUNTING_API = ACCOUNTING_MODULE_CONTRACT.restBasePath;
 
@@ -19,13 +20,13 @@ export const ACCOUNTING_METRICS_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId
 export const ACCOUNTING_JOURNAL_COLUMN_PREFS_QUERY_KEY = [
   ACCOUNTING_MODULE_CONTRACT.moduleId,
   'journal',
-  'column-prefs',
+  'column-preferences',
  ] as const;
 
 export const ACCOUNTING_ACCOUNT_COLUMN_PREFS_QUERY_KEY = [
   ACCOUNTING_MODULE_CONTRACT.moduleId,
   'accounts',
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
 export const ACCOUNTING_ACCOUNTS_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId, 'accounts', 'list'] as const;
@@ -183,8 +184,8 @@ export function useAccountingJournalColumnPrefs() {
   return useQuery({
     queryKey: ACCOUNTING_JOURNAL_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${ACCOUNTING_API}/journal/column-prefs`);
-      return body.prefs;
+      const body = await apiJson<ModuleColumnPreferencesResponse>(`${ACCOUNTING_API}/journal/column-preferences`);
+      return readModuleColumnPreferences(body);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -194,13 +195,13 @@ export function useAccountingJournalColumnPrefs() {
 export function useAccountingJournalColumnPrefsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${ACCOUNTING_API}/journal/column-prefs`, {
+    mutationFn: async (preferences: ModuleColumnPref[]) =>
+      apiJson<ModuleColumnPreferencesResponse>(`${ACCOUNTING_API}/journal/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(ACCOUNTING_JOURNAL_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(ACCOUNTING_JOURNAL_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
     },
   });
 }
@@ -210,8 +211,8 @@ export function useAccountingAccountColumnPrefs() {
   return useQuery({
     queryKey: ACCOUNTING_ACCOUNT_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${ACCOUNTING_API}/accounts/column-prefs`);
-      return body.prefs;
+      const body = await apiJson<ModuleColumnPreferencesResponse>(`${ACCOUNTING_API}/accounts/column-preferences`);
+      return readModuleColumnPreferences(body);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -221,13 +222,13 @@ export function useAccountingAccountColumnPrefs() {
 export function useAccountingAccountColumnPrefsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${ACCOUNTING_API}/accounts/column-prefs`, {
+    mutationFn: async (preferences: ModuleColumnPref[]) =>
+      apiJson<ModuleColumnPreferencesResponse>(`${ACCOUNTING_API}/accounts/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(ACCOUNTING_ACCOUNT_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(ACCOUNTING_ACCOUNT_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
     },
   });
 }

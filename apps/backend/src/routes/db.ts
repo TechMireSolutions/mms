@@ -154,6 +154,24 @@ export default async function dbRoutes(
               delete payload.collections[key];
             }
           }
+          const disallowedCollection = Object.keys(payload.collections).find((key) => !canWriteCollection(user, key));
+          if (disallowedCollection) {
+            return reply.status(403).send({
+              type: 'forbidden',
+              message: `Sync payload contains unsupported collection "${disallowedCollection}"`,
+            });
+          }
+        }
+        if (payload.objects) {
+          const disallowedObject = Object.keys(payload.objects).find((key) =>
+            isServerOnlyObjectKey(key) || !canWriteObject(user, key),
+          );
+          if (disallowedObject) {
+            return reply.status(403).send({
+              type: 'forbidden',
+              message: `Sync payload contains unsupported object "${disallowedObject}"`,
+            });
+          }
         }
         await withSyncTimeout(synchronizeData(payload));
         return reply.send({ success: true });
@@ -366,4 +384,3 @@ export default async function dbRoutes(
     }
   });
 }
-

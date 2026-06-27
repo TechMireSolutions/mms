@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 export const OBLIGATIONS_TYPES_QUERY_KEY = ['obligations', 'types', 'list'] as const;
 export const OBLIGATIONS_MUJTAHIDS_QUERY_KEY = ['obligations', 'mujtahids', 'list'] as const;
@@ -25,7 +26,7 @@ export const OBLIGATIONS_METRICS_QUERY_KEY = ['obligations', 'metrics', 'snapsho
 
 export const OBLIGATIONS_COLUMN_PREFS_QUERY_KEY = [
   OBLIGATIONS_MODULE_CONTRACT.collectionKey,
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
 const OBLIGATIONS_API = OBLIGATIONS_MODULE_CONTRACT.restBasePath;
@@ -295,8 +296,8 @@ export function useObligationColumnPreferences() {
   return useQuery({
     queryKey: OBLIGATIONS_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${OBLIGATIONS_API}/column-preferences`);
-      return body.prefs;
+      const body = await apiJson<ModuleColumnPreferencesResponse>(`${OBLIGATIONS_API}/column-preferences`);
+      return readModuleColumnPreferences(body);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -306,13 +307,13 @@ export function useObligationColumnPreferences() {
 export function useObligationColumnPreferencesMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${OBLIGATIONS_API}/column-preferences`, {
+    mutationFn: async (preferences: ModuleColumnPref[]) =>
+      apiJson<ModuleColumnPreferencesResponse>(`${OBLIGATIONS_API}/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(OBLIGATIONS_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(OBLIGATIONS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
     },
   });
 }

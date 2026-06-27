@@ -22,6 +22,7 @@ import { loadFieldConfig, saveFieldConfig } from "../contactFieldsStore";
 import {
   FieldConfig,
   ContactPreferences,
+  ContactColumnPreference,
   FieldDefinition,
   WhatsAppTemplate,
   translateApp,
@@ -38,20 +39,19 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   applyUserColumnOverlay,
-  loadUserColumnPrefs,
-  saveUserColumnPrefs,
-  saveUserColumnPrefList,
-  type UserColumnPref,
-} from "@/lib/contacts/columnPrefsStorage";
+  loadUserColumnPreferences,
+  saveUserColumnPreferences,
+  saveUserColumnPreferenceList,
+} from "@/lib/contacts/columnPreferencesStorage";
 import { useContactColumnPrefs, useContactColumnPrefsMutation } from "@/hooks/useContacts";
 import {
   CONFIG_KEY,
-  DEFAULT_PREFS,
-  loadPrefs,
-  PREFS_KEY,
-  savePrefs,
+  DEFAULT_PREFERENCES,
+  loadPreferences,
+  PREFERENCES_KEY,
+  savePreferences,
   syncOptionsInConfig,
-} from "../contactConfig/prefsStorage";
+} from "../contactConfig/preferencesStorage";
 import {
   CONTACT_CONFIG_COLLECTION_KEYS,
   CONTACT_CONFIG_OBJECT_KEYS,
@@ -139,10 +139,10 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const { mutate: saveColumnPrefs } = useContactColumnPrefsMutation();
   const migratedLocalColumnPrefs = useRef(false);
   const [fieldConfig, setFieldConfigState] = useState<FieldConfig>(() => loadFieldConfig());
-  const [userColumnOverlay, setUserColumnOverlay] = useState<UserColumnPref[] | null>(null);
+  const [userColumnOverlay, setUserColumnOverlay] = useState<ContactColumnPreference[] | null>(null);
   const [prefs, setPrefsState] = useState<ContactPreferences>(() => ({
-    ...DEFAULT_PREFS,
-    ...loadPrefs(),
+    ...DEFAULT_PREFERENCES,
+    ...loadPreferences(),
   }));
   const contactConfigDefaults = useMemo(() => getContactConfigCollectionDefaults(), []);
 
@@ -184,8 +184,8 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const reloadContactConfigFromDatabaseCache = useCallback(() => {
     setFieldConfigState(loadFieldConfig());
     setPrefsState({
-      ...DEFAULT_PREFS,
-      ...loadPrefs(),
+      ...DEFAULT_PREFERENCES,
+      ...loadPreferences(),
     });
     setGendersState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, contactConfigDefaults.genders));
     setSocialPlatformsState(
@@ -240,15 +240,15 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     }
     const userId = String(user.id);
     if (!columnPrefsLoaded) {
-      setUserColumnOverlay(loadUserColumnPrefs(userId));
+      setUserColumnOverlay(loadUserColumnPreferences(userId));
       return;
     }
     if (serverColumnPrefs && serverColumnPrefs.length > 0) {
       setUserColumnOverlay(serverColumnPrefs);
-      saveUserColumnPrefList(userId, serverColumnPrefs);
+      saveUserColumnPreferenceList(userId, serverColumnPrefs);
       return;
     }
-    const local = loadUserColumnPrefs(userId);
+    const local = loadUserColumnPreferences(userId);
     if (local?.length) {
       setUserColumnOverlay(local);
       if (!migratedLocalColumnPrefs.current) {
@@ -283,9 +283,9 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
       if (e.key === CONFIG_KEY) {
         const parsed = safeParseEvent(e, "fieldConfig");
         if (parsed) setFieldConfigState(parsed as FieldConfig);
-      } else if (e.key === PREFS_KEY) {
-        const parsed = safeParseEvent(e, "prefs");
-        if (parsed) setPrefsState((p) => ({ ...DEFAULT_PREFS, ...p, ...(parsed as Partial<ContactPreferences>) }));
+      } else if (e.key === PREFERENCES_KEY) {
+        const parsed = safeParseEvent(e, "preferences");
+        if (parsed) setPrefsState((p) => ({ ...DEFAULT_PREFERENCES, ...p, ...(parsed as Partial<ContactPreferences>) }));
       } else if (e.key && e.key.startsWith(getWorkspaceLocalStoragePrefix())) {
         const subKey = e.key.slice(getWorkspaceLocalStoragePrefix().length);
         const parsed = safeParseEvent(e, subKey);
@@ -321,7 +321,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const updatePrefs = useCallback((newPrefs: Partial<ContactPreferences>) => {
     setPrefsState((prev) => {
       const merged = { ...prev, ...newPrefs };
-      savePrefs(merged);
+      savePreferences(merged);
       return merged;
     });
   }, []);
@@ -413,10 +413,10 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const updateUserColumnLayout = useCallback((cols: ColumnRegistryEntry[]) => {
     const userId = user?.id ? String(user.id) : "";
     if (!userId) return;
-    saveUserColumnPrefs(userId, cols);
-    const prefs: UserColumnPref[] = cols.map(({ key, enabled, order }) => ({ key, enabled, order }));
-    setUserColumnOverlay(prefs);
-    saveColumnPrefs(prefs);
+    saveUserColumnPreferences(userId, cols);
+    const preferences: ContactColumnPreference[] = cols.map(({ key, enabled, order }) => ({ key, enabled, order }));
+    setUserColumnOverlay(preferences);
+    saveColumnPrefs(preferences);
   }, [user?.id, saveColumnPrefs]);
 
   const viewerRole = user?.role ?? '';

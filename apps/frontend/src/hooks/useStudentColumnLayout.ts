@@ -4,7 +4,7 @@ import {
   applyModuleColumnOverlay,
   buildStudentWorkColumnRegistry,
   isModuleColumnVisible,
-  type ModuleColumnPref,
+  type ModuleColumnPreference,
   type ModuleColumnRegistryEntry,
   type StudentsSettings,
 } from '@mms/shared';
@@ -27,7 +27,7 @@ export function useStudentColumnLayout(settings: StudentsSettings) {
   const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useStudentColumnPrefs();
   const { mutate: saveColumnPrefs } = useStudentColumnPrefsMutation();
   const migratedLocalColumnPrefs = useRef(false);
-  const [userOverlay, setUserOverlay] = useState<ModuleColumnPref[] | null>(null);
+  const [userOverlay, setUserOverlay] = useState<ModuleColumnPreference[] | null>(null);
 
   const tenantRegistry = useMemo(
     () =>
@@ -78,13 +78,13 @@ export function useStudentColumnLayout(settings: StudentsSettings) {
     (cols: ModuleColumnRegistryEntry[]) => {
       if (!userId) return;
       saveModuleColumnRegistry(STUDENTS_MODULE_CONTRACT.moduleId, userId, cols);
-      const prefs: ModuleColumnPref[] = cols.map(({ key, enabled, order }) => ({
+      const preferences: ModuleColumnPreference[] = cols.map(({ key, enabled, order }) => ({
         key,
         enabled,
         order,
       }));
-      setUserOverlay(prefs);
-      saveColumnPrefs(prefs);
+      setUserOverlay(preferences);
+      saveColumnPrefs(preferences);
     },
     [userId, saveColumnPrefs],
   );

@@ -1,5 +1,6 @@
 import { loadGlobalSettings } from './globalSettingsService.js';
 import { LLM_PROVIDERS_META, type LlmConfig } from '@mms/shared';
+import { OUTBOUND_FETCH_TIMEOUT_MS, safeOptionalExternalHttpUrl } from '../lib/outboundUrl.js';
 
 interface GeminiGenerateResponse {
   candidates?: Array<{
@@ -28,6 +29,13 @@ interface AnthropicMessagesResponse {
 interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
+}
+
+function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  return fetch(url, {
+    ...init,
+    signal: init?.signal ?? AbortSignal.timeout(OUTBOUND_FETCH_TIMEOUT_MS),
+  });
 }
 
 /**
@@ -61,7 +69,7 @@ export async function generateCompletion(
   const provider = config ? config.provider : (settings.llmProvider ?? 'none');
   const apiKey = config ? config.apiKey : (settings.llmApiKey ?? '');
   const model = config ? config.model : '';
-  const baseUrl = config ? config.baseUrl : undefined;
+  const baseUrl = safeOptionalExternalHttpUrl(config ? config.baseUrl : undefined, 'AI base URL');
 
   if (provider === 'none' || !apiKey.trim()) {
     throw new Error('LLM integration is not configured. Please add an LLM configuration in Settings > AI Assistant.');
@@ -102,7 +110,7 @@ export async function generateCompletion(
       };
     }
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody)
@@ -160,7 +168,7 @@ export async function generateCompletion(
           { role: 'user', content: prompt }
         ];
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -196,7 +204,7 @@ export async function generateCompletion(
         }))
       : [{ role: 'user' as const, content: prompt }];
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

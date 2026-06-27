@@ -31,7 +31,7 @@ import SyncStatusBadge from "./SyncStatusBadge";
 import { BackgroundJobsTray } from "@/components/ui/BackgroundJobsTray";
 
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { resolveDashboardPersona } from "@/lib/dashboardPersona";
+import { resolveDashboardRole } from "@/lib/dashboardRole";
 import { usePermissions } from "@/hooks/usePermissions";
 import { buildDashboardNotifications } from "@/lib/buildDashboardNotifications";
 
@@ -53,16 +53,16 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
     : "AK";
 
   const { can } = usePermissions();
-  const persona = resolveDashboardPersona(can);
-  const { invoices, attendanceRecords, studentMetricsInactive } = useDashboardData([], persona);
+  const dashboardRole = resolveDashboardRole(can);
+  const { invoices, attendanceRecords, studentMetricsInactive } = useDashboardData([], dashboardRole);
 
   const notifications = React.useMemo(() => {
     return buildDashboardNotifications(
-      persona,
+      dashboardRole,
       { invoices, attendanceRecords, inactiveStudents: studentMetricsInactive },
       t,
     );
-  }, [persona, invoices, attendanceRecords, studentMetricsInactive, t]);
+  }, [dashboardRole, invoices, attendanceRecords, studentMetricsInactive, t]);
 
   const unreadCount = notifications.length;
 

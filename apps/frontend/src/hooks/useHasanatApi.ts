@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 export const HASANAT_DENOMS_QUERY_KEY = ['hasanat', 'denoms', 'list'] as const;
 export const HASANAT_BATCHES_QUERY_KEY = ['hasanat', 'batches', 'list'] as const;
@@ -14,12 +15,12 @@ export const HASANAT_METRICS_QUERY_KEY = ['hasanat', 'metrics', 'snapshot'] as c
 
 export const HASANAT_DISTRIBUTION_COLUMN_PREFS_QUERY_KEY = [
   HASANAT_MODULE_CONTRACT.collectionKey,
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
 export const HASANAT_REDEMPTION_COLUMN_PREFS_QUERY_KEY = [
   HASANAT_MODULE_CONTRACT.redemptionCollectionKey,
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
 const HASANAT_API = HASANAT_MODULE_CONTRACT.restBasePath;
@@ -217,8 +218,8 @@ export function useHasanatDistributionColumnPreferences() {
   return useQuery({
     queryKey: HASANAT_DISTRIBUTION_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${HASANAT_API}/distributions/column-preferences`);
-      return body.prefs;
+      const body = await apiJson<ModuleColumnPreferencesResponse>(`${HASANAT_API}/distributions/column-preferences`);
+      return readModuleColumnPreferences(body);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -228,13 +229,13 @@ export function useHasanatDistributionColumnPreferences() {
 export function useHasanatDistributionColumnPreferencesMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${HASANAT_API}/distributions/column-preferences`, {
+    mutationFn: async (preferences: ModuleColumnPref[]) =>
+      apiJson<ModuleColumnPreferencesResponse>(`${HASANAT_API}/distributions/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(HASANAT_DISTRIBUTION_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(HASANAT_DISTRIBUTION_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
     },
   });
 }
@@ -244,8 +245,8 @@ export function useHasanatRedemptionColumnPreferences() {
   return useQuery({
     queryKey: HASANAT_REDEMPTION_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${HASANAT_API}/redemptions/column-preferences`);
-      return body.prefs;
+      const body = await apiJson<ModuleColumnPreferencesResponse>(`${HASANAT_API}/redemptions/column-preferences`);
+      return readModuleColumnPreferences(body);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -255,13 +256,13 @@ export function useHasanatRedemptionColumnPreferences() {
 export function useHasanatRedemptionColumnPreferencesMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${HASANAT_API}/redemptions/column-preferences`, {
+    mutationFn: async (preferences: ModuleColumnPref[]) =>
+      apiJson<ModuleColumnPreferencesResponse>(`${HASANAT_API}/redemptions/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(HASANAT_REDEMPTION_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(HASANAT_REDEMPTION_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
     },
   });
 }

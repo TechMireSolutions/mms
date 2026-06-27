@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 
@@ -12,7 +13,7 @@ export const ATTENDANCE_QUERY_KEY = ['attendance', 'list'] as const;
 export const ATTENDANCE_METRICS_QUERY_KEY = ['attendance', 'metrics'] as const;
 export const ATTENDANCE_COLUMN_PREFS_QUERY_KEY = [
   ATTENDANCE_MODULE_CONTRACT.collectionKey,
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
 const ATTENDANCE_API = ATTENDANCE_MODULE_CONTRACT.restBasePath;
@@ -113,8 +114,10 @@ export function useAttendanceColumnPrefs() {
   return useQuery({
     queryKey: ATTENDANCE_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${ATTENDANCE_API}/column-prefs`);
-      return body.prefs;
+      const body = await apiJson<ModuleColumnPreferencesResponse>(
+        `${ATTENDANCE_API}/column-preferences`,
+      );
+      return readModuleColumnPreferences(body);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -124,13 +127,13 @@ export function useAttendanceColumnPrefs() {
 export function useAttendanceColumnPrefsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${ATTENDANCE_API}/column-prefs`, {
+    mutationFn: async (preferences: ModuleColumnPref[]) =>
+      apiJson<ModuleColumnPreferencesResponse>(`${ATTENDANCE_API}/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(ATTENDANCE_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(ATTENDANCE_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
     },
   });
 }

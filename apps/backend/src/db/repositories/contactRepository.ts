@@ -67,28 +67,9 @@ export async function saveContact(workspaceSubdomain: string, contact: Contact):
 
 export async function bulkSaveContacts(workspaceSubdomain: string, list: Contact[]): Promise<void> {
   if (list.length === 0) return;
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const db = getDb();
-
-  await db.insert(contacts)
-    .values(
-      list.map((c) => {
-        const { id: _, ...extra } = c;
-        return {
-          id: String(c.id),
-          workspaceSubdomain: subdomain,
-          customData: JSON.stringify(extra),
-          updatedAt: new Date(),
-        };
-      })
-    )
-    .onConflictDoUpdate({
-      target: contacts.id,
-      set: {
-        customData: sql`(COALESCE(NULLIF(${contacts.customData}, ''), '{}')::jsonb || EXCLUDED.custom_data::jsonb)::text`,
-        updatedAt: new Date(),
-      },
-    });
+  for (const contact of list) {
+    await saveContact(workspaceSubdomain, contact);
+  }
 }
 
 export async function deleteContact(workspaceSubdomain: string, id: string): Promise<void> {

@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import type { ReportCollection } from '@/components/reports/reportMetadata';
 import type { CustomWidget } from '@/components/reports/pinnedWidgets/types';
-import type { DashboardPersona } from '@/lib/dashboardPersona';
-import { widgetMatchesPersona } from '@/lib/dashboardPersona';
+import type { DashboardRole } from '@/lib/dashboardRole';
+import { widgetMatchesDashboardRole } from '@/lib/dashboardRole';
 import { getRequiredDashboardCollections } from '@/lib/dashboardCollections';
 import { useStudentsMetrics, useStudentsWidgetAggregates } from '@/hooks/useStudents';
 import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/hooks/useTeachers';
@@ -46,11 +46,11 @@ function needsRevenueExpenses(widgets: CustomWidget[]): boolean {
 /** Loads only collections referenced by dashboard cards and pinned widgets. */
 export function useDashboardData(
   widgets: CustomWidget[],
-  persona: DashboardPersona,
+  dashboardRole: DashboardRole,
 ): DashboardCollectionData {
   const required = useMemo(
-    () => getRequiredDashboardCollections(widgets, persona),
-    [widgets, persona],
+    () => getRequiredDashboardCollections(widgets, dashboardRole),
+    [widgets, dashboardRole],
   );
 
   const needs = (collection: ReportCollection): boolean => required.has(collection);
@@ -64,27 +64,27 @@ export function useDashboardData(
       widgets.filter(
         (widget) =>
           widget.collection === 'contacts' &&
-          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesPersona(widget.role, persona))),
+          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole))),
       ),
-    [widgets, persona],
+    [widgets, dashboardRole],
   );
   const studentWidgets = useMemo(
     () =>
       widgets.filter(
         (widget) =>
           widget.collection === 'students' &&
-          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesPersona(widget.role, persona))),
+          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole))),
       ),
-    [widgets, persona],
+    [widgets, dashboardRole],
   );
   const teacherWidgets = useMemo(
     () =>
       widgets.filter(
         (widget) =>
           widget.collection === 'teachers' &&
-          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesPersona(widget.role, persona))),
+          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole))),
       ),
-    [widgets, persona],
+    [widgets, dashboardRole],
   );
 
   useContactsWidgetAggregates(contactWidgets, { enabled: needsContacts });

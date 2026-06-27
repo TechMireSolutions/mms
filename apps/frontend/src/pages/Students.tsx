@@ -26,7 +26,6 @@ import { type StudentsSettings, STUDENTS_MODULE_CONTRACT } from "@mms/shared";
 
 import ModuleReports from "../components/reports/ModuleReports";
 import KPISummary from "../components/reports/KPISummary";
-import { saveCollection } from "../lib/db";
 import { useStudentCount } from "@/hooks/useStudentCount";
 import { useStudentsPaginated, useStudentMutations, fetchAllStudentsForQuery, type StudentRecord } from "@/hooks/useStudents";
 import { useStudentColumnLayout } from "@/hooks/useStudentColumnLayout";
@@ -117,10 +116,11 @@ export default function Students() {
         const { students: migratedForGr, didMigrate } = applyGrNumberMigration(rawForMigration, settings);
         if (didMigrate && !migrationAppliedRef.current) {
           migrationAppliedRef.current = true;
-          saveCollection("students", migratedForGr);
-          for (const s of migratedForGr) {
-            updateStudent.mutate({ id: String(s.id), student: s as unknown as StudentRecord });
-          }
+          await Promise.all(
+            migratedForGr.map((student) =>
+              updateStudent.mutateAsync({ id: String(student.id), student: student as unknown as StudentRecord }),
+            ),
+          );
         }
       } finally {
         if (!cancelled) {

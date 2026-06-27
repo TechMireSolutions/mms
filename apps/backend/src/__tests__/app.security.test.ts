@@ -75,6 +75,19 @@ describe('tenant JWT binding', () => {
     await app.close();
   });
 
+  it('rejects AI configuration access without auth', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/ai/models',
+      headers: { host: 'demo.localhost' },
+      payload: { provider: 'openai' },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({ type: 'auth_required' });
+    await app.close();
+  });
+
   it('rejects email integration for non-admin', async () => {
     const app = await buildApp();
     const token = app.jwt.sign({

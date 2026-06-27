@@ -1,5 +1,5 @@
 import type { AppTranslationKey } from '@mms/shared';
-import type { DashboardPersona } from '@/lib/dashboardPersona';
+import type { DashboardRole } from '@/lib/dashboardRole';
 import type { Invoice } from '@/lib/data/financeData';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 
@@ -44,7 +44,7 @@ function todayAttendanceRate(records: AttendanceRecord[]): number | null {
 }
 
 export function buildDashboardNotifications(
-  persona: DashboardPersona,
+  dashboardRole: DashboardRole,
   data: {
     invoices: Invoice[];
     attendanceRecords: AttendanceRecord[];
@@ -57,7 +57,7 @@ export function buildDashboardNotifications(
   const outstandingTotal = sumOutstanding(data.invoices);
   const attRate = todayAttendanceRate(data.attendanceRecords);
 
-  if (persona === 'admin' || persona === 'accountant') {
+  if (dashboardRole === 'admin' || dashboardRole === 'accountant') {
     if (unpaidCount > 0) {
       items.push({
         id: 'unpaid-invoices',
@@ -70,7 +70,7 @@ export function buildDashboardNotifications(
     }
   }
 
-  if (persona === 'admin') {
+  if (dashboardRole === 'admin') {
     if (data.inactiveStudents > 0) {
       items.push({
         id: 'inactive-students',
@@ -94,7 +94,7 @@ export function buildDashboardNotifications(
     });
   }
 
-  if (persona === 'accountant' && unpaidCount === 0) {
+  if (dashboardRole === 'accountant' && unpaidCount === 0) {
     items.push({
       id: 'fees-clear',
       type: 'fee',

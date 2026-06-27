@@ -41,26 +41,45 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     headers.set('Content-Type', JSON_CONTENT_TYPE);
   }
 
-  // Intercept and sanitize any outgoing column-prefs payload to guarantee zero-trust schema compliance
-  if (path.includes('column-prefs') && init.body && typeof init.body === 'string') {
+  // Intercept and sanitize outgoing column preference payloads to guarantee zero-trust schema compliance.
+  if ((path.includes('column-preferences') || path.includes('column-prefs')) && init.body && typeof init.body === 'string') {
     try {
       const parsed = JSON.parse(init.body);
-      if (parsed && Array.isArray(parsed.prefs)) {
-        parsed.prefs = parsed.prefs
-          .filter((p: any) => p && typeof p === 'object' && typeof p.key === 'string' && p.key.trim().length > 0)
-          .map((p: any, index: number) => {
-            const enabled = typeof p.enabled === 'boolean'
-              ? p.enabled
-              : p.enabled === 'true' || p.enabled === 1 || p.enabled === '1';
-            const rawOrder = typeof p.order === 'number' ? p.order : parseFloat(String(p.order));
+      const rawPreferences = Array.isArray(parsed?.preferences)
+        ? parsed.preferences
+        : Array.isArray(parsed?.prefs)
+          ? parsed.prefs
+          : null;
+      if (rawPreferences) {
+        const sanitizedPreferences = rawPreferences
+          .filter((columnPreference: any) => {
+            return (
+              columnPreference &&
+              typeof columnPreference === 'object' &&
+              typeof columnPreference.key === 'string' &&
+              columnPreference.key.trim().length > 0
+            );
+          })
+          .map((columnPreference: any, index: number) => {
+            const enabled = typeof columnPreference.enabled === 'boolean'
+              ? columnPreference.enabled
+              : columnPreference.enabled === 'true' || columnPreference.enabled === 1 || columnPreference.enabled === '1';
+            const rawOrder = typeof columnPreference.order === 'number'
+              ? columnPreference.order
+              : parseFloat(String(columnPreference.order));
             const floored = Math.floor(rawOrder);
             const order = Number.isSafeInteger(floored) && floored >= 0 ? floored : index;
             return {
-              key: p.key.trim(),
+              key: columnPreference.key.trim(),
               enabled,
               order,
             };
           });
+        if (Array.isArray(parsed.preferences)) {
+          parsed.preferences = sanitizedPreferences;
+        } else {
+          parsed.prefs = sanitizedPreferences;
+        }
         init.body = JSON.stringify(parsed);
       }
     } catch (e) {

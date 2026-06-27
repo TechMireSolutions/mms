@@ -5,12 +5,13 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 export const ENROLLMENTS_QUERY_KEY = ['enrollments', 'list'] as const;
 export const ENROLLMENTS_METRICS_QUERY_KEY = ['enrollments', 'metrics'] as const;
 export const ENROLLMENTS_COLUMN_PREFS_QUERY_KEY = [
   ENROLLMENTS_MODULE_CONTRACT.collectionKey,
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
 const ENROLLMENTS_API = ENROLLMENTS_MODULE_CONTRACT.restBasePath;
@@ -61,8 +62,10 @@ export function useEnrollmentColumnPreferences() {
   return useQuery({
     queryKey: ENROLLMENTS_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${ENROLLMENTS_API}/column-preferences`);
-      return body.prefs;
+      const body = await apiJson<ModuleColumnPreferencesResponse>(
+        `${ENROLLMENTS_API}/column-preferences`,
+      );
+      return readModuleColumnPreferences(body);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -72,13 +75,13 @@ export function useEnrollmentColumnPreferences() {
 export function useEnrollmentColumnPreferencesMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${ENROLLMENTS_API}/column-preferences`, {
+    mutationFn: async (preferences: ModuleColumnPref[]) =>
+      apiJson<ModuleColumnPreferencesResponse>(`${ENROLLMENTS_API}/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(ENROLLMENTS_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(ENROLLMENTS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
     },
   });
 }

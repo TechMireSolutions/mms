@@ -11,7 +11,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Hardcoded labels/colours | Widespread in modules | Config/registry + `t()` — `mms-settings-i18n.md` |
 | TanStack Query | Students + contacts + workspace registry + auth; most modules still localStorage | New REST resources Query-first — `mms-data-layer.md` |
 | `can()` permissions hook | Shipped; Enrollments + Attendance wired; registry partial | Full registry-driven matrix — `mms-auth-security.md` |
-| Inline `role ===` checks | Dashboard widget filtering uses `resolveDashboardPersona(can)`; `useViewerRole` derives from `can()` | Full registry-driven matrix — `mms-auth-security.md` |
+| Inline `role ===` checks | Dashboard widget filtering uses `resolveDashboardRole(can)`; `useViewerRole` derives from `can()` | Full registry-driven matrix — `mms-auth-security.md` |
 | Custom tab provisioning | JSON document store only | Table + migration + CRUD per custom tab — `mms-fields.md` |
 | WebSockets | Not implemented | Replace polling for server push — `mms-core.md` |
 | Work/Reports sub-tabs | Residual inline bars in deep components | `SubTabBar` per `mms-ui-ux-design.md` |
@@ -20,7 +20,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Status colours inline | Residual in chart color maps | `StatusBadge` + semantic tokens — `mms-ui-ux-design.md` |
 | Automated tests | Shared + backend (auth, rbac, health, security); frontend apiClient + hooks; Playwright API + Contacts UI in CI `e2e/` | Expand Playwright for login/onboard — `mms-testing-observability.md` |
 | Server-first data | Students + contacts Query-first; most modules localStorage primary | Query + API authoritative for new modules — `mms-data-layer.md` |
-| Per-entity REST API | `/api/students` + `/api/contacts` CRUD; generic `/api/db` for rest | Resource routes + validation per domain — `mms-api-interface.md` |
+| Per-entity REST API | Students, contacts, teachers, finance, enrollments, obligations, accounting, hasanat, examinations, question-bank, users, attendance, and sessions have resource routes; generic `/api/db` still serves legacy sync paths | Resource routes + validation per domain — `mms-api-interface.md` |
 | Internal `fetch('/api/...')` | External OAuth only | All MMS API via `apiClient` — `mms-api-interface.md` |
 | Client error reporting | Console/toasts only | Sentry or equivalent — `mms-testing-observability.md` |
 | Global a11y pass | Partial (dropdowns only) | WCAG baseline on new UI — `mms-ui-ux-design.md` |

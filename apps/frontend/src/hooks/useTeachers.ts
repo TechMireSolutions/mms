@@ -6,13 +6,14 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { TEACHER_COUNT_QUERY_KEY } from './useTeacherCount';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
+import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 export const TEACHERS_QUERY_KEY = ['teachers', 'list'] as const;
 export const TEACHERS_METRICS_QUERY_KEY = ['teachers', 'metrics'] as const;
 export const TEACHERS_WIDGET_AGGREGATES_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'widget-aggregates'] as const;
 export const TEACHER_COLUMN_PREFS_QUERY_KEY = [
   TEACHERS_MODULE_CONTRACT.collectionKey,
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
 const TEACHERS_API = TEACHERS_MODULE_CONTRACT.restBasePath;
@@ -230,8 +231,10 @@ export function useTeacherColumnPrefs() {
   return useQuery({
     queryKey: TEACHER_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${TEACHERS_API}/column-prefs`);
-      return body.prefs;
+      const body = await apiJson<ModuleColumnPreferencesResponse>(
+        `${TEACHERS_API}/column-preferences`,
+      );
+      return readModuleColumnPreferences(body);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -241,13 +244,13 @@ export function useTeacherColumnPrefs() {
 export function useTeacherColumnPrefsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${TEACHERS_API}/column-prefs`, {
+    mutationFn: async (preferences: ModuleColumnPref[]) =>
+      apiJson<ModuleColumnPreferencesResponse>(`${TEACHERS_API}/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(TEACHER_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(TEACHER_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
     },
   });
 }

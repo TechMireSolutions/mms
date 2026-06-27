@@ -7,7 +7,7 @@ import StatsGrid from '@/components/dashboard/StatsGrid';
 import QuickActionsPanel from '@/components/dashboard/QuickActionsPanel';
 import NotificationsPanel from '@/components/dashboard/NotificationsPanel';
 import WelcomeBanner from '@/components/dashboard/WelcomeBanner';
-import { resolveDashboardPersona, widgetMatchesPersona, type DashboardPersona } from '@/lib/dashboardPersona';
+import { resolveDashboardRole, widgetMatchesDashboardRole, type DashboardRole } from '@/lib/dashboardRole';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
   DashboardWidgets,
@@ -37,10 +37,10 @@ function Section({ children }: { children: React.ReactNode }) {
 }
 
 function DashboardRolePanel({
-  persona,
+  dashboardRole,
   notifications,
 }: {
-  persona: DashboardPersona;
+  dashboardRole: DashboardRole;
   notifications: ReturnType<typeof buildDashboardNotifications>;
 }) {
   return (
@@ -48,7 +48,7 @@ function DashboardRolePanel({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <Section>
-            <QuickActionsPanel role={persona} />
+            <QuickActionsPanel role={dashboardRole} />
           </Section>
         </div>
         <Section>
@@ -74,7 +74,7 @@ function defaultWidgetCategory(can: (permission: Permission) => boolean): string
 export default function Dashboard() {
   const { t } = useTranslation();
   const { can } = usePermissions();
-  const dashboardPersona = useMemo(() => resolveDashboardPersona(can), [can]);
+  const dashboardRole = useMemo(() => resolveDashboardRole(can), [can]);
   const globalSettings = useGlobalSettings();
   const enabledModules = globalSettings.enabledModules || {};
 
@@ -104,7 +104,7 @@ export default function Dashboard() {
     tests,
     assessmentResults,
     dataVolume,
-  } = useDashboardData(customWidgets, dashboardPersona);
+  } = useDashboardData(customWidgets, dashboardRole);
 
   const openWidgetBuilder = useCallback(
     (type: CustomWidget['widgetType'], widget: CustomWidget | null = null) => {
@@ -142,16 +142,16 @@ export default function Dashboard() {
   const activeCustomCards = useMemo(
     () =>
       customWidgets.filter(
-        (w) => w.widgetType === 'card' && widgetMatchesPersona(w.role, dashboardPersona) && !w.id.startsWith('def-'),
+        (w) => w.widgetType === 'card' && widgetMatchesDashboardRole(w.role, dashboardRole) && !w.id.startsWith('def-'),
       ),
-    [customWidgets, dashboardPersona],
+    [customWidgets, dashboardRole],
   );
 
   const stats = useMemo(() => {
     const isEn = (id: string) => enabledModules[id] !== false;
 
     const cardWidgets = customWidgets.filter(
-      (w) => w.widgetType === 'card' && widgetMatchesPersona(w.role, dashboardPersona),
+      (w) => w.widgetType === 'card' && widgetMatchesDashboardRole(w.role, dashboardRole),
     );
 
     const enabledCardWidgets = cardWidgets.filter((w) => {
@@ -280,7 +280,7 @@ export default function Dashboard() {
       };
     });
   }, [
-    dashboardPersona,
+    dashboardRole,
     enabledModules,
     customWidgets,
     studentsTotal,
@@ -311,11 +311,11 @@ export default function Dashboard() {
   const notifications = useMemo(
     () =>
       buildDashboardNotifications(
-        dashboardPersona,
+        dashboardRole,
         { invoices, attendanceRecords, inactiveStudents: studentMetricsInactive },
         t,
       ),
-    [dashboardPersona, invoices, attendanceRecords, studentMetricsInactive, t],
+    [dashboardRole, invoices, attendanceRecords, studentMetricsInactive, t],
   );
 
   return (
@@ -323,7 +323,7 @@ export default function Dashboard() {
       <title>MMS - {t('dashboard.title')}</title>
       <meta name="description" content={t('dashboard.metaDescription')} />
 
-      <WelcomeBanner persona={dashboardPersona} />
+      <WelcomeBanner dashboardRole={dashboardRole} />
 
       <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2">
         <button
@@ -497,7 +497,7 @@ export default function Dashboard() {
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={`stats-${dashboardPersona}`}
+          key={`stats-${dashboardRole}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -531,14 +531,14 @@ export default function Dashboard() {
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={`body-${dashboardPersona}`}
+          key={`body-${dashboardRole}`}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
           <ErrorBoundary>
-            <DashboardRolePanel persona={dashboardPersona} notifications={notifications} />
+            <DashboardRolePanel dashboardRole={dashboardRole} notifications={notifications} />
           </ErrorBoundary>
         </motion.div>
       </AnimatePresence>

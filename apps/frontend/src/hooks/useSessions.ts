@@ -6,12 +6,13 @@ import { apiFetch, apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
+import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 export const SESSIONS_QUERY_KEY = ['sessions', 'list'] as const;
 export const SESSIONS_METRICS_QUERY_KEY = ['sessions', 'metrics'] as const;
 export const SESSION_COLUMN_PREFS_QUERY_KEY = [
   SESSIONS_MODULE_CONTRACT.collectionKey,
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
 const SESSIONS_API = SESSIONS_MODULE_CONTRACT.restBasePath;
@@ -102,8 +103,10 @@ export function useSessionColumnPrefs() {
   return useQuery({
     queryKey: SESSION_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${SESSIONS_API}/column-prefs`);
-      return body.prefs;
+      const body = await apiJson<ModuleColumnPreferencesResponse>(
+        `${SESSIONS_API}/column-preferences`,
+      );
+      return readModuleColumnPreferences(body);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -113,13 +116,13 @@ export function useSessionColumnPrefs() {
 export function useSessionColumnPrefsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${SESSIONS_API}/column-prefs`, {
+    mutationFn: async (preferences: ModuleColumnPref[]) =>
+      apiJson<ModuleColumnPreferencesResponse>(`${SESSIONS_API}/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(SESSION_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(SESSION_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
     },
   });
 }

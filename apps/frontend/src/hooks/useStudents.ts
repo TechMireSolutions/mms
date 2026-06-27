@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { normalizeStoredStudent, STUDENTS_MODULE_CONTRACT, type ModuleColumnPref, type StudentDuplicateCheckInput, type StudentDuplicateReason, type StudentsCommandMetricsSnapshot, type StudentsListPageResult, studentsWidgetQueryFromWidget, type StudentsWidgetAggregateResult } from '@mms/shared';
+import { normalizeStoredStudent, STUDENTS_MODULE_CONTRACT, type ModuleColumnPreference, type StudentDuplicateCheckInput, type StudentDuplicateReason, type StudentsCommandMetricsSnapshot, type StudentsListPageResult, studentsWidgetQueryFromWidget, type StudentsWidgetAggregateResult } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { STUDENT_COUNT_QUERY_KEY } from './useStudentCount';
@@ -10,9 +10,9 @@ import type { Student } from '@/lib/data/studentsData';
 export const STUDENTS_QUERY_KEY = ['students', 'list'] as const;
 export const STUDENTS_METRICS_QUERY_KEY = ['students', 'metrics'] as const;
 export const STUDENTS_WIDGET_AGGREGATES_QUERY_KEY = [STUDENTS_MODULE_CONTRACT.collectionKey, 'widget-aggregates'] as const;
-export const STUDENT_COLUMN_PREFS_QUERY_KEY = [
+export const STUDENT_COLUMN_PREFERENCES_QUERY_KEY = [
   STUDENTS_MODULE_CONTRACT.collectionKey,
-  'column-prefs',
+  'column-preferences',
 ] as const;
 
 const STUDENTS_API = STUDENTS_MODULE_CONTRACT.restBasePath;
@@ -265,10 +265,12 @@ export function useStudentsWidgetAggregates(
 export function useStudentColumnPrefs() {
   const { isAuthenticated } = useAuth();
   return useQuery({
-    queryKey: STUDENT_COLUMN_PREFS_QUERY_KEY,
+    queryKey: STUDENT_COLUMN_PREFERENCES_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${STUDENTS_API}/column-prefs`);
-      return body.prefs;
+      const body = await apiJson<{ preferences: ModuleColumnPreference[]; prefs?: ModuleColumnPreference[] }>(
+        `${STUDENTS_API}/column-preferences`,
+      );
+      return body.preferences ?? body.prefs ?? [];
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -278,13 +280,16 @@ export function useStudentColumnPrefs() {
 export function useStudentColumnPrefsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${STUDENTS_API}/column-prefs`, {
+    mutationFn: async (preferences: ModuleColumnPreference[]) =>
+      apiJson<{ success: boolean; preferences: ModuleColumnPreference[]; prefs?: ModuleColumnPreference[] }>(
+        `${STUDENTS_API}/column-preferences`,
+        {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
-      }),
+        body: JSON.stringify({ preferences }),
+        },
+      ),
     onSuccess: (data) => {
-      queryClient.setQueryData(STUDENT_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(STUDENT_COLUMN_PREFERENCES_QUERY_KEY, data.preferences ?? data.prefs ?? []);
     },
   });
 }

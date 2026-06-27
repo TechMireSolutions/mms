@@ -42,10 +42,10 @@ describe('apiClient', () => {
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     };
     const { apiFetch } = await import('../lib/apiClient');
-    await apiFetch('/api/contacts/column-prefs', {
+    await apiFetch('/api/contacts/column-preferences', {
       method: 'PUT',
       body: JSON.stringify({
-        prefs: [
+        preferences: [
           { key: 'name', enabled: 'true', order: 1.5 },
           { key: 'email', enabled: false, order: '2' },
           { key: '  ', enabled: true, order: 0 },
@@ -54,7 +54,7 @@ describe('apiClient', () => {
     });
     expect(seenBody).toBeDefined();
     const parsed = JSON.parse(seenBody!);
-    expect(parsed.prefs).toEqual([
+    expect(parsed.preferences).toEqual([
       { key: 'name', enabled: true, order: 1 },
       { key: 'email', enabled: false, order: 2 },
     ]);

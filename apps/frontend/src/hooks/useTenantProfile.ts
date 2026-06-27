@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { TenantUserProfile } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export const TENANT_PROFILE_KEY = ['tenant', 'profile'] as const;
 
@@ -10,10 +11,11 @@ async function fetchTenantProfile(): Promise<TenantUserProfile> {
 }
 
 export function useTenantProfile(enabled = true) {
+  const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: TENANT_PROFILE_KEY,
     queryFn: fetchTenantProfile,
-    enabled,
+    enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
 }

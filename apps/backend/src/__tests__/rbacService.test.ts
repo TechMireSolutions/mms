@@ -29,6 +29,13 @@ describe("rbacService", () => {
     expect(canWriteCollection(accountant, "students")).toBe(true);
   });
 
+  it("denies unknown collection and object keys by default", () => {
+    expect(canReadCollection(admin, "tenant_escape")).toBe(false);
+    expect(canWriteCollection(admin, "tenant_escape")).toBe(false);
+    expect(canReadObject(admin, "tenant_escape")).toBe(false);
+    expect(canWriteObject(admin, "tenant_escape")).toBe(false);
+  });
+
   it("restricts students read to roles with students.read", () => {
     expect(canReadCollection(admin, "students")).toBe(true);
     expect(canReadCollection(teacher, "students")).toBe(true);

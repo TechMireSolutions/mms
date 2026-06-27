@@ -5,12 +5,13 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 const USERS_API = USERS_MODULE_CONTRACT.restBasePath;
 
 export const USERS_LIST_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'users', 'list'] as const;
 export const ACTIVITY_LOGS_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'logs', 'list'] as const;
-export const USERS_COLUMN_PREFS_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'column-prefs'] as const;
+export const USERS_COLUMN_PREFS_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'column-preferences'] as const;
 
 async function fetchUsers(): Promise<WorkspaceUser[]> {
   const body = await apiJson<{ users: WorkspaceUser[] }>(USERS_API);
@@ -73,8 +74,8 @@ export function useUsersColumnPrefs() {
   return useQuery({
     queryKey: USERS_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ModuleColumnPref[] }>(`${USERS_API}/column-prefs`);
-      return body.prefs;
+      const body = await apiJson<ModuleColumnPreferencesResponse>(`${USERS_API}/column-preferences`);
+      return readModuleColumnPreferences(body);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -84,13 +85,13 @@ export function useUsersColumnPrefs() {
 export function useUsersColumnPrefsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (prefs: ModuleColumnPref[]) =>
-      apiJson<{ success: boolean; prefs: ModuleColumnPref[] }>(`${USERS_API}/column-prefs`, {
+    mutationFn: async (preferences: ModuleColumnPref[]) =>
+      apiJson<ModuleColumnPreferencesResponse>(`${USERS_API}/column-preferences`, {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
+        body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData(USERS_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(USERS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
     },
   });
 }

@@ -4,7 +4,7 @@ import {
   CONTACTS_MODULE_CONTRACT,
   filterActiveContacts,
   type Contact,
-  type ContactColumnPref,
+  type ContactColumnPreference,
   type ContactsCommandMetricsSnapshot,
   type ContactsDuplicatePairsPageResult,
   type ContactsListPageResult,
@@ -26,7 +26,7 @@ import { enqueueContactsOutbox } from '@/lib/contacts/contactsSyncOutbox';
 const CONTACTS_API = CONTACTS_MODULE_CONTRACT.restBasePath;
 
 export const CONTACTS_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'list'] as const;
-export const CONTACT_COLUMN_PREFS_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'column-prefs'] as const;
+export const CONTACT_COLUMN_PREFERENCES_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'column-preferences'] as const;
 export const CONTACTS_SAVED_REPORTS_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'saved-reports'] as const;
 export const CONTACTS_GOOGLE_SYNC_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'google-sync'] as const;
 export const CONTACTS_METRICS_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'metrics'] as const;
@@ -458,10 +458,12 @@ export function useContactMutations() {
 export function useContactColumnPrefs() {
   const { isAuthenticated } = useAuth();
   return useQuery({
-    queryKey: CONTACT_COLUMN_PREFS_QUERY_KEY,
+    queryKey: CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ prefs: ContactColumnPref[] }>(`${CONTACTS_API}/column-prefs`);
-      return body.prefs;
+      const body = await apiJson<{ preferences: ContactColumnPreference[]; prefs?: ContactColumnPreference[] }>(
+        `${CONTACTS_API}/column-preferences`,
+      );
+      return body.preferences ?? body.prefs ?? [];
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -471,24 +473,29 @@ export function useContactColumnPrefs() {
 export function useContactColumnPrefsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (rawPrefs: ContactColumnPref[]) => {
-      const prefs: ContactColumnPref[] = rawPrefs
-        .filter((p) => p && typeof p.key === 'string' && p.key.trim().length > 0)
-        .map((p, i) => {
-          const floored = Math.floor(typeof p.order === 'number' ? p.order : Number(p.order));
+    mutationFn: async (rawPreferences: ContactColumnPreference[]) => {
+      const preferences: ContactColumnPreference[] = rawPreferences
+        .filter((columnPreference) => columnPreference && typeof columnPreference.key === 'string' && columnPreference.key.trim().length > 0)
+        .map((columnPreference, index) => {
+          const floored = Math.floor(
+            typeof columnPreference.order === 'number' ? columnPreference.order : Number(columnPreference.order),
+          );
           return {
-            key: p.key.trim(),
-            enabled: Boolean(p.enabled),
-            order: Number.isSafeInteger(floored) && floored >= 0 ? floored : i,
+            key: columnPreference.key.trim(),
+            enabled: Boolean(columnPreference.enabled),
+            order: Number.isSafeInteger(floored) && floored >= 0 ? floored : index,
           };
         });
-      return apiJson<{ success: boolean; prefs: ContactColumnPref[] }>(`${CONTACTS_API}/column-prefs`, {
+      return apiJson<{ success: boolean; preferences: ContactColumnPreference[]; prefs?: ContactColumnPreference[] }>(
+        `${CONTACTS_API}/column-preferences`,
+        {
         method: 'PUT',
-        body: JSON.stringify({ prefs }),
-      });
+        body: JSON.stringify({ preferences }),
+        },
+      );
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(CONTACT_COLUMN_PREFS_QUERY_KEY, data.prefs);
+      queryClient.setQueryData(CONTACT_COLUMN_PREFERENCES_QUERY_KEY, data.preferences ?? data.prefs ?? []);
     },
   });
 }

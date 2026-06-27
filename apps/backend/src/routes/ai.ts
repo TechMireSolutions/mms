@@ -6,9 +6,10 @@ import { authenticateTenant } from '../middleware/authenticate.js';
 import { sendForbidden } from '../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../lib/zodRequest.js';
 import type { User } from '@mms/shared';
+import { OUTBOUND_FETCH_TIMEOUT_MS, safeOptionalExternalHttpUrl } from '../lib/outboundUrl.js';
 
 const modelsBodySchema = z.object({
-  provider: z.string(),
+  provider: z.enum(['gemini', 'openai', 'anthropic', 'deepseek', 'openrouter', 'groq', 'alibaba']),
   apiKey: z.string().optional(),
   configId: z.string().optional(),
   baseUrl: z.string().optional(),
@@ -50,6 +51,13 @@ interface OpenAiModelsResponse {
   data?: Array<{ id: string }>;
 }
 
+function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  return fetch(url, {
+    ...init,
+    signal: init?.signal ?? AbortSignal.timeout(OUTBOUND_FETCH_TIMEOUT_MS),
+  });
+}
+
 export default async function aiRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
@@ -57,8 +65,10 @@ export default async function aiRoutes(
   // Enforce authentication AND admin-only access for all AI configuration routes
   fastify.addHook('preHandler', async (request, reply) => {
     await authenticateTenant(request, reply);
-    const user = request.user as User;
-    if (user.role !== 'admin') {
+    if (reply.sent) return;
+
+    const user = request.user as User | undefined;
+    if (!user || user.role !== 'admin') {
       return sendForbidden(reply, 'Admin privilege required to access AI configuration API');
     }
   });
@@ -69,11 +79,13 @@ export default async function aiRoutes(
     const { provider, apiKey, configId, baseUrl } = parsed.data;
 
     let resolvedApiKey = apiKey;
+    let resolvedBaseUrl = baseUrl;
     if (!resolvedApiKey?.trim() && configId) {
       const settings = await loadGlobalSettings();
       const savedConfig = (settings.llmConfigs ?? []).find(c => c.id === configId);
       if (savedConfig) {
         resolvedApiKey = savedConfig.apiKey;
+        resolvedBaseUrl = savedConfig.baseUrl;
       }
     }
 
@@ -83,19 +95,20 @@ export default async function aiRoutes(
 
     try {
       let models: string[] = [];
+      const safeBaseUrl = safeOptionalExternalHttpUrl(resolvedBaseUrl, 'AI base URL');
 
       if (provider === 'gemini') {
-        const url = baseUrl?.trim()
-          ? `${baseUrl.trim()}/models?key=${resolvedApiKey}`
+        const url = safeBaseUrl
+          ? `${safeBaseUrl}/models?key=${resolvedApiKey}`
           : `https://generativelanguage.googleapis.com/v1beta/models?key=${resolvedApiKey}`;
-        const res = await fetch(url);
+        const res = await fetchWithTimeout(url);
         if (res.ok) {
           const json = (await res.json()) as GeminiModelsResponse;
           models = (json.models || []).map((m) => m.name.replace('models/', ''));
         }
       } else if (provider === 'anthropic') {
-        const url = baseUrl?.trim() || 'https://api.anthropic.com/v1/models';
-        const res = await fetch(url, {
+        const url = safeBaseUrl || 'https://api.anthropic.com/v1/models';
+        const res = await fetchWithTimeout(url, {
           headers: {
             'x-api-key': resolvedApiKey,
             'anthropic-version': '2023-06-01'
@@ -117,8 +130,8 @@ export default async function aiRoutes(
         };
 
         const defaultUrl = openAiCompatibleUrls[provider as keyof typeof openAiCompatibleUrls];
-        if (defaultUrl || baseUrl?.trim()) {
-          const url = baseUrl?.trim() ? `${baseUrl.trim()}/models` : defaultUrl;
+        if (defaultUrl || safeBaseUrl) {
+          const url = safeBaseUrl ? `${safeBaseUrl}/models` : defaultUrl;
           const headers: Record<string, string> = {
             'Authorization': `Bearer ${resolvedApiKey}`
           };
@@ -127,7 +140,7 @@ export default async function aiRoutes(
             headers['HTTP-Referer'] = domain ? `https://${domain}` : 'http://localhost:3000';
             headers['X-Title'] = 'MMS';
           }
-          const res = await fetch(url, { headers });
+          const res = await fetchWithTimeout(url, { headers });
           if (res.ok) {
             const json = (await res.json()) as OpenAiModelsResponse;
             models = (json.data || []).map((m) => m.id);

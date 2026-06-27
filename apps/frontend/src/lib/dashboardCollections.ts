@@ -1,13 +1,13 @@
 import type { ReportCollection } from '@/components/reports/reportMetadata';
 import type { CustomWidget } from '@/components/reports/pinnedWidgets/types';
-import { widgetMatchesPersona, type DashboardPersona } from '@/lib/dashboardPersona';
+import { widgetMatchesDashboardRole, type DashboardRole } from '@/lib/dashboardRole';
 
 const REVENUE_WIDGET_TYPES = new Set(['revenue-expenses']);
 
 /** Collections referenced by visible dashboard cards and pinned widgets. */
 export function getRequiredDashboardCollections(
   widgets: CustomWidget[],
-  persona: DashboardPersona,
+  dashboardRole: DashboardRole,
 ): Set<ReportCollection> {
   const required = new Set<ReportCollection>([
     'sessions',
@@ -17,7 +17,7 @@ export function getRequiredDashboardCollections(
 
   for (const widget of widgets) {
     const cardForPersona =
-      widget.widgetType === 'card' && widgetMatchesPersona(widget.role, persona);
+      widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole);
     const pinned = widget.isPinnedToDashboard;
 
     if (cardForPersona || pinned) {
