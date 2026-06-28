@@ -20,62 +20,64 @@ export interface StudentsListPageResult {
 }
 
 export function studentMatchesSearch(student: Student, search: string): boolean {
-  const q = search.trim().toLowerCase();
-  if (!q) return true;
+  const normalizedSearch = search.trim().toLowerCase();
+  if (!normalizedSearch) return true;
   return (
-    (student.name ?? '').toLowerCase().includes(q) ||
-    (student.cnic ?? '').includes(q) ||
-    (student.fatherName ?? '').toLowerCase().includes(q) ||
-    (student.guardianName ?? '').toLowerCase().includes(q)
+    (student.name ?? '').toLowerCase().includes(normalizedSearch) ||
+    (student.cnic ?? '').includes(normalizedSearch) ||
+    (student.fatherName ?? '').toLowerCase().includes(normalizedSearch) ||
+    (student.guardianName ?? '').toLowerCase().includes(normalizedSearch)
   );
 }
 
 export function filterStudentsForQuery(students: Student[], query: StudentsListQuery): Student[] {
-  let rows = students;
+  let studentRows = students;
   if (query.status?.trim()) {
-    const statuses = query.status.split(',').map((s) => s.trim()).filter(Boolean);
+    const statuses = query.status.split(',').map((status) => status.trim()).filter(Boolean);
     if (statuses.length > 0) {
-      rows = rows.filter((s) => statuses.includes(String(s.status ?? 'active')));
+      studentRows = studentRows.filter((student) => statuses.includes(String(student.status ?? 'active')));
     }
   }
   if (query.gender) {
-    rows = rows.filter((s) => s.gender === query.gender);
+    studentRows = studentRows.filter((student) => student.gender === query.gender);
   }
   if (query.search?.trim()) {
-    rows = rows.filter((s) => studentMatchesSearch(s, query.search!));
+    studentRows = studentRows.filter((student) => studentMatchesSearch(student, query.search!));
   }
-  return rows;
+  return studentRows;
 }
 
-function compareStudents(a: Student, b: Student, field: string, dir: 'asc' | 'desc'): number {
-  const av = a[field as keyof Student];
-  const bv = b[field as keyof Student];
-  const aStr = av == null ? '' : String(av);
-  const bStr = bv == null ? '' : String(bv);
-  const cmp = aStr.localeCompare(bStr, undefined, { numeric: true, sensitivity: 'base' });
-  return dir === 'desc' ? -cmp : cmp;
+function compareStudents(leftStudent: Student, rightStudent: Student, field: string, direction: 'asc' | 'desc'): number {
+  const leftValue = leftStudent[field as keyof Student];
+  const rightValue = rightStudent[field as keyof Student];
+  const leftString = leftValue == null ? '' : String(leftValue);
+  const rightString = rightValue == null ? '' : String(rightValue);
+  const comparison = leftString.localeCompare(rightString, undefined, { numeric: true, sensitivity: 'base' });
+  return direction === 'desc' ? -comparison : comparison;
 }
 
 /** Paginates an in-memory student list (server-side data source). */
 export function paginateStudents(students: Student[], query: StudentsListQuery): StudentsListPageResult {
   const page = Math.max(1, query.page ?? 1);
   const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
-  let rows = filterStudentsForQuery(students, query);
+  let studentRows = filterStudentsForQuery(students, query);
 
   const sortField = query.sortField?.trim();
   if (sortField) {
-    const dir = query.sortDir === 'desc' ? 'desc' : 'asc';
-    rows = [...rows].sort((a, b) => compareStudents(a, b, sortField, dir));
+    const sortDirection = query.sortDir === 'desc' ? 'desc' : 'asc';
+    studentRows = [...studentRows].sort((leftStudent, rightStudent) =>
+      compareStudents(leftStudent, rightStudent, sortField, sortDirection),
+    );
   }
 
-  const total = rows.length;
+  const total = studentRows.length;
   const start = (page - 1) * limit;
-  const slice = rows.slice(start, start + limit);
+  const pageStudents = studentRows.slice(start, start + limit);
   return {
-    students: slice,
+    students: pageStudents,
     total,
     page,
     limit,
-    hasMore: start + slice.length < total,
+    hasMore: start + pageStudents.length < total,
   };
 }

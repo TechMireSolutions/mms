@@ -12,8 +12,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 type ContactSocial = SocialLink & Record<string, unknown>;
 
 interface SocialTabProps {
-  data: Partial<Contact>;
-  onChange: (updatedData: Partial<Contact>) => void;
+  contactDraft: Partial<Contact>;
+  onChange: (updatedContactDraft: Partial<Contact>) => void;
   required?: boolean;
   errors?: ValidationError[];
 }
@@ -24,7 +24,7 @@ interface SocialTabProps {
  * @returns React element.
  */
 export default function SocialTab({
-  data,
+  contactDraft,
   onChange,
   required = false,
   errors = [],
@@ -36,28 +36,32 @@ export default function SocialTab({
 
   const createNewSocial = (): ContactSocial => {
     const item: Record<string, unknown> = {};
-    enabledFields.forEach((f) => {
-      if (f.key === "platform") {
-        item[f.key] = defaultSocialPlatform;
+    enabledFields.forEach((field) => {
+      if (field.key === "platform") {
+        item[field.key] = defaultSocialPlatform;
       } else {
-        item[f.key] = getDefaultFieldValue(f);
+        item[field.key] = getDefaultFieldValue(field);
       }
     });
     return item as ContactSocial;
   };
 
-  const socials = (data.socials || []) as ContactSocial[];
+  const contactSocials = (contactDraft.socials || []) as ContactSocial[];
 
-  const upd = (list: ContactSocial[]): void => {
-    onChange({ ...data, socials: list });
+  const updateContactSocials = (socials: ContactSocial[]): void => {
+    onChange({ ...contactDraft, socials });
   };
 
-  const updateSocial = (i: number, patch: Partial<ContactSocial>): void => {
-    upd(socials.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const updateSocial = (socialIndex: number, patch: Partial<ContactSocial>): void => {
+    updateContactSocials(
+      contactSocials.map((social, index) =>
+        index === socialIndex ? { ...social, ...patch } : social,
+      ),
+    );
   };
 
-  const showPlatformField = enabledFields.find((f) => f.key === "platform");
-  const bodyFields = enabledFields.filter((f) => f.key !== "platform");
+  const showPlatformField = enabledFields.find((field) => field.key === "platform");
+  const bodyFields = enabledFields.filter((field) => field.key !== "platform");
 
   const getPlaceholder = (field: FieldDefinition, platform: string): string => {
     if (field.key === "url") {
@@ -68,12 +72,12 @@ export default function SocialTab({
 
   return (
     <div className="space-y-3">
-      {required && socials.length === 0 && <RequiredBanner message={t("contacts.form.atLeastOneSocialRequired")} />}
-      {socials.length === 0 && <FormEmptyState icon={Share2} text={t("contacts.form.noSocialLinksYet")} />}
+      {required && contactSocials.length === 0 && <RequiredBanner message={t("contacts.form.atLeastOneSocialRequired")} />}
+      {contactSocials.length === 0 && <FormEmptyState icon={Share2} text={t("contacts.form.noSocialLinksYet")} />}
 
-      {socials.map((s, i) => (
+      {contactSocials.map((social, socialIndex) => (
         <motion.div
-          key={i}
+          key={socialIndex}
           layout
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -85,8 +89,8 @@ export default function SocialTab({
                 <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
                 <EditableSelect
                   options={socialPlatforms || []}
-                  value={s.platform || ""}
-                  onChange={(val) => updateSocial(i, { platform: val })}
+                  value={social.platform || ""}
+                  onChange={(value) => updateSocial(socialIndex, { platform: value })}
                   onUpdateOptions={updateSocialPlatforms}
                   placeholder={t("contacts.form.selectLabel")}
                   className={TYPE_SELECT_WIDTH}
@@ -96,8 +100,8 @@ export default function SocialTab({
               <div />
             )}
             <CardRemoveButton
-              onClick={() => upd(socials.filter((_, j) => j !== i))}
-              label={t("contacts.form.removeSocialLink", { index: i + 1 })}
+              onClick={() => updateContactSocials(contactSocials.filter((_, index) => index !== socialIndex))}
+              label={t("contacts.form.removeSocialLink", { index: socialIndex + 1 })}
             />
           </div>
 
@@ -105,14 +109,14 @@ export default function SocialTab({
             <div className={COLLECTION_BODY}>
               {bodyFields.map((field) => {
                 const fieldError = errors.find(
-                  (err) => err.tabId === "socials" && err.index === i && err.fieldId === field.key
+                  (error) => error.tabId === "socials" && error.index === socialIndex && error.fieldId === field.key
                 );
                 return (
-                  <Field key={field.key} id={`socials-${i}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
+                  <Field key={field.key} id={`socials-${socialIndex}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
                     <CustomFieldInput
-                      field={{ ...field, placeholder: getPlaceholder(field, s.platform || defaultSocialPlatform) }}
-                      value={s[field.key]}
-                      onChange={(val) => updateSocial(i, { [field.key]: val })}
+                      field={{ ...field, placeholder: getPlaceholder(field, social.platform || defaultSocialPlatform) }}
+                      value={social[field.key]}
+                      onChange={(value) => updateSocial(socialIndex, { [field.key]: value })}
                       error={!!fieldError}
                     />
                   </Field>
@@ -126,7 +130,7 @@ export default function SocialTab({
       <Button
         type="button"
         variant="ghost"
-        onClick={() => upd([...socials, createNewSocial()])}
+        onClick={() => updateContactSocials([...contactSocials, createNewSocial()])}
         className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
       >
         <Plus className="w-4 h-4" />

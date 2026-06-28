@@ -9,8 +9,8 @@ import ContactPicker from "@/components/contactLink/ContactPicker";
 import { Contact, ContactRelationship } from "@mms/shared";
 
 interface RelationshipsTabProps {
-  data: Partial<Contact>;
-  onChange: (updatedData: Partial<Contact>) => void;
+  contactDraft: Partial<Contact>;
+  onChange: (updatedContactDraft: Partial<Contact>) => void;
   errors?: ValidationError[];
 }
 
@@ -18,24 +18,24 @@ interface RelationshipsTabProps {
  * Registry-driven relationships tab — links use server-mode ContactPicker (globle2 §10).
  */
 export default function RelationshipsTab({
-  data,
+  contactDraft,
   onChange,
   errors = [],
 }: RelationshipsTabProps): React.JSX.Element {
   const { relationships, updateRelationships } = useContactConfig();
   const { t } = useTranslation();
-  const list = data.relationships || [];
-  const upd = (l: ContactRelationship[]): void => {
-    onChange({ ...data, relationships: l });
+  const contactRelationships = contactDraft.relationships || [];
+  const updateContactRelationships = (relationshipsList: ContactRelationship[]): void => {
+    onChange({ ...contactDraft, relationships: relationshipsList });
   };
 
   const excludeIdsForRow = (rowIndex: number): (string | number)[] => {
-    const linked = list
-      .filter((_, j) => j !== rowIndex)
-      .map((row) => row.contactId)
+    const linkedContactIds = contactRelationships
+      .filter((_, index) => index !== rowIndex)
+      .map((relationship) => relationship.contactId)
       .filter((id) => id != null && String(id).length > 0);
-    if (data.id != null) linked.unshift(data.id);
-    return linked;
+    if (contactDraft.id != null) linkedContactIds.unshift(contactDraft.id);
+    return linkedContactIds;
   };
 
   return (
@@ -45,39 +45,43 @@ export default function RelationshipsTab({
         <p>{t("contacts.form.relationshipInstructions")}</p>
       </div>
 
-      {list.length === 0 && <FormEmptyState icon={Users} text={t("contacts.form.noRelationshipsSet")} />}
+      {contactRelationships.length === 0 && <FormEmptyState icon={Users} text={t("contacts.form.noRelationshipsSet")} />}
 
-      {list.map((r, i) => {
+      {contactRelationships.map((relationship, relationshipIndex) => {
         const contactError = errors?.find(
-          (e) => e.tabId === "relationships" && e.index === i && e.fieldId === "contactId"
+          (error) => error.tabId === "relationships" && error.index === relationshipIndex && error.fieldId === "contactId"
         );
         const typeError = errors?.find(
-          (e) => e.tabId === "relationships" && e.index === i && e.fieldId === "relationship"
+          (error) => error.tabId === "relationships" && error.index === relationshipIndex && error.fieldId === "relationship"
         );
         return (
           <motion.div
-            key={i}
+            key={relationshipIndex}
             layout
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             className={COLLECTION_CARD}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">{t("contacts.form.link")} {i + 1}</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase">{t("contacts.form.link")} {relationshipIndex + 1}</span>
               <CardRemoveButton
-                onClick={() => upd(list.filter((_, j) => j !== i))}
-                label={t("contacts.form.removeRelationship", { index: i + 1 })}
+                onClick={() => updateContactRelationships(contactRelationships.filter((_, index) => index !== relationshipIndex))}
+                label={t("contacts.form.removeRelationship", { index: relationshipIndex + 1 })}
               />
             </div>
 
-            <div id={`relationships-${i}-contactId`} data-field-key={`relationships-${i}-contactId`}>
+            <div id={`relationships-${relationshipIndex}-contactId`} data-field-key={`relationships-${relationshipIndex}-contactId`}>
               <ContactPicker
                 label={`${t("contacts.form.linkContact")} *`}
-                value={r.contactId ?? null}
+                value={relationship.contactId ?? null}
                 onChange={(id) =>
-                  upd(list.map((x, j) => (j === i ? { ...x, contactId: id ?? "" } : x)))
+                  updateContactRelationships(
+                    contactRelationships.map((contactRelationship, index) =>
+                      index === relationshipIndex ? { ...contactRelationship, contactId: id ?? "" } : contactRelationship,
+                    ),
+                  )
                 }
-                excludeIds={excludeIdsForRow(i)}
+                excludeIds={excludeIdsForRow(relationshipIndex)}
                 allowCreate={false}
                 searchPlaceholder={t("contacts.form.searchByName")}
                 emptyTitle={t("contacts.form.noContactsFound")}
@@ -88,12 +92,18 @@ export default function RelationshipsTab({
               )}
             </div>
 
-            <Field id={`relationships-${i}-relationship`} label={t("contacts.form.relationshipType")} required error={typeError?.message}>
+            <Field id={`relationships-${relationshipIndex}-relationship`} label={t("contacts.form.relationshipType")} required error={typeError?.message}>
               <EditableSelect
                 options={relationships || []}
-                value={r.relationship || ""}
-                onChange={(val) =>
-                  upd(list.map((x, j) => (j === i ? { ...x, relationship: val } : x)))
+                value={relationship.relationship || ""}
+                onChange={(relationshipValue) =>
+                  updateContactRelationships(
+                    contactRelationships.map((contactRelationship, index) =>
+                      index === relationshipIndex
+                        ? { ...contactRelationship, relationship: relationshipValue }
+                        : contactRelationship,
+                    ),
+                  )
                 }
                 onUpdateOptions={updateRelationships}
                 placeholder={t("contacts.form.selectType")}
@@ -107,7 +117,7 @@ export default function RelationshipsTab({
       <Button
         type="button"
         variant="ghost"
-        onClick={() => upd([...list, { contactId: "", relationship: "" }])}
+        onClick={() => updateContactRelationships([...contactRelationships, { contactId: "", relationship: "" }])}
         className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
       >
         <Plus className="w-4 h-4" />

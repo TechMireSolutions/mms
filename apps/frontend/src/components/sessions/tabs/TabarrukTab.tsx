@@ -19,12 +19,12 @@ interface TabarrukModalProps {
 }
 
 function TabarrukModal({ open, entry, onClose, onSave }: TabarrukModalProps) {
-  const [data, setData] = useState<Partial<TabarrukItem>>(entry ? { ...entry } : { ...EMPTY });
-  const upd = (f: keyof TabarrukItem, v: string) => setData((d) => ({ ...d, [f]: v }));
+  const [tabarrukDraft, setTabarrukDraft] = useState<Partial<TabarrukItem>>(entry ? { ...entry } : { ...EMPTY });
+  const updateTabarrukDraft = (field: keyof TabarrukItem, value: string) => setTabarrukDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
   React.useEffect(() => {
     if (open) {
-      setData(entry ? { ...entry } : { ...EMPTY });
+      setTabarrukDraft(entry ? { ...entry } : { ...EMPTY });
     }
   }, [open, entry]);
 
@@ -36,35 +36,35 @@ function TabarrukModal({ open, entry, onClose, onSave }: TabarrukModalProps) {
       icon={Gift}
       cancelLabel="Cancel"
       saveLabel="Save"
-      onSave={() => onSave({ ...data, id: entry?.id || `tb${Date.now()}` } as TabarrukItem)}
-      saveDisabled={!data.item}
+      onSave={() => onSave({ ...tabarrukDraft, id: entry?.id || `tb${Date.now()}` } as TabarrukItem)}
+      saveDisabled={!tabarrukDraft.item}
     >
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="tabarruk-item">Item *</label>
-          <Input id="tabarruk-item" value={data.item || ""} onChange={(e) => upd("item", e.target.value)} placeholder="e.g. Dates (Ajwa)" required />
+          <Input id="tabarruk-item" value={tabarrukDraft.item || ""} onChange={(event) => updateTabarrukDraft("item", event.target.value)} placeholder="e.g. Dates (Ajwa)" required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="tabarruk-quantity">Quantity</label>
-            <Input id="tabarruk-quantity" value={data.quantity || ""} onChange={(e) => upd("quantity", e.target.value)} placeholder="e.g. 5 kg" />
+            <Input id="tabarruk-quantity" value={tabarrukDraft.quantity || ""} onChange={(event) => updateTabarrukDraft("quantity", event.target.value)} placeholder="e.g. 5 kg" />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="tabarruk-date">Date</label>
             <DatePicker
               id="tabarruk-date"
-              value={data.date || ""}
-              onChange={(val) => upd("date", val)}
+              value={tabarrukDraft.date || ""}
+              onChange={(value) => updateTabarrukDraft("date", value)}
             />
           </div>
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="tabarruk-occasion">Occasion</label>
-          <Input id="tabarruk-occasion" value={data.occasion || ""} onChange={(e) => upd("occasion", e.target.value)} placeholder="e.g. Opening Ceremony" />
+          <Input id="tabarruk-occasion" value={tabarrukDraft.occasion || ""} onChange={(event) => updateTabarrukDraft("occasion", event.target.value)} placeholder="e.g. Opening Ceremony" />
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="tabarruk-note">Note</label>
-          <Textarea id="tabarruk-note" className="min-h-[60px] resize-none" value={data.note || ""} onChange={(e) => upd("note", e.target.value)} placeholder="Any additional notes…" />
+          <Textarea id="tabarruk-note" className="min-h-[60px] resize-none" value={tabarrukDraft.note || ""} onChange={(event) => updateTabarrukDraft("note", event.target.value)} placeholder="Any additional notes…" />
         </div>
       </div>
     </FormModal>
@@ -92,12 +92,12 @@ export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
   const items = session.tabarruk || [];
 
   const handleSave = (entry: TabarrukItem) => {
-    const existing = items.find((x) => x.id === entry.id);
-    onUpdate({ ...session, tabarruk: existing ? items.map((x) => x.id === entry.id ? entry : x) : [...items, entry] });
+    const existing = items.find((item) => item.id === entry.id);
+    onUpdate({ ...session, tabarruk: existing ? items.map((item) => item.id === entry.id ? entry : item) : [...items, entry] });
     setShowModal(false); setEditEntry(null);
   };
 
-  const handleDelete = (id: string) => onUpdate({ ...session, tabarruk: items.filter((x) => x.id !== id) });
+  const handleDelete = (id: string) => onUpdate({ ...session, tabarruk: items.filter((item) => item.id !== id) });
 
   return (
     <section aria-label="Session Tabarruk" className="space-y-4">
@@ -138,12 +138,12 @@ export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
-              {items.map((item, i) => (
+              {items.map((item, index) => (
                 <motion.tr
                   key={item.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.04 }}
+                  transition={{ delay: index * 0.04 }}
                   className="hover:bg-muted/20 transition-colors group"
                 >
                   <td className="px-4 py-3">
@@ -176,7 +176,7 @@ export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
         </div>
       )}
 
-      <TabarrukTabPropsModal
+      <TabarrukEntryModal
         open={showModal}
         entry={editEntry}
         onClose={() => { setShowModal(false); setEditEntry(null); }}
@@ -187,5 +187,4 @@ export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
 }
 
 // Rename component helper to avoid clash/error with named export
-const TabarrukTabPropsModal = TabarrukModal;
-
+const TabarrukEntryModal = TabarrukModal;

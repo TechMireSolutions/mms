@@ -34,8 +34,8 @@ import { notify } from '@/lib/notify';
 
 function teacherStatusLabel(t: (key: AppTranslationKey) => string, status: string): string {
   const key = `teachers.status.${status}` as AppTranslationKey;
-  const val = t(key);
-  return val === key ? status.charAt(0).toUpperCase() + status.slice(1) : val;
+  const translatedStatus = t(key);
+  return translatedStatus === key ? status.charAt(0).toUpperCase() + status.slice(1) : translatedStatus;
 }
 
 /**
@@ -93,14 +93,18 @@ export default function Teachers(): React.JSX.Element {
 
   const filteredTeachers = workTeachers;
 
-  const toggleStatus = (s: string) =>
-    setFilterStatus((st) => (st.includes(s) ? st.filter((x) => x !== s) : [...st, s]));
+  const toggleStatus = (status: string) =>
+    setFilterStatus((selectedStatuses) =>
+      selectedStatuses.includes(status)
+        ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status)
+        : [...selectedStatuses, status],
+    );
 
   const filterChips = [
-    ...filterStatus.map((s) => ({
-      key: s,
-      label: teacherStatusLabel(t, s),
-      onRemove: () => toggleStatus(s),
+    ...filterStatus.map((status) => ({
+      key: status,
+      label: teacherStatusLabel(t, status),
+      onRemove: () => toggleStatus(status),
     })),
     ...(filterSpecialization
       ? [{
@@ -111,10 +115,10 @@ export default function Teachers(): React.JSX.Element {
       : []),
   ];
 
-  const handleSaveTeacher = (data: Teacher) => {
+  const handleSaveTeacher = (teacherToSave: Teacher) => {
     if (editTeacher) {
       updateTeacher.mutate(
-        { id: String(data.id), teacher: data as unknown as TeacherRecord },
+        { id: String(teacherToSave.id), teacher: teacherToSave as unknown as TeacherRecord },
         {
           onSuccess: () => {
             notify.success(t('teachers.toast.updated'));
@@ -124,7 +128,7 @@ export default function Teachers(): React.JSX.Element {
         },
       );
     } else {
-      createTeacher.mutate(data as unknown as TeacherRecord, {
+      createTeacher.mutate(teacherToSave as unknown as TeacherRecord, {
         onSuccess: () => {
           notify.success(t('teachers.toast.created'));
           setShowForm(false);
@@ -215,13 +219,13 @@ export default function Teachers(): React.JSX.Element {
                   <DropdownMenuContent align="end" className="w-44">
                     <DropdownMenuLabel className="text-xs">{t('teachers.filter.status')}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {statusOptions.map((s) => (
+                    {statusOptions.map((status) => (
                       <DropdownMenuCheckboxItem
-                        key={s}
-                        checked={filterStatus.includes(s)}
-                        onCheckedChange={() => toggleStatus(s)}
+                        key={status}
+                        checked={filterStatus.includes(status)}
+                        onCheckedChange={() => toggleStatus(status)}
                       >
-                        {teacherStatusLabel(t, s)}
+                        {teacherStatusLabel(t, status)}
                       </DropdownMenuCheckboxItem>
                     ))}
                   </DropdownMenuContent>
@@ -249,13 +253,13 @@ export default function Teachers(): React.JSX.Element {
                       {t('teachers.filter.allSpecializations')}
                     </DropdownMenuCheckboxItem>
                     <DropdownMenuSeparator />
-                    {specializationOptions.map((spec) => (
+                    {specializationOptions.map((specialization) => (
                       <DropdownMenuCheckboxItem
-                        key={spec}
-                        checked={filterSpecialization === spec}
-                        onCheckedChange={() => setFilterSpecialization(spec)}
+                        key={specialization}
+                        checked={filterSpecialization === specialization}
+                        onCheckedChange={() => setFilterSpecialization(specialization)}
                       >
-                        {spec}
+                        {specialization}
                       </DropdownMenuCheckboxItem>
                     ))}
                   </DropdownMenuContent>

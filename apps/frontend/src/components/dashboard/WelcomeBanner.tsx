@@ -63,11 +63,11 @@ export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): Re
   let subtitle = t('dashboard.overview');
 
   if (dashboardRole === 'teacher') {
-    const teacherSessionsCount = sessions.filter((s) =>
-      (s.classes || []).some(
-        (c) =>
-          c.teacherId === userId ||
-          (userName && String(c.teacherName || '').toLowerCase() === userName.toLowerCase()),
+    const teacherSessionsCount = sessions.filter((session) =>
+      (session.classes || []).some(
+        (sessionClass) =>
+          sessionClass.teacherId === userId ||
+          (userName && String(sessionClass.teacherName || '').toLowerCase() === userName.toLowerCase()),
       ),
     ).length;
     subtitle =

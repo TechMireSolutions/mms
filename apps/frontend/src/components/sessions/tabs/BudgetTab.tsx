@@ -26,13 +26,13 @@ interface TransactionModalProps {
 
 function TransactionModal({ open, type, onClose, onSave }: TransactionModalProps) {
   const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-  const [data, setData] = useState({ category: categories[0], amount: "", date: new Date().toISOString().split("T")[0], note: "" });
-  const upd = (f: keyof typeof data, v: string) => setData((d) => ({ ...d, [f]: v }));
+  const [transactionDraft, setTransactionDraft] = useState({ category: categories[0], amount: "", date: new Date().toISOString().split("T")[0], note: "" });
+  const updateTransactionDraft = (field: keyof typeof transactionDraft, value: string) => setTransactionDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
   React.useEffect(() => {
     if (open) {
-      const cats = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-      setData({ category: cats[0], amount: "", date: new Date().toISOString().split("T")[0], note: "" });
+      const categoryOptions = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+      setTransactionDraft({ category: categoryOptions[0], amount: "", date: new Date().toISOString().split("T")[0], note: "" });
     }
   }, [open, type]);
 
@@ -44,16 +44,16 @@ function TransactionModal({ open, type, onClose, onSave }: TransactionModalProps
       icon={type === "income" ? TrendingUp : TrendingDown}
       cancelLabel="Cancel"
       saveLabel="Add"
-      onSave={() => onSave({ ...data, amount: +data.amount, id: `tx${Date.now()}` })}
-      saveDisabled={!data.amount}
+      onSave={() => onSave({ ...transactionDraft, amount: +transactionDraft.amount, id: `tx${Date.now()}` })}
+      saveDisabled={!transactionDraft.amount}
     >
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="tx-category">Category</label>
           <FormSelect
             id="tx-category"
-            value={data.category}
-            onChange={(val) => upd("category", val)}
+            value={transactionDraft.category}
+            onChange={(value) => updateTransactionDraft("category", value)}
             options={categories}
             className="w-full"
           />
@@ -61,21 +61,21 @@ function TransactionModal({ open, type, onClose, onSave }: TransactionModalProps
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="tx-amount">Amount (PKR) *</label>
-            <Input id="tx-amount" type="number" value={data.amount} onChange={(e) => upd("amount", e.target.value)} placeholder="0" min={0} required />
+            <Input id="tx-amount" type="number" value={transactionDraft.amount} onChange={(event) => updateTransactionDraft("amount", event.target.value)} placeholder="0" min={0} required />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="tx-date">Date</label>
             <DatePicker
               id="tx-date"
-              value={data.date}
-              onChange={(val) => upd("date", val)}
+              value={transactionDraft.date}
+              onChange={(value) => updateTransactionDraft("date", value)}
               required
             />
           </div>
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="tx-note">Note</label>
-          <Input id="tx-note" value={data.note} onChange={(e) => upd("note", e.target.value)} placeholder="Optional note…" />
+          <Input id="tx-note" value={transactionDraft.note} onChange={(event) => updateTransactionDraft("note", event.target.value)} placeholder="Optional note…" />
         </div>
       </div>
     </FormModal>
@@ -99,23 +99,23 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
   const [addType, setAddType] = useState<"income" | "expense" | null>(null);
   const budget = session.budget || { totalRevenue: 0, collected: 0, expenses: [], incomes: [] };
 
-  const totalIncome = budget.incomes?.reduce((s, i) => s + i.amount, 0) || 0;
-  const totalExpenses = budget.expenses?.reduce((s, e) => s + e.amount, 0) || 0;
+  const totalIncome = budget.incomes?.reduce((sum, incomeEntry) => sum + incomeEntry.amount, 0) || 0;
+  const totalExpenses = budget.expenses?.reduce((sum, expenseEntry) => sum + expenseEntry.amount, 0) || 0;
   const balance = totalIncome - totalExpenses;
 
-  const handleAdd = (type: "income" | "expense", tx: TransactionEntry) => {
-    const key = type === "income" ? "incomes" : "expenses";
-    onUpdate({ ...session, budget: { ...budget, [key]: [...(budget[key] || []), tx] } });
+  const handleAdd = (type: "income" | "expense", transaction: TransactionEntry) => {
+    const entryKey = type === "income" ? "incomes" : "expenses";
+    onUpdate({ ...session, budget: { ...budget, [entryKey]: [...(budget[entryKey] || []), transaction] } });
     setAddType(null);
   };
 
   const handleDelete = (type: "income" | "expense", id: string) => {
-    const key = type === "income" ? "incomes" : "expenses";
-    const entries = (budget[key] ?? []) as (BudgetIncome | BudgetExpense)[];
-    onUpdate({ ...session, budget: { ...budget, [key]: entries.filter((x) => x.id !== id) } });
+    const entryKey = type === "income" ? "incomes" : "expenses";
+    const entries = (budget[entryKey] ?? []) as (BudgetIncome | BudgetExpense)[];
+    onUpdate({ ...session, budget: { ...budget, [entryKey]: entries.filter((entry) => entry.id !== id) } });
   };
 
-  const fmt = (n: number) => `PKR ${n.toLocaleString()}`;
+  const formatMoney = (amount: number) => `PKR ${amount.toLocaleString()}`;
 
   return (
     <div className="space-y-5">
@@ -130,7 +130,7 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
             <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center mb-2`} aria-hidden="true">
               <stat.icon className={`w-4 h-4 ${stat.color}`} style={{ color: stat.color.includes("success") ? "hsl(var(--success))" : "hsl(var(--destructive))" }} />
             </div>
-            <p className={`text-[16px] font-bold ${stat.color} m-0`}>{fmt(stat.value)}</p>
+            <p className={`text-[16px] font-bold ${stat.color} m-0`}>{formatMoney(stat.value)}</p>
             <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{stat.label}</p>
           </article>
         ))}
@@ -154,15 +154,15 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
           {(!budget.incomes || budget.incomes.length === 0) ? (
             <p className="py-6 text-center text-sm text-muted-foreground m-0">No income entries yet</p>
           ) : (
-            budget.incomes.map((inc: BudgetIncome, i: number) => (
-              <article key={inc.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-border/50" : ""}`}>
+            budget.incomes.map((incomeEntry: BudgetIncome, index: number) => (
+              <article key={incomeEntry.id} className={`flex items-center gap-3 px-4 py-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-foreground m-0">{inc.category}</p>
-                  {inc.note && <p className="text-[11px] text-muted-foreground truncate m-0">{inc.note}</p>}
+                  <p className="text-[13px] font-medium text-foreground m-0">{incomeEntry.category}</p>
+                  {incomeEntry.note && <p className="text-[11px] text-muted-foreground truncate m-0">{incomeEntry.note}</p>}
                 </div>
-                <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{inc.date}</p>
-                <p className="text-[13px] font-bold text-success flex-shrink-0 m-0">{fmt(inc.amount)}</p>
-                <Button aria-label={`Delete income ${inc.category}`} onClick={() => handleDelete("income", inc.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
+                <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{incomeEntry.date}</p>
+                <p className="text-[13px] font-bold text-success flex-shrink-0 m-0">{formatMoney(incomeEntry.amount)}</p>
+                <Button aria-label={`Delete income ${incomeEntry.category}`} onClick={() => handleDelete("income", incomeEntry.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
               </article>
@@ -189,15 +189,15 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
           {(!budget.expenses || budget.expenses.length === 0) ? (
             <p className="py-6 text-center text-sm text-muted-foreground m-0">No expense entries yet</p>
           ) : (
-            budget.expenses.map((exp: BudgetExpense, i: number) => (
-              <article key={exp.id} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-border/50" : ""}`}>
+            budget.expenses.map((expenseEntry: BudgetExpense, index: number) => (
+              <article key={expenseEntry.id} className={`flex items-center gap-3 px-4 py-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-foreground m-0">{exp.category}</p>
-                  {exp.note && <p className="text-[11px] text-muted-foreground truncate m-0">{exp.note}</p>}
+                  <p className="text-[13px] font-medium text-foreground m-0">{expenseEntry.category}</p>
+                  {expenseEntry.note && <p className="text-[11px] text-muted-foreground truncate m-0">{expenseEntry.note}</p>}
                 </div>
-                <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{exp.date}</p>
-                <p className="text-[13px] font-bold text-destructive flex-shrink-0 m-0">{fmt(exp.amount)}</p>
-                <Button aria-label={`Delete expense ${exp.category}`} onClick={() => handleDelete("expense", exp.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
+                <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{expenseEntry.date}</p>
+                <p className="text-[13px] font-bold text-destructive flex-shrink-0 m-0">{formatMoney(expenseEntry.amount)}</p>
+                <Button aria-label={`Delete expense ${expenseEntry.category}`} onClick={() => handleDelete("expense", expenseEntry.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
               </article>
@@ -210,7 +210,7 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
         open={addType !== null}
         type={addType ?? "income"}
         onClose={() => setAddType(null)}
-        onSave={(tx) => handleAdd(addType!, tx)}
+        onSave={(transaction) => handleAdd(addType!, transaction)}
       />
     </div>
   );

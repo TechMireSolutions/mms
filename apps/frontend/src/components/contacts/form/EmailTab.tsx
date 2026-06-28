@@ -12,8 +12,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 type ContactEmail = EmailAddress & Record<string, unknown>;
 
 interface EmailTabProps {
-  data: Partial<Contact>;
-  onChange: (updatedData: Partial<Contact>) => void;
+  contactDraft: Partial<Contact>;
+  onChange: (updatedContactDraft: Partial<Contact>) => void;
   required?: boolean;
   errors?: ValidationError[];
 }
@@ -24,7 +24,7 @@ interface EmailTabProps {
  * @returns React element.
  */
 export default function EmailTab({
-  data,
+  contactDraft,
   onChange,
   required = false,
   errors = [],
@@ -36,37 +36,39 @@ export default function EmailTab({
 
   const createNewEmail = (): ContactEmail => {
     const item: Record<string, unknown> = {};
-    enabledFields.forEach((f) => {
-      if (f.key === "label") {
-        item[f.key] = defaultEmailLabel;
+    enabledFields.forEach((field) => {
+      if (field.key === "label") {
+        item[field.key] = defaultEmailLabel;
       } else {
-        item[f.key] = getDefaultFieldValue(f);
+        item[field.key] = getDefaultFieldValue(field);
       }
     });
     return item as ContactEmail;
   };
 
-  const emails = (data.emails || []) as ContactEmail[];
+  const contactEmails = (contactDraft.emails || []) as ContactEmail[];
 
-  const upd = (list: ContactEmail[]): void => {
-    onChange({ ...data, emails: list });
+  const updateContactEmails = (emails: ContactEmail[]): void => {
+    onChange({ ...contactDraft, emails });
   };
 
-  const updateEmail = (i: number, patch: Partial<ContactEmail>): void => {
-    upd(emails.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const updateEmail = (emailIndex: number, patch: Partial<ContactEmail>): void => {
+    updateContactEmails(
+      contactEmails.map((email, index) => (index === emailIndex ? { ...email, ...patch } : email)),
+    );
   };
 
-  const showLabelField = enabledFields.find((f) => f.key === "label");
-  const bodyFields = enabledFields.filter((f) => f.key !== "label");
+  const showLabelField = enabledFields.find((field) => field.key === "label");
+  const bodyFields = enabledFields.filter((field) => field.key !== "label");
 
   return (
     <div className="space-y-3">
-      {required && emails.length === 0 && <RequiredBanner message={t("contacts.form.atLeastOneEmailRequired")} />}
-      {emails.length === 0 && <FormEmptyState icon={Mail} text={t("contacts.form.noEmailAddressesYet")} />}
+      {required && contactEmails.length === 0 && <RequiredBanner message={t("contacts.form.atLeastOneEmailRequired")} />}
+      {contactEmails.length === 0 && <FormEmptyState icon={Mail} text={t("contacts.form.noEmailAddressesYet")} />}
 
-      {emails.map((e, i) => (
+      {contactEmails.map((email, emailIndex) => (
         <motion.div
-          key={i}
+          key={emailIndex}
           layout
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -78,8 +80,8 @@ export default function EmailTab({
                 <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
                 <EditableSelect
                   options={emailLabels || []}
-                  value={e.label || ""}
-                  onChange={(val) => updateEmail(i, { label: val })}
+                  value={email.label || ""}
+                  onChange={(value) => updateEmail(emailIndex, { label: value })}
                   onUpdateOptions={updateEmailLabels}
                   placeholder={t("contacts.form.selectLabel")}
                   className={TYPE_SELECT_WIDTH}
@@ -89,8 +91,8 @@ export default function EmailTab({
               <div />
             )}
             <CardRemoveButton
-              onClick={() => upd(emails.filter((_, j) => j !== i))}
-              label={t("contacts.form.removeEmailAddress", { index: i + 1 })}
+              onClick={() => updateContactEmails(contactEmails.filter((_, index) => index !== emailIndex))}
+              label={t("contacts.form.removeEmailAddress", { index: emailIndex + 1 })}
             />
           </div>
 
@@ -98,14 +100,14 @@ export default function EmailTab({
             <div className={COLLECTION_BODY}>
               {bodyFields.map((field) => {
                 const fieldError = errors.find(
-                  (err) => err.tabId === "emails" && err.index === i && err.fieldId === field.key
+                  (error) => error.tabId === "emails" && error.index === emailIndex && error.fieldId === field.key
                 );
                 return (
-                  <Field key={field.key} id={`emails-${i}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
+                  <Field key={field.key} id={`emails-${emailIndex}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
                     <CustomFieldInput
                       field={field}
-                      value={e[field.key]}
-                      onChange={(val) => updateEmail(i, { [field.key]: val })}
+                      value={email[field.key]}
+                      onChange={(value) => updateEmail(emailIndex, { [field.key]: value })}
                       error={!!fieldError}
                     />
                   </Field>
@@ -119,7 +121,7 @@ export default function EmailTab({
       <Button
         type="button"
         variant="ghost"
-        onClick={() => upd([...emails, createNewEmail()])}
+        onClick={() => updateContactEmails([...contactEmails, createNewEmail()])}
         className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
       >
         <Plus className="w-4 h-4" />
@@ -128,4 +130,3 @@ export default function EmailTab({
     </div>
   );
 }
-

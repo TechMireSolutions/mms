@@ -15,51 +15,58 @@ export interface DashboardNotificationItem {
 type Translate = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 
 function sumOutstanding(invoices: Invoice[]): number {
-  return invoices.reduce((sum, inv) => {
-    if (inv.status === 'cancelled' || inv.status === 'paid') return sum;
-    if (inv.status === 'partial') {
-      return sum + Math.max(0, Number(inv.finalAmt || 0) - Number(inv.paidAmt || 0));
+  return invoices.reduce((sum, invoice) => {
+    if (invoice.status === 'cancelled' || invoice.status === 'paid') return sum;
+    if (invoice.status === 'partial') {
+      return sum + Math.max(0, Number(invoice.finalAmt || 0) - Number(invoice.paidAmt || 0));
     }
-    return sum + Number(inv.finalAmt || 0);
+    return sum + Number(invoice.finalAmt || 0);
   }, 0);
 }
 
 function countOpenInvoices(invoices: Invoice[]): number {
   return invoices.filter(
-    (inv) => inv.status === 'pending' || inv.status === 'overdue' || inv.status === 'partial',
+    (invoice) =>
+      invoice.status === 'pending' || invoice.status === 'overdue' || invoice.status === 'partial',
   ).length;
 }
 
-function todayAttendanceRate(records: AttendanceRecord[]): number | null {
+function todayAttendanceRate(attendanceRecords: AttendanceRecord[]): number | null {
   const today = new Date().toISOString().slice(0, 10);
-  let dayRecords = records.filter((r) => r.date === today);
-  if (dayRecords.length === 0) {
-    const dates = [...new Set(records.map((r) => r.date))].sort().reverse();
-    if (dates.length === 0) return null;
-    dayRecords = records.filter((r) => r.date === dates[0]);
+  let attendanceRecordsForDay = attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === today);
+  if (attendanceRecordsForDay.length === 0) {
+    const attendanceDates = [...new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date))]
+      .sort()
+      .reverse();
+    if (attendanceDates.length === 0) return null;
+    attendanceRecordsForDay = attendanceRecords.filter(
+      (attendanceRecord) => attendanceRecord.date === attendanceDates[0],
+    );
   }
-  if (dayRecords.length === 0) return null;
-  const present = dayRecords.filter((r) => r.status === 'present' || r.status === 'late').length;
-  return Math.round((present / dayRecords.length) * 100);
+  if (attendanceRecordsForDay.length === 0) return null;
+  const presentOrLateCount = attendanceRecordsForDay.filter(
+    (attendanceRecord) => attendanceRecord.status === 'present' || attendanceRecord.status === 'late',
+  ).length;
+  return Math.round((presentOrLateCount / attendanceRecordsForDay.length) * 100);
 }
 
 export function buildDashboardNotifications(
   dashboardRole: DashboardRole,
-  data: {
+  dashboardNotificationInput: {
     invoices: Invoice[];
     attendanceRecords: AttendanceRecord[];
     inactiveStudents: number;
   },
   t: Translate,
 ): DashboardNotificationItem[] {
-  const items: DashboardNotificationItem[] = [];
-  const unpaidCount = countOpenInvoices(data.invoices);
-  const outstandingTotal = sumOutstanding(data.invoices);
-  const attRate = todayAttendanceRate(data.attendanceRecords);
+  const dashboardNotifications: DashboardNotificationItem[] = [];
+  const unpaidCount = countOpenInvoices(dashboardNotificationInput.invoices);
+  const outstandingTotal = sumOutstanding(dashboardNotificationInput.invoices);
+  const attendanceRate = todayAttendanceRate(dashboardNotificationInput.attendanceRecords);
 
   if (dashboardRole === 'admin' || dashboardRole === 'accountant') {
     if (unpaidCount > 0) {
-      items.push({
+      dashboardNotifications.push({
         id: 'unpaid-invoices',
         type: 'fee',
         title: t('notifications.unpaidInvoicesTitle', { count: unpaidCount }),
@@ -71,11 +78,13 @@ export function buildDashboardNotifications(
   }
 
   if (dashboardRole === 'admin') {
-    if (data.inactiveStudents > 0) {
-      items.push({
+    if (dashboardNotificationInput.inactiveStudents > 0) {
+      dashboardNotifications.push({
         id: 'inactive-students',
         type: 'student',
-        title: t('notifications.inactiveStudentsTitle', { count: data.inactiveStudents }),
+        title: t('notifications.inactiveStudentsTitle', {
+          count: dashboardNotificationInput.inactiveStudents,
+        }),
         desc: t('notifications.inactiveStudentsDesc'),
         time: t('notifications.timeToday'),
         urgent: false,
@@ -83,19 +92,19 @@ export function buildDashboardNotifications(
     }
   }
 
-  if (attRate !== null && attRate < 75) {
-    items.push({
+  if (attendanceRate !== null && attendanceRate < 75) {
+    dashboardNotifications.push({
       id: 'low-attendance',
       type: 'attendance',
       title: t('notifications.lowAttendanceTitle'),
-      desc: t('notifications.lowAttendanceDesc', { rate: attRate }),
+      desc: t('notifications.lowAttendanceDesc', { rate: attendanceRate }),
       time: t('notifications.timeToday'),
-      urgent: attRate < 60,
+      urgent: attendanceRate < 60,
     });
   }
 
   if (dashboardRole === 'accountant' && unpaidCount === 0) {
-    items.push({
+    dashboardNotifications.push({
       id: 'fees-clear',
       type: 'fee',
       title: t('notifications.feesClearTitle'),
@@ -105,5 +114,5 @@ export function buildDashboardNotifications(
     });
   }
 
-  return items.slice(0, 8);
+  return dashboardNotifications.slice(0, 8);
 }

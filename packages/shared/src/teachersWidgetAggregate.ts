@@ -30,21 +30,21 @@ function matchesWidgetFilter(
   filterValue?: string,
 ): boolean {
   if (!filterField) return true;
-  const val = teacherFieldValue(teacher, filterField);
-  if (val === undefined || val === null) return false;
+  const fieldValue = teacherFieldValue(teacher, filterField);
+  if (fieldValue === undefined || fieldValue === null) return false;
 
-  const strVal = String(val).toLowerCase();
-  const strTargetVal = String(filterValue ?? '').toLowerCase();
+  const normalizedFieldValue = String(fieldValue).toLowerCase();
+  const normalizedTargetValue = String(filterValue ?? '').toLowerCase();
 
   switch (filterOperator) {
     case 'equals':
-      return strVal === strTargetVal;
+      return normalizedFieldValue === normalizedTargetValue;
     case 'contains':
-      return strVal.includes(strTargetVal);
+      return normalizedFieldValue.includes(normalizedTargetValue);
     case 'gt':
-      return Number(val) > Number(filterValue);
+      return Number(fieldValue) > Number(filterValue);
     case 'lt':
-      return Number(val) < Number(filterValue);
+      return Number(fieldValue) < Number(filterValue);
     default:
       return true;
   }
@@ -75,27 +75,27 @@ function aggregateNumericField(
 }
 
 function buildChartData(items: TeacherRow[], query: TeachersWidgetQuery): { name: string; value: number }[] {
-  const xAxis = query.xAxisField || 'status';
+  const xAxisField = query.xAxisField || 'status';
   const groups: Record<string, TeacherRow[]> = {};
 
   items.forEach((item) => {
-    const keyVal = teacherFieldValue(item, xAxis);
-    const key = keyVal === undefined || keyVal === null || keyVal === '' ? 'Unknown' : String(keyVal);
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
+    const groupValue = teacherFieldValue(item, xAxisField);
+    const groupKey = groupValue === undefined || groupValue === null || groupValue === '' ? 'Unknown' : String(groupValue);
+    if (!groups[groupKey]) groups[groupKey] = [];
+    groups[groupKey].push(item);
   });
 
-  const data = Object.entries(groups).map(([groupName, groupItems]) => {
-    let finalVal = 0;
+  const chartData = Object.entries(groups).map(([groupName, groupItems]) => {
+    let aggregateValue = 0;
     if (query.operation === 'count' || query.operation === 'percentage') {
-      finalVal = groupItems.length;
+      aggregateValue = groupItems.length;
     } else if (query.operation === 'sum' || query.operation === 'avg') {
-      finalVal = aggregateNumericField(groupItems, query.operation, query.targetField || '');
+      aggregateValue = aggregateNumericField(groupItems, query.operation, query.targetField || '');
     }
-    return { name: groupName, value: finalVal };
+    return { name: groupName, value: aggregateValue };
   });
 
-  return data.sort((a, b) => b.value - a.value).slice(0, 8);
+  return chartData.sort((leftPoint, rightPoint) => rightPoint.value - leftPoint.value).slice(0, 8);
 }
 
 /** Server/client widget aggregate for teachers collection (globle2 §10). */

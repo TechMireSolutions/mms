@@ -76,13 +76,13 @@ export function useSessionMutations() {
 /** Query-first sessions; falls back to localStorage cache (hydrated). */
 export function useSessionsCollection(options?: { enabled?: boolean }): Session[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useSessions({ enabled });
-  const fromLocal = useLiveCollection<Session>('sessions', SESSIONS_DATA, { enabled });
+  const { data: querySessions = [] } = useSessions({ enabled });
+  const localSessions = useLiveCollection<Session>('sessions', SESSIONS_DATA, { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery as Session[];
+  if (querySessions.length > 0) {
+    return querySessions as Session[];
   }
-  return fromLocal;
+  return localSessions;
 }
 
 export function useSessionsMetrics() {
@@ -121,8 +121,8 @@ export function useSessionColumnPrefsMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(SESSION_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (response) => {
+      queryClient.setQueryData(SESSION_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
     },
   });
 }

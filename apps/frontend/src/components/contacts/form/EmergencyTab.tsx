@@ -12,8 +12,8 @@ import ContactPicker from "@/components/contactLink/ContactPicker";
 type ContactEmergency = EmergencyContact & Record<string, unknown>;
 
 interface EmergencyTabProps {
-  data: Partial<Contact>;
-  onChange: (updatedData: Partial<Contact>) => void;
+  contactDraft: Partial<Contact>;
+  onChange: (updatedContactDraft: Partial<Contact>) => void;
   required?: boolean;
   errors?: ValidationError[];
 }
@@ -22,7 +22,7 @@ interface EmergencyTabProps {
  * EmergencyTab component for managing contact emergency contact linkages dynamically.
  */
 export default function EmergencyTab({
-  data,
+  contactDraft,
   onChange,
   required = false,
   errors = [],
@@ -33,29 +33,33 @@ export default function EmergencyTab({
 
   const createNewEmergency = (): ContactEmergency => {
     const item: Record<string, unknown> = {};
-    enabledFields.forEach((f) => {
-      item[f.key] = getDefaultFieldValue(f);
+    enabledFields.forEach((field) => {
+      item[field.key] = getDefaultFieldValue(field);
     });
     return item as ContactEmergency;
   };
 
-  const list = (data.emergencyContacts || []) as ContactEmergency[];
+  const emergencyContacts = (contactDraft.emergencyContacts || []) as ContactEmergency[];
 
-  const upd = (l: ContactEmergency[]): void => {
-    onChange({ ...data, emergencyContacts: l });
+  const updateEmergencyContacts = (nextEmergencyContacts: ContactEmergency[]): void => {
+    onChange({ ...contactDraft, emergencyContacts: nextEmergencyContacts });
   };
 
   const excludeIdsForRow = (rowIndex: number): (string | number)[] => {
-    const linked = list
-      .filter((_, j) => j !== rowIndex)
-      .map((row) => row.contactId)
+    const linkedContactIds = emergencyContacts
+      .filter((_, index) => index !== rowIndex)
+      .map((emergencyContact) => emergencyContact.contactId)
       .filter((id) => id != null && String(id).length > 0) as (string | number)[];
-    if (data.id != null) linked.unshift(data.id);
-    return linked;
+    if (contactDraft.id != null) linkedContactIds.unshift(contactDraft.id);
+    return linkedContactIds;
   };
 
-  const updateEmergency = (i: number, patch: Partial<ContactEmergency>): void => {
-    upd(list.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const updateEmergencyContact = (emergencyContactIndex: number, patch: Partial<ContactEmergency>): void => {
+    updateEmergencyContacts(
+      emergencyContacts.map((emergencyContact, index) =>
+        index === emergencyContactIndex ? { ...emergencyContact, ...patch } : emergencyContact,
+      ),
+    );
   };
 
   return (
@@ -65,22 +69,22 @@ export default function EmergencyTab({
         <p>{t("contacts.form.emergencyInstructions")}</p>
       </div>
 
-      {required && list.length === 0 && <RequiredBanner message={t("contacts.form.atLeastOneEmergencyContactRequired")} />}
-      {list.length === 0 && <FormEmptyState icon={Heart} text={t("contacts.form.noEmergencyContactsYet")} />}
+      {required && emergencyContacts.length === 0 && <RequiredBanner message={t("contacts.form.atLeastOneEmergencyContactRequired")} />}
+      {emergencyContacts.length === 0 && <FormEmptyState icon={Heart} text={t("contacts.form.noEmergencyContactsYet")} />}
 
-      {list.map((ec, i) => (
+      {emergencyContacts.map((emergencyContact, emergencyContactIndex) => (
         <motion.div
-          key={i}
+          key={emergencyContactIndex}
           layout
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className={COLLECTION_CARD}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase">{t("contacts.form.contact")} {i + 1}</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase">{t("contacts.form.contact")} {emergencyContactIndex + 1}</span>
             <CardRemoveButton
-              onClick={() => upd(list.filter((_, j) => j !== i))}
-              label={t("contacts.form.removeEmergencyContact", { index: i + 1 })}
+              onClick={() => updateEmergencyContacts(emergencyContacts.filter((_, index) => index !== emergencyContactIndex))}
+              label={t("contacts.form.removeEmergencyContact", { index: emergencyContactIndex + 1 })}
             />
           </div>
 
@@ -88,19 +92,19 @@ export default function EmergencyTab({
             <div className={COLLECTION_BODY}>
               {enabledFields.map((field) => {
                 const fieldError = errors.find(
-                  (err) => err.tabId === "emergency" && err.index === i && err.fieldId === field.key
+                  (error) => error.tabId === "emergency" && error.index === emergencyContactIndex && error.fieldId === field.key
                 );
 
                 if (field.key === "contactId") {
                   return (
-                    <div key={field.key} id={`emergencyContacts-${i}-contactId`} data-field-key={`emergencyContacts-${i}-contactId`}>
+                    <div key={field.key} id={`emergencyContacts-${emergencyContactIndex}-contactId`} data-field-key={`emergencyContacts-${emergencyContactIndex}-contactId`}>
                       <ContactPicker
                         label={`${field.label}${field.required ? " *" : ""}`}
-                        value={ec.contactId ?? null}
+                        value={emergencyContact.contactId ?? null}
                         onChange={(id) =>
-                          updateEmergency(i, { contactId: id != null && id !== "" ? String(id) : "" })
+                          updateEmergencyContact(emergencyContactIndex, { contactId: id != null && id !== "" ? String(id) : "" })
                         }
-                        excludeIds={excludeIdsForRow(i)}
+                        excludeIds={excludeIdsForRow(emergencyContactIndex)}
                         allowCreate={false}
                         searchPlaceholder={t("contacts.form.searchByNamePhone")}
                         emptyTitle={t("contacts.form.noContactsFound")}
@@ -115,11 +119,11 @@ export default function EmergencyTab({
 
                 if (field.key === "relationship") {
                   return (
-                    <Field key={field.key} id={`emergencyContacts-${i}-relationship`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
+                    <Field key={field.key} id={`emergencyContacts-${emergencyContactIndex}-relationship`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
                       <EditableSelect
                         options={relationships || []}
-                        value={ec.relationship || ""}
-                        onChange={(val) => updateEmergency(i, { relationship: val })}
+                        value={emergencyContact.relationship || ""}
+                        onChange={(value) => updateEmergencyContact(emergencyContactIndex, { relationship: value })}
                         onUpdateOptions={updateRelationships}
                         placeholder={t("contacts.form.selectType")}
                         className="w-full"
@@ -129,11 +133,11 @@ export default function EmergencyTab({
                 }
 
                 return (
-                  <Field key={field.key} id={`emergencyContacts-${i}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
+                  <Field key={field.key} id={`emergencyContacts-${emergencyContactIndex}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
                     <CustomFieldInput
                       field={field}
-                      value={(ec[field.key] as string | number | boolean | undefined) ?? ""}
-                      onChange={(val) => updateEmergency(i, { [field.key]: val })}
+                      value={(emergencyContact[field.key] as string | number | boolean | undefined) ?? ""}
+                      onChange={(value) => updateEmergencyContact(emergencyContactIndex, { [field.key]: value })}
                       error={!!fieldError}
                     />
                   </Field>
@@ -147,7 +151,7 @@ export default function EmergencyTab({
       <Button
         type="button"
         variant="ghost"
-        onClick={() => upd([...list, createNewEmergency()])}
+        onClick={() => updateEmergencyContacts([...emergencyContacts, createNewEmergency()])}
         className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
       >
         <Plus className="w-4 h-4" />

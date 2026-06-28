@@ -20,61 +20,63 @@ export interface TeachersListPageResult {
 }
 
 export function teacherMatchesSearch(teacher: Teacher, search: string): boolean {
-  const q = search.trim().toLowerCase();
-  if (!q) return true;
+  const normalizedSearch = search.trim().toLowerCase();
+  if (!normalizedSearch) return true;
   return (
-    (teacher.name ?? '').toLowerCase().includes(q) ||
-    (teacher.employeeId ?? '').toLowerCase().includes(q) ||
-    (teacher.specialization ?? '').toLowerCase().includes(q)
+    (teacher.name ?? '').toLowerCase().includes(normalizedSearch) ||
+    (teacher.employeeId ?? '').toLowerCase().includes(normalizedSearch) ||
+    (teacher.specialization ?? '').toLowerCase().includes(normalizedSearch)
   );
 }
 
 export function filterTeachersForQuery(teachers: Teacher[], query: TeachersListQuery): Teacher[] {
-  let rows = teachers;
+  let teacherRows = teachers;
   if (query.status?.trim()) {
-    const statuses = query.status.split(',').map((s) => s.trim()).filter(Boolean);
+    const statuses = query.status.split(',').map((status) => status.trim()).filter(Boolean);
     if (statuses.length > 0) {
-      rows = rows.filter((t) => statuses.includes(String(t.status ?? 'active')));
+      teacherRows = teacherRows.filter((teacher) => statuses.includes(String(teacher.status ?? 'active')));
     }
   }
   if (query.specialization) {
-    rows = rows.filter((t) => t.specialization === query.specialization);
+    teacherRows = teacherRows.filter((teacher) => teacher.specialization === query.specialization);
   }
   if (query.search?.trim()) {
-    rows = rows.filter((t) => teacherMatchesSearch(t, query.search!));
+    teacherRows = teacherRows.filter((teacher) => teacherMatchesSearch(teacher, query.search!));
   }
-  return rows;
+  return teacherRows;
 }
 
-function compareTeachers(a: Teacher, b: Teacher, field: string, dir: 'asc' | 'desc'): number {
-  const av = a[field as keyof Teacher];
-  const bv = b[field as keyof Teacher];
-  const aStr = av == null ? '' : String(av);
-  const bStr = bv == null ? '' : String(bv);
-  const cmp = aStr.localeCompare(bStr, undefined, { numeric: true, sensitivity: 'base' });
-  return dir === 'desc' ? -cmp : cmp;
+function compareTeachers(leftTeacher: Teacher, rightTeacher: Teacher, field: string, direction: 'asc' | 'desc'): number {
+  const leftValue = leftTeacher[field as keyof Teacher];
+  const rightValue = rightTeacher[field as keyof Teacher];
+  const leftString = leftValue == null ? '' : String(leftValue);
+  const rightString = rightValue == null ? '' : String(rightValue);
+  const comparison = leftString.localeCompare(rightString, undefined, { numeric: true, sensitivity: 'base' });
+  return direction === 'desc' ? -comparison : comparison;
 }
 
 /** Paginates an in-memory teacher list (server-side data source). */
 export function paginateTeachers(teachers: Teacher[], query: TeachersListQuery): TeachersListPageResult {
   const page = Math.max(1, query.page ?? 1);
   const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
-  let rows = filterTeachersForQuery(teachers, query);
+  let teacherRows = filterTeachersForQuery(teachers, query);
 
   const sortField = query.sortField?.trim();
   if (sortField) {
-    const dir = query.sortDir === 'desc' ? 'desc' : 'asc';
-    rows = [...rows].sort((a, b) => compareTeachers(a, b, sortField, dir));
+    const sortDirection = query.sortDir === 'desc' ? 'desc' : 'asc';
+    teacherRows = [...teacherRows].sort((leftTeacher, rightTeacher) =>
+      compareTeachers(leftTeacher, rightTeacher, sortField, sortDirection),
+    );
   }
 
-  const total = rows.length;
+  const total = teacherRows.length;
   const start = (page - 1) * limit;
-  const slice = rows.slice(start, start + limit);
+  const pageTeachers = teacherRows.slice(start, start + limit);
   return {
-    teachers: slice,
+    teachers: pageTeachers,
     total,
     page,
     limit,
-    hasMore: start + slice.length < total,
+    hasMore: start + pageTeachers.length < total,
   };
 }

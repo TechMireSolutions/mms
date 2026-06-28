@@ -1,6 +1,6 @@
+import type { DashboardRole } from '@/lib/dashboardRole';
 
-export const ROLES = ["admin", "teacher", "accountant"] as const;
-export type UserRole = typeof ROLES[number];
+export const DASHBOARD_ROLES: DashboardRole[] = ["admin", "teacher", "accountant"];
 
 export interface StatCardItem {
   id: string;
@@ -67,7 +67,7 @@ export interface DashboardNotification {
   urgent: boolean;
 }
 
-export const notifications: Record<UserRole, DashboardNotification[]> = {
+export const notifications: Record<DashboardRole, DashboardNotification[]> = {
   admin: [],
   teacher: [],
   accountant: [],

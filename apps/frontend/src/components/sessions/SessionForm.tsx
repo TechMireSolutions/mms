@@ -50,7 +50,7 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
   // Construct fields mapped by tabs
   const fieldsByTab = useMemo<Record<string, FieldDefinition[]>>(() => {
     const rawFields = settings.fields || {};
-    const hasTabbedFields = Object.values(rawFields).some(val => Array.isArray(val));
+    const hasTabbedFields = Object.values(rawFields).some((fieldGroup) => Array.isArray(fieldGroup));
     
     const base = hasTabbedFields
       ? (rawFields as Record<string, FieldDefinition[]>)
@@ -58,18 +58,18 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
 
     const mapped: Record<string, FieldDefinition[]> = {};
 
-    Object.entries(base).forEach(([tabId, list]) => {
-      mapped[tabId] = list.map((f) => {
-        if (f.key === "type") {
-          return { ...f, options: typeOptions };
+    Object.entries(base).forEach(([tabId, tabFields]) => {
+      mapped[tabId] = tabFields.map((field) => {
+        if (field.key === "type") {
+          return { ...field, options: typeOptions };
         }
-        if (f.key === "status") {
-          return { ...f, options: statusOptions };
+        if (field.key === "status") {
+          return { ...field, options: statusOptions };
         }
-        if (f.key === "currency") {
-          return { ...f, options: ["PKR", "USD", "GBP", "AED", "SAR"] };
+        if (field.key === "currency") {
+          return { ...field, options: ["PKR", "USD", "GBP", "AED", "SAR"] };
         }
-        return f;
+        return field;
       });
     });
 
@@ -77,18 +77,18 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
     if (!hasTabbedFields && customFields && customFields.length > 0) {
       const basicFields = [...(mapped.basic || [])];
       const fieldOrder = settings.fieldOrder || [];
-      customFields.forEach(cf => {
-        if (!basicFields.some(f => f.key === cf.id)) {
-          const orderIdx = fieldOrder.indexOf(cf.id);
+      customFields.forEach((customField) => {
+        if (!basicFields.some((field) => field.key === customField.id)) {
+          const orderIdx = fieldOrder.indexOf(customField.id);
           basicFields.push({
-            key: cf.id,
-            label: cf.label,
-            type: cf.type as any,
-            required: !!cf.required,
+            key: customField.id,
+            label: customField.label,
+            type: customField.type as any,
+            required: !!customField.required,
             enabled: true,
             order: orderIdx >= 0 ? orderIdx : 99,
-            placeholder: cf.placeholder,
-            options: cf.options,
+            placeholder: customField.placeholder,
+            options: customField.options,
           });
         }
       });
@@ -172,7 +172,7 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
     t,
   });
 
-  const data = form.watch();
+  const sessionDraft = form.watch();
   const setValue = form.setValue;
 
   const handleToggleBuilderMode = useCallback((active: boolean) => {
@@ -209,8 +209,8 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
         }
 
         const isRequired = !!field.required;
-        const val = (data as Record<string, any>)[field.key];
-        const isFilled = val !== undefined && val !== null && val !== "";
+        const fieldValue = (sessionDraft as Record<string, any>)[field.key];
+        const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "";
 
         if (isRequired) {
           totalRequired++;
@@ -227,7 +227,7 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
     const progress = (reqRatio * 0.7) + (optRatio * 0.3);
 
     return Math.round(progress * 100);
-  }, [data, fieldsByTab, settings.enabledTabs]);
+  }, [sessionDraft, fieldsByTab, settings.enabledTabs]);
 
   const visibleTabs = useMemo(() => {
     const tabsFromConfig = (settings.formTabs && settings.formTabs.length > 0 
@@ -253,10 +253,10 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
   }, [settings.formTabs, settings.enabledTabs, fieldsByTab]);
 
   const formTabs = useMemo(() => {
-    return visibleTabs.map((t) => ({
-      key: t.key,
-      label: t.label,
-      icon: ICON_MAP[t.key] || BookOpen,
+    return visibleTabs.map((visibleTab) => ({
+      key: visibleTab.key,
+      label: visibleTab.label,
+      icon: ICON_MAP[visibleTab.key] || BookOpen,
     }));
   }, [visibleTabs]);
 
@@ -284,13 +284,13 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
   }, [session, typeOptions, statusOptions]);
 
   const onSubmit = useCallback(async (formData: Session) => {
-    const dataToSave = prepareSessionData(formData);
-    onSave(dataToSave);
+    const sessionToSave = prepareSessionData(formData);
+    onSave(sessionToSave);
   }, [prepareSessionData, onSave]);
 
   const renderField = useCallback((field: FieldDefinition) => {
     if (field.key === "status") {
-      const fieldError = errors.find((e) => e.fieldId === field.key);
+      const fieldError = errors.find((error) => error.fieldId === field.key);
       return (
         <div key="status">
           <label className="text-xs font-semibold text-muted-foreground mb-1 block">
@@ -301,16 +301,16 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
             className={`w-full px-3 py-2 bg-card border rounded-lg text-sm transition-all focus:outline-none focus:ring-1 focus:ring-primary ${
               fieldError ? "border-destructive focus:ring-destructive" : "border-border focus:border-primary"
             }`}
-            value={data.status || "active"}
-            onChange={(e) => setValue("status", e.target.value, { shouldValidate: true, shouldDirty: true })}
+            value={sessionDraft.status || "active"}
+            onChange={(event) => setValue("status", event.target.value, { shouldValidate: true, shouldDirty: true })}
             required={field.required}
           >
-            {statusOptions.map((s) => {
-              const translationKey = `sessions.status.${s}` as AppTranslationKey;
+            {statusOptions.map((statusOption) => {
+              const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
               const translated = t(translationKey);
-              const label = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+              const label = translated === translationKey ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : translated;
               return (
-                <option key={s} value={s}>{label}</option>
+                <option key={statusOption} value={statusOption}>{label}</option>
               );
             })}
           </select>
@@ -319,14 +319,14 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
       );
     }
     return null;
-  }, [data.status, statusOptions, t, errors, setValue]);
+  }, [sessionDraft.status, statusOptions, t, errors, setValue]);
 
-  const footerStart = data.name ? (
+  const footerStart = sessionDraft.name ? (
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      <span className="font-semibold text-foreground">{data.name}</span>
+      <span className="font-semibold text-foreground">{sessionDraft.name}</span>
       <div className="flex items-center gap-2 border-s border-border ps-3">
-        <span>{data.type}</span>
-        <span className="border-s border-border ps-2">{data.status}</span>
+        <span>{sessionDraft.type}</span>
+        <span className="border-s border-border ps-2">{sessionDraft.status}</span>
       </div>
     </div>
   ) : (
@@ -351,16 +351,16 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
       tabPanelIdPrefix="session-form-tab"
       dir={isRtlLanguage(language) ? "rtl" : "ltr"}
       lang={language}
-      error={errors.map(e => e.message)}
+      error={errors.map((error) => error.message)}
       cancelLabel="Cancel"
       saveLabel={session ? "Update" : "Create Session"}
       onSave={() => void handleSave(onSubmit)()}
       saving={saving}
-      saveDisabled={!data.name?.trim() || !data.startDate || !data.endDate}
+      saveDisabled={!sessionDraft.name?.trim() || !sessionDraft.startDate || !sessionDraft.endDate}
       footerStart={footerStart}
       fields={fieldsByTab[tab] || []}
-      data={data}
-      setValue={(key, val, opts) => setValue(key as any, val, opts)}
+      data={sessionDraft}
+      setValue={(key, fieldValue, options) => setValue(key as any, fieldValue, options)}
       errors={errors}
       renderField={renderField}
       builderPanel={

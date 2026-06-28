@@ -25,16 +25,16 @@ interface ActivityChipProps {
 }
 
 function ActivityChip({ entry, onDelete }: ActivityChipProps) {
-  const cfg = TYPE_CONFIG[entry.type] || TYPE_CONFIG.class;
+  const typeConfig = TYPE_CONFIG[entry.type] || TYPE_CONFIG.class;
   return (
     <motion.article
       layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className={`group flex items-start gap-2 rounded-lg border px-3 py-2.5 text-xs ${cfg.color}`}
+      className={`group flex items-start gap-2 rounded-lg border px-3 py-2.5 text-xs ${typeConfig.color}`}
     >
-      <div className={`w-1.5 h-1.5 rounded-full ${cfg.dot} mt-1 flex-shrink-0`} aria-hidden="true" />
+      <div className={`w-1.5 h-1.5 rounded-full ${typeConfig.dot} mt-1 flex-shrink-0`} aria-hidden="true" />
       <div className="flex-1 min-w-0">
         <h5 className="font-semibold text-[12px] truncate m-0">{entry.activity}</h5>
         <div className="flex items-center gap-2 mt-0.5 opacity-80">
@@ -62,12 +62,12 @@ interface AddActivityModalProps {
 }
 
 function AddActivityModal({ open, onClose, onSave }: AddActivityModalProps) {
-  const [data, setData] = useState<Partial<TimetableItem>>({ ...EMPTY });
-  const upd = <K extends keyof TimetableItem>(f: K, v: TimetableItem[K]) => setData((d) => ({ ...d, [f]: v }));
+  const [activityDraft, setActivityDraft] = useState<Partial<TimetableItem>>({ ...EMPTY });
+  const updateActivityDraft = <K extends keyof TimetableItem>(field: K, value: TimetableItem[K]) => setActivityDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
   React.useEffect(() => {
     if (open) {
-      setData({ ...EMPTY });
+      setActivityDraft({ ...EMPTY });
     }
   }, [open]);
 
@@ -79,21 +79,21 @@ function AddActivityModal({ open, onClose, onSave }: AddActivityModalProps) {
       icon={Clock}
       cancelLabel="Cancel"
       saveLabel="Add"
-      onSave={() => onSave({ ...data, id: `tt${Date.now()}` } as TimetableItem)}
-      saveDisabled={!data.activity}
+      onSave={() => onSave({ ...activityDraft, id: `tt${Date.now()}` } as TimetableItem)}
+      saveDisabled={!activityDraft.activity}
     >
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="activity-name">Activity Name *</label>
-          <Input id="activity-name" value={data.activity || ""} onChange={(e) => upd("activity", e.target.value)} placeholder="e.g. Hifz Revision" required />
+          <Input id="activity-name" value={activityDraft.activity || ""} onChange={(event) => updateActivityDraft("activity", event.target.value)} placeholder="e.g. Hifz Revision" required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="activity-day">Day</label>
             <FormSelect
               id="activity-day"
-              value={data.day || "Mon"}
-              onChange={(val) => upd("day", val as TimetableItem["day"])}
+              value={activityDraft.day || "Mon"}
+              onChange={(value) => updateActivityDraft("day", value as TimetableItem["day"])}
               options={DAYS}
               className="w-full"
             />
@@ -102,9 +102,9 @@ function AddActivityModal({ open, onClose, onSave }: AddActivityModalProps) {
             <label className={FORM_LABEL} htmlFor="activity-type">Type</label>
             <FormSelect
               id="activity-type"
-              value={data.type || "class"}
-              onChange={(val) => upd("type", val as TimetableItem["type"])}
-              options={ACTIVITY_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
+              value={activityDraft.type || "class"}
+              onChange={(value) => updateActivityDraft("type", value as TimetableItem["type"])}
+              options={ACTIVITY_TYPES.map((activityType) => ({ value: activityType, label: activityType.charAt(0).toUpperCase() + activityType.slice(1) }))}
               className="w-full"
             />
           </div>
@@ -112,16 +112,16 @@ function AddActivityModal({ open, onClose, onSave }: AddActivityModalProps) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="activity-start">Start Time</label>
-            <Input id="activity-start" type="time" value={data.startTime || ""} onChange={(e) => upd("startTime", e.target.value)} required />
+            <Input id="activity-start" type="time" value={activityDraft.startTime || ""} onChange={(event) => updateActivityDraft("startTime", event.target.value)} required />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="activity-end">End Time</label>
-            <Input id="activity-end" type="time" value={data.endTime || ""} onChange={(e) => upd("endTime", e.target.value)} required />
+            <Input id="activity-end" type="time" value={activityDraft.endTime || ""} onChange={(event) => updateActivityDraft("endTime", event.target.value)} required />
           </div>
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="activity-location">Location</label>
-          <Input id="activity-location" value={data.location || ""} onChange={(e) => upd("location", e.target.value)} placeholder="e.g. Room A" />
+          <Input id="activity-location" value={activityDraft.location || ""} onChange={(event) => updateActivityDraft("location", event.target.value)} placeholder="e.g. Room A" />
         </div>
       </div>
     </FormModal>
@@ -150,15 +150,15 @@ export function TimetableTab({ session, onUpdate }: TimetableTabProps) {
     setShowModal(false);
   };
 
-  const handleDelete = (id: string) => onUpdate({ ...session, timetable: timetable.filter((e) => e.id !== id) });
+  const handleDelete = (id: string) => onUpdate({ ...session, timetable: timetable.filter((entry) => entry.id !== id) });
 
   // Group by day
-  const byDay = DAYS.reduce((acc, day) => {
-    acc[day] = timetable.filter((e) => e.day === day).sort((a, b) => a.startTime.localeCompare(b.startTime));
-    return acc;
+  const timetableByDay = DAYS.reduce((entriesByDay, day) => {
+    entriesByDay[day] = timetable.filter((entry) => entry.day === day).sort((firstEntry, secondEntry) => firstEntry.startTime.localeCompare(secondEntry.startTime));
+    return entriesByDay;
   }, {} as Record<string, TimetableItem[]>);
 
-  const activeDays = DAYS.filter((d) => byDay[d].length > 0);
+  const activeDays = DAYS.filter((day) => timetableByDay[day].length > 0);
 
   return (
     <section aria-label="Session Timetable" className="space-y-4">
@@ -174,9 +174,9 @@ export function TimetableTab({ session, onUpdate }: TimetableTabProps) {
 
       {/* Legend */}
       <div className="flex flex-wrap gap-2" aria-label="Timetable Legend">
-        {Object.entries(TYPE_CONFIG).map(([type, cfg]) => (
+        {Object.entries(TYPE_CONFIG).map(([type, typeConfig]) => (
           <div key={type} className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 rounded-full ${cfg.dot}`} aria-hidden="true" />
+            <div className={`w-2 h-2 rounded-full ${typeConfig.dot}`} aria-hidden="true" />
             <span className="text-[11px] text-muted-foreground capitalize">{type}</span>
           </div>
         ))}
@@ -192,7 +192,7 @@ export function TimetableTab({ session, onUpdate }: TimetableTabProps) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {DAYS.map((day) => {
-            const entries = byDay[day];
+            const entries = timetableByDay[day];
             if (entries.length === 0) return null;
             return (
               <section key={day} aria-label={`${day} Schedule`} className="rounded-xl border border-border bg-card overflow-hidden">
@@ -202,7 +202,7 @@ export function TimetableTab({ session, onUpdate }: TimetableTabProps) {
                 </header>
                 <div className="p-2.5 space-y-2">
                   <AnimatePresence>
-                    {entries.map((e) => <ActivityChip key={e.id} entry={e} onDelete={handleDelete} />)}
+                    {entries.map((entry) => <ActivityChip key={entry.id} entry={entry} onDelete={handleDelete} />)}
                   </AnimatePresence>
                 </div>
               </section>
@@ -214,7 +214,7 @@ export function TimetableTab({ session, onUpdate }: TimetableTabProps) {
       {/* All days placeholder for empty days */}
       {timetable.length > 0 && activeDays.length < DAYS.length && (
         <p className="text-xs text-muted-foreground text-center m-0">
-          {DAYS.filter((d) => byDay[d].length === 0).join(", ")} — no activities scheduled
+          {DAYS.filter((day) => timetableByDay[day].length === 0).join(", ")} — no activities scheduled
         </p>
       )}
 

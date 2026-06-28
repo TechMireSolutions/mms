@@ -27,17 +27,17 @@ const GENDER_COLORS: Record<string, string> = {
 const EMPTY_CLASS: Partial<Class> = { name: "", ageMin: 5, ageMax: 18, gender: "any", teacherId: "", capacity: 20, enrolled: 0, room: "" };
 
 interface ClassCardProps {
-  cls: Class;
+  sessionClass: Class;
   teachers: Teacher[];
-  onEdit: (cls: Class) => void;
+  onEdit: (sessionClass: Class) => void;
   onDelete: (id: string) => void;
 }
 
-function ClassCard({ cls, teachers, onEdit, onDelete }: ClassCardProps) {
+function ClassCard({ sessionClass, teachers, onEdit, onDelete }: ClassCardProps) {
   const { t } = useTranslation();
-  const pct = Math.round((cls.enrolled / cls.capacity) * 100);
-  const barColor = pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-warning" : "bg-success";
-  const teacherLabel = teacherNameById(teachers, cls.teacherId) || cls.teacherName || t('sessions.classes.unassigned');
+  const capacityPercent = Math.round((sessionClass.enrolled / sessionClass.capacity) * 100);
+  const barColor = capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success";
+  const teacherLabel = teacherNameById(teachers, sessionClass.teacherId) || sessionClass.teacherName || t('sessions.classes.unassigned');
 
   return (
     <motion.article
@@ -51,15 +51,15 @@ function ClassCard({ cls, teachers, onEdit, onDelete }: ClassCardProps) {
             <GraduationCap className="w-4.5 h-4.5 text-primary" style={{ width: 18, height: 18 }} />
           </div>
           <div>
-            <h4 className="text-[14px] font-bold text-foreground m-0">{cls.name}</h4>
-            <p className="text-[11px] text-muted-foreground m-0">{cls.room || "No room"}</p>
+            <h4 className="text-[14px] font-bold text-foreground m-0">{sessionClass.name}</h4>
+            <p className="text-[11px] text-muted-foreground m-0">{sessionClass.room || "No room"}</p>
           </div>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" aria-label={`Edit ${cls.name}`} onClick={() => onEdit(cls)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-7 h-7">
+          <Button variant="ghost" size="icon" aria-label={`Edit ${sessionClass.name}`} onClick={() => onEdit(sessionClass)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-7 h-7">
             <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
-          <Button variant="ghost" size="icon" aria-label={`Delete ${cls.name}`} onClick={() => onDelete(cls.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors w-7 h-7">
+          <Button variant="ghost" size="icon" aria-label={`Delete ${sessionClass.name}`} onClick={() => onDelete(sessionClass.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors w-7 h-7">
             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
         </div>
@@ -68,12 +68,12 @@ function ClassCard({ cls, teachers, onEdit, onDelete }: ClassCardProps) {
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="rounded-lg bg-muted/40 px-3 py-2">
           <p className="text-[10px] text-muted-foreground font-medium m-0">Age Range</p>
-          <p className="text-[13px] font-semibold text-foreground m-0">{cls.ageMin}–{cls.ageMax} yrs</p>
+          <p className="text-[13px] font-semibold text-foreground m-0">{sessionClass.ageMin}–{sessionClass.ageMax} yrs</p>
         </div>
         <div className="rounded-lg bg-muted/40 px-3 py-2">
           <p className="text-[10px] text-muted-foreground font-medium m-0">Gender</p>
-          <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full border ${GENDER_COLORS[cls.gender] || GENDER_COLORS.any}`}>
-            {cls.gender === "any" ? "Any" : cls.gender === "male" ? "♂ Male" : "♀ Female"}
+          <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full border ${GENDER_COLORS[sessionClass.gender] || GENDER_COLORS.any}`}>
+            {sessionClass.gender === "any" ? "Any" : sessionClass.gender === "male" ? "♂ Male" : "♀ Female"}
           </span>
         </div>
       </div>
@@ -83,13 +83,13 @@ function ClassCard({ cls, teachers, onEdit, onDelete }: ClassCardProps) {
         <span>{t('sessions.classes.teacher')}: <span className="font-medium text-foreground">{teacherLabel}</span></span>
       </div>
 
-      <div aria-label={`Enrolled ${cls.enrolled} out of ${cls.capacity}`}>
+      <div aria-label={`Enrolled ${sessionClass.enrolled} out of ${sessionClass.capacity}`}>
         <div className="flex items-center justify-between mb-1" aria-hidden="true">
           <span className="text-[11px] text-muted-foreground">Capacity</span>
-          <span className="text-[11px] font-semibold text-foreground">{cls.enrolled}/{cls.capacity}</span>
+          <span className="text-[11px] font-semibold text-foreground">{sessionClass.enrolled}/{sessionClass.capacity}</span>
         </div>
         <div className="h-1.5 rounded-full bg-border overflow-hidden" aria-hidden="true">
-          <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${Math.min(pct, 100)}%` }} />
+          <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${Math.min(capacityPercent, 100)}%` }} />
         </div>
       </div>
     </motion.article>
@@ -98,15 +98,15 @@ function ClassCard({ cls, teachers, onEdit, onDelete }: ClassCardProps) {
 
 interface ClassModalProps {
   open: boolean;
-  cls: Class | null;
+  sessionClass: Class | null;
   onClose: () => void;
-  onSave: (cls: Class) => void;
+  onSave: (sessionClass: Class) => void;
 }
 
-function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
+function ClassModal({ open, sessionClass, onClose, onSave }: ClassModalProps) {
   const { t } = useTranslation();
-  const [data, setData] = useState<Partial<Class>>(cls ? { ...cls } : { ...EMPTY_CLASS });
-  const upd = <K extends keyof Class>(f: K, v: Class[K]) => setData((d) => ({ ...d, [f]: v }));
+  const [classDraft, setClassDraft] = useState<Partial<Class>>(sessionClass ? { ...sessionClass } : { ...EMPTY_CLASS });
+  const updateClassDraft = <K extends keyof Class>(field: K, value: Class[K]) => setClassDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
   const { data: activeTeachersPage } = useTeachersPaginated({
     page: 1,
@@ -115,7 +115,7 @@ function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
     enabled: open,
   });
 
-  const currentTeacherId = data.teacherId || cls?.teacherId;
+  const currentTeacherId = classDraft.teacherId || sessionClass?.teacherId;
   const activeTeachers = (activeTeachersPage?.teachers ?? []) as Teacher[];
   const needsCurrentResolve = Boolean(
     currentTeacherId
@@ -133,29 +133,29 @@ function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
   }, [activeTeachers, extraTeachers]);
 
   const teacherOptions = useMemo(
-    () => teacherOptionsForClass(teachers, data.teacherId || cls?.teacherId),
-    [teachers, data.teacherId, cls?.teacherId],
+    () => teacherOptionsForClass(teachers, classDraft.teacherId || sessionClass?.teacherId),
+    [teachers, classDraft.teacherId, sessionClass?.teacherId],
   );
 
   const handleTeacher = (id: string) => {
-    setData((d) => ({ ...d, ...assignClassTeacher(id) }));
+    setClassDraft((currentDraft) => ({ ...currentDraft, ...assignClassTeacher(id) }));
   };
 
   React.useEffect(() => {
     if (open) {
-      const base = cls ? { ...cls } : { ...EMPTY_CLASS };
-      setData(base.teacherId ? { ...base, ...assignClassTeacher(String(base.teacherId)) } : base);
+      const baseClass = sessionClass ? { ...sessionClass } : { ...EMPTY_CLASS };
+      setClassDraft(baseClass.teacherId ? { ...baseClass, ...assignClassTeacher(String(baseClass.teacherId)) } : baseClass);
     }
-  }, [open, cls]);
+  }, [open, sessionClass]);
 
   const handleSave = () => {
-    const teacherFields = data.teacherId
-      ? assignClassTeacher(String(data.teacherId))
+    const teacherFields = classDraft.teacherId
+      ? assignClassTeacher(String(classDraft.teacherId))
       : { teacherId: '' };
     onSave({
-      ...data,
+      ...classDraft,
       ...teacherFields,
-      id: cls?.id || `c${Date.now()}`,
+      id: sessionClass?.id || `c${Date.now()}`,
     } as Class);
   };
 
@@ -163,26 +163,26 @@ function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
     <FormModal
       open={open}
       onClose={onClose}
-      title={cls ? "Edit Class" : "Add Class"}
+      title={sessionClass ? "Edit Class" : "Add Class"}
       icon={GraduationCap}
       cancelLabel="Cancel"
       saveLabel="Save Class"
       onSave={handleSave}
-      saveDisabled={!data.name}
+      saveDisabled={!classDraft.name}
     >
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="class-name">Class Name *</label>
-          <Input id="class-name" value={data.name || ""} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Hifz A" required />
+          <Input id="class-name" value={classDraft.name || ""} onChange={(event) => updateClassDraft("name", event.target.value)} placeholder="e.g. Hifz A" required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="class-min-age">Min Age</label>
-            <Input id="class-min-age" type="number" value={data.ageMin || 0} onChange={(e) => upd("ageMin", +e.target.value)} min={1} max={100} />
+            <Input id="class-min-age" type="number" value={classDraft.ageMin || 0} onChange={(event) => updateClassDraft("ageMin", +event.target.value)} min={1} max={100} />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="class-max-age">Max Age</label>
-            <Input id="class-max-age" type="number" value={data.ageMax || 0} onChange={(e) => upd("ageMax", +e.target.value)} min={1} max={100} />
+            <Input id="class-max-age" type="number" value={classDraft.ageMax || 0} onChange={(event) => updateClassDraft("ageMax", +event.target.value)} min={1} max={100} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -190,8 +190,8 @@ function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
             <label className={FORM_LABEL} htmlFor="class-gender">Gender</label>
             <FormSelect
               id="class-gender"
-              value={data.gender || "any"}
-              onChange={(val) => upd("gender", val as Class["gender"])}
+              value={classDraft.gender || "any"}
+              onChange={(value) => updateClassDraft("gender", value as Class["gender"])}
               options={[
                 { value: "any", label: "Any" },
                 { value: "male", label: "Male" },
@@ -202,23 +202,23 @@ function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="class-capacity">Capacity</label>
-            <Input id="class-capacity" type="number" value={data.capacity || 0} onChange={(e) => upd("capacity", +e.target.value)} min={1} />
+            <Input id="class-capacity" type="number" value={classDraft.capacity || 0} onChange={(event) => updateClassDraft("capacity", +event.target.value)} min={1} />
           </div>
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="class-teacher">{t('sessions.classes.teacher')}</label>
           <FormSelect
             id="class-teacher"
-            value={data.teacherId || ""}
+            value={classDraft.teacherId || ""}
             onChange={handleTeacher}
             options={[
               { value: "", label: t('sessions.classes.unassigned') },
               ...teacherOptions.map((teacher) => {
                 const spec = teacher.specialization ? ` · ${teacher.specialization}` : '';
-                const stat = teacher.status !== 'active' ? ` (${t(`teachers.status.${teacher.status}` as AppTranslationKey)})` : '';
+                const statusSuffix = teacher.status !== 'active' ? ` (${t(`teachers.status.${teacher.status}` as AppTranslationKey)})` : '';
                 return {
                   value: teacher.id,
-                  label: `${teacher.name}${spec}${stat}`
+                  label: `${teacher.name}${spec}${statusSuffix}`
                 };
               })
             ]}
@@ -230,7 +230,7 @@ function ClassModal({ open, cls, onClose, onSave }: ClassModalProps) {
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="class-room">Room</label>
-          <Input id="class-room" value={data.room || ""} onChange={(e) => upd("room", e.target.value)} placeholder="e.g. Room A" />
+            <Input id="class-room" value={classDraft.room || ""} onChange={(event) => updateClassDraft("room", event.target.value)} placeholder="e.g. Room A" />
         </div>
       </div>
     </FormModal>
@@ -254,32 +254,34 @@ export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
   );
   const { data: teachers = [] } = useTeachersByIds(teacherIds);
   const [showModal, setShowModal] = useState(false);
-  const [editCls, setEditCls] = useState<Class | null>(null);
+  const [classBeingEdited, setClassBeingEdited] = useState<Class | null>(null);
 
-  const handleSave = (cls: Class) => {
-    const teacherFields = cls.teacherId
-      ? assignClassTeacher(String(cls.teacherId))
+  const handleSave = (sessionClass: Class) => {
+    const teacherFields = sessionClass.teacherId
+      ? assignClassTeacher(String(sessionClass.teacherId))
       : { teacherId: '' };
-    const synced = { ...cls, ...teacherFields };
+    const classWithTeacher = { ...sessionClass, ...teacherFields };
 
     const classes = session.classes || [];
-    const existing = classes.find((c) => c.id === synced.id);
-    const updated = existing ? classes.map((c) => c.id === synced.id ? synced : c) : [...classes, synced];
-    onUpdate({ ...session, classes: updated });
+    const existing = classes.find((classItem) => classItem.id === classWithTeacher.id);
+    const updatedClasses = existing
+      ? classes.map((classItem) => classItem.id === classWithTeacher.id ? classWithTeacher : classItem)
+      : [...classes, classWithTeacher];
+    onUpdate({ ...session, classes: updatedClasses });
     setShowModal(false);
-    setEditCls(null);
+    setClassBeingEdited(null);
   };
 
-  const handleDelete = (id: string) => onUpdate({ ...session, classes: session.classes.filter((c) => c.id !== id) });
+  const handleDelete = (id: string) => onUpdate({ ...session, classes: session.classes.filter((classItem) => classItem.id !== id) });
 
-  const handleEdit = (cls: Class) => { setEditCls(cls); setShowModal(true); };
+  const handleEdit = (sessionClass: Class) => { setClassBeingEdited(sessionClass); setShowModal(true); };
 
   return (
     <section aria-label="Session Classes" className="space-y-4">
       <header className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground m-0">{session.classes?.length || 0} class{session.classes?.length !== 1 ? "es" : ""}</p>
         <Button
-          onClick={() => { setEditCls(null); setShowModal(true); }}
+          onClick={() => { setClassBeingEdited(null); setShowModal(true); }}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Class
@@ -294,16 +296,16 @@ export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {session.classes.map((cls) => (
-            <ClassCard key={cls.id} cls={cls} teachers={teachers} onEdit={handleEdit} onDelete={handleDelete} />
+          {session.classes.map((sessionClass) => (
+            <ClassCard key={sessionClass.id} sessionClass={sessionClass} teachers={teachers} onEdit={handleEdit} onDelete={handleDelete} />
           ))}
         </div>
       )}
 
       <ClassModal
         open={showModal}
-        cls={editCls}
-        onClose={() => { setShowModal(false); setEditCls(null); }}
+        sessionClass={classBeingEdited}
+        onClose={() => { setShowModal(false); setClassBeingEdited(null); }}
         onSave={handleSave}
       />
     </section>

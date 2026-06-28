@@ -61,7 +61,7 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
   const [tab, setTab] = useState("classes");
   const TabContent = TAB_COMPONENTS[tab];
 
-  const fmtDate = (d?: string | null) => formatDate(d, true);
+  const formatSessionDate = (date?: string | null) => formatDate(date, true);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="session-detail-title">
@@ -84,7 +84,7 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
               </div>
               <h2 id="session-detail-title" className="text-base font-bold text-foreground leading-snug truncate m-0">{session.name}</h2>
               <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
-                <span>{fmtDate(session.startDate)} → {fmtDate(session.endDate)}</span>
+                <span>{formatSessionDate(session.startDate)} → {formatSessionDate(session.endDate)}</span>
                 <span className="font-semibold text-foreground">{session.currency} {Number(session.baseFee).toLocaleString()} / month</span>
               </div>
             </div>
@@ -101,21 +101,21 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
 
         {/* Tabs */}
         <nav aria-label="Session Tabs" className="flex border-b border-border overflow-x-auto flex-shrink-0 px-2 bg-card">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
+          {TABS.map((tabDefinition) => {
+            const Icon = tabDefinition.icon;
+            const active = tab === tabDefinition.id;
             return (
               <Button
-                key={t.id}
+                key={tabDefinition.id}
                 variant="ghost"
-                onClick={() => setTab(t.id)}
+                onClick={() => setTab(tabDefinition.id)}
                 aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-1.5 px-3.5 py-3 text-[12px] font-semibold whitespace-nowrap border-b-2 rounded-none transition-all h-auto ${
                   active ? "border-primary text-primary hover:text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-transparent"
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" aria-hidden="true" />
-                {t.label}
+                {tabDefinition.label}
               </Button>
             );
           })}
@@ -130,7 +130,7 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -8 }}
               transition={{ duration: 0.18 }}
-              aria-label={`${TABS.find((t) => t.id === tab)?.label} Content`}
+              aria-label={`${TABS.find((tabDefinition) => tabDefinition.id === tab)?.label} Content`}
             >
               <TabContent session={session} onUpdate={onUpdate} />
             </motion.section>

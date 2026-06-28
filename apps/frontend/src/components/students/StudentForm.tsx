@@ -90,7 +90,7 @@ function contactEmail(contact: Contact | undefined): string {
 export interface StudentFormProps {
   student?: Partial<Student> | null;
   onClose: () => void;
-  onSave: (data: Student) => void;
+  onSave: (student: Student) => void;
 }
 
 const DUPLICATE_ERROR_KEYS: Record<StudentDuplicateReason, AppTranslationKey> = {
@@ -184,7 +184,7 @@ export default function StudentForm({
     t,
   });
 
-  const data = form.watch();
+  const studentDraft = form.watch();
   const setValue = form.setValue;
 
   const handleToggleBuilderMode = useCallback((active: boolean) => {
@@ -197,8 +197,8 @@ export default function StudentForm({
   }, [queryClient, student?.id, form]);
 
   const { data: linkedContact } = useContactById(
-    data.contactId != null ? String(data.contactId) : undefined,
-    data.contactId != null,
+    studentDraft.contactId != null ? String(studentDraft.contactId) : undefined,
+    studentDraft.contactId != null,
   );
 
   const linkedGender = linkedContact?.gender?.trim() || "";
@@ -209,8 +209,8 @@ export default function StudentForm({
   const [pendingSaveData, setPendingSaveData] = useState<StudentFormData | null>(null);
 
   const identityString = useMemo(() => {
-    return `${data.contactId || ""}|${linkedContact?.name || ""}|${contactEmail(linkedContact)}|${linkedDob || ""}`;
-  }, [data.contactId, linkedContact, linkedDob]);
+    return `${studentDraft.contactId || ""}|${linkedContact?.name || ""}|${contactEmail(linkedContact)}|${linkedDob || ""}`;
+  }, [studentDraft.contactId, linkedContact, linkedDob]);
 
   const debouncedIdentityString = useDebounce(identityString, 500);
 
@@ -239,8 +239,8 @@ export default function StudentForm({
         if (isMounted) {
           setTypedDuplicateReason(reason);
         }
-      } catch (err) {
-        console.error("Background duplicate check failed", err);
+      } catch (error) {
+        console.error("Background duplicate check failed", error);
       }
     };
 
@@ -259,10 +259,10 @@ export default function StudentForm({
   }, [errorSummary, manualError, typedDuplicateReason, t]);
 
   useEffect(() => {
-    if (!data.status && defaultStatus) {
+    if (!studentDraft.status && defaultStatus) {
       setValue("status", defaultStatus);
     }
-  }, [defaultStatus, data.status, setValue]);
+  }, [defaultStatus, studentDraft.status, setValue]);
 
   const commitSave = useCallback((formData: StudentFormData) => {
     const saved = {
@@ -290,14 +290,14 @@ export default function StudentForm({
     
     // Gender & DOB requirements checks since they are part of contact
     const basicFields = settingsFields.basic || [];
-    const genderDef = basicFields.find((f: FieldDefinition) => f.key === "gender");
-    const dobDef = basicFields.find((f: FieldDefinition) => f.key === "dob");
+    const genderField = basicFields.find((field: FieldDefinition) => field.key === "gender");
+    const dobField = basicFields.find((field: FieldDefinition) => field.key === "dob");
 
-    if (genderDef?.required && !linkedGender) {
+    if (genderField?.required && !linkedGender) {
       setManualError(t("students.form.genderRequiredOnContact"));
       return;
     }
-    if (dobDef?.required && !linkedDob) {
+    if (dobField?.required && !linkedDob) {
       setManualError(t("students.form.dobRequiredOnContact"));
       return;
     }
@@ -328,9 +328,9 @@ export default function StudentForm({
     setDuplicateConfirmOpen(false);
   }, [commitSave, pendingSaveData]);
 
-  const regDate = data.registeredDate || new Date().toISOString().split("T")[0];
+  const registeredDate = studentDraft.registeredDate || new Date().toISOString().split("T")[0];
   const { data: nextGrNumber } = useStudentNextGrNumber({
-    registeredDate: regDate,
+    registeredDate,
     template: settings.grNumberTemplate,
     digits: settings.grNumberDigits,
     restartAnnually: settings.grNumberRestartAnnually,
@@ -342,10 +342,10 @@ export default function StudentForm({
 
   useEffect(() => {
     if (student?.id || !nextGrNumber) return;
-    if (!data.grNumber) {
+    if (!studentDraft.grNumber) {
       setValue("grNumber", nextGrNumber);
     }
-  }, [nextGrNumber, student?.id, data.grNumber, setValue]);
+  }, [nextGrNumber, student?.id, studentDraft.grNumber, setValue]);
 
   const completeness = useMemo(() => {
     let totalRequired = 0;
@@ -355,9 +355,9 @@ export default function StudentForm({
 
     // Core fields: contactId, grNumber, status
     totalRequired += 3;
-    if (data.contactId) filledRequired += 1;
-    if (data.grNumber) filledRequired += 1;
-    if (data.status) filledRequired += 1;
+    if (studentDraft.contactId) filledRequired += 1;
+    if (studentDraft.grNumber) filledRequired += 1;
+    if (studentDraft.status) filledRequired += 1;
 
     Object.entries(settingsFields).forEach(([tabId, tabFields]) => {
       if (tabId !== "basic" && !enabledTabsSet.has(tabId)) return;
@@ -371,7 +371,7 @@ export default function StudentForm({
         else if (field.key === "motherLink") valueKey = "motherContactId";
         else if (field.key === "guardianLink") valueKey = "guardianContactId";
 
-        const isFilled = hasFieldValue(data[valueKey]);
+        const isFilled = hasFieldValue(studentDraft[valueKey]);
         if (field.required) {
           totalRequired += 1;
           if (isFilled) filledRequired += 1;
@@ -387,16 +387,16 @@ export default function StudentForm({
     const progress = (reqRatio * 0.7) + (optRatio * 0.3);
 
     return Math.round(progress * 100);
-  }, [data, settingsFields, enabledTabsSet]);
+  }, [studentDraft, settingsFields, enabledTabsSet]);
 
 
 
   const alreadyRegisteredContactIds = linkedStudentContactIds;
 
   const studentExcludeIds = useMemo(() => {
-    const linkedIds = [data.fatherContactId, data.motherContactId, data.guardianContactId].filter(Boolean);
+    const linkedIds = [studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId].filter(Boolean);
     return [...linkedIds, ...alreadyRegisteredContactIds];
-  }, [data.fatherContactId, data.motherContactId, data.guardianContactId, alreadyRegisteredContactIds]);
+  }, [studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId, alreadyRegisteredContactIds]);
 
   const handleContactSelect = (id: string | number | null): void => {
     if (!id) {
@@ -404,16 +404,16 @@ export default function StudentForm({
       setValue("grNumber", "");
     } else {
       setValue("contactId", id);
-      if (!student && !data.grNumber && nextGrNumber) {
+      if (!student && !studentDraft.grNumber && nextGrNumber) {
         setValue("grNumber", nextGrNumber);
       }
     }
   };
 
   const handleStudentAvatarChange = (avatarUrl: string): void => {
-    if (!data.contactId || !linkedContact) return;
+    if (!studentDraft.contactId || !linkedContact) return;
     void updateContact.mutateAsync({
-      id: String(data.contactId),
+      id: String(studentDraft.contactId),
       contact: { ...linkedContact, avatar: avatarUrl },
     });
   };
@@ -474,15 +474,15 @@ export default function StudentForm({
     }
 
     if (field.key === "fatherLink") {
-      const fieldError = errors.find((e) => e.fieldId === "fatherLink");
+      const fieldError = errors.find((error) => error.fieldId === "fatherLink");
       return (
         <div key="fatherLink" className="sm:col-span-2" id="fatherLink" data-field-key="fatherLink">
           <ContactPicker
             label={`${t("students.form.fatherLink")}${field.required ? " *" : ""}`}
-            value={data.fatherContactId}
+            value={studentDraft.fatherContactId}
             onChange={handleFatherSelect}
             filterGender={guardianContactDefaults.fatherLink?.filterGender}
-            excludeIds={[data.contactId, data.motherContactId, data.guardianContactId].filter(Boolean)}
+            excludeIds={[studentDraft.contactId, studentDraft.motherContactId, studentDraft.guardianContactId].filter(Boolean)}
             createDefaults={
               guardianContactDefaults.fatherLink?.createGender
                 ? {
@@ -504,15 +504,15 @@ export default function StudentForm({
     }
 
     if (field.key === "motherLink") {
-      const fieldError = errors.find((e) => e.fieldId === "motherLink");
+      const fieldError = errors.find((error) => error.fieldId === "motherLink");
       return (
         <div key="motherLink" className="sm:col-span-2" id="motherLink" data-field-key="motherLink">
           <ContactPicker
             label={`${t("students.form.motherLink")}${field.required ? " *" : ""}`}
-            value={data.motherContactId}
+            value={studentDraft.motherContactId}
             onChange={handleMotherSelect}
             filterGender={guardianContactDefaults.motherLink?.filterGender}
-            excludeIds={[data.contactId, data.fatherContactId, data.guardianContactId].filter(Boolean)}
+            excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.guardianContactId].filter(Boolean)}
             createDefaults={
               guardianContactDefaults.motherLink?.createGender
                 ? {
@@ -534,14 +534,14 @@ export default function StudentForm({
     }
 
     if (field.key === "guardianLink") {
-      const fieldError = errors.find((e) => e.fieldId === "guardianLink");
+      const fieldError = errors.find((error) => error.fieldId === "guardianLink");
       return (
         <div key="guardianLink" className="sm:col-span-2" id="guardianLink" data-field-key="guardianLink">
           <ContactPicker
             label={`${t("students.form.guardianLink")}${field.required ? " *" : ""}`}
-            value={data.guardianContactId}
+            value={studentDraft.guardianContactId}
             onChange={handleGuardianSelect}
-            excludeIds={[data.contactId, data.fatherContactId, data.motherContactId].filter(Boolean)}
+            excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.motherContactId].filter(Boolean)}
             searchPlaceholder={t("teachers.form.searchContact")}
             emptyTitle={t("teachers.form.noContacts")}
             emptyHint={t("teachers.form.noContactsHint")}
@@ -555,13 +555,13 @@ export default function StudentForm({
     }
 
     if (field.key === "registeredDate") {
-      const fieldError = errors.find((e) => e.fieldId === "registeredDate");
+      const fieldError = errors.find((error) => error.fieldId === "registeredDate");
       return (
         <div key="registeredDate" id="registeredDate" data-field-key="registeredDate">
           <Field label={t("students.form.registeredDate")} required={field.required} error={fieldError?.message}>
             <DatePicker
               required={field.required}
-              value={data.registeredDate ?? undefined}
+              value={studentDraft.registeredDate ?? undefined}
               onChange={handleRegisteredDateChange}
               className={fieldError ? "border-destructive focus-within:border-destructive focus-within:ring-destructive" : ""}
             />
@@ -570,15 +570,15 @@ export default function StudentForm({
       );
     }
 
-    const value = data[field.key] ?? getDefaultFieldValue(field);
-    const fieldError = errors.find((e) => e.fieldId === field.key);
+    const value = studentDraft[field.key] ?? getDefaultFieldValue(field);
+    const fieldError = errors.find((error) => error.fieldId === field.key);
     return (
       <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
         <Field label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
           <CustomFieldInput
             field={field}
             value={value}
-            onChange={(next) => setValue(field.key as any, next, { shouldValidate: true, shouldDirty: true })}
+            onChange={(nextValue) => setValue(field.key as any, nextValue, { shouldValidate: true, shouldDirty: true })}
             error={!!fieldError}
           />
         </Field>
@@ -591,7 +591,7 @@ export default function StudentForm({
       return null;
     }
 
-    const basicFields = (settingsFields.basic || []).filter((f: FieldDefinition) => f.enabled);
+    const basicFields = (settingsFields.basic || []).filter((field: FieldDefinition) => field.enabled);
 
     return (
       <div className="space-y-5 text-left">
@@ -603,18 +603,18 @@ export default function StudentForm({
           </div>
           <ContactPicker
             label={t("students.form.contactLabel")}
-            value={data.contactId}
+            value={studentDraft.contactId}
             onChange={handleContactSelect}
             excludeIds={studentExcludeIds}
             onAvatarChange={handleStudentAvatarChange}
             searchPlaceholder={t("teachers.form.searchContact")}
             emptyTitle={t("teachers.form.noContacts")}
             emptyHint={t("teachers.form.noContactsHint")}
-            error={!!errors.find((e) => e.fieldId === "contactId")}
+            error={!!errors.find((error) => error.fieldId === "contactId")}
           />
-          {errors.find((e) => e.fieldId === "contactId") && (
+          {errors.find((error) => error.fieldId === "contactId") && (
             <p className="text-[10px] text-destructive mt-1 font-medium">
-              {errors.find((e) => e.fieldId === "contactId")?.message}
+              {errors.find((error) => error.fieldId === "contactId")?.message}
             </p>
           )}
         </section>
@@ -630,27 +630,27 @@ export default function StudentForm({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Field label={t("students.form.grNumber")} required hint={t("students.form.grNumberHint")} error={errors.find((e) => e.fieldId === "grNumber")?.message}>
+              <Field label={t("students.form.grNumber")} required hint={t("students.form.grNumberHint")} error={errors.find((error) => error.fieldId === "grNumber")?.message}>
                 <Input
                   required
-                  className={cn(FORM_INPUT, errors.find((e) => e.fieldId === "grNumber") && "border-destructive focus-visible:ring-destructive")}
-                  value={data.grNumber || ""}
-                  onChange={(e) => setValue("grNumber", e.target.value, { shouldValidate: true, shouldDirty: true })}
+                  className={cn(FORM_INPUT, errors.find((error) => error.fieldId === "grNumber") && "border-destructive focus-visible:ring-destructive")}
+                  value={studentDraft.grNumber || ""}
+                  onChange={(event) => setValue("grNumber", event.target.value, { shouldValidate: true, shouldDirty: true })}
                   placeholder={t("students.form.grNumberPlaceholder")}
                 />
               </Field>
             </div>
 
             <div>
-              <Field label={t("students.form.status")} error={errors.find((e) => e.fieldId === "status")?.message}>
+              <Field label={t("students.form.status")} error={errors.find((error) => error.fieldId === "status")?.message}>
                 <FormSelect
-                  value={data.status}
-                  onChange={(val) => setValue("status", val, { shouldValidate: true, shouldDirty: true })}
+                  value={studentDraft.status}
+                  onChange={(statusValue) => setValue("status", statusValue, { shouldValidate: true, shouldDirty: true })}
                   options={statuses.map((status) => ({
                     value: status,
                     label: t(`students.form.status.${status}` as AppTranslationKey),
                   }))}
-                  className={errors.find((e) => e.fieldId === "status") ? "border-destructive focus:border-destructive" : ""}
+                  className={errors.find((error) => error.fieldId === "status") ? "border-destructive focus:border-destructive" : ""}
                 />
               </Field>
             </div>
@@ -662,8 +662,8 @@ export default function StudentForm({
               return null;
             })}
 
-            {basicFields.some((f: FieldDefinition) => f.key === "registeredDate") && renderFieldByKey(
-              basicFields.find((f: FieldDefinition) => f.key === "registeredDate")!
+            {basicFields.some((field: FieldDefinition) => field.key === "registeredDate") && renderFieldByKey(
+              basicFields.find((field: FieldDefinition) => field.key === "registeredDate")!
             )}
           </div>
         </section>
@@ -675,9 +675,9 @@ export default function StudentForm({
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
       <span className="font-semibold text-foreground">{linkedContact.name}</span>
       <div className="flex items-center gap-2 border-l border-border pl-3">
-        <span>GR: {data.grNumber}</span>
+        <span>GR: {studentDraft.grNumber}</span>
         <span className="border-l border-border pl-2 capitalize">
-          Status: {data.status}
+          Status: {studentDraft.status}
         </span>
       </div>
     </div>
@@ -715,11 +715,11 @@ export default function StudentForm({
         }
         onSave={() => void handleSave(onSubmit)()}
         saving={saving}
-        saveDisabled={!data.contactId}
+        saveDisabled={!studentDraft.contactId}
         error={error || undefined}
         footerStart={footerStart}
         fields={settingsFields[tab] || []}
-        data={data}
+        data={studentDraft}
         setValue={setValue}
         errors={errors}
         renderField={renderFieldByKey}

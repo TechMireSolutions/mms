@@ -49,14 +49,8 @@ interface SessionsSettingsProps {
 
 function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
   if (!savedOrder || savedOrder.length === 0) return fields;
-  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
-  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
-}
-
-function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
-  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
-  const added = newFieldIds.filter((id) => !kept.includes(id));
-  return [...kept, ...added];
+  const orderByFieldKey = Object.fromEntries(savedOrder.map((key, index) => [key, index]));
+  return [...fields].sort((firstField, secondField) => (orderByFieldKey[firstField.key] ?? 9999) - (orderByFieldKey[secondField.key] ?? 9999)) as FieldDefinition[];
 }
 
 export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Element {
@@ -136,14 +130,14 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
     setNotifyOnSessionStart(settings.notifyOnSessionStart);
     setDefaultViewLayout(settings.defaultViewLayout);
 
-    const coreKeys = new Set(SESSIONS_TAB_REGISTRY.map(t => t.key));
-    const customTabs = (settings.formTabs || []).filter(t => !coreKeys.has(t.key));
+    const coreTabKeys = new Set(SESSIONS_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreTabKeys.has(tabDefinition.key));
     const updatedTabs = [
       ...SESSIONS_TAB_REGISTRY,
       ...customTabs
-    ].map(t => ({
-      ...t,
-      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    ].map((tabDefinition) => ({
+      ...tabDefinition,
+      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     }));
 
     resetAllState(
@@ -195,12 +189,12 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
 
 
   const handleSave = (): void => {
-    const updatedFormTabs = formTabs.map(t => ({
-      ...t,
-      enabled: enabledTabs.has(t.key)
+    const updatedFormTabs = formTabs.map((tabDefinition) => ({
+      ...tabDefinition,
+      enabled: enabledTabs.has(tabDefinition.key)
     }));
 
-    const cfg: SessionsSettingsType = {
+    const nextSettings: SessionsSettingsType = {
       ...settings,
       defaultDuration,
       defaultSessionType,
@@ -218,7 +212,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
       fields: buildFieldsMap(),
     };
 
-    updateSettings(cfg);
+    updateSettings(nextSettings);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -244,7 +238,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
                 id="defaultDuration"
                 type="number"
                 value={defaultDuration}
-                onChange={(e) => { setDefaultDuration(e.target.value); setSaved(false); }}
+                onChange={(event) => { setDefaultDuration(event.target.value); setSaved(false); }}
               />
             </div>
             <div>
@@ -252,7 +246,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
               <FormSelect
                 id="defaultSessionType"
                 value={defaultSessionType}
-                onChange={(val) => { setDefaultSessionType(val); setSaved(false); }}
+                onChange={(value) => { setDefaultSessionType(value); setSaved(false); }}
                 options={typeOptions}
                 className="w-full"
               />
@@ -263,7 +257,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
                 id="academicYear"
                 type="text"
                 value={academicYear}
-                onChange={(e) => { setAcademicYear(e.target.value); setSaved(false); }}
+                onChange={(event) => { setAcademicYear(event.target.value); setSaved(false); }}
                 placeholder="2025-2026"
               />
             </div>
@@ -272,11 +266,11 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
               <FormSelect
                 id="sessionStart"
                 value={sessionStart}
-                onChange={(val) => { setSessionStart(val); setSaved(false); }}
+                onChange={(value) => { setSessionStart(value); setSaved(false); }}
                 options={["january", "february", "march", "april", "may", "june",
-                  "july", "august", "september", "october", "november", "december"].map((m) => ({
-                    value: m,
-                    label: m.charAt(0).toUpperCase() + m.slice(1)
+                  "july", "august", "september", "october", "november", "december"].map((month) => ({
+                    value: month,
+                    label: month.charAt(0).toUpperCase() + month.slice(1)
                   }))}
                 className="w-full"
               />
@@ -288,31 +282,31 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
               label="Allow Overlapping Sessions"
               description="Multiple active sessions can run at the same time"
               value={allowOverlap}
-              onChange={(v) => { setAllowOverlap(v); setSaved(false); }}
+              onChange={(value) => { setAllowOverlap(value); setSaved(false); }}
             />
             <Toggle
               label="Auto-archive Old Sessions"
               description="Completed sessions are automatically archived"
               value={archiveOldSessions}
-              onChange={(v) => { setArchiveOldSessions(v); setSaved(false); }}
+              onChange={(value) => { setArchiveOldSessions(value); setSaved(false); }}
             />
             <Toggle
               label="Require Budget Plan"
               description="Session must have a budget before activation"
               value={requireBudget}
-              onChange={(v) => { setRequireBudget(v); setSaved(false); }}
+              onChange={(value) => { setRequireBudget(value); setSaved(false); }}
             />
             <Toggle
               label="Timetable Conflict Check"
               description="Warn when class schedules overlap"
               value={timetableConflictCheck}
-              onChange={(v) => { setTimetableConflictCheck(v); setSaved(false); }}
+              onChange={(value) => { setTimetableConflictCheck(value); setSaved(false); }}
             />
             <Toggle
               label="Notify on Session Start"
               description="Send notification when a new session begins"
               value={notifyOnSessionStart}
-              onChange={(v) => { setNotifyOnSessionStart(v); setSaved(false); }}
+              onChange={(value) => { setNotifyOnSessionStart(value); setSaved(false); }}
             />
 
             <div className="py-3 border-t border-border mt-3 flex items-center justify-between">
@@ -365,7 +359,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
             const tabId = tab.key;
             const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
             const tabDesc = tab.description;
-            const tabDefs = tabFields[tabId] || [];
+            const tabDefinitions = Array.isArray(tabFields[tabId]) ? tabFields[tabId] : [];
             const enabledSet = tabFieldEnabled[tabId] || new Set();
             const requiredSet = tabFieldRequired[tabId] || new Set();
             const isOn = tabId === "basic" ? true : enabledTabs.has(tabId);
@@ -414,7 +408,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
                     <p className="text-xs text-muted-foreground">{tabDesc}</p>
                   </div>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                    {tabDefinitions.filter((field) => enabledSet.has(field.key)).length}/{tabDefinitions.length}
                   </span>
                   {tabId !== "basic" && isOn && (
                     <Button
@@ -437,7 +431,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
                   <div className="p-3 space-y-3">
                     <CoreFieldEditorList
                       tabId={tabId}
-                      fields={getOrderedFields(tabDefs, tabFieldOrder[tabId])}
+                      fields={getOrderedFields(tabDefinitions, tabFieldOrder[tabId])}
                       enabledSet={enabledSet}
                       requiredSet={requiredSet}
                       onToggleEnabled={(fieldId: string) => handleToggleFieldEnabled(tabId, fieldId)}
@@ -445,18 +439,18 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
                       onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
                       onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
                       isUniqueField={(tid: string, fid: string) => tabFieldUnique[tid]?.has(fid) || false}
-                      isCoreField={(key: string) => INITIAL_SESSIONS_FIELD_SEED[tabId]?.some((f) => f.key === key) ?? false}
+                      isCoreField={(key: string) => INITIAL_SESSIONS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
                       defaultValues={tabFieldDefaultValues[tabId]}
                       permissions={tabFieldPermissions[tabId]}
-                      onChangeDefaults={(fieldId: string, val: unknown) => {
-                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                      onChangeDefaults={(fieldId: string, value: unknown) => {
+                        setTabFieldDefaultValues((previousValues) => ({ ...previousValues, [tabId]: { ...previousValues[tabId], [fieldId]: value } }));
                         setSaved(false);
                       }}
                       onChangePermissions={(fieldId: string, roles: string[]) => {
-                        setTabFieldPermissions(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: roles } }));
+                        setTabFieldPermissions((previousPermissions) => ({ ...previousPermissions, [tabId]: { ...previousPermissions[tabId], [fieldId]: roles } }));
                         setSaved(false);
                       }}
-                      onEditField={(f: FieldDefinition) => handleEditFieldLocal(tabId, f)}
+                      onEditField={(field: FieldDefinition) => handleEditFieldLocal(tabId, field)}
                       onDeleteField={(id: string) => handleDeleteFieldLocal(tabId, id)}
                       labels={{
                         required: "Required",
@@ -467,9 +461,9 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
                     />
                     <div className="border-t border-border pt-3">
                       <CustomFieldsBuilder
-                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        fields={tabDefinitions.map((field) => ({ ...field, id: field.key })) as unknown as CustomFieldConfig[]}
                         droppableId={`custom-fields-${tabId}`}
-                        onChange={(f) => handleCustomFieldsChangeLocal(tabId, f)}
+                        onChange={(fields) => handleCustomFieldsChangeLocal(tabId, fields)}
                       />
                     </div>
                   </div>
@@ -531,7 +525,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
           <Input
             id="newTabLabel"
             value={newTabLabel}
-            onChange={(e) => setNewTabLabel(e.target.value)}
+            onChange={(event) => setNewTabLabel(event.target.value)}
             placeholder="e.g. Extra Info"
             autoFocus
           />
@@ -580,7 +574,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
           <Input
             id="renameTabLabel"
             value={renameTabLabel}
-            onChange={(e) => setRenameTabLabel(e.target.value)}
+            onChange={(event) => setRenameTabLabel(event.target.value)}
             placeholder="e.g. Custom Fields"
             autoFocus
           />

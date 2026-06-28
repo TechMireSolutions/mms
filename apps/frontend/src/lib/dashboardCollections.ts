@@ -16,15 +16,15 @@ export function getRequiredDashboardCollections(
   ]);
 
   for (const widget of widgets) {
-    const cardForPersona =
+    const cardForDashboardRole =
       widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole);
-    const pinned = widget.isPinnedToDashboard;
+    const isPinnedWidget = widget.isPinnedToDashboard;
 
-    if (cardForPersona || pinned) {
+    if (cardForDashboardRole || isPinnedWidget) {
       required.add(widget.collection);
     }
 
-    if (pinned && widget.widgetType && REVENUE_WIDGET_TYPES.has(widget.widgetType)) {
+    if (isPinnedWidget && widget.widgetType && REVENUE_WIDGET_TYPES.has(widget.widgetType)) {
       // revenue-expenses chart reads the revenue_expenses document collection
       required.add('finance_invoices');
     }

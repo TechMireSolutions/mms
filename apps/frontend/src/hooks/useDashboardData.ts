@@ -40,7 +40,7 @@ export interface DashboardCollectionData {
 }
 
 function needsRevenueExpenses(widgets: CustomWidget[]): boolean {
-  return widgets.some((w) => w.isPinnedToDashboard && w.widgetType === 'revenue-expenses');
+  return widgets.some((widget) => widget.isPinnedToDashboard && widget.widgetType === 'revenue-expenses');
 }
 
 /** Loads only collections referenced by dashboard cards and pinned widgets. */
@@ -48,16 +48,17 @@ export function useDashboardData(
   widgets: CustomWidget[],
   dashboardRole: DashboardRole,
 ): DashboardCollectionData {
-  const required = useMemo(
+  const requiredDashboardCollections = useMemo(
     () => getRequiredDashboardCollections(widgets, dashboardRole),
     [widgets, dashboardRole],
   );
 
-  const needs = (collection: ReportCollection): boolean => required.has(collection);
+  const requiresCollection = (collection: ReportCollection): boolean =>
+    requiredDashboardCollections.has(collection);
   const loadRevenueExpenses = needsRevenueExpenses(widgets);
-  const needsContacts = needs('contacts');
-  const needsStudents = needs('students');
-  const needsTeachers = needs('teachers');
+  const shouldLoadContacts = requiresCollection('contacts');
+  const shouldLoadStudents = requiresCollection('students');
+  const shouldLoadTeachers = requiresCollection('teachers');
 
   const contactWidgets = useMemo(
     () =>
@@ -87,39 +88,39 @@ export function useDashboardData(
     [widgets, dashboardRole],
   );
 
-  useContactsWidgetAggregates(contactWidgets, { enabled: needsContacts });
-  useStudentsWidgetAggregates(studentWidgets, { enabled: needsStudents });
-  useTeachersWidgetAggregates(teacherWidgets, { enabled: needsTeachers });
+  useContactsWidgetAggregates(contactWidgets, { enabled: shouldLoadContacts });
+  useStudentsWidgetAggregates(studentWidgets, { enabled: shouldLoadStudents });
+  useTeachersWidgetAggregates(teacherWidgets, { enabled: shouldLoadTeachers });
 
-  const { data: studentMetrics } = useStudentsMetrics({ enabled: needsStudents });
+  const { data: studentMetrics } = useStudentsMetrics({ enabled: shouldLoadStudents });
   const studentsTotal = studentMetrics?.total ?? 0;
   const studentMetricsInactive = studentMetrics?.inactive ?? 0;
 
-  const { data: teacherMetrics } = useTeachersMetrics({ enabled: needsTeachers });
+  const { data: teacherMetrics } = useTeachersMetrics({ enabled: shouldLoadTeachers });
   const teachersTotal = teacherMetrics?.total ?? 0;
-  const sessions = useSessionsCollection({ enabled: needs('sessions') });
+  const sessions = useSessionsCollection({ enabled: requiresCollection('sessions') });
   const invoices = useLiveCollection<Invoice>('finance_invoices', [], {
-    enabled: needs('finance_invoices'),
+    enabled: requiresCollection('finance_invoices'),
   });
   const attendanceRecords = useAttendanceRecordsCollection({
-    enabled: needs('attendance_records'),
+    enabled: requiresCollection('attendance_records'),
   });
   const hasanatDistributions = useLiveCollection<Distribution>(
     'hasanat_distributions',
     [],
-    { enabled: needs('hasanat_distributions'),
+    { enabled: requiresCollection('hasanat_distributions'),
   });
   const denoms = useLiveCollection<any>('hasanat_denoms', [], {
-    enabled: needs('hasanat_distributions'),
+    enabled: requiresCollection('hasanat_distributions'),
   });
-  const { data: contactMetrics } = useContactsMetrics({ enabled: needsContacts });
+  const { data: contactMetrics } = useContactsMetrics({ enabled: shouldLoadContacts });
   const contactsTotal = contactMetrics?.total ?? 0;
   const questions = useLiveCollection<QuestionBankQuestion>('questions', [], {
-    enabled: needs('questions'),
+    enabled: requiresCollection('questions'),
   });
-  const tests = useLiveCollection<QuestionBankTest>('tests', [], { enabled: needs('tests') });
+  const tests = useLiveCollection<QuestionBankTest>('tests', [], { enabled: requiresCollection('tests') });
   const assessmentResults = useLiveCollection<QuestionBankResult>('assessment_results', [], {
-    enabled: needs('assessment_results'),
+    enabled: requiresCollection('assessment_results'),
   });
   const revenueExpenses = useLiveCollection<{ revenue: number; expenses: number }>(
     'revenue_expenses',

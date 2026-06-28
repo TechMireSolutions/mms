@@ -6,8 +6,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Contact } from "@mms/shared";
 
 interface BasicTabProps {
-  data: Partial<Contact>;
-  onChange: (updatedData: Partial<Contact>) => void;
+  contactDraft: Partial<Contact>;
+  onChange: (updatedContactDraft: Partial<Contact>) => void;
   tabId?: string;
   readOnlyFieldKeys?: string[];
   errors?: ValidationError[];
@@ -19,7 +19,7 @@ interface BasicTabProps {
  * @returns React element.
  */
 export default function BasicTab({
-  data,
+  contactDraft,
   onChange,
   tabId = "basic",
   readOnlyFieldKeys = [],
@@ -29,14 +29,14 @@ export default function BasicTab({
   const { t } = useTranslation();
   const visibleFields = useVisibleContactFields(tabId);
 
-  const upd = (f: string, v: unknown): void => {
-    const updated = { ...data, [f]: v };
-    if (f === "firstName" || f === "lastName") {
-      const first = f === "firstName" ? String(v) : (data.firstName || "");
-      const last = f === "lastName" ? String(v) : (data.lastName || "");
-      updated.name = [first, last].filter(Boolean).join(" ");
+  const updateContactField = (fieldKey: string, fieldValue: unknown): void => {
+    const updatedContactDraft = { ...contactDraft, [fieldKey]: fieldValue };
+    if (fieldKey === "firstName" || fieldKey === "lastName") {
+      const firstName = fieldKey === "firstName" ? String(fieldValue) : (contactDraft.firstName || "");
+      const lastName = fieldKey === "lastName" ? String(fieldValue) : (contactDraft.lastName || "");
+      updatedContactDraft.name = [firstName, lastName].filter(Boolean).join(" ");
     }
-    onChange(updated);
+    onChange(updatedContactDraft);
   };
 
   const enabledFields = visibleFields;
@@ -46,13 +46,13 @@ export default function BasicTab({
       {enabledFields.map((field) => {
         const label = field.label as string;
         const required = isTabFieldRequired(tabId, field.key);
-        const fieldError = errors.find((e) => e.fieldId === field.key && e.tabId === tabId);
+        const fieldError = errors.find((error) => error.fieldId === field.key && error.tabId === tabId);
         return (
           <Field key={field.key} id={field.key} label={label} required={required} hint={field.description} error={fieldError?.message}>
             <CustomFieldInput
               field={field}
-              value={data[field.key]}
-              onChange={(val) => upd(field.key, val)}
+              value={contactDraft[field.key]}
+              onChange={(value) => updateContactField(field.key, value)}
               disabled={readOnlyFieldKeys.includes(field.key)}
               error={!!fieldError}
             />

@@ -56,16 +56,16 @@ export default function Finance() {
   const invoiceColumnLayout = useFinanceInvoiceColumnLayout();
   const paymentColumnLayout = useFinancePaymentColumnLayout();
 
-  const handleRecordPayment = (paymentData: Payment) => {
-    createPayment.mutate(paymentData, {
+  const handleRecordPayment = (paymentToRecord: Payment) => {
+    createPayment.mutate(paymentToRecord, {
       onSuccess: () => {
         setRecordInvoice(null);
       },
     });
   };
 
-  const handleCreateInvoice = (invoice: Invoice) => {
-    createInvoice.mutate(invoice, {
+  const handleCreateInvoice = (invoiceToCreate: Invoice) => {
+    createInvoice.mutate(invoiceToCreate, {
       onSuccess: () => {
         setCreatingInvoice(false);
         setActiveTab("work");
@@ -172,7 +172,7 @@ export default function Finance() {
           />
         )}
         {viewInvoice && (
-          <InvoiceDetail invoice={viewInvoice} onClose={() => setViewInvoice(null)} onRecord={(inv: Invoice) => { setViewInvoice(null); setRecordInvoice(inv); }} />
+          <InvoiceDetail invoice={viewInvoice} onClose={() => setViewInvoice(null)} onRecord={(invoiceToRecord: Invoice) => { setViewInvoice(null); setRecordInvoice(invoiceToRecord); }} />
         )}
         {recordInvoice && (
           <PaymentForm open={!!recordInvoice} invoice={recordInvoice} onClose={() => setRecordInvoice(null)} onSave={handleRecordPayment} />

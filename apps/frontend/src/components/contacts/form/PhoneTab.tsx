@@ -12,8 +12,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 type ContactPhone = PhoneNumber & Record<string, unknown>;
 
 interface PhoneTabProps {
-  data: Partial<Contact>;
-  onChange: (updatedData: Partial<Contact>) => void;
+  contactDraft: Partial<Contact>;
+  onChange: (updatedContactDraft: Partial<Contact>) => void;
   required?: boolean;
   defaultCountry: string;
   errors?: ValidationError[];
@@ -25,7 +25,7 @@ interface PhoneTabProps {
  * @returns React element.
  */
 export default function PhoneTab({
-  data,
+  contactDraft,
   onChange,
   required = false,
   defaultCountry,
@@ -33,50 +33,52 @@ export default function PhoneTab({
 }: PhoneTabProps): React.JSX.Element {
   const fields = useVisibleContactFields("phones");
   const standardKeys = ["label", "number", "countryCode"];
-  const sortedCustomFields = fields.filter((f) => !standardKeys.includes(f.key) && f.enabled !== false);
+  const sortedCustomFields = fields.filter((field) => !standardKeys.includes(field.key) && field.enabled !== false);
   const { phoneLabels, countryCodesMap, defaultPhoneCountryCode, updatePhoneLabels } = useContactConfig();
   const { t } = useTranslation();
   const defaultPhoneLabel = phoneLabels[0] || t('contacts.detail.mobileLabel');
-  const phones = (data.phones || []) as ContactPhone[];
+  const contactPhones = (contactDraft.phones || []) as ContactPhone[];
 
-  const upd = (list: ContactPhone[]): void => {
-    onChange({ ...data, phones: list });
+  const updateContactPhones = (phones: ContactPhone[]): void => {
+    onChange({ ...contactDraft, phones });
   };
 
-  const labelField = fields.find((f) => f.key === "label");
-  const numberField = fields.find((f) => f.key === "number");
+  const labelField = fields.find((field) => field.key === "label");
+  const numberField = fields.find((field) => field.key === "number");
 
   const showLabel = labelField?.enabled !== false;
   const reqNumber = numberField?.required === true;
   const defaultCode = countryCodesMap[defaultCountry] || defaultPhoneCountryCode;
 
-  const updatePhone = (i: number, patch: Partial<ContactPhone>): void => {
-    upd(phones.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const updatePhone = (phoneIndex: number, patch: Partial<ContactPhone>): void => {
+    updateContactPhones(
+      contactPhones.map((phone, index) => (index === phoneIndex ? { ...phone, ...patch } : phone)),
+    );
   };
 
-  const handlePhoneBlur = (i: number): void => {
-    const p = phones[i];
-    if (!p.number) return;
-    const e164 = normalizeToE164(p.countryCode || defaultCode, p.number);
-    const parsed = parsePhoneNumber(e164, p.countryCode || defaultCode);
-    updatePhone(i, { countryCode: parsed.countryCode, number: parsed.number });
+  const handlePhoneBlur = (phoneIndex: number): void => {
+    const phone = contactPhones[phoneIndex];
+    if (!phone.number) return;
+    const e164PhoneNumber = normalizeToE164(phone.countryCode || defaultCode, phone.number);
+    const parsedPhoneNumber = parsePhoneNumber(e164PhoneNumber, phone.countryCode || defaultCode);
+    updatePhone(phoneIndex, { countryCode: parsedPhoneNumber.countryCode, number: parsedPhoneNumber.number });
   };
 
   return (
     <div className="space-y-3">
-      {required && phones.length === 0 && <RequiredBanner message={t("contacts.form.atLeastOnePhoneRequired")} />}
-      {phones.length === 0 && <FormEmptyState icon={Phone} text={t("contacts.form.noPhoneNumbersYet")} />}
+      {required && contactPhones.length === 0 && <RequiredBanner message={t("contacts.form.atLeastOnePhoneRequired")} />}
+      {contactPhones.length === 0 && <FormEmptyState icon={Phone} text={t("contacts.form.noPhoneNumbersYet")} />}
 
-      {phones.map((p, i) => {
+      {contactPhones.map((phone, phoneIndex) => {
         const numberError = errors?.find(
-          (e) => e.tabId === "phones" && e.index === i && e.fieldId === "number"
+          (error) => error.tabId === "phones" && error.index === phoneIndex && error.fieldId === "number"
         );
         const countryCodeError = errors?.find(
-          (e) => e.tabId === "phones" && e.index === i && e.fieldId === "countryCode"
+          (error) => error.tabId === "phones" && error.index === phoneIndex && error.fieldId === "countryCode"
         );
         return (
           <motion.div
-            key={i}
+            key={phoneIndex}
             layout
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -88,8 +90,8 @@ export default function PhoneTab({
                   <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
                   <EditableSelect
                     options={phoneLabels || []}
-                    value={p.label}
-                    onChange={(val) => updatePhone(i, { label: val })}
+                    value={phone.label}
+                    onChange={(value) => updatePhone(phoneIndex, { label: value })}
                     onUpdateOptions={updatePhoneLabels}
                     placeholder={t("contacts.form.selectLabel")}
                     className={TYPE_SELECT_WIDTH}
@@ -99,8 +101,8 @@ export default function PhoneTab({
                 <div />
               )}
               <CardRemoveButton
-                onClick={() => upd(phones.filter((_, j) => j !== i))}
-                label={t("contacts.form.removePhoneNumber", { index: i + 1 })}
+                onClick={() => updateContactPhones(contactPhones.filter((_, index) => index !== phoneIndex))}
+                label={t("contacts.form.removePhoneNumber", { index: phoneIndex + 1 })}
               />
             </div>
 
@@ -112,22 +114,22 @@ export default function PhoneTab({
             <div className="flex gap-2">
               <div className="w-20 flex-shrink-0">
                 <Input
-                  id={`phones-${i}-countryCode`}
-                  value={p.countryCode || defaultCode}
-                  onChange={(e) => updatePhone(i, { countryCode: e.target.value })}
-                  onBlur={() => handlePhoneBlur(i)}
+                  id={`phones-${phoneIndex}-countryCode`}
+                  value={phone.countryCode || defaultCode}
+                  onChange={(event) => updatePhone(phoneIndex, { countryCode: event.target.value })}
+                  onBlur={() => handlePhoneBlur(phoneIndex)}
                   placeholder={t("contacts.form.countryCodePlaceholder")}
-                  aria-label={`${t("contacts.form.countryCode")} ${i + 1}`}
+                  aria-label={`${t("contacts.form.countryCode")} ${phoneIndex + 1}`}
                   className={countryCodeError ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
               </div>
               <Input
-                id={`phones-${i}-number`}
-                value={p.number}
-                onChange={(e) => updatePhone(i, { number: e.target.value })}
-                onBlur={() => handlePhoneBlur(i)}
+                id={`phones-${phoneIndex}-number`}
+                value={phone.number}
+                onChange={(event) => updatePhone(phoneIndex, { number: event.target.value })}
+                onBlur={() => handlePhoneBlur(phoneIndex)}
                 placeholder={t("contacts.form.phoneNumberPlaceholder")}
-                aria-label={`${t("contacts.form.phoneNumber")} ${i + 1}`}
+                aria-label={`${t("contacts.form.phoneNumber")} ${phoneIndex + 1}`}
                 className={numberError ? "border-destructive focus-visible:ring-destructive" : ""}
               />
             </div>
@@ -141,14 +143,14 @@ export default function PhoneTab({
               <div className={COLLECTION_BODY}>
                 {sortedCustomFields.map((field) => {
                   const fieldError = errors?.find(
-                    (err) => err.tabId === "phones" && err.index === i && err.fieldId === field.key
+                    (error) => error.tabId === "phones" && error.index === phoneIndex && error.fieldId === field.key
                   );
                   return (
-                    <Field key={field.key} id={`phones-${i}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
+                    <Field key={field.key} id={`phones-${phoneIndex}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
                       <CustomFieldInput
                         field={field as unknown as CustomFieldConfig}
-                        value={p[field.key]}
-                        onChange={(val) => updatePhone(i, { [field.key]: val })}
+                        value={phone[field.key]}
+                        onChange={(value) => updatePhone(phoneIndex, { [field.key]: value })}
                         error={!!fieldError}
                       />
                     </Field>
@@ -164,8 +166,8 @@ export default function PhoneTab({
         type="button"
         variant="ghost"
         onClick={() =>
-          upd([
-            ...phones,
+          updateContactPhones([
+            ...contactPhones,
             { label: phoneLabels[0] || defaultPhoneLabel, number: "", countryCode: defaultCode }
           ])
         }

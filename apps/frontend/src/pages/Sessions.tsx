@@ -58,12 +58,12 @@ interface SessionCardProps {
 }
 
 function SessionCard({ session, onClick, statusLabel }: SessionCardProps) {
-  const totalEnrolled = session.classes?.reduce((s, c) => s + c.enrolled, 0) ?? 0;
-  const totalCapacity = session.classes?.reduce((s, c) => s + c.capacity, 0) ?? 0;
+  const totalEnrolled = session.classes?.reduce((sum, sessionClass) => sum + sessionClass.enrolled, 0) ?? 0;
+  const totalCapacity = session.classes?.reduce((sum, sessionClass) => sum + sessionClass.capacity, 0) ?? 0;
   const statusCls = STATUS_CLS[session.status as SessionStatus] ?? STATUS_CLS.active;
-  const pct = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
+  const capacityPercent = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
 
-  const fmtDate = (d: string | undefined) => formatDate(d, true);
+  const formatSessionDate = (date: string | undefined) => formatDate(date, true);
 
   return (
     <motion.button
@@ -93,7 +93,7 @@ function SessionCard({ session, onClick, statusLabel }: SessionCardProps) {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         {[
-          { icon: Calendar, label: "Start", value: fmtDate(session.startDate) },
+          { icon: Calendar, label: "Start", value: formatSessionDate(session.startDate) },
           { icon: Users,    label: "Enrolled", value: `${totalEnrolled}/${totalCapacity || "—"}` },
           { icon: DollarSign, label: "Fee", value: `${session.currency} ${Number(session.baseFee).toLocaleString()}` },
         ].map(({ icon: Icon, label, value }) => (
@@ -112,11 +112,11 @@ function SessionCard({ session, onClick, statusLabel }: SessionCardProps) {
         <div>
           <div className="h-1 rounded-full bg-border overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-warning" : "bg-success"}`}
-              style={{ width: `${Math.min(pct, 100)}%` }}
+              className={`h-full rounded-full transition-all ${capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success"}`}
+              style={{ width: `${Math.min(capacityPercent, 100)}%` }}
             />
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">{pct}% capacity used · {session.classes?.length ?? 0} class{session.classes?.length !== 1 ? "es" : ""}</p>
+          <p className="text-[10px] text-muted-foreground mt-1">{capacityPercent}% capacity used · {session.classes?.length ?? 0} class{session.classes?.length !== 1 ? "es" : ""}</p>
         </div>
       )}
     </motion.button>
@@ -156,47 +156,49 @@ export default function Sessions() {
   const [subTab, setSubTab] = useState("fields");
 
   const filtered = useMemo(() => {
-    return sessions.filter((s) => {
-      const q = search.toLowerCase();
-      const matchSearch = !q || s.name.toLowerCase().includes(q) || s.type.toLowerCase().includes(q);
-      const matchStatus = filterStatus.length === 0 || filterStatus.includes(s.status as SessionStatus);
-      const matchType = filterType.length === 0 || filterType.includes(s.type as SessionType);
+    return sessions.filter((sessionItem) => {
+      const normalizedSearch = search.toLowerCase();
+      const matchSearch = !normalizedSearch || sessionItem.name.toLowerCase().includes(normalizedSearch) || sessionItem.type.toLowerCase().includes(normalizedSearch);
+      const matchStatus = filterStatus.length === 0 || filterStatus.includes(sessionItem.status as SessionStatus);
+      const matchType = filterType.length === 0 || filterType.includes(sessionItem.type as SessionType);
       return matchSearch && matchStatus && matchType;
     });
   }, [sessions, search, filterStatus, filterType]);
 
-  const handleSave = (data: Session) => {
-    const existing = sessions.find((s) => s.id === data.id);
+  const handleSave = (sessionToSave: Session) => {
+    const existing = sessions.find((sessionItem) => sessionItem.id === sessionToSave.id);
     const onDone = () => {
-      if (detailSession?.id === data.id) setDetailSession(data);
+      if (detailSession?.id === sessionToSave.id) setDetailSession(sessionToSave);
       setShowForm(false);
       setEditSession(null);
     };
     if (existing) {
-      updateSession.mutate({ id: data.id, session: data }, { onSuccess: onDone });
+      updateSession.mutate({ id: sessionToSave.id, session: sessionToSave }, { onSuccess: onDone });
     } else {
-      createSession.mutate(data, { onSuccess: onDone });
+      createSession.mutate(sessionToSave, { onSuccess: onDone });
     }
   };
 
-  const handleUpdate = (updated: Session) => {
+  const handleUpdate = (updatedSession: Session) => {
     updateSession.mutate(
-      { id: updated.id, session: updated },
-      { onSuccess: () => setDetailSession(updated) },
+      { id: updatedSession.id, session: updatedSession },
+      { onSuccess: () => setDetailSession(updatedSession) },
     );
   };
 
-  const toggleFilter = <T,>(list: T[], setList: React.Dispatch<React.SetStateAction<T[]>>, val: T) =>
-    setList((l) => l.includes(val) ? l.filter((x) => x !== val) : [...l, val]);
+  const toggleFilter = <T,>(selectedValues: T[], setSelectedValues: React.Dispatch<React.SetStateAction<T[]>>, nextValue: T) =>
+    setSelectedValues((currentValues) => currentValues.includes(nextValue)
+      ? currentValues.filter((selectedValue) => selectedValue !== nextValue)
+      : [...currentValues, nextValue]);
 
   const hasFilters = filterStatus.length > 0 || filterType.length > 0;
 
   const statusLabels = useMemo(() => {
     const map: Record<string, string> = {};
-    for (const s of statusOptions) {
-      const translationKey = `sessions.status.${s}` as AppTranslationKey;
+    for (const statusOption of statusOptions) {
+      const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
       const translated = t(translationKey);
-      map[s] = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+      map[statusOption] = translated === translationKey ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : translated;
     }
     return map;
   }, [statusOptions, t]);
@@ -247,9 +249,9 @@ export default function Sessions() {
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuLabel className="text-xs">Status</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {statusOptions.map((s) => (
-                    <DropdownMenuCheckboxItem key={s} checked={filterStatus.includes(s)} onCheckedChange={() => toggleFilter(filterStatus, setFilterStatus, s)}>
-                      {statusLabels[s]}
+                  {statusOptions.map((statusOption) => (
+                    <DropdownMenuCheckboxItem key={statusOption} checked={filterStatus.includes(statusOption)} onCheckedChange={() => toggleFilter(filterStatus, setFilterStatus, statusOption)}>
+                      {statusLabels[statusOption]}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
@@ -265,9 +267,9 @@ export default function Sessions() {
                 <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuLabel className="text-xs">Type</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {typeOptions.map((t) => (
-                    <DropdownMenuCheckboxItem key={t} checked={filterType.includes(t)} onCheckedChange={() => toggleFilter(filterType, setFilterType, t)}>
-                      {t}
+                  {typeOptions.map((typeOption) => (
+                    <DropdownMenuCheckboxItem key={typeOption} checked={filterType.includes(typeOption)} onCheckedChange={() => toggleFilter(filterType, setFilterType, typeOption)}>
+                      {typeOption}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
@@ -284,8 +286,8 @@ export default function Sessions() {
 
             <FilterChips
               chips={[
-                ...filterStatus.map((s) => ({ key: s, label: statusLabels[s], onRemove: () => toggleFilter(filterStatus, setFilterStatus, s) })),
-                ...filterType.map((t) => ({ key: t, label: t, onRemove: () => toggleFilter(filterType, setFilterType, t) })),
+                ...filterStatus.map((statusOption) => ({ key: statusOption, label: statusLabels[statusOption], onRemove: () => toggleFilter(filterStatus, setFilterStatus, statusOption) })),
+                ...filterType.map((typeOption) => ({ key: typeOption, label: typeOption, onRemove: () => toggleFilter(filterType, setFilterType, typeOption) })),
               ]}
               onClearAll={() => { setFilterStatus([]); setFilterType([]); }}
             />
@@ -337,31 +339,31 @@ export default function Sessions() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
-                      {filtered.map((s) => {
-                        const totalEnrolled = s.classes?.reduce((sum: number, c: { enrolled: number }) => sum + c.enrolled, 0) ?? 0;
-                        const totalCapacity = s.classes?.reduce((sum: number, c: { capacity: number }) => sum + c.capacity, 0) ?? 0;
-                        const statusKey = s.status as SessionStatus;
+                      {filtered.map((sessionItem) => {
+                        const totalEnrolled = sessionItem.classes?.reduce((sum: number, sessionClass: { enrolled: number }) => sum + sessionClass.enrolled, 0) ?? 0;
+                        const totalCapacity = sessionItem.classes?.reduce((sum: number, sessionClass: { capacity: number }) => sum + sessionClass.capacity, 0) ?? 0;
+                        const statusKey = sessionItem.status as SessionStatus;
                         const statusCls = STATUS_CLS[statusKey] ?? STATUS_CLS.active;
                         return (
-                          <tr key={s.id} onClick={() => setDetailSession(s)} className="hover:bg-muted/20 cursor-pointer transition-colors group">
+                          <tr key={sessionItem.id} onClick={() => setDetailSession(sessionItem)} className="hover:bg-muted/20 cursor-pointer transition-colors group">
                             {showName && (
-                              <td className="px-4 py-3 font-semibold text-foreground group-hover:text-primary transition-colors">{s.name}</td>
+                              <td className="px-4 py-3 font-semibold text-foreground group-hover:text-primary transition-colors">{sessionItem.name}</td>
                             )}
                             {showType && (
                               <td className="px-4 py-3">
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[s.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
-                                  {s.type}
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[sessionItem.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
+                                  {sessionItem.type}
                                 </span>
                               </td>
                             )}
                             {showDuration && (
                               <td className="px-4 py-3 text-xs text-muted-foreground">
-                                {formatDate(s.startDate, true)} — {formatDate(s.endDate, true)}
+                                {formatDate(sessionItem.startDate, true)} — {formatDate(sessionItem.endDate, true)}
                               </td>
                             )}
                             {showFee && (
                               <td className="px-4 py-3 text-xs font-medium">
-                                {s.currency} {Number(s.baseFee).toLocaleString()}
+                                {sessionItem.currency} {Number(sessionItem.baseFee).toLocaleString()}
                               </td>
                             )}
                             {showEnrolled && (
@@ -385,12 +387,12 @@ export default function Sessions() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filtered.map((s) => (
+                {filtered.map((sessionItem) => (
                   <SessionCard
-                    key={s.id}
-                    session={s}
-                    onClick={() => setDetailSession(s)}
-                    statusLabel={statusLabels[s.status as SessionStatus] ?? statusLabels.active}
+                    key={sessionItem.id}
+                    session={sessionItem}
+                    onClick={() => setDetailSession(sessionItem)}
+                    statusLabel={statusLabels[sessionItem.status as SessionStatus] ?? statusLabels.active}
                   />
                 ))}
               </div>
@@ -437,7 +439,7 @@ export default function Sessions() {
             session={detailSession}
             onClose={() => setDetailSession(null)}
             onUpdate={handleUpdate}
-            onEdit={(s: Session) => { setEditSession(s); setShowForm(true); }}
+            onEdit={(sessionToEdit: Session) => { setEditSession(sessionToEdit); setShowForm(true); }}
           />
         )}
       </AnimatePresence>

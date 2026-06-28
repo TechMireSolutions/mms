@@ -52,34 +52,34 @@ function applyGrNumberMigration(
   const digits = settings.grNumberDigits || 4;
   const restartAnnually = settings.grNumberRestartAnnually !== false;
 
-  let migrated = false;
-  const migratedList = rawStudents.map((s, idx) => {
-    if (!s.grNumber) {
-      migrated = true;
-      const regDate = (s.registeredDate as string | undefined) || new Date().toISOString().split("T")[0];
-      const year = regDate ? new Date(regDate).getFullYear() : new Date().getFullYear();
+  let didMigrate = false;
+  const migratedStudents = rawStudents.map((studentRecord, studentIndex) => {
+    if (!studentRecord.grNumber) {
+      didMigrate = true;
+      const registeredDate = (studentRecord.registeredDate as string | undefined) || new Date().toISOString().split("T")[0];
+      const year = registeredDate ? new Date(registeredDate).getFullYear() : new Date().getFullYear();
 
       let nextSeq = 1;
       if (restartAnnually) {
-        const yearlyStudents = rawStudents.slice(0, idx).filter((x) => {
-          const xDate = (x.registeredDate as string | undefined) || "";
-          if (xDate.startsWith(String(year))) return true;
-          if (x.grNumber && String(x.grNumber).includes(String(year))) return true;
+        const yearlyStudents = rawStudents.slice(0, studentIndex).filter((previousStudent) => {
+          const previousRegisteredDate = (previousStudent.registeredDate as string | undefined) || "";
+          if (previousRegisteredDate.startsWith(String(year))) return true;
+          if (previousStudent.grNumber && String(previousStudent.grNumber).includes(String(year))) return true;
           return false;
         });
         nextSeq = yearlyStudents.length + 1;
       } else {
-        nextSeq = idx + 1;
+        nextSeq = studentIndex + 1;
       }
 
       const seqStr = String(nextSeq).padStart(digits, "0");
       const autoGr = template.replace("{seq}", seqStr).replace("{year}", String(year));
-      return { ...s, grNumber: autoGr } as unknown as Student;
+      return { ...studentRecord, grNumber: autoGr } as unknown as Student;
     }
-    return s as unknown as Student;
+    return studentRecord as unknown as Student;
   });
 
-  return { students: migratedList, didMigrate: migrated };
+  return { students: migratedStudents, didMigrate };
 }
 
 /**
@@ -172,10 +172,10 @@ export default function Students() {
 
   const filteredStudents = workStudents;
 
-  const handleSaveStudent = (data: Student) => {
+  const handleSaveStudent = (studentToSave: Student) => {
     if (editStudent) {
       updateStudent.mutate(
-        { id: String(data.id), student: data as unknown as StudentRecord },
+        { id: String(studentToSave.id), student: studentToSave as unknown as StudentRecord },
         {
           onSuccess: () => {
             setShowStudentForm(false);
@@ -184,7 +184,7 @@ export default function Students() {
         },
       );
     } else {
-      createStudent.mutate(data as unknown as StudentRecord, {
+      createStudent.mutate(studentToSave as unknown as StudentRecord, {
         onSuccess: () => {
           setShowStudentForm(false);
           setEditStudent(null);
@@ -193,11 +193,15 @@ export default function Students() {
     }
   };
 
-  const toggleStudentStatus = (s: string) =>
-    setStudentFilterStatus((st) => st.includes(s) ? st.filter((x) => x !== s) : [...st, s]);
+  const toggleStudentStatus = (status: string) =>
+    setStudentFilterStatus((selectedStatuses) =>
+      selectedStatuses.includes(status)
+        ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status)
+        : [...selectedStatuses, status],
+    );
 
   const studentFilterChips = [
-    ...studentFilterStatus.map((s) => ({ key: s, label: s, onRemove: () => toggleStudentStatus(s) })),
+    ...studentFilterStatus.map((status) => ({ key: status, label: status, onRemove: () => toggleStudentStatus(status) })),
     ...(studentFilterGender ? [{ key: "gender", label: studentFilterGender, onRemove: () => setStudentFilterGender("") }] : []),
   ];
 
@@ -272,13 +276,13 @@ export default function Students() {
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuLabel className="text-xs">Filter by status</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {studentStatusOptions.map((s) => (
+                  {studentStatusOptions.map((status) => (
                     <DropdownMenuCheckboxItem
-                      key={s}
-                      checked={studentFilterStatus.includes(s)}
-                      onCheckedChange={() => toggleStudentStatus(s)}
+                      key={status}
+                      checked={studentFilterStatus.includes(status)}
+                      onCheckedChange={() => toggleStudentStatus(status)}
                     >
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
@@ -301,13 +305,13 @@ export default function Students() {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-36">
-                  {["", ...genderFilters].map((g) => (
+                  {["", ...genderFilters].map((genderFilter) => (
                     <DropdownMenuCheckboxItem
-                       key={g}
-                       checked={studentFilterGender === g}
-                       onCheckedChange={() => setStudentFilterGender(g)}
+                       key={genderFilter}
+                       checked={studentFilterGender === genderFilter}
+                       onCheckedChange={() => setStudentFilterGender(genderFilter)}
                      >
-                       {g ? g.charAt(0).toUpperCase() + g.slice(1) : t("students.allGenders")}
+                       {genderFilter ? genderFilter.charAt(0).toUpperCase() + genderFilter.slice(1) : t("students.allGenders")}
                      </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
@@ -356,12 +360,12 @@ export default function Students() {
                           }
                         : undefined
                     }
-                    onEdit={(s: Student) => { setEditStudent(s); setShowStudentForm(true); }}
+                    onEdit={(studentToEdit: Student) => { setEditStudent(studentToEdit); setShowStudentForm(true); }}
                     onDelete={(id: string) => deleteStudent.mutate(String(id))}
                     onBulkDelete={(ids) => ids.forEach((id) => deleteStudent.mutate(String(id)))}
                     onBulkStatusChange={(ids, status) => {
                       for (const id of ids) {
-                        const student = workStudents.find((s) => s.id === id);
+                        const student = workStudents.find((workStudent) => workStudent.id === id);
                         if (student) {
                           updateStudent.mutate({ id: String(id), student: { ...student, status } as unknown as StudentRecord });
                         }
@@ -428,7 +432,7 @@ export default function Students() {
           <StudentForm
             student={editStudent as any}
             onClose={() => { setShowStudentForm(false); setEditStudent(null); }}
-            onSave={handleSaveStudent as (data: any) => void}
+            onSave={handleSaveStudent as (studentToSave: any) => void}
           />
         )}
       </AnimatePresence>

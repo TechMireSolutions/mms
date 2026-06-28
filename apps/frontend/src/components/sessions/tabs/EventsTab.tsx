@@ -28,12 +28,12 @@ interface EventModalProps {
 }
 
 function EventModal({ open, event, onClose, onSave }: EventModalProps) {
-  const [data, setData] = useState<Partial<SessionEvent>>(event ? { ...event } : { ...EMPTY });
-  const upd = <K extends keyof SessionEvent>(f: K, v: SessionEvent[K]) => setData((d) => ({ ...d, [f]: v }));
+  const [eventDraft, setEventDraft] = useState<Partial<SessionEvent>>(event ? { ...event } : { ...EMPTY });
+  const updateEventDraft = <K extends keyof SessionEvent>(field: K, value: SessionEvent[K]) => setEventDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
   React.useEffect(() => {
     if (open) {
-      setData(event ? { ...event } : { ...EMPTY });
+      setEventDraft(event ? { ...event } : { ...EMPTY });
     }
   }, [open, event]);
 
@@ -45,27 +45,27 @@ function EventModal({ open, event, onClose, onSave }: EventModalProps) {
       icon={Calendar}
       cancelLabel="Cancel"
       saveLabel="Save"
-      onSave={() => onSave({ ...data, id: event?.id || `ev${Date.now()}` } as SessionEvent)}
-      saveDisabled={!data.title || !data.date}
+      onSave={() => onSave({ ...eventDraft, id: event?.id || `ev${Date.now()}` } as SessionEvent)}
+      saveDisabled={!eventDraft.title || !eventDraft.date}
     >
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="event-title">Title *</label>
-          <Input id="event-title" value={data.title || ""} onChange={(e) => upd("title", e.target.value)} placeholder="Event title" required />
+          <Input id="event-title" value={eventDraft.title || ""} onChange={(inputEvent) => updateEventDraft("title", inputEvent.target.value)} placeholder="Event title" required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="event-date">Date *</label>
             <DatePicker
               id="event-date"
-              value={data.date || ""}
-              onChange={(val) => upd("date", val)}
+              value={eventDraft.date || ""}
+              onChange={(value) => updateEventDraft("date", value)}
               required
             />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="event-time">Time</label>
-            <Input id="event-time" type="time" value={data.time || ""} onChange={(e) => upd("time", e.target.value)} />
+            <Input id="event-time" type="time" value={eventDraft.time || ""} onChange={(inputEvent) => updateEventDraft("time", inputEvent.target.value)} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -73,20 +73,20 @@ function EventModal({ open, event, onClose, onSave }: EventModalProps) {
             <label className={FORM_LABEL} htmlFor="event-type">Type</label>
             <FormSelect
               id="event-type"
-              value={data.type || "meeting"}
-              onChange={(val) => upd("type", val as SessionEvent["type"])}
-              options={EVENT_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
+              value={eventDraft.type || "meeting"}
+              onChange={(value) => updateEventDraft("type", value as SessionEvent["type"])}
+              options={EVENT_TYPES.map((eventType) => ({ value: eventType, label: eventType.charAt(0).toUpperCase() + eventType.slice(1) }))}
               className="w-full"
             />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="event-location">Location</label>
-            <Input id="event-location" value={data.location || ""} onChange={(e) => upd("location", e.target.value)} placeholder="e.g. Main Hall" />
+            <Input id="event-location" value={eventDraft.location || ""} onChange={(inputEvent) => updateEventDraft("location", inputEvent.target.value)} placeholder="e.g. Main Hall" />
           </div>
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="event-description">Description</label>
-          <Textarea id="event-description" className="min-h-[64px] resize-none" value={data.description || ""} onChange={(e) => upd("description", e.target.value)} placeholder="Brief description…" />
+          <Textarea id="event-description" className="min-h-[64px] resize-none" value={eventDraft.description || ""} onChange={(inputEvent) => updateEventDraft("description", inputEvent.target.value)} placeholder="Brief description…" />
         </div>
       </div>
     </FormModal>
@@ -111,13 +111,13 @@ export function EventsTab({ session, onUpdate }: EventsTabProps) {
   const [editEvent, setEditEvent] = useState<SessionEvent | null>(null);
   const events = (session.events || []).sort((a, b) => a.date.localeCompare(b.date));
 
-  const handleSave = (ev: SessionEvent) => {
-    const existing = session.events?.find((e) => e.id === ev.id);
-    onUpdate({ ...session, events: existing ? session.events.map((e) => e.id === ev.id ? ev : e) : [...(session.events || []), ev] });
+  const handleSave = (eventToSave: SessionEvent) => {
+    const existing = session.events?.find((sessionEvent) => sessionEvent.id === eventToSave.id);
+    onUpdate({ ...session, events: existing ? session.events.map((sessionEvent) => sessionEvent.id === eventToSave.id ? eventToSave : sessionEvent) : [...(session.events || []), eventToSave] });
     setShowModal(false); setEditEvent(null);
   };
 
-  const handleDelete = (id: string) => onUpdate({ ...session, events: session.events.filter((e) => e.id !== id) });
+  const handleDelete = (id: string) => onUpdate({ ...session, events: session.events.filter((sessionEvent) => sessionEvent.id !== id) });
 
   return (
     <section aria-label="Session Events" className="space-y-4">
@@ -141,12 +141,12 @@ export function EventsTab({ session, onUpdate }: EventsTabProps) {
           {/* Timeline line */}
           <div className="absolute left-[18px] top-0 bottom-0 w-0.5 bg-border" aria-hidden="true" />
           <div className="space-y-4 pl-10">
-            {events.map((ev, i) => (
+            {events.map((sessionEvent, index) => (
               <motion.article
-                key={ev.id}
+                key={sessionEvent.id}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.06 }}
+                transition={{ delay: index * 0.06 }}
                 className="relative"
               >
                 {/* Timeline dot */}
@@ -154,26 +154,26 @@ export function EventsTab({ session, onUpdate }: EventsTabProps) {
                 <div className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-all group">
                   <header className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-[13px] font-bold text-foreground m-0">{ev.title}</h4>
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${TYPE_COLORS[ev.type] || TYPE_COLORS.other}`}>
-                        {ev.type}
+                      <h4 className="text-[13px] font-bold text-foreground m-0">{sessionEvent.title}</h4>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${TYPE_COLORS[sessionEvent.type] || TYPE_COLORS.other}`}>
+                        {sessionEvent.type}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button aria-label={`Edit ${ev.title}`} onClick={() => { setEditEvent(ev); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground w-8 h-8" variant="ghost" size="icon">
+                      <Button aria-label={`Edit ${sessionEvent.title}`} onClick={() => { setEditEvent(sessionEvent); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground w-8 h-8" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
-                      <Button aria-label={`Delete ${ev.title}`} onClick={() => handleDelete(ev.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive w-8 h-8" variant="ghost" size="icon">
+                      <Button aria-label={`Delete ${sessionEvent.title}`} onClick={() => handleDelete(sessionEvent.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive w-8 h-8" variant="ghost" size="icon">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
                     </div>
                   </header>
                   <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground mb-2">
-                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" />{ev.date}</span>
-                    {ev.time && <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />{ev.time}</span>}
-                    {ev.location && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" aria-hidden="true" />{ev.location}</span>}
+                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.date}</span>
+                    {sessionEvent.time && <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.time}</span>}
+                    {sessionEvent.location && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.location}</span>}
                   </div>
-                  {ev.description && <p className="text-[12px] text-muted-foreground leading-relaxed m-0">{ev.description}</p>}
+                  {sessionEvent.description && <p className="text-[12px] text-muted-foreground leading-relaxed m-0">{sessionEvent.description}</p>}
                 </div>
               </motion.article>
             ))}

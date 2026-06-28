@@ -38,28 +38,28 @@ export function migrateConfig(config: unknown): StudentsSettings {
   const rawConfig = config as Record<string, unknown>;
   const storedVersion = typeof rawConfig.version === "number" ? rawConfig.version : 0;
 
-  const cfg = { ...rawConfig } as unknown as Partial<StudentsSettings>;
+  const studentSettingsDraft = { ...rawConfig } as unknown as Partial<StudentsSettings>;
 
   const normalizeTabs = (tabs: any[] | undefined) => {
     if (!Array.isArray(tabs)) return undefined;
-    return tabs.map(t => {
-      if (t && typeof t === "object" && !t.key && t.id) {
-        return { ...t, key: t.id };
+    return tabs.map((tab) => {
+      if (tab && typeof tab === "object" && !tab.key && tab.id) {
+        return { ...tab, key: tab.id };
       }
-      return t;
+      return tab;
     });
   };
 
   // If the version is < 2, or the fields are in the old flat format, perform migration
-  if (storedVersion < 2 || !cfg.fields || isLegacyFlatFields(cfg.fields)) {
-    const legacyFields = (cfg.fields ?? {}) as Record<string, { enabled?: boolean; required?: boolean }>;
-    const legacyCustoms = (cfg.customFields ?? []) as StudentCustomField[];
-    const legacyOrder = (cfg.fieldOrder ?? []) as string[];
+  if (storedVersion < 2 || !studentSettingsDraft.fields || isLegacyFlatFields(studentSettingsDraft.fields)) {
+    const legacyFields = (studentSettingsDraft.fields ?? {}) as Record<string, { enabled?: boolean; required?: boolean }>;
+    const legacyCustomFields = (studentSettingsDraft.customFields ?? []) as StudentCustomField[];
+    const legacyFieldOrder = (studentSettingsDraft.fieldOrder ?? []) as string[];
 
-    cfg.formTabs = [...STUDENT_TAB_REGISTRY];
-    cfg.enabledTabs = [...DEFAULT_STUDENT_ENABLED_TABS];
-    cfg.requiredTabs = [...DEFAULT_STUDENT_REQUIRED_TABS];
-    cfg.columnRegistry = [...DEFAULT_STUDENT_COLUMN_REGISTRY];
+    studentSettingsDraft.formTabs = [...STUDENT_TAB_REGISTRY];
+    studentSettingsDraft.enabledTabs = [...DEFAULT_STUDENT_ENABLED_TABS];
+    studentSettingsDraft.requiredTabs = [...DEFAULT_STUDENT_REQUIRED_TABS];
+    studentSettingsDraft.columnRegistry = [...DEFAULT_STUDENT_COLUMN_REGISTRY];
 
     const migratedFields: Record<string, FieldDefinition[]> = {};
 
@@ -74,52 +74,52 @@ export function migrateConfig(config: unknown): StudentsSettings {
       });
     }
 
-    if (legacyCustoms.length > 0) {
+    if (legacyCustomFields.length > 0) {
       if (!migratedFields.basic) {
         migratedFields.basic = [];
       }
-      legacyCustoms.forEach((cf) => {
-        if (!migratedFields.basic.some(f => f.key === cf.id)) {
+      legacyCustomFields.forEach((legacyCustomField) => {
+        if (!migratedFields.basic.some((field) => field.key === legacyCustomField.id)) {
           migratedFields.basic.push({
-            key: cf.id,
-            label: cf.label,
-            type: cf.type as any,
+            key: legacyCustomField.id,
+            label: legacyCustomField.label,
+            type: legacyCustomField.type as any,
             enabled: true,
-            required: cf.required ?? false,
-            options: cf.options,
+            required: legacyCustomField.required ?? false,
+            options: legacyCustomField.options,
             order: migratedFields.basic.length,
           });
         }
       });
     }
 
-    if (legacyOrder.length > 0) {
-      const orderMap = Object.fromEntries(legacyOrder.map((key, idx) => [key, idx]));
+    if (legacyFieldOrder.length > 0) {
+      const orderMap = Object.fromEntries(legacyFieldOrder.map((fieldKey, index) => [fieldKey, index]));
       for (const [tabKey, fieldsList] of Object.entries(migratedFields)) {
-        fieldsList.sort((a, b) => {
-          const aOrder = orderMap[a.key] ?? 9999;
-          const bOrder = orderMap[b.key] ?? 9999;
-          return aOrder - bOrder;
+        fieldsList.sort((leftField, rightField) => {
+          const leftFieldOrder = orderMap[leftField.key] ?? 9999;
+          const rightFieldOrder = orderMap[rightField.key] ?? 9999;
+          return leftFieldOrder - rightFieldOrder;
         });
-        fieldsList.forEach((f, idx) => {
-          f.order = idx;
+        fieldsList.forEach((field, index) => {
+          field.order = index;
         });
       }
     }
 
-    cfg.fields = migratedFields;
-    cfg.version = 2;
+    studentSettingsDraft.fields = migratedFields;
+    studentSettingsDraft.version = 2;
   } else {
-    cfg.formTabs = refreshModuleTierTabLabels(
-      refreshModuleTierTabKeys(normalizeTabs(cfg.formTabs) ?? defaults.formTabs ?? STUDENT_TAB_REGISTRY)
+    studentSettingsDraft.formTabs = refreshModuleTierTabLabels(
+      refreshModuleTierTabKeys(normalizeTabs(studentSettingsDraft.formTabs) ?? defaults.formTabs ?? STUDENT_TAB_REGISTRY)
     );
-    cfg.columnRegistry = cfg.columnRegistry ?? defaults.columnRegistry;
-    cfg.fields = cfg.fields ?? defaults.fields;
+    studentSettingsDraft.columnRegistry = studentSettingsDraft.columnRegistry ?? defaults.columnRegistry;
+    studentSettingsDraft.fields = studentSettingsDraft.fields ?? defaults.fields;
   }
 
   return {
     ...defaults,
-    ...cfg,
+    ...studentSettingsDraft,
   } as StudentsSettings;
 }
 
@@ -128,15 +128,15 @@ export function sanitizeConfig(config: StudentsSettings): StudentsSettings {
     return getSystemDefaults();
   }
 
-  const cfg = { ...config };
+  const studentSettingsDraft = { ...config };
 
-  if (Array.isArray(cfg.formTabs)) {
-    cfg.formTabs = cfg.formTabs.filter(
-      (t) => t && typeof t === "object" && typeof t.key === "string" && t.key.trim().length > 0
+  if (Array.isArray(studentSettingsDraft.formTabs)) {
+    studentSettingsDraft.formTabs = studentSettingsDraft.formTabs.filter(
+      (tab) => tab && typeof tab === "object" && typeof tab.key === "string" && tab.key.trim().length > 0
     );
   }
 
-  return cfg;
+  return studentSettingsDraft;
 }
 
 export function loadStudentSettings(): StudentsSettings {

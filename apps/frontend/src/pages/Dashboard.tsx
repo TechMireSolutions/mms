@@ -48,7 +48,7 @@ function DashboardRolePanel({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <Section>
-            <QuickActionsPanel role={dashboardRole} />
+            <QuickActionsPanel dashboardRole={dashboardRole} />
           </Section>
         </div>
         <Section>
@@ -117,24 +117,26 @@ export default function Dashboard() {
     [isEditMode],
   );
 
-  const handleUnpinWidget = (id: string) => {
+  const handleUnpinWidget = (widgetId: string) => {
     updateCustomWidgets(
-      customWidgets.map((w) => (w.id === id ? { ...w, isPinnedToDashboard: false } : w)),
+      customWidgets.map((widget) =>
+        widget.id === widgetId ? { ...widget, isPinnedToDashboard: false } : widget,
+      ),
     );
   };
 
-  const handleDeleteWidget = (id: string) => {
-    updateCustomWidgets(customWidgets.filter((w) => w.id !== id));
+  const handleDeleteWidget = (widgetId: string) => {
+    updateCustomWidgets(customWidgets.filter((widget) => widget.id !== widgetId));
   };
 
-  const handleEditWidget = (w: CustomWidget) => {
-    openWidgetBuilder(w.widgetType || 'kpi', w);
+  const handleEditWidget = (widget: CustomWidget) => {
+    openWidgetBuilder(widget.widgetType || 'kpi', widget);
   };
 
-  const toggleWidgetPin = (id: string) => {
+  const toggleWidgetPin = (widgetId: string) => {
     updateCustomWidgets(
-      customWidgets.map((w) =>
-        w.id === id ? { ...w, isPinnedToDashboard: !w.isPinnedToDashboard } : w,
+      customWidgets.map((widget) =>
+        widget.id === widgetId ? { ...widget, isPinnedToDashboard: !widget.isPinnedToDashboard } : widget,
       ),
     );
   };
@@ -142,117 +144,120 @@ export default function Dashboard() {
   const activeCustomCards = useMemo(
     () =>
       customWidgets.filter(
-        (w) => w.widgetType === 'card' && widgetMatchesDashboardRole(w.role, dashboardRole) && !w.id.startsWith('def-'),
+        (widget) =>
+          widget.widgetType === 'card' &&
+          widgetMatchesDashboardRole(widget.role, dashboardRole) &&
+          !widget.id.startsWith('def-'),
       ),
     [customWidgets, dashboardRole],
   );
 
-  const stats = useMemo(() => {
-    const isEn = (id: string) => enabledModules[id] !== false;
+  const dashboardMetricCards = useMemo(() => {
+    const isModuleEnabled = (moduleId: string) => enabledModules[moduleId] !== false;
 
-    const cardWidgets = customWidgets.filter(
-      (w) => w.widgetType === 'card' && widgetMatchesDashboardRole(w.role, dashboardRole),
+    const dashboardCardWidgets = customWidgets.filter(
+      (widget) => widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole),
     );
 
-    const enabledCardWidgets = cardWidgets.filter((w) => {
-      const coll = w.collection;
-      const id = w.id;
-      if (coll === 'sessions') return isEn('sessions');
-      if (coll === 'attendance_records') return isEn('attendance');
-      if (coll === 'hasanat_distributions') return isEn('hasanat');
-      if (coll === 'finance_invoices') {
-        if (id.includes('revenue') || id.includes('expenses') || w.category === 'accounting') {
-          return isEn('accounting');
+    const enabledDashboardCardWidgets = dashboardCardWidgets.filter((widget) => {
+      const widgetCollection = widget.collection;
+      const widgetId = widget.id;
+      if (widgetCollection === 'sessions') return isModuleEnabled('sessions');
+      if (widgetCollection === 'attendance_records') return isModuleEnabled('attendance');
+      if (widgetCollection === 'hasanat_distributions') return isModuleEnabled('hasanat');
+      if (widgetCollection === 'finance_invoices') {
+        if (widgetId.includes('revenue') || widgetId.includes('expenses') || widget.category === 'accounting') {
+          return isModuleEnabled('accounting');
         }
-        return isEn('finance');
+        return isModuleEnabled('finance');
       }
       return true;
     });
 
-    return enabledCardWidgets.map((w) => {
-      if (w.collection === 'contacts') {
+    return enabledDashboardCardWidgets.map((widget) => {
+      if (widget.collection === 'contacts') {
         const aggregateValue = computeContactsCustomCardValue({
-          id: w.id,
-          operation: w.operation || 'count',
-          targetField: w.targetField,
-          filterField: w.filterField,
-          filterOperator: w.filterOperator,
-          filterValue: w.filterValue,
+          id: widget.id,
+          operation: widget.operation || 'count',
+          targetField: widget.targetField,
+          filterField: widget.filterField,
+          filterOperator: widget.filterOperator,
+          filterValue: widget.filterValue,
         });
         if (aggregateValue) {
           return {
-            id: w.id,
-            title: resolveWidgetTitle(w, t),
+            id: widget.id,
+            title: resolveWidgetTitle(widget, t),
             value: String(aggregateValue.finalValue),
-            sub: w.fixedSubText || `${contactsTotal} total`,
-            icon: w.icon || 'Users',
-            color: w.color || 'blue',
-            trend: w.trend || 0,
+            sub: widget.fixedSubText || `${contactsTotal} total`,
+            icon: widget.icon || 'Users',
+            color: widget.color || 'blue',
+            trend: widget.trend || 0,
           };
         }
       }
 
-      if (w.collection === 'students') {
+      if (widget.collection === 'students') {
         const aggregateValue = computeStudentsCustomCardValue({
-          id: w.id,
-          operation: w.operation || 'count',
-          targetField: w.targetField,
-          filterField: w.filterField,
-          filterOperator: w.filterOperator,
-          filterValue: w.filterValue,
+          id: widget.id,
+          operation: widget.operation || 'count',
+          targetField: widget.targetField,
+          filterField: widget.filterField,
+          filterOperator: widget.filterOperator,
+          filterValue: widget.filterValue,
         });
         if (aggregateValue) {
           return {
-            id: w.id,
-            title: resolveWidgetTitle(w, t),
+            id: widget.id,
+            title: resolveWidgetTitle(widget, t),
             value: String(aggregateValue.finalValue),
-            sub: w.fixedSubText || `${studentsTotal} total`,
-            icon: w.icon || 'GraduationCap',
-            color: w.color || 'emerald',
-            trend: w.trend || 0,
+            sub: widget.fixedSubText || `${studentsTotal} total`,
+            icon: widget.icon || 'GraduationCap',
+            color: widget.color || 'emerald',
+            trend: widget.trend || 0,
           };
         }
       }
 
-      if (w.collection === 'teachers') {
+      if (widget.collection === 'teachers') {
         const aggregateValue = computeTeachersCustomCardValue({
-          id: w.id,
-          operation: w.operation || 'count',
-          targetField: w.targetField,
-          filterField: w.filterField,
-          filterOperator: w.filterOperator,
-          filterValue: w.filterValue,
+          id: widget.id,
+          operation: widget.operation || 'count',
+          targetField: widget.targetField,
+          filterField: widget.filterField,
+          filterOperator: widget.filterOperator,
+          filterValue: widget.filterValue,
         });
         if (aggregateValue) {
           return {
-            id: w.id,
-            title: resolveWidgetTitle(w, t),
+            id: widget.id,
+            title: resolveWidgetTitle(widget, t),
             value: String(aggregateValue.finalValue),
-            sub: w.fixedSubText || `${teachersTotal} total`,
-            icon: w.icon || 'School',
-            color: w.color || 'blue',
-            trend: w.trend || 0,
+            sub: widget.fixedSubText || `${teachersTotal} total`,
+            icon: widget.icon || 'School',
+            color: widget.color || 'blue',
+            trend: widget.trend || 0,
           };
         }
       }
 
       const result = computeCustomCardShared(
         {
-          id: w.id,
-          role: w.role,
-          title: resolveWidgetTitle(w, t),
-          collection: w.collection,
-          operation: w.operation || 'count',
-          targetField: w.targetField,
-          filterField: w.filterField,
-          filterOperator: w.filterOperator,
-          filterValue: w.filterValue,
-          icon: w.icon || 'GraduationCap',
-          color: w.color || 'emerald',
-          subTextType: w.subTextType || 'dynamic',
-          fixedSubText: w.fixedSubText,
-          trend: w.trend,
-          trendType: w.trendType,
+          id: widget.id,
+          role: widget.role,
+          title: resolveWidgetTitle(widget, t),
+          collection: widget.collection,
+          operation: widget.operation || 'count',
+          targetField: widget.targetField,
+          filterField: widget.filterField,
+          filterOperator: widget.filterOperator,
+          filterValue: widget.filterValue,
+          icon: widget.icon || 'GraduationCap',
+          color: widget.color || 'emerald',
+          subTextType: widget.subTextType || 'dynamic',
+          fixedSubText: widget.fixedSubText,
+          trend: widget.trend,
+          trendType: widget.trendType,
         },
         {
           students: [],
@@ -271,7 +276,7 @@ export default function Dashboard() {
 
       return {
         id: result.id,
-        title: resolveWidgetTitle(w, t),
+        title: resolveWidgetTitle(widget, t),
         value: result.value,
         sub: result.sub,
         icon: result.icon,
@@ -296,17 +301,19 @@ export default function Dashboard() {
     t,
   ]);
 
-  const selectedCount = useMemo(
-    () => stats.filter((c) => !disabledCardIds.includes(c.id)).length,
-    [stats, disabledCardIds],
+  const selectedDashboardCardCount = useMemo(
+    () =>
+      dashboardMetricCards.filter((dashboardCard) => !disabledCardIds.includes(dashboardCard.id))
+        .length,
+    [dashboardMetricCards, disabledCardIds],
   );
 
-  const visibleStats = useMemo(
-    () => stats.filter((s) => !disabledCardIds.includes(s.id)),
-    [stats, disabledCardIds],
+  const visibleDashboardMetricCards = useMemo(
+    () => dashboardMetricCards.filter((dashboardCard) => !disabledCardIds.includes(dashboardCard.id)),
+    [dashboardMetricCards, disabledCardIds],
   );
 
-  const pinnedCount = customWidgets.filter((w) => w.isPinnedToDashboard).length;
+  const pinnedDashboardWidgetCount = customWidgets.filter((widget) => widget.isPinnedToDashboard).length;
 
   const notifications = useMemo(
     () =>
@@ -360,11 +367,11 @@ export default function Dashboard() {
                         setEditingWidget(null);
                       }}
                       onSaveWidget={(savedWidget) => {
-                        const exists = customWidgets.some((w) => w.id === savedWidget.id);
-                        const next = exists
-                          ? customWidgets.map((w) => (w.id === savedWidget.id ? savedWidget : w))
+                        const widgetAlreadyExists = customWidgets.some((widget) => widget.id === savedWidget.id);
+                        const nextWidgets = widgetAlreadyExists
+                          ? customWidgets.map((widget) => (widget.id === savedWidget.id ? savedWidget : widget))
                           : [...customWidgets, savedWidget];
-                        updateCustomWidgets(next);
+                        updateCustomWidgets(nextWidgets);
                         setIsWidgetBuilderOpen(false);
                         setEditingWidget(null);
                       }}
@@ -386,25 +393,25 @@ export default function Dashboard() {
 
                     <div className="text-xs border-b border-border/50 pb-3">
                       <p className="font-semibold text-foreground">
-                        {t('dashboard.selectedCards', { count: selectedCount })}
+                        {t('dashboard.selectedCards', { count: selectedDashboardCardCount })}
                       </p>
                     </div>
 
                     <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
-                      {stats.map((card) => {
-                        const isChecked = !disabledCardIds.includes(card.id);
+                      {dashboardMetricCards.map((dashboardCard) => {
+                        const isChecked = !disabledCardIds.includes(dashboardCard.id);
                         return (
                           <label
-                            key={card.id}
+                            key={dashboardCard.id}
                             className="flex items-start gap-3 p-2.5 rounded-xl border border-border/40 bg-card/20 hover:bg-muted/30 transition-colors cursor-pointer"
                           >
                             <input
                               type="checkbox"
                               checked={isChecked}
-                              onChange={() => toggleCardVisibility(card.id)}
+                              onChange={() => toggleCardVisibility(dashboardCard.id)}
                               className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
                             />
-                            <p className="text-xs font-semibold text-foreground leading-tight">{card.title}</p>
+                            <p className="text-xs font-semibold text-foreground leading-tight">{dashboardCard.title}</p>
                           </label>
                         );
                       })}
@@ -421,7 +428,7 @@ export default function Dashboard() {
 
                     <div className="text-xs border-b border-border/50 pb-3 space-y-0.5">
                       <p className="font-semibold text-foreground">
-                        {t('dashboard.pinnedCharts', { count: pinnedCount })}
+                        {t('dashboard.pinnedCharts', { count: pinnedDashboardWidgetCount })}
                       </p>
                       <p className="text-[10px] text-muted-foreground">
                         {t('dashboard.totalWidgets', { count: customWidgets.length })}
@@ -497,7 +504,7 @@ export default function Dashboard() {
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={`stats-${dashboardRole}`}
+          key={`metric-cards-${dashboardRole}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -505,11 +512,11 @@ export default function Dashboard() {
         >
           <ErrorBoundary>
             <StatsGrid
-              stats={visibleStats}
-              customCardIds={activeCustomCards.map((c) => c.id)}
+              statItems={visibleDashboardMetricCards}
+              customCardIds={activeCustomCards.map((customCard) => customCard.id)}
               onDeleteCustomCard={handleDeleteWidget}
               onEditCustomCard={(id) => {
-                const widget = customWidgets.find((w) => w.id === id);
+                const widget = customWidgets.find((dashboardWidget) => dashboardWidget.id === id);
                 if (widget) openWidgetBuilder('card', widget);
               }}
               isEditMode={isEditMode}
@@ -521,7 +528,7 @@ export default function Dashboard() {
 
       <ErrorBoundary>
         <DashboardWidgets
-          widgets={customWidgets.filter((w) => w.isPinnedToDashboard)}
+          widgets={customWidgets.filter((widget) => widget.isPinnedToDashboard)}
           onUnpin={handleUnpinWidget}
           isEditMode={isEditMode}
           onEditWidget={handleEditWidget}

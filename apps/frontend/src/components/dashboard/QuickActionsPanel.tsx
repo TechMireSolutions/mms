@@ -8,7 +8,7 @@ import {
   Star, FileText, Printer, BarChart3, UserCheck,
 } from "lucide-react";
 import { type AppTranslationKey } from "@mms/shared";
-import { UserRole } from '@/lib/data/dashboardData';
+import type { DashboardRole } from '@/lib/dashboardRole';
 import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -20,7 +20,7 @@ interface ActionSetItem {
   moduleId: string;
 }
 
-const ACTION_SETS: Record<string, ActionSetItem[]> = {
+const ACTION_SETS: Record<DashboardRole, ActionSetItem[]> = {
   admin: [
     { labelKey: "action.addStudent", descKey: "action.addStudentDesc", icon: UserPlus, color: "emerald", moduleId: "enrollment" },
     { labelKey: "action.createSession", descKey: "action.createSessionDesc", icon: CalendarPlus, color: "blue", moduleId: "sessions" },
@@ -43,7 +43,7 @@ const ACTION_SETS: Record<string, ActionSetItem[]> = {
   ],
 };
 
-const COLOR: Record<string, string> = {
+const ACTION_COLOR_CLASSES: Record<ActionSetItem["color"], string> = {
   emerald: "bg-success/10 text-success",
   blue:    "bg-info/10 text-info",
   amber:   "bg-warning/10 text-warning",
@@ -52,20 +52,20 @@ const COLOR: Record<string, string> = {
 };
 
 interface QuickActionsPanelProps {
-  role: UserRole | string;
+  dashboardRole: DashboardRole;
 }
 
 /**
  * Displays a grid of role-specific quick actions to navigate
  * directly to frequent tasks.
  */
-export default function QuickActionsPanel({ role }: QuickActionsPanelProps): React.JSX.Element | null {
+export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelProps): React.JSX.Element | null {
   const settings = useGlobalSettings();
   const { t } = useTranslation();
   const enabledModules = settings.enabledModules || {};
 
-  const allActions = ACTION_SETS[role] || ACTION_SETS.admin;
-  const actions = allActions.filter((a) => enabledModules[a.moduleId] !== false);
+  const allActions = ACTION_SETS[dashboardRole] || ACTION_SETS.admin;
+  const actions = allActions.filter((quickAction) => enabledModules[quickAction.moduleId] !== false);
 
   if (actions.length === 0) return null;
 
@@ -75,28 +75,28 @@ export default function QuickActionsPanel({ role }: QuickActionsPanelProps): Rea
         {t("action.quickActions")}
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {actions.map((action, i) => {
-          const Icon = action.icon;
-          const label = t(action.labelKey);
-          const href = QUICK_ACTION_ROUTE_KEYS[action.labelKey] ?? ROUTES.home;
+        {actions.map((quickAction, actionIndex) => {
+          const Icon = quickAction.icon;
+          const label = t(quickAction.labelKey);
+          const href = QUICK_ACTION_ROUTE_KEYS[quickAction.labelKey] ?? ROUTES.home;
           return (
             <motion.div
-              key={action.labelKey}
+              key={quickAction.labelKey}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.06 }}
+              transition={{ delay: actionIndex * 0.06 }}
             >
               <Link
                 to={href}
                 aria-label={label}
                 className="group flex flex-col items-start gap-2.5 p-3.5 rounded-xl border border-border hover:border-primary/20 hover:shadow-md hover:shadow-primary/[0.04] transition-all duration-200 text-left"
               >
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${COLOR[action.color]}`} aria-hidden="true">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${ACTION_COLOR_CLASSES[quickAction.color]}`} aria-hidden="true">
                   <Icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
                 </div>
                 <div>
                   <p className="text-[13px] font-semibold text-foreground m-0">{label}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{t(action.descKey)}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{t(quickAction.descKey)}</p>
                 </div>
               </Link>
             </motion.div>

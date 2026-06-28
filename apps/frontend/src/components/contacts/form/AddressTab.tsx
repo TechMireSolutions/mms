@@ -12,8 +12,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 type ContactAddress = Address & Record<string, unknown>;
 
 interface AddressTabProps {
-  data: Partial<Contact>;
-  onChange: (updatedData: Partial<Contact>) => void;
+  contactDraft: Partial<Contact>;
+  onChange: (updatedContactDraft: Partial<Contact>) => void;
   required?: boolean;
   defaultCountry: string;
   defaultCity: string;
@@ -27,7 +27,7 @@ interface AddressTabProps {
  * @returns React element.
  */
 export default function AddressTab({
-  data,
+  contactDraft,
   onChange,
   required = false,
   defaultCountry,
@@ -42,43 +42,47 @@ export default function AddressTab({
 
   const createNewAddress = (): ContactAddress => {
     const item: Record<string, unknown> = {};
-    enabledFields.forEach((f) => {
-      if (f.key === "label") {
-        item[f.key] = defaultAddressLabel;
-      } else if (f.key === "city") {
-        item[f.key] = defaultCity;
-      } else if (f.key === "state") {
-        item[f.key] = defaultProvince;
-      } else if (f.key === "country") {
-        item[f.key] = defaultCountry;
+    enabledFields.forEach((field) => {
+      if (field.key === "label") {
+        item[field.key] = defaultAddressLabel;
+      } else if (field.key === "city") {
+        item[field.key] = defaultCity;
+      } else if (field.key === "state") {
+        item[field.key] = defaultProvince;
+      } else if (field.key === "country") {
+        item[field.key] = defaultCountry;
       } else {
-        item[f.key] = getDefaultFieldValue(f);
+        item[field.key] = getDefaultFieldValue(field);
       }
     });
     return item as ContactAddress;
   };
 
-  const addresses = (data.addresses || []) as ContactAddress[];
+  const contactAddresses = (contactDraft.addresses || []) as ContactAddress[];
 
-  const upd = (list: ContactAddress[]): void => {
-    onChange({ ...data, addresses: list });
+  const updateContactAddresses = (addresses: ContactAddress[]): void => {
+    onChange({ ...contactDraft, addresses });
   };
 
-  const updateAddress = (i: number, patch: Partial<ContactAddress>): void => {
-    upd(addresses.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const updateAddress = (addressIndex: number, patch: Partial<ContactAddress>): void => {
+    updateContactAddresses(
+      contactAddresses.map((address, index) =>
+        index === addressIndex ? { ...address, ...patch } : address,
+      ),
+    );
   };
 
-  const showLabelField = enabledFields.find((f) => f.key === "label");
-  const bodyFields = enabledFields.filter((f) => f.key !== "label");
+  const showLabelField = enabledFields.find((field) => field.key === "label");
+  const bodyFields = enabledFields.filter((field) => field.key !== "label");
 
   return (
     <div className="space-y-3">
-      {required && addresses.length === 0 && <RequiredBanner message={t("contacts.form.atLeastOneAddressRequired")} />}
-      {addresses.length === 0 && <FormEmptyState icon={MapPin} text={t("contacts.form.noAddressesYet")} />}
+      {required && contactAddresses.length === 0 && <RequiredBanner message={t("contacts.form.atLeastOneAddressRequired")} />}
+      {contactAddresses.length === 0 && <FormEmptyState icon={MapPin} text={t("contacts.form.noAddressesYet")} />}
 
-      {addresses.map((a, i) => (
+      {contactAddresses.map((address, addressIndex) => (
         <motion.div
-          key={i}
+          key={addressIndex}
           layout
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -90,8 +94,8 @@ export default function AddressTab({
                 <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
                 <EditableSelect
                   options={addressLabels || []}
-                  value={a.label || defaultAddressLabel}
-                  onChange={(val) => updateAddress(i, { label: val })}
+                  value={address.label || defaultAddressLabel}
+                  onChange={(value) => updateAddress(addressIndex, { label: value })}
                   onUpdateOptions={updateAddressLabels}
                   placeholder={t("contacts.form.selectLabel")}
                   className={TYPE_SELECT_WIDTH}
@@ -101,8 +105,8 @@ export default function AddressTab({
               <div />
             )}
             <CardRemoveButton
-              onClick={() => upd(addresses.filter((_, j) => j !== i))}
-              label={t("contacts.form.removeAddress", { index: i + 1 })}
+              onClick={() => updateContactAddresses(contactAddresses.filter((_, index) => index !== addressIndex))}
+              label={t("contacts.form.removeAddress", { index: addressIndex + 1 })}
             />
           </div>
 
@@ -110,14 +114,14 @@ export default function AddressTab({
             <div className={COLLECTION_BODY}>
               {bodyFields.map((field) => {
                 const fieldError = errors.find(
-                  (err) => err.tabId === "addresses" && err.index === i && err.fieldId === field.key
+                  (error) => error.tabId === "addresses" && error.index === addressIndex && error.fieldId === field.key
                 );
                 return (
-                  <Field key={field.key} id={`addresses-${i}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
+                  <Field key={field.key} id={`addresses-${addressIndex}-${field.key}`} label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
                     <CustomFieldInput
                       field={field}
-                      value={a[field.key]}
-                      onChange={(val) => updateAddress(i, { [field.key]: val })}
+                      value={address[field.key]}
+                      onChange={(value) => updateAddress(addressIndex, { [field.key]: value })}
                       error={!!fieldError}
                     />
                   </Field>
@@ -131,7 +135,7 @@ export default function AddressTab({
       <Button
         type="button"
         variant="ghost"
-        onClick={() => upd([...addresses, createNewAddress()])}
+        onClick={() => updateContactAddresses([...contactAddresses, createNewAddress()])}
         className="flex items-center min-h-[44px] gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors mt-1 p-0 justify-start"
       >
         <Plus className="w-4 h-4" />
@@ -140,4 +144,3 @@ export default function AddressTab({
     </div>
   );
 }
-

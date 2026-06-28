@@ -33,7 +33,7 @@ import {
 export interface TeacherFormProps {
   teacher?: Teacher;
   onClose: () => void;
-  onSave: (data: Teacher) => void;
+  onSave: (teacher: Teacher) => void;
 }
 
 interface TeacherFormData {
@@ -78,7 +78,7 @@ export function TeacherForm({
   // Construct fields mapped by tabs
   const fieldsByTab = useMemo<Record<string, FieldDefinition[]>>(() => {
     const rawFields = settings.fields || {};
-    const hasTabbedFields = Object.values(rawFields).some(val => Array.isArray(val));
+    const hasTabbedFields = Object.values(rawFields).some((fieldGroup) => Array.isArray(fieldGroup));
     
     const base = hasTabbedFields
       ? (rawFields as Record<string, FieldDefinition[]>)
@@ -87,11 +87,11 @@ export function TeacherForm({
     const mapped: Record<string, FieldDefinition[]> = {};
 
     Object.entries(base).forEach(([tabId, list]) => {
-      mapped[tabId] = list.map((f) => {
-        if (f.key === "specialization") {
-          return { ...f, options: specializationOptions };
+      mapped[tabId] = list.map((field) => {
+        if (field.key === "specialization") {
+          return { ...field, options: specializationOptions };
         }
-        return f;
+        return field;
       });
     });
 
@@ -100,22 +100,24 @@ export function TeacherForm({
     if (!hasTabbedFields && customFields.length > 0) {
       const basicFields = [...(mapped.basic || [])];
       const fieldOrder = settings.fieldOrder || [];
-      customFields.forEach(cf => {
-        if (!basicFields.some(f => f.key === cf.id)) {
-          const orderIdx = fieldOrder.indexOf(cf.id);
+      customFields.forEach((customField) => {
+        if (!basicFields.some((field) => field.key === customField.id)) {
+          const fieldOrderIndex = fieldOrder.indexOf(customField.id);
           basicFields.push({
-            key: cf.id,
-            label: cf.label,
-            type: (cf.type || "text") as any,
-            required: !!cf.required,
+            key: customField.id,
+            label: customField.label,
+            type: (customField.type || "text") as any,
+            required: !!customField.required,
             enabled: true,
-            order: orderIdx >= 0 ? orderIdx : 99,
+            order: fieldOrderIndex >= 0 ? fieldOrderIndex : 99,
             placeholder: undefined,
-            options: cf.options,
+            options: customField.options,
           });
         }
       });
-      mapped.basic = basicFields.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+      mapped.basic = basicFields.sort(
+        (leftField, rightField) => (leftField.order ?? 99) - (rightField.order ?? 99),
+      );
     }
 
     return mapped;
@@ -146,7 +148,7 @@ export function TeacherForm({
   const schema = useMemo(() => {
     const shape: Record<string, z.ZodTypeAny> = {
       id: z.string().optional(),
-      contactId: z.union([z.string(), z.number()]).refine(val => val !== undefined && val !== null && val !== "", {
+      contactId: z.union([z.string(), z.number()]).refine((contactId) => contactId !== undefined && contactId !== null && contactId !== "", {
         message: t('teachers.errorContactRequired'),
       }),
       employeeId: z.string().optional(),
@@ -187,7 +189,7 @@ export function TeacherForm({
     t,
   });
 
-  const data = form.watch();
+  const teacherDraft = form.watch();
   const setValue = form.setValue;
 
   useEffect(() => {
@@ -207,8 +209,8 @@ export function TeacherForm({
   }, [queryClient, teacher?.id, form]);
 
   const { data: linkedContact } = useContactById(
-    data.contactId != null ? String(data.contactId) : undefined,
-    data.contactId != null,
+    teacherDraft.contactId != null ? String(teacherDraft.contactId) : undefined,
+    teacherDraft.contactId != null,
   );
 
   const completeness = useMemo(() => {
@@ -219,12 +221,12 @@ export function TeacherForm({
 
     // Contact link is a core required field
     totalRequired++;
-    if (data.contactId) filledRequired++;
+    if (teacherDraft.contactId) filledRequired++;
 
     // Employee ID is a core required field if not auto-generated
     if (!autoGenerateId) {
       totalRequired++;
-      if (data.employeeId) filledRequired++;
+      if (teacherDraft.employeeId) filledRequired++;
     }
 
     const enabledTabIds = settings.enabledTabs && settings.enabledTabs.length > 0 
@@ -246,8 +248,8 @@ export function TeacherForm({
         }
 
         const isRequired = !!field.required;
-        const val = data[field.key];
-        const isFilled = val !== undefined && val !== null && val !== "";
+        const fieldValue = teacherDraft[field.key];
+        const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "";
 
         if (isRequired) {
           totalRequired++;
@@ -264,7 +266,7 @@ export function TeacherForm({
     const progress = (reqRatio * 0.7) + (optRatio * 0.3);
 
     return Math.round(progress * 100);
-  }, [data, fieldsByTab, settings.enabledTabs, autoGenerateId]);
+  }, [teacherDraft, fieldsByTab, settings.enabledTabs, autoGenerateId]);
 
   const visibleTabs = useMemo(() => {
     const tabsFromConfig = (settings.formTabs && settings.formTabs.length > 0 
@@ -290,9 +292,9 @@ export function TeacherForm({
   }, [settings.formTabs, settings.enabledTabs, fieldsByTab]);
 
   const formTabs = useMemo(() => {
-    return visibleTabs.map((t) => ({
-      key: t.key,
-      label: t.label,
+    return visibleTabs.map((visibleTab) => ({
+      key: visibleTab.key,
+      label: visibleTab.label,
     }));
   }, [visibleTabs]);
 
@@ -314,15 +316,15 @@ export function TeacherForm({
   const renderFieldByKey = (field: FieldDefinition): React.ReactNode => {
     if (!field.enabled) return null;
 
-    const value = data[field.key] ?? getDefaultFieldValue(field);
-    const fieldError = errors.find((e) => e.fieldId === field.key);
+    const value = teacherDraft[field.key] ?? getDefaultFieldValue(field);
+    const fieldError = errors.find((error) => error.fieldId === field.key);
     return (
       <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
         <Field label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
           <CustomFieldInput
             field={field}
             value={value}
-            onChange={(next) => setValue(field.key as any, next, { shouldValidate: true, shouldDirty: true })}
+            onChange={(nextValue) => setValue(field.key as any, nextValue, { shouldValidate: true, shouldDirty: true })}
             error={!!fieldError}
           />
         </Field>
@@ -332,7 +334,7 @@ export function TeacherForm({
 
   const renderBasicContent = () => {
     if (tab === "basic") {
-      const basicFields = (fieldsByTab.basic || []).filter((f) => f.enabled);
+      const basicFields = (fieldsByTab.basic || []).filter((field) => field.enabled);
       return (
         <div className="space-y-5 text-left">
           {/* Contact Picker Section */}
@@ -343,17 +345,17 @@ export function TeacherForm({
             </div>
             <ContactPicker
               label={t('teachers.field.contact')}
-              value={data.contactId}
+              value={teacherDraft.contactId}
               onChange={(id) => setValue("contactId", id)}
               excludeIds={usedContactIds}
               searchPlaceholder={t('teachers.form.searchContact')}
               emptyTitle={t('teachers.form.noContacts')}
               emptyHint={t('teachers.form.noContactsHint')}
-              error={!!errors.find((e) => e.fieldId === "contactId")}
+              error={!!errors.find((error) => error.fieldId === "contactId")}
             />
-            {errors.find((e) => e.fieldId === "contactId") && (
+            {errors.find((error) => error.fieldId === "contactId") && (
               <p className="text-[10px] text-destructive mt-1 font-medium">
-                {errors.find((e) => e.fieldId === "contactId")?.message}
+                {errors.find((error) => error.fieldId === "contactId")?.message}
               </p>
             )}
           </section>
@@ -371,7 +373,7 @@ export function TeacherForm({
     }
 
     if (tab === "employment") {
-      const employmentFields = (fieldsByTab.employment || []).filter((f) => f.enabled);
+      const employmentFields = (fieldsByTab.employment || []).filter((field) => field.enabled);
       return (
         <div className="space-y-5 text-left">
           <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
@@ -381,8 +383,8 @@ export function TeacherForm({
                 <Field label={t('teachers.field.employeeId')} required hint="Employee Identifier">
                   <Input
                     className={FORM_INPUT}
-                    value={data.employeeId || ""}
-                    onChange={(e) => setValue("employeeId", e.target.value)}
+                    value={teacherDraft.employeeId || ""}
+                    onChange={(event) => setValue("employeeId", event.target.value)}
                     readOnly={autoGenerateId}
                   />
                 </Field>
@@ -393,15 +395,15 @@ export function TeacherForm({
                 <Field label={t('teachers.field.status')}>
                   <select
                     className={FORM_SELECT}
-                    value={data.status}
-                    onChange={(e) => setValue("status", e.target.value)}
+                    value={teacherDraft.status}
+                    onChange={(event) => setValue("status", event.target.value)}
                   >
-                    {statusOptions.map((s) => {
-                      const translationKey = `teachers.status.${s}` as AppTranslationKey;
+                    {statusOptions.map((status) => {
+                      const translationKey = `teachers.status.${status}` as AppTranslationKey;
                       const translated = t(translationKey);
-                      const label = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+                      const label = translated === translationKey ? status.charAt(0).toUpperCase() + status.slice(1) : translated;
                       return (
-                        <option key={s} value={s}>{label}</option>
+                        <option key={status} value={status}>{label}</option>
                       );
                     })}
                   </select>
@@ -417,8 +419,8 @@ export function TeacherForm({
                   <textarea
                     rows={3}
                     className={FORM_INPUT + " min-h-[80px] py-2 resize-none"}
-                    value={data.notes || ""}
-                    onChange={(e) => setValue("notes", e.target.value)}
+                    value={teacherDraft.notes || ""}
+                    onChange={(event) => setValue("notes", event.target.value)}
                   />
                 </Field>
               </div>
@@ -435,9 +437,9 @@ export function TeacherForm({
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
       <span className="font-semibold text-foreground">{linkedContact.name}</span>
       <div className="flex items-center gap-2 border-s border-border ps-3">
-        <span>ID: {data.employeeId || "—"}</span>
+        <span>ID: {teacherDraft.employeeId || "—"}</span>
         <span className="border-s border-border ps-2 capitalize">
-          Status: {data.status}
+          Status: {teacherDraft.status}
         </span>
       </div>
     </div>
@@ -464,16 +466,16 @@ export function TeacherForm({
       tabPanelIdPrefix="teacher-form-tab"
       dir={isRtlLanguage(language) ? "rtl" : "ltr"}
       lang={language}
-      error={errors.map(e => e.message)}
+      error={errors.map((error) => error.message)}
       cancelLabel={t('common.cancel')}
       saveLabel={t('common.save')}
       onSave={() => void handleSave(onSubmit)()}
       saving={saving}
-      saveDisabled={!data.contactId}
+      saveDisabled={!teacherDraft.contactId}
       footerStart={footerStart}
       fields={fieldsByTab[tab] || []}
-      data={data}
-      setValue={(key, val, opts) => setValue(key as any, val, opts)}
+      data={teacherDraft}
+      setValue={(key, value, options) => setValue(key as any, value, options)}
       errors={errors}
       renderField={renderFieldByKey}
       renderBasicContent={renderBasicContent}

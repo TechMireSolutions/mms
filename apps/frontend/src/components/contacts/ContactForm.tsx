@@ -48,8 +48,8 @@ const TAB_DATA_KEY: Record<string, string> = {
   relationships: "relationships",
 };
 interface TabRenderProps {
-  data: Partial<Contact>;
-  onChange: (d: Partial<Contact>) => void;
+  contactDraft: Partial<Contact>;
+  onChange: (contactDraft: Partial<Contact>) => void;
   requiredTabIds: Set<string>;
   defaultCountry: string;
   defaultCity: string;
@@ -62,29 +62,29 @@ const SYSTEM_TAB_RENDERS: Record<
   string,
   (props: TabRenderProps) => React.JSX.Element
 > = {
-  basic: ({ data, onChange, readOnlyFieldKeys, errors }) => (
-    <BasicTab tabId="basic" data={data} onChange={onChange} readOnlyFieldKeys={readOnlyFieldKeys} errors={errors} />
+  basic: ({ contactDraft, onChange, readOnlyFieldKeys, errors }) => (
+    <BasicTab tabId="basic" contactDraft={contactDraft} onChange={onChange} readOnlyFieldKeys={readOnlyFieldKeys} errors={errors} />
   ),
-  phones: ({ data, onChange, requiredTabIds, defaultCountry, errors }) => (
+  phones: ({ contactDraft, onChange, requiredTabIds, defaultCountry, errors }) => (
     <PhoneTab
-      data={data}
+      contactDraft={contactDraft}
       onChange={onChange}
       required={requiredTabIds.has("phones")}
       defaultCountry={defaultCountry}
       errors={errors}
     />
   ),
-  emails: ({ data, onChange, requiredTabIds, errors }) => (
+  emails: ({ contactDraft, onChange, requiredTabIds, errors }) => (
     <EmailTab
-      data={data}
+      contactDraft={contactDraft}
       onChange={onChange}
       required={requiredTabIds.has("emails")}
       errors={errors}
     />
   ),
-  addresses: ({ data, onChange, requiredTabIds, defaultCountry, defaultCity, defaultProvince, errors }) => (
+  addresses: ({ contactDraft, onChange, requiredTabIds, defaultCountry, defaultCity, defaultProvince, errors }) => (
     <AddressTab
-      data={data}
+      contactDraft={contactDraft}
       onChange={onChange}
       required={requiredTabIds.has("addresses")}
       defaultCountry={defaultCountry}
@@ -93,25 +93,25 @@ const SYSTEM_TAB_RENDERS: Record<
       errors={errors}
     />
   ),
-  socials: ({ data, onChange, requiredTabIds, errors }) => (
+  socials: ({ contactDraft, onChange, requiredTabIds, errors }) => (
     <SocialTab
-      data={data}
+      contactDraft={contactDraft}
       onChange={onChange}
       required={requiredTabIds.has("socials")}
       errors={errors}
     />
   ),
-  emergency: ({ data, onChange, requiredTabIds, errors }) => (
+  emergency: ({ contactDraft, onChange, requiredTabIds, errors }) => (
     <EmergencyTab
-      data={data}
+      contactDraft={contactDraft}
       onChange={onChange}
       required={requiredTabIds.has("emergency")}
       errors={errors}
     />
   ),
-  relationships: ({ data, onChange, errors }) => (
+  relationships: ({ contactDraft, onChange, errors }) => (
     <RelationshipsTab
-      data={data}
+      contactDraft={contactDraft}
       onChange={onChange}
       errors={errors}
     />
@@ -196,19 +196,22 @@ export default function ContactForm({
     }
 
     const defaultCode = countryCodesMap[defaultCountryProp] || defaultPhoneCountryCode;
-    const phones = ((merged.phones as PhoneNumber[] | undefined) || []).map((p) => {
-      if (p.countryCode) return p;
-      const parsed = parsePhoneNumber(p.number || "", defaultCode);
+    const phones = ((merged.phones as PhoneNumber[] | undefined) || []).map((phone) => {
+      if (phone.countryCode) return phone;
+      const parsedPhoneNumber = parsePhoneNumber(phone.number || "", defaultCode);
       return {
-        ...p,
-        countryCode: parsed.countryCode,
-        number: parsed.number,
+        ...phone,
+        countryCode: parsedPhoneNumber.countryCode,
+        number: parsedPhoneNumber.number,
       };
     });
 
-    const emergencyContacts = ((merged.emergencyContacts as EmergencyContact[] | undefined) || []).map((ec) => ({
-      ...ec,
-      contactId: ec.contactId == null || ec.contactId === "" ? "" : String(ec.contactId),
+    const emergencyContacts = ((merged.emergencyContacts as EmergencyContact[] | undefined) || []).map((emergencyContact) => ({
+      ...emergencyContact,
+      contactId:
+        emergencyContact.contactId == null || emergencyContact.contactId === ""
+          ? ""
+          : String(emergencyContact.contactId),
     }));
 
     return {
@@ -245,7 +248,7 @@ export default function ContactForm({
     t,
   });
 
-  const data = form.watch();
+  const contactDraft = form.watch();
   const setValue = form.setValue;
 
   const handleToggleBuilderMode = useCallback((active: boolean) => {
@@ -270,13 +273,13 @@ export default function ContactForm({
     const lastName  = toTitleCase(formData.lastName?.trim() || "") as string;
     
     const defaultCode = countryCodesMap[defaultCountryProp] || defaultPhoneCountryCode;
-    const normalizedPhones = (formData.phones || []).map((p) => {
-      const e164 = normalizeToE164(p.countryCode || defaultCode, p.number);
-      const parsed = parsePhoneNumber(e164, p.countryCode || defaultCode);
+    const normalizedPhones = (formData.phones || []).map((phone) => {
+      const e164PhoneNumber = normalizeToE164(phone.countryCode || defaultCode, phone.number);
+      const parsedPhoneNumber = parsePhoneNumber(e164PhoneNumber, phone.countryCode || defaultCode);
       return {
-        ...p,
-        countryCode: parsed.countryCode,
-        number: parsed.number,
+        ...phone,
+        countryCode: parsedPhoneNumber.countryCode,
+        number: parsedPhoneNumber.number,
       };
     });
 
@@ -297,10 +300,14 @@ export default function ContactForm({
 
   // Background duplicate check while typing (Rule 12.1)
   const identityString = useMemo(() => {
-    const phonesStr = (data.phones || []).map((p) => `${p.countryCode || ""}:${p.number || ""}`).join(",");
-    const emailsStr = (data.emails || []).map((e) => e.address || "").join(",");
-    return `${data.firstName || ""}|${data.lastName || ""}|${phonesStr}|${emailsStr}`;
-  }, [data.firstName, data.lastName, data.phones, data.emails]);
+    const phonesIdentity = (contactDraft.phones || [])
+      .map((phone) => `${phone.countryCode || ""}:${phone.number || ""}`)
+      .join(",");
+    const emailsIdentity = (contactDraft.emails || [])
+      .map((email) => email.address || "")
+      .join(",");
+    return `${contactDraft.firstName || ""}|${contactDraft.lastName || ""}|${phonesIdentity}|${emailsIdentity}`;
+  }, [contactDraft.firstName, contactDraft.lastName, contactDraft.phones, contactDraft.emails]);
 
   const debouncedIdentityString = useDebounce(identityString, 500);
 
@@ -337,11 +344,11 @@ export default function ContactForm({
   }, [debouncedIdentityString, prepareContactData]);
 
   const formErrors = useMemo(() => {
-    const list = errors.map((e) => e.message);
+    const contactFormErrors = errors.map((error) => error.message);
     if (typedDuplicateCount > 0) {
-      list.push(`${typedDuplicateCount} ${t("contacts.duplicates.potentialFound") || "potential duplicates found"}`);
+      contactFormErrors.push(`${typedDuplicateCount} ${t("contacts.duplicates.potentialFound") || "potential duplicates found"}`);
     }
-    return list;
+    return contactFormErrors;
   }, [errors, typedDuplicateCount, t]);
 
   const commitSave = useCallback(
@@ -349,14 +356,14 @@ export default function ContactForm({
       onSave(contactToSave);
       setSaveSuccess(true);
       notify.success(contact ? t('contacts.form.contactUpdated') : t('contacts.form.contactCreated'), {
-        description: `${data?.name || data?.firstName || t('contacts.form.contact')} ${t('contacts.form.contactSavedSuccess')}`,
+        description: `${contactDraft?.name || contactDraft?.firstName || t('contacts.form.contact')} ${t('contacts.form.contactSavedSuccess')}`,
       });
       setTimeout(() => {
         setSaveSuccess(false);
         setSaving(false);
       }, 600);
     },
-    [onSave, contact, data?.name, data?.firstName, t, setSaving],
+    [onSave, contact, contactDraft?.name, contactDraft?.firstName, t, setSaving],
   );
 
   const onSubmit = useCallback(async (formData: Contact) => {
@@ -385,7 +392,7 @@ export default function ContactForm({
   const defaultCity     = prefs.defaultCity     || defaultCityProp;
   const defaultProvince = prefs.defaultProvince || defaultProvinceProp;
 
-  const completeness = useMemo(() => calculateProfileCompleteness(data, fieldConfig), [data, fieldConfig]);
+  const completeness = useMemo(() => calculateProfileCompleteness(contactDraft, fieldConfig), [contactDraft, fieldConfig]);
   const visibleTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.formTabs || [];
     const sorted = [...tabsFromConfig]
@@ -411,36 +418,36 @@ export default function ContactForm({
         return true;
       });
 
-    return sorted.map((t) => ({
-      key: t.key,
-      label: t.label,
-      icon: t.icon && ICON_MAP[t.icon] ? ICON_MAP[t.icon] : User,
+    return sorted.map((tabDef) => ({
+      key: tabDef.key,
+      label: tabDef.label,
+      icon: tabDef.icon && ICON_MAP[tabDef.icon] ? ICON_MAP[tabDef.icon] : User,
     }));
   }, [fieldConfig.formTabs, enabledTabIds, viewerRole, fields]);
 
   const tabCount = (tabKey: string): number => {
     const key = TAB_DATA_KEY[tabKey];
     if (!key) return 0;
-    const list = data[key];
-    return Array.isArray(list) ? list.length : 0;
+    const tabItems = contactDraft[key];
+    return Array.isArray(tabItems) ? tabItems.length : 0;
   };
 
   const formTabs = useMemo(
     () =>
-      visibleTabs.map((t) => {
-        const count = tabCount(t.key);
+      visibleTabs.map((visibleTab) => {
+        const count = tabCount(visibleTab.key);
         return {
-          key: t.key,
-          label: count > 0 && t.key !== "basic" ? `${t.label} [${count}]` : t.label,
-          icon: t.icon,
+          key: visibleTab.key,
+          label: count > 0 && visibleTab.key !== "basic" ? `${visibleTab.label} [${count}]` : visibleTab.label,
+          icon: visibleTab.icon,
         };
       }),
-    [visibleTabs, data],
+    [visibleTabs, contactDraft],
   );
 
-  const handleChange = useCallback((updated: Partial<Contact>) => {
-    Object.entries(updated).forEach(([key, val]) => {
-      setValue(key as Parameters<typeof setValue>[0], val, { shouldValidate: true, shouldDirty: true });
+  const handleChange = useCallback((updatedContactDraft: Partial<Contact>) => {
+    Object.entries(updatedContactDraft).forEach(([fieldKey, fieldValue]) => {
+      setValue(fieldKey as Parameters<typeof setValue>[0], fieldValue, { shouldValidate: true, shouldDirty: true });
     });
   }, [setValue]);
 
@@ -468,7 +475,7 @@ export default function ContactForm({
     const renderFn = SYSTEM_TAB_RENDERS[tab];
     if (renderFn) {
       return renderFn({
-        data,
+        contactDraft,
         onChange: handleChange,
         requiredTabIds,
         defaultCountry,
@@ -481,7 +488,7 @@ export default function ContactForm({
     return (
       <BasicTab
         tabId={tab}
-        data={data}
+        contactDraft={contactDraft}
         onChange={handleChange}
         readOnlyFieldKeys={readOnlyFieldKeys}
         errors={errors}
@@ -489,15 +496,15 @@ export default function ContactForm({
     );
   };
 
-  const footerStart = data.firstName ? (
+  const footerStart = contactDraft.firstName ? (
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      <span className="font-semibold text-foreground">{data.name || data.firstName}</span>
+      <span className="font-semibold text-foreground">{contactDraft.name || contactDraft.firstName}</span>
       <div className="flex items-center gap-2 border-s border-border ps-3">
         <span>
-          {data.phones?.length || 0} {t('contacts.form.phonesLabel')}
+          {contactDraft.phones?.length || 0} {t('contacts.form.phonesLabel')}
         </span>
         <span className="border-s border-border ps-2">
-          {data.emails?.length || 0} {t('contacts.form.emailsLabel')}
+          {contactDraft.emails?.length || 0} {t('contacts.form.emailsLabel')}
         </span>
       </div>
     </div>
@@ -532,10 +539,10 @@ export default function ContactForm({
         onSave={() => void handleSave(onSubmit)()}
         saving={saving}
         saved={saveSuccess}
-        saveDisabled={!data.firstName?.trim()}
+        saveDisabled={!contactDraft.firstName?.trim()}
         footerStart={footerStart}
         fields={fields[tab] || []}
-        data={data}
+        data={contactDraft}
         setValue={setValue}
         errors={errors}
         readOnlyFieldKeys={readOnlyFieldKeys}
