@@ -9,6 +9,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useContactById } from "@/hooks/useContacts";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/hooks/useTeachers";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import { Input } from "@/components/ui/input";
@@ -24,8 +25,10 @@ import {
   TEACHERS_TAB_REGISTRY,
   INITIAL_TEACHERS_FIELD_SEED,
   TEACHERS_MODULE_CONTRACT,
+  TEACHER_STATUS_VALUES,
+  TEACHER_SPECIALIZATION_VALUES,
+  isRtlLanguage,
 } from "@mms/shared";
-import { TEACHER_STATUS_VALUES, TEACHER_SPECIALIZATION_VALUES } from "@mms/shared";
 
 export interface TeacherFormProps {
   teacher?: Teacher;
@@ -38,7 +41,7 @@ interface TeacherFormData {
   employeeId?: string;
   specialization: string;
   status: string;
-  joinDate: string;
+  joinDate: string | null;
   qualification?: string;
   notes?: string;
   [key: string]: unknown;
@@ -50,6 +53,7 @@ export function TeacherForm({
   onSave,
 }: TeacherFormProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { language } = useGlobalSettings();
   const { can } = usePermissions();
   const canEditSetup = can(TEACHERS_MODULE_CONTRACT.permissions.setupWrite);
   const queryClient = useQueryClient();
@@ -124,7 +128,7 @@ export function TeacherForm({
       employeeId: "",
       specialization: settings.defaultSpecialization || specializationOptions[0] || "General",
       status: statusOptions[0] || "active",
-      joinDate: new Date().toISOString().split("T")[0],
+      joinDate: null,
       qualification: "",
       notes: "",
     };
@@ -300,7 +304,7 @@ export function TeacherForm({
       employeeId: formData.employeeId || (autoGenerateId ? nextEmployeeId : undefined),
       specialization: formData.specialization,
       status: formData.status,
-      joinDate: formData.joinDate,
+      joinDate: formData.joinDate ?? undefined,
       qualification: formData.qualification || undefined,
       notes: formData.notes || undefined,
     } as unknown as Teacher);
@@ -458,6 +462,8 @@ export function TeacherForm({
       activeTab={tab}
       onTabChange={setTab}
       tabPanelIdPrefix="teacher-form-tab"
+      dir={isRtlLanguage(language) ? "rtl" : "ltr"}
+      lang={language}
       error={errors.map(e => e.message)}
       cancelLabel={t('common.cancel')}
       saveLabel={t('common.save')}

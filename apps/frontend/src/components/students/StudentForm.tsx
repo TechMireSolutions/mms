@@ -16,9 +16,9 @@ import {
   canViewContactField,
   isRtlLanguage,
   hasFieldValue,
+  toTitleCase,
 } from "@mms/shared";
 import type { Student, Contact } from "@mms/shared";
-import { toTitleCase } from "@/lib/utils";
 import { useContactMutations, useContactById } from "@/hooks/useContacts";
 import {
   checkStudentRegistrationDuplicate,
@@ -51,7 +51,7 @@ interface StudentFormData {
   guardianName: string;
   status: string;
   grNumber: string;
-  registeredDate: string;
+  registeredDate: string | null;
   [key: string]: unknown;
 }
 
@@ -66,7 +66,7 @@ function buildInitialData(student: Partial<Student> | null | undefined, defaultS
     guardianName: student?.guardianName ?? "",
     status: student?.status ?? defaultStatus,
     grNumber: student?.grNumber ?? "",
-    registeredDate: student?.registeredDate ?? new Date().toISOString().split("T")[0],
+    registeredDate: student?.registeredDate ?? null,
   };
 
   if (student) {
@@ -214,8 +214,13 @@ export default function StudentForm({
 
   const debouncedIdentityString = useDebounce(identityString, 500);
 
+  const [debouncedContactId, debouncedName, debouncedEmail, debouncedDob] = useMemo(() => {
+    const parts = debouncedIdentityString.split("|");
+    return [parts[0] || "", parts[1] || "", parts[2] || "", parts[3] || ""];
+  }, [debouncedIdentityString]);
+
   useEffect(() => {
-    if (!data.contactId) {
+    if (!debouncedContactId) {
       setTypedDuplicateReason(null);
       return;
     }
@@ -225,10 +230,10 @@ export default function StudentForm({
       try {
         const reason = await checkStudentRegistrationDuplicate({
           excludeId: student?.id ? String(student.id) : undefined,
-          contactId: data.contactId ?? undefined,
-          email: contactEmail(linkedContact),
-          name: linkedContact?.name,
-          dob: linkedDob || undefined,
+          contactId: debouncedContactId,
+          email: debouncedEmail,
+          name: debouncedName,
+          dob: debouncedDob || undefined,
         });
 
         if (isMounted) {
@@ -244,7 +249,7 @@ export default function StudentForm({
     return () => {
       isMounted = false;
     };
-  }, [debouncedIdentityString, student?.id, linkedContact, linkedDob]);
+  }, [debouncedContactId, debouncedName, debouncedEmail, debouncedDob, student?.id]);
 
   const error = useMemo(() => {
     if (errorSummary) return errorSummary;
@@ -260,7 +265,10 @@ export default function StudentForm({
   }, [defaultStatus, data.status, setValue]);
 
   const commitSave = useCallback((formData: StudentFormData) => {
-    const saved = { ...formData };
+    const saved = {
+      ...formData,
+      registeredDate: formData.registeredDate ?? undefined,
+    };
     (["fatherName", "motherName", "guardianName"] as const).forEach((key) => {
       if (typeof saved[key] === "string") {
         saved[key] = toTitleCase(saved[key]) as string;
@@ -376,12 +384,7 @@ export default function StudentForm({
 
     const reqRatio = totalRequired === 0 ? 0 : filledRequired / totalRequired;
     const optRatio = totalOptional === 0 ? 0 : filledOptional / totalOptional;
-
-    const progress = totalRequired === 0
-      ? optRatio
-      : totalOptional === 0
-        ? reqRatio
-        : (reqRatio * 0.7) + (optRatio * 0.3);
+    const progress = (reqRatio * 0.7) + (optRatio * 0.3);
 
     return Math.round(progress * 100);
   }, [data, settingsFields, enabledTabsSet]);
@@ -558,7 +561,7 @@ export default function StudentForm({
           <Field label={t("students.form.registeredDate")} required={field.required} error={fieldError?.message}>
             <DatePicker
               required={field.required}
-              value={data.registeredDate}
+              value={data.registeredDate ?? undefined}
               onChange={handleRegisteredDateChange}
               className={fieldError ? "border-destructive focus-within:border-destructive focus-within:ring-destructive" : ""}
             />

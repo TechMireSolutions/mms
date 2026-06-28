@@ -10,7 +10,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 
 const ICONS: Record<string, React.ElementType> = {
   GraduationCap, CalendarCheck, BookOpen, UserCheck, DollarSign, AlertCircle, Star, TrendingUp, Receipt,
@@ -26,10 +26,10 @@ interface ColorTheme {
 
 const COLOR_MAP: Record<string, ColorTheme> = {
   emerald: { bg: "bg-success/10", text: "text-success", ring: "ring-success/20" },
-  blue:    { bg: "bg-info/10",    text: "text-info",    ring: "ring-info/20"    },
-  violet:  { bg: "bg-primary/10",  text: "text-primary",  ring: "ring-primary/20"  },
-  amber:   { bg: "bg-warning/10",   text: "text-warning",   ring: "ring-warning/20"   },
-  red:     { bg: "bg-destructive/10",     text: "text-destructive",     ring: "ring-destructive/20"     },
+  blue: { bg: "bg-info/10", text: "text-info", ring: "ring-info/20" },
+  violet: { bg: "bg-primary/10", text: "text-primary", ring: "ring-primary/20" },
+  amber: { bg: "bg-warning/10", text: "text-warning", ring: "ring-warning/20" },
+  red: { bg: "bg-destructive/10", text: "text-destructive", ring: "ring-destructive/20" },
 };
 
 export interface StatItem {
@@ -88,9 +88,8 @@ export default function StatsGrid({
               <div className="flex items-center gap-1">
                 {stat.trend !== 0 && !isEditMode && (
                   <span
-                    className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
-                      isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
-                    }`}
+                    className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+                      }`}
                     aria-label={t("dashboard.trendAria", {
                       direction: isPositive ? t("dashboard.trendUp") : t("dashboard.trendDown"),
                       value: Math.abs(stat.trend),

@@ -10,6 +10,7 @@ import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { InvoiceList } from "../components/finance/InvoiceList";
 import { InvoiceDetail } from "../components/finance/InvoiceDetail";
+import { InvoiceForm } from "../components/finance/InvoiceForm";
 import { PaymentForm } from "../components/finance/PaymentForm";
 import { PaymentTracker } from "../components/finance/PaymentTracker";
 import { FinanceSettings } from "../components/finance/FinanceSettings";
@@ -47,9 +48,10 @@ export default function Finance() {
   const [subTab, setSubTab] = useState("fields");
   const invoices = useFinanceInvoicesCollection();
   const payments = useFinancePaymentsCollection();
-  const { createPayment } = useFinanceMutations();
+  const { createInvoice, createPayment } = useFinanceMutations();
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const [recordInvoice, setRecordInvoice] = useState<Invoice | null>(null);
+  const [creatingInvoice, setCreatingInvoice] = useState(false);
 
   const invoiceColumnLayout = useFinanceInvoiceColumnLayout();
   const paymentColumnLayout = useFinancePaymentColumnLayout();
@@ -58,6 +60,16 @@ export default function Finance() {
     createPayment.mutate(paymentData, {
       onSuccess: () => {
         setRecordInvoice(null);
+      },
+    });
+  };
+
+  const handleCreateInvoice = (invoice: Invoice) => {
+    createInvoice.mutate(invoice, {
+      onSuccess: () => {
+        setCreatingInvoice(false);
+        setActiveTab("work");
+        setActiveSubTab("invoices");
       },
     });
   };
@@ -71,7 +83,17 @@ export default function Finance() {
         title={t("nav.finance")}
         subtitle={t("page.finance.subtitle")}
         actions={
-          <ActionButton variant="primary" icon={Plus}>{t("finance.newInvoice")}</ActionButton>
+          <ActionButton
+            variant="primary"
+            icon={Plus}
+            onClick={() => {
+              setActiveTab("work");
+              setActiveSubTab("invoices");
+              setCreatingInvoice(true);
+            }}
+          >
+            {t("finance.newInvoice")}
+          </ActionButton>
         }
       />
 
@@ -141,6 +163,14 @@ export default function Finance() {
       </ResponsiveAccordionTabs>
 
       <AnimatePresence>
+        {creatingInvoice && (
+          <InvoiceForm
+            open={creatingInvoice}
+            saving={createInvoice.isPending}
+            onClose={() => setCreatingInvoice(false)}
+            onSave={handleCreateInvoice}
+          />
+        )}
         {viewInvoice && (
           <InvoiceDetail invoice={viewInvoice} onClose={() => setViewInvoice(null)} onRecord={(inv: Invoice) => { setViewInvoice(null); setRecordInvoice(inv); }} />
         )}

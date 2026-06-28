@@ -9,6 +9,7 @@ import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import {
   toTitleCase,
   type AppTranslationKey,
@@ -18,6 +19,7 @@ import {
   SESSIONS_TAB_REGISTRY,
   INITIAL_SESSIONS_FIELD_SEED,
   SESSIONS_MODULE_CONTRACT,
+  isRtlLanguage,
 } from "@mms/shared";
 
 interface SessionFormProps {
@@ -34,6 +36,7 @@ const ICON_MAP: Record<string, typeof Calendar> = {
 
 export function SessionForm({ open = true, session, onClose, onSave }: SessionFormProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { language } = useGlobalSettings();
   const { can } = usePermissions();
   const canEditSetup = can(SESSIONS_MODULE_CONTRACT.permissions.setupWrite);
   const queryClient = useQueryClient();
@@ -346,6 +349,8 @@ export function SessionForm({ open = true, session, onClose, onSave }: SessionFo
       activeTab={tab}
       onTabChange={setTab}
       tabPanelIdPrefix="session-form-tab"
+      dir={isRtlLanguage(language) ? "rtl" : "ltr"}
+      lang={language}
       error={errors.map(e => e.message)}
       cancelLabel="Cancel"
       saveLabel={session ? "Update" : "Create Session"}

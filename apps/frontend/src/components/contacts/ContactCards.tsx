@@ -18,7 +18,7 @@ import { formatContactCellValue } from "@/lib/contacts/contactI18n";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 
 const ContactDetailDrawer = lazy(() => import("./ContactDetailDrawer"));
 
@@ -122,11 +122,10 @@ export default function ContactCards({
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
                 key={i}
-                className={`w-3.5 h-3.5 ${
-                  i < r
+                className={`w-3.5 h-3.5 ${i < r
                     ? "text-amber-500 fill-amber-500"
                     : "text-muted-foreground/20"
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -156,11 +155,10 @@ export default function ContactCards({
         );
       case "whatsapp":
         return (
-          <span className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
-            hasWhatsApp(item)
+          <span className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${hasWhatsApp(item)
               ? "bg-success/10 text-success border-success/20"
               : "bg-muted text-muted-foreground border-border"
-          }`}>
+            }`}>
             {hasWhatsApp(item) ? t("common.yes") : t("common.no")}
           </span>
         );
@@ -249,11 +247,10 @@ export default function ContactCards({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
-              className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card/95 via-card/80 to-background/60 backdrop-blur-xl p-4 space-y-4 transition-all duration-300 shadow-sm hover:shadow-md ${
-                isSelected 
-                  ? "border-primary/45 bg-primary/[0.02] shadow-sm shadow-primary/5" 
+              className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card/95 via-card/80 to-background/60 backdrop-blur-xl p-4 space-y-4 transition-all duration-300 shadow-sm hover:shadow-md ${isSelected
+                  ? "border-primary/45 bg-primary/[0.02] shadow-sm shadow-primary/5"
                   : "border-border/30 hover:border-primary/20"
-              }`}
+                }`}
             >
               {/* Stage Badge */}
               <span className={`absolute top-4 right-4 text-[9px] uppercase tracking-widest font-black px-2.5 py-1 rounded-full border shadow-sm flex items-center justify-center ${stageColors.bg}`}>
@@ -424,11 +421,10 @@ export default function ContactCards({
                     whileHover={hasWhatsApp(contact) ? { scale: 1.05 } : undefined}
                     whileTap={hasWhatsApp(contact) ? { scale: 0.95 } : undefined}
                     onClick={() => onWhatsApp([contact])}
-                    className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${
-                      hasWhatsApp(contact)
+                    className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${hasWhatsApp(contact)
                         ? "border-success/20 bg-success/5 text-success hover:bg-success/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
-                    }`}
+                      }`}
                     title={t("contacts.whatsapp")}
                   >
                     <MessageCircle className="w-4 h-4" />
@@ -441,11 +437,10 @@ export default function ContactCards({
                     whileHover={phone ? { scale: 1.05 } : undefined}
                     whileTap={phone ? { scale: 0.95 } : undefined}
                     onClick={() => onSms([contact])}
-                    className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${
-                      phone
+                    className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${phone
                         ? "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
-                    }`}
+                      }`}
                     title={t("contacts.sms")}
                   >
                     <MessageSquare className="w-4 h-4" />

@@ -15,6 +15,9 @@ function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
   return [...kept, ...added];
 }
 
+// Utility to guarantee an array type, preventing crashes from malformed API objects
+const safeArray = <T>(arr: unknown): T[] => (Array.isArray(arr) ? arr : []);
+
 /**
  * A reusable hook to manage state for core and custom fields editors.
  * Prevents repeating complex state variables, toggles, and reordering logic.
@@ -35,7 +38,7 @@ export function useModuleFieldsEditor({
     Object.fromEntries(
       Object.entries(initialFields).map(([tabId, list]) => [
         tabId,
-        new Set(list.filter((f) => f.enabled).map((f) => f.key)),
+        new Set(safeArray<FieldDefinition>(list).filter((f) => f.enabled).map((f) => f.key)),
       ]),
     ),
   );
@@ -44,7 +47,7 @@ export function useModuleFieldsEditor({
     Object.fromEntries(
       Object.entries(initialFields).map(([tabId, list]) => [
         tabId,
-        new Set(list.filter((f) => f.required).map((f) => f.key)),
+        new Set(safeArray<FieldDefinition>(list).filter((f) => f.required).map((f) => f.key)),
       ]),
     ),
   );
@@ -53,7 +56,7 @@ export function useModuleFieldsEditor({
     Object.fromEntries(
       Object.entries(initialFields).map(([tabId, list]) => [
         tabId,
-        new Set(list.filter((f) => f.unique).map((f) => f.key)),
+        new Set(safeArray<FieldDefinition>(list).filter((f) => f.unique).map((f) => f.key)),
       ]),
     ),
   );
@@ -63,7 +66,9 @@ export function useModuleFieldsEditor({
       Object.entries(initialFields).map(([tabId, list]) => [
         tabId,
         Object.fromEntries(
-          list.filter((f) => f.defaultValue !== undefined).map((f) => [f.key, f.defaultValue]),
+          safeArray<FieldDefinition>(list)
+            .filter((f) => f.defaultValue !== undefined)
+            .map((f) => [f.key, f.defaultValue]),
         ),
       ]),
     ),
@@ -73,37 +78,90 @@ export function useModuleFieldsEditor({
     Object.fromEntries(
       Object.entries(initialFields).map(([tabId, list]) => [
         tabId,
-        Object.fromEntries(list.filter((f) => f.permissions).map((f) => [f.key, f.permissions as string[]])),
+        Object.fromEntries(
+          safeArray<FieldDefinition>(list)
+            .filter((f) => f.permissions)
+            .map((f) => [f.key, f.permissions as string[]]),
+        ),
       ]),
     ),
   );
 
   const [tabFieldOrder, setTabFieldOrder] = useState<Record<string, string[]>>(() =>
-    Object.fromEntries(Object.entries(initialFields).map(([tabId, list]) => [tabId, list.map((f) => f.key)])),
+    Object.fromEntries(
+      Object.entries(initialFields).map(([tabId, list]) => [
+        tabId,
+        safeArray<FieldDefinition>(list).map((f) => f.key),
+      ]),
+    ),
   );
 
-  const resetAllState = (tabs: TabDefinition[], fields: Record<string, FieldDefinition[]>, enabledT: string[], requiredT: string[]) => {
+  const resetAllState = (
+    tabs: TabDefinition[],
+    fields: Record<string, FieldDefinition[]>,
+    enabledT: string[],
+    requiredT: string[]
+  ) => {
     setFormTabs(tabs);
     setTabFields(fields);
     setEnabledTabs(new Set(enabledT));
     setRequiredTabs(new Set(requiredT));
+
     setTabFieldEnabled(
-      Object.fromEntries(Object.entries(fields).map(([tabId, list]) => [tabId, new Set(list.filter((f) => f.enabled).map((f) => f.key))]))
+      Object.fromEntries(
+        Object.entries(fields).map(([tabId, list]) => [
+          tabId,
+          new Set(safeArray<FieldDefinition>(list).filter((f) => f.enabled).map((f) => f.key)),
+        ])
+      )
     );
     setTabFieldRequired(
-      Object.fromEntries(Object.entries(fields).map(([tabId, list]) => [tabId, new Set(list.filter((f) => f.required).map((f) => f.key))]))
+      Object.fromEntries(
+        Object.entries(fields).map(([tabId, list]) => [
+          tabId,
+          new Set(safeArray<FieldDefinition>(list).filter((f) => f.required).map((f) => f.key)),
+        ])
+      )
     );
     setTabFieldUnique(
-      Object.fromEntries(Object.entries(fields).map(([tabId, list]) => [tabId, new Set(list.filter((f) => f.unique).map((f) => f.key))]))
+      Object.fromEntries(
+        Object.entries(fields).map(([tabId, list]) => [
+          tabId,
+          new Set(safeArray<FieldDefinition>(list).filter((f) => f.unique).map((f) => f.key)),
+        ])
+      )
     );
     setTabFieldDefaultValues(
-      Object.fromEntries(Object.entries(fields).map(([tabId, list]) => [tabId, Object.fromEntries(list.filter((f) => f.defaultValue !== undefined).map((f) => [f.key, f.defaultValue]))]))
+      Object.fromEntries(
+        Object.entries(fields).map(([tabId, list]) => [
+          tabId,
+          Object.fromEntries(
+            safeArray<FieldDefinition>(list)
+              .filter((f) => f.defaultValue !== undefined)
+              .map((f) => [f.key, f.defaultValue])
+          ),
+        ])
+      )
     );
     setTabFieldPermissions(
-      Object.fromEntries(Object.entries(fields).map(([tabId, list]) => [tabId, Object.fromEntries(list.filter((f) => f.permissions).map((f) => [f.key, f.permissions as string[]]))]))
+      Object.fromEntries(
+        Object.entries(fields).map(([tabId, list]) => [
+          tabId,
+          Object.fromEntries(
+            safeArray<FieldDefinition>(list)
+              .filter((f) => f.permissions)
+              .map((f) => [f.key, f.permissions as string[]])
+          ),
+        ])
+      )
     );
     setTabFieldOrder(
-      Object.fromEntries(Object.entries(fields).map(([tabId, list]) => [tabId, list.map((f) => f.key)]))
+      Object.fromEntries(
+        Object.entries(fields).map(([tabId, list]) => [
+          tabId,
+          safeArray<FieldDefinition>(list).map((f) => f.key),
+        ])
+      )
     );
   };
 
@@ -189,20 +247,22 @@ export function useModuleFieldsEditor({
   };
 
   const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
-    setTabFields(prev => ({
+    setTabFields((prev) => ({
       ...prev,
-      [tabId]: (prev[tabId] || []).map(f => f.key === updatedField.key ? updatedField : f)
+      [tabId]: safeArray<FieldDefinition>(prev[tabId]).map((f) =>
+        f.key === updatedField.key ? updatedField : f
+      ),
     }));
   };
 
   const handleDeleteField = (tabId: string, fieldId: string) => {
-    setTabFields(prev => ({
+    setTabFields((prev) => ({
       ...prev,
-      [tabId]: (prev[tabId] || []).filter(f => f.key !== fieldId)
+      [tabId]: safeArray<FieldDefinition>(prev[tabId]).filter((f) => f.key !== fieldId),
     }));
-    setTabFieldOrder(prev => ({
+    setTabFieldOrder((prev) => ({
       ...prev,
-      [tabId]: (prev[tabId] || []).filter(id => id !== fieldId)
+      [tabId]: safeArray<string>(prev[tabId]).filter((id) => id !== fieldId),
     }));
   };
 
@@ -218,30 +278,30 @@ export function useModuleFieldsEditor({
       isSystem: false,
     };
 
-    setFormTabs(prev => [...prev, newTab]);
-    setEnabledTabs(prev => {
+    setFormTabs((prev) => [...prev, newTab]);
+    setEnabledTabs((prev) => {
       const next = new Set(prev);
       next.add(key);
       return next;
     });
 
-    setTabFields(prev => ({ ...prev, [key]: [] }));
-    setTabFieldEnabled(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldRequired(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldUnique(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldDefaultValues(prev => ({ ...prev, [key]: {} }));
-    setTabFieldPermissions(prev => ({ ...prev, [key]: {} }));
-    setTabFieldOrder(prev => ({ ...prev, [key]: [] }));
+    setTabFields((prev) => ({ ...prev, [key]: [] }));
+    setTabFieldEnabled((prev) => ({ ...prev, [key]: new Set() }));
+    setTabFieldRequired((prev) => ({ ...prev, [key]: new Set() }));
+    setTabFieldUnique((prev) => ({ ...prev, [key]: new Set() }));
+    setTabFieldDefaultValues((prev) => ({ ...prev, [key]: {} }));
+    setTabFieldPermissions((prev) => ({ ...prev, [key]: {} }));
+    setTabFieldOrder((prev) => ({ ...prev, [key]: [] }));
   };
 
   const handleDeleteTab = (key: string) => {
-    setFormTabs(prev => prev.filter(t => t.key !== key));
-    setEnabledTabs(prev => {
+    setFormTabs((prev) => prev.filter((t) => t.key !== key));
+    setEnabledTabs((prev) => {
       const next = new Set(prev);
       next.delete(key);
       return next;
     });
-    setRequiredTabs(prev => {
+    setRequiredTabs((prev) => {
       const next = new Set(prev);
       next.delete(key);
       return next;
@@ -250,23 +310,25 @@ export function useModuleFieldsEditor({
 
   const handleRenameTab = (key: string, newLabel: string) => {
     if (!newLabel.trim()) return;
-    setFormTabs(prev => prev.map(t => t.key === key ? { ...t, label: newLabel.trim() } : t));
+    setFormTabs((prev) =>
+      prev.map((t) => (t.key === key ? { ...t, label: newLabel.trim() } : t))
+    );
   };
 
   const buildFieldsMap = (): Record<string, FieldDefinition[]> => {
     const newFields: Record<string, FieldDefinition[]> = {};
-    formTabs.forEach(tab => {
+    formTabs.forEach((tab) => {
       const tabId = tab.key;
-      const combined = (tabFields[tabId] || []).map(f => {
+      const combined = safeArray<FieldDefinition>(tabFields[tabId]).map((f) => {
         const fieldKey = f.key || (f as { id?: string }).id || "";
-        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? f.enabled  ?? false;
-        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? f.required ?? false;
-        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? f.unique   ?? false;
-        const orderArray   = tabFieldOrder[tabId] || [];
-        const orderIdx     = orderArray.indexOf(fieldKey);
-        const order        = orderIdx >= 0 ? orderIdx : (f.order ?? 999);
+        const enabled = tabFieldEnabled[tabId]?.has(fieldKey) ?? f.enabled ?? false;
+        const required = tabFieldRequired[tabId]?.has(fieldKey) ?? f.required ?? false;
+        const unique = tabFieldUnique[tabId]?.has(fieldKey) ?? f.unique ?? false;
+        const orderArray = tabFieldOrder[tabId] || [];
+        const orderIdx = orderArray.indexOf(fieldKey);
+        const order = orderIdx >= 0 ? orderIdx : f.order ?? 999;
         const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? f.defaultValue;
-        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? f.permissions;
+        const permissions = tabFieldPermissions[tabId]?.[fieldKey] ?? f.permissions;
 
         return {
           ...f,
@@ -276,7 +338,7 @@ export function useModuleFieldsEditor({
           order,
           defaultValue,
           permissions,
-          unique
+          unique,
         } as FieldDefinition;
       });
 

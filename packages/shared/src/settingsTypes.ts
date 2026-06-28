@@ -623,6 +623,111 @@ export const DEFAULT_QUESTION_BANK_FIELD_DEFS: ModuleFieldDef[] = [
   { id: 'sourceNotes', label: 'Source notes', type: 'textarea' },
 ];
 
+function isTabbedQuestionBankFields(fields: Record<string, any> | undefined): boolean {
+  if (!fields) return false;
+  return Object.values(fields).some(Array.isArray);
+}
+
+function questionBankFieldTypeForEditor(type: ModuleFieldDef['type'] | undefined): FieldDefinition['type'] {
+  if (type === 'textarea') return 'textarea';
+  if (type === 'number') return 'number';
+  if (type === 'date') return 'date';
+  if (type === 'select') return 'select';
+  if (type === 'boolean') return 'boolean';
+  return 'text';
+}
+
+function readQuestionBankFlatFieldConfig(
+  storedFields: Record<string, any> | undefined,
+): Record<string, { enabled: boolean; required: boolean }> {
+  const result: Record<string, { enabled: boolean; required: boolean }> = {};
+  const fields = {
+    ...(DEFAULT_QUESTION_BANK_SETTINGS.fields ?? {}),
+    ...(storedFields ?? {}),
+  };
+  for (const [fieldId, config] of Object.entries(fields)) {
+    if (config && typeof config === 'object' && !Array.isArray(config)) {
+      result[fieldId] = {
+        enabled: (config as { enabled?: boolean }).enabled !== false,
+        required: !!(config as { required?: boolean }).required,
+      };
+    }
+  }
+  return result;
+}
+
+function normalizeQuestionBankFieldsForEditor(
+  storedFields: Record<string, any> | undefined,
+): Record<string, FieldDefinition[]> {
+  if (isTabbedQuestionBankFields(storedFields)) {
+    const normalized: Record<string, FieldDefinition[]> = {};
+    for (const [tabId, tabFields] of Object.entries(storedFields ?? {})) {
+      normalized[tabId] = Array.isArray(tabFields) ? tabFields : [];
+    }
+    for (const [tabId, seedFields] of Object.entries(INITIAL_QUESTION_BANK_FIELD_SEED)) {
+      const current = normalized[tabId] ?? [];
+      const currentKeys = new Set(current.map((field) => field.key));
+      normalized[tabId] = [
+        ...current,
+        ...seedFields.filter((field) => !currentKeys.has(field.key)),
+      ];
+    }
+    return normalized;
+  }
+
+  const flatConfig = readQuestionBankFlatFieldConfig(storedFields);
+  const normalized: Record<string, FieldDefinition[]> = {};
+  const assignedKeys = new Set<string>();
+
+  for (const [tabId, seedFields] of Object.entries(INITIAL_QUESTION_BANK_FIELD_SEED)) {
+    normalized[tabId] = seedFields.map((field) => {
+      assignedKeys.add(field.key);
+      const config = flatConfig[field.key];
+      return {
+        ...field,
+        enabled: config?.enabled ?? field.enabled,
+        required: config?.required ?? field.required,
+      };
+    });
+  }
+
+  const fieldDefById = new Map(DEFAULT_QUESTION_BANK_FIELD_DEFS.map((field) => [field.id, field]));
+  for (const [fieldId, config] of Object.entries(flatConfig)) {
+    if (assignedKeys.has(fieldId)) continue;
+    const fieldDef = fieldDefById.get(fieldId);
+    normalized.options = [
+      ...(normalized.options ?? []),
+      {
+        key: fieldId,
+        label: fieldDef?.label ?? fieldId,
+        type: questionBankFieldTypeForEditor(fieldDef?.type),
+        enabled: config.enabled,
+        required: config.required,
+        order: normalized.options?.length ?? 0,
+      },
+    ];
+  }
+
+  for (const fieldId of QUESTION_SOURCE_FIELD_IDS) {
+    if (assignedKeys.has(fieldId)) continue;
+    const fieldDef = fieldDefById.get(fieldId);
+    normalized.options = [
+      ...(normalized.options ?? []),
+      {
+        key: fieldId,
+        label: fieldDef?.label ?? fieldId,
+        type: questionBankFieldTypeForEditor(fieldDef?.type),
+        enabled: storedFields?.[fieldId]?.enabled ?? true,
+        required: storedFields?.[fieldId]?.required ?? false,
+        order: normalized.options?.length ?? 0,
+      },
+    ];
+    assignedKeys.add(fieldId);
+  }
+
+  return normalized;
+}
+
 /**
  * Merges stored question-bank settings with defaults (categories, type/difficulty registries).
  */
@@ -660,22 +765,12 @@ export function normalizeQuestionBankSettings(
     enabled: diffById.get(id)?.enabled ?? true,
   }));
 
-  merged.fields = {
-    ...DEFAULT_QUESTION_BANK_SETTINGS.fields,
-    ...(stored?.fields ?? {}),
-  };
+  merged.fields = normalizeQuestionBankFieldsForEditor(stored?.fields);
   const defaultOrder = DEFAULT_QUESTION_BANK_SETTINGS.fieldOrder ?? [];
   const storedOrder =
     stored?.fieldOrder && stored.fieldOrder.length > 0 ? stored.fieldOrder : defaultOrder;
   const missingSource = QUESTION_SOURCE_FIELD_IDS.filter((id) => !storedOrder.includes(id));
   merged.fieldOrder = [...storedOrder, ...missingSource];
-
-  for (const id of QUESTION_SOURCE_FIELD_IDS) {
-    merged.fields![id] = {
-      enabled: stored?.fields?.[id]?.enabled ?? true,
-      required: stored?.fields?.[id]?.required ?? false,
-    };
-  }
 
   return merged;
 }
