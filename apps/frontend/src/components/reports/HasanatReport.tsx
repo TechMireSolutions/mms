@@ -249,22 +249,22 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                   t("hasanat.report.colDistributed"),
                   t("hasanat.report.colRedeemed"),
                   t("hasanat.report.colBalance"),
-                ].map((h) => (
-                  <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
+                ].map((headerLabel) => (
+                  <th key={headerLabel} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {distribution.map((h) => (
-                <tr key={h.studentName} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-medium">{h.studentName}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{h.class}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{h.faculty}</td>
-                  <td className="px-3 py-2.5 font-semibold text-primary">{h.distributed}</td>
-                  <td className="px-3 py-2.5 font-semibold text-success">{h.redeemed}</td>
+              {distribution.map((hasanatRow) => (
+                <tr key={hasanatRow.studentName} className="hover:bg-muted/30">
+                  <td className="px-3 py-2.5 font-medium">{hasanatRow.studentName}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{hasanatRow.class}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{hasanatRow.faculty}</td>
+                  <td className="px-3 py-2.5 font-semibold text-primary">{hasanatRow.distributed}</td>
+                  <td className="px-3 py-2.5 font-semibold text-success">{hasanatRow.redeemed}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${h.balance > 0 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>
-                      {h.balance}
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${hasanatRow.balance > 0 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>
+                      {hasanatRow.balance}
                     </span>
                   </td>
                 </tr>

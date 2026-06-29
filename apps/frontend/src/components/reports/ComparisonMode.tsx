@@ -152,8 +152,8 @@ function computeDynamicDateRangeComparison(
   };
 
   const getMonthIndex = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? -1 : d.getMonth();
+    const parsedDate = new Date(dateStr);
+    return isNaN(parsedDate.getTime()) ? -1 : parsedDate.getMonth();
   };
 
   const bucketA = new Array(12).fill(0);

@@ -75,7 +75,7 @@ interface JournalEntriesProps {
   settings: AccountingSettings;
   fiscalYears: FiscalYear[];
   onChange: (entries: JournalEntry[]) => void;
-  fmt: (n: number) => string;
+  formatCurrency: (amount: number) => string;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ColumnCustomizerProps;
@@ -97,7 +97,7 @@ export function JournalEntries({
   settings,
   fiscalYears,
   onChange,
-  fmt,
+  formatCurrency,
   onFilteredCountChange,
   isColumnVisible,
   columnCustomizer,
@@ -138,12 +138,12 @@ export function JournalEntries({
   const [selected,     setSelected]     = useState<JournalEntry | null>(null);
 
   const filtered = useMemo(() => entries
-    .filter((e) => statusFilter === "all" || e.status === statusFilter)
-    .filter((e) => tagFilter === "all" || (e.tags || []).includes(tagFilter))
-    .filter((e) => !dateFrom || e.date >= dateFrom)
-    .filter((e) => !dateTo   || e.date <= dateTo)
-    .filter((e) => !search   || e.description.toLowerCase().includes(search.toLowerCase()) || e.ref.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => b.date.localeCompare(a.date)),
+    .filter((journalEntry) => statusFilter === "all" || journalEntry.status === statusFilter)
+    .filter((journalEntry) => tagFilter === "all" || (journalEntry.tags || []).includes(tagFilter))
+    .filter((journalEntry) => !dateFrom || journalEntry.date >= dateFrom)
+    .filter((journalEntry) => !dateTo   || journalEntry.date <= dateTo)
+    .filter((journalEntry) => !search   || journalEntry.description.toLowerCase().includes(search.toLowerCase()) || journalEntry.ref.toLowerCase().includes(search.toLowerCase()))
+    .sort((firstEntry, secondEntry) => secondEntry.date.localeCompare(firstEntry.date)),
   [entries, search, statusFilter, tagFilter, dateFrom, dateTo]);
 
   useEffect(() => {
@@ -159,35 +159,35 @@ export function JournalEntries({
   const showStatus = isColumnVisible ? isColumnVisible("status") : true;
 
   const handleSave = (entry: JournalEntry) => {
-    if (entries.find((e) => e.id === entry.id)) onChange(entries.map((e) => e.id === entry.id ? entry : e));
+    if (entries.find((journalEntry) => journalEntry.id === entry.id)) onChange(entries.map((journalEntry) => journalEntry.id === entry.id ? entry : journalEntry));
     else onChange([...entries, entry]);
     setModal(null); setSelected(null); setSimpleModal(null);
   };
 
   const handleDelete = (id: string) => {
-    const entry = entries.find((e) => e.id === id);
+    const entry = entries.find((journalEntry) => journalEntry.id === id);
     if (entry?.status === "posted") { alert("Cannot delete a posted entry. Use Reverse instead."); return; }
-    if (confirm("Delete this draft entry?")) onChange(entries.filter((e) => e.id !== id));
+    if (confirm("Delete this draft entry?")) onChange(entries.filter((journalEntry) => journalEntry.id !== id));
   };
 
-  const handlePost    = (entry: JournalEntry) => onChange(entries.map((e) => e.id === entry.id ? { ...e, status: "posted" } : e));
+  const handlePost    = (entry: JournalEntry) => onChange(entries.map((journalEntry) => journalEntry.id === entry.id ? { ...journalEntry, status: "posted" } : journalEntry));
   const handleReverse = (entry: JournalEntry) => {
     if (!confirm(`Create a reversal entry for ${entry.ref}?`)) return;
     onChange([...entries, createReversalEntry(entry, entries)]);
   };
 
   const exportCSV = () => {
-    const rows = filtered.map((e) => {
-      const d = e.lines.reduce((s, l) => s + l.debit, 0);
-      const c = e.lines.reduce((s, l) => s + l.credit, 0);
+    const rows = filtered.map((journalEntry) => {
+      const totalDebit = journalEntry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
+      const totalCredit = journalEntry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
       return {
-        ref: e.ref,
-        date: e.date,
-        description: e.description,
-        tags: (e.tags || []).join(";"),
-        status: e.status,
-        debit: String(d),
-        credit: String(c),
+        ref: journalEntry.ref,
+        date: journalEntry.date,
+        description: journalEntry.description,
+        tags: (journalEntry.tags || []).join(";"),
+        status: journalEntry.status,
+        debit: String(totalDebit),
+        credit: String(totalCredit),
       };
     });
     runGridCsvExportJob({
@@ -207,8 +207,8 @@ export function JournalEntries({
     });
   };
 
-  const handleNlSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleNlSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
     const type = parseNaturalLanguage(nlInput);
     if (type) {
       setSimpleModal({ prefillType: type });
@@ -219,13 +219,13 @@ export function JournalEntries({
     }
   };
 
-  const handleNlChange = (val: string) => {
-    setNlInput(val);
-    setNlSuggestion(val.length > 3 ? parseNaturalLanguage(val) : null);
+  const handleNlChange = (inputValue: string) => {
+    setNlInput(inputValue);
+    setNlSuggestion(inputValue.length > 3 ? parseNaturalLanguage(inputValue) : null);
   };
 
-  const grandDebit  = filtered.reduce((s, e) => s + e.lines.reduce((a, l) => a + l.debit, 0), 0);
-  const grandCredit = filtered.reduce((s, e) => s + e.lines.reduce((a, l) => a + l.credit, 0), 0);
+  const grandDebit  = filtered.reduce((sum, journalEntry) => sum + journalEntry.lines.reduce((lineTotal, journalLine) => lineTotal + journalLine.debit, 0), 0);
+  const grandCredit = filtered.reduce((sum, journalEntry) => sum + journalEntry.lines.reduce((lineTotal, journalLine) => lineTotal + journalLine.credit, 0), 0);
 
   // ── Mode toggle bar ────────────────────────────────────────────────────────
   const ModeToggle = () => (
@@ -274,7 +274,7 @@ export function JournalEntries({
         />
 
         {tab === "cashbook" ? (
-          <CashbookView entries={entries} accounts={accounts} fmt={fmt} />
+          <CashbookView entries={entries} accounts={accounts} formatCurrency={formatCurrency} />
         ) : (
           <>
             {/* Natural language entry */}
@@ -339,28 +339,28 @@ export function JournalEntries({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {[...entries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20).map((entry) => {
-                    const amount = entry.lines.reduce((s, l) => s + l.debit, 0);
-                    const isIn = (entry.tags || []).some((t) => ["Fees","Donation","Capital"].includes(t)) || ["fee_collection","donation","rent_income","other_income"].includes(entry.transaction_type || "");
+                  {[...entries].sort((firstEntry, secondEntry) => secondEntry.date.localeCompare(firstEntry.date)).slice(0, 20).map((entry) => {
+                    const amount = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
+                    const isMoneyIn = (entry.tags || []).some((tag) => ["Fees","Donation","Capital"].includes(tag)) || ["fee_collection","donation","rent_income","other_income"].includes(entry.transaction_type || "");
                     return (
                       <article key={entry.id} className="flex items-center gap-4 px-4 py-3 rounded-xl border border-border bg-card hover:bg-muted/20 transition-colors">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isIn ? "bg-success/15" : "bg-destructive/15"}`} aria-hidden="true">
-                          {isIn ? <TrendingUp className="w-4 h-4 text-success" /> : <TrendingUp className="w-4 h-4 text-destructive rotate-180" />}
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isMoneyIn ? "bg-success/15" : "bg-destructive/15"}`} aria-hidden="true">
+                          {isMoneyIn ? <TrendingUp className="w-4 h-4 text-success" /> : <TrendingUp className="w-4 h-4 text-destructive rotate-180" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-semibold text-foreground truncate m-0">{entry.description}</h4>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[11px] text-muted-foreground">{new Date(entry.date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}</span>
                             <span className="text-[11px] font-mono text-muted-foreground">{entry.ref}</span>
-                            {(entry.tags || []).map((t) => (
-                              <span key={t} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">{t}</span>
+                            {(entry.tags || []).map((tag) => (
+                              <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">{tag}</span>
                             ))}
                           </div>
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
                           <div className="text-right">
-                            <p className={`text-sm font-bold font-mono m-0 ${isIn ? "text-success" : "text-destructive"}`}>
-                              {isIn ? "+" : "−"}{fmt(amount)}
+                            <p className={`text-sm font-bold font-mono m-0 ${isMoneyIn ? "text-success" : "text-destructive"}`}>
+                              {isMoneyIn ? "+" : "−"}{formatCurrency(amount)}
                             </p>
                           </div>
                           <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
@@ -541,8 +541,8 @@ export function JournalEntries({
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.map((entry) => {
-                  const totalD = entry.lines.reduce((s, l) => s + l.debit, 0);
-                  const totalC = entry.lines.reduce((s, l) => s + l.credit, 0);
+                  const totalDebit = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
+                  const totalCredit = entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
                   return (
                     <tr key={entry.id} className="hover:bg-muted/20 transition-colors">
                       {showRef && (
@@ -572,12 +572,12 @@ export function JournalEntries({
                       )}
                       {showDebit && (
                         <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-info">
-                          {totalD.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          {totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                       )}
                       {showCredit && (
                         <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-success">
-                          {totalC.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          {totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                       )}
                       {showStatus && (
@@ -665,7 +665,7 @@ export function JournalEntries({
                   <td colSpan={(showStatus ? 1 : 0) + 1} className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">
                     {Math.abs(grandDebit - grandCredit) < 0.01
                       ? <span className="text-success">✓ Balanced</span>
-                      : <span className="text-destructive">Diff: {fmt(Math.abs(grandDebit - grandCredit))}</span>
+                      : <span className="text-destructive">Diff: {formatCurrency(Math.abs(grandDebit - grandCredit))}</span>
                     }
                   </td>
                 </tr>
@@ -690,7 +690,7 @@ export function JournalEntries({
           <JournalEntryDetail
             entry={selected}
             accounts={accounts}
-            fmt={fmt}
+            formatCurrency={formatCurrency}
             onClose={() => { setModal(null); setSelected(null); }}
             onEdit={() => setModal("edit")}
             onReverse={() => { handleReverse(selected); setModal(null); setSelected(null); }}

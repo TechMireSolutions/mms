@@ -62,8 +62,8 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const totalDebit = form.lines.reduce((s, l) => s + (Number(l.debit) || 0), 0);
-  const totalCredit = form.lines.reduce((s, l) => s + (Number(l.credit) || 0), 0);
+  const totalDebit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.debit) || 0), 0);
+  const totalCredit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.credit) || 0), 0);
   const isBalanced  = Math.abs(totalDebit - totalCredit) < 0.01 && totalDebit > 0;
 
   const completeness = useMemo(() => {
@@ -76,36 +76,36 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
     return Math.round((filled / total) * 100);
   }, [form.date, form.description, form.lines, isBalanced]);
 
-  const updateLine = (idx: number, field: keyof DraftLine, val: string | number) => {
+  const updateLine = (lineIndex: number, field: keyof DraftLine, fieldValue: string | number) => {
     const lines = [...form.lines];
-    lines[idx] = { ...lines[idx], [field]: val };
-    if (field === "debit"  && val) lines[idx].credit = "";
-    if (field === "credit" && val) lines[idx].debit  = "";
+    lines[lineIndex] = { ...lines[lineIndex], [field]: fieldValue };
+    if (field === "debit"  && fieldValue) lines[lineIndex].credit = "";
+    if (field === "credit" && fieldValue) lines[lineIndex].debit  = "";
     setForm({ ...form, lines });
   };
 
   const addLine    = () => setForm({ ...form, lines: [...form.lines, EMPTY_LINE()] });
-  const removeLine = (idx: number) => { if (form.lines.length <= 2) return; setForm({ ...form, lines: form.lines.filter((_, i) => i !== idx) }); };
+  const removeLine = (lineIndex: number) => { if (form.lines.length <= 2) return; setForm({ ...form, lines: form.lines.filter((_, currentIndex) => currentIndex !== lineIndex) }); };
 
-  const toggleTag = (t: string) => {
-    const tags = form.tags?.includes(t) ? form.tags.filter((x) => x !== t) : [...(form.tags || []), t];
+  const toggleTag = (tag: string) => {
+    const tags = form.tags?.includes(tag) ? form.tags.filter((existingTag) => existingTag !== tag) : [...(form.tags || []), tag];
     setForm({ ...form, tags });
   };
 
   const validate = (): Record<string, string> => {
-    const e: Record<string, string> = {};
-    if (!form.date) e.date = "Date is required";
-    if (!form.description.trim()) e.description = "Narration is required";
-    const filled = form.lines.filter((l) => l.account_id);
-    if (filled.length < 2) e.lines = "At least 2 account lines are required";
-    if (!isBalanced) e.balance = "Debits must equal Credits";
-    form.lines.forEach((l, i) => { if (!l.account_id) e[`line${i}`] = "Account required"; });
-    return e;
+    const validationErrors: Record<string, string> = {};
+    if (!form.date) validationErrors.date = "Date is required";
+    if (!form.description.trim()) validationErrors.description = "Narration is required";
+    const filledLines = form.lines.filter((journalLine) => journalLine.account_id);
+    if (filledLines.length < 2) validationErrors.lines = "At least 2 account lines are required";
+    if (!isBalanced) validationErrors.balance = "Debits must equal Credits";
+    form.lines.forEach((journalLine, lineIndex) => { if (!journalLine.account_id) validationErrors[`line${lineIndex}`] = "Account required"; });
+    return validationErrors;
   };
 
   const saveEntry = (saveAs?: "draft" | "posted") => {
-    const e = validate();
-    if (Object.keys(e).length) { setErrors(e); return; }
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
     const ref = isEdit ? form.ref : generateJERef(entries);
     onSave({
       ...form,
@@ -113,26 +113,26 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
       ref,
       status: saveAs || form.status,
       created_by: "Admin",
-      lines: form.lines.map((l) => ({
-        ...l,
-        debit: typeof l.debit === "string" ? parseFloat(l.debit) || 0 : l.debit,
-        credit: typeof l.credit === "string" ? parseFloat(l.credit) || 0 : l.credit,
+      lines: form.lines.map((journalLine) => ({
+        ...journalLine,
+        debit: typeof journalLine.debit === "string" ? parseFloat(journalLine.debit) || 0 : journalLine.debit,
+        credit: typeof journalLine.credit === "string" ? parseFloat(journalLine.credit) || 0 : journalLine.credit,
       })),
     } as JournalEntry);
   };
 
-  const sortedAccounts = [...accounts].filter(a => a.isActive !== false).sort((a, b) => a.code.localeCompare(b.code));
+  const sortedAccounts = [...accounts].filter((account) => account.isActive !== false).sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code));
 
   // Group accounts for optgroup
   const accountGroups: Record<string, Account[]> = {};
-  sortedAccounts.forEach((a) => {
-    if (!accountGroups[a.type]) accountGroups[a.type] = [];
-    accountGroups[a.type].push(a);
+  sortedAccounts.forEach((account) => {
+    if (!accountGroups[account.type]) accountGroups[account.type] = [];
+    accountGroups[account.type].push(account);
   });
 
-  const flattenedAccountOptions = sortedAccounts.map((a) => ({
-    value: a.id,
-    label: `${a.type}: ${a.code} – ${a.name}`
+  const flattenedAccountOptions = sortedAccounts.map((account) => ({
+    value: account.id,
+    label: `${account.type}: ${account.code} – ${account.name}`
   }));
 
   const errorMessages = useMemo(
@@ -162,7 +162,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
         </Button>
       }
     >
-        <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-5" onSubmit={(event) => event.preventDefault()}>
           {/* Header fields */}
           <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
             <div>
@@ -170,27 +170,27 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
               <DatePicker
                 id="je-date"
                 value={form.date}
-                onChange={(val) => setForm({ ...form, date: val })}
+                onChange={(dateValue) => setForm({ ...form, date: dateValue })}
                 required
               />
               {errors.date && <p className="text-xs text-destructive mt-1" role="alert">{errors.date}</p>}
             </div>
             <div>
-              <label htmlFor="je-fy" className={FORM_LABEL}>Financial Year</label>
+              <label htmlFor="journal-entry-financial-year" className={FORM_LABEL}>Financial Year</label>
               <FormSelect
-                id="je-fy"
+                id="journal-entry-financial-year"
                 value={form.fiscal_year || ""}
-                onChange={(val) => setForm({ ...form, fiscal_year: val })}
+                onChange={(fiscalYearValue) => setForm({ ...form, fiscal_year: fiscalYearValue })}
                 placeholder="— None —"
-                options={(fiscalYears || []).map((fy) => fy.label)}
+                options={(fiscalYears || []).map((fiscalYear) => fiscalYear.label)}
               />
             </div>
             <div className="sm:col-span-2">
-              <label htmlFor="je-desc" className={FORM_LABEL}>Narration / Description *</label>
+              <label htmlFor="journal-entry-description" className={FORM_LABEL}>Narration / Description *</label>
               <Input
-                id="je-desc"
+                id="journal-entry-description"
                 value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(event) => setForm({ ...form, description: event.target.value })}
                 placeholder="e.g. Student fee collection for Spring 2026…"
                 aria-invalid={!!errors.description}
               />
@@ -202,16 +202,16 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
           <fieldset className="border-0 p-0 m-0">
             <legend className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1"><Tag className="w-3 h-3" aria-hidden="true" /> Tags</legend>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {JOURNAL_TAGS.map((t) => (
+              {JOURNAL_TAGS.map((tag) => (
                 <Button
-                  key={t}
+                  key={tag}
                   type="button"
-                  variant={form.tags?.includes(t) ? "default" : "outline"}
-                  onClick={() => toggleTag(t)}
-                  aria-pressed={form.tags?.includes(t)}
+                  variant={form.tags?.includes(tag) ? "default" : "outline"}
+                  onClick={() => toggleTag(tag)}
+                  aria-pressed={form.tags?.includes(tag)}
                   className="px-2.5 py-1 rounded-full text-xs font-semibold h-auto"
                 >
-                  {t}
+                  {tag}
                 </Button>
               ))}
             </div>
@@ -245,30 +245,30 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {form.lines.map((line, idx) => {
-                    const acc = accounts.find((a) => a.id === line.account_id);
+                  {form.lines.map((line, lineIndex) => {
+                    const account = accounts.find((accountOption) => accountOption.id === line.account_id);
                     return (
                       <tr key={line.id} className="hover:bg-muted/10">
                         <td className="px-3 py-2">
                           <FormSelect
-                            aria-label={`Account for line ${idx + 1}`}
+                            aria-label={`Account for line ${lineIndex + 1}`}
                             value={line.account_id}
-                            onChange={(val) => updateLine(idx, "account_id", val)}
+                            onChange={(accountId) => updateLine(lineIndex, "account_id", accountId)}
                             placeholder="Select account…"
                             options={flattenedAccountOptions}
                           />
-                          {acc && (
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${ACCOUNT_TYPE_META[acc.type]?.color}`}>
-                              {acc.type} · {ACCOUNT_TYPE_META[acc.type]?.normalBalance === "debit" ? "Dr normal" : "Cr normal"}
+                          {account && (
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${ACCOUNT_TYPE_META[account.type]?.color}`}>
+                              {account.type} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "Dr normal" : "Cr normal"}
                             </span>
                           )}
-                          {errors[`line${idx}`] && <p className="text-[10px] text-destructive m-0" role="alert">{errors[`line${idx}`]}</p>}
+                          {errors[`line${lineIndex}`] && <p className="text-[10px] text-destructive m-0" role="alert">{errors[`line${lineIndex}`]}</p>}
                         </td>
                         <td className="px-3 py-2 hidden md:table-cell">
                           <Input
-                            aria-label={`Description for line ${idx + 1}`}
+                            aria-label={`Description for line ${lineIndex + 1}`}
                             value={line.description || ""}
-                            onChange={(e) => updateLine(idx, "description", e.target.value)}
+                            onChange={(event) => updateLine(lineIndex, "description", event.target.value)}
                             placeholder="Note…"
                             className="h-8 py-1 px-2 text-xs"
                           />
@@ -278,10 +278,10 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                             type="number"
                             min="0"
                             step="0.01"
-                            aria-label={`Debit amount for line ${idx + 1}`}
+                            aria-label={`Debit amount for line ${lineIndex + 1}`}
                             value={line.debit}
                             placeholder="0.00"
-                            onChange={(e) => updateLine(idx, "debit", e.target.value)}
+                            onChange={(event) => updateLine(lineIndex, "debit", event.target.value)}
                             className="h-8 py-1 px-2 text-xs text-end bg-info/5 focus:ring-info/30 font-mono"
                           />
                         </td>
@@ -290,10 +290,10 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                             type="number"
                             min="0"
                             step="0.01"
-                            aria-label={`Credit amount for line ${idx + 1}`}
+                            aria-label={`Credit amount for line ${lineIndex + 1}`}
                             value={line.credit}
                             placeholder="0.00"
-                            onChange={(e) => updateLine(idx, "credit", e.target.value)}
+                            onChange={(event) => updateLine(lineIndex, "credit", event.target.value)}
                             className="h-8 py-1 px-2 text-xs text-end bg-success/5 focus:ring-success/30 font-mono"
                           />
                         </td>
@@ -302,8 +302,8 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                             type="button"
                             variant="ghost"
                             size="icon"
-                            aria-label={`Remove line ${idx + 1}`}
-                            onClick={() => removeLine(idx)}
+                            aria-label={`Remove line ${lineIndex + 1}`}
+                            onClick={() => removeLine(lineIndex)}
                             disabled={form.lines.length <= 2}
                             className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
                           >

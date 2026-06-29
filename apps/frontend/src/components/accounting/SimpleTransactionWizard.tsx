@@ -150,8 +150,8 @@ function StepTypeSelection({ selected, onSelect }: { selected: QuickActionType |
 function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickActionType, form: WizardFormState, setForm: React.Dispatch<React.SetStateAction<WizardFormState>>, accounts: Account[] }) {
   const isMoneyIn = type.group === "Money In";
   const isTransfer = type.group === "Transfers";
-  const cashAccounts = accounts.filter((a) => ["a1000","a1010","a1020"].includes(a.id));
-  const cashAccountOptions = cashAccounts.map((a) => ({ value: a.id, label: a.name }));
+  const cashAccounts = accounts.filter((account) => ["a1000","a1010","a1020"].includes(account.id));
+  const cashAccountOptions = cashAccounts.map((account) => ({ value: account.id, label: account.name }));
 
   return (
     <fieldset className="space-y-4 border-0 p-0 m-0">
@@ -173,17 +173,17 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
           <DatePicker
             id="wizard-date"
             value={form.date}
-            onChange={(val) => setForm({ ...form, date: val })}
+            onChange={(dateValue) => setForm({ ...form, date: dateValue })}
           />
         </div>
 
         {/* Amount */}
         <div className="col-span-2 sm:col-span-1">
-          <label htmlFor="wizard-amt" className={FORM_LABEL}>Amount *</label>
+          <label htmlFor="wizard-amount" className={FORM_LABEL}>Amount *</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground" aria-hidden="true">₨</span>
-            <Input id="wizard-amt" type="number" min="0" step="0.01" value={form.amount} placeholder="0.00"
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+            <Input id="wizard-amount" type="number" min="0" step="0.01" value={form.amount} placeholder="0.00"
+              onChange={(event) => setForm({ ...form, amount: event.target.value })}
               className="pl-8 text-lg font-bold" aria-invalid={!form.amount} />
           </div>
           {!form.amount && <p className="text-[11px] text-warning mt-1" role="alert">Please enter an amount</p>}
@@ -196,7 +196,7 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
             <FormSelect
               id="wizard-acc-in"
               value={form.debitAcc}
-              onChange={(val) => setForm({ ...form, debitAcc: val })}
+              onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
               options={cashAccountOptions}
             />
           </div>
@@ -207,7 +207,7 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
               <FormSelect
                 id="wizard-acc-to"
                 value={form.debitAcc}
-                onChange={(val) => setForm({ ...form, debitAcc: val })}
+                onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
                 options={cashAccountOptions}
               />
             </div>
@@ -216,7 +216,7 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
               <FormSelect
                 id="wizard-acc-from"
                 value={form.creditAcc}
-                onChange={(val) => setForm({ ...form, creditAcc: val })}
+                onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
                 options={cashAccountOptions}
               />
             </div>
@@ -227,7 +227,7 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
             <FormSelect
               id="wizard-acc-out"
               value={form.creditAcc}
-              onChange={(val) => setForm({ ...form, creditAcc: val })}
+              onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
               options={cashAccountOptions}
             />
           </div>
@@ -235,15 +235,15 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
 
         {/* Description */}
         <div className="col-span-2">
-          <label htmlFor="wizard-desc" className={FORM_LABEL}>Description</label>
-          <Input id="wizard-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+          <label htmlFor="wizard-description" className={FORM_LABEL}>Description</label>
+          <Input id="wizard-description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })}
             placeholder={type.description} />
         </div>
 
         {/* Reference */}
         <div className="col-span-2 sm:col-span-1">
           <label htmlFor="wizard-ref" className={FORM_LABEL}>Reference No. <span className="normal-case font-normal text-muted-foreground">(optional)</span></label>
-          <Input id="wizard-ref" value={form.ref} onChange={(e) => setForm({ ...form, ref: e.target.value })}
+          <Input id="wizard-ref" value={form.ref} onChange={(event) => setForm({ ...form, ref: event.target.value })}
             placeholder="e.g. RCP-001" />
         </div>
 
@@ -254,7 +254,7 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
             <Upload className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
             <span className="text-xs">{form.receipt ? form.receipt : "Upload receipt…"}</span>
             <Input type="file" accept="image/*,application/pdf" className="hidden"
-              onChange={(e) => setForm({ ...form, receipt: e.target.files?.[0]?.name || "" })} />
+              onChange={(event) => setForm({ ...form, receipt: event.target.files?.[0]?.name || "" })} />
           </label>
         </div>
       </div>
@@ -264,19 +264,19 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
 
 // ── Step 3: Review ──────────────────────────────────────────────────────────
 function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { type: QuickActionType, form: WizardFormState, accounts: Account[], showAdvanced: boolean, setShowAdvanced: React.Dispatch<React.SetStateAction<boolean>> }) {
-  const amt = parseFloat(form.amount) || 0;
-  const debitAcc  = accounts.find((a) => a.id === form.debitAcc);
-  const creditAcc = accounts.find((a) => a.id === form.creditAcc);
+  const amount = parseFloat(form.amount) || 0;
+  const debitAccount  = accounts.find((account) => account.id === form.debitAcc);
+  const creditAccount = accounts.find((account) => account.id === form.creditAcc);
 
   const rows = [
     { label: "Transaction Type", value: type.label },
     { label: "Date",             value: form.date },
-    { label: "Amount",           value: `₨ ${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}` },
+    { label: "Amount",           value: `₨ ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` },
     type.group === "Money In"
-      ? { label: "Received Into", value: debitAcc?.name || "—" }
+      ? { label: "Received Into", value: debitAccount?.name || "—" }
       : type.group === "Transfers"
-      ? { label: "Transfer",      value: `${creditAcc?.name || "—"} → ${debitAcc?.name || "—"}` }
-      : { label: "Paid From",     value: creditAcc?.name || "—" },
+      ? { label: "Transfer",      value: `${creditAccount?.name || "—"} → ${debitAccount?.name || "—"}` }
+      : { label: "Paid From",     value: creditAccount?.name || "—" },
     { label: "Description",      value: form.description || "—" },
     form.ref ? { label: "Reference", value: form.ref } : null,
   ].filter(Boolean) as { label: string, value: string }[];
@@ -289,8 +289,8 @@ function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { t
       </header>
 
       <div className="rounded-2xl border border-border overflow-hidden">
-        {rows.map((row, i) => (
-          <div key={i} className={`flex items-start gap-4 px-4 py-3 ${i % 2 === 0 ? "bg-muted/20" : "bg-background"}`}>
+        {rows.map((row, index) => (
+          <div key={index} className={`flex items-start gap-4 px-4 py-3 ${index % 2 === 0 ? "bg-muted/20" : "bg-background"}`}>
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide w-32 flex-shrink-0 pt-0.5">{row.label}</span>
             <span className="text-sm font-semibold text-foreground">{row.value}</span>
           </div>
@@ -303,7 +303,7 @@ function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { t
 
       {/* Advanced accounting accordion */}
       <div className="rounded-xl border border-border overflow-hidden">
-        <Button type="button" variant="ghost" onClick={() => setShowAdvanced((p) => !p)}
+        <Button type="button" variant="ghost" onClick={() => setShowAdvanced((previousValue) => !previousValue)}
           aria-expanded={showAdvanced}
           className="w-full h-auto flex items-center justify-between px-4 py-3 bg-muted/30 hover:bg-muted/50 transition-colors">
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Show Accounting Details (Advanced)</span>
@@ -318,14 +318,14 @@ function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { t
                 <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-right">Credit</div>
               </div>
               <div className="grid grid-cols-3 bg-info/10/50 border-b border-border">
-                <div className="px-3 py-2 font-semibold text-foreground">{debitAcc?.name || "—"}</div>
-                <div className="px-3 py-2 text-right font-mono text-info font-bold">{amt.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+                <div className="px-3 py-2 font-semibold text-foreground">{debitAccount?.name || "—"}</div>
+                <div className="px-3 py-2 text-right font-mono text-info font-bold">{amount.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
                 <div className="px-3 py-2 text-right text-muted-foreground">—</div>
               </div>
               <div className="grid grid-cols-3 bg-success/10/50">
-                <div className="px-3 py-2 font-semibold text-foreground">{creditAcc?.name || "—"}</div>
+                <div className="px-3 py-2 font-semibold text-foreground">{creditAccount?.name || "—"}</div>
                 <div className="px-3 py-2 text-right text-muted-foreground">—</div>
-                <div className="px-3 py-2 text-right font-mono text-success font-bold">{amt.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+                <div className="px-3 py-2 text-right font-mono text-success font-bold">{amount.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground m-0">These journal lines are auto-generated. No manual entry needed.</p>
@@ -361,7 +361,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
   const [step, setStep] = useState(prefillType ? 2 : 1);
   const [selectedType, setSelectedType] = useState<QuickActionType | null>(prefillType || null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const activeFY = (fiscalYears || []).find((f) => f.status === "active")?.label || "";
+  const activeFiscalYearLabel = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
 
   const [form, setForm] = useState<WizardFormState>({
     date: new Date().toISOString().slice(0, 10),
@@ -371,13 +371,13 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
     description: prefillType?.description || "",
     ref: "",
     receipt: "",
-    fiscal_year: activeFY,
+    fiscal_year: activeFiscalYearLabel,
   });
 
   const handleTypeSelect = (type: QuickActionType) => {
     setSelectedType(type);
-    setForm((f) => ({
-      ...f,
+    setForm((previousForm) => ({
+      ...previousForm,
       debitAcc: type.debitAcc,
       creditAcc: type.creditAcc,
       description: type.description,
@@ -398,16 +398,16 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
   };
 
   const handleSave = (status: "draft" | "posted") => {
-    const err = validate();
-    if (err) { alert(err); return; }
-    const amt = parseFloat(form.amount);
+    const validationError = validate();
+    if (validationError) { alert(validationError); return; }
+    const amount = parseFloat(form.amount);
     const ref = generateJERef(entries);
-    const desc = form.description || selectedType!.label;
+    const description = form.description || selectedType!.label;
     onSave({
       id: `je${Date.now()}`,
       ref: form.ref ? `${form.ref}` : ref,
       date: form.date,
-      description: desc,
+      description,
       status,
       created_by: "Admin",
       tags: [selectedType!.tag],
@@ -416,16 +416,16 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
       simple_mode: true,
       transaction_type: selectedType!.id,
       lines: [
-        { id: `l${Date.now()}a`, account_id: form.debitAcc,  debit: amt, credit: 0,   description: desc },
-        { id: `l${Date.now()}b`, account_id: form.creditAcc, debit: 0,   credit: amt, description: desc },
+        { id: `l${Date.now()}a`, account_id: form.debitAcc,  debit: amount, credit: 0,   description },
+        { id: `l${Date.now()}b`, account_id: form.creditAcc, debit: 0,   credit: amount, description },
       ],
     });
   };
 
   const steps = [
-    { n: 1, label: "Select Type" },
-    { n: 2, label: "Enter Details" },
-    { n: 3, label: "Review" },
+    { stepNumber: 1, label: "Select Type" },
+    { stepNumber: 2, label: "Enter Details" },
+    { stepNumber: 3, label: "Review" },
   ];
 
   return (
@@ -438,17 +438,17 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
       panelClassName="max-h-[92vh]"
       headerExtra={
         <nav aria-label="Wizard Steps" className="flex items-center gap-2">
-          {steps.map((s, i) => (
-            <React.Fragment key={s.n}>
+          {steps.map((stepDefinition, index) => (
+            <React.Fragment key={stepDefinition.stepNumber}>
               <div className="flex items-center gap-1.5">
                 <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold transition-all ${
-                  step > s.n ? "bg-success text-white" : step === s.n ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                }`} aria-current={step === s.n ? "step" : undefined}>
-                  {step > s.n ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> : s.n}
+                  step > stepDefinition.stepNumber ? "bg-success text-white" : step === stepDefinition.stepNumber ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                }`} aria-current={step === stepDefinition.stepNumber ? "step" : undefined}>
+                  {step > stepDefinition.stepNumber ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> : stepDefinition.stepNumber}
                 </div>
-                <span className={`hidden text-[11px] font-semibold sm:block ${step === s.n ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+                <span className={`hidden text-[11px] font-semibold sm:block ${step === stepDefinition.stepNumber ? "text-foreground" : "text-muted-foreground"}`}>{stepDefinition.label}</span>
               </div>
-              {i < steps.length - 1 && <div className={`h-0.5 flex-1 rounded-full transition-all ${step > s.n ? "bg-success" : "bg-border"}`} aria-hidden="true" />}
+              {index < steps.length - 1 && <div className={`h-0.5 flex-1 rounded-full transition-all ${step > stepDefinition.stepNumber ? "bg-success" : "bg-border"}`} aria-hidden="true" />}
             </React.Fragment>
           ))}
         </nav>

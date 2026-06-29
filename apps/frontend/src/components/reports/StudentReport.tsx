@@ -61,23 +61,23 @@ const STATUS_COLOR: Record<string, string> = {
   dropped:   "bg-destructive/10 text-destructive",
 };
 
-function mapStudentRow(s: Student): ReportStudent {
+function mapStudentRow(student: Student): ReportStudent {
   let age = 0;
-  if (s.dob) {
-    const d = new Date(s.dob);
-    if (!isNaN(d.getTime())) {
-      age = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+  if (student.dob) {
+    const birthDate = new Date(student.dob);
+    if (!isNaN(birthDate.getTime())) {
+      age = Math.floor((Date.now() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
     }
   }
   return {
-    id: String(s.id),
-    name: s.name,
-    gender: s.gender || "male",
-    status: s.status || "inactive",
-    session: s.enrolledSessions?.[0] || "—",
-    class: s.enrolledSessions?.[0] || "—",
-    city: s.city || "—",
-    registered: s.registeredDate || "—",
+    id: String(student.id),
+    name: student.name,
+    gender: student.gender || "male",
+    status: student.status || "inactive",
+    session: student.enrolledSessions?.[0] || "—",
+    class: student.enrolledSessions?.[0] || "—",
+    city: student.city || "—",
+    registered: student.registeredDate || "—",
     age,
   };
 }

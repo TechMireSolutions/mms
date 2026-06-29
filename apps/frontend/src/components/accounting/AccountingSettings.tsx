@@ -88,7 +88,7 @@ function Toggle({ checked, onChange, ariaLabel }: ToggleProps) {
 interface FYModalProps {
   open: boolean;
   initial: Partial<FiscalYear> | null;
-  onSave: (fy: FiscalYear) => void;
+  onSave: (fiscalYear: FiscalYear) => void;
   onClose: () => void;
 }
 
@@ -105,18 +105,18 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
   }, [open, initial]);
 
   const validate = () => {
-    const e: Record<string, string> = {};
-    if (!form.label?.trim()) e.label = "Label is required";
-    if (!form.startDate) e.startDate = "Start date is required";
-    if (!form.endDate) e.endDate = "End date is required";
-    if (form.startDate && form.endDate && form.startDate >= form.endDate) e.endDate = "End must be after start";
-    return e;
+    const validationErrors: Record<string, string> = {};
+    if (!form.label?.trim()) validationErrors.label = "Label is required";
+    if (!form.startDate) validationErrors.startDate = "Start date is required";
+    if (!form.endDate) validationErrors.endDate = "End date is required";
+    if (form.startDate && form.endDate && form.startDate >= form.endDate) validationErrors.endDate = "End must be after start";
+    return validationErrors;
   };
 
   const handleSave = () => {
-    const e = validate();
-    if (Object.keys(e).length) {
-      setErrors(e);
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length) {
+      setErrors(validationErrors);
       return;
     }
     onSave({
@@ -138,41 +138,41 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="fy-label" className={FORM_LABEL}>Label *</label>
+          <label htmlFor="financial-year-label" className={FORM_LABEL}>Label *</label>
           <Input
-            id="fy-label"
+            id="financial-year-label"
             value={form.label || ""}
-            onChange={(e) => setForm({ ...form, label: e.target.value })}
+            onChange={(event) => setForm({ ...form, label: event.target.value })}
             placeholder="e.g. FY 2026–27"
             required
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="fy-start" className={FORM_LABEL}>Start Date *</label>
+            <label htmlFor="financial-year-start" className={FORM_LABEL}>Start Date *</label>
             <DatePicker
-              id="fy-start"
+              id="financial-year-start"
               value={form.startDate || ""}
-              onChange={(val) => setForm({ ...form, startDate: val })}
+              onChange={(startDateValue) => setForm({ ...form, startDate: startDateValue })}
               required
             />
           </div>
           <div>
-            <label htmlFor="fy-end" className={FORM_LABEL}>End Date *</label>
+            <label htmlFor="financial-year-end" className={FORM_LABEL}>End Date *</label>
             <DatePicker
-              id="fy-end"
+              id="financial-year-end"
               value={form.endDate || ""}
-              onChange={(val) => setForm({ ...form, endDate: val })}
+              onChange={(endDateValue) => setForm({ ...form, endDate: endDateValue })}
               required
             />
           </div>
         </div>
         <div>
-          <label htmlFor="fy-status" className={FORM_LABEL}>Status</label>
+          <label htmlFor="financial-year-status" className={FORM_LABEL}>Status</label>
           <FormSelect
-            id="fy-status"
+            id="financial-year-status"
             value={form.status || "upcoming"}
-            onChange={(val) => setForm({ ...form, status: val as FiscalYear["status"] | "upcoming" })}
+            onChange={(statusValue) => setForm({ ...form, status: statusValue as FiscalYear["status"] | "upcoming" })}
             options={[
               { value: "upcoming", label: "Upcoming" },
               { value: "active", label: "Active" },
@@ -200,12 +200,12 @@ interface AccountingSettingsProps {
 
 function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
   if (!savedOrder || savedOrder.length === 0) return fields;
-  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
-  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
+  const orderByKey = Object.fromEntries(savedOrder.map((key, index) => [key, index]));
+  return [...fields].sort((firstField, secondField) => (orderByKey[firstField.key] ?? 9999) - (orderByKey[secondField.key] ?? 9999)) as FieldDefinition[];
 }
 
-function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
-  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
+function syncOrder(previousOrder: string[], newFieldIds: string[]): string[] {
+  const kept = previousOrder.filter((id) => newFieldIds.includes(id));
   const added = newFieldIds.filter((id) => !kept.includes(id));
   return [...kept, ...added];
 }
@@ -287,34 +287,34 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
     setEnabledTabs(new Set(settings.enabledTabs || ["basic"]));
     setRequiredTabs(new Set(settings.requiredTabs || []));
 
-    const coreKeys = new Set(ACCOUNTING_TAB_REGISTRY.map((t: any) => t.key));
-    const customTabs = (settings.formTabs || []).filter((t: any) => !coreKeys.has(t.key));
+    const coreKeys = new Set(ACCOUNTING_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition: any) => !coreKeys.has(tabDefinition.key));
     setFormTabs([
       ...ACCOUNTING_TAB_REGISTRY,
       ...customTabs
-    ].map((t: any) => ({
-      ...t,
-      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    ].map((tabDefinition: any) => ({
+      ...tabDefinition,
+      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     })));
 
     const newTabIds = Array.from(new Set([
-      ...ACCOUNTING_TAB_REGISTRY.map((t: any) => t.key),
-      ...(settings.formTabs || []).map((t: any) => t.key)
+      ...ACCOUNTING_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key),
+      ...(settings.formTabs || []).map((tabDefinition: any) => tabDefinition.key)
     ]));
     const currentFields = settings.fields || {};
     setTabFields(Object.fromEntries(newTabIds.map(tabId => [tabId, currentFields[tabId] || []])));
-    setTabFieldEnabled(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.enabled).map((f: any) => f.key))])));
-    setTabFieldRequired(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.required).map((f: any) => f.key))])));
-    setTabFieldUnique(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.unique).map((f: any) => f.key))])));
+    setTabFieldEnabled(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((fieldDefinition: any) => fieldDefinition.enabled).map((fieldDefinition: any) => fieldDefinition.key))])));
+    setTabFieldRequired(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((fieldDefinition: any) => fieldDefinition.required).map((fieldDefinition: any) => fieldDefinition.key))])));
+    setTabFieldUnique(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((fieldDefinition: any) => fieldDefinition.unique).map((fieldDefinition: any) => fieldDefinition.key))])));
     setTabFieldDefaultValues(Object.fromEntries(newTabIds.map(tabId => [
       tabId,
-      Object.fromEntries((currentFields[tabId] || []).filter((f: any) => f.defaultValue !== undefined).map((f: any) => [f.key, f.defaultValue]))
+      Object.fromEntries((currentFields[tabId] || []).filter((fieldDefinition: any) => fieldDefinition.defaultValue !== undefined).map((fieldDefinition: any) => [fieldDefinition.key, fieldDefinition.defaultValue]))
     ])));
     setTabFieldPermissions(Object.fromEntries(newTabIds.map(tabId => [
       tabId,
-      Object.fromEntries((currentFields[tabId] || []).filter((f: any) => f.permissions).map((f: any) => [f.key, f.permissions as string[]]))
+      Object.fromEntries((currentFields[tabId] || []).filter((fieldDefinition: any) => fieldDefinition.permissions).map((fieldDefinition: any) => [fieldDefinition.key, fieldDefinition.permissions as string[]]))
     ])));
-    setTabFieldOrder(Object.fromEntries(newTabIds.map(tabId => [tabId, (currentFields[tabId] || []).map((f: any) => f.key)])));
+    setTabFieldOrder(Object.fromEntries(newTabIds.map(tabId => [tabId, (currentFields[tabId] || []).map((fieldDefinition: any) => fieldDefinition.key)])));
   }, [settings]);
 
   const handleToggleTabEnabled = (id: string) => { toggleTabEnabled(id); setSaved(false); };
@@ -325,7 +325,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
   const handleReorderFields = (tabId: string, reorderedFields: FieldDefinition[]) => { handleReorder(tabId, reorderedFields); setSaved(false); };
 
   const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
-    const newKeys = newFields.map((f) => f.key);
+    const newKeys = newFields.map((fieldDefinition) => fieldDefinition.key);
     setTabFieldOrder((prev) => ({
       ...prev,
       [tabId]: syncOrder(prev[tabId] || [], newKeys),
@@ -335,21 +335,21 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
   };
 
   const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
-    setTabFields(prev => ({
-      ...prev,
-      [tabId]: (prev[tabId] || []).map(f => f.key === updatedField.key ? updatedField : f)
+    setTabFields(previousTabFields => ({
+      ...previousTabFields,
+      [tabId]: (previousTabFields[tabId] || []).map(fieldDefinition => fieldDefinition.key === updatedField.key ? updatedField : fieldDefinition)
     }));
     setSaved(false);
   };
 
   const handleDeleteField = async (tabId: string, fieldId: string) => {
-    setTabFields(prev => ({
-      ...prev,
-      [tabId]: (prev[tabId] || []).filter(f => f.key !== fieldId)
+    setTabFields(previousTabFields => ({
+      ...previousTabFields,
+      [tabId]: (previousTabFields[tabId] || []).filter(fieldDefinition => fieldDefinition.key !== fieldId)
     }));
-    setTabFieldOrder(prev => ({
-      ...prev,
-      [tabId]: (prev[tabId] || []).filter(id => id !== fieldId)
+    setTabFieldOrder(previousFieldOrder => ({
+      ...previousFieldOrder,
+      [tabId]: (previousFieldOrder[tabId] || []).filter(id => id !== fieldId)
     }));
     setSaved(false);
   };
@@ -366,32 +366,32 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
       isSystem: false,
     };
 
-    setFormTabs(prev => [...prev, newTab]);
-    setEnabledTabs(prev => {
-      const next = new Set(prev);
+    setFormTabs(previousFormTabs => [...previousFormTabs, newTab]);
+    setEnabledTabs(previousEnabledTabs => {
+      const next = new Set(previousEnabledTabs);
       next.add(key);
       return next;
     });
 
-    setTabFields(prev => ({ ...prev, [key]: [] }));
-    setTabFieldEnabled(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldRequired(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldUnique(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldDefaultValues(prev => ({ ...prev, [key]: {} }));
-    setTabFieldPermissions(prev => ({ ...prev, [key]: {} }));
-    setTabFieldOrder(prev => ({ ...prev, [key]: [] }));
+    setTabFields(previousTabFields => ({ ...previousTabFields, [key]: [] }));
+    setTabFieldEnabled(previousEnabledFields => ({ ...previousEnabledFields, [key]: new Set() }));
+    setTabFieldRequired(previousRequiredFields => ({ ...previousRequiredFields, [key]: new Set() }));
+    setTabFieldUnique(previousUniqueFields => ({ ...previousUniqueFields, [key]: new Set() }));
+    setTabFieldDefaultValues(previousDefaultValues => ({ ...previousDefaultValues, [key]: {} }));
+    setTabFieldPermissions(previousPermissions => ({ ...previousPermissions, [key]: {} }));
+    setTabFieldOrder(previousFieldOrder => ({ ...previousFieldOrder, [key]: [] }));
     setSaved(false);
   };
 
   const handleDeleteTab = (key: string) => {
-    setFormTabs(prev => prev.filter(t => t.key !== key));
-    setEnabledTabs(prev => {
-      const next = new Set(prev);
+    setFormTabs(previousFormTabs => previousFormTabs.filter(tabDefinition => tabDefinition.key !== key));
+    setEnabledTabs(previousEnabledTabs => {
+      const next = new Set(previousEnabledTabs);
       next.delete(key);
       return next;
     });
-    setRequiredTabs(prev => {
-      const next = new Set(prev);
+    setRequiredTabs(previousRequiredTabs => {
+      const next = new Set(previousRequiredTabs);
       next.delete(key);
       return next;
     });
@@ -400,27 +400,27 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
 
   const handleRenameTab = (key: string, newLabel: string) => {
     if (!newLabel.trim()) return;
-    setFormTabs(prev => prev.map(t => t.key === key ? { ...t, label: newLabel.trim() } : t));
+    setFormTabs(previousFormTabs => previousFormTabs.map(tabDefinition => tabDefinition.key === key ? { ...tabDefinition, label: newLabel.trim() } : tabDefinition));
     setSaved(false);
   };
 
   const buildFieldsMap = (): Record<string, FieldDefinition[]> => {
     const newFields: Record<string, FieldDefinition[]> = {};
-    formTabs.forEach(tab => {
-      const tabId = tab.key;
-      const combined = (tabFields[tabId] || []).map(f => {
-        const fieldKey = f.key || (f as { id?: string }).id || "";
-        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? f.enabled  ?? false;
-        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? f.required ?? false;
-        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? f.unique   ?? false;
+    formTabs.forEach(tabDefinition => {
+      const tabId = tabDefinition.key;
+      const combined = (tabFields[tabId] || []).map(fieldDefinition => {
+        const fieldKey = fieldDefinition.key || (fieldDefinition as { id?: string }).id || "";
+        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? fieldDefinition.enabled  ?? false;
+        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? fieldDefinition.required ?? false;
+        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? fieldDefinition.unique   ?? false;
         const orderArray   = tabFieldOrder[tabId] || [];
-        const orderIdx     = orderArray.indexOf(fieldKey);
-        const order        = orderIdx >= 0 ? orderIdx : (f.order ?? 999);
-        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? f.defaultValue;
-        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? f.permissions;
+        const orderIndex   = orderArray.indexOf(fieldKey);
+        const order        = orderIndex >= 0 ? orderIndex : (fieldDefinition.order ?? 999);
+        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? fieldDefinition.defaultValue;
+        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? fieldDefinition.permissions;
 
         return {
-          ...f,
+          ...fieldDefinition,
           key: fieldKey,
           enabled,
           required,
@@ -431,18 +431,18 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
         } as FieldDefinition;
       });
 
-      newFields[tabId] = combined.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+      newFields[tabId] = combined.sort((firstField, secondField) => (firstField.order ?? 999) - (secondField.order ?? 999));
     });
     return newFields;
   };
 
   const handleSave = () => {
-    const updatedFormTabs = formTabs.map(t => ({
-      ...t,
-      enabled: enabledTabs.has(t.key)
+    const updatedFormTabs = formTabs.map(tabDefinition => ({
+      ...tabDefinition,
+      enabled: enabledTabs.has(tabDefinition.key)
     }));
 
-    const cfg: SettingsType = {
+    const nextSettings: SettingsType = {
       ...settings,
       organizationName,
       currency,
@@ -462,27 +462,27 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
       fields: buildFieldsMap(),
     };
 
-    updateSettings(cfg);
+    updateSettings(nextSettings);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const handleSaveFY = (fy: FiscalYear) => {
-    const updated = fiscalYears.find((f) => f.id === fy.id)
-      ? fiscalYears.map((f) => f.id === fy.id ? fy : f)
-      : [...fiscalYears, fy];
-    onSaveFiscalYears(updated);
+  const handleSaveFY = (fiscalYear: FiscalYear) => {
+    const updatedFiscalYears = fiscalYears.find((existingFiscalYear) => existingFiscalYear.id === fiscalYear.id)
+      ? fiscalYears.map((existingFiscalYear) => existingFiscalYear.id === fiscalYear.id ? fiscalYear : existingFiscalYear)
+      : [...fiscalYears, fiscalYear];
+    onSaveFiscalYears(updatedFiscalYears);
     setFyModal(null);
   };
 
   const handleDeleteFY = (id: string) => {
-    const fy = fiscalYears.find((f) => f.id === id);
-    if (fy?.status === "active") { alert("Cannot delete the active financial year."); return; }
-    if (confirm("Delete this financial year?")) onSaveFiscalYears(fiscalYears.filter((f) => f.id !== id));
+    const fiscalYear = fiscalYears.find((existingFiscalYear) => existingFiscalYear.id === id);
+    if (fiscalYear?.status === "active") { alert("Cannot delete the active financial year."); return; }
+    if (confirm("Delete this financial year?")) onSaveFiscalYears(fiscalYears.filter((existingFiscalYear) => existingFiscalYear.id !== id));
   };
 
-  const activeCur = currencies.find((c: any) => c.code === currency);
-  const fmtDate   = (d: string) => d ? new Date(d).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" }) : "—";
+  const activeCurrency = currencies.find((currencyOption: any) => currencyOption.code === currency);
+  const formatDate   = (dateValue: string) => dateValue ? new Date(dateValue).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
   const showPrefs = mode === "preferences";
   const showFields = mode === "fields";
@@ -503,7 +503,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           {/* Organisation */}
           <SectionCard title="Organisation" icon={null}>
             <Field label="Organisation Name" hint="Displayed on reports and printed documents">
-              <Input value={organizationName || ""} aria-label="Organisation Name" onChange={(e) => { setOrganizationName(e.target.value); setSaved(false); }} />
+              <Input value={organizationName || ""} aria-label="Organisation Name" onChange={(event) => { setOrganizationName(event.target.value); setSaved(false); }} />
             </Field>
           </SectionCard>
 
@@ -513,20 +513,20 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
               <FormSelect
                 aria-label="Base Currency"
                 value={currency}
-                onChange={(val) => {
-                  const cur = currencies.find((c: any) => c.code === val);
-                  setCurrency(val);
-                  if (cur) setCurrencySymbol(cur.symbol);
+                onChange={(currencyValue) => {
+                  const selectedCurrency = currencies.find((currencyOption: any) => currencyOption.code === currencyValue);
+                  setCurrency(currencyValue);
+                  if (selectedCurrency) setCurrencySymbol(selectedCurrency.symbol);
                   setSaved(false);
                 }}
-                options={currencies.map((c: any) => ({
-                  value: c.code,
-                  label: `${c.symbol} ${c.code} – ${c.name}`
+                options={currencies.map((currencyOption: any) => ({
+                  value: currencyOption.code,
+                  label: `${currencyOption.symbol} ${currencyOption.code} – ${currencyOption.name}`
                 }))}
               />
-              {activeCur && (
+              {activeCurrency && (
                 <p className="text-xs text-muted-foreground mt-1 m-0">
-                  Symbol: <span className="font-bold">{activeCur.symbol}</span> · Code: <span className="font-mono font-bold">{activeCur.code}</span>
+                  Symbol: <span className="font-bold">{activeCurrency.symbol}</span> · Code: <span className="font-mono font-bold">{activeCurrency.code}</span>
                 </p>
               )}
             </Field>
@@ -534,7 +534,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
               <FormSelect
                 aria-label="Date Format"
                 value={dateFormat}
-                onChange={(val) => { setDateFormat(val); setSaved(false); }}
+                onChange={(dateFormatValue) => { setDateFormat(dateFormatValue); setSaved(false); }}
                 options={DATE_FORMATS}
               />
             </Field>
@@ -542,7 +542,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
               <FormSelect
                 aria-label="Number Format"
                 value={decimalSeparator}
-                onChange={(val) => { setDecimalSeparator(val as "period" | "comma"); setSaved(false); }}
+                onChange={(separatorValue) => { setDecimalSeparator(separatorValue as "period" | "comma"); setSaved(false); }}
                 options={DECIMAL_SEPARATORS}
               />
             </Field>
@@ -550,8 +550,8 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
               <FormSelect
                 aria-label="Decimal Places"
                 value={String(decimalPlaces)}
-                onChange={(val) => { setDecimalPlaces(parseInt(val)); setSaved(false); }}
-                options={[0, 1, 2, 3].map((n) => String(n))}
+                onChange={(decimalPlacesValue) => { setDecimalPlaces(parseInt(decimalPlacesValue)); setSaved(false); }}
+                options={[0, 1, 2, 3].map((placeCount) => String(placeCount))}
                 className="w-32"
               />
             </Field>
@@ -563,7 +563,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
               <FormSelect
                 aria-label="FY Start Month"
                 value={fyStartMonth}
-                onChange={(val) => { setFyStartMonth(val); setSaved(false); }}
+                onChange={(startMonthValue) => { setFyStartMonth(startMonthValue); setSaved(false); }}
                 options={FY_MONTHS}
                 className="w-48"
               />
@@ -594,18 +594,18 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {[...fiscalYears].sort((a, b) => b.startDate.localeCompare(a.startDate)).map((fy) => {
-                      const st = FY_STATUS[fy.status] || FY_STATUS.upcoming;
-                      const StatusIcon = st.icon;
+                    {[...fiscalYears].sort((firstYear, secondYear) => secondYear.startDate.localeCompare(firstYear.startDate)).map((fiscalYear) => {
+                      const statusMeta = FY_STATUS[fiscalYear.status] || FY_STATUS.upcoming;
+                      const StatusIcon = statusMeta.icon;
                       return (
-                        <tr key={fy.id} className="hover:bg-muted/20 transition-colors">
-                          <td className="px-4 py-2.5 font-semibold text-foreground">{fy.label}</td>
+                        <tr key={fiscalYear.id} className="hover:bg-muted/20 transition-colors">
+                          <td className="px-4 py-2.5 font-semibold text-foreground">{fiscalYear.label}</td>
                           <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
-                            {fmtDate(fy.startDate)} → {fmtDate(fy.endDate)}
+                            {formatDate(fiscalYear.startDate)} → {formatDate(fiscalYear.endDate)}
                           </td>
                           <td className="px-4 py-2.5">
-                            <span className={`flex items-center gap-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold border ${st.color}`}>
-                              <StatusIcon className="w-2.5 h-2.5" aria-hidden="true" /> {st.label}
+                            <span className={`flex items-center gap-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusMeta.color}`}>
+                              <StatusIcon className="w-2.5 h-2.5" aria-hidden="true" /> {statusMeta.label}
                             </span>
                           </td>
                           <td className="px-4 py-2.5 text-right">
@@ -614,8 +614,8 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                aria-label={`Edit ${fy.label}`}
-                                onClick={() => setFyModal({ ...fy })}
+                                aria-label={`Edit ${fiscalYear.label}`}
+                                onClick={() => setFyModal({ ...fiscalYear })}
                                 className="h-8 w-8 text-muted-foreground hover:text-foreground shadow-none"
                               >
                                 <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
@@ -624,9 +624,9 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                aria-label={`Delete ${fy.label}`}
-                                onClick={() => handleDeleteFY(fy.id)}
-                                disabled={fy.status === "active"}
+                                aria-label={`Delete ${fiscalYear.label}`}
+                                onClick={() => handleDeleteFY(fiscalYear.id)}
+                                disabled={fiscalYear.status === "active"}
                                 className="h-8 w-8 text-muted-foreground hover:text-destructive shadow-none"
                               >
                                 <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -645,16 +645,16 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           {/* Journal Entry Rules */}
           <SectionCard title="Journal Entry Rules" icon={null}>
             <Field label="Require Narration" hint="Enforce description on every entry">
-              <Toggle ariaLabel="Require Narration" checked={requireNarration} onChange={(v) => { setRequireNarration(v); setSaved(false); }} />
+              <Toggle ariaLabel="Require Narration" checked={requireNarration} onChange={(checked) => { setRequireNarration(checked); setSaved(false); }} />
             </Field>
             <Field label="Allow Editing Posted Entries" hint="If off, posted entries are locked (recommended)">
-              <Toggle ariaLabel="Allow Editing Posted Entries" checked={allowEditPosted} onChange={(v) => { setAllowEditPosted(v); setSaved(false); }} />
+              <Toggle ariaLabel="Allow Editing Posted Entries" checked={allowEditPosted} onChange={(checked) => { setAllowEditPosted(checked); setSaved(false); }} />
               {allowEditPosted && (
                 <p className="text-xs text-warning mt-1 font-semibold m-0" role="alert">⚠ Enabling this breaks audit integrity. Use reversals instead.</p>
               )}
             </Field>
             <Field label="Auto-post Draft Entries" hint="Automatically post entries saved as draft">
-              <Toggle ariaLabel="Auto-post Draft Entries" checked={autoPostDrafts} onChange={(v) => { setAutoPostDrafts(v); setSaved(false); }} />
+              <Toggle ariaLabel="Auto-post Draft Entries" checked={autoPostDrafts} onChange={(checked) => { setAutoPostDrafts(checked); setSaved(false); }} />
             </Field>
           </SectionCard>
 
@@ -664,8 +664,8 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
               <FormSelect
                 aria-label="Default Code Length"
                 value={String(accountCodeLength)}
-                onChange={(val) => { setAccountCodeLength(parseInt(val)); setSaved(false); }}
-                options={[3, 4, 5, 6].map((n) => String(n))}
+                onChange={(codeLengthValue) => { setAccountCodeLength(parseInt(codeLengthValue)); setSaved(false); }}
+                options={[3, 4, 5, 6].map((digitCount) => String(digitCount))}
                 className="w-32"
               />
             </Field>
@@ -673,12 +673,12 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
               <FormSelect
                 aria-label="Retained Earnings Account"
                 value={retainedEarningsAccount || ""}
-                onChange={(val) => { setRetainedEarningsAccount(val); setSaved(false); }}
+                onChange={(accountId) => { setRetainedEarningsAccount(accountId); setSaved(false); }}
                 placeholder="— None —"
                 options={accounts
-                  .filter((a) => a.type === "Equity" && a.isActive !== false)
-                  .sort((a, b) => a.code.localeCompare(b.code))
-                  .map((a) => ({ value: a.id, label: `${a.code} – ${a.name}` }))}
+                  .filter((account) => account.type === "Equity" && account.isActive !== false)
+                  .sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code))
+                  .map((account) => ({ value: account.id, label: `${account.code} – ${account.name}` }))}
               />
             </Field>
           </SectionCard>
@@ -697,10 +697,10 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
             </div>
           </div>
 
-          {formTabs.map((tab) => {
-            const tabId = tab.key;
-            const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
-            const tabDesc = tab.description;
+          {formTabs.map((tabDefinition) => {
+            const tabId = tabDefinition.key;
+            const tabLabel = tabDefinition.label.charAt(0).toUpperCase() + tabDefinition.label.slice(1);
+            const tabDescription = tabDefinition.description;
             const tabDefs = tabFields[tabId] || [];
             const enabledSet = tabFieldEnabled[tabId] || new Set();
             const requiredSet = tabFieldRequired[tabId] || new Set();
@@ -721,14 +721,14 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                   <div className="flex-1 min-w-0 ml-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-foreground">{tabLabel}</span>
-                      {!tab.isSystem && (
+                      {!tabDefinition.isSystem && (
                         <div className="flex items-center gap-1.5 ml-2">
                           <Button
                             type="button"
                             variant="ghost"
                             onClick={() => {
                               setRenamingTabKey(tabId);
-                              setRenameTabLabel(tab.label);
+                              setRenameTabLabel(tabDefinition.label);
                             }}
                             className="p-1 h-6 w-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none flex items-center justify-center"
                             title="Rename Tab"
@@ -747,10 +747,10 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">{tabDesc}</p>
+                    <p className="text-xs text-muted-foreground">{tabDescription}</p>
                   </div>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                    {tabDefs.filter((fieldDefinition) => enabledSet.has(fieldDefinition.key)).length}/{tabDefs.length}
                   </span>
                   {tabId !== "basic" && isOn && (
                     <Button
@@ -780,20 +780,20 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                       onToggleRequired={(fieldId: string) => handleToggleFieldRequired(tabId, fieldId)}
                       onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
                       onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
-                      isUniqueField={(tid: string, fid: string) => tabFieldUnique[tid]?.has(fid) || false}
-                      isCoreField={(key: string) => INITIAL_ACCOUNTING_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+                      isUniqueField={(targetTabId: string, fieldId: string) => tabFieldUnique[targetTabId]?.has(fieldId) || false}
+                      isCoreField={(key: string) => INITIAL_ACCOUNTING_FIELD_SEED[tabId]?.some((fieldDefinition: any) => fieldDefinition.key === key) ?? false}
                       defaultValues={tabFieldDefaultValues[tabId]}
                       permissions={tabFieldPermissions[tabId]}
-                      onChangeDefaults={(fieldId: string, val: unknown) => {
-                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                      onChangeDefaults={(fieldId: string, fieldValue: unknown) => {
+                        setTabFieldDefaultValues(previousDefaultValues => ({ ...previousDefaultValues, [tabId]: { ...previousDefaultValues[tabId], [fieldId]: fieldValue } }));
                         setSaved(false);
                       }}
                       onChangePermissions={(fieldId: string, roles: string[]) => {
-                        setTabFieldPermissions(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: roles } }));
+                        setTabFieldPermissions(previousPermissions => ({ ...previousPermissions, [tabId]: { ...previousPermissions[tabId], [fieldId]: roles } }));
                         setSaved(false);
                       }}
-                      onEditField={(f: FieldDefinition) => handleEditField(tabId, f)}
-                      onDeleteField={(id: string) => handleDeleteField(tabId, id)}
+                      onEditField={(fieldDefinition: FieldDefinition) => handleEditField(tabId, fieldDefinition)}
+                      onDeleteField={(fieldId: string) => handleDeleteField(tabId, fieldId)}
                       labels={{
                         required: "Required",
                         optional: "Optional",
@@ -803,9 +803,9 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                     />
                     <div className="border-t border-border pt-3">
                       <CustomFieldsBuilder
-                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        fields={(tabFields[tabId] || []).map(fieldDefinition => ({...fieldDefinition, id: fieldDefinition.key})) as unknown as CustomFieldConfig[]}
                         droppableId={`custom-fields-${tabId}`}
-                        onChange={(f) => handleCustomFieldsChange(tabId, f)}
+                        onChange={(fieldDefinitions) => handleCustomFieldsChange(tabId, fieldDefinitions)}
                       />
                     </div>
                   </div>
@@ -867,7 +867,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           <Input
             id="newTabLabel"
             value={newTabLabel}
-            onChange={(e) => setNewTabLabel(e.target.value)}
+            onChange={(event) => setNewTabLabel(event.target.value)}
             placeholder="e.g. Extra Info"
             autoFocus
           />
@@ -916,7 +916,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           <Input
             id="renameTabLabel"
             value={renameTabLabel}
-            onChange={(e) => setRenameTabLabel(e.target.value)}
+            onChange={(event) => setRenameTabLabel(event.target.value)}
             placeholder="e.g. Custom Fields"
             autoFocus
           />

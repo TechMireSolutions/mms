@@ -52,8 +52,11 @@ interface ReportSectionProps {
 }
 
 function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: ReportSectionProps) {
-  const fmt = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2 });
-  const maxAmt = Math.max(...rows.map((r) => { const a = debitNormal ? r.totalDebit - r.totalCredit : r.totalCredit - r.totalDebit; return Math.abs(a); }), 1);
+  const formatNumber = (amount: number) => amount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+  const maxAmount = Math.max(...rows.map((reportRow) => {
+    const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
+    return Math.abs(rowAmount);
+  }), 1);
 
   return (
     <section aria-label={title} className="rounded-xl border border-border overflow-hidden">
@@ -63,20 +66,20 @@ function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: R
       <table className="w-full text-sm">
         <caption className="sr-only">{title} Data</caption>
         <tbody className="divide-y divide-border">
-          {rows.map((r) => {
-            const amt = debitNormal ? (r.totalDebit - r.totalCredit) : (r.totalCredit - r.totalDebit);
-            const pct = (Math.abs(amt) / maxAmt) * 100;
+          {rows.map((reportRow) => {
+            const rowAmount = debitNormal ? (reportRow.totalDebit - reportRow.totalCredit) : (reportRow.totalCredit - reportRow.totalDebit);
+            const percentage = (Math.abs(rowAmount) / maxAmount) * 100;
             return (
-              <tr key={r.id} className="hover:bg-muted/10">
+              <tr key={reportRow.id} className="hover:bg-muted/10">
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-foreground">{r.name}</span>
-                    <span className="font-mono font-semibold text-foreground ml-2">{fmt(Math.abs(amt))}</span>
+                    <span className="font-medium text-foreground">{reportRow.name}</span>
+                    <span className="font-mono font-semibold text-foreground ml-2">{formatNumber(Math.abs(rowAmount))}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
-                    <div className="h-full rounded-full bg-primary/40 transition-all" style={{ width: `${pct}%` }} />
+                    <div className="h-full rounded-full bg-primary/40 transition-all" style={{ width: `${percentage}%` }} />
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 font-mono m-0">{r.code} · {r.subtype || r.type}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 font-mono m-0">{reportRow.code} · {reportRow.subtype || reportRow.type}</p>
                 </td>
               </tr>
             );
@@ -86,7 +89,7 @@ function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: R
           <tr>
             <td className="px-4 py-2.5 flex items-center justify-between">
               <span className="font-bold text-foreground">{totalLabel}</span>
-              <span className="font-mono font-bold text-foreground text-base">{fmt(total)}</span>
+              <span className="font-mono font-bold text-foreground text-base">{formatNumber(total)}</span>
             </td>
           </tr>
         </tfoot>
@@ -103,7 +106,7 @@ interface FinancialReportsProps {
   entries: JournalEntry[];
   fiscalYears: FiscalYear[];
   settings: AccountingSettings;
-  fmt: (n: number) => string;
+  formatCurrency: (amount: number) => string;
 }
 
 /**
@@ -114,7 +117,7 @@ interface FinancialReportsProps {
  * @param {FinancialReportsProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt }: FinancialReportsProps) {
+export function FinancialReports({ accounts, entries, fiscalYears, settings, formatCurrency }: FinancialReportsProps) {
   const { t } = useTranslation();
   const reportViews = useMemo(
     () => [
@@ -125,35 +128,35 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt
     [t],
   );
   const [view,     setView]     = useState<ViewType>("income");
-  const activeFY   = (fiscalYears || []).find((f) => f.status === "active");
-  const [dateFrom, setDateFrom] = useState(activeFY?.startDate || "");
-  const [dateTo,   setDateTo]   = useState(activeFY?.endDate   || "");
+  const activeFiscalYear   = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active");
+  const [dateFrom, setDateFrom] = useState(activeFiscalYear?.startDate || "");
+  const [dateTo,   setDateTo]   = useState(activeFiscalYear?.endDate   || "");
 
   const { revenue, expenses, netSurplus, assets, liabilities, equity, netCashFlow, cashInflow, cashOutflow, tb } = useMemo(
     () => computeFinancials(accounts, entries, dateFrom || undefined, dateTo || undefined),
     [accounts, entries, dateFrom, dateTo]
   );
 
-  const get = (type: string) => tb.filter((r) => r.type === type);
+  const getRowsByAccountType = (type: string) => tb.filter((trialBalanceRow) => trialBalanceRow.type === type);
 
   const exportCSV = () => {
     const exportRows: Record<string, string>[] = [];
     if (view === "income") {
-      get("Revenue").forEach((r) =>
+      getRowsByAccountType("Revenue").forEach((trialBalanceRow) =>
         exportRows.push({
           section: "Revenue",
-          code: r.code,
-          account: r.name,
-          amount: String(r.totalCredit - r.totalDebit),
+          code: trialBalanceRow.code,
+          account: trialBalanceRow.name,
+          amount: String(trialBalanceRow.totalCredit - trialBalanceRow.totalDebit),
         }),
       );
       exportRows.push({ section: "", code: "", account: "Total Revenue", amount: String(revenue) });
-      get("Expense").forEach((r) =>
+      getRowsByAccountType("Expense").forEach((trialBalanceRow) =>
         exportRows.push({
           section: "Expense",
-          code: r.code,
-          account: r.name,
-          amount: String(r.totalDebit - r.totalCredit),
+          code: trialBalanceRow.code,
+          account: trialBalanceRow.name,
+          amount: String(trialBalanceRow.totalDebit - trialBalanceRow.totalCredit),
         }),
       );
       exportRows.push({ section: "", code: "", account: "Total Expenses", amount: String(expenses) });
@@ -164,16 +167,16 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt
         amount: String(netSurplus),
       });
     } else if (view === "balance") {
-      get("Asset").forEach((r) =>
-        exportRows.push({ section: "Asset", code: r.code, account: r.name, amount: String(r.balance) }),
+      getRowsByAccountType("Asset").forEach((trialBalanceRow) =>
+        exportRows.push({ section: "Asset", code: trialBalanceRow.code, account: trialBalanceRow.name, amount: String(trialBalanceRow.balance) }),
       );
       exportRows.push({ section: "", code: "", account: "Total Assets", amount: String(assets) });
-      get("Liability").forEach((r) =>
+      getRowsByAccountType("Liability").forEach((trialBalanceRow) =>
         exportRows.push({
           section: "Liability",
-          code: r.code,
-          account: r.name,
-          amount: String(r.totalCredit - r.totalDebit),
+          code: trialBalanceRow.code,
+          account: trialBalanceRow.name,
+          amount: String(trialBalanceRow.totalCredit - trialBalanceRow.totalDebit),
         }),
       );
       exportRows.push({ section: "", code: "", account: "Total Liabilities", amount: String(liabilities) });
@@ -191,6 +194,15 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt
       rows: exportRows,
     });
   };
+
+  const equityRows = getRowsByAccountType("Equity");
+  const equityTotal = equityRows.reduce((sum, trialBalanceRow) => sum + (trialBalanceRow.totalCredit - trialBalanceRow.totalDebit), 0) + netSurplus;
+  const depreciationAdjustment = tb
+    .filter((trialBalanceRow) => trialBalanceRow.name === "Depreciation Expense")
+    .reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalDebit - trialBalanceRow.totalCredit, 0);
+  const receivablesChange = -(tb.find((trialBalanceRow) => trialBalanceRow.code === "1100")?.balance || 0);
+  const payablesRow = tb.find((trialBalanceRow) => trialBalanceRow.code === "2000");
+  const payablesChange = payablesRow ? payablesRow.totalCredit - payablesRow.totalDebit : 0;
 
   return (
     <section aria-label="Financial Reports" className="space-y-5">
@@ -214,15 +226,15 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt
             className="px-3 py-1.5 w-40"
           />
         </div>
-        {activeFY && (
+        {activeFiscalYear && (
           <Button 
             type="button" 
             variant="link" 
             size="sm" 
-            onClick={() => { setDateFrom(activeFY.startDate); setDateTo(activeFY.endDate); }}
+            onClick={() => { setDateFrom(activeFiscalYear.startDate); setDateTo(activeFiscalYear.endDate); }}
             className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
           >
-            Active FY: {activeFY.label}
+            Active FY: {activeFiscalYear.label}
           </Button>
         )}
         <Button 
@@ -246,11 +258,11 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Total Revenue"  value={fmt(revenue)}   icon={TrendingUp}   color="bg-success/10" />
-        <StatCard label="Total Expenses" value={fmt(expenses)}  icon={TrendingDown} color="bg-destructive/10" />
-        <StatCard label="Net Surplus"    value={fmt(Math.abs(netSurplus))}
+        <StatCard label="Total Revenue"  value={formatCurrency(revenue)}   icon={TrendingUp}   color="bg-success/10" />
+        <StatCard label="Total Expenses" value={formatCurrency(expenses)}  icon={TrendingDown} color="bg-destructive/10" />
+        <StatCard label="Net Surplus"    value={formatCurrency(Math.abs(netSurplus))}
           icon={DollarSign} color={netSurplus >= 0 ? "bg-primary/5" : "bg-destructive/10"} />
-        <StatCard label="Total Assets"   value={fmt(assets)}    icon={Scale}        color="bg-info/10" />
+        <StatCard label="Total Assets"   value={formatCurrency(assets)}    icon={Scale}        color="bg-info/10" />
       </div>
 
       <SubTabBar
@@ -263,11 +275,11 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt
       {/* Income Statement */}
       {view === "income" && (
         <section aria-label="Income Statement" className="space-y-4">
-          <ReportSection title="Revenue" rows={get("Revenue")} totalLabel="Total Revenue" total={revenue} debitNormal={false} color="bg-success/10/60" />
-          <ReportSection title="Expenses" rows={get("Expense")} totalLabel="Total Expenses" total={expenses} debitNormal={true} color="bg-destructive/10/60" />
+          <ReportSection title="Revenue" rows={getRowsByAccountType("Revenue")} totalLabel="Total Revenue" total={revenue} debitNormal={false} color="bg-success/10/60" />
+          <ReportSection title="Expenses" rows={getRowsByAccountType("Expense")} totalLabel="Total Expenses" total={expenses} debitNormal={true} color="bg-destructive/10/60" />
           <div className={`flex items-center justify-between px-5 py-4 rounded-xl border-2 font-bold text-lg ${netSurplus >= 0 ? "border-success/40 bg-success/10 text-success" : "border-destructive/40 bg-destructive/10 text-destructive"}`}>
             <span>{netSurplus >= 0 ? "📈 Net Surplus" : "📉 Net Deficit"}</span>
-            <span className="font-mono">{fmt(Math.abs(netSurplus))}</span>
+            <span className="font-mono">{formatCurrency(Math.abs(netSurplus))}</span>
           </div>
         </section>
       )}
@@ -275,24 +287,24 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt
       {/* Balance Sheet */}
       {view === "balance" && (
         <section aria-label="Balance Sheet" className="space-y-4">
-          <ReportSection title="Assets" rows={get("Asset")} totalLabel="Total Assets" total={assets} debitNormal={true} color="bg-info/10/60" />
-          <ReportSection title="Liabilities" rows={get("Liability")} totalLabel="Total Liabilities" total={liabilities} debitNormal={false} color="bg-destructive/10/60" />
-          <ReportSection title="Equity" rows={get("Equity")} totalLabel="Total Equity (incl. Net Surplus)"
-            total={get("Equity").reduce((s, r) => s + (r.totalCredit - r.totalDebit), 0) + netSurplus} debitNormal={false} color="bg-primary/10" />
+          <ReportSection title="Assets" rows={getRowsByAccountType("Asset")} totalLabel="Total Assets" total={assets} debitNormal={true} color="bg-info/10/60" />
+          <ReportSection title="Liabilities" rows={getRowsByAccountType("Liability")} totalLabel="Total Liabilities" total={liabilities} debitNormal={false} color="bg-destructive/10/60" />
+          <ReportSection title="Equity" rows={equityRows} totalLabel="Total Equity (incl. Net Surplus)"
+            total={equityTotal} debitNormal={false} color="bg-primary/10" />
           <div className="grid grid-cols-2 gap-3">
             <article className="px-5 py-3 rounded-xl border border-border bg-info/10 text-right">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">Total Assets</h4>
-              <p className="font-mono font-bold text-info text-lg m-0">{fmt(assets)}</p>
+              <p className="font-mono font-bold text-info text-lg m-0">{formatCurrency(assets)}</p>
             </article>
             <article className="px-5 py-3 rounded-xl border border-border bg-primary/10 text-right">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">Liabilities + Equity</h4>
-              <p className="font-mono font-bold text-primary text-lg m-0">{fmt(liabilities + equity)}</p>
+              <p className="font-mono font-bold text-primary text-lg m-0">{formatCurrency(liabilities + equity)}</p>
             </article>
           </div>
           <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-semibold ${Math.abs(assets - (liabilities + equity)) < 1 ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
             {Math.abs(assets - (liabilities + equity)) < 1
               ? "✓ Balance Sheet is balanced — Assets = Liabilities + Equity"
-              : `✗ Balance Sheet difference: ${fmt(Math.abs(assets - (liabilities + equity)))}`
+              : `✗ Balance Sheet difference: ${formatCurrency(Math.abs(assets - (liabilities + equity)))}`
             }
           </div>
         </section>
@@ -310,24 +322,24 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt
               <tbody className="divide-y divide-border">
                 <tr className="bg-muted/10">
                   <td className="px-4 py-3 font-semibold text-foreground">Net Surplus / (Deficit)</td>
-                  <td className="px-4 py-3 text-right font-mono font-semibold">{fmt(netSurplus)}</td>
+                  <td className="px-4 py-3 text-right font-mono font-semibold">{formatCurrency(netSurplus)}</td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-muted-foreground pl-8">Add: Depreciation & Non-cash items</td>
                   <td className="px-4 py-3 text-right font-mono text-muted-foreground">
-                    {fmt(tb.filter(r => r.name === "Depreciation Expense").reduce((s, r) => s + r.totalDebit - r.totalCredit, 0))}
+                    {formatCurrency(depreciationAdjustment)}
                   </td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-muted-foreground pl-8">Changes in Receivables</td>
                   <td className="px-4 py-3 text-right font-mono text-muted-foreground">
-                    {fmt(-(tb.find(r => r.code === "1100")?.balance || 0))}
+                    {formatCurrency(receivablesChange)}
                   </td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-muted-foreground pl-8">Changes in Payables</td>
                   <td className="px-4 py-3 text-right font-mono text-muted-foreground">
-                    {fmt(tb.find(r => r.code === "2000") ? tb.find(r => r.code === "2000")!.totalCredit - tb.find(r => r.code === "2000")!.totalDebit : 0)}
+                    {formatCurrency(payablesChange)}
                   </td>
                 </tr>
               </tbody>
@@ -335,7 +347,7 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt
                 <tr>
                   <td className="px-4 py-2.5 font-bold text-foreground">Net Cash from Operations</td>
                   <td className="px-4 py-2.5 text-right font-mono font-bold text-foreground text-base">
-                    {fmt(Math.abs(netCashFlow))}
+                    {formatCurrency(Math.abs(netCashFlow))}
                     <span className={`text-xs ml-1 ${netCashFlow >= 0 ? "text-success" : "text-destructive"}`}>
                       {netCashFlow >= 0 ? "(Inflow)" : "(Outflow)"}
                     </span>
@@ -348,15 +360,15 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings, fmt
           <div className="grid grid-cols-3 gap-3">
             <article className="rounded-xl border border-border px-4 py-3 bg-success/10/60 text-center">
               <h4 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Cash Inflow</h4>
-              <p className="font-mono font-bold text-success text-lg mt-1 m-0">{fmt(cashInflow)}</p>
+              <p className="font-mono font-bold text-success text-lg mt-1 m-0">{formatCurrency(cashInflow)}</p>
             </article>
             <article className="rounded-xl border border-border px-4 py-3 bg-destructive/10/60 text-center">
               <h4 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Cash Outflow</h4>
-              <p className="font-mono font-bold text-destructive text-lg mt-1 m-0">{fmt(cashOutflow)}</p>
+              <p className="font-mono font-bold text-destructive text-lg mt-1 m-0">{formatCurrency(cashOutflow)}</p>
             </article>
             <article className={`rounded-xl border border-border px-4 py-3 text-center ${netCashFlow >= 0 ? "bg-primary/5" : "bg-destructive/10/60"}`}>
               <h4 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Net Cash Flow</h4>
-              <p className={`font-mono font-bold text-lg mt-1 m-0 ${netCashFlow >= 0 ? "text-primary" : "text-destructive"}`}>{fmt(Math.abs(netCashFlow))}</p>
+              <p className={`font-mono font-bold text-lg mt-1 m-0 ${netCashFlow >= 0 ? "text-primary" : "text-destructive"}`}>{formatCurrency(Math.abs(netCashFlow))}</p>
             </article>
           </div>
         </section>

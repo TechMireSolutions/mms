@@ -1148,11 +1148,11 @@ export default function DynamicChartVisualizer({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/40 font-medium">
-                        {processedData.map((d, index) => (
+                        {processedData.map((processedRow, index) => (
                           <tr key={index} className="hover:bg-muted/20">
-                            <td className="px-4 py-2.5 text-foreground font-semibold">{d.name}</td>
-                            <td className="px-4 py-2.5 text-primary font-bold">{d.value.toLocaleString()}</td>
-                            <td className="px-4 py-2.5 text-muted-foreground">{d.count}</td>
+                            <td className="px-4 py-2.5 text-foreground font-semibold">{processedRow.name}</td>
+                            <td className="px-4 py-2.5 text-primary font-bold">{processedRow.value.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-muted-foreground">{processedRow.count}</td>
                           </tr>
                         ))}
                       </tbody>

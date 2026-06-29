@@ -51,7 +51,7 @@ interface AccountingDashboardProps {
   entries: JournalEntry[];
   settings: AccountingSettings;
   fiscalYears: FiscalYear[];
-  fmt: (n: number) => string;
+  formatCurrency: (amount: number) => string;
 }
 
 /**
@@ -60,7 +60,7 @@ interface AccountingDashboardProps {
  * @param {AccountingDashboardProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function AccountingDashboard({ accounts, entries, settings, fiscalYears, fmt }: AccountingDashboardProps) {
+export function AccountingDashboard({ accounts, entries, settings, fiscalYears, formatCurrency }: AccountingDashboardProps) {
   const { primary, secondary, charts } = useBrandPalette();
   const pieColors = useMemo(() => [...charts], [charts]);
 
@@ -112,18 +112,18 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
     <section aria-label="Accounting Dashboard" className="space-y-5">
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard label="Total Revenue"   value={fmt(revenue)}    icon={TrendingUp}   color="bg-success/10/60" />
-        <KpiCard label="Total Expenses"  value={fmt(expenses)}   icon={TrendingDown} color="bg-destructive/10/60" />
-        <KpiCard label="Net Surplus"     value={fmt(Math.abs(netSurplus))}
+        <KpiCard label="Total Revenue"   value={formatCurrency(revenue)}    icon={TrendingUp}   color="bg-success/10/60" />
+        <KpiCard label="Total Expenses"  value={formatCurrency(expenses)}   icon={TrendingDown} color="bg-destructive/10/60" />
+        <KpiCard label="Net Surplus"     value={formatCurrency(Math.abs(netSurplus))}
           sub={netSurplus < 0 ? "Deficit" : "Surplus"} icon={DollarSign}
           color={netSurplus >= 0 ? "bg-primary/5" : "bg-destructive/10/60"} />
-        <KpiCard label="Total Assets"    value={fmt(assets)}     icon={Scale}        color="bg-info/10/60" />
+        <KpiCard label="Total Assets"    value={formatCurrency(assets)}     icon={Scale}        color="bg-info/10/60" />
       </div>
 
       {/* Second row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard label="Total Liabilities" value={fmt(liabilities)} icon={null} color="bg-muted/40" />
-        <KpiCard label="Net Cash Flow"     value={fmt(Math.abs(netCashFlow))} sub={netCashFlow >= 0 ? "Positive" : "Negative"} icon={null} color="bg-muted/40" />
+        <KpiCard label="Total Liabilities" value={formatCurrency(liabilities)} icon={null} color="bg-muted/40" />
+        <KpiCard label="Net Cash Flow"     value={formatCurrency(Math.abs(netCashFlow))} sub={netCashFlow >= 0 ? "Positive" : "Negative"} icon={null} color="bg-muted/40" />
         <KpiCard label="Posted Entries"    value={postedEntries.length}   icon={CheckCircle2} color="bg-success/10/60" />
         <KpiCard label="Pending Drafts"    value={draftEntries.length}   icon={Clock}        color={draftEntries.length > 0 ? "bg-warning/10/60" : "bg-muted/40"} />
       </div>
@@ -143,7 +143,7 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(tickValue) => tickValue >= 1000 ? `${(tickValue / 1000).toFixed(0)}k` : tickValue} />
-                  <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? fmt(Number(tooltipValue)) : ""} />
+                  <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? formatCurrency(Number(tooltipValue)) : ""} />
                   <Bar dataKey="revenue"  name="Revenue"  fill={primary} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expenses" name="Expenses" fill={secondary} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -168,16 +168,16 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
                         <Cell key={index} fill={pieColors[index % pieColors.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? fmt(Number(tooltipValue)) : ""} />
+                    <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? formatCurrency(Number(tooltipValue)) : ""} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="space-y-1 mt-2">
                 {expenseBreakdown.map((expenseItem, index) => (
-                  <div key={index} className="flex items-center gap-2 text-xs" aria-label={`${expenseItem.name}: ${fmt(expenseItem.value)}`}>
+                  <div key={index} className="flex items-center gap-2 text-xs" aria-label={`${expenseItem.name}: ${formatCurrency(expenseItem.value)}`}>
                     <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: pieColors[index % pieColors.length] }} aria-hidden="true" />
                     <span className="truncate text-muted-foreground flex-1">{expenseItem.name}</span>
-                    <span className="font-mono font-semibold text-foreground">{fmt(expenseItem.value)}</span>
+                    <span className="font-mono font-semibold text-foreground">{formatCurrency(expenseItem.value)}</span>
                   </div>
                 ))}
               </div>
@@ -198,10 +198,10 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
               const percentage = (balanceSheetItem.value / max) * 100;
               const colors: Record<string, string> = { Assets: "bg-info", Liabilities: "bg-destructive", Equity: "bg-primary" };
               return (
-                <div key={balanceSheetItem.name} aria-label={`${balanceSheetItem.name}: ${fmt(balanceSheetItem.value)}`}>
+                <div key={balanceSheetItem.name} aria-label={`${balanceSheetItem.name}: ${formatCurrency(balanceSheetItem.value)}`}>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="font-semibold text-foreground">{balanceSheetItem.name}</span>
-                    <span className="font-mono font-bold text-foreground">{fmt(balanceSheetItem.value)}</span>
+                    <span className="font-mono font-bold text-foreground">{formatCurrency(balanceSheetItem.value)}</span>
                   </div>
                   <div className="h-2 rounded-full bg-muted overflow-hidden" aria-hidden="true">
                     <div className={`h-full rounded-full transition-all ${colors[balanceSheetItem.name]}`} style={{ width: `${percentage}%` }} />
@@ -213,7 +213,7 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
           <div className={`mt-4 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg ${Math.abs(assets - (liabilities + equity)) < 1 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
             {Math.abs(assets - (liabilities + equity)) < 1
               ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Balance Sheet is balanced</>
-              : <><AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> Difference: {fmt(Math.abs(assets - (liabilities + equity)))}</>
+              : <><AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> Difference: {formatCurrency(Math.abs(assets - (liabilities + equity)))}</>
             }
           </div>
         </div>
@@ -237,7 +237,7 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
                     <p className="text-xs text-foreground truncate m-0">{journalEntry.description}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-xs font-mono font-bold text-foreground m-0">{fmt(totalDebit)}</p>
+                    <p className="text-xs font-mono font-bold text-foreground m-0">{formatCurrency(totalDebit)}</p>
                     <p className="text-[10px] text-muted-foreground m-0">{new Date(journalEntry.date).toLocaleDateString("en-PK", { day: "numeric", month: "short" })}</p>
                   </div>
                 </article>

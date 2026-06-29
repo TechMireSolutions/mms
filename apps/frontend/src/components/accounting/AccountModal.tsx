@@ -153,7 +153,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                     <input
                       type="checkbox"
                       checked={!!value}
-                      onChange={(e) => setForm((d) => ({ ...d, [field.id]: e.target.checked }))}
+                      onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.checked }))}
                       className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
                     />
                     <span className="text-xs font-medium text-foreground">{field.label}</span>
@@ -163,14 +163,14 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                     type="number"
                     className={FORM_INPUT}
                     value={value as number}
-                    onChange={(e) => setForm((d) => ({ ...d, [field.id]: e.target.value }))}
+                    onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
                     placeholder={field.placeholder || "Enter number…"}
                     required={field.required}
                   />
                 ) : field.type === "date" ? (
                   <DatePicker
                     value={value as string}
-                    onChange={(val) => setForm((d) => ({ ...d, [field.id]: val }))}
+                    onChange={(dateValue) => setForm((previousForm) => ({ ...previousForm, [field.id]: dateValue }))}
                     required={field.required}
                   />
                 ) : (

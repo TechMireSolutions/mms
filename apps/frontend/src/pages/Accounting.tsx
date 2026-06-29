@@ -156,13 +156,13 @@ export default function Accounting() {
                 entries={journalEntries}
                 fiscalYears={fiscalYears}
                 settings={settings}
-                fmt={formatCurrency}
+                formatCurrency={formatCurrency}
               />
             </div>
           )}
           
           {activeTab === "work" && activeSubTab === "overview" && (
-            <AccountingDashboard accounts={accounts} entries={journalEntries} settings={settings} fiscalYears={fiscalYears} fmt={formatCurrency} />
+            <AccountingDashboard accounts={accounts} entries={journalEntries} settings={settings} fiscalYears={fiscalYears} formatCurrency={formatCurrency} />
           )}
 
           {activeTab === "work" && activeSubTab === "journal" && (
@@ -172,7 +172,7 @@ export default function Accounting() {
               settings={settings}
               fiscalYears={fiscalYears}
               onChange={setEntries}
-              fmt={formatCurrency}
+              formatCurrency={formatCurrency}
               onFilteredCountChange={setFilteredCount}
               isColumnVisible={journalColumnLayout.isColumnVisible}
               columnCustomizer={{
@@ -183,7 +183,7 @@ export default function Accounting() {
             />
           )}
           {activeTab === "work" && activeSubTab === "ledger" && (
-            <GeneralLedger accounts={accounts} entries={journalEntries} fmt={formatCurrency} />
+            <GeneralLedger accounts={accounts} entries={journalEntries} formatCurrency={formatCurrency} />
           )}
           {activeTab === "work" && activeSubTab === "trial" && (
             <TrialBalance accounts={accounts} entries={journalEntries} fiscalYears={fiscalYears} formatCurrency={formatCurrency} />

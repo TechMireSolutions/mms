@@ -9,7 +9,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 interface JournalEntryDetailProps {
   entry: JournalEntry;
   accounts: Account[];
-  fmt?: (n: number) => string;
+  formatCurrency?: (amount: number) => string;
   onClose: () => void;
   onEdit: () => void;
   onReverse?: () => void;
@@ -23,15 +23,15 @@ interface JournalEntryDetailProps {
  * @param {JournalEntryDetailProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function JournalEntryDetail({ entry, accounts, fmt, onClose, onEdit, onReverse }: JournalEntryDetailProps) {
+export function JournalEntryDetail({ entry, accounts, formatCurrency, onClose, onEdit, onReverse }: JournalEntryDetailProps) {
   const { t } = useTranslation();
   const journalStatusConfig: Record<string, StatusBadgeConfigItem> = {
     posted: { label: t("accounting.journal.status.posted"), cls: SEMANTIC_BADGE.successStrong },
     draft: { label: t("accounting.journal.status.draft"), cls: SEMANTIC_BADGE.warningStrong },
   };
-  const getAccount = (id: string) => accounts.find((a) => a.id === id);
-  const totalD = entry.lines.reduce((s, l) => s + l.debit, 0);
-  const totalC = entry.lines.reduce((s, l) => s + l.credit, 0);
+  const getAccount = (id: string) => accounts.find((account) => account.id === id);
+  const totalDebit = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
+  const totalCredit = entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -93,8 +93,8 @@ export function JournalEntryDetail({ entry, accounts, fmt, onClose, onEdit, onRe
           {(entry.tags || []).length > 0 && (
             <div className="flex flex-wrap gap-1.5" aria-label="Tags">
               <Tag className="w-3.5 h-3.5 text-muted-foreground mt-0.5" aria-hidden="true" />
-              {entry.tags!.map((t) => (
-                <span key={t} className="px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">{t}</span>
+              {entry.tags!.map((tag) => (
+                <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">{tag}</span>
               ))}
             </div>
           )}
@@ -113,14 +113,14 @@ export function JournalEntryDetail({ entry, accounts, fmt, onClose, onEdit, onRe
               </thead>
               <tbody className="divide-y divide-border">
                 {entry.lines.map((line) => {
-                  const acc = getAccount(line.account_id);
+                  const account = getAccount(line.account_id);
                   return (
                     <tr key={line.id} className="hover:bg-muted/10">
                       <td className="px-4 py-2.5">
-                        <p className="font-semibold text-foreground m-0">{acc?.name || "Unknown Account"}</p>
+                        <p className="font-semibold text-foreground m-0">{account?.name || "Unknown Account"}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="font-mono text-[10px] text-muted-foreground">{acc?.code}</span>
-                          {acc && <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${ACCOUNT_TYPE_META[acc.type]?.color}`}>{acc.type}</span>}
+                          <span className="font-mono text-[10px] text-muted-foreground">{account?.code}</span>
+                          {account && <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${ACCOUNT_TYPE_META[account.type]?.color}`}>{account.type}</span>}
                         </div>
                       </td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground hidden sm:table-cell">{line.description || "—"}</td>
@@ -137,18 +137,18 @@ export function JournalEntryDetail({ entry, accounts, fmt, onClose, onEdit, onRe
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={2} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">Totals</td>
-                  <td className="px-4 py-2 text-right font-mono font-bold text-info">{fmt ? fmt(totalD) : totalD.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                  <td className="px-4 py-2 text-right font-mono font-bold text-success">{fmt ? fmt(totalC) : totalC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-2 text-right font-mono font-bold text-info">{formatCurrency ? formatCurrency(totalDebit) : totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-2 text-right font-mono font-bold text-success">{formatCurrency ? formatCurrency(totalCredit) : totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                 </tr>
               </tfoot>
             </table>
           </section>
 
           {/* Balance check */}
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border ${Math.abs(totalD - totalC) < 0.01 ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
-            {Math.abs(totalD - totalC) < 0.01
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border ${Math.abs(totalDebit - totalCredit) < 0.01 ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
+            {Math.abs(totalDebit - totalCredit) < 0.01
               ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Balanced entry — Debits equal Credits</>
-              : <>Unbalanced — Difference: {Math.abs(totalD - totalC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</>
+              : <>Unbalanced — Difference: {Math.abs(totalDebit - totalCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}</>
             }
           </div>
         </div>

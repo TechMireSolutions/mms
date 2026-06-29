@@ -28,31 +28,31 @@ type EntryType = "in" | "out" | "transfer";
 
 function classifyEntry(entry: JournalEntry & { transaction_type?: string }): EntryType {
   if (entry.transaction_type) {
-    const t = entry.transaction_type;
-    if (["fee_collection","donation","rent_income","other_income"].includes(t)) return "in";
-    if (["salary","utilities","supplies","rent_payment","other_expense"].includes(t)) return "out";
+    const transactionType = entry.transaction_type;
+    if (["fee_collection","donation","rent_income","other_income"].includes(transactionType)) return "in";
+    if (["salary","utilities","supplies","rent_payment","other_expense"].includes(transactionType)) return "out";
     return "transfer";
   }
   // Infer from lines
-  const hasRevCredit = entry.lines.some((l) => MONEY_IN_CREDITS.includes(l.account_id) && l.credit > 0);
-  const hasExpDebit  = entry.lines.some((l) => MONEY_OUT_DEBITS.includes(l.account_id) && l.debit  > 0);
-  if (hasRevCredit) return "in";
-  if (hasExpDebit)  return "out";
+  const hasRevenueCredit = entry.lines.some((journalLine) => MONEY_IN_CREDITS.includes(journalLine.account_id) && journalLine.credit > 0);
+  const hasExpenseDebit  = entry.lines.some((journalLine) => MONEY_OUT_DEBITS.includes(journalLine.account_id) && journalLine.debit  > 0);
+  if (hasRevenueCredit) return "in";
+  if (hasExpenseDebit)  return "out";
   return "transfer";
 }
 
 function getEntryAmount(entry: JournalEntry, type: EntryType): number {
   if (type === "in") {
-    const rev = entry.lines.filter((l) => MONEY_IN_CREDITS.includes(l.account_id) && l.credit > 0);
-    if (rev.length > 0) return rev.reduce((s, l) => s + l.credit, 0);
-    return entry.lines.reduce((s, l) => s + l.credit, 0);
+    const revenueLines = entry.lines.filter((journalLine) => MONEY_IN_CREDITS.includes(journalLine.account_id) && journalLine.credit > 0);
+    if (revenueLines.length > 0) return revenueLines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
+    return entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
   }
   if (type === "out") {
-    const exp = entry.lines.filter((l) => MONEY_OUT_DEBITS.includes(l.account_id) && l.debit > 0);
-    if (exp.length > 0) return exp.reduce((s, l) => s + l.debit, 0);
-    return entry.lines.reduce((s, l) => s + l.debit, 0);
+    const expenseLines = entry.lines.filter((journalLine) => MONEY_OUT_DEBITS.includes(journalLine.account_id) && journalLine.debit > 0);
+    if (expenseLines.length > 0) return expenseLines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
+    return entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
   }
-  return entry.lines.reduce((s, l) => Math.max(s, l.debit), 0);
+  return entry.lines.reduce((largestDebit, journalLine) => Math.max(largestDebit, journalLine.debit), 0);
 }
 
 function getEntryLabel(entry: JournalEntry & { transaction_type?: string }): string {
@@ -65,7 +65,7 @@ function getEntryLabel(entry: JournalEntry & { transaction_type?: string }): str
 interface CashbookViewProps {
   entries: JournalEntry[];
   accounts: Account[];
-  fmt: (n: number) => string;
+  formatCurrency: (amount: number) => string;
 }
 
 /**
@@ -76,28 +76,28 @@ interface CashbookViewProps {
  * @param {CashbookViewProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function CashbookView({ entries, accounts, fmt }: CashbookViewProps) {
+export function CashbookView({ entries, accounts, formatCurrency }: CashbookViewProps) {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<EntryType | "all">("all");
 
   const rows = useMemo(() => entries
-    .filter((e) => e.status === "posted")
-    .map((e) => {
-      const _type = classifyEntry(e);
+    .filter((journalEntry) => journalEntry.status === "posted")
+    .map((journalEntry) => {
+      const flowType = classifyEntry(journalEntry);
       return {
-        ...e,
-        _type,
-        _amount: getEntryAmount(e, _type),
-        _typeLabel: getEntryLabel(e),
+        ...journalEntry,
+        flowType,
+        flowAmount: getEntryAmount(journalEntry, flowType),
+        flowLabel: getEntryLabel(journalEntry),
       };
     })
-    .filter((r) => filterType === "all" || r._type === filterType)
-    .filter((r) => !search || r.description.toLowerCase().includes(search.toLowerCase()) || r.ref.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => b.date.localeCompare(a.date)),
+    .filter((cashbookRow) => filterType === "all" || cashbookRow.flowType === filterType)
+    .filter((cashbookRow) => !search || cashbookRow.description.toLowerCase().includes(search.toLowerCase()) || cashbookRow.ref.toLowerCase().includes(search.toLowerCase()))
+    .sort((firstRow, secondRow) => secondRow.date.localeCompare(firstRow.date)),
   [entries, search, filterType]);
 
-  const totalIn  = rows.filter((r) => r._type === "in").reduce((s, r) => s + r._amount, 0);
-  const totalOut = rows.filter((r) => r._type === "out").reduce((s, r) => s + r._amount, 0);
+  const totalIn  = rows.filter((cashbookRow) => cashbookRow.flowType === "in").reduce((sum, cashbookRow) => sum + cashbookRow.flowAmount, 0);
+  const totalOut = rows.filter((cashbookRow) => cashbookRow.flowType === "out").reduce((sum, cashbookRow) => sum + cashbookRow.flowAmount, 0);
   const balance  = totalIn - totalOut;
 
   return (
@@ -107,17 +107,17 @@ export function CashbookView({ entries, accounts, fmt }: CashbookViewProps) {
         <article className="rounded-xl border border-success/30 bg-success/10 p-4 text-center">
           <TrendingUp className="w-5 h-5 text-success mx-auto mb-1" aria-hidden="true" />
           <h4 className="text-[10px] font-bold text-success uppercase tracking-wide m-0">Money In</h4>
-          <p className="text-lg font-bold text-success mt-1 m-0">{fmt(totalIn)}</p>
+          <p className="text-lg font-bold text-success mt-1 m-0">{formatCurrency(totalIn)}</p>
         </article>
         <article className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-center">
           <TrendingDown className="w-5 h-5 text-destructive mx-auto mb-1" aria-hidden="true" />
           <h4 className="text-[10px] font-bold text-destructive uppercase tracking-wide m-0">Money Out</h4>
-          <p className="text-lg font-bold text-destructive mt-1 m-0">{fmt(totalOut)}</p>
+          <p className="text-lg font-bold text-destructive mt-1 m-0">{formatCurrency(totalOut)}</p>
         </article>
         <article className={`rounded-xl border p-4 text-center ${balance >= 0 ? "border-primary/30 bg-primary/5" : "border-destructive/30 bg-destructive/10"}`}>
           <ArrowUpDown className={`w-5 h-5 mx-auto mb-1 ${balance >= 0 ? "text-primary" : "text-destructive"}`} aria-hidden="true" />
           <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide m-0">Net Balance</h4>
-          <p className={`text-lg font-bold mt-1 m-0 ${balance >= 0 ? "text-primary" : "text-destructive"}`}>{fmt(Math.abs(balance))}</p>
+          <p className={`text-lg font-bold mt-1 m-0 ${balance >= 0 ? "text-primary" : "text-destructive"}`}>{formatCurrency(Math.abs(balance))}</p>
         </article>
       </section>
 
@@ -129,20 +129,20 @@ export function CashbookView({ entries, accounts, fmt }: CashbookViewProps) {
             type="search"
             aria-label="Search transactions"
             value={search} 
-            onChange={(e) => setSearch(e.target.value)} 
+            onChange={(event) => setSearch(event.target.value)}
             placeholder="Search transactions…"
             className="pl-9 pr-4" 
           />
         </div>
-        {(["all","in","out","transfer"] as const).map((f) => (
+        {(["all","in","out","transfer"] as const).map((filterOption) => (
           <Button 
-            key={f} 
-            variant={filterType === f ? "default" : "outline"}
-            onClick={() => setFilterType(f)}
-            aria-pressed={filterType === f}
+            key={filterOption}
+            variant={filterType === filterOption ? "default" : "outline"}
+            onClick={() => setFilterType(filterOption)}
+            aria-pressed={filterType === filterOption}
             className="rounded-xl text-xs font-bold"
           >
-            {f === "all" ? "All" : f === "in" ? "Money In" : f === "out" ? "Money Out" : "Transfers"}
+            {filterOption === "all" ? "All" : filterOption === "in" ? "Money In" : filterOption === "out" ? "Money Out" : "Transfers"}
           </Button>
         ))}
       </nav>
@@ -175,12 +175,12 @@ export function CashbookView({ entries, accounts, fmt }: CashbookViewProps) {
                     <td className="px-3 py-3">
                       <span className={cn(
                         "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border",
-                        row._type === "in" ? FLOW_TONE.in.badge
-                          : row._type === "out" ? FLOW_TONE.out.badge
+                        row.flowType === "in" ? FLOW_TONE.in.badge
+                          : row.flowType === "out" ? FLOW_TONE.out.badge
                           : SEMANTIC_BADGE.infoStrong,
                       )}>
-                        {row._type === "in" ? <TrendingUp className="w-2.5 h-2.5" aria-hidden="true" /> : row._type === "out" ? <TrendingDown className="w-2.5 h-2.5" aria-hidden="true" /> : <ArrowUpDown className="w-2.5 h-2.5" aria-hidden="true" />}
-                        {row._typeLabel}
+                        {row.flowType === "in" ? <TrendingUp className="w-2.5 h-2.5" aria-hidden="true" /> : row.flowType === "out" ? <TrendingDown className="w-2.5 h-2.5" aria-hidden="true" /> : <ArrowUpDown className="w-2.5 h-2.5" aria-hidden="true" />}
+                        {row.flowLabel}
                       </span>
                     </td>
                     <td className="px-3 py-3 text-foreground max-w-[200px] truncate">
@@ -188,13 +188,13 @@ export function CashbookView({ entries, accounts, fmt }: CashbookViewProps) {
                       <p className="text-[10px] text-muted-foreground font-mono m-0">{row.ref}</p>
                     </td>
                     <td className="px-3 py-3 text-right">
-                      {row._type === "in" ? (
-                        <span className="font-mono font-bold text-success">{fmt(row._amount)}</span>
+                      {row.flowType === "in" ? (
+                        <span className="font-mono font-bold text-success">{formatCurrency(row.flowAmount)}</span>
                       ) : <span className="text-muted-foreground/30">—</span>}
                     </td>
                     <td className="px-3 py-3 text-right">
-                      {row._type === "out" ? (
-                        <span className="font-mono font-bold text-destructive">{fmt(row._amount)}</span>
+                      {row.flowType === "out" ? (
+                        <span className="font-mono font-bold text-destructive">{formatCurrency(row.flowAmount)}</span>
                       ) : <span className="text-muted-foreground/30">—</span>}
                     </td>
                   </tr>
@@ -203,8 +203,8 @@ export function CashbookView({ entries, accounts, fmt }: CashbookViewProps) {
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={3} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{rows.length} transaction{rows.length !== 1 ? "s" : ""}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{fmt(totalIn)}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{fmt(totalOut)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{formatCurrency(totalIn)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{formatCurrency(totalOut)}</td>
                 </tr>
               </tfoot>
             </table>

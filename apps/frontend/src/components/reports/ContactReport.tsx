@@ -132,16 +132,16 @@ export default function ContactReport(props: ContactReportProps = {}) {
           <table className="w-full text-sm">
             <thead className="bg-muted/50 border-b border-border/50">
               <tr>
-                {[stageColumn, countColumn].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{h}</th>
+                {[stageColumn, countColumn].map((headerLabel) => (
+                  <th key={headerLabel} className="px-4 py-3 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50 bg-transparent">
-              {stageDistribution.map((p) => (
-                <tr key={p.stage} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => drillToStage(p.stage)}>
-                  <td className="px-4 py-4 font-bold text-foreground">{p.stage}</td>
-                  <td className="px-4 py-4 text-muted-foreground font-medium">{p.count}</td>
+              {stageDistribution.map((stageRow) => (
+                <tr key={stageRow.stage} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => drillToStage(stageRow.stage)}>
+                  <td className="px-4 py-4 font-bold text-foreground">{stageRow.stage}</td>
+                  <td className="px-4 py-4 text-muted-foreground font-medium">{stageRow.count}</td>
                 </tr>
               ))}
             </tbody>
