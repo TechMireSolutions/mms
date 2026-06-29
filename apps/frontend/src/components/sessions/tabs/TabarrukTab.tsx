@@ -89,15 +89,20 @@ interface TabarrukTabProps {
 export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
   const [showModal, setShowModal] = useState(false);
   const [editEntry, setEditEntry] = useState<TabarrukItem | null>(null);
-  const items = session.tabarruk || [];
+  const tabarrukItems = session.tabarruk || [];
 
   const handleSave = (entry: TabarrukItem) => {
-    const existing = items.find((item) => item.id === entry.id);
-    onUpdate({ ...session, tabarruk: existing ? items.map((item) => item.id === entry.id ? entry : item) : [...items, entry] });
+    const existingEntry = tabarrukItems.find((tabarrukItem) => tabarrukItem.id === entry.id);
+    onUpdate({
+      ...session,
+      tabarruk: existingEntry
+        ? tabarrukItems.map((tabarrukItem) => tabarrukItem.id === entry.id ? entry : tabarrukItem)
+        : [...tabarrukItems, entry],
+    });
     setShowModal(false); setEditEntry(null);
   };
 
-  const handleDelete = (id: string) => onUpdate({ ...session, tabarruk: items.filter((item) => item.id !== id) });
+  const handleDelete = (id: string) => onUpdate({ ...session, tabarruk: tabarrukItems.filter((tabarrukItem) => tabarrukItem.id !== id) });
 
   return (
     <section aria-label="Session Tabarruk" className="space-y-4">
@@ -110,7 +115,7 @@ export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
       </article>
 
       <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{items.length} item{items.length !== 1 ? "s" : ""} recorded</p>
+        <p className="text-sm font-semibold text-foreground m-0">{tabarrukItems.length} item{tabarrukItems.length !== 1 ? "s" : ""} recorded</p>
         <Button
           onClick={() => { setEditEntry(null); setShowModal(true); }}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
@@ -119,7 +124,7 @@ export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
         </Button>
       </header>
 
-      {items.length === 0 ? (
+      {tabarrukItems.length === 0 ? (
         <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
           <Gift className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
           <p className="text-sm font-medium text-foreground m-0">No tabarruk recorded yet</p>
@@ -138,33 +143,33 @@ export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
-              {items.map((item, index) => (
+              {tabarrukItems.map((tabarrukItem, index) => (
                 <motion.tr
-                  key={item.id}
+                  key={tabarrukItem.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.04 }}
                   className="hover:bg-muted/20 transition-colors group"
                 >
                   <td className="px-4 py-3">
-                    <p className="text-[13px] font-semibold text-foreground m-0">{item.item}</p>
-                    {item.note && <p className="text-[11px] text-muted-foreground m-0">{item.note}</p>}
+                    <p className="text-[13px] font-semibold text-foreground m-0">{tabarrukItem.item}</p>
+                    {tabarrukItem.note && <p className="text-[11px] text-muted-foreground m-0">{tabarrukItem.note}</p>}
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="text-[13px] text-foreground">{item.quantity || "—"}</span>
+                    <span className="text-[13px] text-foreground">{tabarrukItem.quantity || "—"}</span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-[13px] text-muted-foreground">{item.occasion || "—"}</span>
+                    <span className="text-[13px] text-muted-foreground">{tabarrukItem.occasion || "—"}</span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-[12px] text-muted-foreground">{item.date || "—"}</span>
+                    <span className="text-[12px] text-muted-foreground">{tabarrukItem.date || "—"}</span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 justify-end">
-                      <Button aria-label={`Edit ${item.item}`} onClick={() => { setEditEntry(item); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
+                      <Button aria-label={`Edit ${tabarrukItem.item}`} onClick={() => { setEditEntry(tabarrukItem); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
-                      <Button aria-label={`Delete ${item.item}`} onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
+                      <Button aria-label={`Delete ${tabarrukItem.item}`} onClick={() => handleDelete(tabarrukItem.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
                     </div>

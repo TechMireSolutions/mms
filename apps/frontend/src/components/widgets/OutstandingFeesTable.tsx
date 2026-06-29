@@ -18,29 +18,29 @@ import { Button } from "../ui/button";
 export default function OutstandingFeesTable({ title }: { title?: string }) {
   const invoices = useLiveCollection<Invoice>("finance_invoices", []);
   const unpaidInvoices = useMemo(
-    () => invoices.filter((inv) => inv.status !== "paid" && inv.status !== "cancelled"),
+    () => invoices.filter((invoice) => invoice.status !== "paid" && invoice.status !== "cancelled"),
     [invoices],
   );
   const studentIds = useMemo(
-    () => uniqueRegistryIds(unpaidInvoices.map((inv) => inv.studentId)),
+    () => uniqueRegistryIds(unpaidInvoices.map((invoice) => invoice.studentId)),
     [unpaidInvoices],
   );
   const { data: students = [] } = useStudentsByIds(studentIds);
 
-  const list = unpaidInvoices
-    .map((inv) => {
-      const student = students.find((s) => String(s.id) === String(inv.studentId));
+  const outstandingFeeRows = unpaidInvoices
+    .map((invoice) => {
+      const student = students.find((studentOption) => String(studentOption.id) === String(invoice.studentId));
       const contact = student?.phone || "+92 300 1234567";
-      const amount = inv.status === "partial" ? (inv.finalAmt - (inv.paidAmt || 0)) : inv.finalAmt;
+      const amount = invoice.status === "partial" ? (invoice.finalAmt - (invoice.paidAmt || 0)) : invoice.finalAmt;
 
-      const due = new Date(inv.dueDate);
+      const due = new Date(invoice.dueDate);
       const now = new Date();
       const diffMonths = Math.max(1, (now.getFullYear() - due.getFullYear()) * 12 + now.getMonth() - due.getMonth());
 
       return {
-        id: inv.id,
-        student: inv.studentName,
-        class: inv.class,
+        id: invoice.id,
+        student: invoice.studentName,
+        class: invoice.class,
         amount,
         months: diffMonths,
         contact,
@@ -79,42 +79,42 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-border/50">
-            {list.map((fee, i) => (
+            {outstandingFeeRows.map((outstandingFee, index) => (
               <motion.tr
-                key={fee.id}
+                key={outstandingFee.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.05 }}
+                transition={{ delay: index * 0.05 }}
                 className="hover:bg-muted/20 transition-colors"
               >
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
                       <span className="text-[10px] font-bold text-primary">
-                        {fee.student.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                        {outstandingFee.student.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2)}
                       </span>
                     </div>
-                    <span className="text-[13px] font-medium text-foreground">{fee.student}</span>
+                    <span className="text-[13px] font-medium text-foreground">{outstandingFee.student}</span>
                   </div>
                 </td>
-                <td className="px-3 py-3 text-[12px] text-muted-foreground hidden sm:table-cell">{fee.class}</td>
+                <td className="px-3 py-3 text-[12px] text-muted-foreground hidden sm:table-cell">{outstandingFee.class}</td>
                 <td className="px-3 py-3">
-                  <span className="text-[13px] font-bold text-destructive">₨ {fee.amount.toLocaleString()}</span>
+                  <span className="text-[13px] font-bold text-destructive">₨ {outstandingFee.amount.toLocaleString()}</span>
                 </td>
                 <td className="px-3 py-3 hidden md:table-cell">
                   <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                    fee.months >= 3
+                    outstandingFee.months >= 3
                       ? "bg-destructive/10 text-destructive"
                       : "bg-warning/10 text-warning"
                   }`}>
-                    {fee.months} {fee.months === 1 ? "month" : "months"}
+                    {outstandingFee.months} {outstandingFee.months === 1 ? "month" : "months"}
                   </span>
                 </td>
                 <td className="px-3 py-3 text-right">
                   <div className="flex items-center justify-end gap-1.5">
                     <Button
                       variant="ghost"
-                      aria-label={`Call ${fee.student}`}
+                      aria-label={`Call ${outstandingFee.student}`}
                       title="Call"
                       className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-none"
                     >
@@ -122,7 +122,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                     </Button>
                     <Button
                       variant="ghost"
-                      aria-label={`Send reminder to ${fee.student}`}
+                      aria-label={`Send reminder to ${outstandingFee.student}`}
                       title="Send reminder"
                       className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none"
                     >

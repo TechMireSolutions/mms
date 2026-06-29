@@ -111,8 +111,8 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
 
   const handleDelete = (type: "income" | "expense", id: string) => {
     const entryKey = type === "income" ? "incomes" : "expenses";
-    const entries = (budget[entryKey] ?? []) as (BudgetIncome | BudgetExpense)[];
-    onUpdate({ ...session, budget: { ...budget, [entryKey]: entries.filter((entry) => entry.id !== id) } });
+    const budgetEntries = (budget[entryKey] ?? []) as (BudgetIncome | BudgetExpense)[];
+    onUpdate({ ...session, budget: { ...budget, [entryKey]: budgetEntries.filter((budgetEntry) => budgetEntry.id !== id) } });
   };
 
   const formatMoney = (amount: number) => `PKR ${amount.toLocaleString()}`;

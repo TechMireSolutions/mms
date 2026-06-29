@@ -68,38 +68,38 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
     () => computeFinancials(accounts, entries), [accounts, entries]
   );
 
-  const posted = entries.filter((e) => e.status === "posted");
-  const drafts = entries.filter((e) => e.status === "draft");
+  const postedEntries = entries.filter((journalEntry) => journalEntry.status === "posted");
+  const draftEntries = entries.filter((journalEntry) => journalEntry.status === "draft");
 
   // Monthly revenue/expense bar chart (from posted entries)
   const monthlyData = useMemo(() => {
-    const map: Record<string, { month: string, revenue: number, expenses: number }> = {};
-    posted.forEach((entry) => {
-      const m = entry.date.slice(0, 7);
-      if (!map[m]) map[m] = { month: m, revenue: 0, expenses: 0 };
-      entry.lines.forEach((l) => {
-        const acc = accounts.find((a) => a.id === l.account_id);
-        if (acc?.type === "Revenue") map[m].revenue += l.credit - l.debit;
-        if (acc?.type === "Expense") map[m].expenses += l.debit - l.credit;
+    const totalsByMonth: Record<string, { month: string, revenue: number, expenses: number }> = {};
+    postedEntries.forEach((journalEntry) => {
+      const monthKey = journalEntry.date.slice(0, 7);
+      if (!totalsByMonth[monthKey]) totalsByMonth[monthKey] = { month: monthKey, revenue: 0, expenses: 0 };
+      journalEntry.lines.forEach((journalLine) => {
+        const account = accounts.find((accountOption) => accountOption.id === journalLine.account_id);
+        if (account?.type === "Revenue") totalsByMonth[monthKey].revenue += journalLine.credit - journalLine.debit;
+        if (account?.type === "Expense") totalsByMonth[monthKey].expenses += journalLine.debit - journalLine.credit;
       });
     });
-    return Object.values(map).sort((a, b) => a.month.localeCompare(b.month)).slice(-6).map((d) => ({
-      ...d,
-      month: new Date(d.month + "-01").toLocaleDateString("en-PK", { month: "short" }),
+    return Object.values(totalsByMonth).sort((firstMonth, secondMonth) => firstMonth.month.localeCompare(secondMonth.month)).slice(-6).map((monthTotal) => ({
+      ...monthTotal,
+      month: new Date(monthTotal.month + "-01").toLocaleDateString("en-PK", { month: "short" }),
     }));
-  }, [posted, accounts]);
+  }, [postedEntries, accounts]);
 
   // Expense breakdown for pie
   const expenseBreakdown = useMemo(() => {
     return tb
-      .filter((r) => r.type === "Expense" && r.totalDebit > 0)
-      .map((r) => ({ name: r.name, value: r.totalDebit - r.totalCredit }))
-      .sort((a, b) => b.value - a.value)
+      .filter((trialBalanceRow) => trialBalanceRow.type === "Expense" && trialBalanceRow.totalDebit > 0)
+      .map((trialBalanceRow) => ({ name: trialBalanceRow.name, value: trialBalanceRow.totalDebit - trialBalanceRow.totalCredit }))
+      .sort((firstExpense, secondExpense) => secondExpense.value - firstExpense.value)
       .slice(0, 5);
   }, [tb]);
 
   // Recent entries
-  const recentEntries = [...entries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  const recentEntries = [...entries].sort((firstEntry, secondEntry) => secondEntry.date.localeCompare(firstEntry.date)).slice(0, 5);
 
   // Assets vs Liabilities
   const bsData = [
@@ -124,8 +124,8 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard label="Total Liabilities" value={fmt(liabilities)} icon={null} color="bg-muted/40" />
         <KpiCard label="Net Cash Flow"     value={fmt(Math.abs(netCashFlow))} sub={netCashFlow >= 0 ? "Positive" : "Negative"} icon={null} color="bg-muted/40" />
-        <KpiCard label="Posted Entries"    value={posted.length}   icon={CheckCircle2} color="bg-success/10/60" />
-        <KpiCard label="Pending Drafts"    value={drafts.length}   icon={Clock}        color={drafts.length > 0 ? "bg-warning/10/60" : "bg-muted/40"} />
+        <KpiCard label="Posted Entries"    value={postedEntries.length}   icon={CheckCircle2} color="bg-success/10/60" />
+        <KpiCard label="Pending Drafts"    value={draftEntries.length}   icon={Clock}        color={draftEntries.length > 0 ? "bg-warning/10/60" : "bg-muted/40"} />
       </div>
 
       {/* Charts row */}
@@ -142,8 +142,8 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
                 <BarChart data={monthlyData} barGap={4}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v} />
-                  <Tooltip formatter={(v) => v !== undefined ? fmt(Number(v)) : ""} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(tickValue) => tickValue >= 1000 ? `${(tickValue / 1000).toFixed(0)}k` : tickValue} />
+                  <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? fmt(Number(tooltipValue)) : ""} />
                   <Bar dataKey="revenue"  name="Revenue"  fill={primary} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expenses" name="Expenses" fill={secondary} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -164,20 +164,20 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
                   <PieChart>
                     <Pie data={expenseBreakdown} cx="50%" cy="50%" innerRadius={40} outerRadius={65}
                       dataKey="value" paddingAngle={2}>
-                      {expenseBreakdown.map((_, i) => (
-                        <Cell key={i} fill={pieColors[i % pieColors.length]} />
+                      {expenseBreakdown.map((_, index) => (
+                        <Cell key={index} fill={pieColors[index % pieColors.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v) => v !== undefined ? fmt(Number(v)) : ""} />
+                    <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? fmt(Number(tooltipValue)) : ""} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="space-y-1 mt-2">
-                {expenseBreakdown.map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs" aria-label={`${item.name}: ${fmt(item.value)}`}>
-                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: pieColors[i % pieColors.length] }} aria-hidden="true" />
-                    <span className="truncate text-muted-foreground flex-1">{item.name}</span>
-                    <span className="font-mono font-semibold text-foreground">{fmt(item.value)}</span>
+                {expenseBreakdown.map((expenseItem, index) => (
+                  <div key={index} className="flex items-center gap-2 text-xs" aria-label={`${expenseItem.name}: ${fmt(expenseItem.value)}`}>
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: pieColors[index % pieColors.length] }} aria-hidden="true" />
+                    <span className="truncate text-muted-foreground flex-1">{expenseItem.name}</span>
+                    <span className="font-mono font-semibold text-foreground">{fmt(expenseItem.value)}</span>
                   </div>
                 ))}
               </div>
@@ -193,18 +193,18 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
         <div className="rounded-xl border border-border bg-card p-5">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0">Balance Sheet Snapshot</h3>
           <div className="space-y-3">
-            {bsData.map((item) => {
-              const max = Math.max(...bsData.map(d => d.value), 1);
-              const pct = (item.value / max) * 100;
+            {bsData.map((balanceSheetItem) => {
+              const max = Math.max(...bsData.map((snapshotItem) => snapshotItem.value), 1);
+              const percentage = (balanceSheetItem.value / max) * 100;
               const colors: Record<string, string> = { Assets: "bg-info", Liabilities: "bg-destructive", Equity: "bg-primary" };
               return (
-                <div key={item.name} aria-label={`${item.name}: ${fmt(item.value)}`}>
+                <div key={balanceSheetItem.name} aria-label={`${balanceSheetItem.name}: ${fmt(balanceSheetItem.value)}`}>
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="font-semibold text-foreground">{item.name}</span>
-                    <span className="font-mono font-bold text-foreground">{fmt(item.value)}</span>
+                    <span className="font-semibold text-foreground">{balanceSheetItem.name}</span>
+                    <span className="font-mono font-bold text-foreground">{fmt(balanceSheetItem.value)}</span>
                   </div>
                   <div className="h-2 rounded-full bg-muted overflow-hidden" aria-hidden="true">
-                    <div className={`h-full rounded-full transition-all ${colors[item.name]}`} style={{ width: `${pct}%` }} />
+                    <div className={`h-full rounded-full transition-all ${colors[balanceSheetItem.name]}`} style={{ width: `${percentage}%` }} />
                   </div>
                 </div>
               );
@@ -222,23 +222,23 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
         <div className="rounded-xl border border-border bg-card p-5">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0">Recent Journal Entries</h3>
           <div className="space-y-2">
-            {recentEntries.map((entry) => {
-              const totalD = entry.lines.reduce((s, l) => s + l.debit, 0);
+            {recentEntries.map((journalEntry) => {
+              const totalDebit = journalEntry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
               return (
-                <article key={entry.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${entry.status === "posted" ? "bg-success/15" : "bg-warning/15"}`} aria-hidden="true">
-                    {entry.status === "posted"
+                <article key={journalEntry.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${journalEntry.status === "posted" ? "bg-success/15" : "bg-warning/15"}`} aria-hidden="true">
+                    {journalEntry.status === "posted"
                       ? <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                       : <Clock className="w-3.5 h-3.5 text-warning" />
                     }
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-primary font-mono m-0">{entry.ref}</p>
-                    <p className="text-xs text-foreground truncate m-0">{entry.description}</p>
+                    <p className="text-xs font-bold text-primary font-mono m-0">{journalEntry.ref}</p>
+                    <p className="text-xs text-foreground truncate m-0">{journalEntry.description}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-xs font-mono font-bold text-foreground m-0">{fmt(totalD)}</p>
-                    <p className="text-[10px] text-muted-foreground m-0">{new Date(entry.date).toLocaleDateString("en-PK", { day: "numeric", month: "short" })}</p>
+                    <p className="text-xs font-mono font-bold text-foreground m-0">{fmt(totalDebit)}</p>
+                    <p className="text-[10px] text-muted-foreground m-0">{new Date(journalEntry.date).toLocaleDateString("en-PK", { day: "numeric", month: "short" })}</p>
                   </div>
                 </article>
               );

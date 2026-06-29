@@ -24,8 +24,8 @@ const AVATAR_COLORS = [
 
 function TeacherAvatar({ teacher, fallback }: { teacher: Teacher; fallback: string }): React.JSX.Element {
   const displayName = teacher.name || fallback;
-  const initials = displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
-  const colorIndex = Math.abs(displayName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % AVATAR_COLORS.length;
+  const initials = displayName.split(' ').map((namePart) => namePart[0]).join('').slice(0, 2).toUpperCase();
+  const colorIndex = Math.abs(displayName.split('').reduce((hashTotal, character) => hashTotal + character.charCodeAt(0), 0)) % AVATAR_COLORS.length;
   const colorClass = AVATAR_COLORS[colorIndex];
 
   return (
@@ -56,10 +56,10 @@ export function TeacherList({
   const sortedCustomFields = useMemo(() => {
     const order = settings.fieldOrder ?? DEFAULT_TEACHERS_SETTINGS.fieldOrder ?? [];
     const orderMap = Object.fromEntries(order.map((id, index) => [id, index]));
-    return [...customFields].sort((a, b) => {
-      const ai = orderMap[a.id] ?? 9999;
-      const bi = orderMap[b.id] ?? 9999;
-      return ai - bi;
+    return [...customFields].sort((firstField, secondField) => {
+      const firstFieldOrder = orderMap[firstField.id] ?? 9999;
+      const secondFieldOrder = orderMap[secondField.id] ?? 9999;
+      return firstFieldOrder - secondFieldOrder;
     });
   }, [customFields, settings.fieldOrder]);
 
@@ -73,18 +73,18 @@ export function TeacherList({
 
   const statusConfig = useMemo(() => {
     const map: Record<string, { label: string; cls: string }> = {};
-    const list = statuses.length > 0 ? statuses : ['active', 'inactive', 'on_leave'];
-    for (const s of list) {
-      const translationKey = `teachers.status.${s}` as AppTranslationKey;
+    const statusValues = statuses.length > 0 ? statuses : ['active', 'inactive', 'on_leave'];
+    for (const statusValue of statusValues) {
+      const translationKey = `teachers.status.${statusValue}` as AppTranslationKey;
       const translated = t(translationKey);
-      const label = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+      const label = translated === translationKey ? statusValue.charAt(0).toUpperCase() + statusValue.slice(1) : translated;
       
       let cls: string = SEMANTIC_BADGE.muted;
-      if (s === 'active') cls = SEMANTIC_BADGE.success;
-      else if (s === 'on_leave') cls = SEMANTIC_BADGE.warning;
-      else if (s === 'inactive') cls = SEMANTIC_BADGE.muted;
+      if (statusValue === 'active') cls = SEMANTIC_BADGE.success;
+      else if (statusValue === 'on_leave') cls = SEMANTIC_BADGE.warning;
+      else if (statusValue === 'inactive') cls = SEMANTIC_BADGE.muted;
 
-      map[s] = { label, cls };
+      map[statusValue] = { label, cls };
     }
     return map;
   }, [statuses, t]);
@@ -94,23 +94,23 @@ export function TeacherList({
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const sorted = useMemo(() => {
-    const list = [...teachers];
-    list.sort((a, b) => {
-      const av = sortField === 'name'
-        ? (a.name ?? '').toLowerCase()
-        : String(a[sortField] ?? '');
-      const bv = sortField === 'name'
-        ? (b.name ?? '').toLowerCase()
-        : String(b[sortField] ?? '');
-      const cmp = av.localeCompare(bv);
-      return sortDir === 'asc' ? cmp : -cmp;
+    const sortedTeachers = [...teachers];
+    sortedTeachers.sort((firstTeacher, secondTeacher) => {
+      const firstSortValue = sortField === 'name'
+        ? (firstTeacher.name ?? '').toLowerCase()
+        : String(firstTeacher[sortField] ?? '');
+      const secondSortValue = sortField === 'name'
+        ? (secondTeacher.name ?? '').toLowerCase()
+        : String(secondTeacher[sortField] ?? '');
+      const comparison = firstSortValue.localeCompare(secondSortValue);
+      return sortDir === 'asc' ? comparison : -comparison;
     });
-    return list;
+    return sortedTeachers;
   }, [teachers, sortField, sortDir]);
 
   const handleSort = (field: typeof sortField) => {
     if (sortField === field) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+      setSortDir((currentDirection) => (currentDirection === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortDir('asc');
@@ -216,14 +216,14 @@ export function TeacherList({
                   </td>
                 )}
                 {visibleCustomFields.map((field) => {
-                  const val = (teacher as unknown as Record<string, unknown>)[field.id];
-                  let displayVal = '—';
-                  if (val !== undefined && val !== null && val !== '') {
-                    displayVal = typeof val === 'boolean' ? (val ? 'Yes' : 'No') : String(val);
+                  const fieldValue = (teacher as unknown as Record<string, unknown>)[field.id];
+                  let displayValue = '—';
+                  if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
+                    displayValue = typeof fieldValue === 'boolean' ? (fieldValue ? 'Yes' : 'No') : String(fieldValue);
                   }
                   return (
                     <td key={field.id} className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                      {displayVal}
+                      {displayValue}
                     </td>
                   );
                 })}

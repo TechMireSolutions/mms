@@ -48,7 +48,7 @@ const HasanatTooltip = ({ active = false, payload = [] }: Partial<TooltipContent
 export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { attendance: ATTENDANCE_COLORS } = useBrandedDashboardChartColors();
   const palette = useBrandPalette();
-  const records = getCollection<AttendanceRecord>("attendance_records");
+  const attendanceRecords = getCollection<AttendanceRecord>("attendance_records");
 
   const [chartType, setChartType] = useState<"bar" | "line" | "area">(() => {
     return (localStorage.getItem("db_chart_type_attendance") as "bar" | "line" | "area") || "bar";
@@ -57,20 +57,20 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
     return localStorage.getItem("db_chart_color_attendance") || "semantic";
   });
 
-  const uniqueDates = [...new Set(records.map(r => r.date as string))].sort().reverse().slice(0, 7).reverse();
+  const uniqueDates = [...new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date as string))].sort().reverse().slice(0, 7).reverse();
 
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const attendanceData: AttendancePoint[] = days.map((dayLabel, index) => {
-    const targetDate = uniqueDates.find(d => {
-      const dateObj = new Date(d);
+    const targetDate = uniqueDates.find((attendanceDate) => {
+      const dateObj = new Date(attendanceDate);
       const dayIndex = (dateObj.getDay() + 6) % 7; // Mon=0, Sun=6
       return dayIndex === index;
     });
 
     if (targetDate) {
-      const dayRecords = records.filter(r => r.date === targetDate);
+      const dayRecords = attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === targetDate);
       const total = dayRecords.length;
-      const present = dayRecords.filter(r => r.status === "present" || r.status === "late").length;
+      const present = dayRecords.filter((attendanceRecord) => attendanceRecord.status === "present" || attendanceRecord.status === "late").length;
       return {
         day: dayLabel,
         rate: total > 0 ? Math.round((present / total) * 100) : 0
@@ -83,7 +83,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
     };
   });
   
-  const avg = attendanceData.length ? Math.round(attendanceData.reduce((s, d) => s + d.rate, 0) / attendanceData.length) : 0;
+  const avg = attendanceData.length ? Math.round(attendanceData.reduce((sum, attendancePoint) => sum + attendancePoint.rate, 0) / attendanceData.length) : 0;
 
   const isSemantic = colorTheme === "semantic";
   const themeColor = ATTENDANCE_COLORS[colorTheme] || ATTENDANCE_COLORS.brand;
@@ -106,10 +106,10 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
             <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
               <select
                 value={chartType}
-                onChange={(e) => {
-                  const type = e.target.value as "bar" | "line" | "area";
-                  setChartType(type);
-                  localStorage.setItem("db_chart_type_attendance", type);
+                onChange={(event) => {
+                  const selectedChartType = event.target.value as "bar" | "line" | "area";
+                  setChartType(selectedChartType);
+                  localStorage.setItem("db_chart_type_attendance", selectedChartType);
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -119,10 +119,10 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
               </select>
               <select
                 value={colorTheme}
-                onChange={(e) => {
-                  const col = e.target.value;
-                  setColorTheme(col);
-                  localStorage.setItem("db_chart_color_attendance", col);
+                onChange={(event) => {
+                  const selectedColorTheme = event.target.value;
+                  setColorTheme(selectedColorTheme);
+                  localStorage.setItem("db_chart_color_attendance", selectedColorTheme);
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -179,10 +179,10 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
 
           {chartType === "bar" && (
             <Bar dataKey="rate" radius={[5, 5, 0, 0]} maxBarSize={32}>
-              {attendanceData.map((entry, i) => (
+              {attendanceData.map((attendancePoint, index) => (
                 <Cell
-                  key={i}
-                  fill={isSemantic ? semanticBarFill(entry.rate) : themeColor}
+                  key={index}
+                  fill={isSemantic ? semanticBarFill(attendancePoint.rate) : themeColor}
                   fillOpacity={0.85}
                 />
               ))}
@@ -202,7 +202,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
 export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { hasanat: HASANAT_THEMES } = useBrandedDashboardChartColors();
   const distributions = getCollection<Distribution>("hasanat_distributions");
-  const denoms = getCollection<any>("hasanat_denoms");
+  const denominations = getCollection<any>("hasanat_denoms");
 
   const [chartType, setChartType] = useState<"pie" | "bar" | "radar">(() => {
     return (localStorage.getItem("db_chart_type_hasanat") as "pie" | "bar" | "radar") || "pie";
@@ -216,27 +216,27 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   let behaviorPoints = 0;
 
   const pointsMap = new Map<string, number>();
-  (denoms || []).forEach(d => pointsMap.set(d.id, d.points));
+  (denominations || []).forEach((denomination) => pointsMap.set(denomination.id, denomination.points));
 
-  distributions.forEach(d => {
-    if (!d) return;
-    const denom = String(d.denominationName || "").toLowerCase();
-    const points = pointsMap.get(d.denominationId) || (
-      denom.includes("silver") ? 150 :
-      denom.includes("gold") ? 500 :
-      denom.includes("platinum") ? 1000 :
-      denom.includes("diamond") ? 2500 : 50
+  distributions.forEach((distribution) => {
+    if (!distribution) return;
+    const denominationName = String(distribution.denominationName || "").toLowerCase();
+    const points = pointsMap.get(distribution.denominationId) || (
+      denominationName.includes("silver") ? 150 :
+      denominationName.includes("gold") ? 500 :
+      denominationName.includes("platinum") ? 1000 :
+      denominationName.includes("diamond") ? 2500 : 50
     );
 
-    const totalPts = Number(d.quantity || 1) * points;
+    const totalPoints = Number(distribution.quantity || 1) * points;
 
-    const reason = String(d.reason || "").toLowerCase();
+    const reason = String(distribution.reason || "").toLowerCase();
     if (reason.includes("attendance") || reason.includes("absence")) {
-      attendancePoints += totalPts;
+      attendancePoints += totalPoints;
     } else if (reason.includes("juz") || reason.includes("hifz") || reason.includes("completion") || reason.includes("memorisation") || reason.includes("memorization") || reason.includes("milestone")) {
-      memorisationPoints += totalPts;
+      memorisationPoints += totalPoints;
     } else {
-      behaviorPoints += totalPts;
+      behaviorPoints += totalPoints;
     }
   });
 
@@ -248,7 +248,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
     { name: "Behavior",     value: behaviorPoints, color: activeColors.beh }
   ];
   
-  const total = hasanatData.reduce((s, d) => s + d.value, 0);
+  const total = hasanatData.reduce((sum, hasanatPoint) => sum + hasanatPoint.value, 0);
 
   return (
     <section aria-labelledby="hasanat-chart-heading" className="bg-card rounded-xl border border-border p-5">
@@ -263,10 +263,10 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
             <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
               <select
                 value={chartType}
-                onChange={(e) => {
-                  const type = e.target.value as "pie" | "bar" | "radar";
-                  setChartType(type);
-                  localStorage.setItem("db_chart_type_hasanat", type);
+                onChange={(event) => {
+                  const selectedChartType = event.target.value as "pie" | "bar" | "radar";
+                  setChartType(selectedChartType);
+                  localStorage.setItem("db_chart_type_hasanat", selectedChartType);
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -276,10 +276,10 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
               </select>
               <select
                 value={colorTheme}
-                onChange={(e) => {
-                  const col = e.target.value;
-                  setColorTheme(col);
-                  localStorage.setItem("db_chart_color_hasanat", col);
+                onChange={(event) => {
+                  const selectedColorTheme = event.target.value;
+                  setColorTheme(selectedColorTheme);
+                  localStorage.setItem("db_chart_color_hasanat", selectedColorTheme);
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -308,8 +308,8 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                 paddingAngle={3}
                 dataKey="value"
               >
-                {hasanatData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
+                {hasanatData.map((hasanatPoint, index) => (
+                  <Cell key={index} fill={hasanatPoint.color} />
                 ))}
               </Pie>
               <Tooltip content={<HasanatTooltip />} />
@@ -326,8 +326,8 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                 <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                 <Tooltip content={<HasanatTooltip />} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={32}>
-                  {hasanatData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} fillOpacity={0.85} />
+                  {hasanatData.map((hasanatPoint, index) => (
+                    <Cell key={index} fill={hasanatPoint.color} fillOpacity={0.85} />
                   ))}
                 </Bar>
               </BarChart>
@@ -351,19 +351,19 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
 
         {/* Legend */}
         <div className="flex-1 w-full space-y-2 text-left">
-          {hasanatData.map((d) => {
-            const pct = total > 0 ? ((d.value / total) * 100).toFixed(0) : "0";
+          {hasanatData.map((hasanatPoint) => {
+            const percentage = total > 0 ? ((hasanatPoint.value / total) * 100).toFixed(0) : "0";
             return (
-              <div key={d.name} aria-label={`${d.name}: ${pct}%`}>
+              <div key={hasanatPoint.name} aria-label={`${hasanatPoint.name}: ${percentage}%`}>
                 <div className="flex items-center justify-between mb-1 select-none">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full" style={{ background: d.color }} aria-hidden="true" />
-                    <span className="text-[11px] text-muted-foreground">{d.name}</span>
+                    <div className="w-2 h-2 rounded-full" style={{ background: hasanatPoint.color }} aria-hidden="true" />
+                    <span className="text-[11px] text-muted-foreground">{hasanatPoint.name}</span>
                   </div>
-                  <span className="text-[11px] font-semibold text-foreground">{pct}%</span>
+                  <span className="text-[11px] font-semibold text-foreground">{percentage}%</span>
                 </div>
                 <div className="h-1 rounded-full bg-muted overflow-hidden" aria-hidden="true">
-                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: d.color }} />
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${percentage}%`, background: hasanatPoint.color }} />
                 </div>
               </div>
             );

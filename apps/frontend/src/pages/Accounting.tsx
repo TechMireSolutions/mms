@@ -186,7 +186,7 @@ export default function Accounting() {
             <GeneralLedger accounts={accounts} entries={journalEntries} fmt={formatCurrency} />
           )}
           {activeTab === "work" && activeSubTab === "trial" && (
-            <TrialBalance accounts={accounts} entries={journalEntries} fiscalYears={fiscalYears} fmt={formatCurrency} />
+            <TrialBalance accounts={accounts} entries={journalEntries} fiscalYears={fiscalYears} formatCurrency={formatCurrency} />
           )}
           {activeTab === "work" && activeSubTab === "coa" && (
             <ChartOfAccounts

@@ -30,11 +30,11 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
   return (
     <div className="bg-card border border-border rounded-xl px-4 py-3 shadow-lg text-sm space-y-1.5">
       <p className="text-muted-foreground text-[11px] font-medium m-0">{label}</p>
-      {payload.map((p: TooltipPayloadEntry) => (
-        <div key={p.dataKey as string | number} className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ background: p.color }} aria-hidden="true" />
-          <span className="text-muted-foreground text-xs capitalize">{p.dataKey as string | number}</span>
-          <span className="font-semibold text-foreground ml-auto">₨ {p.value?.toLocaleString()}</span>
+      {payload.map((payloadEntry: TooltipPayloadEntry) => (
+        <div key={payloadEntry.dataKey as string | number} className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ background: payloadEntry.color }} aria-hidden="true" />
+          <span className="text-muted-foreground text-xs capitalize">{payloadEntry.dataKey as string | number}</span>
+          <span className="font-semibold text-foreground ml-auto">₨ {payloadEntry.value?.toLocaleString()}</span>
         </div>
       ))}
     </div>
@@ -71,16 +71,16 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
     { key: "2026-04", label: "Apr" }
   ];
 
-  const revenueData: RevenuePoint[] = months.map((m) => {
+  const revenueData: RevenuePoint[] = months.map((monthDefinition) => {
     let revenue = 0;
-    invoices.forEach(inv => {
-      if (!inv || inv.status === "cancelled") return;
-      const invMonth = (inv.paidDate || inv.dueDate || "").slice(0, 7);
-      if (invMonth === m.key) {
-        if (inv.status === "paid") {
-          revenue += Number(inv.finalAmt || 0);
-        } else if (inv.status === "partial") {
-          revenue += Number(inv.paidAmt || 0);
+    invoices.forEach((invoice) => {
+      if (!invoice || invoice.status === "cancelled") return;
+      const invoiceMonth = (invoice.paidDate || invoice.dueDate || "").slice(0, 7);
+      if (invoiceMonth === monthDefinition.key) {
+        if (invoice.status === "paid") {
+          revenue += Number(invoice.finalAmt || 0);
+        } else if (invoice.status === "partial") {
+          revenue += Number(invoice.paidAmt || 0);
         }
       }
     });
@@ -88,13 +88,13 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
     const expenses = invoices.length > 0 ? Math.round(revenue * 0.6) : 0;
 
     return {
-      month: m.label,
+      month: monthDefinition.label,
       revenue,
       expenses
     };
   });
   
-  const data = period === "6m" ? revenueData.slice(-6) : revenueData;
+  const visibleRevenueData = period === "6m" ? revenueData.slice(-6) : revenueData;
   const activeColors = COLOR_THEMES[colorTheme] || COLOR_THEMES.mixed;
 
   return (
@@ -110,10 +110,10 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
             <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
               <Select
                 value={chartType}
-                onValueChange={(val) => {
-                  const type = val as "bar" | "line" | "area";
-                  setChartType(type);
-                  localStorage.setItem("db_chart_type_revenue", type);
+                onValueChange={(chartTypeValue) => {
+                  const selectedChartType = chartTypeValue as "bar" | "line" | "area";
+                  setChartType(selectedChartType);
+                  localStorage.setItem("db_chart_type_revenue", selectedChartType);
                 }}
               >
                 <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
@@ -127,9 +127,9 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
               </Select>
               <Select
                 value={colorTheme}
-                onValueChange={(col) => {
-                  setColorTheme(col);
-                  localStorage.setItem("db_chart_color_revenue", col);
+                onValueChange={(selectedColorTheme) => {
+                  setColorTheme(selectedColorTheme);
+                  localStorage.setItem("db_chart_color_revenue", selectedColorTheme);
                 }}
               >
                 <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
@@ -147,17 +147,17 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
             </div>
           )}
           <div className="flex gap-1 bg-muted rounded-lg p-0.5">
-            {(["6m", "10m"] as const).map((p) => (
+            {(["6m", "10m"] as const).map((periodOption) => (
               <Button
-                key={p}
+                key={periodOption}
                 variant="ghost"
-                onClick={() => setPeriod(p)}
-                aria-pressed={period === p}
+                onClick={() => setPeriod(periodOption)}
+                aria-pressed={period === periodOption}
                 className={`text-[11px] font-medium px-2.5 py-1 h-auto rounded-md transition-all shadow-none ${
-                  period === p ? "bg-card text-foreground hover:bg-card hover:text-foreground" : "text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
+                  period === periodOption ? "bg-card text-foreground hover:bg-card hover:text-foreground" : "text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
                 }`}
               >
-                {p}
+                {periodOption}
               </Button>
             ))}
           </div>
@@ -177,7 +177,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
       </div>
 
       <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
-        <ComposedChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
+        <ComposedChart data={visibleRevenueData} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
           <defs>
             <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%"  stopColor={activeColors.revenue} stopOpacity={0.2} />

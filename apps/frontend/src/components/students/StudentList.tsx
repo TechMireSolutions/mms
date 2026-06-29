@@ -37,10 +37,10 @@ const AVATAR_COLORS = [
 ] as const;
 
 function StudentAvatar({ student }: { student: Student }): JSX.Element {
-  const initials = student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-  const idx = student.id.charCodeAt(student.id.length - 1) % AVATAR_COLORS.length;
+  const initials = student.name.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2).toUpperCase();
+  const colorIndex = student.id.charCodeAt(student.id.length - 1) % AVATAR_COLORS.length;
   return (
-    <div className={`w-8 h-8 rounded-full ${AVATAR_COLORS[idx]} flex items-center justify-center text-[11px] font-bold flex-shrink-0`}>
+    <div className={`w-8 h-8 rounded-full ${AVATAR_COLORS[colorIndex]} flex items-center justify-center text-[11px] font-bold flex-shrink-0`}>
       {initials}
     </div>
   );
@@ -84,27 +84,27 @@ export default function StudentList({
 
   const isFieldEnabled = React.useCallback((fieldKey: string): boolean => {
     for (const tabFields of Object.values(fields) as any[][]) {
-      const found = tabFields.find(f => f.key === fieldKey);
-      if (found) {
-        return found.enabled !== false;
+      const fieldDefinition = tabFields.find((tabField) => tabField.key === fieldKey);
+      if (fieldDefinition) {
+        return fieldDefinition.enabled !== false;
       }
     }
     return true; // default enabled
   }, [fields]);
 
   const sortedCustomFields = useMemo(() => {
-    const list: Array<{ id: string; label: string }> = [];
+    const customFieldColumns: Array<{ id: string; label: string }> = [];
     Object.entries(fields).forEach(([tabId, tabFields]) => {
-      (tabFields as FieldDefinition[]).forEach((f) => {
+      (tabFields as FieldDefinition[]).forEach((fieldDefinition) => {
         const isSystemField =
-          (tabId === "basic" && ["gender", "dob", "registeredDate"].includes(f.key)) ||
-          (tabId === "guardians" && ["fatherLink", "motherLink", "guardianLink"].includes(f.key));
+          (tabId === "basic" && ["gender", "dob", "registeredDate"].includes(fieldDefinition.key)) ||
+          (tabId === "guardians" && ["fatherLink", "motherLink", "guardianLink"].includes(fieldDefinition.key));
         if (!isSystemField) {
-          list.push({ id: f.key, label: f.label });
+          customFieldColumns.push({ id: fieldDefinition.key, label: fieldDefinition.label });
         }
       });
     });
-    return list;
+    return customFieldColumns;
   }, [fields]);
 
   const showDob = isColumnVisible
@@ -152,7 +152,7 @@ export default function StudentList({
   // Handle Header Click for Sorting
   const handleSort = (field: NonNullable<typeof sortField>) => {
     if (sortField === field) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+      setSortDir((currentDirection) => (currentDirection === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
       setSortDir("asc");
@@ -172,32 +172,32 @@ export default function StudentList({
   const sortedStudents = useMemo(() => {
     if (!sortField) return students;
 
-    return [...students].sort((a, b) => {
-      let valA = "";
-      let valB = "";
+    return [...students].sort((firstStudent, secondStudent) => {
+      let firstSortValue = "";
+      let secondSortValue = "";
 
       if (sortField === "name") {
-        valA = a.name.toLowerCase();
-        valB = b.name.toLowerCase();
+        firstSortValue = firstStudent.name.toLowerCase();
+        secondSortValue = secondStudent.name.toLowerCase();
       } else if (sortField === "age") {
-        valA = a.dob || "";
-        valB = b.dob || "";
-        const dateA = valA ? new Date(valA).getTime() : 0;
-        const dateB = valB ? new Date(valB).getTime() : 0;
-        return sortDir === "asc" ? dateB - dateA : dateA - dateB;
+        firstSortValue = firstStudent.dob || "";
+        secondSortValue = secondStudent.dob || "";
+        const firstDate = firstSortValue ? new Date(firstSortValue).getTime() : 0;
+        const secondDate = secondSortValue ? new Date(secondSortValue).getTime() : 0;
+        return sortDir === "asc" ? secondDate - firstDate : firstDate - secondDate;
       } else if (sortField === "fatherName") {
-        valA = (a.fatherName || "").toLowerCase();
-        valB = (b.fatherName || "").toLowerCase();
+        firstSortValue = (firstStudent.fatherName || "").toLowerCase();
+        secondSortValue = (secondStudent.fatherName || "").toLowerCase();
       } else if (sortField === "status") {
-        valA = a.status.toLowerCase();
-        valB = b.status.toLowerCase();
+        firstSortValue = firstStudent.status.toLowerCase();
+        secondSortValue = secondStudent.status.toLowerCase();
       } else if (sortField === "grNumber") {
-        valA = a.grNumber || "";
-        valB = b.grNumber || "";
+        firstSortValue = firstStudent.grNumber || "";
+        secondSortValue = secondStudent.grNumber || "";
       }
 
-      if (valA < valB) return sortDir === "asc" ? -1 : 1;
-      if (valA > valB) return sortDir === "asc" ? 1 : -1;
+      if (firstSortValue < secondSortValue) return sortDir === "asc" ? -1 : 1;
+      if (firstSortValue > secondSortValue) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
   }, [students, sortField, sortDir]);
@@ -215,13 +215,13 @@ export default function StudentList({
     if (selectedIds.length === paginatedStudents.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(paginatedStudents.map((s) => s.id));
+      setSelectedIds(paginatedStudents.map((student) => student.id));
     }
   };
 
   const handleSelectOne = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    setSelectedIds((previousSelectedIds) =>
+      previousSelectedIds.includes(id) ? previousSelectedIds.filter((selectedId) => selectedId !== id) : [...previousSelectedIds, id]
     );
   };
 
@@ -252,13 +252,13 @@ export default function StudentList({
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-            {paginatedStudents.map((st) => {
-              const isSelected = selectedIds.includes(st.id);
-              const age = calcAge(st.dob);
+            {paginatedStudents.map((studentCard) => {
+              const isSelected = selectedIds.includes(studentCard.id);
+              const age = calcAge(studentCard.dob);
               return (
                 <motion.div
-                  key={st.id}
-                  onClick={(e) => handleRowClick(e, st)}
+                  key={studentCard.id}
+                  onClick={(event) => handleRowClick(event, studentCard)}
                   className={`relative rounded-2xl border bg-card/40 backdrop-blur-xl p-5 hover:shadow-md transition-all group cursor-pointer ${
                     isSelected ? "border-primary bg-primary/[0.015]" : "border-border/50 hover:border-primary/20"
                   }`}
@@ -266,7 +266,7 @@ export default function StudentList({
                   <div className="absolute top-3 left-3">
                     <Checkbox
                       checked={isSelected}
-                      onCheckedChange={() => handleSelectOne(st.id)}
+                      onCheckedChange={() => handleSelectOne(studentCard.id)}
                     />
                   </div>
                   <div className="absolute top-3 right-3">
@@ -277,15 +277,15 @@ export default function StudentList({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem onClick={() => setViewStudent(st)}>
+                        <DropdownMenuItem onClick={() => setViewStudent(studentCard)}>
                           <Eye className="w-3.5 h-3.5 mr-2" /> View profile
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit(st)}>
+                        <DropdownMenuItem onClick={() => onEdit(studentCard)}>
                           <Edit2 className="w-3.5 h-3.5 mr-2" /> Edit student
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => onDelete(st.id)}
+                          onClick={() => onDelete(studentCard.id)}
                           className="text-destructive focus:text-destructive"
                         >
                           <Trash2 className="w-3.5 h-3.5 mr-2" /> Remove
@@ -295,13 +295,13 @@ export default function StudentList({
                   </div>
 
                   <div className="flex flex-col items-center text-center mt-3 mb-4">
-                    <StudentAvatar student={st} />
+                    <StudentAvatar student={studentCard} />
                     <h4 className="text-sm font-bold text-foreground mt-2 group-hover:text-primary transition-colors truncate w-full max-w-[150px]">
-                      {st.name}
+                      {studentCard.name}
                     </h4>
-                    {st.grNumber && (
+                    {studentCard.grNumber && (
                       <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase tracking-wider mt-1">
-                        GR: {st.grNumber}
+                        GR: {studentCard.grNumber}
                       </span>
                     )}
                   </div>
@@ -310,7 +310,7 @@ export default function StudentList({
                     {isFieldEnabled("gender") && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Gender:</span>
-                        <span className="font-semibold text-foreground capitalize">{st.gender || "—"}</span>
+                        <span className="font-semibold text-foreground capitalize">{studentCard.gender || "—"}</span>
                       </div>
                     )}
                     {isFieldEnabled("dob") && (
@@ -319,21 +319,21 @@ export default function StudentList({
                         <span className="font-semibold text-foreground">{age ? `${age} yrs` : "—"}</span>
                       </div>
                     )}
-                    {isFieldEnabled("fatherLink") && st.fatherName && (
+                    {isFieldEnabled("fatherLink") && studentCard.fatherName && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Father:</span>
-                        <span className="font-semibold text-foreground truncate max-w-[100px]">{st.fatherName}</span>
+                        <span className="font-semibold text-foreground truncate max-w-[100px]">{studentCard.fatherName}</span>
                       </div>
                     )}
-                    {isFieldEnabled("guardianLink") && st.guardianName && (
+                    {isFieldEnabled("guardianLink") && studentCard.guardianName && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Guardian:</span>
-                        <span className="font-semibold text-foreground truncate max-w-[100px]">{st.guardianName}</span>
+                        <span className="font-semibold text-foreground truncate max-w-[100px]">{studentCard.guardianName}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Status:</span>
-                      <StatusBadge status={st.status} />
+                      <StatusBadge status={studentCard.status} />
                     </div>
                   </div>
                 </motion.div>
@@ -353,7 +353,7 @@ export default function StudentList({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span>Rows per page:</span>
-                <Select value={String(pageSize)} onValueChange={(val) => setPageSize(Number(val))}>
+                <Select value={String(pageSize)} onValueChange={(pageSizeValue) => setPageSize(Number(pageSizeValue))}>
                   <SelectTrigger className="h-7 w-[60px] bg-background border border-border rounded px-1.5 py-0.5 text-foreground cursor-pointer">
                     <SelectValue placeholder={pageSize} />
                   </SelectTrigger>
@@ -373,7 +373,7 @@ export default function StudentList({
                   variant="ghost"
                   size="icon"
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => p - 1)}
+                  onClick={() => setCurrentPage((currentPageNumber) => currentPageNumber - 1)}
                   className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -386,7 +386,7 @@ export default function StudentList({
                   variant="ghost"
                   size="icon"
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => p + 1)}
+                  onClick={() => setCurrentPage((currentPageNumber) => currentPageNumber + 1)}
                   className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -401,9 +401,9 @@ export default function StudentList({
             <StudentDetail
               student={viewStudent}
               onClose={() => setViewStudent(null)}
-              onEdit={(s) => {
+              onEdit={(student) => {
                 setViewStudent(null);
-                onEdit(s);
+                onEdit(student);
               }}
             />
           )}
@@ -489,20 +489,20 @@ export default function StudentList({
                 </tr>
               ) : (
                 <AnimatePresence>
-                  {paginatedStudents.map((st, i) => {
-                    const isSelected = selectedIds.includes(st.id);
-                    const age = calcAge(st.dob);
+                  {paginatedStudents.map((studentRow, rowIndex) => {
+                    const isSelected = selectedIds.includes(studentRow.id);
+                    const age = calcAge(studentRow.dob);
                     const sessionNames = sessions
-                      .filter((s) => st.enrolledSessions?.includes(s.id))
-                      .map((s) => s.name);
+                      .filter((session) => studentRow.enrolledSessions?.includes(session.id))
+                      .map((session) => session.name);
 
                     return (
                       <motion.tr
-                        key={st.id}
+                        key={studentRow.id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: Math.min(i * 0.03, 0.2) }}
-                        onClick={(e) => handleRowClick(e, st)}
+                        transition={{ delay: Math.min(rowIndex * 0.03, 0.2) }}
+                        onClick={(event) => handleRowClick(event, studentRow)}
                         className={`hover:bg-muted/20 cursor-pointer transition-colors group ${
                           isSelected ? "bg-primary/[0.015]" : ""
                         }`}
@@ -510,25 +510,25 @@ export default function StudentList({
                         <td className="px-4 py-3">
                           <Checkbox
                             checked={isSelected}
-                            onCheckedChange={() => handleSelectOne(st.id)}
+                            onCheckedChange={() => handleSelectOne(studentRow.id)}
                           />
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <StudentAvatar student={st} />
+                            <StudentAvatar student={studentRow} />
                             <div>
                               <div className="flex items-center gap-1.5">
                                 <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors">
-                                  {st.name}
+                                  {studentRow.name}
                                 </p>
-                                {st.grNumber && (
+                                {studentRow.grNumber && (
                                   <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase tracking-wider">
-                                    GR: {st.grNumber}
+                                    GR: {studentRow.grNumber}
                                   </span>
                                 )}
                               </div>
                               <p className="text-[11px] text-muted-foreground">
-                                {isFieldEnabled("gender") && st.gender ? `${st.gender} · ` : ""}{st.phone || "No phone"}
+                                {isFieldEnabled("gender") && studentRow.gender ? `${studentRow.gender} · ` : ""}{studentRow.phone || "No phone"}
                               </p>
                             </div>
                           </div>
@@ -539,7 +539,7 @@ export default function StudentList({
                               {age ? `${age} yrs` : "—"}
                             </p>
                             <p className="text-[11px] text-muted-foreground">
-                              {formatDate(st.dob, true)}
+                              {formatDate(studentRow.dob, true)}
                             </p>
                           </td>
                         )}
@@ -547,17 +547,17 @@ export default function StudentList({
                           <td className="px-4 py-3 hidden md:table-cell">
                             {isFieldEnabled("fatherLink") && (
                               <p className="text-[13px] text-foreground">
-                                {st.fatherName || "—"}
+                                {studentRow.fatherName || "—"}
                               </p>
                             )}
                             {isFieldEnabled("motherLink") && (
                               <p className="text-[11px] text-muted-foreground">
-                                {st.motherName || "—"}
+                                {studentRow.motherName || "—"}
                               </p>
                             )}
                             {isFieldEnabled("guardianLink") && (
                               <p className="text-[11px] text-muted-foreground">
-                                {st.guardianName || "—"}
+                                {studentRow.guardianName || "—"}
                               </p>
                             )}
                           </td>
@@ -570,12 +570,12 @@ export default function StudentList({
                                 Not enrolled
                               </span>
                             ) : (
-                              sessionNames.map((n) => (
+                              sessionNames.map((sessionName) => (
                                 <span
-                                  key={n}
+                                  key={sessionName}
                                   className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/10"
                                 >
-                                  {n}
+                                  {sessionName}
                                 </span>
                               ))
                             )}
@@ -583,24 +583,24 @@ export default function StudentList({
                         </td>
                         )}
                         {visibleCustomFields.map((field) => {
-                          const val = (st as unknown as Record<string, unknown>)[field.id];
-                          let displayVal = "—";
-                          if (val !== undefined && val !== null && val !== "") {
-                            if (typeof val === "boolean") {
-                              displayVal = val ? "Yes" : "No";
+                          const fieldValue = (studentRow as unknown as Record<string, unknown>)[field.id];
+                          let displayValue = "—";
+                          if (fieldValue !== undefined && fieldValue !== null && fieldValue !== "") {
+                            if (typeof fieldValue === "boolean") {
+                              displayValue = fieldValue ? "Yes" : "No";
                             } else {
-                              displayVal = String(val);
+                              displayValue = String(fieldValue);
                             }
                           }
                           return (
                             <td key={field.id} className="px-4 py-3 hidden md:table-cell text-[13px] text-foreground font-medium">
-                              {displayVal}
+                              {displayValue}
                             </td>
                           );
                         })}
                         {showStatus && (
                         <td className="px-4 py-3 hidden sm:table-cell">
-                          <StatusBadge status={st.status} />
+                          <StatusBadge status={studentRow.status} />
                         </td>
                         )}
                         <td className="px-4 py-3">
@@ -611,15 +611,15 @@ export default function StudentList({
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem onClick={() => setViewStudent(st)}>
+                              <DropdownMenuItem onClick={() => setViewStudent(studentRow)}>
                                 <Eye className="w-3.5 h-3.5 mr-2" /> View profile
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => onEdit(st)}>
+                              <DropdownMenuItem onClick={() => onEdit(studentRow)}>
                                 <Edit2 className="w-3.5 h-3.5 mr-2" /> Edit student
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                onClick={() => onDelete(st.id)}
+                                onClick={() => onDelete(studentRow.id)}
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="w-3.5 h-3.5 mr-2" /> Remove
@@ -647,7 +647,7 @@ export default function StudentList({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span>Rows per page:</span>
-                <Select value={String(pageSize)} onValueChange={(val) => setPageSize(Number(val))}>
+                <Select value={String(pageSize)} onValueChange={(pageSizeValue) => setPageSize(Number(pageSizeValue))}>
                   <SelectTrigger className="h-7 w-[60px] bg-background border border-border rounded px-1.5 py-0.5 text-foreground cursor-pointer">
                     <SelectValue placeholder={pageSize} />
                   </SelectTrigger>
@@ -667,7 +667,7 @@ export default function StudentList({
                   variant="ghost"
                   size="icon"
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => p - 1)}
+                  onClick={() => setCurrentPage((currentPageNumber) => currentPageNumber - 1)}
                   className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -680,7 +680,7 @@ export default function StudentList({
                   variant="ghost"
                   size="icon"
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => p + 1)}
+                  onClick={() => setCurrentPage((currentPageNumber) => currentPageNumber + 1)}
                   className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -733,7 +733,7 @@ export default function StudentList({
               type="button"
               variant="outline"
               onClick={() => {
-                const selectedStudents = students.filter((s) => selectedIds.includes(s.id));
+                const selectedStudents = students.filter((student) => selectedIds.includes(student.id));
                 const headers = [
                   "GR Number",
                   "Name",
@@ -747,18 +747,18 @@ export default function StudentList({
                   "Status",
                   "Registered Date",
                 ];
-                const rows = selectedStudents.map((s) => [
-                  s.grNumber || "",
-                  s.name,
-                  s.gender,
-                  s.dob,
-                  s.phone,
-                  s.email,
-                  s.fatherName || "",
-                  s.motherName || "",
-                  s.guardianName || "",
-                  s.status,
-                  s.registeredDate,
+                const rows = selectedStudents.map((student) => [
+                  student.grNumber || "",
+                  student.name,
+                  student.gender,
+                  student.dob,
+                  student.phone,
+                  student.email,
+                  student.fatherName || "",
+                  student.motherName || "",
+                  student.guardianName || "",
+                  student.status,
+                  student.registeredDate,
                 ]);
                 runCsvDownloadJob({
                   moduleId: 'students',
@@ -797,9 +797,9 @@ export default function StudentList({
           <StudentDetail
             student={viewStudent}
             onClose={() => setViewStudent(null)}
-            onEdit={(s) => {
+            onEdit={(student) => {
               setViewStudent(null);
-              onEdit(s);
+              onEdit(student);
             }}
           />
         )}
