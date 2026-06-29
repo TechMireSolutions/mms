@@ -75,10 +75,10 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
   const enrollments = useLiveCollection<Enrollment>("enrollments");
 
   const sessionCapacity = useMemo<SessionCapacityItem[]>(() => {
-    const list: SessionCapacityItem[] = [];
+    const sessionCapacityRows: SessionCapacityItem[] = [];
     sessions.forEach((session) => {
       (session.classes || []).forEach((sessionClass) => {
-        list.push({
+        sessionCapacityRows.push({
           session: session.name,
           class: sessionClass.name,
           enrolled: sessionClass.enrolled,
@@ -88,7 +88,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
         });
       });
     });
-    return list;
+    return sessionCapacityRows;
   }, [sessions]);
 
   const enrollmentTrends = useMemo<EnrollmentTrendItem[]>(() => {
@@ -117,14 +117,14 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
   }, [enrollments]);
 
   const capacityData = useMemo<SessionCapacityItem[]>(() => {
-    let list = sessionCapacity;
+    let filteredSessionCapacity = sessionCapacity;
     if (filters.session !== "all") {
-      const targetSession = sessions.find((session) => session.id === filters.session)?.name;
-      if (targetSession) {
-        list = list.filter((capacityItem) => capacityItem.session === targetSession);
+      const targetSessionName = sessions.find((session) => session.id === filters.session)?.name;
+      if (targetSessionName) {
+        filteredSessionCapacity = filteredSessionCapacity.filter((capacityItem) => capacityItem.session === targetSessionName);
       }
     }
-    return list;
+    return filteredSessionCapacity;
   }, [filters, sessionCapacity, sessions]);
 
   const totalEnrolled  = capacityData.reduce((total, capacityItem) => total + capacityItem.enrolled, 0);

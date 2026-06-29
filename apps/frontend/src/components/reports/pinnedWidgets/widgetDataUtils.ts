@@ -180,11 +180,11 @@ export function getWidgetCollections() {
   const invoices = getCollection("finance_invoices");
   const attendance = getCollection("attendance_records");
   const distributions = getCollection("hasanat_distributions");
-  const denoms = getCollection("hasanat_denoms");
+  const denominations = getCollection("hasanat_denoms");
   const sessions = getCollection("sessions");
   const questions = getCollection("questions");
   const tests = getCollection("tests");
-  const results = getCollection("assessment_results");
+  const assessmentResults = getCollection("assessment_results");
 
   return {
     students,
@@ -193,11 +193,11 @@ export function getWidgetCollections() {
     finance_invoices: invoices,
     attendance_records: attendance,
     hasanat_distributions: distributions,
-    hasanat_denoms: denoms,
+    hasanat_denoms: denominations,
     contacts,
     questions,
     tests,
-    assessment_results: results,
+    assessment_results: assessmentResults,
   };
 }
 
@@ -218,12 +218,12 @@ export function getFilteredRecords(
     return [];
   }
 
-  const list = (collections[widget.collection] || []) as Record<string, unknown>[];
-  if (!widget.filterField) return list;
+  const collectionRecords = (collections[widget.collection] || []) as Record<string, unknown>[];
+  if (!widget.filterField) return collectionRecords;
 
-  return list.filter((item) => {
-    if (!item) return false;
-    const fieldValue = item[widget.filterField || ""];
+  return collectionRecords.filter((record) => {
+    if (!record) return false;
+    const fieldValue = record[widget.filterField || ""];
     if (fieldValue === undefined || fieldValue === null) return false;
 
     const stringValue = String(fieldValue).toLowerCase();
@@ -290,53 +290,53 @@ export function computeWidgetSingleValue(
     };
   }
 
-  const filtered = getFilteredRecords(widget, collections);
+  const filteredRecords = getFilteredRecords(widget, collections);
   const totalInCollection = (collections[widget.collection] || []).length;
-  let finalValue = 0;
+  let computedValue = 0;
 
   if (widget.operation === "count") {
-    finalValue = filtered.length;
+    computedValue = filteredRecords.length;
   } else if (widget.operation === "percentage") {
-    finalValue = totalInCollection > 0 ? Math.round((filtered.length / totalInCollection) * 100) : 0;
+    computedValue = totalInCollection > 0 ? Math.round((filteredRecords.length / totalInCollection) * 100) : 0;
   } else {
-    const field = widget.targetField || "";
-    let sum = 0;
-    let count = 0;
-    filtered.forEach((item) => {
-      if (widget.collection === "hasanat_distributions" && field === "points") {
-        const denominationName = String(item.denominationName || "").toLowerCase();
-        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === item.denominationId);
+    const targetField = widget.targetField || "";
+    let numericTotal = 0;
+    let numericRecordCount = 0;
+    filteredRecords.forEach((record) => {
+      if (widget.collection === "hasanat_distributions" && targetField === "points") {
+        const denominationName = String(record.denominationName || "").toLowerCase();
+        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === record.denominationId);
         const points = matchedDenomination ? matchedDenomination.points : (
           denominationName.includes("silver") ? 150 :
           denominationName.includes("gold") ? 500 :
           denominationName.includes("platinum") ? 1000 :
           denominationName.includes("diamond") ? 2500 : 50
         );
-        sum += Number(item.quantity || 1) * points;
-        count++;
+        numericTotal += Number(record.quantity || 1) * points;
+        numericRecordCount++;
       } else {
-        const numericValue = Number(item[field]);
+        const numericValue = Number(record[targetField]);
         if (!isNaN(numericValue)) {
-          sum += numericValue;
-          count++;
+          numericTotal += numericValue;
+          numericRecordCount++;
         }
       }
     });
-    finalValue = widget.operation === "sum" ? sum : (count > 0 ? Math.round(sum / count) : 0);
+    computedValue = widget.operation === "sum" ? numericTotal : (numericRecordCount > 0 ? Math.round(numericTotal / numericRecordCount) : 0);
   }
 
-  let formattedValue = String(finalValue);
+  let formattedValue = String(computedValue);
   if (widget.widgetType === "progress" || widget.operation === "percentage") {
-    formattedValue = `${finalValue}%`;
+    formattedValue = `${computedValue}%`;
   } else if (widget.collection === "finance_invoices" && widget.operation !== "count") {
-    formattedValue = `₨ ${finalValue.toLocaleString()}`;
+    formattedValue = `₨ ${computedValue.toLocaleString()}`;
   } else {
-    formattedValue = finalValue.toLocaleString();
+    formattedValue = computedValue.toLocaleString();
   }
 
   let isAlert = false;
   if (widget.thresholdEnabled && widget.thresholdValue !== undefined) {
-    const numericValue = Number(finalValue);
+    const numericValue = Number(computedValue);
     const numericThreshold = Number(widget.thresholdValue);
     switch (widget.thresholdCondition) {
       case "lt":
@@ -351,7 +351,7 @@ export function computeWidgetSingleValue(
     }
   }
 
-  return { value: finalValue, formattedValue, isAlert, totalCount: totalInCollection };
+  return { value: computedValue, formattedValue, isAlert, totalCount: totalInCollection };
 }
 
 export function computeWidgetChartData(
@@ -371,11 +371,11 @@ export function computeWidgetChartData(
     return aggregate?.chartData ?? [];
   }
 
-  const list = collections[widget.collection] || [];
-  const filteredList = list.filter((item) => {
-    if (!item) return false;
+  const collectionRecords = collections[widget.collection] || [];
+  const filteredRecords = collectionRecords.filter((record) => {
+    if (!record) return false;
     if (!widget.filterField) return true;
-    const fieldValue = (item as Record<string, unknown>)[widget.filterField];
+    const fieldValue = (record as Record<string, unknown>)[widget.filterField];
     if (fieldValue === undefined || fieldValue === null) return false;
     const stringValue = String(fieldValue).toLowerCase();
     const stringTargetValue = String(widget.filterValue || "").toLowerCase();
@@ -395,44 +395,44 @@ export function computeWidgetChartData(
 
   const xAxis = widget.xAxisField || "status";
   const groups: Record<string, Record<string, unknown>[]> = {};
-  filteredList.forEach((item) => {
-    const groupValue = (item as Record<string, unknown>)[xAxis];
+  filteredRecords.forEach((record) => {
+    const groupValue = (record as Record<string, unknown>)[xAxis];
     const groupKey = groupValue === undefined || groupValue === null || groupValue === "" ? "Unknown" : String(groupValue);
     if (!groups[groupKey]) groups[groupKey] = [];
-    groups[groupKey].push(item as Record<string, unknown>);
+    groups[groupKey].push(record as Record<string, unknown>);
   });
 
-  const chartData = Object.entries(groups).map(([groupName, items]) => {
-    let finalValue = 0;
+  const chartData = Object.entries(groups).map(([groupName, groupRecords]) => {
+    let computedValue = 0;
     if (widget.operation === "count") {
-      finalValue = items.length;
+      computedValue = groupRecords.length;
     } else {
-      const field = widget.targetField || "";
-      let sum = 0;
-      let count = 0;
-      items.forEach((item) => {
-        if (widget.collection === "hasanat_distributions" && field === "points") {
-          const denominationName = String(item.denominationName || "").toLowerCase();
-          const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === item.denominationId);
+      const targetField = widget.targetField || "";
+      let numericTotal = 0;
+      let numericRecordCount = 0;
+      groupRecords.forEach((record) => {
+        if (widget.collection === "hasanat_distributions" && targetField === "points") {
+          const denominationName = String(record.denominationName || "").toLowerCase();
+          const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === record.denominationId);
           const points = matchedDenomination ? matchedDenomination.points : (
             denominationName.includes("silver") ? 150 :
             denominationName.includes("gold") ? 500 :
             denominationName.includes("platinum") ? 1000 :
             denominationName.includes("diamond") ? 2500 : 50
           );
-          sum += Number(item.quantity || 1) * points;
-          count++;
+          numericTotal += Number(record.quantity || 1) * points;
+          numericRecordCount++;
         } else {
-          const numericValue = Number(item[field]);
+          const numericValue = Number(record[targetField]);
           if (!isNaN(numericValue)) {
-            sum += numericValue;
-            count++;
+            numericTotal += numericValue;
+            numericRecordCount++;
           }
         }
       });
-      finalValue = widget.operation === "sum" ? sum : (count > 0 ? Math.round(sum / count) : 0);
+      computedValue = widget.operation === "sum" ? numericTotal : (numericRecordCount > 0 ? Math.round(numericTotal / numericRecordCount) : 0);
     }
-    return { name: groupName, value: finalValue };
+    return { name: groupName, value: computedValue };
   });
 
   return chartData.sort((firstItem, secondItem) => secondItem.value - firstItem.value).slice(0, 8);
@@ -452,18 +452,18 @@ export function computeContactsCustomCardValue(
   const aggregate = readContactsWidgetAggregate(card.id);
   if (!aggregate) return null;
 
-  let finalValue: string | number = aggregate.value;
+  let displayValue: string | number = aggregate.value;
   if (card.operation === "percentage") {
-    finalValue = `${aggregate.value}%`;
+    displayValue = `${aggregate.value}%`;
   } else if (card.operation === "count") {
-    finalValue = aggregate.value;
+    displayValue = aggregate.value;
   } else {
-    finalValue = aggregate.value;
+    displayValue = aggregate.value;
   }
 
   return {
     numericValue: aggregate.value,
-    finalValue,
+    finalValue: displayValue,
     totalCount: aggregate.totalCount,
   };
 }
@@ -482,14 +482,14 @@ export function computeStudentsCustomCardValue(
   const aggregate = readStudentsWidgetAggregate(card.id);
   if (!aggregate) return null;
 
-  let finalValue: string | number = aggregate.value;
+  let displayValue: string | number = aggregate.value;
   if (card.operation === "percentage") {
-    finalValue = `${aggregate.value}%`;
+    displayValue = `${aggregate.value}%`;
   }
 
   return {
     numericValue: aggregate.value,
-    finalValue,
+    finalValue: displayValue,
     totalCount: aggregate.totalCount,
   };
 }
@@ -508,14 +508,14 @@ export function computeTeachersCustomCardValue(
   const aggregate = readTeachersWidgetAggregate(card.id);
   if (!aggregate) return null;
 
-  let finalValue: string | number = aggregate.value;
+  let displayValue: string | number = aggregate.value;
   if (card.operation === "percentage") {
-    finalValue = `${aggregate.value}%`;
+    displayValue = `${aggregate.value}%`;
   }
 
   return {
     numericValue: aggregate.value,
-    finalValue,
+    finalValue: displayValue,
     totalCount: aggregate.totalCount,
   };
 }

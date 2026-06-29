@@ -65,24 +65,24 @@ export default function DynamicCardBuilder({
     };
 
     if (mode === "kpi") {
-      const activeList = getObject<CustomCard[]>(`kpi_custom_cards_${category}`, []);
-      let updated: CustomCard[];
+      const existingCards = getObject<CustomCard[]>(`kpi_custom_cards_${category}`, []);
+      let updatedCards: CustomCard[];
       if (editCardConfig) {
-        updated = activeList.map((card) => card.id === editCardConfig.id ? newCard : card);
+        updatedCards = existingCards.map((card) => card.id === editCardConfig.id ? newCard : card);
       } else {
-        updated = [...activeList, newCard];
+        updatedCards = [...existingCards, newCard];
       }
-      saveObject(`kpi_custom_cards_${category}`, updated);
+      saveObject(`kpi_custom_cards_${category}`, updatedCards);
     } else {
       // Save directly to the unified kpi_custom_widgets local storage
-      const allWidgets = getObject<CustomWidget[]>("kpi_custom_widgets", []);
-      let updated: CustomWidget[];
+      const existingWidgets = getObject<CustomWidget[]>("kpi_custom_widgets", []);
+      let updatedWidgets: CustomWidget[];
       if (editCardConfig) {
-        updated = allWidgets.map((widget: CustomWidget) => widget.id === editCardConfig.id ? savedWidget : widget);
+        updatedWidgets = existingWidgets.map((widget: CustomWidget) => widget.id === editCardConfig.id ? savedWidget : widget);
       } else {
-        updated = [...allWidgets, savedWidget];
+        updatedWidgets = [...existingWidgets, savedWidget];
       }
-      saveObject("kpi_custom_widgets", updated);
+      saveObject("kpi_custom_widgets", updatedWidgets);
     }
 
     if (onCancelEdit) {

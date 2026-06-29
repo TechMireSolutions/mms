@@ -73,19 +73,19 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
     [palette],
   );
   const distributions = useHasanatDistributionsCollection();
-  const denoms = useHasanatDenomsCollection();
+  const denominations = useHasanatDenomsCollection();
 
   const { distributionData, hasanatByFaculty } = useMemo(() => {
     const studentMap: Record<string, HasanatReportItem> = {};
     const facultyMap: Record<string, HasanatByFacultyItem> = {};
 
     const pointsMap = new Map<string, number>();
-    denoms.forEach((denom) => {
-      pointsMap.set(denom.id, denom.points);
+    denominations.forEach((denomination) => {
+      pointsMap.set(denomination.id, denomination.points);
     });
 
     distributions.forEach((distributionRecord) => {
-      // Resolve points from the database denoms collection
+      // Resolve points from the database denominations collection
       const points = pointsMap.get(distributionRecord.denominationId) || 50;
 
       const totalPoints = points * distributionRecord.quantity;
@@ -127,19 +127,19 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       distributionData: Object.values(studentMap),
       hasanatByFaculty: Object.values(facultyMap)
     };
-  }, [distributions, denoms]);
+  }, [distributions, denominations]);
 
   const distribution = useMemo<HasanatReportItem[]>(() => {
-    let list = distributionData;
+    let filteredDistribution = distributionData;
     if (filters.class !== "all") {
-      list = list.filter((hasanatItem) => hasanatItem.class === filters.class);
+      filteredDistribution = filteredDistribution.filter((hasanatItem) => hasanatItem.class === filters.class);
     }
     if (filters.student) {
-      list = list.filter((hasanatItem) =>
+      filteredDistribution = filteredDistribution.filter((hasanatItem) =>
         hasanatItem.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
-    return list;
+    return filteredDistribution;
   }, [filters, distributionData]);
 
   const totalDistributed = distribution.reduce((total, hasanatItem) => total + hasanatItem.distributed, 0);

@@ -121,16 +121,16 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
   const totalDiscounted = discountUsage.reduce((total, discountTotals) => total + discountTotals.totalDiscounted, 0);
 
   const invoices = useMemo(() => {
-    let list = financeInvoices;
+    let filteredInvoices = financeInvoices;
     if (filters.status !== "all") {
-      list = list.filter((invoice) => invoice.status === filters.status);
+      filteredInvoices = filteredInvoices.filter((invoice) => invoice.status === filters.status);
     }
     if (filters.student) {
-      list = list.filter((invoice) =>
+      filteredInvoices = filteredInvoices.filter((invoice) =>
         invoice.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
-    return list;
+    return filteredInvoices;
   }, [filters, financeInvoices]);
 
   return (

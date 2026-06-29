@@ -54,14 +54,14 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
 
   const studentAtt = useMemo<StudentAttendanceItem[]>(() => {
     // Group records by student ID
-    const grouped: Record<string, StudentAttendanceItem> = {};
+    const attendanceByStudent: Record<string, StudentAttendanceItem> = {};
     
     records.forEach((record) => {
        const studentKey = record.studentId;
-       if (!grouped[studentKey]) {
+       if (!attendanceByStudent[studentKey]) {
          // Resolve class name
          const classInfo = allClasses.find((sessionClass) => sessionClass.id === record.classId);
-         grouped[studentKey] = {
+         attendanceByStudent[studentKey] = {
            studentName: record.studentName,
            class: classInfo ? classInfo.name : record.classId,
            present: 0,
@@ -72,33 +72,33 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
          };
        }
        
-       grouped[studentKey].total++;
-       if (record.status === "present" || record.status === "excused") grouped[studentKey].present++;
-       if (record.status === "absent") grouped[studentKey].absent++;
+       attendanceByStudent[studentKey].total++;
+       if (record.status === "present" || record.status === "excused") attendanceByStudent[studentKey].present++;
+       if (record.status === "absent") attendanceByStudent[studentKey].absent++;
        if (record.status === "late") {
-         grouped[studentKey].late++;
-         grouped[studentKey].present++; // Late is usually counted as present for general rating
+         attendanceByStudent[studentKey].late++;
+         attendanceByStudent[studentKey].present++; // Late is usually counted as present for general rating
        }
     });
 
     // Calculate rates
-    const list = Object.values(grouped).map((studentAttendance) => {
+    const studentAttendanceRows = Object.values(attendanceByStudent).map((studentAttendance) => {
        studentAttendance.rate = studentAttendance.total > 0 ? Math.round((studentAttendance.present / studentAttendance.total) * 100) : 0;
        return studentAttendance;
      });
 
-    let filtered = list;
+    let filteredAttendanceRows = studentAttendanceRows;
     // Note: We use class name for filtering here to match UI text filter if it's name-based, or ID if it's ID-based.
     // Assuming filters.class is the class ID, we should probably group by classId internally, but for display we need name.
     // Let's refine the filter:
     if (filters.class !== "all") {
-       const targetClass = allClasses.find((sessionClass) => sessionClass.id === filters.class)?.name;
-       if (targetClass) filtered = filtered.filter((studentAttendance) => studentAttendance.class === targetClass);
+       const targetClassName = allClasses.find((sessionClass) => sessionClass.id === filters.class)?.name;
+       if (targetClassName) filteredAttendanceRows = filteredAttendanceRows.filter((studentAttendance) => studentAttendance.class === targetClassName);
     }
     if (filters.student) {
-      filtered = filtered.filter((studentAttendance) => studentAttendance.studentName.toLowerCase().includes(filters.student.toLowerCase()));
+      filteredAttendanceRows = filteredAttendanceRows.filter((studentAttendance) => studentAttendance.studentName.toLowerCase().includes(filters.student.toLowerCase()));
     }
-    return filtered;
+    return filteredAttendanceRows;
   }, [filters, records, allClasses]);
 
   const summary = useMemo<AttendanceSummaryItem[]>(() => {

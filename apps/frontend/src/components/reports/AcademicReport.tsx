@@ -76,7 +76,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
   const { data: students = [] } = useStudentsByIds(studentIds);
 
   const results = useMemo<AcademicResultItem[]>(() => {
-    let list: AcademicResultItem[] = [];
+    let academicResults: AcademicResultItem[] = [];
 
     examResults.forEach((result) => {
       const exam = exams.find((examOption) => examOption.id === result.examId);
@@ -84,7 +84,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
       if (!exam || !student) return;
 
       const percentage = Math.round((result.marksObtained / exam.totalMarks) * 100);
-      list.push({
+      academicResults.push({
         studentName: student.name,
         class: exam.name, // using exam name as proxy for class group context here
         subject: exam.subject,
@@ -96,26 +96,26 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
     });
 
     // Compute rank
-    list.sort((firstResult, secondResult) => secondResult.marks - firstResult.marks);
-    list.forEach((item, index) => {
-      item.rank = index + 1;
+    academicResults.sort((firstResult, secondResult) => secondResult.marks - firstResult.marks);
+    academicResults.forEach((academicResult, index) => {
+      academicResult.rank = index + 1;
     });
 
     if (filters.class !== "all") {
-      list = list.filter((result) => result.class === filters.class);
+      academicResults = academicResults.filter((result) => result.class === filters.class);
     }
     if (filters.student) {
-      list = list.filter((result) =>
+      academicResults = academicResults.filter((result) =>
         result.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
-    return list;
+    return academicResults;
   }, [filters, examResults, exams, students]);
 
   const classRankings = useMemo<ClassRankingItem[]>(() => {
     // Group by class (exam name)
-    const grouped: Record<string, { class: string; studentName: string; marks: number }[]> = {};
-    const baseResults = examResults.map((result) => {
+    const resultsByClass: Record<string, { class: string; studentName: string; marks: number }[]> = {};
+    const rankingSourceResults = examResults.map((result) => {
       const exam = exams.find((examOption) => examOption.id === result.examId);
       const student = students.find((studentOption) => String(studentOption.id) === String(result.studentId));
       if (!exam || !student) return null;
@@ -126,28 +126,28 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
       };
     }).filter(Boolean) as { class: string, studentName: string, marks: number }[];
 
-    baseResults.forEach((result) => {
-      if (!grouped[result.class]) grouped[result.class] = [];
-      grouped[result.class].push(result);
+    rankingSourceResults.forEach((result) => {
+      if (!resultsByClass[result.class]) resultsByClass[result.class] = [];
+      resultsByClass[result.class].push(result);
     });
 
-    let list = Object.entries(grouped).map(([className, items]) => {
-      const sorted = [...items].sort((firstResult, secondResult) => secondResult.marks - firstResult.marks);
-      const average = Math.round(items.reduce((sum, result) => sum + result.marks, 0) / items.length);
-      const passes = items.filter((result) => result.marks >= 50).length;
+    let classRankingItems = Object.entries(resultsByClass).map(([className, classResults]) => {
+      const sortedClassResults = [...classResults].sort((firstResult, secondResult) => secondResult.marks - firstResult.marks);
+      const averageMarks = Math.round(classResults.reduce((sum, result) => sum + result.marks, 0) / classResults.length);
+      const passingCount = classResults.filter((result) => result.marks >= 50).length;
       return {
         class: className,
-        avgMarks: average,
-        topMarks: sorted[0]?.marks || 0,
-        passRate: Math.round((passes / items.length) * 100),
-        topStudent: sorted[0]?.studentName || "—"
+        avgMarks: averageMarks,
+        topMarks: sortedClassResults[0]?.marks || 0,
+        passRate: Math.round((passingCount / classResults.length) * 100),
+        topStudent: sortedClassResults[0]?.studentName || "—"
       };
     });
 
     if (filters.class !== "all") {
-      list = list.filter((result) => result.class === filters.class);
+      classRankingItems = classRankingItems.filter((result) => result.class === filters.class);
     }
-    return list;
+    return classRankingItems;
   }, [filters, examResults, exams, students]);
 
   const avgMarks = results.length

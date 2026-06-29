@@ -84,7 +84,7 @@ function mapStudentRow(s: Student): ReportStudent {
 
 export default function StudentReport({ filters }: StudentReportProps): React.JSX.Element {
   const { t } = useTranslation();
-  const [sub, setSub] = useState<SubTab>("Student List");
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>("Student List");
   const [listPage, setListPage] = useState(1);
 
   const { data: metrics } = useStudentsMetrics();
@@ -118,15 +118,15 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
 
   const students = useMemo<ReportStudent[]>(() => {
     const studentRows = (studentPage?.students ?? []) as unknown as Student[];
-    let list = studentRows.map(mapStudentRow);
+    let filteredStudents = studentRows.map(mapStudentRow);
     if (filters.class && filters.class !== "all") {
-      list = list.filter((student) => student.class === filters.class);
+      filteredStudents = filteredStudents.filter((student) => student.class === filters.class);
     }
-    return list;
+    return filteredStudents;
   }, [studentPage, filters.class]);
 
   const enrollments = useMemo<EnrollmentHistoryItem[]>(() => {
-    let list = enrollmentRecords.map((enrollment) => ({
+    let filteredEnrollments = enrollmentRecords.map((enrollment) => ({
       id: enrollment.id,
       studentName: enrollment.studentName,
       session: enrollment.sessionName,
@@ -135,11 +135,11 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
       status: enrollment.status,
     }));
     if (filters.student) {
-      list = list.filter((enrollment) =>
+      filteredEnrollments = filteredEnrollments.filter((enrollment) =>
         enrollment.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
-    return list;
+    return filteredEnrollments;
   }, [enrollmentRecords, filters.student]);
 
   const male = genderAgg?.male?.value ?? 0;
@@ -159,9 +159,9 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         {SUB_TABS.map((tab) => (
           <button
             key={tab}
-            onClick={() => setSub(tab)}
+            onClick={() => setActiveSubTab(tab)}
             className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all ${
-              sub === tab
+              activeSubTab === tab
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
@@ -172,9 +172,9 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
       </div>
 
       <ReportExportBar 
-        title={sub === "Student List" ? t("students.report.studentListTab") : t("students.report.enrollmentHistoryTab")} 
-        data={sub === "Student List" ? students : enrollments}
-        headers={sub === "Student List" 
+        title={activeSubTab === "Student List" ? t("students.report.studentListTab") : t("students.report.enrollmentHistoryTab")} 
+        data={activeSubTab === "Student List" ? students : enrollments}
+        headers={activeSubTab === "Student List" 
           ? [
               t("students.report.colName"),
               t("students.report.colGender"),
@@ -195,7 +195,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         }
       />
 
-      {sub === "Student List" && (
+      {activeSubTab === "Student List" && (
         students.length === 0 ? (
           <EmptyState icon={Users} title={t("students.report.noStudentsFound")} description={t("students.report.adjustFilters")} compact />
         ) : (
@@ -265,7 +265,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         )
       )}
 
-      {sub === "Enrollment History" && (
+      {activeSubTab === "Enrollment History" && (
         enrollments.length === 0 ? (
           <EmptyState icon={Users} title={t("students.report.noEnrollmentsFound")} compact />
         ) : (
