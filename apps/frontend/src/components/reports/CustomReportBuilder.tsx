@@ -276,9 +276,9 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
 
   const available = useMemo(() => {
     if (source === "contacts") {
-      return contactsFieldCatalog.map((f) => f.id).filter((id) => !selectedFields.includes(id));
+      return contactsFieldCatalog.map((field) => field.id).filter((id) => !selectedFields.includes(id));
     }
-    return ALL_FIELDS[source].filter((f) => !selectedFields.includes(f));
+    return ALL_FIELDS[source].filter((field) => !selectedFields.includes(field));
   }, [source, selectedFields, contactsFieldCatalog]);
 
   // Sync group-by selection to make sure it's valid if columns change
@@ -295,45 +295,45 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       return;
     }
 
-    let raw: Record<string, unknown>[] = [];
+    let sourceRows: Record<string, unknown>[] = [];
     if (source === "contacts") {
-      raw = contactsColl;
+      sourceRows = contactsColl;
     } else if (source === "students") {
-      raw = studentsColl;
+      sourceRows = studentsColl;
     } else if (source === "sessions") {
-      raw = sessionsColl;
+      sourceRows = sessionsColl;
     } else if (source === "financial") {
-      raw = financialColl;
+      sourceRows = financialColl;
     } else if (source === "attendance") {
-      raw = attendanceColl;
+      sourceRows = attendanceColl;
     } else if (source === "hasanat") {
-      raw = hasanatColl;
+      sourceRows = hasanatColl;
     } else if (source === "academic") {
-      raw = academicColl;
+      sourceRows = academicColl;
     } else if (source === "faculty") {
       const sessionsList = sessionsColl;
-      const map: Record<string, { classes: Set<string>, sessions: Set<string>, students: number, hours: number }> = {};
-      sessionsList.forEach((s) => {
-        const classes = s.classes as { id: string; teacherName?: string; enrolled: number }[] | undefined;
+      const workloadByFacultyName: Record<string, { classes: Set<string>, sessions: Set<string>, students: number, hours: number }> = {};
+      sessionsList.forEach((session) => {
+        const classes = session.classes as { id: string; teacherName?: string; enrolled: number }[] | undefined;
         if (classes) {
-          classes.forEach((c) => {
-            const tName = c.teacherName || "Unassigned";
-            if (!map[tName]) {
-              map[tName] = { classes: new Set(), sessions: new Set(), students: 0, hours: 0 };
+          classes.forEach((sessionClass) => {
+            const facultyName = sessionClass.teacherName || "Unassigned";
+            if (!workloadByFacultyName[facultyName]) {
+              workloadByFacultyName[facultyName] = { classes: new Set(), sessions: new Set(), students: 0, hours: 0 };
             }
-            map[tName].classes.add(c.id);
-            map[tName].sessions.add(String(s.id));
-            map[tName].students += Number(c.enrolled || 0);
-            map[tName].hours += 2; // Assuming 2 hours per class workload
+            workloadByFacultyName[facultyName].classes.add(sessionClass.id);
+            workloadByFacultyName[facultyName].sessions.add(String(session.id));
+            workloadByFacultyName[facultyName].students += Number(sessionClass.enrolled || 0);
+            workloadByFacultyName[facultyName].hours += 2; // Assuming 2 hours per class workload
           });
         }
       });
-      raw = Object.entries(map).map(([name, data]) => ({
-        facultyName: name,
-        classes: data.classes.size,
-        sessions: data.sessions.size,
-        totalStudents: data.students,
-        hoursWeek: data.hours,
+      sourceRows = Object.entries(workloadByFacultyName).map(([facultyName, workload]) => ({
+        facultyName,
+        classes: workload.classes.size,
+        sessions: workload.sessions.size,
+        totalStudents: workload.students,
+        hoursWeek: workload.hours,
         specialization: "General Studies",
       }));
     }
@@ -342,11 +342,11 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       const cleaned = str.replace(/[^a-zA-Z0-9 ]/g, "");
       return cleaned
         .split(" ")
-        .map((word, i) => i === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .map((word, index) => index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join("");
     };
 
-    let processed = raw.map((item) => {
+    let processedRows = sourceRows.map((item) => {
       const row: PreviewRow = {};
       const cellLabels = { yes: t("common.yes"), no: t("common.no") };
       selectedFields.forEach((field) => {
@@ -378,8 +378,8 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           row[label] = String(item.registeredDate || item.issuedDate || item.dueDate || item.date || item.lastMarked || item.lastAwarded || "—");
         }
         else {
-          const rawVal = item[camel] !== undefined ? item[camel] : item[field.toLowerCase().replace(/ /g, "")];
-          row[label] = rawVal !== undefined ? String(rawVal) : "—";
+          const rawValue = item[camel] !== undefined ? item[camel] : item[field.toLowerCase().replace(/ /g, "")];
+          row[label] = rawValue !== undefined ? String(rawValue) : "—";
         }
       });
       return row;
@@ -389,41 +389,41 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
     if (groupBy && aggregate !== "None") {
       const groupByLabel = resolveFieldLabel(groupBy);
       const groups: Record<string, PreviewRow[]> = {};
-      processed.forEach((row) => {
-        const groupVal = String(row[groupByLabel] || "Unspecified");
-        if (!groups[groupVal]) groups[groupVal] = [];
-        groups[groupVal].push(row);
+      processedRows.forEach((row) => {
+        const groupValue = String(row[groupByLabel] || "Unspecified");
+        if (!groups[groupValue]) groups[groupValue] = [];
+        groups[groupValue].push(row);
       });
 
-      processed = Object.entries(groups).map(([groupName, rows]) => {
+      processedRows = Object.entries(groups).map(([groupName, rows]) => {
         const summaryRow: PreviewRow = { [groupByLabel]: groupName };
-        selectedFields.forEach((f) => {
-          if (f === groupBy) return;
-          const fLabel = resolveFieldLabel(f);
+        selectedFields.forEach((field) => {
+          if (field === groupBy) return;
+          const fieldLabel = resolveFieldLabel(field);
           const values = rows
-            .map((r) => Number(String(r[fLabel]).replace(/[^0-9.-]/g, "")))
-            .filter((v) => !isNaN(v));
+            .map((row) => Number(String(row[fieldLabel]).replace(/[^0-9.-]/g, "")))
+            .filter((value) => !isNaN(value));
 
           if (aggregate === "Count") {
-            summaryRow[fLabel] = rows.length;
+            summaryRow[fieldLabel] = rows.length;
           } else if (values.length === 0) {
-            summaryRow[fLabel] = "—";
+            summaryRow[fieldLabel] = "—";
           } else {
             switch (aggregate) {
               case "Sum":
-                summaryRow[fLabel] = values.reduce((sum, v) => sum + v, 0);
+                summaryRow[fieldLabel] = values.reduce((sum, value) => sum + value, 0);
                 break;
               case "Average":
-                summaryRow[fLabel] = Math.round(values.reduce((sum, v) => sum + v, 0) / values.length);
+                summaryRow[fieldLabel] = Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
                 break;
               case "Max":
-                summaryRow[fLabel] = Math.max(...values);
+                summaryRow[fieldLabel] = Math.max(...values);
                 break;
               case "Min":
-                summaryRow[fLabel] = Math.min(...values);
+                summaryRow[fieldLabel] = Math.min(...values);
                 break;
               default:
-                summaryRow[fLabel] = "—";
+                summaryRow[fieldLabel] = "—";
             }
           }
         });
@@ -431,34 +431,34 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       });
     }
 
-    setPreviewData(processed.slice(0, 20));
+    setPreviewData(processedRows.slice(0, 20));
   }, [source, selectedFields, aggregate, groupBy, contactsColl, studentsColl, sessionsColl, financialColl, attendanceColl, hasanatColl, academicColl, t]);
 
   /** Appends a field to the selected columns list. */
-  const addField = (f: string): void => {
-    setSelectedFields((s) => [...s, f]);
+  const addField = (field: string): void => {
+    setSelectedFields((currentFields) => [...currentFields, field]);
   };
 
   /** Removes a field from the selected columns list. */
-  const removeField = (f: string): void => {
-    setSelectedFields((s) => s.filter((x) => x !== f));
+  const removeField = (field: string): void => {
+    setSelectedFields((currentFields) => currentFields.filter((candidate) => candidate !== field));
   };
 
   /** Moves a field one position earlier in the columns list. */
-  const moveUp = (i: number): void => {
-    setSelectedFields((s) => {
-      const a = [...s];
-      [a[i - 1], a[i]] = [a[i], a[i - 1]];
-      return a;
+  const moveUp = (index: number): void => {
+    setSelectedFields((currentFields) => {
+      const nextFields = [...currentFields];
+      [nextFields[index - 1], nextFields[index]] = [nextFields[index], nextFields[index - 1]];
+      return nextFields;
     });
   };
 
   /** Moves a field one position later in the columns list. */
-  const moveDown = (i: number): void => {
-    setSelectedFields((s) => {
-      const a = [...s];
-      [a[i + 1], a[i]] = [a[i], a[i + 1]];
-      return a;
+  const moveDown = (index: number): void => {
+    setSelectedFields((currentFields) => {
+      const nextFields = [...currentFields];
+      [nextFields[index + 1], nextFields[index]] = [nextFields[index], nextFields[index + 1]];
+      return nextFields;
     });
   };
 
@@ -486,7 +486,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       format: pageSize,
     });
     doc.text(reportName, 14, 15);
-    const tableData = previewData.map((row) => selectedFields.map((f) => row[f]));
+    const tableData = previewData.map((row) => selectedFields.map((field) => row[field]));
     autoTable(doc, {
       head: [selectedFields],
       body: tableData as string[][],
@@ -538,7 +538,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
             <Input
               type="text"
               value={reportName}
-              onChange={(e) => setReportName(e.target.value)}
+              onChange={(event) => setReportName(event.target.value)}
               placeholder={t("reports.builder.placeholderName")}
               className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-4 py-2.5 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all text-foreground h-auto"
             />
@@ -551,8 +551,8 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
             </label>
             <FormSelect
               value={source}
-              onChange={(val) => {
-                const newSource = val as DataSource;
+              onChange={(value) => {
+                const newSource = value as DataSource;
                 setSource(newSource);
                 if (newSource === "contacts") setSelectedFields(["fullName", "lifecycleStage", "city"]);
                 else if (newSource === "financial") setSelectedFields(["Student Name", "Class", "Base Fee", "Final Amount"]);
@@ -592,16 +592,16 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   {t("reports.builder.allFieldsSelected")}
                 </div>
               ) : (
-                available.map((f) => (
+                available.map((field) => (
                   <Button
-                    key={f}
-                    onClick={() => addField(f)}
+                    key={field}
+                    onClick={() => addField(field)}
                     variant="ghost"
                     className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-primary/10 text-xs font-semibold text-left text-foreground transition-all group cursor-pointer justify-start h-auto"
                     type="button"
                   >
                     <Plus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="truncate">{resolveFieldLabel(f)}</span>
+                    <span className="truncate">{resolveFieldLabel(field)}</span>
                   </Button>
                 ))
               )}
@@ -616,16 +616,16 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               </label>
               <FormSelect
                 value={aggregate}
-                onChange={(val) => setAggregate(val)}
-                options={AGGREGATE_FNS.map((a) => {
-                  let label = a;
-                  if (a === "None") label = t("reports.builder.noGrouping");
-                  else if (a === "Sum") label = t("reports.visualizer.opSum");
-                  else if (a === "Average") label = t("reports.visualizer.opAvg");
-                  else if (a === "Count") label = t("reports.visualizer.opCount");
-                  else if (a === "Max") label = t("reports.visualizer.opMax");
-                  else if (a === "Min") label = t("reports.visualizer.opMin");
-                  return { value: a, label };
+                onChange={(value) => setAggregate(value)}
+                options={AGGREGATE_FNS.map((aggregateName) => {
+                  let label = aggregateName;
+                  if (aggregateName === "None") label = t("reports.builder.noGrouping");
+                  else if (aggregateName === "Sum") label = t("reports.visualizer.opSum");
+                  else if (aggregateName === "Average") label = t("reports.visualizer.opAvg");
+                  else if (aggregateName === "Count") label = t("reports.visualizer.opCount");
+                  else if (aggregateName === "Max") label = t("reports.visualizer.opMax");
+                  else if (aggregateName === "Min") label = t("reports.visualizer.opMin");
+                  return { value: aggregateName, label };
                 })}
                 className="w-full"
               />
@@ -637,10 +637,10 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               <FormSelect
                 value={groupBy}
                 disabled={aggregate === "None"}
-                onChange={(val) => setGroupBy(val)}
+                onChange={(value) => setGroupBy(value)}
                 options={[
                   { value: "", label: t("reports.builder.noGrouping") },
-                  ...selectedFields.map((f) => ({ value: f, label: resolveFieldLabel(f) }))
+                  ...selectedFields.map((field) => ({ value: field, label: resolveFieldLabel(field) }))
                 ]}
                 className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
               />
@@ -678,7 +678,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               </label>
               <FormSelect
                 value={pageSize}
-                onChange={(val) => setPageSize(val)}
+                onChange={(value) => setPageSize(value)}
                 options={[
                   { value: "a4", label: t("reports.builder.formatA4") },
                   { value: "letter", label: t("reports.builder.formatLetter") },
@@ -721,15 +721,15 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar text-left">
                   <AnimatePresence>
-                    {selectedFields.map((f, i) => (
+                    {selectedFields.map((field, index) => (
                       <DraggableField
-                        key={f}
-                        field={resolveFieldLabel(f)}
-                        onRemove={() => removeField(f)}
-                        onMoveUp={() => moveUp(i)}
-                        onMoveDown={() => moveDown(i)}
-                        isFirst={i === 0}
-                        isLast={i === selectedFields.length - 1}
+                        key={field}
+                        field={resolveFieldLabel(field)}
+                        onRemove={() => removeField(field)}
+                        onMoveUp={() => moveUp(index)}
+                        onMoveDown={() => moveDown(index)}
+                        isFirst={index === 0}
+                        isLast={index === selectedFields.length - 1}
                       />
                     ))}
                   </AnimatePresence>
@@ -791,18 +791,18 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   <table className="w-full text-xs">
                     <thead className="bg-muted/40 border-b border-border/70 sticky top-0 z-10 backdrop-blur-lg">
                       <tr>
-                        {selectedFields.map((h) => (
-                          <th key={h} className="px-4 py-3.5 text-left text-[9px] font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">{h}</th>
+                        {selectedFields.map((field) => (
+                          <th key={field} className="px-4 py-3.5 text-left text-[9px] font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">{field}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40">
                       {previewData.map((row, ri) => (
                         <tr key={ri} className="hover:bg-primary/[0.02] transition-colors group">
-                          {selectedFields.map((f) => (
-                            <td key={f} className="px-4 py-3 text-foreground font-semibold whitespace-nowrap group-hover:text-primary transition-colors">
-                              {row[f] !== undefined && row[f] !== null
-                                ? String(row[f])
+                          {selectedFields.map((field) => (
+                            <td key={field} className="px-4 py-3 text-foreground font-semibold whitespace-nowrap group-hover:text-primary transition-colors">
+                              {row[field] !== undefined && row[field] !== null
+                                ? String(row[field])
                                 : <span className="text-muted-foreground/30 text-xs italic">—</span>
                               }
                             </td>

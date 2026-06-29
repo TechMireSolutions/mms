@@ -200,20 +200,20 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                   innerRadius={45}
                   outerRadius={72}
                 >
-                  {pieData.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i]} />
+                  {pieData.map((_, index) => (
+                    <Cell key={index} fill={PIE_COLORS[index]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v) => v !== undefined ? Number(v).toLocaleString() : ""} />
+                <Tooltip formatter={(value) => value !== undefined ? Number(value).toLocaleString() : ""} />
               </PieChart>
             </SafeResponsiveContainer>
             <div className="space-y-3">
-              {pieData.map((d, i) => (
-                <div key={d.name} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-sm" style={{ background: PIE_COLORS[i] }} />
+              {pieData.map((slice, index) => (
+                <div key={slice.name} className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm" style={{ background: PIE_COLORS[index] }} />
                   <div>
-                    <p className="text-xs text-muted-foreground">{d.name}</p>
-                    <p className="text-sm font-bold text-foreground">{d.value.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">{slice.name}</p>
+                    <p className="text-sm font-bold text-foreground">{slice.value.toLocaleString()}</p>
                   </div>
                 </div>
               ))}

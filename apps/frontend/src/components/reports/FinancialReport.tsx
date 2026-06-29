@@ -112,7 +112,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       type,
       count: discountTotals.count,
       totalDiscounted: discountTotals.totalDiscounted,
-      pct: totalAllDiscounts > 0 ? Math.round((discountTotals.totalDiscounted / totalAllDiscounts) * 100) : 0
+      percentage: totalAllDiscounts > 0 ? Math.round((discountTotals.totalDiscounted / totalAllDiscounts) * 100) : 0
     }));
   }, [financeInvoices]);
 
@@ -194,8 +194,8 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                 label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
                 labelLine={false}
               >
-                {discountUsage.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                {discountUsage.map((_, index) => (
+                  <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip formatter={(v) => v !== undefined ? PKR(Number(v)) : ""} />

@@ -68,7 +68,7 @@ export default function DynamicCardBuilder({
       const activeList = getObject<CustomCard[]>(`kpi_custom_cards_${category}`, []);
       let updated: CustomCard[];
       if (editCardConfig) {
-        updated = activeList.map((c) => c.id === editCardConfig.id ? newCard : c);
+        updated = activeList.map((card) => card.id === editCardConfig.id ? newCard : card);
       } else {
         updated = [...activeList, newCard];
       }
@@ -78,7 +78,7 @@ export default function DynamicCardBuilder({
       const allWidgets = getObject<CustomWidget[]>("kpi_custom_widgets", []);
       let updated: CustomWidget[];
       if (editCardConfig) {
-        updated = allWidgets.map((w: CustomWidget) => w.id === editCardConfig.id ? savedWidget : w);
+        updated = allWidgets.map((widget: CustomWidget) => widget.id === editCardConfig.id ? savedWidget : widget);
       } else {
         updated = [...allWidgets, savedWidget];
       }

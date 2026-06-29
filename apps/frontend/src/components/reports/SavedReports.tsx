@@ -37,7 +37,7 @@ export default function SavedReports({ category }: SavedReportsProps): React.JSX
   const allSaved = useLiveCollection<SavedReportItem>("reports_saved_reports", []);
 
   const saved = useMemo(() => {
-    return allSaved.filter((r) => r.category === category);
+    return allSaved.filter((report) => report.category === category);
   }, [allSaved, category]);
 
   return (
@@ -64,27 +64,27 @@ export default function SavedReports({ category }: SavedReportsProps): React.JSX
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {saved.map((r) => (
-            <div key={r.id} className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm flex flex-col gap-3 text-left">
+          {saved.map((report) => (
+            <div key={report.id} className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm flex flex-col gap-3 text-left">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h4 className="text-sm font-semibold text-foreground">{r.name}</h4>
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${CATEGORY_COLOR[r.category] || "bg-muted text-muted-foreground"}`}>
-                    {r.category}
+                  <h4 className="text-sm font-semibold text-foreground">{report.name}</h4>
+                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${CATEGORY_COLOR[report.category] || "bg-muted text-muted-foreground"}`}>
+                    {report.category}
                   </span>
                 </div>
                 <Bookmark className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
               </div>
               <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{r.lastRun}</span>
-                <span className="flex items-center gap-1"><User className="w-3 h-3" />{r.createdBy}</span>
+                <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{report.lastRun}</span>
+                <span className="flex items-center gap-1"><User className="w-3 h-3" />{report.createdBy}</span>
               </div>
               <div className="flex items-center gap-2 pt-1 border-t border-border">
                 <button className="flex items-center gap-1 text-xs font-medium text-primary hover:underline" type="button">
                   <Play className="w-3 h-3" /> {t("reports.saved.run")}
                 </button>
                 <button
-                  onClick={() => saveCollection("reports_saved_reports", allSaved.filter((x) => x.id !== r.id))}
+                  onClick={() => saveCollection("reports_saved_reports", allSaved.filter((savedReport) => savedReport.id !== report.id))}
                   className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto"
                   type="button"
                 >

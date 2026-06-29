@@ -237,12 +237,12 @@ export default function DynamicChartVisualizer({
         groupItems.forEach((item) => {
           // Special Hasanat points calculation
           if (collectionKey === "hasanat_distributions" && field === "points") {
-            const denomName = String(item.denominationName || "").toLowerCase();
+            const denominationName = String(item.denominationName || "").toLowerCase();
             const points = pointsMap.get(item.denominationId as string) || (
-              denomName.includes("silver") ? 150 :
-              denomName.includes("gold") ? 500 :
-              denomName.includes("platinum") ? 1000 :
-              denomName.includes("diamond") ? 2500 : 50
+              denominationName.includes("silver") ? 150 :
+              denominationName.includes("gold") ? 500 :
+              denominationName.includes("platinum") ? 1000 :
+              denominationName.includes("diamond") ? 2500 : 50
             );
             values.push(Number(item.quantity || 1) * points);
           } else {
@@ -707,15 +707,15 @@ export default function DynamicChartVisualizer({
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.xAxisDimension")}</label>
                 <select
                   value={xAxisField}
-                  onChange={(e) => setXAxisField(e.target.value)}
+                  onChange={(event) => setXAxisField(event.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
                 >
-                  {activeMeta.fields.map((f) => {
-                    const transKey = `reports.fields.${f.value}`;
+                  {activeMeta.fields.map((field) => {
+                    const transKey = `reports.fields.${field.value}`;
                     const translated = t(transKey as any);
                     return (
-                      <option key={f.value} value={f.value}>
-                        {translated === transKey ? f.label : translated}
+                      <option key={field.value} value={field.value}>
+                        {translated === transKey ? field.label : translated}
                       </option>
                     );
                   })}

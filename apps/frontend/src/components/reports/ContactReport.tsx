@@ -102,15 +102,15 @@ export default function ContactReport(props: ContactReportProps = {}) {
                 <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
                 <XAxis type="number" domain={[0, 100]} unit="%" hide />
                 <YAxis dataKey="stage" type="category" width={100} tick={{ fontSize: 11, fontWeight: 600 }} />
-                <Tooltip formatter={(v) => (v !== undefined ? `${v}%` : "")} />
+                <Tooltip formatter={(value) => (value !== undefined ? `${value}%` : "")} />
                 <Bar
                   dataKey="conversionRate"
                   fill={charts[4]}
                   radius={[0, 4, 4, 0]}
                   barSize={24}
                   cursor="pointer"
-                  onClick={(data) => {
-                    const stage = (data as { stage?: string })?.stage;
+                  onClick={(barPayload) => {
+                    const stage = (barPayload as { stage?: string })?.stage;
                     if (stage) drillToStage(stage);
                   }}
                 />

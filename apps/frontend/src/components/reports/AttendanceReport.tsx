@@ -198,22 +198,22 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
                   t("attendance.report.colAvgRate"),
                   t("attendance.report.colPerfectAttendance"),
                   t("attendance.report.colBelowThreshold"),
-                ].map((h) => (
-                  <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
+                ].map((headerLabel) => (
+                  <th key={headerLabel} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {summary.map((s) => (
-                <tr key={s.class} className="hover:bg-muted/30">
-                  <td className="px-3 py-3 font-medium text-foreground">{s.class}</td>
-                  <td className="px-3 py-3 text-muted-foreground">{s.total}</td>
-                  <td className="px-3 py-3 w-44">{rateBar(s.avgRate)}</td>
+              {summary.map((summaryRow) => (
+                <tr key={summaryRow.class} className="hover:bg-muted/30">
+                  <td className="px-3 py-3 font-medium text-foreground">{summaryRow.class}</td>
+                  <td className="px-3 py-3 text-muted-foreground">{summaryRow.total}</td>
+                  <td className="px-3 py-3 w-44">{rateBar(summaryRow.avgRate)}</td>
                   <td className="px-3 py-3">
-                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[11px] font-semibold">{s.perfectAttendance}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[11px] font-semibold">{summaryRow.perfectAttendance}</span>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[11px] font-semibold">{s.belowThreshold}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[11px] font-semibold">{summaryRow.belowThreshold}</span>
                   </td>
                 </tr>
               ))}
@@ -254,21 +254,21 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
                   t("attendance.report.colLate"),
                   t("attendance.report.colTotal"),
                   t("attendance.report.colRate"),
-                ].map((h) => (
-                  <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
+                ].map((headerLabel) => (
+                  <th key={headerLabel} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {studentAtt.map((s) => (
-                <tr key={s.studentName} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-medium text-foreground">{s.studentName}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{s.class}</td>
-                  <td className="px-3 py-2.5 text-success font-medium">{s.present}</td>
-                  <td className="px-3 py-2.5 text-destructive font-medium">{s.absent}</td>
-                  <td className="px-3 py-2.5 text-warning font-medium">{s.late}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{s.total}</td>
-                  <td className="px-3 py-2.5 w-32">{rateBar(s.rate)}</td>
+              {studentAtt.map((studentAttendance) => (
+                <tr key={studentAttendance.studentName} className="hover:bg-muted/30">
+                  <td className="px-3 py-2.5 font-medium text-foreground">{studentAttendance.studentName}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{studentAttendance.class}</td>
+                  <td className="px-3 py-2.5 text-success font-medium">{studentAttendance.present}</td>
+                  <td className="px-3 py-2.5 text-destructive font-medium">{studentAttendance.absent}</td>
+                  <td className="px-3 py-2.5 text-warning font-medium">{studentAttendance.late}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{studentAttendance.total}</td>
+                  <td className="px-3 py-2.5 w-32">{rateBar(studentAttendance.rate)}</td>
                 </tr>
               ))}
             </tbody>

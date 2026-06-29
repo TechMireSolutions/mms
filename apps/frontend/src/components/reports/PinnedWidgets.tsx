@@ -81,59 +81,59 @@ function WidgetDrilldownModal({
 
   const students = useMemo(() => collections.students, [collections]);
   const studentNameMap = useMemo(() => {
-    return new Map((students as unknown as Record<string, unknown>[]).map(s => [String(s.id), String(s.name || s.studentName || s.id)]));
+    return new Map((students as unknown as Record<string, unknown>[]).map((student) => [String(student.id), String(student.name || student.studentName || student.id)]));
   }, [students]);
 
   const filteredRecords = useMemo(() => {
     const records = getFilteredRecords(widget, collections);
     if (!search) return records;
-    const q = search.toLowerCase();
-    return records.filter((r) => {
-      return Object.values(r).some(v => String(v).toLowerCase().includes(q));
+    const searchText = search.toLowerCase();
+    return records.filter((record) => {
+      return Object.values(record).some((value) => String(value).toLowerCase().includes(searchText));
     });
   }, [widget, collections, search]);
 
   const handleToggleStatus = (recordId: string) => {
     try {
-      const collName = widget.collection;
-      const data = getCollection<Record<string, unknown>>(collName, []);
-      const updated = data.map((item) => {
+      const collectionName = widget.collection;
+      const records = getCollection<Record<string, unknown>>(collectionName, []);
+      const updatedRecords = records.map((item) => {
         if (String(item.id) === String(recordId)) {
-          if (collName === "students") {
+          if (collectionName === "students") {
             const nextStatus = item.status === "active" ? "inactive" : "active";
             return { ...item, status: nextStatus };
-          } else if (collName === "finance_invoices") {
+          } else if (collectionName === "finance_invoices") {
             const nextStatus = item.status === "paid" ? "unpaid" : "paid";
             const finalAmt = Number(item.finalAmt || 0);
             return { ...item, status: nextStatus, paidAmt: nextStatus === "paid" ? finalAmt : 0 };
-          } else if (collName === "attendance_records") {
+          } else if (collectionName === "attendance_records") {
             const nextStatus = item.status === "present" ? "absent" : "present";
             return { ...item, status: nextStatus };
-          } else if (collName === "contacts") {
+          } else if (collectionName === "contacts") {
             const nextStage = item.lifecycleStage === "customer" ? "lead" : "customer";
             return { ...item, lifecycleStage: nextStage };
-          } else if (collName === "sessions") {
+          } else if (collectionName === "sessions") {
             const nextStatus = item.status === "active" ? "inactive" : "active";
             return { ...item, status: nextStatus };
           }
         }
         return item;
       });
-      saveCollection(collName, updated);
+      saveCollection(collectionName, updatedRecords);
       window.dispatchEvent(new Event("local-database-update"));
-    } catch (e) {
-      console.error("Failed to toggle record status", e);
+    } catch (error) {
+      console.error("Failed to toggle record status", error);
     }
   };
 
   const handleDeleteDist = (distId: string) => {
     try {
-      const data = getCollection<Record<string, unknown>>("hasanat_distributions", []);
-      const updated = data.filter(d => String(d.id) !== String(distId));
-      saveCollection("hasanat_distributions", updated);
+      const distributions = getCollection<Record<string, unknown>>("hasanat_distributions", []);
+      const updatedDistributions = distributions.filter((distribution) => String(distribution.id) !== String(distId));
+      saveCollection("hasanat_distributions", updatedDistributions);
       window.dispatchEvent(new Event("local-database-update"));
-    } catch (e) {
-      console.error("Failed to delete distribution", e);
+    } catch (error) {
+      console.error("Failed to delete distribution", error);
     }
   };
 
@@ -194,9 +194,9 @@ function WidgetDrilldownModal({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {filteredRecords.map((item, idx) => {
+                  {filteredRecords.map((item, index) => {
                     const record = item as any;
-                    const recordId = String(record.id || idx);
+                    const recordId = String(record.id || index);
                     
                     // Format columns based on collection
                     let name = String(record.name || record.studentName || record.invoiceNo || record.id);
@@ -351,17 +351,17 @@ function CustomWidgetRenderer({
   const { t } = useTranslation();
   const palette = useBrandPalette();
   
-  const wType = widget.widgetType || (["bar", "line", "area", "pie", "radar"].includes(widget.chartType || "") ? "chart" : "kpi");
+  const resolvedWidgetType = widget.widgetType || (["bar", "line", "area", "pie", "radar"].includes(widget.chartType || "") ? "chart" : "kpi");
 
   const { value, formattedValue, isAlert } = useMemo(() => {
-    if (wType === "card") {
+    if (resolvedWidgetType === "card") {
       return { value: 0, formattedValue: "", isAlert: false };
     }
     return computeWidgetSingleValue(widget, collections);
-  }, [wType, widget, collections]);
+  }, [resolvedWidgetType, widget, collections]);
 
   const isSwitchOn = useMemo(() => {
-    if (wType === "card") return false;
+    if (resolvedWidgetType === "card") return false;
     if (widget.switchActionType === "app_setting") {
       const key = widget.switchStateKey || "";
       if (key.startsWith("section_")) {
@@ -371,18 +371,18 @@ function CustomWidgetRenderer({
       }
       return getObject<unknown>(key, false) === true || getObject<unknown>(key, "false") === "true";
     }
-    const coll = widget.switchCollection;
-    const recId = widget.switchRecordId;
+    const collectionName = widget.switchCollection;
+    const recordId = widget.switchRecordId;
     const field = widget.switchField || "status";
-    if (!coll || !recId) return false;
-    const list = collections[coll] || [];
-    const item = list.find((i: { id?: unknown }) => String(i.id) === String(recId));
+    if (!collectionName || !recordId) return false;
+    const list = collections[collectionName] || [];
+    const item = list.find((candidate: { id?: unknown }) => String(candidate.id) === String(recordId));
     if (!item) return false;
-    const val = (item as Record<string, unknown>)[field];
-    return String(val) === "active" || String(val) === "paid" || !!val;
-  }, [wType, widget, collections]);
+    const fieldValue = (item as Record<string, unknown>)[field];
+    return String(fieldValue) === "active" || String(fieldValue) === "paid" || !!fieldValue;
+  }, [resolvedWidgetType, widget, collections]);
 
-  if (wType === "card") {
+  if (resolvedWidgetType === "card") {
     const card = widget as unknown as CustomCard;
     let computed = null as ReturnType<typeof computeCustomCard> | null;
 
@@ -458,7 +458,7 @@ function CustomWidgetRenderer({
     }
 
     const Icon = ICONS_LIST[computed.icon || ""] || Users;
-    const c = COLOR_MAP[computed.color || ""] || COLOR_MAP.emerald;
+    const colorClasses = COLOR_MAP[computed.color || ""] || COLOR_MAP.emerald;
     const isPositive = computed.trend >= 0;
     
     if (isCompact) {
@@ -484,8 +484,8 @@ function CustomWidgetRenderer({
     return (
       <div className="bg-card rounded-2xl border border-border p-5 hover:shadow-md transition-all duration-300 relative text-left flex flex-col justify-between min-h-[140px] font-sans">
         <div className="flex items-start justify-between">
-          <div className={`w-9 h-9 rounded-lg ${c.bg} ring-4 ${c.ring} flex items-center justify-center aspect-square flex-shrink-0`}>
-            <Icon className={`w-4.5 h-4.5 ${c.text}`} style={{ width: 18, height: 18 }} />
+          <div className={`w-9 h-9 rounded-lg ${colorClasses.bg} ring-4 ${colorClasses.ring} flex items-center justify-center aspect-square flex-shrink-0`}>
+            <Icon className={`w-4.5 h-4.5 ${colorClasses.text}`} style={{ width: 18, height: 18 }} />
           </div>
           {computed.trend !== 0 && (
             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
@@ -517,15 +517,15 @@ function CustomWidgetRenderer({
   const alertScheme = isAlert ? ALERT_COLOR_MAP[widget.thresholdColor || "red"] : null;
 
   // Handle Switch inline toggle
-  const handleSwitchClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleSwitchClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
     onSwitchToggle(widget);
   };
 
   // Compact size (100x100px) widget layouts
   if (isCompact) {
-    if (["sessions-list", "attendance-summary", "fee-summary", "outstanding-list", "overdue-obligations", "enrollment-trends", "revenue-expenses", "attendance-rate", "hasanat-distribution"].includes(wType)) {
-      const displayAsProgress = wType === "attendance-summary";
+    if (["sessions-list", "attendance-summary", "fee-summary", "outstanding-list", "overdue-obligations", "enrollment-trends", "revenue-expenses", "attendance-rate", "hasanat-distribution"].includes(resolvedWidgetType)) {
+      const displayAsProgress = resolvedWidgetType === "attendance-summary";
       if (displayAsProgress) {
         return (
           <button
@@ -573,7 +573,7 @@ function CustomWidgetRenderer({
       }
     }
 
-    if (wType === "kpi") {
+    if (resolvedWidgetType === "kpi") {
       return (
         <button
           onClick={() => onMetricClick(widget)}
@@ -597,7 +597,7 @@ function CustomWidgetRenderer({
       );
     }
 
-    if (wType === "progress") {
+    if (resolvedWidgetType === "progress") {
       return (
         <button
           onClick={() => onMetricClick(widget)}
@@ -621,7 +621,7 @@ function CustomWidgetRenderer({
       );
     }
 
-    if (wType === "switch") {
+    if (resolvedWidgetType === "switch") {
       return (
         <div
           className="w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border bg-card/50 backdrop-blur-sm border-border/80 overflow-hidden relative"
@@ -651,31 +651,31 @@ function CustomWidgetRenderer({
   }
 
   // Comfortable mode (standard card sized) layouts
-  if (wType === "sessions-list") {
+  if (resolvedWidgetType === "sessions-list") {
     return <SessionsTable title={widget.title} />;
   }
-  if (wType === "attendance-summary") {
+  if (resolvedWidgetType === "attendance-summary") {
     return <TodayAttendanceWidget title={widget.title} />;
   }
-  if (wType === "fee-summary") {
+  if (resolvedWidgetType === "fee-summary") {
     return <FeeCollectionSummary title={widget.title} />;
   }
-  if (wType === "outstanding-list") {
+  if (resolvedWidgetType === "outstanding-list") {
     return <OutstandingFeesTable title={widget.title} />;
   }
-  if (wType === "overdue-obligations") {
+  if (resolvedWidgetType === "overdue-obligations") {
     return <OverdueObligationsWidget title={widget.title} />;
   }
-  if (wType === "enrollment-trends") {
+  if (resolvedWidgetType === "enrollment-trends") {
     return <EnrollmentChart isEditMode={isEditMode} />;
   }
-  if (wType === "revenue-expenses") {
+  if (resolvedWidgetType === "revenue-expenses") {
     return <RevenueChart isEditMode={isEditMode} />;
   }
-  if (wType === "attendance-rate") {
+  if (resolvedWidgetType === "attendance-rate") {
     return <AttendanceChart isEditMode={isEditMode} />;
   }
-  if (wType === "hasanat-distribution") {
+  if (resolvedWidgetType === "hasanat-distribution") {
     return <HasanatChart isEditMode={isEditMode} />;
   }
 
@@ -695,7 +695,7 @@ function CustomWidgetRenderer({
             {widget.title}
           </span>
           <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
-            {t(`reports.collections.${widget.collection}` as any)} {wType !== "switch" ? `• ${t(`reports.widgets.builder.formula${widget.operation.charAt(0).toUpperCase() + widget.operation.slice(1)}` as any) || widget.operation}` : ""}
+            {t(`reports.collections.${widget.collection}` as any)} {resolvedWidgetType !== "switch" ? `• ${t(`reports.widgets.builder.formula${widget.operation.charAt(0).toUpperCase() + widget.operation.slice(1)}` as any) || widget.operation}` : ""}
           </p>
         </div>
         
@@ -709,7 +709,7 @@ function CustomWidgetRenderer({
 
       {/* Widget Card Body */}
       <div className="py-4 flex items-center justify-between min-h-[70px]">
-        {wType === "kpi" && (
+        {resolvedWidgetType === "kpi" && (
           <button
             onClick={() => onMetricClick(widget)}
             className="text-left cursor-pointer select-none outline-none group/kpi"
@@ -725,7 +725,7 @@ function CustomWidgetRenderer({
           </button>
         )}
 
-        {wType === "progress" && (
+        {resolvedWidgetType === "progress" && (
           <div className="flex items-center gap-4 w-full">
             <button
               onClick={() => onMetricClick(widget)}
@@ -744,7 +744,7 @@ function CustomWidgetRenderer({
           </div>
         )}
 
-        {wType === "switch" && (
+        {resolvedWidgetType === "switch" && (
           <div className="flex items-center justify-between w-full">
             <div className="text-left">
               <span className={`text-base font-black uppercase tracking-wider ${isSwitchOn ? "text-primary" : "text-muted-foreground"}`}>
@@ -769,7 +769,7 @@ function CustomWidgetRenderer({
           </div>
         )}
 
-        {wType === "chart" && (
+        {resolvedWidgetType === "chart" && (
           <div className="w-full h-[80px] -mb-2">
             <CustomWidgetChartFallback widget={widget} collections={collections} />
           </div>
@@ -791,13 +791,13 @@ function CustomWidgetChartFallback({
 }): React.JSX.Element | null {
   const { t } = useTranslation();
   const palette = useBrandPalette();
-  const data = useMemo(() => {
+  const chartData = useMemo(() => {
     return computeWidgetChartData(widget, collections);
   }, [widget, collections]);
 
   const colorHex = resolveWidgetChartHex(widget.color, palette);
 
-  if (data.length === 0) {
+  if (chartData.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border/40 rounded-xl bg-card/20">
         <span className="text-[8px] font-bold uppercase tracking-wider">{t("reports.widgets.noChartData")}</span>
@@ -811,7 +811,7 @@ function CustomWidgetChartFallback({
       <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
         <PieChart>
           <Pie
-            data={data}
+            data={chartData}
             cx="50%"
             cy="50%"
             innerRadius={14}
@@ -819,7 +819,7 @@ function CustomWidgetChartFallback({
             paddingAngle={2}
             dataKey="value"
           >
-            {data.map((_, index) => (
+            {chartData.map((_, index) => (
               <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
             ))}
           </Pie>
@@ -830,7 +830,7 @@ function CustomWidgetChartFallback({
 
   return (
     <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
-      <BarChart data={data} barSize={8} margin={{ top: 2, right: 2, left: -25, bottom: 2 }}>
+      <BarChart data={chartData} barSize={8} margin={{ top: 2, right: 2, left: -25, bottom: 2 }}>
         <XAxis dataKey="name" tick={false} axisLine={false} tickLine={false} />
         <YAxis tick={{ fontSize: 6 }} axisLine={false} tickLine={false} />
         <Bar dataKey="value" fill={colorHex} radius={[2, 2, 0, 0]} />
@@ -874,10 +874,10 @@ export function DashboardWidgets({
       try {
         const saved = getObject<CustomWidget[] | null>("kpi_custom_widgets", null);
         if (saved) {
-          setLocalWidgets(saved.filter(w => w.isPinnedToDashboard));
+          setLocalWidgets(saved.filter((widget) => widget.isPinnedToDashboard));
         }
-      } catch (e) {
-        console.error("Failed to load pinned widgets on dashboard", e);
+      } catch (error) {
+        console.error("Failed to load pinned widgets on dashboard", error);
       }
     };
 
@@ -918,18 +918,18 @@ export function DashboardWidgets({
     try {
       const saved = getObject<CustomWidget[] | null>("kpi_custom_widgets", null);
       if (saved) {
-        const updated = saved.map(w => {
-          if (w.id === id) {
-            return { ...w, isPinnedToDashboard: false };
+        const updatedWidgets = saved.map((widget) => {
+          if (widget.id === id) {
+            return { ...widget, isPinnedToDashboard: false };
           }
-          return w;
+          return widget;
         });
-        saveObject("kpi_custom_widgets", updated);
-        setLocalWidgets(updated.filter(w => w.isPinnedToDashboard));
+        saveObject("kpi_custom_widgets", updatedWidgets);
+        setLocalWidgets(updatedWidgets.filter((widget) => widget.isPinnedToDashboard));
         window.dispatchEvent(new Event("local-database-update"));
       }
-    } catch (e) {
-      console.error("Failed to unpin widget", e);
+    } catch (error) {
+      console.error("Failed to unpin widget", error);
     }
   };
 
@@ -946,28 +946,28 @@ export function DashboardWidgets({
         saveObject(key, !flag);
       }
     } else {
-      const coll = widget.switchCollection;
-      const recId = widget.switchRecordId;
+      const collectionName = widget.switchCollection;
+      const recordId = widget.switchRecordId;
       const field = widget.switchField || "status";
-      if (!coll || !recId) return;
+      if (!collectionName || !recordId) return;
       try {
-        const list = getCollection<Record<string, unknown>>(coll, []);
-        const updated = list.map((item) => {
-          if (String(item.id) === String(recId)) {
+        const records = getCollection<Record<string, unknown>>(collectionName, []);
+        const updatedRecords = records.map((item) => {
+          if (String(item.id) === String(recordId)) {
             const current = item[field];
-            let nextVal: unknown = !current;
-            if (current === "active") nextVal = "inactive";
-            else if (current === "inactive") nextVal = "active";
-            else if (current === "paid") nextVal = "unpaid";
-            else if (current === "unpaid") nextVal = "paid";
+            let nextValue: unknown = !current;
+            if (current === "active") nextValue = "inactive";
+            else if (current === "inactive") nextValue = "active";
+            else if (current === "paid") nextValue = "unpaid";
+            else if (current === "unpaid") nextValue = "paid";
             
-            return { ...item, [field]: nextVal };
+            return { ...item, [field]: nextValue };
           }
           return item;
         });
-        saveCollection(coll, updated);
-      } catch (e) {
-        console.error(e);
+        saveCollection(collectionName, updatedRecords);
+      } catch (error) {
+        console.error(error);
       }
     }
     window.dispatchEvent(new Event("local-database-update"));
@@ -1187,26 +1187,26 @@ export default function PinnedWidgets({ category }: { category: string }): React
   };
 
   const handleDeleteWidget = (id: string) => {
-    const nextWidgets = widgets.filter(w => w.id !== id);
+    const nextWidgets = widgets.filter((widget) => widget.id !== id);
     setWidgets(nextWidgets);
     saveObject("kpi_custom_widgets", nextWidgets);
     window.dispatchEvent(new Event("local-database-update"));
   };
 
   const handleTogglePin = (id: string) => {
-    const nextWidgets = widgets.map(w => {
-      if (w.id === id) {
-        return { ...w, isPinnedToDashboard: !w.isPinnedToDashboard };
+    const nextWidgets = widgets.map((widget) => {
+      if (widget.id === id) {
+        return { ...widget, isPinnedToDashboard: !widget.isPinnedToDashboard };
       }
-      return w;
+      return widget;
     });
     setWidgets(nextWidgets);
     saveObject("kpi_custom_widgets", nextWidgets);
     window.dispatchEvent(new Event("local-database-update"));
   };
 
-  const handleEditClick = (w: CustomWidget) => {
-    setEditingWidgetId(w.id);
+  const handleEditClick = (widget: CustomWidget) => {
+    setEditingWidgetId(widget.id);
     setIsBuilderOpen(true);
   };
 
@@ -1215,48 +1215,48 @@ export default function PinnedWidgets({ category }: { category: string }): React
     setIsBuilderOpen(true);
   };
 
-  const handleToggleSwitchStateLocal = (w: CustomWidget) => {
-    if (w.switchActionType === "app_setting") {
-      const key = w.switchStateKey || "";
+  const handleToggleSwitchStateLocal = (widget: CustomWidget) => {
+    if (widget.switchActionType === "app_setting") {
+      const key = widget.switchStateKey || "";
       if (key.startsWith("section_")) {
-        const sec = key.replace("section_", "");
+        const sectionKey = key.replace("section_", "");
         const settings = getObject<Record<string, boolean>>("dashboard_section_settings", {});
-        settings[sec] = !settings[sec];
+        settings[sectionKey] = !settings[sectionKey];
         saveObject("dashboard_section_settings", settings);
       } else {
         const current = getObject<unknown>(key, false) === true || getObject<unknown>(key, "false") === "true";
         saveObject(key, !current);
       }
     } else {
-      const coll = w.switchCollection;
-      const recId = w.switchRecordId;
-      const fld = w.switchField || "status";
-      if (!coll || !recId) return;
+      const collectionName = widget.switchCollection;
+      const recordId = widget.switchRecordId;
+      const field = widget.switchField || "status";
+      if (!collectionName || !recordId) return;
       try {
-        const data = getCollection<Record<string, unknown>>(coll, []);
-        const updated = data.map((item) => {
-          if (String(item.id) === String(recId)) {
-            const current = item[fld];
-            let nextVal: unknown = !current;
-            if (current === "active") nextVal = "inactive";
-            else if (current === "inactive") nextVal = "active";
-            else if (current === "paid") nextVal = "unpaid";
-            else if (current === "unpaid") nextVal = "paid";
+        const records = getCollection<Record<string, unknown>>(collectionName, []);
+        const updatedRecords = records.map((item) => {
+          if (String(item.id) === String(recordId)) {
+            const current = item[field];
+            let nextValue: unknown = !current;
+            if (current === "active") nextValue = "inactive";
+            else if (current === "inactive") nextValue = "active";
+            else if (current === "paid") nextValue = "unpaid";
+            else if (current === "unpaid") nextValue = "paid";
             
-            return { ...item, [fld]: nextVal };
+            return { ...item, [field]: nextValue };
           }
           return item;
         });
-        saveCollection(coll, updated);
-      } catch (e) {
-        console.error(e);
+        saveCollection(collectionName, updatedRecords);
+      } catch (error) {
+        console.error(error);
       }
     }
     window.dispatchEvent(new Event("local-database-update"));
   };
 
   const filteredWidgets = useMemo(() => {
-    return widgets.filter(w => w.category === category);
+    return widgets.filter((widget) => widget.category === category);
   }, [widgets, category]);
 
 
@@ -1451,21 +1451,21 @@ export default function PinnedWidgets({ category }: { category: string }): React
         {isBuilderOpen && (
           <WidgetBuilder
             initialCollection={defaultCollection}
-            editWidgetConfig={widgets.find((w) => w.id === editingWidgetId) || null}
+            editWidgetConfig={widgets.find((widget) => widget.id === editingWidgetId) || null}
             onCancelEdit={() => {
               setIsBuilderOpen(false);
               setEditingWidgetId(null);
             }}
             onSaveWidget={(savedWidget) => {
-              const exists = widgets.some((w) => w.id === savedWidget.id);
-              let next: CustomWidget[];
+              const exists = widgets.some((widget) => widget.id === savedWidget.id);
+              let nextWidgets: CustomWidget[];
               if (exists) {
-                next = widgets.map((w) => w.id === savedWidget.id ? savedWidget : w);
+                nextWidgets = widgets.map((widget) => widget.id === savedWidget.id ? savedWidget : widget);
               } else {
-                next = [...widgets, savedWidget];
+                nextWidgets = [...widgets, savedWidget];
               }
-              setWidgets(next);
-              saveObject("kpi_custom_widgets", next);
+              setWidgets(nextWidgets);
+              saveObject("kpi_custom_widgets", nextWidgets);
               setIsBuilderOpen(false);
               setEditingWidgetId(null);
               window.dispatchEvent(new Event("local-database-update"));
@@ -1484,39 +1484,39 @@ export default function PinnedWidgets({ category }: { category: string }): React
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredWidgets.map((w) => {
+          {filteredWidgets.map((widget) => {
             return (
               <motion.div
-                key={w.id}
+                key={widget.id}
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-md p-5 space-y-4 shadow-sm relative group text-left font-sans"
               >
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <span className="text-[10px] font-black text-foreground uppercase tracking-widest leading-none block">{w.title}</span>
+                    <span className="text-[10px] font-black text-foreground uppercase tracking-widest leading-none block">{widget.title}</span>
                     <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
-                      {w.widgetType || "kpi"} • {t(`reports.collections.${w.collection}` as any) || w.collection.replace("_", " ")}
+                      {widget.widgetType || "kpi"} • {t(`reports.collections.${widget.collection}` as any) || widget.collection.replace("_", " ")}
                     </p>
                   </div>
                   
                   <div className="flex items-center gap-1.5">
                     {/* Pin toggle button handles */}
                     <button
-                      onClick={() => handleTogglePin(w.id)}
+                      onClick={() => handleTogglePin(widget.id)}
                       className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
-                        w.isPinnedToDashboard 
+                        widget.isPinnedToDashboard 
                           ? "border-primary bg-primary/10 text-primary" 
                           : "border-border text-muted-foreground hover:text-foreground"
                       }`}
-                      title={w.isPinnedToDashboard ? t("reports.widgets.pinnedToDashboard") : t("reports.widgets.pinToDashboard")}
+                      title={widget.isPinnedToDashboard ? t("reports.widgets.pinnedToDashboard") : t("reports.widgets.pinToDashboard")}
                       type="button"
                     >
-                      {w.isPinnedToDashboard ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                      {widget.isPinnedToDashboard ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
                     </button>
                     {/* Edit configuration settings */}
                     <button
-                      onClick={() => handleEditClick(w)}
+                      onClick={() => handleEditClick(widget)}
                       className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                       title={t("reports.widgets.editWidget")}
                       type="button"
@@ -1525,7 +1525,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     </button>
                     {/* Deletion handle triggers */}
                     <button
-                      onClick={() => handleDeleteWidget(w.id)}
+                      onClick={() => handleDeleteWidget(widget.id)}
                       className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                       title={t("reports.widgets.deleteWidget")}
                       type="button"
@@ -1536,7 +1536,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                 </div>
 
                 <CustomWidgetRenderer
-                  widget={w}
+                  widget={widget}
                   collections={collections}
                   onSwitchToggle={handleToggleSwitchStateLocal}
                   onMetricClick={() => {}}
@@ -1554,7 +1554,7 @@ interface WidgetBuilderProps {
   initialCollection: CustomWidget["collection"];
   editWidgetConfig: CustomWidget | null;
   onCancelEdit: () => void;
-  onSaveWidget: (w: CustomWidget) => void;
+  onSaveWidget: (widget: CustomWidget) => void;
   category?: string;
   mode?: "dashboard" | "kpi";
   initialWidgetType?: CustomWidget["widgetType"];

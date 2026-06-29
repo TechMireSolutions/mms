@@ -207,32 +207,32 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
                   t("sessions.report.colCapacity"),
                   t("sessions.report.colUtilisation"),
                   t("sessions.report.colStatus"),
-                ].map((h) => (
-                  <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
+                ].map((headerLabel) => (
+                  <th key={headerLabel} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {capacityData.map((s, i) => (
-                <tr key={i} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-medium max-w-[180px] truncate">{s.session}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{s.class}</td>
-                  <td className="px-3 py-2.5 font-semibold text-foreground">{s.enrolled}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{s.capacity}</td>
+              {capacityData.map((sessionCapacity, index) => (
+                <tr key={index} className="hover:bg-muted/30">
+                  <td className="px-3 py-2.5 font-medium max-w-[180px] truncate">{sessionCapacity.session}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.class}</td>
+                  <td className="px-3 py-2.5 font-semibold text-foreground">{sessionCapacity.enrolled}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.capacity}</td>
                   <td className="px-3 py-2.5 w-36">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1.5 rounded-full bg-muted">
                         <div
-                          className={`h-1.5 rounded-full ${utilisationColour(s.rate)}`}
-                          style={{ width: `${s.rate}%` }}
+                          className={`h-1.5 rounded-full ${utilisationColour(sessionCapacity.rate)}`}
+                          style={{ width: `${sessionCapacity.rate}%` }}
                         />
                       </div>
-                      <span className="text-xs font-bold text-foreground">{s.rate}%</span>
+                      <span className="text-xs font-bold text-foreground">{sessionCapacity.rate}%</span>
                     </div>
                   </td>
                   <td className="px-3 py-2.5">
                     <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[11px] font-semibold capitalize">
-                      {s.status}
+                      {sessionCapacity.status}
                     </span>
                   </td>
                 </tr>

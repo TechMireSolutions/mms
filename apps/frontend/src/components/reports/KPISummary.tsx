@@ -352,43 +352,43 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     }
 
     // 2. Avg Attendance
-    const present = records.filter(r => r.status === "present" || r.status === "late").length;
+    const present = records.filter((record) => record.status === "present" || record.status === "late").length;
     const attRate = records.length > 0 ? Math.round((present / records.length) * 100) : 0;
     const avgAttendanceVal = `${attRate}%`;
     const avgAttendanceTrend = attRate > 85 ? "up" : "flat";
 
     // 3. Fee Collected
-    const collected = invoices.filter(i => i.status === "paid").reduce((sum, i) => sum + i.finalAmt, 0);
+    const collected = invoices.filter((invoice) => invoice.status === "paid").reduce((sum, invoice) => sum + invoice.finalAmt, 0);
     const feeCollectedVal = `PKR ${(collected/1000).toFixed(1)}k`;
 
     // 4. Outstanding
-    const outstanding = invoices.filter(i => i.status !== "paid" && i.status !== "cancelled").reduce((sum, i) => sum + (i.finalAmt - (i.paidAmt || 0)), 0);
-    const outstandingCount = invoices.filter(i => i.status !== "paid" && i.status !== "cancelled").length;
+    const outstanding = invoices.filter((invoice) => invoice.status !== "paid" && invoice.status !== "cancelled").reduce((sum, invoice) => sum + (invoice.finalAmt - (invoice.paidAmt || 0)), 0);
+    const outstandingCount = invoices.filter((invoice) => invoice.status !== "paid" && invoice.status !== "cancelled").length;
     const outstandingVal = `PKR ${(outstanding/1000).toFixed(1)}k`;
     const outstandingSub = `${outstandingCount} invoices`;
 
     // 5. Hasanat Awarded
-    const totalHasanat = distributions.reduce((sum, dist) => {
-      const denomName = (dist.denominationName || "").toLowerCase();
-      const matchedDenom = denoms.find((d: any) => d.id === dist.denominationId);
-      const points = matchedDenom ? matchedDenom.points : (
-        denomName.includes("silver") ? 150 :
-        denomName.includes("gold") ? 500 :
-        denomName.includes("platinum") ? 1000 :
-        denomName.includes("diamond") ? 2500 : 50
+    const totalHasanat = distributions.reduce((sum, distribution) => {
+      const denominationName = (distribution.denominationName || "").toLowerCase();
+      const matchedDenomination = denoms.find((denomination: any) => denomination.id === distribution.denominationId);
+      const points = matchedDenomination ? matchedDenomination.points : (
+        denominationName.includes("silver") ? 150 :
+        denominationName.includes("gold") ? 500 :
+        denominationName.includes("platinum") ? 1000 :
+        denominationName.includes("diamond") ? 2500 : 50
       );
-      return sum + (dist.quantity || 1) * points;
+      return sum + (distribution.quantity || 1) * points;
     }, 0);
     const hasanatVal = totalHasanat.toLocaleString();
 
     // 6. Pass Rate
     let passesCount = 0;
     let totalResultsCount = 0;
-    examResults.forEach(res => {
-      const exam = exams.find(e => e.id === res.examId);
+    examResults.forEach((result) => {
+      const exam = exams.find((examOption) => examOption.id === result.examId);
       if (exam) {
         totalResultsCount++;
-        if (res.marksObtained >= exam.passingMarks) {
+        if (result.marksObtained >= exam.passingMarks) {
           passesCount++;
         }
       }
@@ -402,13 +402,13 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     const qbSubmissionCount = qbResults.length;
     let qbTotalObtained = 0;
     let qbTotalMax = 0;
-    qbResults.forEach((res: QuestionBankResult) => {
-      const test = qbTests.find((t: QuestionBankTest) => t.id === res.testId);
+    qbResults.forEach((result: QuestionBankResult) => {
+      const test = qbTests.find((questionBankTest: QuestionBankTest) => questionBankTest.id === result.testId);
       if (!test) return;
-      const obtained = Object.values(res.scores).reduce((sum: number, v) => sum + (v as number), 0);
-      const max = test.questionIds.reduce((sum: number, qid: string) => {
-        const q = qbQuestions.find((item: QuestionBankQuestion) => item.id === qid);
-        return sum + (q?.marks ?? 0);
+      const obtained = Object.values(result.scores).reduce((sum: number, score) => sum + (score as number), 0);
+      const max = test.questionIds.reduce((sum: number, questionId: string) => {
+        const question = qbQuestions.find((item: QuestionBankQuestion) => item.id === questionId);
+        return sum + (question?.marks ?? 0);
       }, 0);
       qbTotalObtained += obtained;
       qbTotalMax += max;
@@ -417,10 +417,10 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       qbTotalMax > 0 ? `${Math.round((qbTotalObtained / qbTotalMax) * 100)}%` : "0%";
 
     // 7. Capacity Used
-    const activeSessionsList = sessions.filter(s => s.status === "active");
-    const classesList = activeSessionsList.flatMap(s => s.classes || []);
-    const enrolledSum = classesList.reduce((sum, c) => sum + (c.enrolled || 0), 0);
-    const capacitySum = classesList.reduce((sum, c) => sum + (c.capacity || 0), 0);
+    const activeSessionsList = sessions.filter((session) => session.status === "active");
+    const classesList = activeSessionsList.flatMap((session) => session.classes || []);
+    const enrolledSum = classesList.reduce((sum, sessionClass) => sum + (sessionClass.enrolled || 0), 0);
+    const capacitySum = classesList.reduce((sum, sessionClass) => sum + (sessionClass.capacity || 0), 0);
     const capacityUsed = capacitySum > 0 ? Math.round((enrolledSum / capacitySum) * 100) : 0;
     const capacityVal = `${capacityUsed}%`;
     const capacitySub = `Across ${classesList.length} classes`;
@@ -437,9 +437,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         growthTrend = recentSignups > 0 ? "up" : "flat";
         growthSub = `+${recentSignups} new (last 30d)`;
       } else {
-        const pct = Math.round(((recentSignups - priorSignups) / priorSignups) * 100);
-        growthVal = `${pct >= 0 ? "+" : ""}${pct}%`;
-        growthTrend = pct > 0 ? "up" : (pct < 0 ? "down" : "flat");
+        const percentage = Math.round(((recentSignups - priorSignups) / priorSignups) * 100);
+        growthVal = `${percentage >= 0 ? "+" : ""}${percentage}%`;
+        growthTrend = percentage > 0 ? "up" : (percentage < 0 ? "down" : "flat");
         growthSub = `${recentSignups} vs ${priorSignups} (prev 30d)`;
       }
     } else if (needsContactAnalytics && contactAnalytics) {
@@ -497,7 +497,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         color: "blue",
         trend: "up",
         categories: ["financial", "accounting"],
-        isAvailable: invoices.some(i => i.status === "paid")
+        isAvailable: invoices.some((invoice) => invoice.status === "paid")
       },
       {
         icon: AlertCircle,
@@ -507,7 +507,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         color: "red",
         trend: "down",
         categories: ["financial", "accounting"],
-        isAvailable: invoices.some(i => i.status !== "paid" && i.status !== "cancelled")
+        isAvailable: invoices.some((invoice) => invoice.status !== "paid" && invoice.status !== "cancelled")
       },
       {
         icon: Star,
@@ -730,7 +730,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   useEffect(() => {
     const handleUpdate = () => {
       const nextCards = getObject<CustomCard[]>(`kpi_custom_cards_${category}`, []);
-      setCustomCards((prev) => areCustomCardsEqual(prev, nextCards) ? prev : nextCards);
+      setCustomCards((previousCards) => areCustomCardsEqual(previousCards, nextCards) ? previousCards : nextCards);
     };
     window.addEventListener("local-database-update", handleUpdate);
     return () => window.removeEventListener("local-database-update", handleUpdate);
@@ -823,8 +823,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
 
   // Merge standard and custom possible cards, preventing duplicates if standard label is overridden
   const possibleCards = useMemo(() => {
-    const customLabels = computedCustomKPIs.map(c => c.label);
-    const uniqueStandard = standardPossibleCards.filter(s => !customLabels.includes(s.label));
+    const customLabels = computedCustomKPIs.map((card) => card.label);
+    const uniqueStandard = standardPossibleCards.filter((card) => !customLabels.includes(card.label));
     return [...uniqueStandard, ...computedCustomKPIs];
   }, [standardPossibleCards, computedCustomKPIs]);
 
@@ -884,12 +884,12 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   }, [availableCardLabelsKey, category, role, selectedLabels]);
 
   const handleToggleCard = (label: string) => {
-    setSelectedLabels((prev) => {
+    setSelectedLabels((previousLabels) => {
       let next: string[];
-      if (prev.includes(label)) {
-        next = prev.filter(l => l !== label);
+      if (previousLabels.includes(label)) {
+        next = previousLabels.filter((selectedLabel) => selectedLabel !== label);
       } else {
-        next = [...prev, label];
+        next = [...previousLabels, label];
       }
       saveObject(`kpi_config_${category}_${role || "all"}`, next);
       return next;
@@ -905,9 +905,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       prevCustomTitlesRef.current = getObject<string[]>(`prev_kpi_titles_${category}`, []);
     }
 
-    const currentTitles = customCards.map((c) => c.title);
+    const currentTitles = customCards.map((card) => card.title);
     const prevTitles = prevCustomTitlesRef.current;
-    const newlyAdded = currentTitles.filter((t) => !prevTitles.includes(t));
+    const newlyAdded = currentTitles.filter((title) => !prevTitles.includes(title));
     prevCustomTitlesRef.current = currentTitles;
     saveObject(`prev_kpi_titles_${category}`, currentTitles);
     if (newlyAdded.length > 0) {
@@ -920,11 +920,11 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   }, [customCards, category, role, selectedLabels]);
 
   const handleDeleteCustomCard = (label: string) => {
-    const updatedCards = customCards.filter((c) => c.title !== label);
+    const updatedCards = customCards.filter((card) => card.title !== label);
     setCustomCards(updatedCards);
     saveObject(`kpi_custom_cards_${category}`, updatedCards);
     
-    const nextSelected = selectedLabels.filter((l) => l !== label);
+    const nextSelected = selectedLabels.filter((selectedLabel) => selectedLabel !== label);
     setSelectedLabels(nextSelected);
     saveObject(`kpi_config_${category}_${role || "all"}`, nextSelected);
 
@@ -936,7 +936,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   };
 
   const handleEditCard = (label: string) => {
-    const customCard = customCards.find((c) => c.title === label);
+    const customCard = customCards.find((card) => card.title === label);
     if (customCard) {
       setEditingCardConfig(customCard);
     } else {
@@ -947,14 +947,14 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       });
     }
 
-    const el = document.getElementById(`config-panel-${category}`);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    const configPanel = document.getElementById(`config-panel-${category}`);
+    if (configPanel) configPanel.scrollIntoView({ behavior: "smooth" });
   };
 
-  const visible = possibleCards.filter(kpi => selectedLabels.includes(kpi.label));
+  const visible = possibleCards.filter((card) => selectedLabels.includes(card.label));
 
-  const getCategoryLabelKey = (cat: string): string => {
-    switch (cat) {
+  const getCategoryLabelKey = (categoryName: string): string => {
+    switch (categoryName) {
       case "contacts": return "nav.contacts";
       case "students": return "nav.students";
       case "attendance": return "nav.attendance";
@@ -1161,8 +1161,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
           onClick={() => {
             setIsConfigOpen(true);
             setTimeout(() => {
-              const el = document.getElementById(`config-panel-${category}`);
-              if (el) el.scrollIntoView({ behavior: "smooth" });
+              const configPanel = document.getElementById(`config-panel-${category}`);
+              if (configPanel) configPanel.scrollIntoView({ behavior: "smooth" });
             }, 100);
           }}
           className="rounded-2xl border border-dashed border-border/85 hover:border-primary/50 bg-card/25 hover:bg-primary/5 hover:text-primary transition-all duration-300 flex flex-col items-center justify-center p-3 text-muted-foreground min-h-[100px] text-center cursor-pointer"

@@ -247,9 +247,9 @@ function calculateDynamicTrend(
   // 1. Find the maximum date in the list to pivot the time windows
   let maxTime = 0;
   list.forEach((item) => {
-    const dVal = item[dateField];
-    if (dVal) {
-      const time = new Date(String(dVal)).getTime();
+    const dateValue = item[dateField];
+    if (dateValue) {
+      const time = new Date(String(dateValue)).getTime();
       if (!isNaN(time) && time > maxTime) {
         maxTime = time;
       }
@@ -268,20 +268,20 @@ function calculateDynamicTrend(
     // Apply filter
     const filtered = items.filter((item) => {
       if (!card.filterField) return true;
-      const val = item[card.filterField];
-      if (val === undefined || val === null) return false;
-      const strVal = String(val).toLowerCase();
-      const strTargetVal = String(card.filterValue || "").toLowerCase();
+      const fieldValue = item[card.filterField];
+      if (fieldValue === undefined || fieldValue === null) return false;
+      const fieldText = String(fieldValue).toLowerCase();
+      const targetText = String(card.filterValue || "").toLowerCase();
       
       switch (card.filterOperator) {
         case "equals":
-          return strVal === strTargetVal;
+          return fieldText === targetText;
         case "contains":
-          return strVal.includes(strTargetVal);
+          return fieldText.includes(targetText);
         case "gt":
-          return Number(val) > Number(card.filterValue);
+          return Number(fieldValue) > Number(card.filterValue);
         case "lt":
-          return Number(val) < Number(card.filterValue);
+          return Number(fieldValue) < Number(card.filterValue);
         default:
           return true;
       }
@@ -301,20 +301,20 @@ function calculateDynamicTrend(
     let count = 0;
     filtered.forEach((item) => {
       if (card.collection === "hasanat_distributions" && field === "points") {
-        const denomName = String(item.denominationName || "").toLowerCase();
-        const matchedDenom = (denoms || []).find((d: any) => d.id === item.denominationId);
-        const points = matchedDenom ? matchedDenom.points : (
-          denomName.includes("silver") ? 150 :
-          denomName.includes("gold") ? 500 :
-          denomName.includes("platinum") ? 1000 :
-          denomName.includes("diamond") ? 2500 : 50
+        const denominationName = String(item.denominationName || "").toLowerCase();
+        const matchedDenomination = (denoms || []).find((denomination: any) => denomination.id === item.denominationId);
+        const points = matchedDenomination ? matchedDenomination.points : (
+          denominationName.includes("silver") ? 150 :
+          denominationName.includes("gold") ? 500 :
+          denominationName.includes("platinum") ? 1000 :
+          denominationName.includes("diamond") ? 2500 : 50
         );
         sum += Number(item.quantity || 1) * points;
         count++;
       } else {
-        const num = Number(item[field]);
-        if (!isNaN(num)) {
-          sum += num;
+        const numericFieldValue = Number(item[field]);
+        if (!isNaN(numericFieldValue)) {
+          sum += numericFieldValue;
           count++;
         }
       }
@@ -328,9 +328,9 @@ function calculateDynamicTrend(
   const previousItems: Record<string, unknown>[] = [];
 
   list.forEach((item) => {
-    const dVal = item[dateField];
-    if (dVal) {
-      const time = new Date(String(dVal)).getTime();
+    const dateValue = item[dateField];
+    if (dateValue) {
+      const time = new Date(String(dateValue)).getTime();
       if (!isNaN(time)) {
         if (time >= pivotTime && time <= maxTime) {
           currentItems.push(item);
@@ -372,21 +372,21 @@ export function computeCustomCard(
     if (!item) return false;
     if (!card.filterField) return true;
     
-    const val = item[card.filterField];
-    if (val === undefined || val === null) return false;
+    const fieldValue = item[card.filterField];
+    if (fieldValue === undefined || fieldValue === null) return false;
     
-    const strVal = String(val).toLowerCase();
-    const strTargetVal = String(card.filterValue || "").toLowerCase();
+    const fieldText = String(fieldValue).toLowerCase();
+    const targetText = String(card.filterValue || "").toLowerCase();
     
     switch (card.filterOperator) {
       case "equals":
-        return strVal === strTargetVal;
+        return fieldText === targetText;
       case "contains":
-        return strVal.includes(strTargetVal);
+        return fieldText.includes(targetText);
       case "gt":
-        return Number(val) > Number(card.filterValue);
+        return Number(fieldValue) > Number(card.filterValue);
       case "lt":
-        return Number(val) < Number(card.filterValue);
+        return Number(fieldValue) < Number(card.filterValue);
       default:
         return true;
     }
@@ -399,20 +399,20 @@ export function computeCustomCard(
     let count = 0;
     filteredList.forEach((item) => {
       if (card.collection === "hasanat_distributions" && field === "points") {
-        const denomName = String(item.denominationName || "").toLowerCase();
-        const matchedDenom = (collections.hasanat_denoms || []).find((d: any) => d.id === item.denominationId);
-        const points = matchedDenom ? matchedDenom.points : (
-          denomName.includes("silver") ? 150 :
-          denomName.includes("gold") ? 500 :
-          denomName.includes("platinum") ? 1000 :
-          denomName.includes("diamond") ? 2500 : 50
+        const denominationName = String(item.denominationName || "").toLowerCase();
+        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === item.denominationId);
+        const points = matchedDenomination ? matchedDenomination.points : (
+          denominationName.includes("silver") ? 150 :
+          denominationName.includes("gold") ? 500 :
+          denominationName.includes("platinum") ? 1000 :
+          denominationName.includes("diamond") ? 2500 : 50
         );
         sum += Number(item.quantity || 1) * points;
         count++;
       } else {
-        const num = Number(item[field]);
-        if (!isNaN(num)) {
-          sum += num;
+        const numericFieldValue = Number(item[field]);
+        if (!isNaN(numericFieldValue)) {
+          sum += numericFieldValue;
           count++;
         }
       }
@@ -447,9 +447,9 @@ export function computeCustomCard(
     subText = `${filteredList.length} of ${list.length} matched`;
   }
 
-  let trendVal = card.trend || 0;
+  let trendValue = card.trend || 0;
   if (card.trendType === "database") {
-    trendVal = calculateDynamicTrend(card, list, card.collection, collections.hasanat_denoms);
+    trendValue = calculateDynamicTrend(card, list, card.collection, collections.hasanat_denoms);
   }
 
   return {
@@ -459,7 +459,7 @@ export function computeCustomCard(
     sub: subText,
     icon: card.icon,
     color: card.color,
-    trend: trendVal
+    trend: trendValue
   };
 }
 
@@ -577,8 +577,8 @@ export function getReportVisual(id: string): VisualizerConfig {
     if (saved && saved[id]) {
       return saved[id];
     }
-  } catch (e) {
-    console.error("Failed to load custom report visual configuration", e);
+  } catch (error) {
+    console.error("Failed to load custom report visual configuration", error);
   }
   return DEFAULT_VISUALS[id] || {
     id,

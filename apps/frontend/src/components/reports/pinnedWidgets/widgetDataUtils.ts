@@ -304,13 +304,13 @@ export function computeWidgetSingleValue(
     let count = 0;
     filtered.forEach((item) => {
       if (widget.collection === "hasanat_distributions" && field === "points") {
-        const denomName = String(item.denominationName || "").toLowerCase();
-        const matchedDenom = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === item.denominationId);
-        const points = matchedDenom ? matchedDenom.points : (
-          denomName.includes("silver") ? 150 :
-          denomName.includes("gold") ? 500 :
-          denomName.includes("platinum") ? 1000 :
-          denomName.includes("diamond") ? 2500 : 50
+        const denominationName = String(item.denominationName || "").toLowerCase();
+        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === item.denominationId);
+        const points = matchedDenomination ? matchedDenomination.points : (
+          denominationName.includes("silver") ? 150 :
+          denominationName.includes("gold") ? 500 :
+          denominationName.includes("platinum") ? 1000 :
+          denominationName.includes("diamond") ? 2500 : 50
         );
         sum += Number(item.quantity || 1) * points;
         count++;
@@ -396,13 +396,13 @@ export function computeWidgetChartData(
   const xAxis = widget.xAxisField || "status";
   const groups: Record<string, Record<string, unknown>[]> = {};
   filteredList.forEach((item) => {
-    const keyVal = (item as Record<string, unknown>)[xAxis];
-    const key = keyVal === undefined || keyVal === null || keyVal === "" ? "Unknown" : String(keyVal);
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item as Record<string, unknown>);
+    const groupValue = (item as Record<string, unknown>)[xAxis];
+    const groupKey = groupValue === undefined || groupValue === null || groupValue === "" ? "Unknown" : String(groupValue);
+    if (!groups[groupKey]) groups[groupKey] = [];
+    groups[groupKey].push(item as Record<string, unknown>);
   });
 
-  const data = Object.entries(groups).map(([groupName, items]) => {
+  const chartData = Object.entries(groups).map(([groupName, items]) => {
     let finalValue = 0;
     if (widget.operation === "count") {
       finalValue = items.length;
@@ -412,13 +412,13 @@ export function computeWidgetChartData(
       let count = 0;
       items.forEach((item) => {
         if (widget.collection === "hasanat_distributions" && field === "points") {
-          const denomName = String(item.denominationName || "").toLowerCase();
-          const matchedDenom = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === item.denominationId);
-          const points = matchedDenom ? matchedDenom.points : (
-            denomName.includes("silver") ? 150 :
-            denomName.includes("gold") ? 500 :
-            denomName.includes("platinum") ? 1000 :
-            denomName.includes("diamond") ? 2500 : 50
+          const denominationName = String(item.denominationName || "").toLowerCase();
+          const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === item.denominationId);
+          const points = matchedDenomination ? matchedDenomination.points : (
+            denominationName.includes("silver") ? 150 :
+            denominationName.includes("gold") ? 500 :
+            denominationName.includes("platinum") ? 1000 :
+            denominationName.includes("diamond") ? 2500 : 50
           );
           sum += Number(item.quantity || 1) * points;
           count++;
@@ -435,7 +435,7 @@ export function computeWidgetChartData(
     return { name: groupName, value: finalValue };
   });
 
-  return data.sort((firstItem, secondItem) => secondItem.value - firstItem.value).slice(0, 8);
+  return chartData.sort((firstItem, secondItem) => secondItem.value - firstItem.value).slice(0, 8);
 }
 
 /** Resolve dashboard card values for contacts via server widget aggregates. */

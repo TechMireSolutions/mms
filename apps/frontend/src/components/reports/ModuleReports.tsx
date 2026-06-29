@@ -186,8 +186,8 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
                      const customVisuals = getObject<Record<string, VisualizerConfig>>("report_custom_visuals", {});
                      customVisuals[updatedConfig.id] = updatedConfig;
                      saveObject("report_custom_visuals", customVisuals);
-                   } catch (e) {
-                     console.error("Failed to save custom visual configuration", e);
+                   } catch (error) {
+                     console.error("Failed to save custom visual configuration", error);
                    }
                    window.dispatchEvent(new Event("local-database-update"));
                    setShowVisualizer(false);

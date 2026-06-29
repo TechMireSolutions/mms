@@ -153,9 +153,9 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
   const avgMarks = results.length
     ? (results.reduce((totalMarks, result) => totalMarks + result.marks, 0) / results.length).toFixed(1)
     : 0;
-  const topMark  = results.length ? Math.max(...results.map((r) => r.marks)) : 0;
+  const topMark  = results.length ? Math.max(...results.map((result) => result.marks)) : 0;
   const passRate = results.length
-    ? ((results.filter((r) => r.marks >= 50).length / results.length) * 100).toFixed(0)
+    ? ((results.filter((result) => result.marks >= 50).length / results.length) * 100).toFixed(0)
     : 0;
 
   return (
@@ -207,22 +207,22 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
         <EmptyState icon={Trophy} title={t("examinations.report.noClassRankingData")} compact />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {classRankings.map((c, i) => (
-            <div key={c.class} className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
+          {classRankings.map((classRanking, index) => (
+            <div key={classRanking.class} className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-semibold text-foreground">{c.class}</p>
+                <p className="text-sm font-semibold text-foreground">{classRanking.class}</p>
                 <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
-                  #{i + 1}
+                  #{index + 1}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                {t("examinations.report.topStudentLabel")}: <span className="font-semibold text-foreground">{c.topStudent}</span> ({c.topMarks}%)
+                {t("examinations.report.topStudentLabel")}: <span className="font-semibold text-foreground">{classRanking.topStudent}</span> ({classRanking.topMarks}%)
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {t("examinations.report.classAvg")}: <span className="font-semibold">{c.avgMarks}%</span>
+                {t("examinations.report.classAvg")}: <span className="font-semibold">{classRanking.avgMarks}%</span>
               </p>
               <p className="text-xs text-muted-foreground">
-                {t("examinations.report.passRate")}: <span className="font-semibold text-success">{c.passRate}%</span>
+                {t("examinations.report.passRate")}: <span className="font-semibold text-success">{classRanking.passRate}%</span>
               </p>
             </div>
           ))}
@@ -256,27 +256,27 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                   t("examinations.report.colSubject"),
                   t("examinations.report.colMarks"),
                   t("examinations.report.colGrade"),
-                ].map((h) => (
-                  <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
+                ].map((headerLabel) => (
+                  <th key={headerLabel} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {results.map((r) => (
-                <tr key={`${r.studentName}-${r.class}`} className="hover:bg-muted/30">
+              {results.map((result) => (
+                <tr key={`${result.studentName}-${result.class}`} className="hover:bg-muted/30">
                   <td className="px-3 py-2.5">
-                    {r.rank === 1
+                    {result.rank === 1
                       ? <Trophy className="w-4 h-4 text-warning" />
-                      : <span className="text-muted-foreground">{r.rank}</span>
+                      : <span className="text-muted-foreground">{result.rank}</span>
                     }
                   </td>
-                  <td className="px-3 py-2.5 font-medium">{r.studentName}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{r.class}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{r.subject}</td>
-                  <td className="px-3 py-2.5 font-semibold">{r.marks}/{r.total}</td>
+                  <td className="px-3 py-2.5 font-medium">{result.studentName}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{result.class}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{result.subject}</td>
+                  <td className="px-3 py-2.5 font-semibold">{result.marks}/{result.total}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${GRADE_COLOR[r.grade] ?? "bg-muted text-muted-foreground"}`}>
-                      {r.grade}
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${GRADE_COLOR[result.grade] ?? "bg-muted text-muted-foreground"}`}>
+                      {result.grade}
                     </span>
                   </td>
                 </tr>

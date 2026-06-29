@@ -117,26 +117,26 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
   const enrollmentRecords = useEnrollmentsCollection();
 
   const students = useMemo<ReportStudent[]>(() => {
-    const rows = (studentPage?.students ?? []) as unknown as Student[];
-    let list = rows.map(mapStudentRow);
+    const studentRows = (studentPage?.students ?? []) as unknown as Student[];
+    let list = studentRows.map(mapStudentRow);
     if (filters.class && filters.class !== "all") {
-      list = list.filter((s) => s.class === filters.class);
+      list = list.filter((student) => student.class === filters.class);
     }
     return list;
   }, [studentPage, filters.class]);
 
   const enrollments = useMemo<EnrollmentHistoryItem[]>(() => {
-    let list = enrollmentRecords.map((e) => ({
-      id: e.id,
-      studentName: e.studentName,
-      session: e.sessionName,
-      class: e.className || "—",
-      enrolled: e.enrolledDate,
-      status: e.status,
+    let list = enrollmentRecords.map((enrollment) => ({
+      id: enrollment.id,
+      studentName: enrollment.studentName,
+      session: enrollment.sessionName,
+      class: enrollment.className || "—",
+      enrolled: enrollment.enrolledDate,
+      status: enrollment.status,
     }));
     if (filters.student) {
-      list = list.filter((e) =>
-        e.studentName.toLowerCase().includes(filters.student.toLowerCase()),
+      list = list.filter((enrollment) =>
+        enrollment.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
     return list;
@@ -213,24 +213,24 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                       t("students.report.colAge"),
                       t("students.report.colRegistered"),
                       t("students.report.colStatus"),
-                    ].map((h) => (
-                      <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
+                    ].map((headerLabel) => (
+                      <th key={headerLabel} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {students.map((s) => (
-                    <tr key={s.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-3 py-2.5 font-medium text-foreground">{s.name}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground capitalize">{s.gender}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground">{s.class}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground max-w-[160px] truncate">{s.session}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground">{s.city}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground">{s.age}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground">{s.registered}</td>
+                  {students.map((student) => (
+                    <tr key={student.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-3 py-2.5 font-medium text-foreground">{student.name}</td>
+                      <td className="px-3 py-2.5 text-muted-foreground capitalize">{student.gender}</td>
+                      <td className="px-3 py-2.5 text-muted-foreground">{student.class}</td>
+                      <td className="px-3 py-2.5 text-muted-foreground max-w-[160px] truncate">{student.session}</td>
+                      <td className="px-3 py-2.5 text-muted-foreground">{student.city}</td>
+                      <td className="px-3 py-2.5 text-muted-foreground">{student.age}</td>
+                      <td className="px-3 py-2.5 text-muted-foreground">{student.registered}</td>
                       <td className="px-3 py-2.5">
-                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${STATUS_COLOR[s.status] ?? "bg-muted text-muted-foreground"}`}>
-                          {s.status}
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${STATUS_COLOR[student.status] ?? "bg-muted text-muted-foreground"}`}>
+                          {student.status}
                         </span>
                       </td>
                     </tr>
@@ -279,21 +279,21 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                     t("students.report.colClass"),
                     t("students.report.colEnrolled"),
                     t("students.report.colStatus"),
-                  ].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">{h}</th>
+                  ].map((headerLabel) => (
+                    <th key={headerLabel} className="px-4 py-3 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">{headerLabel}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {enrollments.map((e) => (
-                  <tr key={e.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-3 py-2.5 font-medium text-foreground">{e.studentName}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{e.session}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{e.class}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{e.enrolled}</td>
+                {enrollments.map((enrollment) => (
+                  <tr key={enrollment.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-3 py-2.5 font-medium text-foreground">{enrollment.studentName}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{enrollment.session}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{enrollment.class}</td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{enrollment.enrolled}</td>
                     <td className="px-3 py-2.5">
-                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${STATUS_COLOR[e.status] ?? "bg-muted text-muted-foreground"}`}>
-                        {e.status}
+                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${STATUS_COLOR[enrollment.status] ?? "bg-muted text-muted-foreground"}`}>
+                        {enrollment.status}
                       </span>
                     </td>
                   </tr>
