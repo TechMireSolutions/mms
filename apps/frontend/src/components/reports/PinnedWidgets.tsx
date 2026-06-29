@@ -85,10 +85,10 @@ function WidgetDrilldownModal({
   }, [students]);
 
   const filteredRecords = useMemo(() => {
-    const records = getFilteredRecords(widget, collections);
-    if (!search) return records;
+    const widgetRecords = getFilteredRecords(widget, collections);
+    if (!search) return widgetRecords;
     const searchText = search.toLowerCase();
-    return records.filter((record) => {
+    return widgetRecords.filter((record) => {
       return Object.values(record).some((value) => String(value).toLowerCase().includes(searchText));
     });
   }, [widget, collections, search]);
@@ -96,28 +96,28 @@ function WidgetDrilldownModal({
   const handleToggleStatus = (recordId: string) => {
     try {
       const collectionName = widget.collection;
-      const records = getCollection<Record<string, unknown>>(collectionName, []);
-      const updatedRecords = records.map((item) => {
-        if (String(item.id) === String(recordId)) {
+      const storedRecords = getCollection<Record<string, unknown>>(collectionName, []);
+      const updatedRecords = storedRecords.map((storedRecord) => {
+        if (String(storedRecord.id) === String(recordId)) {
           if (collectionName === "students") {
-            const nextStatus = item.status === "active" ? "inactive" : "active";
-            return { ...item, status: nextStatus };
+            const nextStatus = storedRecord.status === "active" ? "inactive" : "active";
+            return { ...storedRecord, status: nextStatus };
           } else if (collectionName === "finance_invoices") {
-            const nextStatus = item.status === "paid" ? "unpaid" : "paid";
-            const finalAmt = Number(item.finalAmt || 0);
-            return { ...item, status: nextStatus, paidAmt: nextStatus === "paid" ? finalAmt : 0 };
+            const nextStatus = storedRecord.status === "paid" ? "unpaid" : "paid";
+            const finalAmt = Number(storedRecord.finalAmt || 0);
+            return { ...storedRecord, status: nextStatus, paidAmt: nextStatus === "paid" ? finalAmt : 0 };
           } else if (collectionName === "attendance_records") {
-            const nextStatus = item.status === "present" ? "absent" : "present";
-            return { ...item, status: nextStatus };
+            const nextStatus = storedRecord.status === "present" ? "absent" : "present";
+            return { ...storedRecord, status: nextStatus };
           } else if (collectionName === "contacts") {
-            const nextStage = item.lifecycleStage === "customer" ? "lead" : "customer";
-            return { ...item, lifecycleStage: nextStage };
+            const nextStage = storedRecord.lifecycleStage === "customer" ? "lead" : "customer";
+            return { ...storedRecord, lifecycleStage: nextStage };
           } else if (collectionName === "sessions") {
-            const nextStatus = item.status === "active" ? "inactive" : "active";
-            return { ...item, status: nextStatus };
+            const nextStatus = storedRecord.status === "active" ? "inactive" : "active";
+            return { ...storedRecord, status: nextStatus };
           }
         }
-        return item;
+        return storedRecord;
       });
       saveCollection(collectionName, updatedRecords);
       window.dispatchEvent(new Event("local-database-update"));
@@ -194,50 +194,50 @@ function WidgetDrilldownModal({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {filteredRecords.map((item, index) => {
-                    const record = item as any;
-                    const recordId = String(record.id || index);
+                  {filteredRecords.map((recordSource, index) => {
+                    const displayRecord = recordSource as any;
+                    const recordId = String(displayRecord.id || index);
                     
                     // Format columns based on collection
-                    let name = String(record.name || record.studentName || record.invoiceNo || record.id);
-                    let info = "";
-                    let status = String(record.status || record.lifecycleStage || "active");
+                    let name = String(displayRecord.name || displayRecord.studentName || displayRecord.invoiceNo || displayRecord.id);
+                    let detailText = "";
+                    let status = String(displayRecord.status || displayRecord.lifecycleStage || "active");
                     let hasAction = true;
                     
                     if (widget.collection === "students") {
-                      name = String(record.name || "");
-                      info = t("reports.widgets.ageText", {
-                        age: record.age || "N/A",
-                        gender: record.gender ? t(`reports.fields.${record.gender}` as any) || record.gender : t("reports.widgets.any")
+                      name = String(displayRecord.name || "");
+                      detailText = t("reports.widgets.ageText", {
+                        age: displayRecord.age || "N/A",
+                        gender: displayRecord.gender ? t(`reports.fields.${displayRecord.gender}` as any) || displayRecord.gender : t("reports.widgets.any")
                       });
                     } else if (widget.collection === "finance_invoices") {
-                      name = t("reports.widgets.invoiceText", { invoiceNo: record.invoiceNo || record.id });
-                      const studentId = String(record.studentId || "");
+                      name = t("reports.widgets.invoiceText", { invoiceNo: displayRecord.invoiceNo || displayRecord.id });
+                      const studentId = String(displayRecord.studentId || "");
                       const studentName = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
-                      info = `${studentName} • ₨ ${Number(record.finalAmt || 0).toLocaleString()}`;
+                      detailText = `${studentName} • ₨ ${Number(displayRecord.finalAmt || 0).toLocaleString()}`;
                     } else if (widget.collection === "attendance_records") {
-                      const studentId = String(record.studentId || "");
+                      const studentId = String(displayRecord.studentId || "");
                       name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
-                      info = t("reports.widgets.classText", { date: record.date, className: record.className || t("reports.widgets.class") });
+                      detailText = t("reports.widgets.classText", { date: displayRecord.date, className: displayRecord.className || t("reports.widgets.class") });
                     } else if (widget.collection === "hasanat_distributions") {
-                      const studentId = String(record.studentId || "");
+                      const studentId = String(displayRecord.studentId || "");
                       name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
-                      info = t("reports.widgets.qtyText", { denomination: record.denominationName || "Standard", qty: record.quantity || 1 });
-                      status = t("reports.widgets.pointsText", { points: record.points || 50 });
+                      detailText = t("reports.widgets.qtyText", { denomination: displayRecord.denominationName || "Standard", qty: displayRecord.quantity || 1 });
+                      status = t("reports.widgets.pointsText", { points: displayRecord.points || 50 });
                       hasAction = false; // deleting is the action instead of toggling status
                     } else if (widget.collection === "contacts") {
-                      name = String(record.name || "");
-                      info = `${record.email || t("reports.widgets.noEmail")} • ${t(`reports.status.${record.lifecycleStage}` as any) || record.lifecycleStage}`;
-                      status = String(record.lifecycleStage || "lead");
+                      name = String(displayRecord.name || "");
+                      detailText = `${displayRecord.email || t("reports.widgets.noEmail")} • ${t(`reports.status.${displayRecord.lifecycleStage}` as any) || displayRecord.lifecycleStage}`;
+                      status = String(displayRecord.lifecycleStage || "lead");
                     } else if (widget.collection === "sessions") {
-                      name = String(record.name || "");
-                      info = t("reports.widgets.roomText", { type: record.type || "Hifz", room: record.room || "N/A" });
+                      name = String(displayRecord.name || "");
+                      detailText = t("reports.widgets.roomText", { type: displayRecord.type || "Hifz", room: displayRecord.room || "N/A" });
                     }
 
                     return (
                       <tr key={recordId} className="hover:bg-muted/10">
                         <td className="py-3.5 pr-2 font-bold text-foreground max-w-[180px] truncate">{name}</td>
-                        <td className="py-3.5 text-muted-foreground font-semibold">{info}</td>
+                        <td className="py-3.5 text-muted-foreground font-semibold">{detailText}</td>
                         <td className="py-3.5">
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
                             ["active", "paid", "present", "customer"].includes(status.toLowerCase())
@@ -363,22 +363,22 @@ function CustomWidgetRenderer({
   const isSwitchOn = useMemo(() => {
     if (resolvedWidgetType === "card") return false;
     if (widget.switchActionType === "app_setting") {
-      const key = widget.switchStateKey || "";
-      if (key.startsWith("section_")) {
-        const sectionKey = key.replace("section_", "");
+      const switchStateKey = widget.switchStateKey || "";
+      if (switchStateKey.startsWith("section_")) {
+        const sectionKey = switchStateKey.replace("section_", "");
         const settings = getObject<Record<string, boolean>>("dashboard_section_settings", {});
         return !!settings[sectionKey];
       }
-      return getObject<unknown>(key, false) === true || getObject<unknown>(key, "false") === "true";
+      return getObject<unknown>(switchStateKey, false) === true || getObject<unknown>(switchStateKey, "false") === "true";
     }
     const collectionName = widget.switchCollection;
     const recordId = widget.switchRecordId;
-    const field = widget.switchField || "status";
+    const targetField = widget.switchField || "status";
     if (!collectionName || !recordId) return false;
-    const list = collections[collectionName] || [];
-    const item = list.find((candidate: { id?: unknown }) => String(candidate.id) === String(recordId));
-    if (!item) return false;
-    const fieldValue = (item as Record<string, unknown>)[field];
+    const collectionRecords = collections[collectionName] || [];
+    const matchedRecord = collectionRecords.find((candidate: { id?: unknown }) => String(candidate.id) === String(recordId));
+    if (!matchedRecord) return false;
+    const fieldValue = (matchedRecord as Record<string, unknown>)[targetField];
     return String(fieldValue) === "active" || String(fieldValue) === "paid" || !!fieldValue;
   }, [resolvedWidgetType, widget, collections]);
 
@@ -872,9 +872,9 @@ export function DashboardWidgets({
       setCollections(getWidgetCollections());
       if (widgets) return;
       try {
-        const saved = getObject<CustomWidget[] | null>("kpi_custom_widgets", null);
-        if (saved) {
-          setLocalWidgets(saved.filter((widget) => widget.isPinnedToDashboard));
+        const savedWidgets = getObject<CustomWidget[] | null>("kpi_custom_widgets", null);
+        if (savedWidgets) {
+          setLocalWidgets(savedWidgets.filter((widget) => widget.isPinnedToDashboard));
         }
       } catch (error) {
         console.error("Failed to load pinned widgets on dashboard", error);
@@ -916,9 +916,9 @@ export function DashboardWidgets({
       return;
     }
     try {
-      const saved = getObject<CustomWidget[] | null>("kpi_custom_widgets", null);
-      if (saved) {
-        const updatedWidgets = saved.map((widget) => {
+      const savedWidgets = getObject<CustomWidget[] | null>("kpi_custom_widgets", null);
+      if (savedWidgets) {
+        const updatedWidgets = savedWidgets.map((widget) => {
           if (widget.id === id) {
             return { ...widget, isPinnedToDashboard: false };
           }
@@ -935,35 +935,35 @@ export function DashboardWidgets({
 
   const handleToggleSwitchState = (widget: CustomWidget) => {
     if (widget.switchActionType === "app_setting") {
-      const key = widget.switchStateKey || "";
-      if (key.startsWith("section_")) {
-        const sectionKey = key.replace("section_", "");
+      const switchStateKey = widget.switchStateKey || "";
+      if (switchStateKey.startsWith("section_")) {
+        const sectionKey = switchStateKey.replace("section_", "");
         const settings = getObject<Record<string, boolean>>("dashboard_section_settings", {});
         settings[sectionKey] = !settings[sectionKey];
         saveObject("dashboard_section_settings", settings);
       } else {
-        const flag = getObject<unknown>(key, false) === true || getObject<unknown>(key, "false") === "true";
-        saveObject(key, !flag);
+        const isEnabled = getObject<unknown>(switchStateKey, false) === true || getObject<unknown>(switchStateKey, "false") === "true";
+        saveObject(switchStateKey, !isEnabled);
       }
     } else {
       const collectionName = widget.switchCollection;
       const recordId = widget.switchRecordId;
-      const field = widget.switchField || "status";
+      const targetField = widget.switchField || "status";
       if (!collectionName || !recordId) return;
       try {
-        const records = getCollection<Record<string, unknown>>(collectionName, []);
-        const updatedRecords = records.map((item) => {
-          if (String(item.id) === String(recordId)) {
-            const current = item[field];
-            let nextValue: unknown = !current;
-            if (current === "active") nextValue = "inactive";
-            else if (current === "inactive") nextValue = "active";
-            else if (current === "paid") nextValue = "unpaid";
-            else if (current === "unpaid") nextValue = "paid";
+        const storedRecords = getCollection<Record<string, unknown>>(collectionName, []);
+        const updatedRecords = storedRecords.map((storedRecord) => {
+          if (String(storedRecord.id) === String(recordId)) {
+            const currentFieldValue = storedRecord[targetField];
+            let nextValue: unknown = !currentFieldValue;
+            if (currentFieldValue === "active") nextValue = "inactive";
+            else if (currentFieldValue === "inactive") nextValue = "active";
+            else if (currentFieldValue === "paid") nextValue = "unpaid";
+            else if (currentFieldValue === "unpaid") nextValue = "paid";
             
-            return { ...item, [field]: nextValue };
+            return { ...storedRecord, [targetField]: nextValue };
           }
-          return item;
+          return storedRecord;
         });
         saveCollection(collectionName, updatedRecords);
       } catch (error) {
@@ -1147,21 +1147,21 @@ export default function PinnedWidgets({ category }: { category: string }): React
   });
 
   const toggleSectionSetting = (key: string) => {
-    const next = { ...sectionSettings, [key]: !sectionSettings[key] };
-    setSectionSettings(next);
-    saveObject("dashboard_section_settings", next);
+    const nextSectionSettings = { ...sectionSettings, [key]: !sectionSettings[key] };
+    setSectionSettings(nextSectionSettings);
+    saveObject("dashboard_section_settings", nextSectionSettings);
     window.dispatchEvent(new Event("local-database-update"));
   };
 
   const toggleCardVisibility = (cardId: string) => {
-    let next: string[];
+    let nextDisabledCardIds: string[];
     if (disabledCardIds.includes(cardId)) {
-      next = disabledCardIds.filter(id => id !== cardId);
+      nextDisabledCardIds = disabledCardIds.filter(id => id !== cardId);
     } else {
-      next = [...disabledCardIds, cardId];
+      nextDisabledCardIds = [...disabledCardIds, cardId];
     }
-    setDisabledCardIds(next);
-    saveObject("mms_dashboard_disabled_cards", next);
+    setDisabledCardIds(nextDisabledCardIds);
+    saveObject("mms_dashboard_disabled_cards", nextDisabledCardIds);
     window.dispatchEvent(new Event("local-database-update"));
   };
 
@@ -1217,35 +1217,35 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
   const handleToggleSwitchStateLocal = (widget: CustomWidget) => {
     if (widget.switchActionType === "app_setting") {
-      const key = widget.switchStateKey || "";
-      if (key.startsWith("section_")) {
-        const sectionKey = key.replace("section_", "");
+      const switchStateKey = widget.switchStateKey || "";
+      if (switchStateKey.startsWith("section_")) {
+        const sectionKey = switchStateKey.replace("section_", "");
         const settings = getObject<Record<string, boolean>>("dashboard_section_settings", {});
         settings[sectionKey] = !settings[sectionKey];
         saveObject("dashboard_section_settings", settings);
       } else {
-        const current = getObject<unknown>(key, false) === true || getObject<unknown>(key, "false") === "true";
-        saveObject(key, !current);
+        const currentSwitchValue = getObject<unknown>(switchStateKey, false) === true || getObject<unknown>(switchStateKey, "false") === "true";
+        saveObject(switchStateKey, !currentSwitchValue);
       }
     } else {
       const collectionName = widget.switchCollection;
       const recordId = widget.switchRecordId;
-      const field = widget.switchField || "status";
+      const targetField = widget.switchField || "status";
       if (!collectionName || !recordId) return;
       try {
-        const records = getCollection<Record<string, unknown>>(collectionName, []);
-        const updatedRecords = records.map((item) => {
-          if (String(item.id) === String(recordId)) {
-            const current = item[field];
-            let nextValue: unknown = !current;
-            if (current === "active") nextValue = "inactive";
-            else if (current === "inactive") nextValue = "active";
-            else if (current === "paid") nextValue = "unpaid";
-            else if (current === "unpaid") nextValue = "paid";
+        const storedRecords = getCollection<Record<string, unknown>>(collectionName, []);
+        const updatedRecords = storedRecords.map((storedRecord) => {
+          if (String(storedRecord.id) === String(recordId)) {
+            const currentFieldValue = storedRecord[targetField];
+            let nextValue: unknown = !currentFieldValue;
+            if (currentFieldValue === "active") nextValue = "inactive";
+            else if (currentFieldValue === "inactive") nextValue = "active";
+            else if (currentFieldValue === "paid") nextValue = "unpaid";
+            else if (currentFieldValue === "unpaid") nextValue = "paid";
             
-            return { ...item, [field]: nextValue };
+            return { ...storedRecord, [targetField]: nextValue };
           }
-          return item;
+          return storedRecord;
         });
         saveCollection(collectionName, updatedRecords);
       } catch (error) {
@@ -1680,15 +1680,15 @@ export function WidgetBuilder({
   // Load record options for DB Record switch selector
   const dbRecordsList = useMemo(() => {
     if (switchCollection === "sessions") {
-      const sList = (collections.sessions || []) as Session[];
-      return sList.flatMap((s: Session) => 
-        (s.classes || []).map((c: Class) => ({ id: c.id, label: `${s.name} - ${c.name}` }))
+      const sessionRecords = (collections.sessions || []) as Session[];
+      return sessionRecords.flatMap((session: Session) => 
+        (session.classes || []).map((sessionClass: Class) => ({ id: sessionClass.id, label: `${session.name} - ${sessionClass.name}` }))
       );
     }
-    const list = (collections[switchCollection] || []) as { id?: string | number; name?: string; studentName?: string; invoiceNo?: string }[];
-    return list.map((item) => ({
-      id: String(item.id),
-      label: String(item.name || item.studentName || item.invoiceNo || item.id)
+    const collectionRecords = (collections[switchCollection] || []) as { id?: string | number; name?: string; studentName?: string; invoiceNo?: string }[];
+    return collectionRecords.map((collectionRecord) => ({
+      id: String(collectionRecord.id),
+      label: String(collectionRecord.name || collectionRecord.studentName || collectionRecord.invoiceNo || collectionRecord.id)
     }));
   }, [switchCollection, collections]);
 
@@ -1812,26 +1812,26 @@ export function WidgetBuilder({
                   base.push({ id: "hasanat-distribution", label: t("reports.widgets.builder.typeHasanatDistribution"), desc: t("reports.widgets.builder.typeHasanatDistributionDesc") });
                 }
                 return base;
-              })().map((type) => {
-                const isSel = widgetType === type.id;
+              })().map((widgetTypeOption) => {
+                const isSelectedType = widgetType === widgetTypeOption.id;
                 return (
                   <button
-                    key={type.id}
+                    key={widgetTypeOption.id}
                     onClick={() => {
-                      setWidgetType(type.id as CustomWidget["widgetType"]);
-                      if (type.id === "switch") {
+                      setWidgetType(widgetTypeOption.id as CustomWidget["widgetType"]);
+                      if (widgetTypeOption.id === "switch") {
                         setBuilderOperation("count");
                       }
                     }}
                     className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
-                      isSel 
+                      isSelectedType
                         ? "border-primary bg-primary/10 text-primary shadow-sm" 
                         : "border-border bg-card/30 text-muted-foreground hover:border-muted-foreground/20"
                     }`}
                     type="button"
                   >
-                    <span className="text-xs font-black uppercase block">{type.label}</span>
-                    <span className="text-[9px] text-muted-foreground block mt-1 leading-none">{type.desc}</span>
+                    <span className="text-xs font-black uppercase block">{widgetTypeOption.label}</span>
+                    <span className="text-[9px] text-muted-foreground block mt-1 leading-none">{widgetTypeOption.desc}</span>
                   </button>
                 );
               })}
@@ -1913,9 +1913,9 @@ export function WidgetBuilder({
                     {METADATA_FIELDS[builderCollection].numericFields.length === 0 ? (
                       <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noNumericFields")}</option>
                     ) : (
-                      METADATA_FIELDS[builderCollection].numericFields.map((field) => (
-                        <option key={field.value} value={field.value} className="bg-background text-foreground">
-                          {t(`reports.fields.${field.value}` as any) || field.label}
+                      METADATA_FIELDS[builderCollection].numericFields.map((numericField) => (
+                        <option key={numericField.value} value={numericField.value} className="bg-background text-foreground">
+                          {t(`reports.fields.${numericField.value}` as any) || numericField.label}
                         </option>
                       ))
                     )}
@@ -1931,9 +1931,9 @@ export function WidgetBuilder({
                     className={FORM_INPUT_BUILDER}
                   >
                     <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noFilter")}</option>
-                    {METADATA_FIELDS[builderCollection].fields.map((field) => (
-                      <option key={field.value} value={field.value} className="bg-background text-foreground">
-                        {t(`reports.fields.${field.value}` as any) || field.label}
+                    {METADATA_FIELDS[builderCollection].fields.map((metadataField) => (
+                      <option key={metadataField.value} value={metadataField.value} className="bg-background text-foreground">
+                        {t(`reports.fields.${metadataField.value}` as any) || metadataField.label}
                       </option>
                     ))}
                   </select>

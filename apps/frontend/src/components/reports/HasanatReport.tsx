@@ -94,10 +94,10 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       if (distributionRecord.recipientType === "student") {
         const studentKey = distributionRecord.recipientStudentId || distributionRecord.recipientName || "";
         if (studentKey) {
-          const label = distributionRecord.recipientName || studentKey;
+          const studentName = distributionRecord.recipientName || studentKey;
           if (!studentMap[studentKey]) {
             studentMap[studentKey] = {
-              studentName: label,
+              studentName,
               class: distributionRecord.recipientClass,
               faculty: distributionRecord.issuedBy || "—",
               distributed: 0,

@@ -22,8 +22,8 @@ function sumScores(scores: Record<string, number>): number {
 }
 
 function testTotalMarks(test: QuestionBankTest, questions: QuestionBankQuestion[]): number {
-  return test.questionIds.reduce((sum, qid) => {
-    const question = questions.find((item) => item.id === qid);
+  return test.questionIds.reduce((sum, questionId) => {
+    const question = questions.find((questionBankQuestion) => questionBankQuestion.id === questionId);
     return sum + (question?.marks ?? 0);
   }, 0);
 }
@@ -32,31 +32,31 @@ export default function QuestionBankReport(): React.JSX.Element {
   const { t } = useTranslation();
   const questions = useQuestionBankQuestionsCollection();
   const tests = useQuestionBankTestsCollection();
-  const results = useQuestionBankResultsCollection();
-  const config = useQuestionBankConfig(questions);
+  const questionBankResults = useQuestionBankResultsCollection();
+  const questionBankConfig = useQuestionBankConfig(questions);
 
   const avgScore = useMemo(() => {
-    const scored = results
-      .map((result) => {
-        const test = tests.find((item) => item.id === result.testId);
+    const scored = questionBankResults
+      .map((questionBankResult) => {
+        const test = tests.find((questionBankTest) => questionBankTest.id === questionBankResult.testId);
         if (!test) return null;
         const total = testTotalMarks(test, questions);
-        return total > 0 ? Math.round((sumScores(result.scores) / total) * 100) : null;
+        return total > 0 ? Math.round((sumScores(questionBankResult.scores) / total) * 100) : null;
       })
       .filter((value): value is number => value !== null);
 
     return scored.length
       ? Math.round(scored.reduce((sum, value) => sum + value, 0) / scored.length)
       : 0;
-  }, [questions, results, tests]);
+  }, [questions, questionBankResults, tests]);
 
-  const difficultyData = config.enabledDifficulties.map((difficulty) => ({
-    name: config.difficultyLabel(difficulty),
+  const difficultyData = questionBankConfig.enabledDifficulties.map((difficulty) => ({
+    name: questionBankConfig.difficultyLabel(difficulty),
     questions: questions.filter((question) => question.difficulty === difficulty).length,
     tests: tests.filter((test) => test.difficulty === difficulty).length,
   }));
 
-  const categoryData = config.categories.map((category) => ({
+  const categoryData = questionBankConfig.categories.map((category) => ({
     name: category.name,
     questions: questions.filter((question) => getQuestionCategoryIds(question).includes(category.id)).length,
   }));
@@ -79,7 +79,7 @@ export default function QuestionBankReport(): React.JSX.Element {
         <ReportSummaryCard
           icon={Users}
           label={t("questionBank.report.submissions")}
-          value={results.length}
+          value={questionBankResults.length}
           color="violet"
         />
         <ReportSummaryCard

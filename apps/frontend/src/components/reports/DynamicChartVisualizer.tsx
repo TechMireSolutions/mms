@@ -113,10 +113,10 @@ export default function DynamicChartVisualizer({
 
   useEffect(() => {
     if (!chartRef.current) return;
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.contentRect.width > 0) {
-          setContainerWidth(entry.contentRect.width);
+    const observer = new ResizeObserver((resizeEntries) => {
+      for (const resizeEntry of resizeEntries) {
+        if (resizeEntry.contentRect.width > 0) {
+          setContainerWidth(resizeEntry.contentRect.width);
         }
       }
     });
@@ -181,17 +181,17 @@ export default function DynamicChartVisualizer({
 
   // Read data from DB and apply queries with smart sorting/grouping
   const processedData = useMemo<AggregatedItem[]>(() => {
-    const dataList = getCollection(activeMeta.dbKey, activeMeta.defaultData as unknown[]) as Record<string, unknown>[];
-    const denoms = getCollection<any>("hasanat_denoms", []);
+    const collectionRows = getCollection(activeMeta.dbKey, activeMeta.defaultData as unknown[]) as Record<string, unknown>[];
+    const denominations = getCollection<any>("hasanat_denoms", []);
     const pointsMap = new Map<string, number>();
-    denoms.forEach((denomination) => pointsMap.set(denomination.id, denomination.points));
+    denominations.forEach((denomination) => pointsMap.set(denomination.id, denomination.points));
     
     // 1. Apply multiple filters
-    const filteredList = dataList.filter((item) => {
-      if (!item) return false;
+    const filteredRows = collectionRows.filter((collectionRow) => {
+      if (!collectionRow) return false;
       return filters.every((rule) => {
         if (!rule.field || !rule.value) return true;
-        const fieldValue = item[rule.field];
+        const fieldValue = collectionRow[rule.field];
         if (fieldValue === undefined || fieldValue === null) return false;
         
         const stringValue = String(fieldValue).toLowerCase();
@@ -216,37 +216,37 @@ export default function DynamicChartVisualizer({
 
     // 2. Group records by xAxisField dimension
     const groups: Record<string, Record<string, unknown>[]> = {};
-    filteredList.forEach((item) => {
-      const xAxisValue = item[xAxisField];
-      const key = xAxisValue === undefined || xAxisValue === null || xAxisValue === "" ? "Unknown / Null" : String(xAxisValue);
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(item);
+    filteredRows.forEach((filteredRow) => {
+      const xAxisValue = filteredRow[xAxisField];
+      const groupKey = xAxisValue === undefined || xAxisValue === null || xAxisValue === "" ? "Unknown / Null" : String(xAxisValue);
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(filteredRow);
     });
 
     // 3. Compute Aggregations
-    const result = Object.entries(groups).map(([name, groupItems]) => {
+    const aggregatedRows = Object.entries(groups).map(([name, groupItems]) => {
       let finalValue = 0;
       const count = groupItems.length;
 
       if (operation === "count") {
         finalValue = count;
       } else {
-        const field = targetField || "";
+        const targetMetricField = targetField || "";
         const values: number[] = [];
 
-        groupItems.forEach((item) => {
+        groupItems.forEach((groupItem) => {
           // Special Hasanat points calculation
-          if (collectionKey === "hasanat_distributions" && field === "points") {
-            const denominationName = String(item.denominationName || "").toLowerCase();
-            const points = pointsMap.get(item.denominationId as string) || (
+          if (collectionKey === "hasanat_distributions" && targetMetricField === "points") {
+            const denominationName = String(groupItem.denominationName || "").toLowerCase();
+            const points = pointsMap.get(groupItem.denominationId as string) || (
               denominationName.includes("silver") ? 150 :
               denominationName.includes("gold") ? 500 :
               denominationName.includes("platinum") ? 1000 :
               denominationName.includes("diamond") ? 2500 : 50
             );
-            values.push(Number(item.quantity || 1) * points);
+            values.push(Number(groupItem.quantity || 1) * points);
           } else {
-            const numericValue = Number(item[field]);
+            const numericValue = Number(groupItem[targetMetricField]);
             if (!isNaN(numericValue)) {
               values.push(numericValue);
             }
@@ -284,7 +284,7 @@ export default function DynamicChartVisualizer({
     const isDateField = /date|time|created|updated|issued|registered/i.test(xAxisField);
     if (isDateField) {
       // Sort chronologically
-      const sorted = result.sort((firstItem, secondItem) => {
+      const sortedRows = aggregatedRows.sort((firstItem, secondItem) => {
         const timeA = new Date(firstItem.name).getTime();
         const timeB = new Date(secondItem.name).getTime();
         if (isNaN(timeA) || isNaN(timeB)) {
@@ -293,43 +293,43 @@ export default function DynamicChartVisualizer({
         return timeA - timeB;
       });
       // Cap timeline at most recent 20 dates to stay readable
-      if (sorted.length > 20) {
-        return sorted.slice(-20);
+      if (sortedRows.length > 20) {
+        return sortedRows.slice(-20);
       }
-      return sorted;
+      return sortedRows;
     } else {
       // Sort categories descending by value
-      const sortedResult = result.sort((firstItem, secondItem) => secondItem.value - firstItem.value);
-      if (sortedResult.length > 10) {
-        const top9 = sortedResult.slice(0, 9);
-        const remaining = sortedResult.slice(9);
+      const sortedRows = aggregatedRows.sort((firstItem, secondItem) => secondItem.value - firstItem.value);
+      if (sortedRows.length > 10) {
+        const topRows = sortedRows.slice(0, 9);
+        const remainingRows = sortedRows.slice(9);
         
-        const othersValue = remaining.reduce((sum, item) => sum + item.value, 0);
-        const othersCount = remaining.reduce((sum, item) => sum + item.count, 0);
+        const othersValue = remainingRows.reduce((sum, remainingRow) => sum + remainingRow.value, 0);
+        const othersCount = remainingRows.reduce((sum, remainingRow) => sum + remainingRow.count, 0);
         
         let finalOthersValue = othersValue;
         if (operation === "avg") {
-          const totalCount = remaining.reduce((sum, item) => sum + item.count, 0);
+          const totalCount = remainingRows.reduce((sum, remainingRow) => sum + remainingRow.count, 0);
           if (totalCount > 0) {
-            const weightedSum = remaining.reduce((sum, item) => sum + (item.value * item.count), 0);
+            const weightedSum = remainingRows.reduce((sum, remainingRow) => sum + (remainingRow.value * remainingRow.count), 0);
             finalOthersValue = Math.round(weightedSum / totalCount);
           }
         } else if (operation === "min") {
-          finalOthersValue = Math.min(...remaining.map((item) => item.value));
+          finalOthersValue = Math.min(...remainingRows.map((remainingRow) => remainingRow.value));
         } else if (operation === "max") {
-          finalOthersValue = Math.max(...remaining.map((item) => item.value));
+          finalOthersValue = Math.max(...remainingRows.map((remainingRow) => remainingRow.value));
         }
 
         return [
-          ...top9,
+          ...topRows,
           {
-            name: `Others (${remaining.length} fields)`,
+            name: `Others (${remainingRows.length} fields)`,
             value: finalOthersValue,
             count: othersCount
           }
         ];
       }
-      return sortedResult;
+      return sortedRows;
     }
   }, [collectionKey, xAxisField, operation, targetField, filters, activeMeta]);
 
@@ -433,10 +433,10 @@ export default function DynamicChartVisualizer({
     if (processedData.length === 0) return;
     try {
       const XLSX = await import("xlsx");
-      const sheetData = processedData.map((item) => ({
-        "Grouping Key": item.name,
-        "Aggregated Value": item.value,
-        "Count": item.count
+      const sheetData = processedData.map((aggregatedItem) => ({
+        "Grouping Key": aggregatedItem.name,
+        "Aggregated Value": aggregatedItem.value,
+        "Count": aggregatedItem.count
       }));
       const worksheet = XLSX.utils.json_to_sheet(sheetData);
       const workbook = XLSX.utils.book_new();
@@ -649,7 +649,7 @@ export default function DynamicChartVisualizer({
     }
   };
 
-  const totalValue = processedData.reduce((s, item) => s + item.value, 0);
+  const totalValue = processedData.reduce((sum, aggregatedItem) => sum + aggregatedItem.value, 0);
   const avgGroupValue = processedData.length ? Math.round(totalValue / processedData.length) : 0;
   const topGroup = processedData[0]?.name || "N/A";
 
@@ -691,12 +691,12 @@ export default function DynamicChartVisualizer({
                   onChange={(e) => setCollectionKey(e.target.value as keyof typeof METADATA_CONFIGS)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
                 >
-                  {Object.entries(METADATA_CONFIGS).map(([key, item]) => {
-                    const transKey = `reports.collections.${key}`;
+                  {Object.entries(METADATA_CONFIGS).map(([metadataKey, metadataConfig]) => {
+                    const transKey = `reports.collections.${metadataKey}`;
                     const translated = t(transKey as any);
                     return (
-                      <option key={key} value={key}>
-                        {translated === transKey ? item.name : translated}
+                      <option key={metadataKey} value={metadataKey}>
+                        {translated === transKey ? metadataConfig.name : translated}
                       </option>
                     );
                   })}
@@ -710,12 +710,12 @@ export default function DynamicChartVisualizer({
                   onChange={(event) => setXAxisField(event.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
                 >
-                  {activeMeta.fields.map((field) => {
-                    const transKey = `reports.fields.${field.value}`;
+                  {activeMeta.fields.map((metadataField) => {
+                    const transKey = `reports.fields.${metadataField.value}`;
                     const translated = t(transKey as any);
                     return (
-                      <option key={field.value} value={field.value}>
-                        {translated === transKey ? field.label : translated}
+                      <option key={metadataField.value} value={metadataField.value}>
+                        {translated === transKey ? metadataField.label : translated}
                       </option>
                     );
                   })}
@@ -755,12 +755,12 @@ export default function DynamicChartVisualizer({
                   {activeMeta.numericFields.length === 0 ? (
                     <option value="">{t("reports.widgets.builder.noNumericFields")}</option>
                   ) : (
-                    activeMeta.numericFields.map((field) => {
-                      const transKey = `reports.fields.${field.value}`;
+                    activeMeta.numericFields.map((numericField) => {
+                      const transKey = `reports.fields.${numericField.value}`;
                       const translated = t(transKey as any);
                       return (
-                        <option key={field.value} value={field.value}>
-                          {translated === transKey ? field.label : translated}
+                        <option key={numericField.value} value={numericField.value}>
+                          {translated === transKey ? numericField.label : translated}
                         </option>
                       );
                     })
@@ -875,12 +875,12 @@ export default function DynamicChartVisualizer({
                     onChange={(event) => handleUpdateFilter(rule.id, { field: event.target.value })}
                     className="flex-1 min-w-0 px-2 py-1 text-[11px] rounded-lg border border-border bg-card/60 text-foreground focus:outline-none"
                   >
-                    {activeMeta.fields.map((field) => {
-                      const transKey = `reports.fields.${field.value}`;
+                    {activeMeta.fields.map((metadataField) => {
+                      const transKey = `reports.fields.${metadataField.value}`;
                       const translated = t(transKey as any);
                       return (
-                        <option key={field.value} value={field.value}>
-                          {translated === transKey ? field.label : translated}
+                        <option key={metadataField.value} value={metadataField.value}>
+                          {translated === transKey ? metadataField.label : translated}
                         </option>
                       );
                     })}

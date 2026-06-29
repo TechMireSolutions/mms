@@ -47,23 +47,23 @@ export interface StudentAttendanceItem {
  */
 export default function AttendanceReport({ filters }: AttendanceReportProps): React.JSX.Element {
   const { t } = useTranslation();
-  const records = useAttendanceRecordsCollection();
+  const attendanceRecords = useAttendanceRecordsCollection();
 
   const sessions = useSessionsCollection();
-  const allClasses = useMemo(() => sessions.flatMap((session) => session.classes || []), [sessions]);
+  const sessionClasses = useMemo(() => sessions.flatMap((session) => session.classes || []), [sessions]);
 
   const studentAttendanceRows = useMemo<StudentAttendanceItem[]>(() => {
     // Group records by student ID
     const attendanceByStudent: Record<string, StudentAttendanceItem> = {};
     
-    records.forEach((record) => {
-       const studentKey = record.studentId;
+    attendanceRecords.forEach((attendanceRecord) => {
+       const studentKey = attendanceRecord.studentId;
        if (!attendanceByStudent[studentKey]) {
          // Resolve class name
-         const classInfo = allClasses.find((sessionClass) => sessionClass.id === record.classId);
+         const classInfo = sessionClasses.find((sessionClass) => sessionClass.id === attendanceRecord.classId);
          attendanceByStudent[studentKey] = {
-           studentName: record.studentName,
-           class: classInfo ? classInfo.name : record.classId,
+           studentName: attendanceRecord.studentName,
+           class: classInfo ? classInfo.name : attendanceRecord.classId,
            present: 0,
            absent: 0,
            late: 0,
@@ -73,9 +73,9 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
        }
        
        attendanceByStudent[studentKey].total++;
-       if (record.status === "present" || record.status === "excused") attendanceByStudent[studentKey].present++;
-       if (record.status === "absent") attendanceByStudent[studentKey].absent++;
-       if (record.status === "late") {
+       if (attendanceRecord.status === "present" || attendanceRecord.status === "excused") attendanceByStudent[studentKey].present++;
+       if (attendanceRecord.status === "absent") attendanceByStudent[studentKey].absent++;
+       if (attendanceRecord.status === "late") {
          attendanceByStudent[studentKey].late++;
          attendanceByStudent[studentKey].present++; // Late is usually counted as present for general rating
        }
@@ -92,14 +92,14 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
     // Assuming filters.class is the class ID, we should probably group by classId internally, but for display we need name.
     // Let's refine the filter:
     if (filters.class !== "all") {
-       const targetClassName = allClasses.find((sessionClass) => sessionClass.id === filters.class)?.name;
+       const targetClassName = sessionClasses.find((sessionClass) => sessionClass.id === filters.class)?.name;
        if (targetClassName) filteredAttendanceRows = filteredAttendanceRows.filter((studentAttendance) => studentAttendance.class === targetClassName);
     }
     if (filters.student) {
       filteredAttendanceRows = filteredAttendanceRows.filter((studentAttendance) => studentAttendance.studentName.toLowerCase().includes(filters.student.toLowerCase()));
     }
     return filteredAttendanceRows;
-  }, [filters, records, allClasses]);
+  }, [filters, attendanceRecords, sessionClasses]);
 
   const summary = useMemo<AttendanceSummaryItem[]>(() => {
      const classGroups: Record<string, { totalStudents: number, sumRates: number, perfect: number, below: number }> = {};

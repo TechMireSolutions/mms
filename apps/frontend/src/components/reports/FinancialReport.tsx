@@ -77,9 +77,9 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       if (invoice.status === "paid") {
         monthlyTotals[monthLabel].collected += invoice.finalAmt;
       } else if (invoice.status === "partial") {
-        const paid = invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
-        monthlyTotals[monthLabel].collected += paid;
-        monthlyTotals[monthLabel].outstanding += (invoice.finalAmt - paid);
+        const paidAmount = invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
+        monthlyTotals[monthLabel].collected += paidAmount;
+        monthlyTotals[monthLabel].outstanding += (invoice.finalAmt - paidAmount);
       } else if (invoice.status !== "cancelled") {
         monthlyTotals[monthLabel].outstanding += invoice.finalAmt;
       }
@@ -100,16 +100,16 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
 
     financeInvoices.forEach((invoice) => {
       if (invoice.discountAmt > 0 && invoice.discountType && invoice.status !== "cancelled") {
-        const type = invoice.discountType;
-        if (!discountTotalsByType[type]) discountTotalsByType[type] = { count: 0, totalDiscounted: 0 };
-        discountTotalsByType[type].count++;
-        discountTotalsByType[type].totalDiscounted += invoice.discountAmt;
+        const discountType = invoice.discountType;
+        if (!discountTotalsByType[discountType]) discountTotalsByType[discountType] = { count: 0, totalDiscounted: 0 };
+        discountTotalsByType[discountType].count++;
+        discountTotalsByType[discountType].totalDiscounted += invoice.discountAmt;
         totalDiscountAmount += invoice.discountAmt;
       }
     });
 
-    return Object.entries(discountTotalsByType).map(([type, discountTotals]) => ({
-      type,
+    return Object.entries(discountTotalsByType).map(([discountType, discountTotals]) => ({
+      type: discountType,
       count: discountTotals.count,
       totalDiscounted: discountTotals.totalDiscounted,
       percentage: totalDiscountAmount > 0 ? Math.round((discountTotals.totalDiscounted / totalDiscountAmount) * 100) : 0

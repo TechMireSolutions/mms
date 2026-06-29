@@ -258,9 +258,9 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
     if (source === "contacts") {
       return resolveContactReportFieldLabel(field, fieldConfig.fields, (key) => t(key as AppTranslationKey));
     }
-    const key = FIELD_KEY_MAP[field];
-    if (key) {
-      return t(key as AppTranslationKey);
+    const fieldTranslationKey = FIELD_KEY_MAP[field];
+    if (fieldTranslationKey) {
+      return t(fieldTranslationKey as AppTranslationKey);
     }
     return field;
   };
@@ -276,9 +276,9 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
 
   const available = useMemo(() => {
     if (source === "contacts") {
-      return contactsFieldCatalog.map((field) => field.id).filter((id) => !selectedFields.includes(id));
+      return contactsFieldCatalog.map((contactField) => contactField.id).filter((fieldId) => !selectedFields.includes(fieldId));
     }
-    return ALL_FIELDS[source].filter((field) => !selectedFields.includes(field));
+    return ALL_FIELDS[source].filter((fieldName) => !selectedFields.includes(fieldName));
   }, [source, selectedFields, contactsFieldCatalog]);
 
   // Sync group-by selection to make sure it's valid if columns change
@@ -346,39 +346,39 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
         .join("");
     };
 
-    let processedRows = sourceRows.map((item) => {
+    let processedRows = sourceRows.map((sourceRow) => {
       const row: PreviewRow = {};
       const cellLabels = { yes: t("common.yes"), no: t("common.no") };
-      selectedFields.forEach((field) => {
-        const label = resolveFieldLabel(field);
-        if (source === "contacts" && isContactsReportFieldId(field)) {
-          row[label] = getContactReportCellValue(item, field as ContactsReportFieldId, cellLabels);
+      selectedFields.forEach((selectedField) => {
+        const label = resolveFieldLabel(selectedField);
+        if (source === "contacts" && isContactsReportFieldId(selectedField)) {
+          row[label] = getContactReportCellValue(sourceRow, selectedField as ContactsReportFieldId, cellLabels);
           return;
         }
-        const camel = toCamelCase(field);
-        if (field === "Name" || field === "Student Name" || field === "Faculty Name" || field === "Faculty") {
-          row[label] = String(item.name || item.studentName || item.facultyName || item.faculty || "—");
+        const camel = toCamelCase(selectedField);
+        if (selectedField === "Name" || selectedField === "Student Name" || selectedField === "Faculty Name" || selectedField === "Faculty") {
+          row[label] = String(sourceRow.name || sourceRow.studentName || sourceRow.facultyName || sourceRow.faculty || "—");
         }
-        else if (field === "Status") row[label] = String(item.status || "—");
-        else if (field === "Class") row[label] = String(item.class || item.className || (item.classes as { name: string }[] | undefined)?.[0]?.name || "—");
-        else if (field === "Session") row[label] = String(item.session || "—");
-        else if (field === "Teacher") row[label] = String(item.teacher || item.teacherName || "—");
-        else if (field === "Room") row[label] = String(item.room || "—");
-        else if (field === "Time") row[label] = String(item.time || "—");
-        else if (field === "Days") row[label] = Array.isArray(item.days) ? item.days.join(", ") : String(item.days || "—");
-        else if (field === "Discount Type") row[label] = String(item.discountType || "None");
-        else if (field === "Discount %" || field === "Discount") {
-          row[label] = item.discountPct !== undefined ? `${item.discountPct}%` : (item.discountAmt ? `PKR ${item.discountAmt}` : "0");
+        else if (selectedField === "Status") row[label] = String(sourceRow.status || "—");
+        else if (selectedField === "Class") row[label] = String(sourceRow.class || sourceRow.className || (sourceRow.classes as { name: string }[] | undefined)?.[0]?.name || "—");
+        else if (selectedField === "Session") row[label] = String(sourceRow.session || "—");
+        else if (selectedField === "Teacher") row[label] = String(sourceRow.teacher || sourceRow.teacherName || "—");
+        else if (selectedField === "Room") row[label] = String(sourceRow.room || "—");
+        else if (selectedField === "Time") row[label] = String(sourceRow.time || "—");
+        else if (selectedField === "Days") row[label] = Array.isArray(sourceRow.days) ? sourceRow.days.join(", ") : String(sourceRow.days || "—");
+        else if (selectedField === "Discount Type") row[label] = String(sourceRow.discountType || "None");
+        else if (selectedField === "Discount %" || selectedField === "Discount") {
+          row[label] = sourceRow.discountPct !== undefined ? `${sourceRow.discountPct}%` : (sourceRow.discountAmt ? `PKR ${sourceRow.discountAmt}` : "0");
         }
-        else if (field === "Final Amount") row[label] = item.finalAmt ? `PKR ${item.finalAmt}` : "0";
-        else if (field === "Utilisation %" || field === "Rate %") {
-          row[label] = (Number(item.capacity || 0) > 0 ? `${Math.round((Number(item.enrolled || 0) / Number(item.capacity || 1)) * 100)}%` : (item.rate ? `${item.rate}%` : "100%"));
+        else if (selectedField === "Final Amount") row[label] = sourceRow.finalAmt ? `PKR ${sourceRow.finalAmt}` : "0";
+        else if (selectedField === "Utilisation %" || selectedField === "Rate %") {
+          row[label] = (Number(sourceRow.capacity || 0) > 0 ? `${Math.round((Number(sourceRow.enrolled || 0) / Number(sourceRow.capacity || 1)) * 100)}%` : (sourceRow.rate ? `${sourceRow.rate}%` : "100%"));
         }
-        else if (field === "Registration Date" || field === "Issued Date" || field === "Due Date" || field === "Date" || field === "Last Marked" || field === "Last Awarded") {
-          row[label] = String(item.registeredDate || item.issuedDate || item.dueDate || item.date || item.lastMarked || item.lastAwarded || "—");
+        else if (selectedField === "Registration Date" || selectedField === "Issued Date" || selectedField === "Due Date" || selectedField === "Date" || selectedField === "Last Marked" || selectedField === "Last Awarded") {
+          row[label] = String(sourceRow.registeredDate || sourceRow.issuedDate || sourceRow.dueDate || sourceRow.date || sourceRow.lastMarked || sourceRow.lastAwarded || "—");
         }
         else {
-          const rawValue = item[camel] !== undefined ? item[camel] : item[field.toLowerCase().replace(/ /g, "")];
+          const rawValue = sourceRow[camel] !== undefined ? sourceRow[camel] : sourceRow[selectedField.toLowerCase().replace(/ /g, "")];
           row[label] = rawValue !== undefined ? String(rawValue) : "—";
         }
       });
@@ -397,9 +397,9 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
 
       processedRows = Object.entries(groups).map(([groupName, rows]) => {
         const summaryRow: PreviewRow = { [groupByLabel]: groupName };
-        selectedFields.forEach((field) => {
-          if (field === groupBy) return;
-          const fieldLabel = resolveFieldLabel(field);
+        selectedFields.forEach((selectedField) => {
+          if (selectedField === groupBy) return;
+          const fieldLabel = resolveFieldLabel(selectedField);
           const values = rows
             .map((row) => Number(String(row[fieldLabel]).replace(/[^0-9.-]/g, "")))
             .filter((value) => !isNaN(value));
@@ -486,7 +486,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       format: pageSize,
     });
     doc.text(reportName, 14, 15);
-    const tableData = previewData.map((row) => selectedFields.map((field) => row[field]));
+    const tableData = previewData.map((previewRow) => selectedFields.map((selectedField) => previewRow[selectedField]));
     autoTable(doc, {
       head: [selectedFields],
       body: tableData as string[][],
@@ -592,16 +592,16 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   {t("reports.builder.allFieldsSelected")}
                 </div>
               ) : (
-                available.map((field) => (
+                available.map((availableField) => (
                   <Button
-                    key={field}
-                    onClick={() => addField(field)}
+                    key={availableField}
+                    onClick={() => addField(availableField)}
                     variant="ghost"
                     className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-primary/10 text-xs font-semibold text-left text-foreground transition-all group cursor-pointer justify-start h-auto"
                     type="button"
                   >
                     <Plus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="truncate">{resolveFieldLabel(field)}</span>
+                    <span className="truncate">{resolveFieldLabel(availableField)}</span>
                   </Button>
                 ))
               )}
@@ -640,7 +640,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 onChange={(value) => setGroupBy(value)}
                 options={[
                   { value: "", label: t("reports.builder.noGrouping") },
-                  ...selectedFields.map((field) => ({ value: field, label: resolveFieldLabel(field) }))
+                  ...selectedFields.map((selectedField) => ({ value: selectedField, label: resolveFieldLabel(selectedField) }))
                 ]}
                 className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
               />
@@ -721,11 +721,11 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar text-left">
                   <AnimatePresence>
-                    {selectedFields.map((field, index) => (
+                    {selectedFields.map((selectedField, index) => (
                       <DraggableField
-                        key={field}
-                        field={resolveFieldLabel(field)}
-                        onRemove={() => removeField(field)}
+                        key={selectedField}
+                        field={resolveFieldLabel(selectedField)}
+                        onRemove={() => removeField(selectedField)}
                         onMoveUp={() => moveUp(index)}
                         onMoveDown={() => moveDown(index)}
                         isFirst={index === 0}
@@ -791,18 +791,18 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   <table className="w-full text-xs">
                     <thead className="bg-muted/40 border-b border-border/70 sticky top-0 z-10 backdrop-blur-lg">
                       <tr>
-                        {selectedFields.map((field) => (
-                          <th key={field} className="px-4 py-3.5 text-left text-[9px] font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">{field}</th>
+                        {selectedFields.map((selectedField) => (
+                          <th key={selectedField} className="px-4 py-3.5 text-left text-[9px] font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">{selectedField}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40">
-                      {previewData.map((row, ri) => (
-                        <tr key={ri} className="hover:bg-primary/[0.02] transition-colors group">
-                          {selectedFields.map((field) => (
-                            <td key={field} className="px-4 py-3 text-foreground font-semibold whitespace-nowrap group-hover:text-primary transition-colors">
-                              {row[field] !== undefined && row[field] !== null
-                                ? String(row[field])
+                      {previewData.map((previewRow, rowIndex) => (
+                        <tr key={rowIndex} className="hover:bg-primary/[0.02] transition-colors group">
+                          {selectedFields.map((selectedField) => (
+                            <td key={selectedField} className="px-4 py-3 text-foreground font-semibold whitespace-nowrap group-hover:text-primary transition-colors">
+                              {previewRow[selectedField] !== undefined && previewRow[selectedField] !== null
+                                ? String(previewRow[selectedField])
                                 : <span className="text-muted-foreground/30 text-xs italic">—</span>
                               }
                             </td>

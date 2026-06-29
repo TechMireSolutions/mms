@@ -153,13 +153,13 @@ function computeCustomCard(
     hasanat_denoms?: any[];
   }
 ): KPIItem & { categories: string[] } {
-  const result = computeCustomCardShared(card, collections);
+  const computedCard = computeCustomCardShared(card, collections);
   return {
-    label: result.title,
-    value: String(result.value),
-    sub: result.sub,
-    icon: (ICONS[result.icon] || BarChart2) as LucideIcon,
-    color: (result.color === "emerald" ? "green" : result.color) as KPIItem["color"],
+    label: computedCard.title,
+    value: String(computedCard.value),
+    sub: computedCard.sub,
+    icon: (ICONS[computedCard.icon] || BarChart2) as LucideIcon,
+    color: (computedCard.color === "emerald" ? "green" : computedCard.color) as KPIItem["color"],
     trend: "flat" as const,
     isAvailable: true,
     categories: [] as string[]
@@ -172,7 +172,7 @@ function computeCustomCard(
 function getDefaultCardConfig(category: string, label: string): CustomCard {
   const id = `default-${label.toLowerCase().replace(/\s+/g, "-")}`;
   
-  const config: CustomCard = {
+  const defaultCardConfig: CustomCard = {
     id,
     title: label,
     collection: "students",
@@ -189,109 +189,109 @@ function getDefaultCardConfig(category: string, label: string): CustomCard {
   switch (label) {
     case "Total Students":
       if (category === "contacts") {
-        config.collection = "contacts";
-        config.filterField = "";
-        config.icon = "Users";
-        config.color = "blue";
+        defaultCardConfig.collection = "contacts";
+        defaultCardConfig.filterField = "";
+        defaultCardConfig.icon = "Users";
+        defaultCardConfig.color = "blue";
       } else {
-        config.collection = "students";
-        config.filterField = "status";
-        config.filterValue = "active";
-        config.icon = "GraduationCap";
-        config.color = "emerald";
+        defaultCardConfig.collection = "students";
+        defaultCardConfig.filterField = "status";
+        defaultCardConfig.filterValue = "active";
+        defaultCardConfig.icon = "GraduationCap";
+        defaultCardConfig.color = "emerald";
       }
       break;
     case "Avg Attendance":
-      config.collection = "attendance_records";
-      config.operation = "percentage";
-      config.filterField = "status";
-      config.filterOperator = "equals";
-      config.filterValue = "present";
-      config.icon = "UserCheck";
-      config.color = "emerald";
+      defaultCardConfig.collection = "attendance_records";
+      defaultCardConfig.operation = "percentage";
+      defaultCardConfig.filterField = "status";
+      defaultCardConfig.filterOperator = "equals";
+      defaultCardConfig.filterValue = "present";
+      defaultCardConfig.icon = "UserCheck";
+      defaultCardConfig.color = "emerald";
       break;
     case "Fee Collected":
-      config.collection = "finance_invoices";
-      config.operation = "sum";
-      config.targetField = "finalAmt";
-      config.filterField = "status";
-      config.filterOperator = "equals";
-      config.filterValue = "paid";
-      config.icon = "DollarSign";
-      config.color = "blue";
+      defaultCardConfig.collection = "finance_invoices";
+      defaultCardConfig.operation = "sum";
+      defaultCardConfig.targetField = "finalAmt";
+      defaultCardConfig.filterField = "status";
+      defaultCardConfig.filterOperator = "equals";
+      defaultCardConfig.filterValue = "paid";
+      defaultCardConfig.icon = "DollarSign";
+      defaultCardConfig.color = "blue";
       break;
     case "Outstanding":
-      config.collection = "finance_invoices";
-      config.operation = "sum";
-      config.targetField = "finalAmt";
-      config.filterField = "status";
-      config.filterOperator = "equals";
-      config.filterValue = "unpaid";
-      config.icon = "AlertCircle";
-      config.color = "red";
+      defaultCardConfig.collection = "finance_invoices";
+      defaultCardConfig.operation = "sum";
+      defaultCardConfig.targetField = "finalAmt";
+      defaultCardConfig.filterField = "status";
+      defaultCardConfig.filterOperator = "equals";
+      defaultCardConfig.filterValue = "unpaid";
+      defaultCardConfig.icon = "AlertCircle";
+      defaultCardConfig.color = "red";
       break;
     case "Hasanat Awarded":
-      config.collection = "hasanat_distributions";
-      config.operation = "sum";
-      config.targetField = "points";
-      config.filterField = "";
-      config.icon = "Star";
-      config.color = "amber";
+      defaultCardConfig.collection = "hasanat_distributions";
+      defaultCardConfig.operation = "sum";
+      defaultCardConfig.targetField = "points";
+      defaultCardConfig.filterField = "";
+      defaultCardConfig.icon = "Star";
+      defaultCardConfig.color = "amber";
       break;
     case "Pass Rate":
-      config.collection = "students";
-      config.operation = "percentage";
-      config.filterField = "status";
-      config.filterOperator = "equals";
-      config.filterValue = "active";
-      config.icon = "GraduationCap";
-      config.color = "violet";
+      defaultCardConfig.collection = "students";
+      defaultCardConfig.operation = "percentage";
+      defaultCardConfig.filterField = "status";
+      defaultCardConfig.filterOperator = "equals";
+      defaultCardConfig.filterValue = "active";
+      defaultCardConfig.icon = "GraduationCap";
+      defaultCardConfig.color = "violet";
       break;
     case "Capacity Used":
-      config.collection = "sessions";
-      config.operation = "percentage";
-      config.filterField = "status";
-      config.filterOperator = "equals";
-      config.filterValue = "active";
-      config.icon = "BarChart2";
-      config.color = "blue";
+      defaultCardConfig.collection = "sessions";
+      defaultCardConfig.operation = "percentage";
+      defaultCardConfig.filterField = "status";
+      defaultCardConfig.filterOperator = "equals";
+      defaultCardConfig.filterValue = "active";
+      defaultCardConfig.icon = "BarChart2";
+      defaultCardConfig.color = "blue";
       break;
     case "Growth Rate":
-      config.collection = "contacts";
-      config.operation = "count";
-      config.filterField = "";
-      config.icon = "TrendingUp";
-      config.color = "emerald";
+      defaultCardConfig.collection = "contacts";
+      defaultCardConfig.operation = "count";
+      defaultCardConfig.filterField = "";
+      defaultCardConfig.icon = "TrendingUp";
+      defaultCardConfig.color = "emerald";
       break;
     case "Lead Conversion":
-      config.collection = "contacts";
-      config.operation = "percentage";
-      config.filterField = "lifecycleStage";
-      config.filterOperator = "equals";
-      config.filterValue = "Lead";
-      config.icon = "Target";
-      config.color = "violet";
+      defaultCardConfig.collection = "contacts";
+      defaultCardConfig.operation = "percentage";
+      defaultCardConfig.filterField = "lifecycleStage";
+      defaultCardConfig.filterOperator = "equals";
+      defaultCardConfig.filterValue = "Lead";
+      defaultCardConfig.icon = "Target";
+      defaultCardConfig.color = "violet";
       break;
     case "Active Enquiries":
-      config.collection = "contacts";
-      config.operation = "count";
-      config.filterField = "lifecycleStage";
-      config.filterOperator = "equals";
-      config.filterValue = "Lead";
-      config.icon = "Zap";
-      config.color = "amber";
+      defaultCardConfig.collection = "contacts";
+      defaultCardConfig.operation = "count";
+      defaultCardConfig.filterField = "lifecycleStage";
+      defaultCardConfig.filterOperator = "equals";
+      defaultCardConfig.filterValue = "Lead";
+      defaultCardConfig.icon = "Zap";
+      defaultCardConfig.color = "amber";
       break;
     case "Engagement Index":
-      config.collection = "contacts";
-      config.operation = "avg";
-      config.targetField = "rating";
-      config.filterField = "";
-      config.icon = "Activity";
-      config.color = "emerald";
+      defaultCardConfig.collection = "contacts";
+      defaultCardConfig.operation = "avg";
+      defaultCardConfig.targetField = "rating";
+      defaultCardConfig.filterField = "";
+      defaultCardConfig.icon = "Activity";
+      defaultCardConfig.color = "emerald";
       break;
   }
 
-  return config;
+  return defaultCardConfig;
 }
 
 export default function KPISummary({ category, role }: KPISummaryProps): React.JSX.Element {
@@ -311,16 +311,16 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   const contactAnalytics = contactsReportData?.analytics;
   const auxiliaryStudentMetrics = category === "enrollments" ? studentMetrics : crossStudentMetrics;
   const auxiliaryTeacherMetrics = category === "enrollments" ? teacherMetrics : crossTeacherMetrics;
-  const records = useAttendanceRecordsCollection();
+  const attendanceRecords = useAttendanceRecordsCollection();
   const invoices = useFinanceInvoicesCollection();
   const exams = useExaminationsExamsCollection();
   const examResults = useExaminationsResultsCollection();
   const sessions = useSessionsCollection();
   const distributions = useHasanatDistributionsCollection();
-  const denoms = useHasanatDenomsCollection();
-  const qbQuestions = useQuestionBankQuestionsCollection();
-  const qbTests = useQuestionBankTestsCollection();
-  const qbResults = useQuestionBankResultsCollection();
+  const denominations = useHasanatDenomsCollection();
+  const questionBankQuestions = useQuestionBankQuestionsCollection();
+  const questionBankTests = useQuestionBankTestsCollection();
+  const questionBankResults = useQuestionBankResultsCollection();
 
   const computedKPIs = useMemo(() => {
     // 1. Total Students
@@ -352,10 +352,10 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     }
 
     // 2. Avg Attendance
-    const present = records.filter((record) => record.status === "present" || record.status === "late").length;
-    const attRate = records.length > 0 ? Math.round((present / records.length) * 100) : 0;
-    const avgAttendanceVal = `${attRate}%`;
-    const avgAttendanceTrend = attRate > 85 ? "up" : "flat";
+    const presentAttendanceCount = attendanceRecords.filter((record) => record.status === "present" || record.status === "late").length;
+    const attendanceRate = attendanceRecords.length > 0 ? Math.round((presentAttendanceCount / attendanceRecords.length) * 100) : 0;
+    const averageAttendanceValue = `${attendanceRate}%`;
+    const averageAttendanceTrend = attendanceRate > 85 ? "up" : "flat";
 
     // 3. Fee Collected
     const collected = invoices.filter((invoice) => invoice.status === "paid").reduce((sum, invoice) => sum + invoice.finalAmt, 0);
@@ -370,7 +370,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     // 5. Hasanat Awarded
     const totalHasanat = distributions.reduce((sum, distribution) => {
       const denominationName = (distribution.denominationName || "").toLowerCase();
-      const matchedDenomination = denoms.find((denomination: any) => denomination.id === distribution.denominationId);
+      const matchedDenomination = denominations.find((denomination: any) => denomination.id === distribution.denominationId);
       const points = matchedDenomination ? matchedDenomination.points : (
         denominationName.includes("silver") ? 150 :
         denominationName.includes("gold") ? 500 :
@@ -384,11 +384,11 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     // 6. Pass Rate
     let passesCount = 0;
     let totalResultsCount = 0;
-    examResults.forEach((result) => {
-      const exam = exams.find((examOption) => examOption.id === result.examId);
+    examResults.forEach((examResult) => {
+      const exam = exams.find((examOption) => examOption.id === examResult.examId);
       if (exam) {
         totalResultsCount++;
-        if (result.marksObtained >= exam.passingMarks) {
+        if (examResult.marksObtained >= exam.passingMarks) {
           passesCount++;
         }
       }
@@ -397,24 +397,24 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     const passRateVal = `${passRate}%`;
 
     // Question bank metrics
-    const qbQuestionCount = qbQuestions.length;
-    const qbTestCount = qbTests.length;
-    const qbSubmissionCount = qbResults.length;
-    let qbTotalObtained = 0;
-    let qbTotalMax = 0;
-    qbResults.forEach((result: QuestionBankResult) => {
-      const test = qbTests.find((questionBankTest: QuestionBankTest) => questionBankTest.id === result.testId);
+    const questionBankQuestionCount = questionBankQuestions.length;
+    const questionBankTestCount = questionBankTests.length;
+    const questionBankSubmissionCount = questionBankResults.length;
+    let questionBankTotalObtained = 0;
+    let questionBankTotalMax = 0;
+    questionBankResults.forEach((questionBankResult: QuestionBankResult) => {
+      const test = questionBankTests.find((questionBankTest: QuestionBankTest) => questionBankTest.id === questionBankResult.testId);
       if (!test) return;
-      const obtained = Object.values(result.scores).reduce((sum: number, score) => sum + (score as number), 0);
+      const obtained = Object.values(questionBankResult.scores).reduce((sum: number, score) => sum + (score as number), 0);
       const max = test.questionIds.reduce((sum: number, questionId: string) => {
-        const question = qbQuestions.find((item: QuestionBankQuestion) => item.id === questionId);
+        const question = questionBankQuestions.find((questionBankQuestion: QuestionBankQuestion) => questionBankQuestion.id === questionId);
         return sum + (question?.marks ?? 0);
       }, 0);
-      qbTotalObtained += obtained;
-      qbTotalMax += max;
+      questionBankTotalObtained += obtained;
+      questionBankTotalMax += max;
     });
-    const qbAvgScoreVal =
-      qbTotalMax > 0 ? `${Math.round((qbTotalObtained / qbTotalMax) * 100)}%` : "0%";
+    const questionBankAverageScoreValue =
+      questionBankTotalMax > 0 ? `${Math.round((questionBankTotalObtained / questionBankTotalMax) * 100)}%` : "0%";
 
     // 7. Capacity Used
     const activeSessionsList = sessions.filter((session) => session.status === "active");
@@ -463,7 +463,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     const engagementVal = contactAnalytics?.engagementIndex ?? "0.0";
     const contactsRecent30 = contactAnalytics?.newThisPeriod ?? 0;
 
-    const items: (KPIItem & { categories: string[] })[] = [
+    const kpiItems: (KPIItem & { categories: string[] })[] = [
       {
         icon: Users,
         label: "Total Students",
@@ -482,12 +482,12 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       {
         icon: UserCheck,
         label: "Avg Attendance",
-        value: avgAttendanceVal,
+        value: averageAttendanceValue,
         sub: "Last 30 days",
         color: "green",
-        trend: avgAttendanceTrend,
+        trend: averageAttendanceTrend,
         categories: ["attendance"],
-        isAvailable: records.length > 0
+        isAvailable: attendanceRecords.length > 0
       },
       {
         icon: DollarSign,
@@ -592,42 +592,42 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       {
         icon: BarChart2,
         label: "Total Questions",
-        value: String(qbQuestionCount),
+        value: String(questionBankQuestionCount),
         sub: "In question bank",
         color: "primary",
         trend: "up",
         categories: ["questionBank"],
-        isAvailable: qbQuestionCount > 0,
+        isAvailable: questionBankQuestionCount > 0,
       },
       {
         icon: CalendarCheck,
         label: "Generated Tests",
-        value: String(qbTestCount),
+        value: String(questionBankTestCount),
         sub: "Auto-built papers",
         color: "blue",
         trend: "flat",
         categories: ["questionBank"],
-        isAvailable: qbTestCount > 0,
+        isAvailable: questionBankTestCount > 0,
       },
       {
         icon: UserCheck,
         label: "Test Submissions",
-        value: String(qbSubmissionCount),
+        value: String(questionBankSubmissionCount),
         sub: "Graded attempts",
         color: "violet",
         trend: "up",
         categories: ["questionBank"],
-        isAvailable: qbSubmissionCount > 0,
+        isAvailable: questionBankSubmissionCount > 0,
       },
       {
         icon: Target,
         label: "Avg Test Score",
-        value: qbAvgScoreVal,
+        value: questionBankAverageScoreValue,
         sub: "Across submissions",
         color: "green",
         trend: "flat",
         categories: ["questionBank"],
-        isAvailable: qbSubmissionCount > 0 && qbTotalMax > 0,
+        isAvailable: questionBankSubmissionCount > 0 && questionBankTotalMax > 0,
       },
       {
         icon: GraduationCap,
@@ -655,8 +655,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       },
     ];
 
-    return items;
-  }, [contactAnalytics, records, invoices, exams, examResults, sessions, distributions, qbQuestions, qbTests, qbResults, category, studentMetrics, isStudentsCategory, teacherMetrics, isTeachersCategory, auxiliaryStudentMetrics, auxiliaryTeacherMetrics, needsContactAnalytics, t]);
+    return kpiItems;
+  }, [contactAnalytics, attendanceRecords, invoices, exams, examResults, sessions, distributions, questionBankQuestions, questionBankTests, questionBankResults, category, studentMetrics, isStudentsCategory, teacherMetrics, isTeachersCategory, auxiliaryStudentMetrics, auxiliaryTeacherMetrics, needsContactAnalytics, t]);
 
   // Determine standard possible cards for this category and user role
   const standardPossibleCards = useMemo(() => {
@@ -797,13 +797,13 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         teachers: [],
         sessions,
         finance_invoices: invoices,
-        attendance_records: records,
+        attendance_records: attendanceRecords,
         hasanat_distributions: distributions,
-        hasanat_denoms: denoms,
+        hasanat_denoms: denominations,
         contacts: [],
-        questions: qbQuestions,
-        tests: qbTests,
-        assessment_results: qbResults,
+        questions: questionBankQuestions,
+        tests: questionBankTests,
+        assessment_results: questionBankResults,
       });
     });
   }, [
@@ -814,11 +814,12 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     teacherWidgetAggregates,
     sessions,
     invoices,
-    records,
+    attendanceRecords,
     distributions,
-    qbQuestions,
-    qbTests,
-    qbResults,
+    denominations,
+    questionBankQuestions,
+    questionBankTests,
+    questionBankResults,
   ]);
 
   // Merge standard and custom possible cards, preventing duplicates if standard label is overridden
@@ -840,7 +841,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     switch (category) {
       case "students": return studentMetrics?.total ?? 0;
       case "contacts": return contactAnalytics?.total ?? 0;
-      case "attendance": return records.length;
+      case "attendance": return attendanceRecords.length;
       case "financial":
       case "accounting":
         return invoices.length;
@@ -849,7 +850,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       case "examinations":
         return examResults.length + exams.length;
       case "questionBank":
-        return qbQuestions.length + qbTests.length + qbResults.length;
+        return questionBankQuestions.length + questionBankTests.length + questionBankResults.length;
       case "enrollments":
         return (studentMetrics?.total ?? 0) + sessions.length;
       case "teachers":
@@ -858,7 +859,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       default:
         return 0;
     }
-  }, [category, contactAnalytics, studentMetrics, teacherMetrics, records, invoices, distributions, examResults, exams, sessions, qbQuestions, qbTests, qbResults]);
+  }, [category, contactAnalytics, studentMetrics, teacherMetrics, attendanceRecords, invoices, distributions, examResults, exams, sessions, questionBankQuestions, questionBankTests, questionBankResults]);
 
   // User-configurable active visibility controls state
   const [selectedLabels, setSelectedLabels] = useState<string[]>(() => {
@@ -870,29 +871,29 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   // Validate user selections reactively against database changes
   useEffect(() => {
     const availableLabels = availableCardLabelsKey ? availableCardLabelsKey.split("\u0000") : [];
-    let updated = selectedLabels.filter((label) => availableLabels.includes(label));
+    let validSelectedLabels = selectedLabels.filter((label) => availableLabels.includes(label));
 
     // Default to all available cards if no active selection is stored
-    if (updated.length === 0 && availableLabels.length > 0) {
-      updated = availableLabels;
+    if (validSelectedLabels.length === 0 && availableLabels.length > 0) {
+      validSelectedLabels = availableLabels;
     }
 
-    if (areStringListsEqual(selectedLabels, updated)) return;
+    if (areStringListsEqual(selectedLabels, validSelectedLabels)) return;
 
-    saveObject(`kpi_config_${category}_${role || "all"}`, updated);
-    setSelectedLabels(updated);
+    saveObject(`kpi_config_${category}_${role || "all"}`, validSelectedLabels);
+    setSelectedLabels(validSelectedLabels);
   }, [availableCardLabelsKey, category, role, selectedLabels]);
 
   const handleToggleCard = (label: string) => {
     setSelectedLabels((previousLabels) => {
-      let next: string[];
+      let nextSelectedLabels: string[];
       if (previousLabels.includes(label)) {
-        next = previousLabels.filter((selectedLabel) => selectedLabel !== label);
+        nextSelectedLabels = previousLabels.filter((selectedLabel) => selectedLabel !== label);
       } else {
-        next = [...previousLabels, label];
+        nextSelectedLabels = [...previousLabels, label];
       }
-      saveObject(`kpi_config_${category}_${role || "all"}`, next);
-      return next;
+      saveObject(`kpi_config_${category}_${role || "all"}`, nextSelectedLabels);
+      return nextSelectedLabels;
     });
   };
 
@@ -911,11 +912,11 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     prevCustomTitlesRef.current = currentTitles;
     saveObject(`prev_kpi_titles_${category}`, currentTitles);
     if (newlyAdded.length > 0) {
-      const next = [...new Set([...selectedLabels, ...newlyAdded])];
-      if (areStringListsEqual(selectedLabels, next)) return;
+      const nextSelectedLabels = [...new Set([...selectedLabels, ...newlyAdded])];
+      if (areStringListsEqual(selectedLabels, nextSelectedLabels)) return;
 
-      saveObject(`kpi_config_${category}_${role || "all"}`, next);
-      setSelectedLabels(next);
+      saveObject(`kpi_config_${category}_${role || "all"}`, nextSelectedLabels);
+      setSelectedLabels(nextSelectedLabels);
     }
   }, [customCards, category, role, selectedLabels]);
 
@@ -940,9 +941,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     if (customCard) {
       setEditingCardConfig(customCard);
     } else {
-      const config = getDefaultCardConfig(category, label);
+      const defaultCardConfig = getDefaultCardConfig(category, label);
       setEditingCardConfig({
-        ...config,
+        ...defaultCardConfig,
         id: "edit-default-" + Date.now()
       });
     }
@@ -971,8 +972,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     }
   };
 
-  const key = getCategoryLabelKey(category);
-  const moduleLabel = key ? t(key as any) : category;
+  const categoryLabelKey = getCategoryLabelKey(category);
+  const moduleLabel = categoryLabelKey ? t(categoryLabelKey as any) : category;
 
   return (
     <div className="space-y-3 w-full">

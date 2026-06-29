@@ -79,12 +79,12 @@ export default function ContactReport(props: ContactReportProps = {}) {
                   nameKey="stage"
                   cursor="pointer"
                   onClick={(_, index) => {
-                    const item = stageDistribution[index];
-                    if (item?.stage) drillToStage(item.stage);
+                    const selectedStage = stageDistribution[index];
+                    if (selectedStage?.stage) drillToStage(selectedStage.stage);
                   }}
                 >
-                  {stageDistribution.map((entry, index) => (
-                    <Cell key={`cell-${entry.stage}-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {stageDistribution.map((stageBucket, index) => (
+                    <Cell key={`cell-${stageBucket.stage}-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />

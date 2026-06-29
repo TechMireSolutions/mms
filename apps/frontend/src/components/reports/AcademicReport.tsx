@@ -70,20 +70,20 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
   const examResults = useExaminationsResultsCollection();
   const exams = useExaminationsExamsCollection();
   const studentIds = useMemo(
-    () => uniqueRegistryIds(examResults.map((result) => result.studentId)),
+    () => uniqueRegistryIds(examResults.map((examResult) => examResult.studentId)),
     [examResults],
   );
   const { data: students = [] } = useStudentsByIds(studentIds);
 
-  const results = useMemo<AcademicResultItem[]>(() => {
+  const academicResultsData = useMemo<AcademicResultItem[]>(() => {
     let academicResults: AcademicResultItem[] = [];
 
-    examResults.forEach((result) => {
-      const exam = exams.find((examOption) => examOption.id === result.examId);
-      const student = students.find((studentOption) => String(studentOption.id) === String(result.studentId));
+    examResults.forEach((examResult) => {
+      const exam = exams.find((examOption) => examOption.id === examResult.examId);
+      const student = students.find((studentOption) => String(studentOption.id) === String(examResult.studentId));
       if (!exam || !student) return;
 
-      const percentage = Math.round((result.marksObtained / exam.totalMarks) * 100);
+      const percentage = Math.round((examResult.marksObtained / exam.totalMarks) * 100);
       academicResults.push({
         studentName: student.name,
         class: exam.name, // using exam name as proxy for class group context here
@@ -102,11 +102,11 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
     });
 
     if (filters.class !== "all") {
-      academicResults = academicResults.filter((result) => result.class === filters.class);
+      academicResults = academicResults.filter((academicResult) => academicResult.class === filters.class);
     }
     if (filters.student) {
-      academicResults = academicResults.filter((result) =>
-        result.studentName.toLowerCase().includes(filters.student.toLowerCase()),
+      academicResults = academicResults.filter((academicResult) =>
+        academicResult.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
     return academicResults;
@@ -115,26 +115,26 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
   const classRankings = useMemo<ClassRankingItem[]>(() => {
     // Group by class (exam name)
     const resultsByClass: Record<string, { class: string; studentName: string; marks: number }[]> = {};
-    const rankingSourceResults = examResults.map((result) => {
-      const exam = exams.find((examOption) => examOption.id === result.examId);
-      const student = students.find((studentOption) => String(studentOption.id) === String(result.studentId));
+    const rankingSourceResults = examResults.map((examResult) => {
+      const exam = exams.find((examOption) => examOption.id === examResult.examId);
+      const student = students.find((studentOption) => String(studentOption.id) === String(examResult.studentId));
       if (!exam || !student) return null;
       return {
         class: exam.name,
         studentName: student.name,
-        marks: Math.round((result.marksObtained / exam.totalMarks) * 100),
+        marks: Math.round((examResult.marksObtained / exam.totalMarks) * 100),
       };
     }).filter(Boolean) as { class: string, studentName: string, marks: number }[];
 
-    rankingSourceResults.forEach((result) => {
-      if (!resultsByClass[result.class]) resultsByClass[result.class] = [];
-      resultsByClass[result.class].push(result);
+    rankingSourceResults.forEach((rankingSourceResult) => {
+      if (!resultsByClass[rankingSourceResult.class]) resultsByClass[rankingSourceResult.class] = [];
+      resultsByClass[rankingSourceResult.class].push(rankingSourceResult);
     });
 
     let classRankingItems = Object.entries(resultsByClass).map(([className, classResults]) => {
       const sortedClassResults = [...classResults].sort((firstResult, secondResult) => secondResult.marks - firstResult.marks);
-      const averageMarks = Math.round(classResults.reduce((sum, result) => sum + result.marks, 0) / classResults.length);
-      const passingCount = classResults.filter((result) => result.marks >= 50).length;
+      const averageMarks = Math.round(classResults.reduce((sum, classResult) => sum + classResult.marks, 0) / classResults.length);
+      const passingCount = classResults.filter((classResult) => classResult.marks >= 50).length;
       return {
         class: className,
         averageMarks,
@@ -145,23 +145,23 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
     });
 
     if (filters.class !== "all") {
-      classRankingItems = classRankingItems.filter((result) => result.class === filters.class);
+      classRankingItems = classRankingItems.filter((classRankingItem) => classRankingItem.class === filters.class);
     }
     return classRankingItems;
   }, [filters, examResults, exams, students]);
 
-  const averageMarks = results.length
-    ? (results.reduce((totalMarks, result) => totalMarks + result.marks, 0) / results.length).toFixed(1)
+  const averageMarks = academicResultsData.length
+    ? (academicResultsData.reduce((totalMarks, academicResult) => totalMarks + academicResult.marks, 0) / academicResultsData.length).toFixed(1)
     : 0;
-  const topScore = results.length ? Math.max(...results.map((result) => result.marks)) : 0;
-  const passRate = results.length
-    ? ((results.filter((result) => result.marks >= 50).length / results.length) * 100).toFixed(0)
+  const topScore = academicResultsData.length ? Math.max(...academicResultsData.map((academicResult) => academicResult.marks)) : 0;
+  const passRate = academicResultsData.length
+    ? ((academicResultsData.filter((academicResult) => academicResult.marks >= 50).length / academicResultsData.length) * 100).toFixed(0)
     : 0;
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={BookOpen}   label={t("examinations.report.totalRecords")} value={results.length} color="primary" />
+        <ReportSummaryCard icon={BookOpen}   label={t("examinations.report.totalRecords")} value={academicResultsData.length} color="primary" />
         <ReportSummaryCard icon={TrendingUp} label={t("examinations.report.classAvg")}     value={`${averageMarks}%`} color="blue"    />
         <ReportSummaryCard icon={Trophy}     label={t("examinations.report.topScore")}     value={`${topScore}%`}      color="amber"   />
         <ReportSummaryCard icon={Star}       label={t("examinations.report.passRate")}     value={`${passRate}%`} color="green"   />
@@ -172,7 +172,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">{t("examinations.report.marksDistribution")}</p>
           <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart data={results} barSize={28}>
+            <BarChart data={academicResultsData} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="studentName" tick={{ fontSize: 10 }} angle={-25} textAnchor="end" height={40} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
@@ -232,7 +232,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
       {/* Results table */}
       <ReportExportBar 
         title={t("examinations.report.examResultsTitle")} 
-        data={results}
+        data={academicResultsData}
         headers={[
           t("examinations.report.colRank"),
           t("examinations.report.colStudent"),
@@ -242,7 +242,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
           t("examinations.report.colGrade"),
         ]}
       />
-      {results.length === 0 ? (
+      {academicResultsData.length === 0 ? (
         <EmptyState icon={BookOpen} title={t("examinations.report.noResultsFound")} compact />
       ) : (
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
@@ -262,21 +262,21 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {results.map((result) => (
-                <tr key={`${result.studentName}-${result.class}`} className="hover:bg-muted/30">
+              {academicResultsData.map((academicResult) => (
+                <tr key={`${academicResult.studentName}-${academicResult.class}`} className="hover:bg-muted/30">
                   <td className="px-3 py-2.5">
-                    {result.rank === 1
+                    {academicResult.rank === 1
                       ? <Trophy className="w-4 h-4 text-warning" />
-                      : <span className="text-muted-foreground">{result.rank}</span>
+                      : <span className="text-muted-foreground">{academicResult.rank}</span>
                     }
                   </td>
-                  <td className="px-3 py-2.5 font-medium">{result.studentName}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{result.class}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{result.subject}</td>
-                  <td className="px-3 py-2.5 font-semibold">{result.marks}/{result.total}</td>
+                  <td className="px-3 py-2.5 font-medium">{academicResult.studentName}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{academicResult.class}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{academicResult.subject}</td>
+                  <td className="px-3 py-2.5 font-semibold">{academicResult.marks}/{academicResult.total}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${GRADE_COLOR[result.grade] ?? "bg-muted text-muted-foreground"}`}>
-                      {result.grade}
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${GRADE_COLOR[academicResult.grade] ?? "bg-muted text-muted-foreground"}`}>
+                      {academicResult.grade}
                     </span>
                   </td>
                 </tr>
