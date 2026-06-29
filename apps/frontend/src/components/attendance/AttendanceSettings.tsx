@@ -59,14 +59,14 @@ function Toggle({ checked, onChange }: ToggleProps) {
 
 function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
   if (!savedOrder || savedOrder.length === 0) return fields;
-  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
-  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
+  const orderByFieldKey = Object.fromEntries(savedOrder.map((key, index) => [key, index]));
+  return [...fields].sort((firstField, secondField) => (orderByFieldKey[firstField.key] ?? 9999) - (orderByFieldKey[secondField.key] ?? 9999)) as FieldDefinition[];
 }
 
-function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
-  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
-  const added = newFieldIds.filter((id) => !kept.includes(id));
-  return [...kept, ...added];
+function syncOrder(previousOrder: string[], newFieldIds: string[]): string[] {
+  const keptFieldIds = previousOrder.filter((fieldId) => newFieldIds.includes(fieldId));
+  const addedFieldIds = newFieldIds.filter((fieldId) => !keptFieldIds.includes(fieldId));
+  return [...keptFieldIds, ...addedFieldIds];
 }
 
 export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
@@ -153,34 +153,34 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
     setEnabledTabs(new Set(settings.enabledTabs || ["basic"]));
     setRequiredTabs(new Set(settings.requiredTabs || []));
 
-    const coreKeys = new Set(ATTENDANCE_TAB_REGISTRY.map((t: any) => t.key));
-    const customTabs = (settings.formTabs || []).filter((t: any) => !coreKeys.has(t.key));
+    const coreTabKeys = new Set(ATTENDANCE_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition: any) => !coreTabKeys.has(tabDefinition.key));
     setFormTabs([
       ...ATTENDANCE_TAB_REGISTRY,
       ...customTabs
-    ].map((t: any) => ({
-      ...t,
-      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    ].map((tabDefinition: any) => ({
+      ...tabDefinition,
+      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     })));
 
     const newTabIds = Array.from(new Set([
-      ...ATTENDANCE_TAB_REGISTRY.map((t: any) => t.key),
-      ...(settings.formTabs || []).map((t: any) => t.key)
+      ...ATTENDANCE_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key),
+      ...(settings.formTabs || []).map((tabDefinition: any) => tabDefinition.key)
     ]));
     const currentFields = settings.fields || {};
-    setTabFields(Object.fromEntries(newTabIds.map(tabId => [tabId, currentFields[tabId] || []])));
-    setTabFieldEnabled(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.enabled).map((f: any) => f.key))])));
-    setTabFieldRequired(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.required).map((f: any) => f.key))])));
-    setTabFieldUnique(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.unique).map((f: any) => f.key))])));
-    setTabFieldDefaultValues(Object.fromEntries(newTabIds.map(tabId => [
+    setTabFields(Object.fromEntries(newTabIds.map((tabId) => [tabId, currentFields[tabId] || []])));
+    setTabFieldEnabled(Object.fromEntries(newTabIds.map((tabId) => [tabId, new Set((currentFields[tabId] || []).filter((field: any) => field.enabled).map((field: any) => field.key))])));
+    setTabFieldRequired(Object.fromEntries(newTabIds.map((tabId) => [tabId, new Set((currentFields[tabId] || []).filter((field: any) => field.required).map((field: any) => field.key))])));
+    setTabFieldUnique(Object.fromEntries(newTabIds.map((tabId) => [tabId, new Set((currentFields[tabId] || []).filter((field: any) => field.unique).map((field: any) => field.key))])));
+    setTabFieldDefaultValues(Object.fromEntries(newTabIds.map((tabId) => [
       tabId,
-      Object.fromEntries((currentFields[tabId] || []).filter((f: any) => f.defaultValue !== undefined).map((f: any) => [f.key, f.defaultValue]))
+      Object.fromEntries((currentFields[tabId] || []).filter((field: any) => field.defaultValue !== undefined).map((field: any) => [field.key, field.defaultValue]))
     ])));
-    setTabFieldPermissions(Object.fromEntries(newTabIds.map(tabId => [
+    setTabFieldPermissions(Object.fromEntries(newTabIds.map((tabId) => [
       tabId,
-      Object.fromEntries((currentFields[tabId] || []).filter((f: any) => f.permissions).map((f: any) => [f.key, f.permissions as string[]]))
+      Object.fromEntries((currentFields[tabId] || []).filter((field: any) => field.permissions).map((field: any) => [field.key, field.permissions as string[]]))
     ])));
-    setTabFieldOrder(Object.fromEntries(newTabIds.map(tabId => [tabId, (currentFields[tabId] || []).map((f: any) => f.key)])));
+    setTabFieldOrder(Object.fromEntries(newTabIds.map((tabId) => [tabId, (currentFields[tabId] || []).map((field: any) => field.key)])));
   }, [settings]);
 
   if (role !== "admin") {
@@ -201,31 +201,31 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
   const handleReorderFields = (tabId: string, reorderedFields: FieldDefinition[]) => { handleReorder(tabId, reorderedFields); setSaved(false); };
 
   const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
-    const newKeys = newFields.map((f) => f.key);
-    setTabFieldOrder((prev) => ({
-      ...prev,
-      [tabId]: syncOrder(prev[tabId] || [], newKeys),
+    const newFieldKeys = newFields.map((field) => field.key);
+    setTabFieldOrder((previousOrder) => ({
+      ...previousOrder,
+      [tabId]: syncOrder(previousOrder[tabId] || [], newFieldKeys),
     }));
-    setTabFields((prev) => ({ ...prev, [tabId]: newFields as unknown as FieldDefinition[] }));
+    setTabFields((previousFields) => ({ ...previousFields, [tabId]: newFields as unknown as FieldDefinition[] }));
     setSaved(false);
   };
 
   const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
-    setTabFields(prev => ({
-      ...prev,
-      [tabId]: (prev[tabId] || []).map(f => f.key === updatedField.key ? updatedField : f)
+    setTabFields((previousFields) => ({
+      ...previousFields,
+      [tabId]: (previousFields[tabId] || []).map((field) => field.key === updatedField.key ? updatedField : field)
     }));
     setSaved(false);
   };
 
   const handleDeleteField = async (tabId: string, fieldId: string) => {
-    setTabFields(prev => ({
-      ...prev,
-      [tabId]: (prev[tabId] || []).filter(f => f.key !== fieldId)
+    setTabFields((previousFields) => ({
+      ...previousFields,
+      [tabId]: (previousFields[tabId] || []).filter((field) => field.key !== fieldId)
     }));
-    setTabFieldOrder(prev => ({
-      ...prev,
-      [tabId]: (prev[tabId] || []).filter(id => id !== fieldId)
+    setTabFieldOrder((previousOrder) => ({
+      ...previousOrder,
+      [tabId]: (previousOrder[tabId] || []).filter((orderedFieldId) => orderedFieldId !== fieldId)
     }));
     setSaved(false);
   };
@@ -242,61 +242,61 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
       isSystem: false,
     };
 
-    setFormTabs(prev => [...prev, newTab]);
-    setEnabledTabs(prev => {
-      const next = new Set(prev);
-      next.add(key);
-      return next;
+    setFormTabs((previousTabs) => [...previousTabs, newTab]);
+    setEnabledTabs((previousTabs) => {
+      const nextTabs = new Set(previousTabs);
+      nextTabs.add(key);
+      return nextTabs;
     });
 
-    setTabFields(prev => ({ ...prev, [key]: [] }));
-    setTabFieldEnabled(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldRequired(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldUnique(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldDefaultValues(prev => ({ ...prev, [key]: {} }));
-    setTabFieldPermissions(prev => ({ ...prev, [key]: {} }));
-    setTabFieldOrder(prev => ({ ...prev, [key]: [] }));
+    setTabFields((previousFields) => ({ ...previousFields, [key]: [] }));
+    setTabFieldEnabled((previousEnabled) => ({ ...previousEnabled, [key]: new Set() }));
+    setTabFieldRequired((previousRequired) => ({ ...previousRequired, [key]: new Set() }));
+    setTabFieldUnique((previousUnique) => ({ ...previousUnique, [key]: new Set() }));
+    setTabFieldDefaultValues((previousDefaults) => ({ ...previousDefaults, [key]: {} }));
+    setTabFieldPermissions((previousPermissions) => ({ ...previousPermissions, [key]: {} }));
+    setTabFieldOrder((previousOrder) => ({ ...previousOrder, [key]: [] }));
     setSaved(false);
   };
 
   const handleDeleteTab = (key: string) => {
-    setFormTabs(prev => prev.filter(t => t.key !== key));
-    setEnabledTabs(prev => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
+    setFormTabs((previousTabs) => previousTabs.filter((tabDefinition) => tabDefinition.key !== key));
+    setEnabledTabs((previousTabs) => {
+      const nextTabs = new Set(previousTabs);
+      nextTabs.delete(key);
+      return nextTabs;
     });
-    setRequiredTabs(prev => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
+    setRequiredTabs((previousTabs) => {
+      const nextTabs = new Set(previousTabs);
+      nextTabs.delete(key);
+      return nextTabs;
     });
     setSaved(false);
   };
 
   const handleRenameTab = (key: string, newLabel: string) => {
     if (!newLabel.trim()) return;
-    setFormTabs(prev => prev.map(t => t.key === key ? { ...t, label: newLabel.trim() } : t));
+    setFormTabs((previousTabs) => previousTabs.map((tabDefinition) => tabDefinition.key === key ? { ...tabDefinition, label: newLabel.trim() } : tabDefinition));
     setSaved(false);
   };
 
   const buildFieldsMap = (): Record<string, FieldDefinition[]> => {
     const newFields: Record<string, FieldDefinition[]> = {};
-    formTabs.forEach(tab => {
-      const tabId = tab.key;
-      const combined = (tabFields[tabId] || []).map(f => {
-        const fieldKey = f.key || (f as { id?: string }).id || "";
-        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? f.enabled  ?? false;
-        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? f.required ?? false;
-        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? f.unique   ?? false;
+    formTabs.forEach((tabDefinition) => {
+      const tabId = tabDefinition.key;
+      const combinedFields = (tabFields[tabId] || []).map((field) => {
+        const fieldKey = field.key || (field as { id?: string }).id || "";
+        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? field.enabled  ?? false;
+        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? field.required ?? false;
+        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? field.unique   ?? false;
         const orderArray   = tabFieldOrder[tabId] || [];
         const orderIdx     = orderArray.indexOf(fieldKey);
-        const order        = orderIdx >= 0 ? orderIdx : (f.order ?? 999);
-        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? f.defaultValue;
-        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? f.permissions;
+        const order        = orderIdx >= 0 ? orderIdx : (field.order ?? 999);
+        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? field.defaultValue;
+        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? field.permissions;
 
         return {
-          ...f,
+          ...field,
           key: fieldKey,
           enabled,
           required,
@@ -307,18 +307,18 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
         } as FieldDefinition;
       });
 
-      newFields[tabId] = combined.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+      newFields[tabId] = combinedFields.sort((firstField, secondField) => (firstField.order ?? 999) - (secondField.order ?? 999));
     });
     return newFields;
   };
 
   const handleSave = () => {
-    const updatedFormTabs = formTabs.map(t => ({
-      ...t,
-      enabled: enabledTabs.has(t.key)
+    const updatedFormTabs = formTabs.map((tabDefinition) => ({
+      ...tabDefinition,
+      enabled: enabledTabs.has(tabDefinition.key)
     }));
 
-    const cfg: AttendanceSettingsData = {
+    const nextSettings: AttendanceSettingsData = {
       ...settings,
       workingDays,
       cutoffTime,
@@ -342,7 +342,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
       fields: buildFieldsMap(),
     };
 
-    updateSettings(cfg);
+    updateSettings(nextSettings);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -370,7 +370,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
                     min={1} 
                     max={60} 
                     value={lateThresholdMins}
-                    onChange={(e) => { setLateThresholdMins(Number(e.target.value)); setSaved(false); }}
+                    onChange={(event) => { setLateThresholdMins(Number(event.target.value)); setSaved(false); }}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
                   <span className="text-xs text-muted-foreground">min</span>
@@ -385,14 +385,14 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
                     min={10} 
                     max={120} 
                     value={autoAbsentAfterMins}
-                    onChange={(e) => { setAutoAbsentAfterMins(Number(e.target.value)); setSaved(false); }}
+                    onChange={(event) => { setAutoAbsentAfterMins(Number(event.target.value)); setSaved(false); }}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
                   <span className="text-xs text-muted-foreground">min</span>
                 </div>
               </SettingRow>
               <SettingRow label="Lock After Submit" sub="Prevent edits once attendance is submitted">
-                <Toggle checked={lockAfterSubmit} onChange={(v) => { setLockAfterSubmit(v); setSaved(false); }} />
+                <Toggle checked={lockAfterSubmit} onChange={(value) => { setLockAfterSubmit(value); setSaved(false); }} />
               </SettingRow>
             </div>
           </article>
@@ -405,7 +405,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
             </header>
             <div className="px-4">
               <SettingRow label="Enable QR Attendance" sub="Allow teachers to scan student QR codes to mark attendance">
-                <Toggle checked={qrEnabled} onChange={(v) => { setQrEnabled(v); setSaved(false); }} />
+                <Toggle checked={qrEnabled} onChange={(value) => { setQrEnabled(value); setSaved(false); }} />
               </SettingRow>
             </div>
           </article>
@@ -426,17 +426,17 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
                     min={50} 
                     max={100} 
                     value={lowAttendanceThreshold}
-                    onChange={(e) => { setLowAttendanceThreshold(Number(e.target.value)); setSaved(false); }}
+                    onChange={(event) => { setLowAttendanceThreshold(Number(event.target.value)); setSaved(false); }}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
                   <span className="text-xs text-muted-foreground">%</span>
                 </div>
               </SettingRow>
               <SettingRow label="Notify Parents" sub="Send SMS/WhatsApp to parent on student absence">
-                <Toggle checked={notifyParents} onChange={(v) => { setNotifyParents(v); setSaved(false); }} />
+                <Toggle checked={notifyParents} onChange={(value) => { setNotifyParents(value); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Require Note for Absent" sub="Teacher must add a note when marking a student absent">
-                <Toggle checked={requireNoteForAbsent} onChange={(v) => { setRequireNoteForAbsent(v); setSaved(false); }} />
+                <Toggle checked={requireNoteForAbsent} onChange={(value) => { setRequireNoteForAbsent(value); setSaved(false); }} />
               </SettingRow>
             </div>
           </article>
@@ -449,10 +449,10 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
             </header>
             <div className="px-4">
               <SettingRow label="Offline Mode" sub="Allow teachers to mark attendance without internet; syncs when reconnected">
-                <Toggle checked={offlineEnabled} onChange={(v) => { setOfflineEnabled(v); setSaved(false); }} />
+                <Toggle checked={offlineEnabled} onChange={(value) => { setOfflineEnabled(value); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Geo-location Tagging" sub="Record teacher's GPS coordinates when submitting attendance">
-                <Toggle checked={geoTagging} onChange={(v) => { setGeoTagging(v); setSaved(false); }} />
+                <Toggle checked={geoTagging} onChange={(value) => { setGeoTagging(value); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Default View Layout" sub="Select default layout format for attendance records in work view">
                 <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
@@ -482,7 +482,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>
               </SettingRow>
               <SettingRow label="Daily Auto-Lock" sub="Automatically lock attendance after end-of-day submission">
-                <Toggle checked={lockAfterSubmit} onChange={(v) => { setLockAfterSubmit(v); setSaved(false); }} />
+                <Toggle checked={lockAfterSubmit} onChange={(value) => { setLockAfterSubmit(value); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Audit Logging" sub="Record all edits and submissions in an audit trail (always on)">
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>
@@ -509,7 +509,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
             const tabId = tab.key;
             const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
             const tabDesc = tab.description;
-            const tabDefs = tabFields[tabId] || [];
+            const tabDefinitions = Array.isArray(tabFields[tabId]) ? tabFields[tabId] : [];
             const enabledSet = tabFieldEnabled[tabId] || new Set();
             const requiredSet = tabFieldRequired[tabId] || new Set();
             const isOn = tabId === "basic" ? true : enabledTabs.has(tabId);
@@ -558,7 +558,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
                     <p className="text-xs text-muted-foreground">{tabDesc}</p>
                   </div>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                    {tabDefinitions.filter((field) => enabledSet.has(field.key)).length}/{tabDefinitions.length}
                   </span>
                   {tabId !== "basic" && isOn && (
                     <Button
@@ -581,26 +581,26 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
                   <div className="p-3 space-y-3">
                     <CoreFieldEditorList
                       tabId={tabId}
-                      fields={getOrderedFields(tabDefs, tabFieldOrder[tabId])}
+                      fields={getOrderedFields(tabDefinitions, tabFieldOrder[tabId])}
                       enabledSet={enabledSet}
                       requiredSet={requiredSet}
                       onToggleEnabled={(fieldId: string) => handleToggleFieldEnabled(tabId, fieldId)}
                       onToggleRequired={(fieldId: string) => handleToggleFieldRequired(tabId, fieldId)}
                       onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
                       onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
-                      isUniqueField={(tid: string, fid: string) => tabFieldUnique[tid]?.has(fid) || false}
-                      isCoreField={(key: string) => INITIAL_ATTENDANCE_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+                      isUniqueField={(targetTabId: string, fieldId: string) => tabFieldUnique[targetTabId]?.has(fieldId) || false}
+                      isCoreField={(key: string) => INITIAL_ATTENDANCE_FIELD_SEED[tabId]?.some((field: any) => field.key === key) ?? false}
                       defaultValues={tabFieldDefaultValues[tabId]}
                       permissions={tabFieldPermissions[tabId]}
-                      onChangeDefaults={(fieldId: string, val: unknown) => {
-                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                      onChangeDefaults={(fieldId: string, value: unknown) => {
+                        setTabFieldDefaultValues((previousValues) => ({ ...previousValues, [tabId]: { ...previousValues[tabId], [fieldId]: value } }));
                         setSaved(false);
                       }}
                       onChangePermissions={(fieldId: string, roles: string[]) => {
-                        setTabFieldPermissions(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: roles } }));
+                        setTabFieldPermissions((previousPermissions) => ({ ...previousPermissions, [tabId]: { ...previousPermissions[tabId], [fieldId]: roles } }));
                         setSaved(false);
                       }}
-                      onEditField={(f: FieldDefinition) => handleEditField(tabId, f)}
+                      onEditField={(field: FieldDefinition) => handleEditField(tabId, field)}
                       onDeleteField={(id: string) => handleDeleteField(tabId, id)}
                       labels={{
                         required: "Required",
@@ -611,9 +611,9 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
                     />
                     <div className="border-t border-border pt-3">
                       <CustomFieldsBuilder
-                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        fields={tabDefinitions.map((field) => ({ ...field, id: field.key })) as unknown as CustomFieldConfig[]}
                         droppableId={`custom-fields-${tabId}`}
-                        onChange={(f) => handleCustomFieldsChange(tabId, f)}
+                        onChange={(fields) => handleCustomFieldsChange(tabId, fields)}
                       />
                     </div>
                   </div>
@@ -675,7 +675,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
           <Input
             id="newTabLabel"
             value={newTabLabel}
-            onChange={(e) => setNewTabLabel(e.target.value)}
+            onChange={(event) => setNewTabLabel(event.target.value)}
             placeholder="e.g. Extra Info"
             autoFocus
           />
@@ -724,7 +724,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
           <Input
             id="renameTabLabel"
             value={renameTabLabel}
-            onChange={(e) => setRenameTabLabel(e.target.value)}
+            onChange={(event) => setRenameTabLabel(event.target.value)}
             placeholder="e.g. Custom Fields"
             autoFocus
           />

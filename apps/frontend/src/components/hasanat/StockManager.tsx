@@ -26,8 +26,8 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
     note: "",
   });
 
-  const upd = <K extends keyof StockBatch>(f: K, v: StockBatch[K]) => setData((d: Partial<StockBatch>) => ({ ...d, [f]: v }));
-  const selectedDen = denoms.find((d) => d.id === data.denominationId);
+  const updateField = <K extends keyof StockBatch>(field: K, value: StockBatch[K]) => setData((previousData: Partial<StockBatch>) => ({ ...previousData, [field]: value }));
+  const selectedDenomination = denoms.find((denomination) => denomination.id === data.denominationId);
 
   React.useEffect(() => {
     if (open) {
@@ -50,8 +50,8 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
       cancelLabel="Cancel"
       saveLabel="Add Batch"
       onSave={() => {
-        const den = denoms.find((d) => d.id === data.denominationId);
-        onSave({ ...data, id: `bat${Date.now()}`, quantity: Number(data.quantity), remaining: Number(data.quantity), denominationName: den?.name || "" } as StockBatch);
+        const denomination = denoms.find((candidate) => candidate.id === data.denominationId);
+        onSave({ ...data, id: `bat${Date.now()}`, quantity: Number(data.quantity), remaining: Number(data.quantity), denominationName: denomination?.name || "" } as StockBatch);
       }}
       saveDisabled={!data.denominationId || !data.quantity}
     >
@@ -61,29 +61,29 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
           <FormSelect
             id="denom"
             value={data.denominationId || ""}
-            onChange={(val) => upd("denominationId", val)}
-            options={denoms.filter((d) => d.active).map((d) => ({
-              value: d.id,
-              label: `${d.icon} ${d.name} (${d.points} pts)`
+            onChange={(value) => updateField("denominationId", value)}
+            options={denoms.filter((denomination) => denomination.active).map((denomination) => ({
+              value: denomination.id,
+              label: `${denomination.icon} ${denomination.name} (${denomination.points} pts)`
             }))}
           />
         </div>
-        {selectedDen && (
-          <div className="h-10 rounded-xl flex items-center gap-2 px-3 text-white text-sm font-semibold" style={{ background: selectedDen.color }}>
-            <span aria-hidden="true">{selectedDen.icon}</span><span>{selectedDen.name}</span>
+        {selectedDenomination && (
+          <div className="h-10 rounded-xl flex items-center gap-2 px-3 text-white text-sm font-semibold" style={{ background: selectedDenomination.color }}>
+            <span aria-hidden="true">{selectedDenomination.icon}</span><span>{selectedDenomination.name}</span>
           </div>
         )}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="qty" className={FORM_LABEL}>Quantity *</label>
-            <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || ""} onChange={(e) => upd("quantity", Number(e.target.value))} placeholder="0" min={1} />
+            <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || ""} onChange={(event) => updateField("quantity", Number(event.target.value))} placeholder="0" min={1} />
           </div>
           <div>
             <label htmlFor="add-date" className={FORM_LABEL}>Date</label>
             <DatePicker
               id="add-date"
               value={data.addedDate || ""}
-              onChange={(val) => upd("addedDate", val)}
+              onChange={(value) => updateField("addedDate", value)}
             />
           </div>
         </div>
@@ -91,12 +91,12 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
           id="added-by"
           label="Added By"
           value={data.addedByUserId || ""}
-          onChange={(id) => upd("addedByUserId", id)}
+          onChange={(id) => updateField("addedByUserId", id)}
           allowEmpty
         />
         <div>
           <label htmlFor="note" className={FORM_LABEL}>Note</label>
-          <Input id="note" className={FORM_INPUT} value={data.note} onChange={(e) => upd("note", e.target.value)} placeholder="e.g. January batch" />
+          <Input id="note" className={FORM_INPUT} value={data.note} onChange={(event) => updateField("note", event.target.value)} placeholder="e.g. January batch" />
         </div>
       </div>
     </FormModal>
@@ -125,10 +125,10 @@ export function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
   const handleAdd = (batch: StockBatch) => { onUpdate([...batches, batch]); setShowModal(false); };
 
   // Group by denomination
-  const grouped = denoms.reduce((acc: Record<string, { den: Denomination, batches: StockBatch[] }>, den: Denomination) => {
-    const denBatches = batches.filter((b: StockBatch) => b.denominationId === den.id);
-    if (denBatches.length > 0) acc[den.id] = { den, batches: denBatches };
-    return acc;
+  const grouped = denoms.reduce((groups: Record<string, { den: Denomination, batches: StockBatch[] }>, denomination: Denomination) => {
+    const denominationBatches = batches.filter((batch: StockBatch) => batch.denominationId === denomination.id);
+    if (denominationBatches.length > 0) groups[denomination.id] = { den: denomination, batches: denominationBatches };
+    return groups;
   }, {} as Record<string, { den: Denomination, batches: StockBatch[] }>);
 
   return (
@@ -144,9 +144,9 @@ export function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
         </Button>
       </header>
 
-      {(Object.values(grouped) as { den: Denomination; batches: StockBatch[] }[]).map(({ den, batches: dBatches }) => {
-        const totalStock = dBatches.reduce((s: number, b: StockBatch) => s + b.quantity, 0);
-        const totalRemaining = dBatches.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
+      {(Object.values(grouped) as { den: Denomination; batches: StockBatch[] }[]).map(({ den, batches: denominationBatches }) => {
+        const totalStock = denominationBatches.reduce((sum: number, batch: StockBatch) => sum + batch.quantity, 0);
+        const totalRemaining = denominationBatches.reduce((sum: number, batch: StockBatch) => sum + batch.remaining, 0);
         const pct = totalStock > 0 ? Math.round((totalRemaining / totalStock) * 100) : 0;
 
         return (
@@ -170,18 +170,18 @@ export function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
 
             {/* Batches */}
             <div className="divide-y divide-border/50">
-              {dBatches.map((b: StockBatch, i: number) => {
-                const bPct = b.quantity > 0 ? Math.round((b.remaining / b.quantity) * 100) : 0;
+              {denominationBatches.map((batch: StockBatch, index: number) => {
+                const batchPercentage = batch.quantity > 0 ? Math.round((batch.remaining / batch.quantity) * 100) : 0;
                 return (
-                  <motion.div key={b.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 px-4 py-3">
+                  <motion.div key={batch.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.04 }} className="flex items-center gap-3 px-4 py-3">
                     <Package className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-medium text-foreground m-0">{b.note || "Batch"}</p>
-                      <p className="text-[10px] text-muted-foreground m-0">{b.addedDate} · Added by {b.addedBy || "—"}</p>
+                      <p className="text-[12px] font-medium text-foreground m-0">{batch.note || "Batch"}</p>
+                      <p className="text-[10px] text-muted-foreground m-0">{batch.addedDate} · Added by {batch.addedBy || "—"}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-[12px] font-bold text-foreground m-0">{b.remaining}<span className="text-muted-foreground font-normal">/{b.quantity}</span></p>
-                      <p className="text-[10px] text-muted-foreground m-0">{bPct}% left</p>
+                      <p className="text-[12px] font-bold text-foreground m-0">{batch.remaining}<span className="text-muted-foreground font-normal">/{batch.quantity}</span></p>
+                      <p className="text-[10px] text-muted-foreground m-0">{batchPercentage}% left</p>
                     </div>
                   </motion.div>
                 );

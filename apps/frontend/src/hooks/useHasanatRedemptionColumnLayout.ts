@@ -78,10 +78,10 @@ export function useHasanatRedemptionColumnLayout() {
   );
 
   const updateUserColumnLayout = useCallback(
-    (cols: ModuleColumnRegistryEntry[]) => {
+    (columns: ModuleColumnRegistryEntry[]) => {
       if (!userId) return;
-      saveModuleColumnRegistry(storageModuleId, userId, cols);
-      const preferences: ModuleColumnPreference[] = cols.map(({ key, enabled, order }) => ({
+      saveModuleColumnRegistry(storageModuleId, userId, columns);
+      const preferences: ModuleColumnPreference[] = columns.map(({ key, enabled, order }) => ({
         key,
         enabled,
         order,

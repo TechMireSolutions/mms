@@ -76,7 +76,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
   const student = resolvedStudents[0];
 
   if (!enrollment) return null;
-  const s = STATUS_MAP[enrollment.status] || { label: enrollment.status, color: "bg-muted text-muted-foreground border-border" };
+  const enrollmentStatus = STATUS_MAP[enrollment.status] || { label: enrollment.status, color: "bg-muted text-muted-foreground border-border" };
 
   const TRANSITIONS: Record<Enrollment["status"], Enrollment["status"][]> = {
     pending:   ["confirmed", "cancelled"],
@@ -92,7 +92,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 p-4 pt-10 overflow-y-auto"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(event) => event.target === event.currentTarget && onClose()}
       role="dialog"
       aria-modal="true"
       aria-labelledby="enrollment-detail-title"
@@ -116,7 +116,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
             <p className="text-xs text-muted-foreground mt-0.5">{enrollment.sessionName} · #{enrollment.id}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${s.color}`}>{s.label}</span>
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${enrollmentStatus.color}`}>{enrollmentStatus.label}</span>
             <Button
               variant="ghost"
               size="icon"
@@ -165,16 +165,16 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
         {enrollment.timeline && enrollment.timeline.length > 0 && (
           <Section icon={Clock} title="Timeline">
             <div className="py-2 space-y-3" role="list">
-              {enrollment.timeline.map((t, i) => (
-                <div key={i} className="flex gap-3" role="listitem">
+              {enrollment.timeline.map((timelineItem, index) => (
+                <div key={`${timelineItem.ts}-${timelineItem.event}`} className="flex gap-3" role="listitem">
                   <div className="flex flex-col items-center">
                     <div className="w-2 h-2 rounded-full bg-primary mt-1 flex-shrink-0" aria-hidden="true" />
-                    {enrollment.timeline && i < enrollment.timeline.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" aria-hidden="true" />}
+                    {enrollment.timeline && index < enrollment.timeline.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" aria-hidden="true" />}
                   </div>
                   <div className="pb-2">
-                    <p className="text-xs font-semibold text-foreground">{t.event}</p>
+                    <p className="text-xs font-semibold text-foreground">{timelineItem.event}</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {new Date(t.ts).toLocaleString()} · {t.by}
+                      {new Date(timelineItem.ts).toLocaleString()} · {timelineItem.by}
                     </p>
                   </div>
                 </div>
@@ -187,14 +187,14 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
         {canWrite && nextStatuses.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap pt-1">
             <p className="text-xs font-semibold text-muted-foreground">Move to:</p>
-            {nextStatuses.map((ns) => {
-              const info = STATUS_MAP[ns];
-              const isCancel = ns === "cancelled";
+            {nextStatuses.map((nextStatus) => {
+              const statusInfo = STATUS_MAP[nextStatus];
+              const isCancel = nextStatus === "cancelled";
               return (
                 <Button
-                  key={ns}
+                  key={nextStatus}
                   variant="ghost"
-                  onClick={() => onStatusChange(enrollment.id, ns)}
+                  onClick={() => onStatusChange(enrollment.id, nextStatus)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors h-auto ${
                     isCancel
                       ? "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/15 hover:text-destructive"
@@ -202,7 +202,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
                   }`}
                 >
                   <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                  {info?.label || ns}
+                  {statusInfo?.label || nextStatus}
                 </Button>
               );
             })}

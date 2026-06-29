@@ -46,10 +46,10 @@ export function suggestClass(student: Partial<Student>, session: Session): Class
   if (!student.dob) return null;
   const birthYear = parseInt(student.dob.split("-")[0]);
   const age = 2026 - birthYear;
-  for (const c of session.classes) {
-    if (age >= c.ageMin && age <= c.ageMax) {
-      if (c.gender === "any" || student.gender === c.gender) {
-        return c;
+  for (const sessionClass of session.classes) {
+    if (age >= sessionClass.ageMin && age <= sessionClass.ageMax) {
+      if (sessionClass.gender === "any" || student.gender === sessionClass.gender) {
+        return sessionClass;
       }
     }
   }
@@ -103,7 +103,7 @@ export function runFullEligibility(
     checks.push({ id: "duplicate", label: "Duplicate Enrollment", status: "pass", detail: "Student is not already enrolled in this session." });
   }
 
-  const hasSibling = students.some(s => s.id !== student.id && (s.fatherName === student.fatherName || s.motherName === student.motherName) && s.status === "active");
+  const hasSibling = students.some((candidate) => candidate.id !== student.id && (candidate.fatherName === student.fatherName || candidate.motherName === student.motherName) && candidate.status === "active");
   if (hasSibling) {
     checks.push({ id: "sibling", label: "Sibling Connection", status: "pass", detail: "Active sibling detected. Sibling discount eligible." });
   } else {

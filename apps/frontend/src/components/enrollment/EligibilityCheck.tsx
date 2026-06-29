@@ -32,7 +32,7 @@ export function EligibilityCheck(): React.ReactElement {
 
   const { data: resolvedStudents = [] } = useStudentsByIds(studentId ? [studentId] : []);
   const student = resolvedStudents[0];
-  const session = sessions.find((s) => s.id === sessionId);
+  const session = sessions.find((sessionOption) => sessionOption.id === sessionId);
   const suggested = student && session ? suggestClass(student, session) : null;
 
   const checks = useMemo<CheckResult[]>(() => {
@@ -40,9 +40,9 @@ export function EligibilityCheck(): React.ReactElement {
     return runFullEligibility(student, session, suggested, []);
   }, [student, session, suggested]);
 
-  const failCount = checks.filter((c) => c.status === "fail").length;
-  const warnCount = checks.filter((c) => c.status === "warn").length;
-  const passCount = checks.filter((c) => c.status === "pass").length;
+  const failCount = checks.filter((check) => check.status === "fail").length;
+  const warnCount = checks.filter((check) => check.status === "warn").length;
+  const passCount = checks.filter((check) => check.status === "pass").length;
 
   return (
     <article className="max-w-2xl space-y-5" aria-labelledby="eligibility-title">
@@ -64,11 +64,11 @@ export function EligibilityCheck(): React.ReactElement {
           <select
             id="select-session"
             value={sessionId}
-            onChange={(e) => setSessionId(e.target.value)}
+            onChange={(event) => setSessionId(event.target.value)}
             className={FORM_SELECT}
           >
             <option value="">— Select session —</option>
-            {sessions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {sessions.map((sessionOption) => <option key={sessionOption.id} value={sessionOption.id}>{sessionOption.name}</option>)}
           </select>
         </div>
       </div>
@@ -116,12 +116,12 @@ export function EligibilityCheck(): React.ReactElement {
           </div>
 
           <div className="space-y-2" role="list" aria-label="Eligibility check details">
-            {checks.map((c) => (
-              <div key={c.id} className={`flex items-start gap-3 p-3 rounded-xl border ${ROW_BG[c.status]}`} role="listitem">
-                <div className="mt-0.5">{ICONS[c.status]}</div>
+            {checks.map((check) => (
+              <div key={check.id} className={`flex items-start gap-3 p-3 rounded-xl border ${ROW_BG[check.status]}`} role="listitem">
+                <div className="mt-0.5">{ICONS[check.status]}</div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-bold ${LABEL_COL[c.status]}`}>{c.label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{c.detail}</p>
+                  <p className={`text-xs font-bold ${LABEL_COL[check.status]}`}>{check.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{check.detail}</p>
                 </div>
               </div>
             ))}

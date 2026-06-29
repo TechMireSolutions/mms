@@ -57,33 +57,33 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
     [palette],
   );
   const total      = enrollments.length;
-  const confirmed  = enrollments.filter((e) => e.status === "confirmed").length;
-  const pending    = enrollments.filter((e) => e.status === "pending").length;
-  const cancelled  = enrollments.filter((e) => e.status === "cancelled").length;
-  const totalFees  = enrollments.filter((e) => e.status !== "cancelled")
-    .reduce((sum, e) => sum + (e.finalFee || 0), 0);
-  const paidFees   = enrollments.filter((e) => e.paymentStatus === "paid")
-    .reduce((sum, e) => sum + (e.finalFee || 0), 0);
+  const confirmed  = enrollments.filter((enrollment) => enrollment.status === "confirmed").length;
+  const pending    = enrollments.filter((enrollment) => enrollment.status === "pending").length;
+  const cancelled  = enrollments.filter((enrollment) => enrollment.status === "cancelled").length;
+  const totalFees  = enrollments.filter((enrollment) => enrollment.status !== "cancelled")
+    .reduce((totalFee, enrollment) => totalFee + (enrollment.finalFee || 0), 0);
+  const paidFees   = enrollments.filter((enrollment) => enrollment.paymentStatus === "paid")
+    .reduce((paidTotal, enrollment) => paidTotal + (enrollment.finalFee || 0), 0);
 
   // Status distribution
-  const statusData = ENROLLMENT_STATUSES.map((s) => ({
-    name: s.label,
-    value: enrollments.filter((e) => e.status === s.id).length,
+  const statusData = ENROLLMENT_STATUSES.map((status) => ({
+    name: status.label,
+    value: enrollments.filter((enrollment) => enrollment.status === status.id).length,
   }));
 
   // Per-session breakdown
   const sessionData = useMemo<SessionDataPoint[]>(() => {
-    const map: Record<string, SessionDataPoint> = {};
-    enrollments.forEach((e) => {
-      if (!map[e.sessionId]) {
-        map[e.sessionId] = { name: e.sessionName, count: 0, revenue: 0 };
+    const sessionStatsById: Record<string, SessionDataPoint> = {};
+    enrollments.forEach((enrollment) => {
+      if (!sessionStatsById[enrollment.sessionId]) {
+        sessionStatsById[enrollment.sessionId] = { name: enrollment.sessionName, count: 0, revenue: 0 };
       }
-      map[e.sessionId].count++;
-      if (e.status !== "cancelled") {
-        map[e.sessionId].revenue += e.finalFee || 0;
+      sessionStatsById[enrollment.sessionId].count++;
+      if (enrollment.status !== "cancelled") {
+        sessionStatsById[enrollment.sessionId].revenue += enrollment.finalFee || 0;
       }
     });
-    return Object.values(map);
+    return Object.values(sessionStatsById);
   }, [enrollments]);
 
   return (
@@ -104,9 +104,9 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
             <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
               <PieChart>
                 <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} paddingAngle={3}>
-                  {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  {statusData.map((status, index) => <Cell key={status.name} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
-                <Tooltip formatter={(val) => [`${val} enrollments`]} />
+                <Tooltip formatter={(value) => [`${value} enrollments`]} />
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px" }} />
               </PieChart>
             </SafeResponsiveContainer>
@@ -124,7 +124,7 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
                 <BarChart data={sessionData} barSize={20}>
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} />
                   <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <Tooltip formatter={(val) => [`${val}`]} />
+                  <Tooltip formatter={(value) => [`${value}`]} />
                   <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </SafeResponsiveContainer>
@@ -142,13 +142,13 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
           {sessionData.length === 0 ? (
             <p className="text-center py-8 text-sm text-muted-foreground" role="status">No data</p>
           ) : (
-            sessionData.map((s, i) => (
-              <div key={i} className="flex items-center justify-between px-4 py-3" role="listitem">
+            sessionData.map((sessionStats) => (
+              <div key={sessionStats.name} className="flex items-center justify-between px-4 py-3" role="listitem">
                 <div>
-                  <p className="text-sm font-semibold text-foreground">{s.name}</p>
-                  <p className="text-xs text-muted-foreground">{s.count} enrollment{s.count !== 1 ? "s" : ""}</p>
+                  <p className="text-sm font-semibold text-foreground">{sessionStats.name}</p>
+                  <p className="text-xs text-muted-foreground">{sessionStats.count} enrollment{sessionStats.count !== 1 ? "s" : ""}</p>
                 </div>
-                <p className="text-sm font-bold text-primary">PKR {s.revenue.toLocaleString()}</p>
+                <p className="text-sm font-bold text-primary">PKR {sessionStats.revenue.toLocaleString()}</p>
               </div>
             ))
           )}

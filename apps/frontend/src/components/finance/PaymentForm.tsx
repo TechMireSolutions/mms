@@ -18,7 +18,7 @@ import {
   getDefaultFieldValue,
 } from '@mms/shared';
 
-const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
+const formatMoney = (amount: number) => `PKR ${Number(amount).toLocaleString()}`;
 
 interface PaymentFormProps {
   open: boolean;
@@ -96,7 +96,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     // Override field required checks from config
     fieldsList.forEach((field) => {
       if (field.required && shape[field.key]) {
-        shape[field.key] = (shape[field.key] as any).refine((val: any) => val !== undefined && val !== null && val !== "", {
+        shape[field.key] = (shape[field.key] as any).refine((fieldValue: any) => fieldValue !== undefined && fieldValue !== null && fieldValue !== "", {
           message: `${field.label} is required.`,
         });
       }
@@ -122,7 +122,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     t,
   });
 
-  const data = form.watch();
+  const paymentDraft = form.watch();
   const setValue = form.setValue;
 
   const completeness = useMemo(() => {
@@ -140,8 +140,8 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       }
 
       const isRequired = !!field.required;
-      const val = data[field.key];
-      const isFilled = val !== undefined && val !== null && val !== "";
+      const fieldValue = paymentDraft[field.key];
+      const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "";
 
       if (isRequired) {
         totalRequired++;
@@ -157,12 +157,12 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     const progress = (reqRatio * 0.7) + (optRatio * 0.3);
 
     return Math.round(progress * 100);
-  }, [data, fieldsList]);
+  }, [paymentDraft, fieldsList]);
 
   const onSubmit = useCallback(async (formData: PaymentFormData) => {
     if (!invoice) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
+    await new Promise((resolve) => setTimeout(resolve, 600));
     onSave({
       ...formData,
       amount: Number(formData.amount),
@@ -178,7 +178,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
   const renderFieldByKey = (field: FieldDefinition): React.ReactNode => {
     if (!field.enabled) return null;
 
-    const fieldError = errors.find((e) => e.fieldId === field.key);
+    const fieldError = errors.find((error) => error.fieldId === field.key);
 
     if (field.key === "amount") {
       return (
@@ -187,15 +187,15 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
             <input
               type="number"
               className={FORM_INPUT}
-              value={data.amount || ""}
-              onChange={(e) => setValue("amount", e.target.value === "" ? 0 : +e.target.value, { shouldValidate: true, shouldDirty: true })}
+              value={paymentDraft.amount || ""}
+              onChange={(event) => setValue("amount", event.target.value === "" ? 0 : +event.target.value, { shouldValidate: true, shouldDirty: true })}
               max={balance}
               min={1}
               required
             />
-            {Number(data.amount) < balance && Number(data.amount) > 0 && (
+            {Number(paymentDraft.amount) < balance && Number(paymentDraft.amount) > 0 && (
               <p className="m-0 mt-1 text-[10px] text-warning">
-                Partial payment — balance remaining: {fmt(balance - Number(data.amount))}
+                Partial payment — balance remaining: {formatMoney(balance - Number(paymentDraft.amount))}
               </p>
             )}
           </Field>
@@ -209,12 +209,12 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
           <Field label="Method *" required={field.required} error={fieldError?.message}>
             <select
               className={`${FORM_SELECT} cursor-pointer`}
-              value={data.method || "Cash"}
-              onChange={(e) => setValue("method", e.target.value, { shouldValidate: true, shouldDirty: true })}
+              value={paymentDraft.method || "Cash"}
+              onChange={(event) => setValue("method", event.target.value, { shouldValidate: true, shouldDirty: true })}
               required={field.required}
             >
-              {PAYMENT_METHODS.map((m) => (
-                <option key={m} value={m}>{m}</option>
+              {PAYMENT_METHODS.map((method) => (
+                <option key={method} value={method}>{method}</option>
               ))}
             </select>
           </Field>
@@ -227,8 +227,8 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
         <div key="date">
           <Field label="Date *" required={field.required} error={fieldError?.message}>
             <DatePicker
-              value={data.date || ""}
-              onChange={(val) => setValue("date", val, { shouldValidate: true, shouldDirty: true })}
+              value={paymentDraft.date || ""}
+              onChange={(value) => setValue("date", value, { shouldValidate: true, shouldDirty: true })}
               required={field.required}
             />
           </Field>
@@ -243,7 +243,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
             id="payment-receivedBy"
             label="Received By"
             required={field.required}
-            value={data.receivedByUserId || ""}
+            value={paymentDraft.receivedByUserId || ""}
             onChange={(id) => setValue("receivedByUserId", id, { shouldValidate: true, shouldDirty: true })}
           />
         </div>
@@ -256,8 +256,8 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
           <Field label="Note" required={field.required} error={fieldError?.message}>
             <Input
               className={FORM_INPUT}
-              value={data.note || ""}
-              onChange={(e) => setValue("note", e.target.value, { shouldValidate: true, shouldDirty: true })}
+              value={paymentDraft.note || ""}
+              onChange={(event) => setValue("note", event.target.value, { shouldValidate: true, shouldDirty: true })}
               placeholder="e.g. Cash received, receipt #123"
               required={field.required}
             />
@@ -267,14 +267,14 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     }
 
     // Default custom field rendering
-    const value = data[field.key] ?? getDefaultFieldValue(field);
+    const value = paymentDraft[field.key] ?? getDefaultFieldValue(field);
     return (
       <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
         <Field label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
           <CustomFieldInput
             field={field}
             value={value}
-            onChange={(next) => setValue(field.key as any, next, { shouldValidate: true, shouldDirty: true })}
+            onChange={(nextValue) => setValue(field.key as any, nextValue, { shouldValidate: true, shouldDirty: true })}
             error={!!fieldError}
           />
         </Field>
@@ -289,7 +289,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
           <article className="rounded-xl border border-border bg-card p-4">
             <h4 className="text-[14px] font-bold text-foreground m-0">{invoice.studentName}</h4>
             <p className="text-[11px] text-muted-foreground m-0 mt-0.5">{invoice.id} · {invoice.class}</p>
-            <p className="text-[12px] font-semibold text-primary m-0 mt-2">Balance due: {fmt(balance)}</p>
+            <p className="text-[12px] font-semibold text-primary m-0 mt-2">Balance due: {formatMoney(balance)}</p>
           </article>
         )}
 
@@ -306,7 +306,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
       <span className="font-semibold text-foreground truncate max-w-[200px]">{invoice.studentName}</span>
       <div className="flex items-center gap-2 border-s border-border ps-3">
-        <span>Balance: {fmt(balance - Number(data.amount || 0))}</span>
+        <span>Balance: {formatMoney(balance - Number(paymentDraft.amount || 0))}</span>
       </div>
     </div>
   ) : null;
@@ -324,16 +324,16 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       builderPanel={null}
       tabs={[]}
       activeTab={tab}
-      error={errors.map(e => e.message)}
+      error={errors.map((error) => error.message)}
       cancelLabel="Cancel"
       saveLabel="Record Payment"
       onSave={() => void handleSave(onSubmit)()}
       saving={saving}
-      saveDisabled={!data.amount || Number(data.amount) <= 0}
+      saveDisabled={!paymentDraft.amount || Number(paymentDraft.amount) <= 0}
       footerStart={footerStart || undefined}
       fields={fieldsList}
-      data={data}
-      setValue={(key, val, opts) => setValue(key as any, val, opts)}
+      data={paymentDraft}
+      setValue={(key, fieldValue, options) => setValue(key as any, fieldValue, options)}
       errors={errors}
       renderField={renderFieldByKey}
       renderBasicContent={renderBasicContent}

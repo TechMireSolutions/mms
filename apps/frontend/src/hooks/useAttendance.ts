@@ -49,8 +49,8 @@ export function useAttendanceMutations() {
         method: 'PUT',
         body: JSON.stringify({ records }),
       }),
-    onSuccess: (data) => {
-      saveCollection('attendance_records', data.records);
+    onSuccess: (response) => {
+      saveCollection('attendance_records', response.records);
       invalidate();
     },
   });
@@ -84,13 +84,13 @@ export function useAttendanceMutations() {
 /** Query-first attendance; falls back to localStorage cache (hydrated). */
 export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useAttendanceRecords({ enabled });
-  const fromLocal = useLiveCollection<AttendanceRecord>('attendance_records', ATTENDANCE_RECORDS, { enabled });
+  const { data: queryRecords = [] } = useAttendanceRecords({ enabled });
+  const localRecords = useLiveCollection<AttendanceRecord>('attendance_records', ATTENDANCE_RECORDS, { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryRecords.length > 0) {
+    return queryRecords;
   }
-  return fromLocal;
+  return localRecords;
 }
 
 export function useAttendanceMetrics(selectedDate: string) {
@@ -98,9 +98,9 @@ export function useAttendanceMetrics(selectedDate: string) {
   return useQuery({
     queryKey: [...ATTENDANCE_METRICS_QUERY_KEY, selectedDate] as const,
     queryFn: async () => {
-      const qs = selectedDate ? `?date=${encodeURIComponent(selectedDate)}` : '';
+      const queryString = selectedDate ? `?date=${encodeURIComponent(selectedDate)}` : '';
       const body = await apiJson<{ metrics: AttendanceCommandMetricsSnapshot }>(
-        `${ATTENDANCE_API}/metrics${qs}`,
+        `${ATTENDANCE_API}/metrics${queryString}`,
       );
       return body.metrics;
     },
@@ -132,8 +132,8 @@ export function useAttendanceColumnPrefsMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(ATTENDANCE_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (response) => {
+      queryClient.setQueryData(ATTENDANCE_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
     },
   });
 }

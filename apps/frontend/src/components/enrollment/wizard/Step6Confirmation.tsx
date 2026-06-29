@@ -77,7 +77,7 @@ export function Step6Confirmation({
   const { fields, customFields, orderedFields: allOrderedFields } = useEnrollmentConfig();
 
   const orderedFields = React.useMemo(() => {
-    return allOrderedFields.filter((f) => !["studentId", "sessionId", "classId"].includes(f.id));
+    return allOrderedFields.filter((field) => !["studentId", "sessionId", "classId"].includes(field.id));
   }, [allOrderedFields]);
 
   return (
@@ -134,7 +134,7 @@ export function Step6Confirmation({
                 <textarea
                   id="enrollment-notes"
                   value={notes}
-                  onChange={(e) => onNotesChange(e.target.value)}
+                  onChange={(event) => onNotesChange(event.target.value)}
                   rows={3}
                   placeholder="Any additional notes about this enrollment…"
                   className={FORM_TEXTAREA}
@@ -145,7 +145,7 @@ export function Step6Confirmation({
           }
 
           if (!["studentId", "sessionId", "classId", "notes"].includes(field.id)) {
-            const val = customFieldValues[field.id] ?? "";
+            const fieldValue = customFieldValues[field.id] ?? "";
             return (
               <div key={field.id}>
                 <label className={FORM_LABEL}>
@@ -155,22 +155,22 @@ export function Step6Confirmation({
                   <textarea
                     className={FORM_TEXTAREA}
                     rows={3}
-                    value={val}
-                    onChange={(e) => onCustomFieldChange(field.id, e.target.value)}
+                    value={fieldValue}
+                    onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
                     required={field.required}
                   />
                 ) : field.type === "select" ? (
                   <select
                     className={FORM_SELECT}
-                    value={val}
-                    onChange={(e) => onCustomFieldChange(field.id, e.target.value)}
+                    value={fieldValue}
+                    onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
                     required={field.required}
                   >
                     <option value="">Select option…</option>
-                    {field.options?.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
+                    {field.options?.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
                       </option>
                     ))}
                   </select>
@@ -178,8 +178,8 @@ export function Step6Confirmation({
                   <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
-                      checked={!!val}
-                      onChange={(e) => onCustomFieldChange(field.id, e.target.checked)}
+                      checked={!!fieldValue}
+                      onChange={(event) => onCustomFieldChange(field.id, event.target.checked)}
                       className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
                     />
                     <span className="text-xs font-medium text-foreground">{field.label}</span>
@@ -188,8 +188,8 @@ export function Step6Confirmation({
                   <input
                     type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "email" ? "email" : field.type === "url" ? "url" : "text"}
                     className={FORM_INPUT}
-                    value={val}
-                    onChange={(e) => onCustomFieldChange(field.id, e.target.value)}
+                    value={fieldValue}
+                    onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
                     required={field.required}
                   />
@@ -210,8 +210,8 @@ export function Step6Confirmation({
           "Invoice auto-generated for PKR " + (feeResult?.finalFee?.toLocaleString() || "—"),
           "Notification sent to parent/guardian",
           "Status → Confirmed once payment is received",
-        ].map((item, i) => (
-          <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+        ].map((item, index) => (
+          <div key={`${index}-${item}`} className="flex items-start gap-2 text-xs text-muted-foreground">
             <CheckCircle2 className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
             <span>{item}</span>
           </div>

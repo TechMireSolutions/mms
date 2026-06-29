@@ -34,9 +34,9 @@ export function Step3Eligibility({ student, session, suggestedClass }: Step3Elig
     [student, session, suggestedClass]
   );
 
-  const passCount = checks.filter((c) => c.status === "pass").length;
-  const failCount = checks.filter((c) => c.status === "fail").length;
-  const warnCount = checks.filter((c) => c.status === "warn").length;
+  const passCount = checks.filter((check) => check.status === "pass").length;
+  const failCount = checks.filter((check) => check.status === "fail").length;
+  const warnCount = checks.filter((check) => check.status === "warn").length;
   const canProceed = failCount === 0;
 
   return (
@@ -70,12 +70,12 @@ export function Step3Eligibility({ student, session, suggestedClass }: Step3Elig
 
       {/* Check rows */}
       <div className="space-y-2" role="list" aria-label="Eligibility check details">
-        {checks.map((c) => (
-          <div key={c.id} className={`flex items-start gap-3 p-3 rounded-xl border ${ROW_COLORS[c.status]}`} role="listitem">
-            <div className="mt-0.5">{ICONS[c.status]}</div>
+        {checks.map((check) => (
+          <div key={check.id} className={`flex items-start gap-3 p-3 rounded-xl border ${ROW_COLORS[check.status]}`} role="listitem">
+            <div className="mt-0.5">{ICONS[check.status]}</div>
             <div className="flex-1 min-w-0">
-              <p className={`text-xs font-bold ${LABEL_COLORS[c.status]}`}>{c.label}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{c.detail}</p>
+              <p className={`text-xs font-bold ${LABEL_COLORS[check.status]}`}>{check.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{check.detail}</p>
             </div>
           </div>
         ))}

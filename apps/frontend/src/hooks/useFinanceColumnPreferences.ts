@@ -54,8 +54,8 @@ export function useFinanceInvoiceColumnPreferencesMutation() {
         method: 'PUT',
         body: JSON.stringify({ preferences }),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(FINANCE_INVOICE_COLUMN_PREFERENCES_QUERY_KEY, data.preferences);
+    onSuccess: (response) => {
+      queryClient.setQueryData(FINANCE_INVOICE_COLUMN_PREFERENCES_QUERY_KEY, response.preferences);
     },
   });
 }
@@ -81,8 +81,8 @@ export function useFinancePaymentColumnPreferencesMutation() {
         method: 'PUT',
         body: JSON.stringify({ preferences }),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(FINANCE_PAYMENT_COLUMN_PREFERENCES_QUERY_KEY, data.preferences);
+    onSuccess: (response) => {
+      queryClient.setQueryData(FINANCE_PAYMENT_COLUMN_PREFERENCES_QUERY_KEY, response.preferences);
     },
   });
 }

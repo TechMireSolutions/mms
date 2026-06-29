@@ -47,8 +47,8 @@ export type AttendanceStatus = {
 };
 
 export function getAttendanceStatusInfo(status: string, customStatuses?: AttendanceStatus[]): AttendanceStatus {
-  const list = customStatuses && customStatuses.length > 0 ? customStatuses : ATTENDANCE_STATUSES;
-  const found = list.find((s) => s.id === status);
+  const statusList = customStatuses && customStatuses.length > 0 ? customStatuses : ATTENDANCE_STATUSES;
+  const found = statusList.find((statusOption) => statusOption.id === status);
   if (found) return found;
   return {
     id: status,
@@ -72,12 +72,12 @@ export const STATUS_MAP: Record<string, AttendanceStatus> = {
 export const CLASS_STUDENTS: Record<string, ClassStudent[]> = {};
 
 export function calcClassStats(classId: string, records: AttendanceRecord[]) {
-  const classRecs = records.filter(r => r.classId === classId);
+  const classRecords = records.filter((record) => record.classId === classId);
   const counts: Record<string, number> = {};
-  classRecs.forEach(r => {
-    counts[r.status] = (counts[r.status] || 0) + 1;
+  classRecords.forEach((record) => {
+    counts[record.status] = (counts[record.status] || 0) + 1;
   });
-  const total = classRecs.length;
+  const total = classRecords.length;
   const present = counts.present || 0;
   const late = counts.late || 0;
   const rate = total ? Math.round(((present + late) / total) * 100) : 0;
@@ -85,31 +85,31 @@ export function calcClassStats(classId: string, records: AttendanceRecord[]) {
 }
 
 export function calcStudentRate(studentId: string, records: AttendanceRecord[]): number {
-  const studRecs = records.filter(r => r.studentId === studentId);
-  const present = studRecs.filter(r => r.status === "present" || r.status === "late").length;
-  const total = studRecs.length;
+  const studentRecords = records.filter((record) => record.studentId === studentId);
+  const present = studentRecords.filter((record) => record.status === "present" || record.status === "late").length;
+  const total = studentRecords.length;
   return total ? Math.round((present / total) * 100) : 100;
 }
 
 export function getMonthlyTrend(classId: string, records: AttendanceRecord[]): { month: string; rate: number }[] {
-  const classRecs = records.filter(r => r.classId === classId);
+  const classRecords = records.filter((record) => record.classId === classId);
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const grouped: Record<string, { present: number; total: number }> = {};
-  classRecs.forEach(r => {
-    if (!r.date) return;
-    const dateObj = new Date(r.date);
-    const m = months[dateObj.getMonth()];
-    if (!grouped[m]) grouped[m] = { present: 0, total: 0 };
-    grouped[m].total++;
-    if (r.status === "present" || r.status === "late") {
-      grouped[m].present++;
+  classRecords.forEach((record) => {
+    if (!record.date) return;
+    const dateObj = new Date(record.date);
+    const month = months[dateObj.getMonth()];
+    if (!grouped[month]) grouped[month] = { present: 0, total: 0 };
+    grouped[month].total++;
+    if (record.status === "present" || record.status === "late") {
+      grouped[month].present++;
     }
   });
-  return months.map(m => {
-    const data = grouped[m];
+  return months.map((month) => {
+    const monthStats = grouped[month];
     return {
-      month: m,
-      rate: data && data.total ? Math.round((data.present / data.total) * 100) : 90
+      month,
+      rate: monthStats && monthStats.total ? Math.round((monthStats.present / monthStats.total) * 100) : 90
     };
   });
 }

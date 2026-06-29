@@ -4,15 +4,15 @@ import { X, CheckCircle2, Clock, AlertCircle, ReceiptText, User, Calendar, Credi
 import { Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
 
-const STATUS_CFG: Record<string, { label: string, cls: string, icon: React.ElementType }> = {
-  paid:      { label: "Paid",      cls: "bg-success/10 text-success border-success/20", icon: CheckCircle2 },
-  pending:   { label: "Pending",   cls: "bg-warning/10 text-warning border-warning/20",       icon: Clock },
-  overdue:   { label: "Overdue",   cls: "bg-destructive/10 text-destructive border-destructive/20",             icon: AlertCircle },
-  partial:   { label: "Partial",   cls: "bg-info/10 text-info border-info/20",          icon: Clock },
-  cancelled: { label: "Cancelled", cls: "bg-muted text-muted-foreground border-border",      icon: X },
+const STATUS_CONFIG: Record<string, { label: string, className: string, icon: React.ElementType }> = {
+  paid:      { label: "Paid",      className: "bg-success/10 text-success border-success/20", icon: CheckCircle2 },
+  pending:   { label: "Pending",   className: "bg-warning/10 text-warning border-warning/20",       icon: Clock },
+  overdue:   { label: "Overdue",   className: "bg-destructive/10 text-destructive border-destructive/20",             icon: AlertCircle },
+  partial:   { label: "Partial",   className: "bg-info/10 text-info border-info/20",          icon: Clock },
+  cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground border-border",      icon: X },
 };
 
-const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
+const formatMoney = (amount: number) => `PKR ${Number(amount).toLocaleString()}`;
 
 interface InvoiceDetailProps {
   invoice: Invoice;
@@ -30,15 +30,15 @@ interface InvoiceDetailProps {
  * @returns {React.ReactElement}
  */
 export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps) {
-  const sCfg = STATUS_CFG[invoice.status] || STATUS_CFG.pending;
-  const StatusIcon = sCfg.icon;
+  const statusConfig = STATUS_CONFIG[invoice.status] || STATUS_CONFIG.pending;
+  const StatusIcon = statusConfig.icon;
 
   const rows = [
-    { label: "Base Fee", value: fmt(invoice.baseFee), highlight: false, neg: false },
-    ...(invoice.discountAmt > 0 ? [{ label: `Discount (${invoice.discountType} – ${invoice.discountValue}%)`, value: `– ${fmt(invoice.discountAmt)}`, highlight: false, neg: true }] : []),
-    { label: "Final Amount", value: fmt(invoice.finalAmt), highlight: true, neg: false },
-    ...(invoice.paidAmt ? [{ label: "Amount Paid", value: fmt(invoice.paidAmt), highlight: false, neg: false }] : []),
-    ...(invoice.paidAmt && invoice.paidAmt < invoice.finalAmt ? [{ label: "Balance Due", value: fmt(invoice.finalAmt - invoice.paidAmt), highlight: false, neg: true }] : []),
+    { label: "Base Fee", value: formatMoney(invoice.baseFee), highlight: false, neg: false },
+    ...(invoice.discountAmt > 0 ? [{ label: `Discount (${invoice.discountType} – ${invoice.discountValue}%)`, value: `– ${formatMoney(invoice.discountAmt)}`, highlight: false, neg: true }] : []),
+    { label: "Final Amount", value: formatMoney(invoice.finalAmt), highlight: true, neg: false },
+    ...(invoice.paidAmt ? [{ label: "Amount Paid", value: formatMoney(invoice.paidAmt), highlight: false, neg: false }] : []),
+    ...(invoice.paidAmt && invoice.paidAmt < invoice.finalAmt ? [{ label: "Balance Due", value: formatMoney(invoice.finalAmt - invoice.paidAmt), highlight: false, neg: true }] : []),
   ];
 
   return (
@@ -61,9 +61,9 @@ export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps
 
         <div className="px-6 py-5 space-y-5">
           {/* Status badge */}
-          <div className="flex items-center justify-between" aria-label={`Invoice Status: ${sCfg.label}`}>
-            <span className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${sCfg.cls}`}>
-              <StatusIcon className="w-3 h-3" aria-hidden="true" /> {sCfg.label}
+          <div className="flex items-center justify-between" aria-label={`Invoice Status: ${statusConfig.label}`}>
+            <span className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${statusConfig.className}`}>
+              <StatusIcon className="w-3 h-3" aria-hidden="true" /> {statusConfig.label}
             </span>
             <span className="text-[11px] text-muted-foreground">Due: {invoice.dueDate}</span>
           </div>

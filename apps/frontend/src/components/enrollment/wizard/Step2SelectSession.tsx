@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
  * @param date - Date string to format.
  * @returns Formatted date.
  */
-function fmt(date?: string): string {
+function formatDate(date?: string): string {
   if (!date) return "—";
   return new Date(date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
 }
@@ -41,7 +41,7 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
     }),
     [t],
   );
-  const activeSessions = sessions.filter((s) => s.status === "active");
+  const activeSessions = sessions.filter((session) => session.status === "active");
 
   return (
     <section className="space-y-4" aria-labelledby="step2-title">
@@ -56,8 +56,8 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
         )}
         {activeSessions.map((session) => {
           const selected = value?.id === session.id;
-          const totalSpots = (session.classes || []).reduce((sum, c) => sum + c.capacity, 0);
-          const totalEnrolled = (session.classes || []).reduce((sum, c) => sum + c.enrolled, 0);
+          const totalSpots = (session.classes || []).reduce((total, sessionClass) => total + sessionClass.capacity, 0);
+          const totalEnrolled = (session.classes || []).reduce((total, sessionClass) => total + sessionClass.enrolled, 0);
           const spotsLeft = totalSpots - totalEnrolled;
           const isFull = spotsLeft <= 0;
 
@@ -87,7 +87,7 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Calendar className="w-3 h-3" aria-hidden="true" />
-                      <span>{fmt(session.startDate)} – {fmt(session.endDate)}</span>
+                      <span>{formatDate(session.startDate)} – {formatDate(session.endDate)}</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Users className="w-3.5 h-3.5" aria-hidden="true" />
@@ -100,9 +100,9 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
                   </div>
                   {session.classes && session.classes.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {session.classes.map((c) => (
-                        <span key={c.id} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                          {c.name} ({c.capacity - c.enrolled} spots)
+                      {session.classes.map((sessionClass) => (
+                        <span key={sessionClass.id} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                          {sessionClass.name} ({sessionClass.capacity - sessionClass.enrolled} spots)
                         </span>
                       ))}
                     </div>

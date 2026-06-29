@@ -28,12 +28,12 @@ export function HasanatDashboard({
 }: HasanatDashboardProps) {
   const palette = useBrandPalette();
 
-  const totalStock = batches.reduce((s: number, b: StockBatch) => s + b.quantity, 0);
-  const totalRemaining = batches.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
-  const totalDistributed = distributions.reduce((s: number, d: Distribution) => s + d.quantity, 0);
-  const totalRedeemed = distributions.filter((d: Distribution) => d.status === "redeemed").reduce((s: number, d: Distribution) => s + d.quantity, 0);
-  const totalReturned = distributions.filter((d: Distribution) => d.status === "returned").reduce((s: number, d: Distribution) => s + d.quantity, 0);
-  const totalActive = distributions.filter((d: Distribution) => d.status === "active").reduce((s: number, d: Distribution) => s + d.quantity, 0);
+  const totalStock = batches.reduce((sum: number, batch: StockBatch) => sum + batch.quantity, 0);
+  const totalRemaining = batches.reduce((sum: number, batch: StockBatch) => sum + batch.remaining, 0);
+  const totalDistributed = distributions.reduce((sum: number, distribution: Distribution) => sum + distribution.quantity, 0);
+  const totalRedeemed = distributions.filter((distribution: Distribution) => distribution.status === "redeemed").reduce((sum: number, distribution: Distribution) => sum + distribution.quantity, 0);
+  const totalReturned = distributions.filter((distribution: Distribution) => distribution.status === "returned").reduce((sum: number, distribution: Distribution) => sum + distribution.quantity, 0);
+  const totalActive = distributions.filter((distribution: Distribution) => distribution.status === "active").reduce((sum: number, distribution: Distribution) => sum + distribution.quantity, 0);
   const usedPct = totalStock > 0 ? Math.round(((totalStock - totalRemaining) / totalStock) * 100) : 0;
 
   const pieData = useMemo(
@@ -61,32 +61,32 @@ export function HasanatDashboard({
     remaining: number;
     used: number;
   }
-  const denStock = denoms.map((den: Denomination): DenStockEntry => {
-    const denBatches = batches.filter((b: StockBatch) => b.denominationId === den.id);
-    const total = denBatches.reduce((s: number, b: StockBatch) => s + b.quantity, 0);
-    const remaining = denBatches.reduce((s: number, b: StockBatch) => s + b.remaining, 0);
-    return { ...den, total, remaining, used: total - remaining };
-  }).filter((d: DenStockEntry) => d.total > 0);
+  const denominationStock = denoms.map((denomination: Denomination): DenStockEntry => {
+    const denominationBatches = batches.filter((batch: StockBatch) => batch.denominationId === denomination.id);
+    const total = denominationBatches.reduce((sum: number, batch: StockBatch) => sum + batch.quantity, 0);
+    const remaining = denominationBatches.reduce((sum: number, batch: StockBatch) => sum + batch.remaining, 0);
+    return { ...denomination, total, remaining, used: total - remaining };
+  }).filter((denomination: DenStockEntry) => denomination.total > 0);
 
   return (
     <div className="space-y-5">
       {/* Stat cards */}
       <section aria-label="Hasanat Dashboard Statistics" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {stats.map((s, i) => {
-          const Icon = s.icon;
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
           return (
             <motion.div
-              key={s.label}
+              key={stat.label}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
-              className={`rounded-xl border ${s.border} bg-card p-3.5`}
+              transition={{ delay: index * 0.06 }}
+              className={`rounded-xl border ${stat.border} bg-card p-3.5`}
             >
-              <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center mb-2`} aria-hidden="true">
-                <Icon className={`w-4 h-4 ${s.color}`} />
+              <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center mb-2`} aria-hidden="true">
+                <Icon className={`w-4 h-4 ${stat.color}`} />
               </div>
-              <p className={`text-[20px] font-bold ${s.color} m-0`}>{s.value}</p>
-              <h3 className="text-[10px] text-muted-foreground font-medium mt-0.5 m-0">{s.label}</h3>
+              <p className={`text-[20px] font-bold ${stat.color} m-0`}>{stat.value}</p>
+              <h3 className="text-[10px] text-muted-foreground font-medium mt-0.5 m-0">{stat.label}</h3>
             </motion.div>
           );
         })}
@@ -102,14 +102,14 @@ export function HasanatDashboard({
               <Pie data={pieData} cx={60} cy={60} innerRadius={38} outerRadius={58} dataKey="value" paddingAngle={3}>
                 {pieData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
               </Pie>
-              <Tooltip formatter={(v) => [`${v} cards`, ""]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+              <Tooltip formatter={(value) => [`${value} cards`, ""]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
             </PieChart>
             <div className="space-y-2.5">
-              {pieData.map((d) => (
-                <div key={d.name} className="flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: d.color }} aria-hidden="true" />
-                  <span className="text-[12px] text-muted-foreground flex-1">{d.name}</span>
-                  <span className="text-[12px] font-bold text-foreground">{d.value}</span>
+              {pieData.map((entry) => (
+                <div key={entry.name} className="flex items-center gap-2.5">
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: entry.color }} aria-hidden="true" />
+                  <span className="text-[12px] text-muted-foreground flex-1">{entry.name}</span>
+                  <span className="text-[12px] font-bold text-foreground">{entry.value}</span>
                 </div>
               ))}
             </div>
@@ -120,22 +120,22 @@ export function HasanatDashboard({
         <section aria-label="Stock by Denomination" className="rounded-xl border border-border bg-card p-5">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0">Stock by Denomination</h3>
           <div className="space-y-3">
-            {denStock.map((den: DenStockEntry) => {
-              const pct = den.total > 0 ? Math.round((den.used / den.total) * 100) : 0;
+            {denominationStock.map((denomination: DenStockEntry) => {
+              const pct = denomination.total > 0 ? Math.round((denomination.used / denomination.total) * 100) : 0;
               return (
-                <div key={den.id}>
+                <div key={denomination.id}>
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[14px]" aria-hidden="true">{den.icon}</span>
-                      <span className="text-[12px] font-semibold text-foreground">{den.name}</span>
-                      <span className="text-[10px] font-bold text-muted-foreground">{den.points} pts</span>
+                      <span className="text-[14px]" aria-hidden="true">{denomination.icon}</span>
+                      <span className="text-[12px] font-semibold text-foreground">{denomination.name}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground">{denomination.points} pts</span>
                     </div>
-                    <span className="text-[11px] text-muted-foreground">{den.remaining}/{den.total}</span>
+                    <span className="text-[11px] text-muted-foreground">{denomination.remaining}/{denomination.total}</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${den.name} stock usage`}>
+                  <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${denomination.name} stock usage`}>
                     <div
                       className="h-full rounded-full transition-all"
-                      style={{ width: `${pct}%`, background: den.color }}
+                      style={{ width: `${pct}%`, background: denomination.color }}
                     />
                   </div>
                 </div>

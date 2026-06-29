@@ -59,15 +59,15 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
   );
   
   const allClasses = useMemo(() => {
-    return sessions.flatMap((s) =>
-      (s.classes || []).map((c) => ({ ...c, sessionId: s.id, sessionName: s.name }))
+    return sessions.flatMap((session) =>
+      (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
     );
   }, [sessions]);
 
-  const set = (k: keyof AttendanceFilterState, v: string) => onChange({ ...filters, [k]: v });
+  const setFilterValue = (key: keyof AttendanceFilterState, value: string) => onChange({ ...filters, [key]: value });
 
   const sessionClasses = filters.sessionId
-    ? allClasses.filter((c) => c.sessionId === filters.sessionId)
+    ? allClasses.filter((sessionClass) => sessionClass.sessionId === filters.sessionId)
     : allClasses;
 
   const today = new Date().toISOString().slice(0, 10);
@@ -91,7 +91,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
       <Button
         type="button"
         variant="ghost"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen((isOpen) => !isOpen)}
         aria-expanded={open}
         aria-controls="filters-panel"
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors h-auto rounded-none justify-between hover:text-foreground"
@@ -109,7 +109,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
               type="button"
               variant="ghost"
               size="sm"
-              onClick={(e) => { e.stopPropagation(); reset(); }}
+              onClick={(event) => { event.stopPropagation(); reset(); }}
               className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors h-auto p-0 hover:bg-transparent"
             >
               <X className="w-3 h-3" /> Clear
@@ -136,9 +136,9 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 <FormSelect
                   id="filter-session"
                   value={filters.sessionId}
-                  onChange={(val) => set("sessionId", val)}
+                  onChange={(value) => setFilterValue("sessionId", value)}
                   placeholder="All Sessions"
-                  options={sessions.map((s) => ({ value: s.id, label: s.name }))}
+                  options={sessions.map((session) => ({ value: session.id, label: session.name }))}
                 />
               </div>
 
@@ -148,9 +148,9 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 <FormSelect
                   id="filter-class"
                   value={filters.classId}
-                  onChange={(val) => set("classId", val)}
+                  onChange={(value) => setFilterValue("classId", value)}
                   placeholder="All Classes"
-                  options={sessionClasses.map((c) => ({ value: c.id, label: c.name }))}
+                  options={sessionClasses.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
                 />
               </div>
 
@@ -160,7 +160,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 <FormSelect
                   id="filter-teacher"
                   value={filters.teacherId}
-                  onChange={(val) => set("teacherId", val)}
+                  onChange={(value) => setFilterValue("teacherId", value)}
                   placeholder={t('attendance.filters.allTeachers')}
                   options={assignableTeachers.map((teacher) => ({ value: teacher.id, label: teacher.name || "Unknown" }))}
                 />
@@ -172,7 +172,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 <DatePicker
                   id="filter-date"
                   value={filters.date}
-                  onChange={(val) => set("date", val)}
+                  onChange={(value) => setFilterValue("date", value)}
                 />
               </div>
             </div>

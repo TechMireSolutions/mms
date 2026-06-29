@@ -22,7 +22,7 @@ interface DenomModalProps {
 function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
   const [data, setData] = useState<Denomination>(denom || { ...EMPTY });
   const presetColors = getDenominationPresetColors();
-  const upd = <K extends keyof Denomination>(f: K, v: Denomination[K]) => setData((d: Denomination) => ({ ...d, [f]: v }));
+  const updateField = <K extends keyof Denomination>(field: K, value: Denomination[K]) => setData((previousData: Denomination) => ({ ...previousData, [field]: value }));
 
   React.useEffect(() => {
     if (open) {
@@ -51,30 +51,30 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="denom-name" className={FORM_LABEL}>Card Name *</label>
-            <Input id="denom-name" className={FORM_INPUT} value={data.name} onChange={(e) => upd("name", e.target.value)} placeholder="e.g. Gold Card" />
+            <Input id="denom-name" className={FORM_INPUT} value={data.name} onChange={(event) => updateField("name", event.target.value)} placeholder="e.g. Gold Card" />
           </div>
           <div>
             <label htmlFor="denom-pts" className={FORM_LABEL}>Points Value *</label>
-            <Input id="denom-pts" type="number" className={FORM_INPUT} value={data.points} onChange={(e) => upd("points", +e.target.value)} min={1} />
+            <Input id="denom-pts" type="number" className={FORM_INPUT} value={data.points} onChange={(event) => updateField("points", +event.target.value)} min={1} />
           </div>
         </div>
         <div>
           <label htmlFor="denom-desc" className={FORM_LABEL}>Description</label>
-          <Input id="denom-desc" className={FORM_INPUT} value={data.description} onChange={(e) => upd("description", e.target.value)} placeholder="When is this card awarded?" />
+          <Input id="denom-desc" className={FORM_INPUT} value={data.description} onChange={(event) => updateField("description", event.target.value)} placeholder="When is this card awarded?" />
         </div>
 
         <fieldset>
           <legend className={FORM_LABEL}>Icon</legend>
           <div className="flex gap-2 flex-wrap">
-            {PRESET_ICONS.map((ic) => (
+            {PRESET_ICONS.map((icon) => (
               <Button
                 type="button"
-                aria-pressed={data.icon === ic}
-                key={ic}
-                onClick={() => upd("icon", ic)}
-                className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${data.icon === ic ? "bg-primary/15 ring-2 ring-primary" : "bg-muted hover:bg-muted/80"}`}
+                aria-pressed={data.icon === icon}
+                key={icon}
+                onClick={() => updateField("icon", icon)}
+                className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${data.icon === icon ? "bg-primary/15 ring-2 ring-primary" : "bg-muted hover:bg-muted/80"}`}
               >
-                {ic}
+                {icon}
               </Button>
             ))}
           </div>
@@ -83,24 +83,24 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
         <fieldset>
           <legend className={FORM_LABEL}>Color</legend>
           <div className="flex gap-2 flex-wrap items-center">
-            {presetColors.map((c) => (
+            {presetColors.map((color) => (
               <Button
                 type="button"
-                aria-pressed={data.color === c}
-                aria-label={`Select color ${c}`}
-                key={c}
-                onClick={() => upd("color", c)}
-                className={`w-7 h-7 rounded-full border-2 transition-all ${data.color === c ? "border-foreground scale-110" : "border-transparent"}`}
-                style={{ background: c }}
+                aria-pressed={data.color === color}
+                aria-label={`Select color ${color}`}
+                key={color}
+                onClick={() => updateField("color", color)}
+                className={`w-7 h-7 rounded-full border-2 transition-all ${data.color === color ? "border-foreground scale-110" : "border-transparent"}`}
+                style={{ background: color }}
               />
             ))}
             <label className="sr-only" htmlFor="custom-color">Custom Color</label>
-            <Input id="custom-color" type="color" value={data.color} onChange={(e) => upd("color", e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 p-0" title="Custom color" />
+            <Input id="custom-color" type="color" value={data.color} onChange={(event) => updateField("color", event.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 p-0" title="Custom color" />
           </div>
         </fieldset>
 
         <label className="flex items-center gap-2.5 cursor-pointer">
-          <Checkbox checked={data.active} onCheckedChange={(checked) => upd("active", !!checked)} />
+          <Checkbox checked={data.active} onCheckedChange={(checked) => updateField("active", !!checked)} />
           <span className="text-sm font-medium text-foreground">Active</span>
         </label>
       </div>
@@ -127,14 +127,14 @@ export function DenominationsManager({ denoms, onUpdate }: DenominationsManagerP
   const [showModal, setShowModal] = useState(false);
   const [editDenom, setEditDenom] = useState<Denomination | null>(null);
 
-  const handleSave = (d: Denomination) => {
-    const existing = denoms.find((x) => x.id === d.id);
-    onUpdate(existing ? denoms.map((x) => x.id === d.id ? d : x) : [...denoms, d]);
+  const handleSave = (denomination: Denomination) => {
+    const existing = denoms.find((candidate) => candidate.id === denomination.id);
+    onUpdate(existing ? denoms.map((candidate) => candidate.id === denomination.id ? denomination : candidate) : [...denoms, denomination]);
     setShowModal(false); setEditDenom(null);
   };
 
-  const toggleActive = (id: string) => onUpdate(denoms.map((d) => d.id === id ? { ...d, active: !d.active } : d));
-  const handleDelete = (id: string) => onUpdate(denoms.filter((d) => d.id !== id));
+  const toggleActive = (id: string) => onUpdate(denoms.map((denomination) => denomination.id === id ? { ...denomination, active: !denomination.active } : denomination));
+  const handleDelete = (id: string) => onUpdate(denoms.filter((denomination) => denomination.id !== id));
 
   return (
     <section aria-label="Denominations Manager" className="space-y-4">
@@ -150,38 +150,38 @@ export function DenominationsManager({ denoms, onUpdate }: DenominationsManagerP
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {denoms.map((d, i) => (
+        {denoms.map((denomination, index) => (
           <motion.article
-            key={d.id}
+            key={denomination.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
-            className={`rounded-xl border border-border bg-card p-4 group ${!d.active ? "opacity-60" : ""}`}
+            transition={{ delay: index * 0.06 }}
+            className={`rounded-xl border border-border bg-card p-4 group ${!denomination.active ? "opacity-60" : ""}`}
           >
             {/* Card visual */}
-            <header className="relative mb-3 h-16 rounded-xl flex items-center gap-3 px-4 text-white shadow-md overflow-hidden" style={{ background: `linear-gradient(135deg, ${d.color}, ${d.color}99)` }}>
-              <span className="text-3xl" aria-hidden="true">{d.icon}</span>
+            <header className="relative mb-3 h-16 rounded-xl flex items-center gap-3 px-4 text-white shadow-md overflow-hidden" style={{ background: `linear-gradient(135deg, ${denomination.color}, ${denomination.color}99)` }}>
+              <span className="text-3xl" aria-hidden="true">{denomination.icon}</span>
               <div>
-                <h3 className="text-[13px] font-bold m-0">{d.name}</h3>
-                <p className="text-[11px] opacity-80 m-0">{d.points} points</p>
+                <h3 className="text-[13px] font-bold m-0">{denomination.name}</h3>
+                <p className="text-[11px] opacity-80 m-0">{denomination.points} points</p>
               </div>
-              {!d.active && (
+              {!denomination.active && (
                 <span className="absolute top-2 right-2 text-[9px] font-bold bg-black/30 text-white px-1.5 py-0.5 rounded" aria-label="Inactive denomination">INACTIVE</span>
               )}
             </header>
 
-            <p className="text-[12px] text-muted-foreground mb-3">{d.description || "No description"}</p>
+            <p className="text-[12px] text-muted-foreground mb-3">{denomination.description || "No description"}</p>
 
             <footer className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-foreground px-2 py-1 rounded-lg bg-muted">{d.points} pts</span>
+              <span className="text-[11px] font-bold text-foreground px-2 py-1 rounded-lg bg-muted">{denomination.points} pts</span>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" type="button" onClick={() => toggleActive(d.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={d.active ? "Deactivate" : "Activate"} aria-label={d.active ? "Deactivate" : "Activate"}>
-                  {d.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
+                <Button variant="ghost" type="button" onClick={() => toggleActive(denomination.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={denomination.active ? "Deactivate" : "Activate"} aria-label={denomination.active ? "Deactivate" : "Activate"}>
+                  {denomination.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
                 </Button>
-                <Button variant="ghost" type="button" aria-label={`Edit ${d.name}`} onClick={() => { setEditDenom(d); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" type="button" aria-label={`Edit ${denomination.name}`} onClick={() => { setEditDenom(denomination); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
                   <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
-                <Button variant="ghost" type="button" aria-label={`Delete ${d.name}`} onClick={() => handleDelete(d.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                <Button variant="ghost" type="button" aria-label={`Delete ${denomination.name}`} onClick={() => handleDelete(denomination.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
               </div>

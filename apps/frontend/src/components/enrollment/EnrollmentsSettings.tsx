@@ -16,7 +16,6 @@ import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";
 import { Checkbox } from "../ui/checkbox";
 import { Modal } from "../ui/Modal";
-import { useTranslation } from "@/hooks/useTranslation";
 
 interface ToggleProps {
   label: string;
@@ -47,18 +46,11 @@ interface EnrollmentsSettingsProps {
 
 function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
   if (!savedOrder || savedOrder.length === 0) return fields;
-  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
-  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
-}
-
-function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
-  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
-  const added = newFieldIds.filter((id) => !kept.includes(id));
-  return [...kept, ...added];
+  const orderByFieldKey = Object.fromEntries(savedOrder.map((key, index) => [key, index]));
+  return [...fields].sort((firstField, secondField) => (orderByFieldKey[firstField.key] ?? 9999) - (orderByFieldKey[secondField.key] ?? 9999)) as FieldDefinition[];
 }
 
 export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.JSX.Element {
-  const { t } = useTranslation();
   const { settings, updateSettings } = useEnrollmentConfig();
   const [saved, setSaved] = useState<boolean>(false);
 
@@ -130,14 +122,14 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
     setAllowTransfers(settings.allowTransfers);
     setReenrollmentReminder(settings.reenrollmentReminder);
 
-    const coreKeys = new Set(ENROLLMENTS_TAB_REGISTRY.map((t: any) => t.key));
-    const customTabs = (settings.formTabs || []).filter((t: any) => !coreKeys.has(t.key));
+    const coreTabKeys = new Set(ENROLLMENTS_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition: any) => !coreTabKeys.has(tabDefinition.key));
     const updatedTabs = [
       ...ENROLLMENTS_TAB_REGISTRY,
       ...customTabs
-    ].map((t: any) => ({
-      ...t,
-      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    ].map((tabDefinition: any) => ({
+      ...tabDefinition,
+      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     }));
 
     resetAllState(
@@ -186,12 +178,12 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
   };
 
   const handleSave = (): void => {
-    const updatedFormTabs = formTabs.map(t => ({
-      ...t,
-      enabled: enabledTabs.has(t.key)
+    const updatedFormTabs = formTabs.map((tabDefinition) => ({
+      ...tabDefinition,
+      enabled: enabledTabs.has(tabDefinition.key)
     }));
 
-    const cfg: EnrollmentsSettingsData = {
+    const nextSettings: EnrollmentsSettingsData = {
       ...settings,
       maxStudentsPerClass,
       dropDeadlineDays,
@@ -207,7 +199,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
       fields: buildFieldsMap(),
     };
 
-    updateSettings(cfg);
+    updateSettings(nextSettings);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -233,7 +225,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
                 id="maxStudentsPerClass"
                 type="number"
                 value={maxStudentsPerClass}
-                onChange={(e) => { setMaxStudentsPerClass(e.target.value); setSaved(false); }}
+                onChange={(event) => { setMaxStudentsPerClass(event.target.value); setSaved(false); }}
               />
             </div>
             <div>
@@ -242,7 +234,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
                 id="dropDeadlineDays"
                 type="number"
                 value={dropDeadlineDays}
-                onChange={(e) => { setDropDeadlineDays(e.target.value); setSaved(false); }}
+                onChange={(event) => { setDropDeadlineDays(event.target.value); setSaved(false); }}
               />
             </div>
           </div>
@@ -252,37 +244,37 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
               label="Enable Waitlist"
               description="Allow students to join a waitlist when class is full"
               value={waitlistEnabled}
-              onChange={(v) => { setWaitlistEnabled(v); setSaved(false); }}
+              onChange={(value) => { setWaitlistEnabled(value); setSaved(false); }}
             />
             <Toggle
               label="Require Eligibility Check"
               description="Run eligibility rules before confirming enrollment"
               value={requireEligibilityCheck}
-              onChange={(v) => { setRequireEligibilityCheck(v); setSaved(false); }}
+              onChange={(value) => { setRequireEligibilityCheck(value); setSaved(false); }}
             />
             <Toggle
               label="Auto-assign to Class"
               description="System automatically places student in best available class"
               value={autoAssignClass}
-              onChange={(v) => { setAutoAssignClass(v); setSaved(false); }}
+              onChange={(value) => { setAutoAssignClass(value); setSaved(false); }}
             />
             <Toggle
               label="Enrollment Requires Approval"
               description="Admin must approve each enrollment"
               value={enrollmentApproval}
-              onChange={(v) => { setEnrollmentApproval(v); setSaved(false); }}
+              onChange={(value) => { setEnrollmentApproval(value); setSaved(false); }}
             />
             <Toggle
               label="Allow Class Transfers"
               description="Students can be transferred between classes"
               value={allowTransfers}
-              onChange={(v) => { setAllowTransfers(v); setSaved(false); }}
+              onChange={(value) => { setAllowTransfers(value); setSaved(false); }}
             />
             <Toggle
               label="Re-enrollment Reminder"
               description="Remind guardians when re-enrollment period opens"
               value={reenrollmentReminder}
-              onChange={(v) => { setReenrollmentReminder(v); setSaved(false); }}
+              onChange={(value) => { setReenrollmentReminder(value); setSaved(false); }}
             />
           </div>
         </>
@@ -304,7 +296,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
             const tabId = tab.key;
             const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
             const tabDesc = tab.description;
-            const tabDefs = tabFields[tabId] || [];
+            const tabDefinitions = Array.isArray(tabFields[tabId]) ? tabFields[tabId] : [];
             const enabledSet = tabFieldEnabled[tabId] || new Set();
             const requiredSet = tabFieldRequired[tabId] || new Set();
             const isOn = tabId === "basic" ? true : enabledTabs.has(tabId);
@@ -341,7 +333,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
                           <Button
                             type="button"
                             variant="ghost"
-                            onClick={() => handleDeleteTab(tabId)}
+                            onClick={() => handleDeleteTabLocal(tabId)}
                             className="p-1 h-6 w-6 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
                             title="Delete Tab"
                           >
@@ -353,7 +345,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
                     <p className="text-xs text-muted-foreground">{tabDesc}</p>
                   </div>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                    {tabDefinitions.filter((field) => enabledSet.has(field.key)).length}/{tabDefinitions.length}
                   </span>
                   {tabId !== "basic" && isOn && (
                     <Button
@@ -376,27 +368,27 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
                   <div className="p-3 space-y-3">
                     <CoreFieldEditorList
                       tabId={tabId}
-                      fields={getOrderedFields(tabDefs, tabFieldOrder[tabId])}
+                      fields={getOrderedFields(tabDefinitions, tabFieldOrder[tabId])}
                       enabledSet={enabledSet}
                       requiredSet={requiredSet}
                       onToggleEnabled={(fieldId: string) => handleToggleFieldEnabled(tabId, fieldId)}
                       onToggleRequired={(fieldId: string) => handleToggleFieldRequired(tabId, fieldId)}
                       onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
                       onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
-                      isUniqueField={(tid: string, fid: string) => tabFieldUnique[tid]?.has(fid) || false}
-                      isCoreField={(key: string) => INITIAL_ENROLLMENTS_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+                      isUniqueField={(targetTabId: string, fieldId: string) => tabFieldUnique[targetTabId]?.has(fieldId) || false}
+                      isCoreField={(key: string) => INITIAL_ENROLLMENTS_FIELD_SEED[tabId]?.some((field: any) => field.key === key) ?? false}
                       defaultValues={tabFieldDefaultValues[tabId]}
                       permissions={tabFieldPermissions[tabId]}
-                      onChangeDefaults={(fieldId: string, val: unknown) => {
-                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                      onChangeDefaults={(fieldId: string, value: unknown) => {
+                        setTabFieldDefaultValues((previousValues) => ({ ...previousValues, [tabId]: { ...previousValues[tabId], [fieldId]: value } }));
                         setSaved(false);
                       }}
                       onChangePermissions={(fieldId: string, roles: string[]) => {
-                        setTabFieldPermissions(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: roles } }));
+                        setTabFieldPermissions((previousPermissions) => ({ ...previousPermissions, [tabId]: { ...previousPermissions[tabId], [fieldId]: roles } }));
                         setSaved(false);
                       }}
-                      onEditField={(f: FieldDefinition) => handleEditField(tabId, f)}
-                      onDeleteField={(id: string) => handleDeleteField(tabId, id)}
+                      onEditField={(field: FieldDefinition) => handleEditFieldLocal(tabId, field)}
+                      onDeleteField={(fieldId: string) => handleDeleteFieldLocal(tabId, fieldId)}
                       labels={{
                         required: "Required",
                         optional: "Optional",
@@ -406,9 +398,9 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
                     />
                     <div className="border-t border-border pt-3">
                       <CustomFieldsBuilder
-                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        fields={tabDefinitions.map((field) => ({...field, id: field.key})) as unknown as CustomFieldConfig[]}
                         droppableId={`custom-fields-${tabId}`}
-                        onChange={(f) => handleCustomFieldsChange(tabId, f)}
+                        onChange={(fields) => handleCustomFieldsChangeLocal(tabId, fields)}
                       />
                     </div>
                   </div>
@@ -453,7 +445,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
             </Button>
             <Button
               onClick={() => {
-                handleAddTab(newTabLabel);
+                handleAddTabLocal(newTabLabel);
                 setIsAddTabModalOpen(false);
                 setNewTabLabel("");
               }}
@@ -470,7 +462,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
           <Input
             id="newTabLabel"
             value={newTabLabel}
-            onChange={(e) => setNewTabLabel(e.target.value)}
+            onChange={(event) => setNewTabLabel(event.target.value)}
             placeholder="e.g. Extra Info"
             autoFocus
           />
@@ -501,7 +493,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
             <Button
               onClick={() => {
                 if (renamingTabKey) {
-                  handleRenameTab(renamingTabKey, renameTabLabel);
+                  handleRenameTabLocal(renamingTabKey, renameTabLabel);
                 }
                 setRenamingTabKey(null);
                 setRenameTabLabel("");
@@ -519,7 +511,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
           <Input
             id="renameTabLabel"
             value={renameTabLabel}
-            onChange={(e) => setRenameTabLabel(e.target.value)}
+            onChange={(event) => setRenameTabLabel(event.target.value)}
             placeholder="e.g. Custom Fields"
             autoFocus
           />

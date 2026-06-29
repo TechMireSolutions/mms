@@ -17,7 +17,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
   labels: {
     trigger: string;
     title: string;
@@ -32,27 +32,27 @@ interface RedeemModalProps {
   open: boolean;
   distributions: Distribution[];
   onClose: () => void;
-  onSave: (red: Redemption) => void;
+  onSave: (redemption: Redemption) => void;
 }
 
 function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps) {
   const { t } = useTranslation();
-  const activeDistr = distributions.filter((d) => d.status === "active");
+  const activeDistributions = distributions.filter((distribution) => distribution.status === "active");
   const users = useLiveCollection<SystemUser>("users");
   const [data, setData] = useState<Partial<Redemption>>({
-    distributionId: activeDistr[0]?.id || "",
+    distributionId: activeDistributions[0]?.id || "",
     reward: "",
     pointsUsed: 0,
     date: new Date().toISOString().split("T")[0],
     approvedByUserId: "",
   });
 
-  const upd = <K extends keyof Redemption>(f: K, v: Redemption[K]) => setData((d: Partial<Redemption>) => ({ ...d, [f]: v }));
-  const selected = activeDistr.find((d) => d.id === data.distributionId);
+  const updateField = <K extends keyof Redemption>(field: K, value: Redemption[K]) => setData((previousData: Partial<Redemption>) => ({ ...previousData, [field]: value }));
+  const selectedDistribution = activeDistributions.find((distribution) => distribution.id === data.distributionId);
 
   React.useEffect(() => {
     if (open) {
-      const active = distributions.filter((d) => d.status === "active");
+      const active = distributions.filter((distribution) => distribution.status === "active");
       setData({
         distributionId: active[0]?.id || "",
         reward: "",
@@ -72,13 +72,13 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
       onSave={() => {
-        const selectedUser = users.find((u) => u.id === data.approvedByUserId);
+        const selectedUser = users.find((user) => user.id === data.approvedByUserId);
         const approvedBy = selectedUser ? selectedUser.name : (data.approvedByUserId ? `User #${data.approvedByUserId}` : '');
         onSave({
           ...data,
           id: `red${Date.now()}`,
           pointsUsed: Number(data.pointsUsed),
-          studentName: selected?.recipientName || "",
+          studentName: selectedDistribution?.recipientName || "",
           approvedBy,
         } as Redemption);
       }}
@@ -90,31 +90,31 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
           <FormSelect
             id="dist-sel"
             value={data.distributionId || ""}
-            onChange={(val) => upd("distributionId", val)}
-            options={activeDistr.map((d) => ({
-              value: d.id,
-              label: `${d.recipientName} — ${d.denominationName} × ${d.quantity}`
+            onChange={(value) => updateField("distributionId", value)}
+            options={activeDistributions.map((distribution) => ({
+              value: distribution.id,
+              label: `${distribution.recipientName} — ${distribution.denominationName} × ${distribution.quantity}`
             }))}
           />
-          {selected && (
-            <p className="text-[11px] text-muted-foreground mt-1 m-0">{selected.reason}</p>
+          {selectedDistribution && (
+            <p className="text-[11px] text-muted-foreground mt-1 m-0">{selectedDistribution.reason}</p>
           )}
         </div>
         <div>
           <label htmlFor="reward-given" className={FORM_LABEL}>{t("hasanat.columns.redemption.reward")} *</label>
-          <Input id="reward-given" className={FORM_INPUT} value={data.reward} onChange={(e) => upd("reward", e.target.value)} placeholder={t("hasanat.rewardPlaceholder")} />
+          <Input id="reward-given" className={FORM_INPUT} value={data.reward} onChange={(event) => updateField("reward", event.target.value)} placeholder={t("hasanat.rewardPlaceholder")} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="pts-used" className={FORM_LABEL}>{t("hasanat.columns.redemption.pointsUsed")} *</label>
-            <Input id="pts-used" type="number" className={FORM_INPUT} value={data.pointsUsed || ""} onChange={(e) => upd("pointsUsed", Number(e.target.value))} placeholder="0" min={1} />
+            <Input id="pts-used" type="number" className={FORM_INPUT} value={data.pointsUsed || ""} onChange={(event) => updateField("pointsUsed", Number(event.target.value))} placeholder="0" min={1} />
           </div>
           <div>
             <label htmlFor="red-date" className={FORM_LABEL}>{t("hasanat.columns.redemption.date")}</label>
             <DatePicker
               id="red-date"
               value={data.date || ""}
-              onChange={(val) => upd("date", val)}
+              onChange={(value) => updateField("date", value)}
             />
           </div>
         </div>
@@ -122,7 +122,7 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
           id="approved-by"
           label={t("hasanat.columns.redemption.approvedBy")}
           value={data.approvedByUserId || ""}
-          onChange={(id) => upd("approvedByUserId", id)}
+          onChange={(id) => updateField("approvedByUserId", id)}
           allowEmpty
         />
       </div>
@@ -132,7 +132,7 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
 
 export interface RedemptionTrackerProps {
   distributions: Distribution[];
-  onUpdateDistributions: (dists: Distribution[]) => void;
+  onUpdateDistributions: (distributions: Distribution[]) => void;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ColumnCustomizerProps;
@@ -158,11 +158,11 @@ export function RedemptionTracker({
     replaceRedemptions.mutate(next);
   }, [replaceRedemptions]);
 
-  const totalPts = redemptions.reduce((s: number, r: Redemption) => s + r.pointsUsed, 0);
+  const totalPoints = redemptions.reduce((sum: number, redemption: Redemption) => sum + redemption.pointsUsed, 0);
 
-  const handleSave = (r: Redemption) => {
-    saveRedemptions([...redemptions, r]);
-    onUpdateDistributions(distributions.map((d: Distribution) => d.id === r.distributionId ? { ...d, status: "redeemed" as const } : d));
+  const handleSave = (redemption: Redemption) => {
+    saveRedemptions([...redemptions, redemption]);
+    onUpdateDistributions(distributions.map((distribution: Distribution) => distribution.id === redemption.distributionId ? { ...distribution, status: "redeemed" as const } : distribution));
     setShowModal(false);
   };
 
@@ -178,7 +178,7 @@ export function RedemptionTracker({
         <div className="flex items-center gap-2">
           <Star className="w-4 h-4 text-warning" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-foreground m-0">
-            {t("hasanat.redemptionsSummary", { count: redemptions.length, points: totalPts.toLocaleString() })}
+            {t("hasanat.redemptionsSummary", { count: redemptions.length, points: totalPoints.toLocaleString() })}
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -239,27 +239,27 @@ export function RedemptionTracker({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
-                {redemptions.map((r, i) => (
-                  <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="hover:bg-muted/20 transition-colors">
+                {redemptions.map((redemption, index) => (
+                  <motion.tr key={redemption.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.04 }} className="hover:bg-muted/20 transition-colors">
                     {showStudent && (
-                      <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{r.studentName || "—"}</td>
+                      <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{redemption.studentName || "—"}</td>
                     )}
                     {showReward && (
-                      <td className="px-4 py-3 text-[13px] text-foreground">{r.reward}</td>
+                      <td className="px-4 py-3 text-[13px] text-foreground">{redemption.reward}</td>
                     )}
                     {showPointsUsed && (
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3 text-warning" aria-hidden="true" />
-                          <span className="text-[13px] font-bold text-warning">{r.pointsUsed}</span>
+                          <span className="text-[13px] font-bold text-warning">{redemption.pointsUsed}</span>
                         </div>
                       </td>
                     )}
                     {showDate && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{r.date}</td>
+                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{redemption.date}</td>
                     )}
                     {showApprovedBy && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground">{r.approvedBy || "—"}</td>
+                      <td className="px-4 py-3 text-[12px] text-muted-foreground">{redemption.approvedBy || "—"}</td>
                     )}
                   </motion.tr>
                 ))}

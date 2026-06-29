@@ -48,13 +48,13 @@ export function useExaminationsExams(options?: { enabled?: boolean }) {
 
 export function useExaminationsExamsCollection(options?: { enabled?: boolean }): Exam[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useExaminationsExams({ enabled });
-  const fromLocal = useLiveCollection<Exam>('exams', [], { enabled });
+  const { data: queryExams = [] } = useExaminationsExams({ enabled });
+  const localExams = useLiveCollection<Exam>('exams', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryExams.length > 0) {
+    return queryExams;
   }
-  return fromLocal;
+  return localExams;
 }
 
 export function useExaminationsResults(options?: { enabled?: boolean }) {
@@ -70,13 +70,13 @@ export function useExaminationsResults(options?: { enabled?: boolean }) {
 
 export function useExaminationsResultsCollection(options?: { enabled?: boolean }): ExamResult[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useExaminationsResults({ enabled });
-  const fromLocal = useLiveCollection<ExamResult>('exam_results', [], { enabled });
+  const { data: queryResults = [] } = useExaminationsResults({ enabled });
+  const localResults = useLiveCollection<ExamResult>('exam_results', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryResults.length > 0) {
+    return queryResults;
   }
-  return fromLocal;
+  return localResults;
 }
 
 export function useExaminationsMetrics() {
@@ -101,8 +101,8 @@ export function useExaminationsMutations() {
         method: 'PUT',
         body: JSON.stringify(exams),
       }),
-    onSuccess: (data) => {
-      saveCollection('exams', data.exams);
+    onSuccess: (response) => {
+      saveCollection('exams', response.exams);
       void queryClient.invalidateQueries({ queryKey: EXAMINATIONS_EXAMS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: EXAMINATIONS_METRICS_QUERY_KEY });
     },
@@ -114,8 +114,8 @@ export function useExaminationsMutations() {
         method: 'PUT',
         body: JSON.stringify(results),
       }),
-    onSuccess: (data) => {
-      saveCollection('exam_results', data.results);
+    onSuccess: (response) => {
+      saveCollection('exam_results', response.results);
       void queryClient.invalidateQueries({ queryKey: EXAMINATIONS_RESULTS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: EXAMINATIONS_METRICS_QUERY_KEY });
     },
@@ -148,8 +148,8 @@ export function useExaminationExamColumnPreferencesMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(EXAMINATIONS_EXAM_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (response) => {
+      queryClient.setQueryData(EXAMINATIONS_EXAM_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
     },
   });
 }
@@ -175,8 +175,8 @@ export function useExaminationResultsColumnPreferencesMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(EXAMINATIONS_RESULTS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (response) => {
+      queryClient.setQueryData(EXAMINATIONS_RESULTS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
     },
   });
 }

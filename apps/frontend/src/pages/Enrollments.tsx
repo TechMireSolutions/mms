@@ -94,25 +94,25 @@ export default function Enrollments() {
   };
 
   const handleCancel = (id: string) => {
-    const e = enrollments.find((x) => x.id === id);
-    if (!e) return;
+    const enrollment = enrollments.find((candidate) => candidate.id === id);
+    if (!enrollment) return;
     updateEnrollment.mutate({
       id,
       enrollment: {
-        ...e,
+        ...enrollment,
         status: "cancelled" as const,
-        timeline: [...(e.timeline || []), { ts: new Date().toISOString(), event: "Enrollment cancelled", by: role }]
+        timeline: [...(enrollment.timeline || []), { ts: new Date().toISOString(), event: "Enrollment cancelled", by: role }]
       }
     });
   };
 
   const handleStatusChange = (id: string, newStatus: Enrollment["status"]) => {
-    const e = enrollments.find((x) => x.id === id);
-    if (!e) return;
+    const enrollment = enrollments.find((candidate) => candidate.id === id);
+    if (!enrollment) return;
     const updated: Enrollment = {
-      ...e,
+      ...enrollment,
       status: newStatus,
-      timeline: [...(e.timeline || []), { ts: new Date().toISOString(), event: `Status → ${newStatus}`, by: role }]
+      timeline: [...(enrollment.timeline || []), { ts: new Date().toISOString(), event: `Status → ${newStatus}`, by: role }]
     };
     updateEnrollment.mutate({
       id,
@@ -188,7 +188,7 @@ export default function Enrollments() {
               <EnrollmentList
                 enrollments={enrollments}
                 canWrite={canWriteEnrollments}
-                onView={(enr: Enrollment) => setViewing(enr)}
+                onView={(enrollment: Enrollment) => setViewing(enrollment)}
                 onCancel={handleCancel}
                 onFilteredCountChange={setFilteredCount}
                 isColumnVisible={columnLayout.isColumnVisible}

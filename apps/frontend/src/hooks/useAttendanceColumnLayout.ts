@@ -76,16 +76,16 @@ export function useAttendanceColumnLayout() {
   );
 
   const updateUserColumnLayout = useCallback(
-    (cols: ModuleColumnRegistryEntry[]) => {
+    (columns: ModuleColumnRegistryEntry[]) => {
       if (!userId) return;
-      saveModuleColumnRegistry(ATTENDANCE_MODULE_CONTRACT.moduleId, userId, cols);
-      const prefs: ModuleColumnPref[] = cols.map(({ key, enabled, order }) => ({
+      saveModuleColumnRegistry(ATTENDANCE_MODULE_CONTRACT.moduleId, userId, columns);
+      const preferences: ModuleColumnPref[] = columns.map(({ key, enabled, order }) => ({
         key,
         enabled,
         order,
       }));
-      setUserOverlay(prefs);
-      saveColumnPrefs(prefs);
+      setUserOverlay(preferences);
+      saveColumnPrefs(preferences);
     },
     [userId, saveColumnPrefs],
   );

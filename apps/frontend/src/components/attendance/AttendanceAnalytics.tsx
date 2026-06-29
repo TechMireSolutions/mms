@@ -67,32 +67,32 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
   const enrollments = useLiveCollection<Enrollment>("enrollments");
   
   const allClasses = useMemo(() => {
-    return sessions.flatMap((s) =>
-      (s.classes || []).map((c) => ({ ...c, sessionId: s.id, sessionName: s.name }))
+    return sessions.flatMap((session) =>
+      (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
     );
   }, [sessions]);
 
   const classesToShow = filters.classId
-    ? allClasses.filter((c) => c.id === filters.classId)
+    ? allClasses.filter((sessionClass) => sessionClass.id === filters.classId)
     : allClasses;
 
   const classStats = useMemo(() =>
-    classesToShow.map((c) => ({
-      name: c.name,
-      ...calcClassStats(c.id, records),
+    classesToShow.map((sessionClass) => ({
+      name: sessionClass.name,
+      ...calcClassStats(sessionClass.id, records),
     })),
     [classesToShow, records]
   );
 
   const totalStats = useMemo(() => {
     return classStats.reduce(
-      (acc, c) => {
-        Object.keys(c).forEach((key) => {
+      (totals, classStat) => {
+        Object.keys(classStat).forEach((key) => {
           if (key !== "name" && key !== "rate") {
-            acc[key] = (acc[key] || 0) + (c[key as keyof typeof c] as number || 0);
+            totals[key] = (totals[key] || 0) + (classStat[key as keyof typeof classStat] as number || 0);
           }
         });
-        return acc;
+        return totals;
       },
       {} as Record<string, number>
     );
@@ -125,21 +125,21 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
   interface StudentRateEntry { name: string; rate: number; }
 
   const studentRates = useMemo<StudentRateEntry[]>(() =>
-    students.map((st) => ({
-      name: st.name.split(" ")[0] + " " + (st.name.split(" ")[1]?.[0] ?? "") + ".",
-      rate: calcStudentRate(st.id, records),
-    })).sort((a, b) => a.rate - b.rate),
+    students.map((student) => ({
+      name: student.name.split(" ")[0] + " " + (student.name.split(" ")[1]?.[0] ?? "") + ".",
+      rate: calcStudentRate(student.id, records),
+    })).sort((firstStudent, secondStudent) => firstStudent.rate - secondStudent.rate),
     [students, trendClassId, records]
   );
 
-  const lowAttendance = studentRates.filter((s) => s.rate < 75);
-  const topStudents = [...studentRates].sort((a, b) => b.rate - a.rate).slice(0, 3);
+  const lowAttendance = studentRates.filter((studentRate) => studentRate.rate < 75);
+  const topStudents = [...studentRates].sort((firstStudent, secondStudent) => secondStudent.rate - firstStudent.rate).slice(0, 3);
 
   // Pie data
   const pieData = useMemo(() =>
-    statuses.map((s: AttendanceStatus) => ({
-      name: s.label,
-      value: totalStats[s.id] ?? 0,
+    statuses.map((status: AttendanceStatus) => ({
+      name: status.label,
+      value: totalStats[status.id] ?? 0,
     })),
     [statuses, totalStats]
   );
@@ -163,9 +163,9 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={(v) => `${v}%`} />
+              <Tooltip formatter={(value) => `${value}%`} />
               <Bar dataKey="rate" name="Attendance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}
-                label={{ position: "top", fontSize: 10, fill: "hsl(var(--muted-foreground))", formatter: (v) => v !== undefined && v !== null ? `${v}%` : "" }} />
+                label={{ position: "top", fontSize: 10, fill: "hsl(var(--muted-foreground))", formatter: (value) => value !== undefined && value !== null ? `${value}%` : "" }} />
             </BarChart>
           </ResponsiveContainer>
         </article>
@@ -184,7 +184,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={(v) => `${v}%`} />
+              <Tooltip formatter={(value) => `${value}%`} />
               <Area type="monotone" dataKey="rate" name="Attendance%" stroke="hsl(var(--primary))" fill="url(#att-grad)" strokeWidth={2} dot={{ r: 3 }} />
             </AreaChart>
           </ResponsiveContainer>
@@ -197,7 +197,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
             <BarChart data={studentRates} layout="vertical" barSize={12}>
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
               <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
-              <Tooltip formatter={(v) => `${v}%`} />
+              <Tooltip formatter={(value) => `${value}%`} />
               <Bar dataKey="rate" name="Rate" radius={[0, 4, 4, 0]}
                 fill="hsl(var(--primary))"
                 background={{ fill: "hsl(var(--muted))", radius: 4 }} />
@@ -212,17 +212,17 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
             <ResponsiveContainer width="60%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
               <PieChart>
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value">
-                  {pieData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
+                  {pieData.map((entry, index) => <Cell key={entry.name} fill={COLORS[index]} />)}
                 </Pie>
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
             <div className="space-y-2">
-              {statuses.map((s: AttendanceStatus, i: number) => (
-                <div key={s.id} className="flex items-center gap-2 text-xs">
-                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                  <span className="text-muted-foreground">{s.label}</span>
-                  <span className="font-bold text-foreground ml-auto">{totalStats[s.id] || 0}</span>
+              {statuses.map((status: AttendanceStatus, index: number) => (
+                <div key={status.id} className="flex items-center gap-2 text-xs">
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[index % COLORS.length] }} />
+                  <span className="text-muted-foreground">{status.label}</span>
+                  <span className="font-bold text-foreground ml-auto">{totalStats[status.id] || 0}</span>
                 </div>
               ))}
             </div>
@@ -238,10 +238,10 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
             <h3 className="text-sm font-bold text-warning m-0">Low Attendance Alert — {lowAttendance.length} student{lowAttendance.length > 1 ? "s" : ""} below 75%</h3>
           </div>
           <div className="flex flex-wrap gap-2">
-            {lowAttendance.map((s) => (
-              <div key={s.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-warning/30">
-                <span className="text-xs font-semibold text-foreground">{s.name}</span>
-                <span className="text-[11px] font-bold text-destructive">{s.rate}%</span>
+            {lowAttendance.map((studentRate) => (
+              <div key={studentRate.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-warning/30">
+                <span className="text-xs font-semibold text-foreground">{studentRate.name}</span>
+                <span className="text-[11px] font-bold text-destructive">{studentRate.rate}%</span>
               </div>
             ))}
           </div>
@@ -252,16 +252,16 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
       <article className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-sm font-bold text-foreground mb-3 m-0">Top Performers</h2>
         <div className="space-y-2">
-          {topStudents.map((s, i) => (
-            <div key={s.name} className="flex items-center gap-3">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${i === 0 ? "bg-warning/15 text-warning" : i === 1 ? "bg-muted text-muted-foreground" : "bg-warning/10 text-warning"}`}>{i + 1}</span>
+          {topStudents.map((studentRate, index) => (
+            <div key={studentRate.name} className="flex items-center gap-3">
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${index === 0 ? "bg-warning/15 text-warning" : index === 1 ? "bg-muted text-muted-foreground" : "bg-warning/10 text-warning"}`}>{index + 1}</span>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-sm font-semibold text-foreground">{s.name}</span>
-                  <span className="text-xs font-bold text-success">{s.rate}%</span>
+                  <span className="text-sm font-semibold text-foreground">{studentRate.name}</span>
+                  <span className="text-xs font-bold text-success">{studentRate.rate}%</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full bg-success" style={{ width: `${s.rate}%` }} />
+                  <div className="h-full rounded-full bg-success" style={{ width: `${studentRate.rate}%` }} />
                 </div>
               </div>
             </div>

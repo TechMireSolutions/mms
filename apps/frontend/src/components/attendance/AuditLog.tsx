@@ -31,24 +31,24 @@ interface AuditLogProps {
   filters: Partial<AttendanceFilterState>;
 }
 
-function fmt(ts?: string | number): string {
-  if (!ts) return "—";
-  const d = new Date(ts);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " · " + d.toLocaleDateString();
+function formatTimestamp(timestamp?: string | number): string {
+  if (!timestamp) return "—";
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " · " + date.toLocaleDateString();
 }
 
 import { useStudentsByIds } from "@/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 
-function describeEntry(e: AuditEntry, studentNameFor: (id?: string) => string): string {
-  if (e.action === "edit") {
-    const who = studentNameFor(e.studentId) || e.studentName || "student";
-    return `Changed ${e.field} from "${e.from}" → "${e.to}" for ${who}`;
+function describeEntry(entry: AuditEntry, studentNameFor: (id?: string) => string): string {
+  if (entry.action === "edit") {
+    const studentLabel = studentNameFor(entry.studentId) || entry.studentName || "student";
+    return `Changed ${entry.field} from "${entry.from}" → "${entry.to}" for ${studentLabel}`;
   }
-  if (e.action === "bulk_mark")   return `Marked all ${e.count} students as ${e.status}`;
-  if (e.action === "submitted")   return `Submitted ${e.count} records${e.geo ? ` · geo-tagged` : ""}`;
-  if (e.action === "draft_saved") return `Saved as draft`;
-  return e.action;
+  if (entry.action === "bulk_mark")   return `Marked all ${entry.count} students as ${entry.status}`;
+  if (entry.action === "submitted")   return `Submitted ${entry.count} records${entry.geo ? ` · geo-tagged` : ""}`;
+  if (entry.action === "draft_saved") return `Saved as draft`;
+  return entry.action;
 }
 
 /**
@@ -68,12 +68,12 @@ export function AuditLog({ filters }: AuditLogProps) {
 
   const studentNameFor = (id?: string): string => {
     if (!id) return "";
-    return students.find((s) => String(s.id) === String(id))?.name ?? "";
+    return students.find((student) => String(student.id) === String(id))?.name ?? "";
   };
   
   const allClasses = useMemo(() => {
-    return sessions.flatMap((s) =>
-      (s.classes || []).map((c) => ({ ...c, sessionId: s.id, sessionName: s.name }))
+    return sessions.flatMap((session) =>
+      (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
     );
   }, [sessions]);
 
@@ -124,11 +124,11 @@ export function AuditLog({ filters }: AuditLogProps) {
         <select 
           id="audit-class-select"
           value={classId} 
-          onChange={(e) => setClassId(e.target.value)}
+          onChange={(event) => setClassId(event.target.value)}
           className="text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           <option value="">All Classes</option>
-          {allClasses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {allClasses.map((sessionClass) => <option key={sessionClass.id} value={sessionClass.id}>{sessionClass.name}</option>)}
         </select>
         
         <DatePicker
@@ -158,16 +158,16 @@ export function AuditLog({ filters }: AuditLogProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {log.map((e, i) => {
-                const a = ACTION_LABELS[e.action] || { label: e.action, color: "bg-muted text-muted-foreground border-border" };
+              {log.map((entry, index) => {
+                const actionLabel = ACTION_LABELS[entry.action] || { label: entry.action, color: "bg-muted text-muted-foreground border-border" };
                 return (
-                  <tr key={i} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-3 py-2.5 text-[11px] font-mono text-muted-foreground whitespace-nowrap">{fmt(e.ts)}</td>
+                  <tr key={index} className="hover:bg-muted/20 transition-colors">
+                    <td className="px-3 py-2.5 text-[11px] font-mono text-muted-foreground whitespace-nowrap">{formatTimestamp(entry.ts)}</td>
                     <td className="px-3 py-2.5">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${a.color}`}>{a.label}</span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${actionLabel.color}`}>{actionLabel.label}</span>
                     </td>
-                    <td className="px-3 py-2.5 text-xs text-foreground">{describeEntry(e, studentNameFor)}</td>
-                    <td className="px-3 py-2.5 text-xs font-semibold text-muted-foreground capitalize">{e.by || "—"}</td>
+                    <td className="px-3 py-2.5 text-xs text-foreground">{describeEntry(entry, studentNameFor)}</td>
+                    <td className="px-3 py-2.5 text-xs font-semibold text-muted-foreground capitalize">{entry.by || "—"}</td>
                   </tr>
                 );
               })}

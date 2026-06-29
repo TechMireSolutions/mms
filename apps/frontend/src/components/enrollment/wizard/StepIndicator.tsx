@@ -23,9 +23,9 @@ interface StepIndicatorProps {
 export function StepIndicator({ steps, current }: StepIndicatorProps): React.ReactElement {
   return (
     <div className="flex items-center gap-0" role="list" aria-label="Enrollment progress steps">
-      {steps.map((step, i) => {
-        const done    = i < current;
-        const active  = i === current;
+      {steps.map((step, index) => {
+        const done    = index < current;
+        const active  = index === current;
         const Icon    = step.icon;
         return (
           <React.Fragment key={step.id}>
@@ -40,7 +40,7 @@ export function StepIndicator({ steps, current }: StepIndicatorProps): React.Rea
                   active ? "bg-primary/10 border-primary text-primary" :
                            "bg-muted border-border text-muted-foreground"
                 }`}
-                aria-label={`Step ${i + 1}: ${step.label} (${done ? "Completed" : active ? "Current" : "Upcoming"})`}
+                aria-label={`Step ${index + 1}: ${step.label} (${done ? "Completed" : active ? "Current" : "Upcoming"})`}
               >
                 {done ? (
                   <Check className="w-4 h-4" aria-hidden="true" />
@@ -56,7 +56,7 @@ export function StepIndicator({ steps, current }: StepIndicatorProps): React.Rea
                 {step.label}
               </span>
             </div>
-            {i < steps.length - 1 && (
+            {index < steps.length - 1 && (
               <div
                 className={`flex-1 h-0.5 mb-5 min-w-[16px] transition-colors ${done ? "bg-primary" : "bg-border"}`}
                 aria-hidden="true"

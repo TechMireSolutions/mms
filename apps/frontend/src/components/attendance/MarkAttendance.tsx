@@ -86,9 +86,9 @@ function loadQueue(): OfflinePayload[] {
   }
 }
 
-function saveQueue(q: OfflinePayload[]) {
+function saveQueue(queue: OfflinePayload[]) {
   try {
-    localStorage.setItem("att_offline_queue", JSON.stringify(q));
+    localStorage.setItem("att_offline_queue", JSON.stringify(queue));
   } catch (err) {
     console.error("Failed to save offline queue:", err);
   }
@@ -121,18 +121,18 @@ export function getAuditLog(classId: string, date: string): AuditEntry[] {
 
 // ── Default rows ──────────────────────────────────────────────────────────────
 function buildDefaultRows(students: ClassStudent[], customFields: ModuleCustomField[] = []): AttendanceRow[] {
-  return students.map((st) => {
+  return students.map((student) => {
     const row: AttendanceRow = {
-      studentId: st.id,
-      name: st.name,
-      rollNo: st.rollNo,
+      studentId: student.id,
+      name: student.name,
+      rollNo: student.rollNo,
       status: "present",
       timeIn: "07:00",
       timeOut: "08:30",
       notes: "",
     };
-    customFields.forEach((cf) => {
-      row[cf.id] = cf.defaultValue ?? "";
+    customFields.forEach((customField) => {
+      row[customField.id] = customField.defaultValue ?? "";
     });
     return row;
   });
@@ -284,13 +284,13 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
   const { data: enrolledStudents = [] } = useStudentsByIds(studentIds);
   
   const allClasses = useMemo(() => {
-    return sessions.flatMap((s) =>
-      (s.classes || []).map((c) => ({ ...c, sessionId: s.id, sessionName: s.name }))
+    return sessions.flatMap((session) =>
+      (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
     );
   }, [sessions]);
 
-  const classInfo  = useMemo(() => allClasses.find((c) => c.id === filters.classId), [allClasses, filters.classId]);
-  const sessionInfo = useMemo(() => classInfo ? sessions.find((s) => s.id === classInfo.sessionId) : null, [sessions, classInfo]);
+  const classInfo  = useMemo(() => allClasses.find((sessionClass) => sessionClass.id === filters.classId), [allClasses, filters.classId]);
+  const sessionInfo = useMemo(() => classInfo ? sessions.find((session) => session.id === classInfo.sessionId) : null, [sessions, classInfo]);
   const students: ClassStudent[] = useMemo(() => {
     if (!filters.classId) return [];
     const fromEnrollments = enrolledStudentsForClass(filters.classId, enrollments, enrolledStudents);
@@ -300,17 +300,17 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
   const [rows, setRows] = useState<AttendanceRow[]>(() => {
     if (!filters.classId || !filters.date) return [];
-    const existing = records.filter((r) => r.classId === filters.classId && r.date === filters.date);
+    const existing = records.filter((record) => record.classId === filters.classId && record.date === filters.date);
     if (existing.length > 0) {
-      return existing.map((r) => ({
-        studentId: r.studentId || "",
-        name: r.studentName || "",
-        rollNo: (r as AttendanceRecord & { rollNo?: string }).rollNo ?? "",
-        status: r.status,
-        timeIn: r.timeIn || "07:00",
-        timeOut: r.timeOut || "08:30",
-        notes: r.notes || "",
-        ...((r as any).customFields || {}),
+      return existing.map((record) => ({
+        studentId: record.studentId || "",
+        name: record.studentName || "",
+        rollNo: (record as AttendanceRecord & { rollNo?: string }).rollNo ?? "",
+        status: record.status,
+        timeIn: record.timeIn || "07:00",
+        timeOut: record.timeOut || "08:30",
+        notes: record.notes || "",
+        ...((record as any).customFields || {}),
       }));
     }
     return buildDefaultRows(students, customFields);
@@ -326,11 +326,11 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
   // Watch online/offline
   useEffect(() => {
-    const onOn  = () => setIsOffline(false);
-    const onOff = () => setIsOffline(true);
-    window.addEventListener("online", onOn);
-    window.addEventListener("offline", onOff);
-    return () => { window.removeEventListener("online", onOn); window.removeEventListener("offline", onOff); };
+    const handleOnline  = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => { window.removeEventListener("online", handleOnline); window.removeEventListener("offline", handleOffline); };
   }, []);
 
   // Rebuild rows when class/date/roster changes — must be in useEffect, never in render body
@@ -339,18 +339,18 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
   useEffect(() => {
     if (!filters.classId || !filters.date) return;
-    const existing = records.filter((r) => r.classId === filters.classId && r.date === filters.date);
+    const existing = records.filter((record) => record.classId === filters.classId && record.date === filters.date);
     let newRows: AttendanceRow[];
     if (existing.length > 0) {
-      newRows = existing.map((r) => ({
-        studentId: r.studentId || "",
-        name: r.studentName || "",
-        rollNo: (r as AttendanceRecord & { rollNo?: string }).rollNo ?? "",
-        status: r.status,
-        timeIn: r.timeIn || "07:00",
-        timeOut: r.timeOut || "08:30",
-        notes: r.notes || "",
-        ...((r as any).customFields || {}),
+      newRows = existing.map((record) => ({
+        studentId: record.studentId || "",
+        name: record.studentName || "",
+        rollNo: (record as AttendanceRecord & { rollNo?: string }).rollNo ?? "",
+        status: record.status,
+        timeIn: record.timeIn || "07:00",
+        timeOut: record.timeOut || "08:30",
+        notes: record.notes || "",
+        ...((record as any).customFields || {}),
       }));
     } else {
       newRows = buildDefaultRows(students, customFields);
@@ -365,21 +365,21 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
   }, [stableKey]);
 
   const filteredRows = useMemo(() =>
-    rows.filter((r) => r.name.toLowerCase().includes(search.toLowerCase())),
+    rows.filter((row) => row.name.toLowerCase().includes(search.toLowerCase())),
     [rows, search]
   );
 
   const stats = useMemo(() => {
     const counts: Record<string, number> = {};
-    rows.forEach((r) => {
-      counts[r.status] = (counts[r.status] || 0) + 1;
+    rows.forEach((row) => {
+      counts[row.status] = (counts[row.status] || 0) + 1;
     });
     return counts;
   }, [rows]);
 
   const setRow = (studentId: string, key: string, value: any) => {
-    const before = rows.find((r) => r.studentId === studentId);
-    setRows((prev) => prev.map((r) => r.studentId === studentId ? { ...r, [key]: value } : r));
+    const before = rows.find((row) => row.studentId === studentId);
+    setRows((previousRows) => previousRows.map((row) => row.studentId === studentId ? { ...row, [key]: value } : row));
     // Audit
     if (filters.classId && filters.date && before) {
       addAuditEntry(filters.classId, filters.date, {
@@ -394,7 +394,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
   };
 
   const markAll = (status: AttendanceRecord["status"]) => {
-    setRows((prev) => prev.map((r) => ({ ...r, status })));
+    setRows((previousRows) => previousRows.map((row) => ({ ...row, status })));
     addAuditEntry(filters.classId, filters.date, { action: "bulk_mark", status, count: rows.length, by: role });
   };
 
@@ -412,9 +412,9 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
   const handleSaveDraft = () => {
     const newRecords: AttendanceRecord[] = rows.map((row) => {
-      const customFieldVals: Record<string, any> = {};
-      customFields.forEach((cf: ModuleCustomField) => {
-        customFieldVals[cf.id] = row[cf.id];
+      const customFieldValues: Record<string, any> = {};
+      customFields.forEach((customField: ModuleCustomField) => {
+        customFieldValues[customField.id] = row[customField.id];
       });
 
       return {
@@ -428,13 +428,13 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
         timeIn: row.status !== "absent" ? row.timeIn : "",
         timeOut: row.status !== "absent" ? row.timeOut : "",
         notes: row.notes || "",
-        customFields: customFieldVals,
+        customFields: customFieldValues,
       } as unknown as AttendanceRecord;
     });
 
-    setRecords((prev) => {
-      const filtered = prev.filter((r) => !(r.classId === filters.classId && r.date === filters.date));
-      return [...filtered, ...newRecords];
+    setRecords((previousRecords) => {
+      const filteredRecords = previousRecords.filter((record) => !(record.classId === filters.classId && record.date === filters.date));
+      return [...filteredRecords, ...newRecords];
     });
 
     setIsDraft(true);
@@ -443,9 +443,9 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
   const handleSubmit = () => {
     const newRecords: AttendanceRecord[] = rows.map((row) => {
-      const customFieldVals: Record<string, any> = {};
-      customFields.forEach((cf: ModuleCustomField) => {
-        customFieldVals[cf.id] = row[cf.id];
+      const customFieldValues: Record<string, any> = {};
+      customFields.forEach((customField: ModuleCustomField) => {
+        customFieldValues[customField.id] = row[customField.id];
       });
 
       return {
@@ -459,13 +459,13 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
         timeIn: row.status !== "absent" ? row.timeIn : "",
         timeOut: row.status !== "absent" ? row.timeOut : "",
         notes: row.notes || "",
-        customFields: customFieldVals,
+        customFields: customFieldValues,
       } as unknown as AttendanceRecord;
     });
 
-    setRecords((prev) => {
-      const filtered = prev.filter((r) => !(r.classId === filters.classId && r.date === filters.date));
-      return [...filtered, ...newRecords];
+    setRecords((previousRecords) => {
+      const filteredRecords = previousRecords.filter((record) => !(record.classId === filters.classId && record.date === filters.date));
+      return [...filteredRecords, ...newRecords];
     });
 
     const finalGeo = typeof geo === "object" ? geo : null;
@@ -473,9 +473,9 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
     addAuditEntry(filters.classId, filters.date, { action: "submitted", count: rows.length, by: role, geo: finalGeo });
     
     if (isOffline) {
-      const q = [...offlineQueue, payload];
-      saveQueue(q);
-      setOfflineQueue(q);
+      const nextQueue = [...offlineQueue, payload];
+      saveQueue(nextQueue);
+      setOfflineQueue(nextQueue);
       setSubmitted(true);
     } else {
       setSubmitted(true);
@@ -487,10 +487,10 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
     let updatedRecords = [...records];
     offlineQueue.forEach((payload) => {
-      const newRecs: AttendanceRecord[] = payload.rows.map((row) => {
-        const customFieldVals: Record<string, any> = {};
-        customFields.forEach((cf: ModuleCustomField) => {
-          customFieldVals[cf.id] = row[cf.id];
+      const newRecords: AttendanceRecord[] = payload.rows.map((row) => {
+        const customFieldValues: Record<string, any> = {};
+        customFields.forEach((customField: ModuleCustomField) => {
+          customFieldValues[customField.id] = row[customField.id];
         });
 
         return {
@@ -504,13 +504,13 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
           timeIn: row.status !== "absent" ? row.timeIn : "",
           timeOut: row.status !== "absent" ? row.timeOut : "",
           notes: row.notes || "",
-          customFields: customFieldVals,
+          customFields: customFieldValues,
         } as unknown as AttendanceRecord;
       });
       updatedRecords = updatedRecords.filter(
-        (r) => !(r.classId === payload.classId && r.date === payload.date)
+        (record) => !(record.classId === payload.classId && record.date === payload.date)
       );
-      updatedRecords.push(...newRecs);
+      updatedRecords.push(...newRecords);
     });
     setRecords(updatedRecords);
 
@@ -566,7 +566,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {isDraft && <span className="px-2 py-1 rounded-lg bg-warning/15 text-warning text-[11px] font-bold">Draft Saved</span>}
-          <Button onClick={() => setShowFaceAI((o) => !o)} variant="outline" size="sm"
+          <Button onClick={() => setShowFaceAI((isOpen) => !isOpen)} variant="outline" size="sm"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted hover:text-foreground transition-colors h-auto">
             <Scan className="w-3 h-3" aria-hidden="true" /> Face AI
           </Button>
@@ -586,10 +586,10 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
         className="grid gap-2"
         style={{ gridTemplateColumns: `repeat(${statuses.length || 4}, minmax(0, 1fr))` }}
       >
-        {statuses.map((s: AttendanceStatus) => (
-          <div key={s.id} className={`rounded-xl ${s.bg} ${s.text} border ${s.border} px-3 py-2 text-center`}>
-            <p className="text-lg font-bold">{stats[s.id] || 0}</p>
-            <p className="text-[11px] font-semibold">{s.label}</p>
+        {statuses.map((status: AttendanceStatus) => (
+          <div key={status.id} className={`rounded-xl ${status.bg} ${status.text} border ${status.border} px-3 py-2 text-center`}>
+            <p className="text-lg font-bold">{stats[status.id] || 0}</p>
+            <p className="text-[11px] font-semibold">{status.label}</p>
           </div>
         ))}
       </div>
@@ -601,7 +601,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
         <Input 
           id="search-mark"
           value={search} 
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(event) => setSearch(event.target.value)}
           placeholder="Search student…"
           className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
         />
@@ -633,11 +633,11 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
             </thead>
             <tbody className="divide-y divide-border">
               {filteredRows.length === 0 ? (
-                <tr><td colSpan={orderedFields.filter(f => fields[f.id]?.enabled !== false).length + 2} className="px-4 py-10 text-center text-muted-foreground text-sm">No students found</td></tr>
+                <tr><td colSpan={orderedFields.filter((field) => fields[field.id]?.enabled !== false).length + 2} className="px-4 py-10 text-center text-muted-foreground text-sm">No students found</td></tr>
               ) : filteredRows.map((row) => {
-                const s = getAttendanceStatusInfo(row.status, statuses);
+                const statusInfo = getAttendanceStatusInfo(row.status, statuses);
                 return (
-                  <motion.tr key={row.studentId} layout className={`transition-colors hover:bg-muted/20 ${s?.bg || ""}`}>
+                  <motion.tr key={row.studentId} layout className={`transition-colors hover:bg-muted/20 ${statusInfo?.bg || ""}`}>
                     <td className="px-3 py-2.5 text-[11px] text-muted-foreground font-mono">{row.rollNo}</td>
                     <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{row.name}</td>
                     {orderedFields.map((field) => {
@@ -648,7 +648,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
                         return (
                           <td key="status" className="px-3 py-2.5">
                             <div className="flex justify-center">
-                              <StatusToggle value={row.status} onChange={(v) => setRow(row.studentId, "status", v as AttendanceRecord["status"])} />
+                              <StatusToggle value={row.status} onChange={(value) => setRow(row.studentId, "status", value as AttendanceRecord["status"])} />
                             </div>
                           </td>
                         );
@@ -662,7 +662,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
                               id={`time-in-${row.studentId}`}
                               type="time" 
                               value={row.timeIn}
-                              onChange={(e) => setRow(row.studentId, "timeIn", e.target.value)}
+                              onChange={(event) => setRow(row.studentId, "timeIn", event.target.value)}
                               disabled={row.status === "absent"}
                               className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 h-8" 
                             />
@@ -678,7 +678,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
                               id={`time-out-${row.studentId}`}
                               type="time" 
                               value={row.timeOut}
-                              onChange={(e) => setRow(row.studentId, "timeOut", e.target.value)}
+                              onChange={(event) => setRow(row.studentId, "timeOut", event.target.value)}
                               disabled={row.status === "absent"}
                               className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 h-8" 
                             />
@@ -695,7 +695,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
                               type="text" 
                               value={row.notes} 
                               placeholder="Add note…"
-                              onChange={(e) => setRow(row.studentId, "notes", e.target.value)}
+                              onChange={(event) => setRow(row.studentId, "notes", event.target.value)}
                               className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground h-8" 
                             />
                           </td>
@@ -704,13 +704,13 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
                       // Custom column field
                       if (!["status", "timeIn", "timeOut", "notes"].includes(field.id)) {
-                        const val = row[field.id] ?? "";
+                        const fieldValue = row[field.id] ?? "";
                         return (
                           <td key={field.id} className="px-3 py-2.5">
                             {field.type === "select" ? (
                               <Select
-                                value={val || "__empty__"}
-                                onValueChange={(v) => setRow(row.studentId, field.id, v === "__empty__" ? "" : v)}
+                                value={fieldValue || "__empty__"}
+                                onValueChange={(value) => setRow(row.studentId, field.id, value === "__empty__" ? "" : value)}
                               >
                                 <SelectTrigger className="h-8 text-xs py-1 px-2 w-[120px] bg-background">
                                   <SelectValue placeholder="Select…" />
@@ -724,15 +724,15 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
                               </Select>
                             ) : field.type === "boolean" ? (
                               <Checkbox
-                                checked={!!val}
+                                checked={!!fieldValue}
                                 onCheckedChange={(checked) => setRow(row.studentId, field.id, !!checked)}
                                 className="w-4 h-4 rounded border border-border cursor-pointer"
                               />
                             ) : (
                               <Input
                                 type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
-                                value={val}
-                                onChange={(e) => setRow(row.studentId, field.id, e.target.value)}
+                                value={fieldValue}
+                                onChange={(event) => setRow(row.studentId, field.id, event.target.value)}
                                 placeholder={field.placeholder || "Enter…"}
                                 className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground h-8"
                               />

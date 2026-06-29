@@ -9,7 +9,7 @@ interface Step4ClassAssignmentProps {
   student: Student | null | undefined;
   suggestedClass: Class | null | undefined;
   value: Class | null | undefined;
-  onChange: (cls: Class) => void;
+  onChange: (sessionClass: Class) => void;
 }
 
 /**
@@ -27,10 +27,10 @@ export function Step4ClassAssignment({ session, student, suggestedClass, value, 
   const [override, setOverride] = useState<boolean>(false);
   const classes = session?.classes || [];
 
-  const handleSelect = (cls: Class) => {
-    const isOverride = suggestedClass && cls.id !== suggestedClass.id;
+  const handleSelect = (sessionClass: Class) => {
+    const isOverride = suggestedClass && sessionClass.id !== suggestedClass.id;
     setOverride(!!isOverride);
-    onChange(cls);
+    onChange(sessionClass);
   };
 
   return (
@@ -78,19 +78,19 @@ export function Step4ClassAssignment({ session, student, suggestedClass, value, 
             No eligible classes found for this session.
           </div>
         )}
-        {classes.map((cls) => {
-          const selected   = value?.id === cls.id;
-          const isSuggested = suggestedClass?.id === cls.id;
-          const spotsLeft  = cls.capacity - cls.enrolled;
+        {classes.map((sessionClass) => {
+          const selected   = value?.id === sessionClass.id;
+          const isSuggested = suggestedClass?.id === sessionClass.id;
+          const spotsLeft  = sessionClass.capacity - sessionClass.enrolled;
           const full       = spotsLeft <= 0;
 
           return (
             <Button
-              key={cls.id}
+              key={sessionClass.id}
               role="radio"
               aria-checked={selected}
               disabled={full}
-              onClick={() => !full && handleSelect(cls)}
+              onClick={() => !full && handleSelect(sessionClass)}
               variant="outline"
               className={`w-full text-left p-4 rounded-xl border-2 transition-all h-auto disabled:opacity-50 disabled:cursor-not-allowed justify-start hover:bg-transparent ${
                 selected ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground hover:text-foreground" : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground hover:text-foreground"
@@ -103,27 +103,27 @@ export function Step4ClassAssignment({ session, student, suggestedClass, value, 
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-sm font-bold text-foreground">{cls.name}</p>
+                      <p className="text-sm font-bold text-foreground">{sessionClass.name}</p>
                       {isSuggested && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Recommended</span>}
                       {full && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">Full</span>}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
-                      <span>Age {cls.ageMin}–{cls.ageMax}</span>
-                      <span className="capitalize">{cls.gender}</span>
-                      <span>{cls.teacherName}</span>
-                      {cls.room && <span>{cls.room}</span>}
+                      <span>Age {sessionClass.ageMin}–{sessionClass.ageMax}</span>
+                      <span className="capitalize">{sessionClass.gender}</span>
+                      <span>{sessionClass.teacherName}</span>
+                      {sessionClass.room && <span>{sessionClass.room}</span>}
                     </div>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0" aria-hidden="true">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Users className="w-3.5 h-3.5" />
-                    <span>{cls.enrolled}/{cls.capacity}</span>
+                    <span>{sessionClass.enrolled}/{sessionClass.capacity}</span>
                   </div>
                   <div className="h-1.5 w-20 rounded-full bg-muted mt-1 overflow-hidden">
                     <div
                       className={`h-full rounded-full ${spotsLeft <= 3 ? "bg-destructive" : spotsLeft <= 7 ? "bg-warning" : "bg-success"}`}
-                      style={{ width: `${(cls.enrolled / cls.capacity) * 100}%` }}
+                      style={{ width: `${(sessionClass.enrolled / sessionClass.capacity) * 100}%` }}
                     />
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-0.5">{spotsLeft} left</p>

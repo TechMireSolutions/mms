@@ -61,7 +61,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
     if (step === 1) return !!session;
     if (step === 2) {
       const checks = student && session ? runFullEligibility(student, session, suggested, []) : [];
-      return checks.filter((c) => c.status === "fail").length === 0;
+      return checks.filter((check) => check.status === "fail").length === 0;
     }
     if (step === 3) return !!classInfo;
     if (step === 4) return !!feeResult;
@@ -70,15 +70,15 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
 
   const canConfirm = (): boolean => {
     if (fields.notes?.required && !notes) return false;
-    for (const cf of customFields) {
-      if (cf.required && !customFieldValues[cf.id]) return false;
+    for (const customField of customFields) {
+      if (customField.required && !customFieldValues[customField.id]) return false;
     }
     return true;
   };
 
-  const go = (dir: number) => {
-    setDirection(dir);
-    setStep((s) => s + dir);
+  const go = (directionDelta: number) => {
+    setDirection(directionDelta);
+    setStep((currentStep) => currentStep + directionDelta);
   };
 
   const handleNext = () => {
@@ -156,7 +156,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
           transition={{ duration: 0.22 }}
         >
           {step === 0 && <Step1SelectStudent value={student} onChange={setStudent} sessions={sessions} />}
-          {step === 1 && <Step2SelectSession value={session} onChange={(s) => { setSession(s); setClassInfo(null); }} sessions={sessions} />}
+          {step === 1 && <Step2SelectSession value={session} onChange={(selectedSession) => { setSession(selectedSession); setClassInfo(null); }} sessions={sessions} />}
           {step === 2 && student && session && (
             <Step3Eligibility student={student} session={session} suggestedClass={suggested} />
           )}
@@ -174,7 +174,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
               student={student} session={session} classInfo={classInfo}
               feeResult={feeResult} notes={notes} onNotesChange={setNotes}
               customFieldValues={customFieldValues}
-              onCustomFieldChange={(id, val) => setCustomFieldValues((prev) => ({ ...prev, [id]: val }))}
+              onCustomFieldChange={(id, value) => setCustomFieldValues((previousValues) => ({ ...previousValues, [id]: value }))}
             />
           )}
         </motion.div>

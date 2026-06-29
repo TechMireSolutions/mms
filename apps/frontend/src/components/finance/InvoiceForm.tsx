@@ -34,8 +34,8 @@ function nextInvoiceId(): string {
   return `INV-${stamp}`;
 }
 
-function money(n: number): string {
-  return `PKR ${Number(n).toLocaleString()}`;
+function formatMoney(amount: number): string {
+  return `PKR ${Number(amount).toLocaleString()}`;
 }
 
 const INITIAL_DRAFT: InvoiceDraft = {
@@ -73,7 +73,7 @@ export function InvoiceForm({
   );
 
   const setField = (key: keyof InvoiceDraft, value: string): void => {
-    setDraft((prev) => ({ ...prev, [key]: value }));
+    setDraft((currentDraft) => ({ ...currentDraft, [key]: value }));
   };
 
   const resetAndClose = (): void => {
@@ -233,15 +233,15 @@ export function InvoiceForm({
           <div className="grid grid-cols-3 gap-3 text-sm">
             <div>
               <p className="m-0 text-[11px] font-semibold uppercase text-muted-foreground">Base</p>
-              <p className="m-0 font-bold text-foreground">{money(baseFee)}</p>
+              <p className="m-0 font-bold text-foreground">{formatMoney(baseFee)}</p>
             </div>
             <div>
               <p className="m-0 text-[11px] font-semibold uppercase text-muted-foreground">Discount</p>
-              <p className="m-0 font-bold text-warning">-{money(discountAmt)}</p>
+              <p className="m-0 font-bold text-warning">-{formatMoney(discountAmt)}</p>
             </div>
             <div>
               <p className="m-0 text-[11px] font-semibold uppercase text-muted-foreground">Final</p>
-              <p className="m-0 font-bold text-primary">{money(finalAmt)}</p>
+              <p className="m-0 font-bold text-primary">{formatMoney(finalAmt)}</p>
             </div>
           </div>
         </section>

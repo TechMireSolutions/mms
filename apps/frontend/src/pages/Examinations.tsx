@@ -60,9 +60,9 @@ export default function Examinations(): React.JSX.Element {
   const [filteredCount, setFilteredCount] = useState(0);
 
   const handleSaveExam = (exam: Exam): void => {
-    const exists = exams.find((e) => e.id === exam.id);
+    const existingExam = exams.find((candidate) => candidate.id === exam.id);
     replaceExams.mutate(
-      exists ? exams.map((e) => (e.id === exam.id ? exam : e)) : [...exams, exam],
+      existingExam ? exams.map((candidate) => (candidate.id === exam.id ? exam : candidate)) : [...exams, exam],
     );
     setShowExamForm(false);
     setEditExam(null);
@@ -70,7 +70,7 @@ export default function Examinations(): React.JSX.Element {
 
   const handleSaveResults = (examId: string, newResults: ExamResult[]): void => {
     replaceExamResults.mutate([
-      ...examResults.filter((r) => r.examId !== examId),
+      ...examResults.filter((result) => result.examId !== examId),
       ...newResults,
     ]);
   };
@@ -137,7 +137,7 @@ export default function Examinations(): React.JSX.Element {
                   <SubTabBar
                     tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
                     value={configSubTab}
-                    onChange={(key) => setConfigSubTab(key as typeof configSubTab)}
+                    onChange={(tabKey) => setConfigSubTab(tabKey as typeof configSubTab)}
                   />
                   <ExaminationsSettings mode={configSubTab} />
                 </div>
@@ -158,8 +158,8 @@ export default function Examinations(): React.JSX.Element {
                     setEditExam(null);
                     setShowExamForm(true);
                   }}
-                  onEdit={(e: Exam) => {
-                    setEditExam(e);
+                  onEdit={(exam: Exam) => {
+                    setEditExam(exam);
                     setShowExamForm(true);
                   }}
                   onFilteredCountChange={setFilteredCount}

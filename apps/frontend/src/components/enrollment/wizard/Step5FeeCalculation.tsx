@@ -81,17 +81,17 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
       )}
 
       {/* Available discounts */}
-      {session?.discounts && session.discounts.filter((d) => d.active).length > 0 && (
+      {session?.discounts && session.discounts.filter((discount) => discount.active).length > 0 && (
         <div className="space-y-2">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Available Discounts in this Session</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="list">
-            {session.discounts.filter((d) => d.active).map((d) => (
-              <div key={d.id} className={`p-3 rounded-xl border ${d.name === displayFee.label ? "border-primary bg-primary/5" : "border-border bg-card"}`} role="listitem">
+            {session.discounts.filter((discount) => discount.active).map((discount) => (
+              <div key={discount.id} className={`p-3 rounded-xl border ${discount.name === displayFee.label ? "border-primary bg-primary/5" : "border-border bg-card"}`} role="listitem">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold text-foreground">{d.name}</p>
-                  <span className="text-xs font-bold text-primary">{d.value}% off</span>
+                  <p className="text-xs font-bold text-foreground">{discount.name}</p>
+                  <span className="text-xs font-bold text-primary">{discount.value}% off</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{d.conditions}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{discount.conditions}</p>
               </div>
             ))}
           </div>

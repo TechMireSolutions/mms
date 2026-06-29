@@ -48,24 +48,24 @@ export function useFinancePayments(options?: { enabled?: boolean }) {
 
 export function useFinanceInvoicesCollection(options?: { enabled?: boolean }): Invoice[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useFinanceInvoices({ enabled });
-  const fromLocal = useLiveCollection<Invoice>('finance_invoices', [], { enabled });
+  const { data: queryInvoices = [] } = useFinanceInvoices({ enabled });
+  const localInvoices = useLiveCollection<Invoice>('finance_invoices', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryInvoices.length > 0) {
+    return queryInvoices;
   }
-  return fromLocal;
+  return localInvoices;
 }
 
 export function useFinancePaymentsCollection(options?: { enabled?: boolean }): Payment[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useFinancePayments({ enabled });
-  const fromLocal = useLiveCollection<Payment>('finance_payments', [], { enabled });
+  const { data: queryPayments = [] } = useFinancePayments({ enabled });
+  const localPayments = useLiveCollection<Payment>('finance_payments', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryPayments.length > 0) {
+    return queryPayments;
   }
-  return fromLocal;
+  return localPayments;
 }
 
 export function useFinanceMutations() {

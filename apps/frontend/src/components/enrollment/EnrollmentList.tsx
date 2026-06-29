@@ -15,7 +15,7 @@ const PAGE_SIZE = 12;
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
   labels: {
     trigger: string;
     title: string;
@@ -58,11 +58,11 @@ export function EnrollmentList({
 
   const filtered = useMemo<Enrollment[]>(() => {
     const trimmed = search.trim();
-    return enrollments.filter((e) => {
-      if (statusFilter !== "all" && e.status !== statusFilter) return false;
-      if (sessionFilter !== "all" && e.sessionId !== sessionFilter) return false;
-      if (trimmed && !e.studentName.toLowerCase().includes(trimmed.toLowerCase()) &&
-          !e.sessionName.toLowerCase().includes(trimmed.toLowerCase())) return false;
+    return enrollments.filter((enrollment) => {
+      if (statusFilter !== "all" && enrollment.status !== statusFilter) return false;
+      if (sessionFilter !== "all" && enrollment.sessionId !== sessionFilter) return false;
+      if (trimmed && !enrollment.studentName.toLowerCase().includes(trimmed.toLowerCase()) &&
+          !enrollment.sessionName.toLowerCase().includes(trimmed.toLowerCase())) return false;
       return true;
     });
   }, [enrollments, search, statusFilter, sessionFilter]);
@@ -72,8 +72,8 @@ export function EnrollmentList({
   }, [filtered.length, onFilteredCountChange]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const { data: students = [] } = useStudentsByIds(paginated.map((enr) => enr.studentId));
+  const paginatedEnrollments = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const { data: students = [] } = useStudentsByIds(paginatedEnrollments.map((enrollment) => enrollment.studentId));
 
   const showStudent = isColumnVisible ? isColumnVisible("student") : true;
   const showSession = isColumnVisible ? isColumnVisible("session") : true;
@@ -83,12 +83,12 @@ export function EnrollmentList({
   const showStatus = isColumnVisible ? isColumnVisible("status") : true;
   const showPayment = isColumnVisible ? isColumnVisible("payment") : true;
 
-  const statusInfo = (s: string): EnrollmentStatus => STATUS_MAP[s] || { id: s as EnrollmentStatus["id"], label: s, color: "bg-muted text-muted-foreground border-border" };
+  const statusInfo = (status: string): EnrollmentStatus => STATUS_MAP[status] || { id: status as EnrollmentStatus["id"], label: status, color: "bg-muted text-muted-foreground border-border" };
 
-  const paymentColor = (s: string): string => {
-    if (s === "paid")    return "text-success";
-    if (s === "pending") return "text-warning";
-    if (s === "overdue") return "text-destructive";
+  const paymentColor = (status: string): string => {
+    if (status === "paid")    return "text-success";
+    if (status === "pending") return "text-warning";
+    if (status === "overdue") return "text-destructive";
     return "text-muted-foreground";
   };
 
@@ -107,7 +107,7 @@ export function EnrollmentList({
           <Input
             type="search"
             value={search === " " ? "" : search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(event) => { setSearch(event.target.value); setPage(1); }}
             placeholder={t("enrollments.searchPlaceholder")}
             aria-label={t("enrollments.searchPlaceholder")}
             className="w-full pl-9 pr-4 py-2 text-sm rounded-xl"
@@ -122,14 +122,14 @@ export function EnrollmentList({
           >
             {t("enrollments.filter.all")}
           </Button>
-          {ENROLLMENT_STATUSES.map((s) => (
+          {ENROLLMENT_STATUSES.map((status) => (
             <Button
-              key={s.id}
+              key={status.id}
               variant="ghost"
-              onClick={() => { setStatus(s.id); setPage(1); }}
-              className={`px-3 py-2 transition-colors rounded-none h-auto ${statusFilter === s.id ? `${s.color} border-0 hover:bg-transparent` : "bg-card text-muted-foreground hover:bg-muted"}`}
+              onClick={() => { setStatus(status.id); setPage(1); }}
+              className={`px-3 py-2 transition-colors rounded-none h-auto ${statusFilter === status.id ? `${status.color} border-0 hover:bg-transparent` : "bg-card text-muted-foreground hover:bg-muted"}`}
             >
-              {s.label}
+              {status.label}
             </Button>
           ))}
         </div>
@@ -139,10 +139,10 @@ export function EnrollmentList({
           <FormSelect
             id="filter-session"
             value={sessionFilter}
-            onChange={(val) => { setSession(val); setPage(1); }}
+            onChange={(value) => { setSession(value); setPage(1); }}
             options={[
               { value: "all", label: t("enrollments.filter.allSessions") },
-              ...sessions.map((s) => ({ value: s.id, label: s.name }))
+              ...sessions.map((session) => ({ value: session.id, label: session.name }))
             ]}
             className="w-48 text-sm"
           />
@@ -157,7 +157,7 @@ export function EnrollmentList({
         )}
       </div>
 
-      {paginated.length === 0 ? (
+      {paginatedEnrollments.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center rounded-xl border border-border bg-card" role="status">
           <Search className="w-10 h-10 text-muted-foreground/30 mb-3" aria-hidden="true" />
           <p className="text-sm font-semibold text-foreground">{t("enrollments.empty.title")}</p>
@@ -210,15 +210,15 @@ export function EnrollmentList({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                 {paginated.map((enr) => {
-                  const s = statusInfo(enr.status);
-                  const student = students.find((st) => String(st.id) === String(enr.studentId));
+                 {paginatedEnrollments.map((enrollment) => {
+                  const enrollmentStatus = statusInfo(enrollment.status);
+                  const student = students.find((candidate) => String(candidate.id) === String(enrollment.studentId));
                   return (
-                    <motion.tr key={enr.id} layout className="hover:bg-muted/20 transition-colors">
+                    <motion.tr key={enrollment.id} layout className="hover:bg-muted/20 transition-colors">
                       {showStudent && (
                         <td className="px-3 py-2.5 whitespace-nowrap">
                           <div className="flex flex-col">
-                            <span className="font-semibold text-foreground">{enr.studentName}</span>
+                            <span className="font-semibold text-foreground">{enrollment.studentName}</span>
                             {student?.grNumber && (
                               <span className="text-[10px] text-primary font-bold">GR: {student.grNumber}</span>
                             )}
@@ -226,33 +226,33 @@ export function EnrollmentList({
                         </td>
                       )}
                       {showSession && (
-                        <td className="px-3 py-2.5 text-xs text-foreground max-w-[160px] truncate">{enr.sessionName}</td>
+                        <td className="px-3 py-2.5 text-xs text-foreground max-w-[160px] truncate">{enrollment.sessionName}</td>
                       )}
                       {showClass && (
-                        <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{enr.className || "—"}</td>
+                        <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{enrollment.className || "—"}</td>
                       )}
                       {showEnrolledDate && (
-                        <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{enr.enrolledDate}</td>
+                        <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{enrollment.enrolledDate}</td>
                       )}
                       {showFinalFee && (
                         <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">
-                          PKR {enr.finalFee?.toLocaleString()}
-                          {enr.discountPct > 0 && (
-                            <span className="ml-1 text-[10px] text-success font-normal" aria-label={`Discount percentage: ${enr.discountPct} percent`}>–{enr.discountPct}%</span>
+                          PKR {enrollment.finalFee?.toLocaleString()}
+                          {enrollment.discountPct > 0 && (
+                            <span className="ml-1 text-[10px] text-success font-normal" aria-label={`Discount percentage: ${enrollment.discountPct} percent`}>–{enrollment.discountPct}%</span>
                           )}
                         </td>
                       )}
                       {showStatus && (
                         <td className="px-3 py-2.5">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${s.color}`}>
-                            {s.label}
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${enrollmentStatus.color}`}>
+                            {enrollmentStatus.label}
                           </span>
                         </td>
                       )}
                       {showPayment && (
                         <td className="px-3 py-2.5">
-                          <span className={`text-xs font-semibold capitalize ${paymentColor(enr.paymentStatus)}`}>
-                            {enr.paymentStatus || "—"}
+                          <span className={`text-xs font-semibold capitalize ${paymentColor(enrollment.paymentStatus)}`}>
+                            {enrollment.paymentStatus || "—"}
                           </span>
                         </td>
                       )}
@@ -261,20 +261,20 @@ export function EnrollmentList({
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => onView(enr)}
+                            onClick={() => onView(enrollment)}
                             className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
-                            aria-label={t("enrollments.actions.view", { name: enr.studentName })}
+                            aria-label={t("enrollments.actions.view", { name: enrollment.studentName })}
                             title={t("enrollments.actions.viewShort")}
                           >
                             <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                           </Button>
-                          {canWrite && enr.status !== "cancelled" && enr.status !== "completed" && (
+                          {canWrite && enrollment.status !== "cancelled" && enrollment.status !== "completed" && (
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => onCancel(enr.id)}
+                              onClick={() => onCancel(enrollment.id)}
                               className="p-1.5 w-8 h-8 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                              aria-label={t("enrollments.actions.cancel", { name: enr.studentName })}
+                              aria-label={t("enrollments.actions.cancel", { name: enrollment.studentName })}
                               title={t("enrollments.actions.cancelShort")}
                             >
                               <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
@@ -297,7 +297,7 @@ export function EnrollmentList({
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
             disabled={page === 1}
             aria-label={t("enrollments.pagination.previous")}
             className="p-1.5 w-8 h-8 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
@@ -307,7 +307,7 @@ export function EnrollmentList({
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
             disabled={page === totalPages}
             aria-label={t("enrollments.pagination.next")}
             className="p-1.5 w-8 h-8 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"

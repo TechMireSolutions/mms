@@ -123,22 +123,22 @@ export default function HasanatCards() {
               <SubTabBar
                 tabs={HASANAT_CONFIG_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
                 value={configSubTab}
-                onChange={(key) => setConfigSubTab(key as typeof configSubTab)}
+                onChange={(tabKey) => setConfigSubTab(tabKey as typeof configSubTab)}
               />
-              {configSubTab === "denominations" && <DenominationsManager denoms={denoms} onUpdate={(d) => replaceDenoms.mutate(d)} />}
+              {configSubTab === "denominations" && <DenominationsManager denoms={denoms} onUpdate={(denominations) => replaceDenoms.mutate(denominations)} />}
               {configSubTab === "fields" && <HasanatSettings mode="fields" />}
               {configSubTab === "preferences" && <HasanatSettings mode="preferences" />}
             </div>
           )}
           
           {effectiveTab === "work" && effectiveSubTab === "overview"     && <HasanatDashboard denoms={denoms} batches={batches} distributions={distributions} />}
-          {effectiveTab === "work" && effectiveSubTab === "stock"         && <StockManager batches={batches} denoms={denoms} onUpdate={(b) => replaceBatches.mutate(b)} />}
+          {effectiveTab === "work" && effectiveSubTab === "stock"         && <StockManager batches={batches} denoms={denoms} onUpdate={(batches) => replaceBatches.mutate(batches)} />}
           {effectiveTab === "work" && effectiveSubTab === "distribute"    && (
             <DistributionManager
               distributions={distributions}
               denoms={denoms}
               batches={batches}
-              onUpdate={(d) => replaceDistributions.mutate(d)}
+              onUpdate={(distributions) => replaceDistributions.mutate(distributions)}
               onFilteredCountChange={setFilteredCount}
               isColumnVisible={distributionColumnLayout.isColumnVisible}
               columnCustomizer={{
@@ -151,7 +151,7 @@ export default function HasanatCards() {
           {effectiveTab === "work" && effectiveSubTab === "redemptions"   && (
             <RedemptionTracker
               distributions={distributions}
-              onUpdateDistributions={(d) => replaceDistributions.mutate(d)}
+              onUpdateDistributions={(distributions) => replaceDistributions.mutate(distributions)}
               onFilteredCountChange={setFilteredCount}
               isColumnVisible={redemptionColumnLayout.isColumnVisible}
               columnCustomizer={{

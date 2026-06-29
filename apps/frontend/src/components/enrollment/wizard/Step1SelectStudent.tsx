@@ -30,23 +30,23 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
   });
 
   const selectedId = value?.id ? String(value.id) : "";
-  const valueInPage = (studentPage?.students ?? []).some((s) => String(s.id) === selectedId);
+  const valueInPage = (studentPage?.students ?? []).some((student) => String(student.id) === selectedId);
   const { data: resolvedSelected = [] } = useStudentsByIds(
     selectedId && !valueInPage ? [selectedId] : [],
   );
 
   const students = useMemo(() => {
     const rows = (studentPage?.students ?? []) as unknown as Student[];
-    if (value && !rows.some((s) => String(s.id) === String(value.id))) {
+    if (value && !rows.some((student) => String(student.id) === String(value.id))) {
       return [value, ...rows];
     }
-    if (resolvedSelected.length > 0 && !rows.some((s) => String(s.id) === String(resolvedSelected[0].id))) {
+    if (resolvedSelected.length > 0 && !rows.some((student) => String(student.id) === String(resolvedSelected[0].id))) {
       return [resolvedSelected[0], ...rows];
     }
     return rows;
   }, [studentPage, value, resolvedSelected]);
 
-  const sessionName = (sid: string): string => sessions.find((s) => s.id === sid)?.name || sid;
+  const sessionName = (sessionId: string): string => sessions.find((session) => session.id === sessionId)?.name || sessionId;
   const hasMore = Boolean(studentPage?.hasMore);
 
   return (
@@ -61,7 +61,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
         <Input
           type="search"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(event) => setSearch(event.target.value)}
           placeholder="Search students by name…"
           aria-label="Search students by name"
           className="pl-9 pr-4 py-2 text-sm rounded-xl"
@@ -72,15 +72,15 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
         {!isFetching && students.length === 0 && (
           <div className="text-center py-10 text-muted-foreground text-sm" role="status">No students found</div>
         )}
-        {students.map((st) => {
-          const age = calcAge(st.dob);
-          const selected = value?.id === st.id;
+        {students.map((student) => {
+          const age = calcAge(student.dob);
+          const selected = value?.id === student.id;
           return (
             <Button
-              key={st.id}
+              key={student.id}
               role="radio"
               aria-checked={selected}
-              onClick={() => onChange(st)}
+              onClick={() => onChange(student)}
               variant="outline"
               className={`w-full text-left flex items-start gap-3 p-4 rounded-xl border-2 transition-all h-auto justify-start hover:bg-transparent ${
                 selected ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground hover:text-foreground" : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground hover:text-foreground"
@@ -91,29 +91,29 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-bold text-foreground">{st.name}</p>
-                  {st.grNumber && (
+                  <p className="text-sm font-bold text-foreground">{student.name}</p>
+                  {student.grNumber && (
                     <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase tracking-wider">
-                      GR: {st.grNumber}
+                      GR: {student.grNumber}
                     </span>
                   )}
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    st.gender === "male" ? "bg-info/15 text-info" : "bg-secondary/15 text-secondary"
-                  }`}>{st.gender}</span>
+                    student.gender === "male" ? "bg-info/15 text-info" : "bg-secondary/15 text-secondary"
+                  }`}>{student.gender}</span>
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    st.status === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
-                  }`}>{st.status}</span>
+                    student.status === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+                  }`}>{student.status}</span>
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" /> Age {age ?? "?"}</span>
-                  <span>Father: {st.fatherName}</span>
-                  {st.city && <span>{st.city}</span>}
+                  <span>Father: {student.fatherName}</span>
+                  {student.city && <span>{student.city}</span>}
                 </div>
-                {st.enrolledSessions && st.enrolledSessions.length > 0 && (
+                {student.enrolledSessions && student.enrolledSessions.length > 0 && (
                   <div className="mt-1.5 flex flex-wrap gap-1">
-                    {st.enrolledSessions.map((sid: string) => (
-                      <span key={sid} className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                        {sessionName(sid)}
+                    {student.enrolledSessions.map((sessionId: string) => (
+                      <span key={sessionId} className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                        {sessionName(sessionId)}
                       </span>
                     ))}
                   </div>

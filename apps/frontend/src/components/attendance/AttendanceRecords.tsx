@@ -19,7 +19,7 @@ const PAGE_SIZE = 15;
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
   labels: {
     trigger: string;
     title: string;
@@ -53,8 +53,8 @@ export function AttendanceRecords({
   const sessions = useSessionsCollection();
 
   const allClasses = useMemo(() => {
-    return sessions.flatMap((s) =>
-      (s.classes || []).map((c) => ({ ...c, sessionId: s.id, sessionName: s.name }))
+    return sessions.flatMap((session) =>
+      (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
     );
   }, [sessions]);
 
@@ -66,7 +66,7 @@ export function AttendanceRecords({
   const [page, setPage] = useState(1);
 
   const statusLabel = (statusId: string) => {
-    const found = statuses.find((s) => s.id === statusId);
+    const found = statuses.find((status) => status.id === statusId);
     if (found) return found.label;
     const key = `attendance.status.${statusId}` as AppTranslationKey;
     return t(key);
@@ -91,28 +91,28 @@ export function AttendanceRecords({
     1;
 
   const filtered = useMemo(() => {
-    return records.filter((r) => {
-      if (filters.classId && r.classId !== filters.classId) return false;
-      if (statusFilter !== "all" && r.status !== statusFilter) return false;
-      if (dateFrom && r.date < dateFrom) return false;
-      if (dateTo && r.date > dateTo) return false;
-      if (search && !r.studentName.toLowerCase().includes(search.toLowerCase())) return false;
+    return records.filter((record) => {
+      if (filters.classId && record.classId !== filters.classId) return false;
+      if (statusFilter !== "all" && record.status !== statusFilter) return false;
+      if (dateFrom && record.date < dateFrom) return false;
+      if (dateTo && record.date > dateTo) return false;
+      if (search && !record.studentName.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
   }, [records, filters, statusFilter, dateFrom, dateTo, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const paginatedRecords = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const updateRecord = <K extends keyof AttendanceRecord>(id: string, key: K, value: AttendanceRecord[K]) =>
-    setRecords((prev) => prev.map((r) => r.id === id ? { ...r, [key]: value } : r));
+    setRecords((previousRecords) => previousRecords.map((record) => record.id === id ? { ...record, [key]: value } : record));
 
   const deleteRecord = (id: string) => {
     if (!can("users.manage")) return;
-    setRecords((prev) => prev.filter((r) => r.id !== id));
+    setRecords((previousRecords) => previousRecords.filter((record) => record.id !== id));
   };
 
-  const classLabel = (classId: string) => allClasses.find((c) => c.id === classId)?.name || classId;
+  const classLabel = (classId: string) => allClasses.find((sessionClass) => sessionClass.id === classId)?.name || classId;
 
   return (
     <section className="space-y-4">
@@ -123,7 +123,7 @@ export function AttendanceRecords({
           <Input
             id="search-student"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(event) => { setSearch(event.target.value); setPage(1); }}
             placeholder={t("attendance.searchStudent")}
             className="pl-9 pr-4"
           />
@@ -138,15 +138,15 @@ export function AttendanceRecords({
           >
             {t("attendance.filter.all")}
           </Button>
-          {statuses.map((s: AttendanceStatus) => (
+          {statuses.map((status: AttendanceStatus) => (
             <Button
               type="button"
-              key={s.id}
-              variant={statusFilter === s.id ? "default" : "ghost"}
-              onClick={() => { setStatusFilter(s.id); setPage(1); }}
-              className={`rounded-none h-8 px-3 text-[11px] font-bold border-r border-border last:border-r-0 ${statusFilter === s.id ? `${s.bg} ${s.text}` : ""}`}
+              key={status.id}
+              variant={statusFilter === status.id ? "default" : "ghost"}
+              onClick={() => { setStatusFilter(status.id); setPage(1); }}
+              className={`rounded-none h-8 px-3 text-[11px] font-bold border-r border-border last:border-r-0 ${statusFilter === status.id ? `${status.bg} ${status.text}` : ""}`}
             >
-              {statusLabel(s.id)}
+              {statusLabel(status.id)}
             </Button>
           ))}
         </div>
@@ -154,14 +154,14 @@ export function AttendanceRecords({
         <DatePicker
           id="date-from"
           value={dateFrom}
-          onChange={(val) => { setDateFrom(val); setPage(1); }}
+          onChange={(value) => { setDateFrom(value); setPage(1); }}
           className="text-sm rounded-xl border border-border bg-background px-3 py-2 max-w-[150px]"
         />
 
         <DatePicker
           id="date-to"
           value={dateTo}
-          onChange={(val) => { setDateTo(val); setPage(1); }}
+          onChange={(value) => { setDateTo(value); setPage(1); }}
           className="text-sm rounded-xl border border-border bg-background px-3 py-2 max-w-[150px]"
         />
 
@@ -220,49 +220,49 @@ export function AttendanceRecords({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {paginated.length === 0 ? (
+              {paginatedRecords.length === 0 ? (
                 <tr><td colSpan={visibleColCount} className="px-4 py-12 text-center text-muted-foreground">{t("attendance.empty.records")}</td></tr>
-              ) : paginated.map((r) => (
-                <motion.tr key={r.id} layout className="hover:bg-muted/20 transition-colors">
+              ) : paginatedRecords.map((record) => (
+                <motion.tr key={record.id} layout className="hover:bg-muted/20 transition-colors">
                   {showDate && (
-                    <td className="px-3 py-2.5 font-mono text-xs text-foreground whitespace-nowrap">{r.date}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-foreground whitespace-nowrap">{record.date}</td>
                   )}
                   {showClass && (
-                    <td className="px-3 py-2.5 text-foreground whitespace-nowrap">{classLabel(r.classId)}</td>
+                    <td className="px-3 py-2.5 text-foreground whitespace-nowrap">{classLabel(record.classId)}</td>
                   )}
                   {showStudent && (
-                    <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{r.studentName}</td>
+                    <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{record.studentName}</td>
                   )}
                   {showStatus && (
                     <td className="px-3 py-2.5">
-                      {editing === r.id
-                        ? <StatusToggle value={r.status} onChange={(v) => updateRecord(r.id, "status", v as AttendanceRecord["status"])} />
-                        : <StatusBadge status={r.status} />
+                      {editing === record.id
+                        ? <StatusToggle value={record.status} onChange={(value) => updateRecord(record.id, "status", value as AttendanceRecord["status"])} />
+                        : <StatusBadge status={record.status} />
                       }
                     </td>
                   )}
                   {showTimeIn && (
                     <td className="px-3 py-2.5">
-                      {editing === r.id
-                        ? <input type="time" value={r.timeIn} onChange={(e) => updateRecord(r.id, "timeIn", e.target.value)}
+                      {editing === record.id
+                        ? <input type="time" value={record.timeIn} onChange={(event) => updateRecord(record.id, "timeIn", event.target.value)}
                             aria-label={t("attendance.columns.timeIn")}
                             className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none" />
-                        : <span className="text-xs text-muted-foreground font-mono">{r.timeIn || "—"}</span>
+                        : <span className="text-xs text-muted-foreground font-mono">{record.timeIn || "—"}</span>
                       }
                     </td>
                   )}
                   {showTimeOut && (
                     <td className="px-3 py-2.5">
-                      {editing === r.id
-                        ? <input type="time" value={r.timeOut} onChange={(e) => updateRecord(r.id, "timeOut", e.target.value)}
+                      {editing === record.id
+                        ? <input type="time" value={record.timeOut} onChange={(event) => updateRecord(record.id, "timeOut", event.target.value)}
                             aria-label={t("attendance.columns.timeOut")}
                             className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none" />
-                        : <span className="text-xs text-muted-foreground font-mono">{r.timeOut || "—"}</span>
+                        : <span className="text-xs text-muted-foreground font-mono">{record.timeOut || "—"}</span>
                       }
                     </td>
                   )}
                   {showNotes && (
-                    <td className="px-3 py-2.5 max-w-[160px] truncate text-xs text-muted-foreground">{r.notes || "—"}</td>
+                    <td className="px-3 py-2.5 max-w-[160px] truncate text-xs text-muted-foreground">{record.notes || "—"}</td>
                   )}
                   <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -271,11 +271,11 @@ export function AttendanceRecords({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => setEditing(editing === r.id ? null : r.id)}
-                          aria-label={editing === r.id ? t("common.cancel") : t("common.edit")}
+                          onClick={() => setEditing(editing === record.id ? null : record.id)}
+                          aria-label={editing === record.id ? t("common.cancel") : t("common.edit")}
                           className="h-8 w-8 text-muted-foreground hover:text-primary"
                         >
-                          {editing === r.id ? <X className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+                          {editing === record.id ? <X className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
                         </Button>
                       )}
                       {can("users.manage") && (
@@ -283,7 +283,7 @@ export function AttendanceRecords({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => deleteRecord(r.id)}
+                          onClick={() => deleteRecord(record.id)}
                           aria-label={t("attendance.deleteRecord")}
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         >
@@ -306,7 +306,7 @@ export function AttendanceRecords({
             type="button"
             variant="outline"
             size="icon"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
             disabled={page === 1}
             aria-label={t("attendance.pagination.previous")}
             className="h-8 w-8"
@@ -317,7 +317,7 @@ export function AttendanceRecords({
             type="button"
             variant="outline"
             size="icon"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
             disabled={page === totalPages}
             aria-label={t("attendance.pagination.next")}
             className="h-8 w-8"

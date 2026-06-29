@@ -13,11 +13,11 @@ import { INVOICE_STATUSES, Invoice } from '@/lib/data/financeData';
 import type { AppTranslationKey, ModuleColumnRegistryEntry } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 
-const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
+const formatMoney = (amount: number) => `PKR ${Number(amount).toLocaleString()}`;
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
   labels: {
     trigger: string;
     title: string;
@@ -81,15 +81,20 @@ export function InvoiceList({
     1;
 
   const filtered = useMemo(() => {
-    return invoices.filter((inv) => {
-      const q = search.toLowerCase();
-      const matchSearch = !q || inv.studentName.toLowerCase().includes(q) || inv.id.toLowerCase().includes(q) || inv.session.toLowerCase().includes(q);
-      const matchStatus = filterStatus.length === 0 || filterStatus.includes(inv.status);
+    return invoices.filter((invoice) => {
+      const normalizedSearch = search.toLowerCase();
+      const matchSearch = !normalizedSearch
+        || invoice.studentName.toLowerCase().includes(normalizedSearch)
+        || invoice.id.toLowerCase().includes(normalizedSearch)
+        || invoice.session.toLowerCase().includes(normalizedSearch);
+      const matchStatus = filterStatus.length === 0 || filterStatus.includes(invoice.status);
       return matchSearch && matchStatus;
     });
   }, [invoices, search, filterStatus]);
 
-  const toggleStatus = (s: string) => setFilterStatus((l) => l.includes(s) ? l.filter((x) => x !== s) : [...l, s]);
+  const toggleStatus = (status: string) => setFilterStatus((currentStatuses) => currentStatuses.includes(status)
+    ? currentStatuses.filter((selectedStatus) => selectedStatus !== status)
+    : [...currentStatuses, status]);
 
   return (
     <section aria-label={t("finance.invoices")} className="space-y-4">
@@ -108,9 +113,9 @@ export function InvoiceList({
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuLabel className="text-xs">{t("finance.filter.status")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {INVOICE_STATUSES.map((s) => (
-              <DropdownMenuCheckboxItem key={s} checked={filterStatus.includes(s)} onCheckedChange={() => toggleStatus(s)}>
-                {statusLabel(s)}
+            {INVOICE_STATUSES.map((status) => (
+              <DropdownMenuCheckboxItem key={status} checked={filterStatus.includes(status)} onCheckedChange={() => toggleStatus(status)}>
+                {statusLabel(status)}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
@@ -127,9 +132,9 @@ export function InvoiceList({
       <AnimatePresence>
         {filterStatus.length > 0 && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="flex gap-2 flex-wrap" aria-label={t("finance.filter.active")}>
-            {filterStatus.map((s) => (
-              <Button key={s} onClick={() => toggleStatus(s)} aria-label={t("finance.filter.remove", { label: statusLabel(s) })} className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-                {statusLabel(s)} <X className="w-3 h-3" aria-hidden="true" />
+            {filterStatus.map((status) => (
+              <Button key={status} onClick={() => toggleStatus(status)} aria-label={t("finance.filter.remove", { label: statusLabel(status) })} className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                {statusLabel(status)} <X className="w-3 h-3" aria-hidden="true" />
               </Button>
             ))}
             <Button variant="link" onClick={() => setFilterStatus([])} className="text-xs text-muted-foreground hover:text-foreground underline p-0 h-auto">{t("contacts.clearFilters")}</Button>
@@ -192,72 +197,72 @@ export function InvoiceList({
               {filtered.length === 0 ? (
                 <tr><td colSpan={visibleColCount} className="py-4"><EmptyState icon={ReceiptText} title={t("finance.empty.invoicesTitle")} description={t("finance.empty.invoicesSubtitle")} compact /></td></tr>
               ) : (
-                filtered.map((inv, i) => {
-                  const cls = statusCls[inv.status] || statusCls.pending;
+                filtered.map((invoice, index) => {
+                  const statusClassName = statusCls[invoice.status] || statusCls.pending;
                   return (
                     <motion.tr
-                      key={inv.id}
+                      key={invoice.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ delay: i * 0.03 }}
+                      transition={{ delay: index * 0.03 }}
                       className="hover:bg-muted/20 transition-colors group"
                     >
                       {showInvoice && (
                         <td className="px-4 py-3">
-                          <span className="text-[11px] font-mono font-semibold text-muted-foreground">{inv.id}</span>
+                          <span className="text-[11px] font-mono font-semibold text-muted-foreground">{invoice.id}</span>
                         </td>
                       )}
                       {showStudent && (
                         <td className="px-4 py-3">
-                          <p className="text-[13px] font-semibold text-foreground whitespace-nowrap m-0">{inv.studentName}</p>
+                          <p className="text-[13px] font-semibold text-foreground whitespace-nowrap m-0">{invoice.studentName}</p>
                         </td>
                       )}
                       {showSessionClass && (
                         <td className="px-4 py-3">
-                          <p className="text-[12px] text-foreground m-0">{inv.class}</p>
-                          <p className="text-[10px] text-muted-foreground m-0">{inv.session}</p>
+                          <p className="text-[12px] text-foreground m-0">{invoice.class}</p>
+                          <p className="text-[10px] text-muted-foreground m-0">{invoice.session}</p>
                         </td>
                       )}
                       {showBaseFee && (
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="text-[12px] text-foreground">{fmt(inv.baseFee)}</span>
+                          <span className="text-[12px] text-foreground">{formatMoney(invoice.baseFee)}</span>
                         </td>
                       )}
                       {showDiscount && (
                         <td className="px-4 py-3">
-                          {inv.discountAmt > 0 ? (
+                          {invoice.discountAmt > 0 ? (
                             <div>
-                              <span className="text-[12px] text-warning font-medium">-{fmt(inv.discountAmt)}</span>
-                              <p className="text-[10px] text-muted-foreground m-0">{inv.discountType}</p>
+                              <span className="text-[12px] text-warning font-medium">-{formatMoney(invoice.discountAmt)}</span>
+                              <p className="text-[10px] text-muted-foreground m-0">{invoice.discountType}</p>
                             </div>
                           ) : <span className="text-[12px] text-muted-foreground">—</span>}
                         </td>
                       )}
                       {showFinal && (
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="text-[13px] font-bold text-foreground">{fmt(inv.finalAmt)}</span>
-                          {inv.paidAmt && inv.status === "partial" && (
-                            <p className="text-[10px] text-info m-0">{t("finance.paidAmount", { amount: fmt(inv.paidAmt) })}</p>
+                          <span className="text-[13px] font-bold text-foreground">{formatMoney(invoice.finalAmt)}</span>
+                          {invoice.paidAmt && invoice.status === "partial" && (
+                            <p className="text-[10px] text-info m-0">{t("finance.paidAmount", { amount: formatMoney(invoice.paidAmt) })}</p>
                           )}
                         </td>
                       )}
                       {showStatus && (
                         <td className="px-4 py-3">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cls}`}>{statusLabel(inv.status)}</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusClassName}`}>{statusLabel(invoice.status)}</span>
                         </td>
                       )}
                       {showDueDate && (
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className={`text-[12px] ${inv.status === "overdue" ? "text-destructive font-semibold" : "text-muted-foreground"}`}>{inv.dueDate}</span>
+                          <span className={`text-[12px] ${invoice.status === "overdue" ? "text-destructive font-semibold" : "text-muted-foreground"}`}>{invoice.dueDate}</span>
                         </td>
                       )}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" onClick={() => onView(inv)} aria-label={t("finance.viewInvoice", { id: inv.id })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                          <Button variant="ghost" onClick={() => onView(invoice)} aria-label={t("finance.viewInvoice", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                             <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                           </Button>
-                          {inv.status !== "paid" && (
-                            <Button variant="ghost" onClick={() => onRecord(inv)} aria-label={t("finance.recordPaymentFor", { id: inv.id })} className="p-1.5 rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
+                          {invoice.status !== "paid" && (
+                            <Button variant="ghost" onClick={() => onRecord(invoice)} aria-label={t("finance.recordPaymentFor", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
                               <ReceiptText className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>
                           )}

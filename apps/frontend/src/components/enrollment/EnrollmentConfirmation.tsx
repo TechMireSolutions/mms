@@ -61,7 +61,7 @@ export function EnrollmentConfirmation({ student, session, onConfirm, onBack }: 
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [confirmed, setConfirmed] = useState<boolean>(false);
 
-  const discount = discountTypes.find((d) => d.id === discountType) ?? discountTypes[0] ?? {
+  const discount = discountTypes.find((discountOption) => discountOption.id === discountType) ?? discountTypes[0] ?? {
     id: "none",
     label: "No Discount",
     pct: 0,
@@ -74,7 +74,7 @@ export function EnrollmentConfirmation({ student, session, onConfirm, onBack }: 
   const handleConfirm = async () => {
     setSubmitting(true);
     try {
-      await new Promise((r) => setTimeout(r, 1200));
+      await new Promise((resolve) => setTimeout(resolve, 1200));
       setConfirmed(true);
       setSubmitting(false);
       setTimeout(() => onConfirm({ student, session, discountType, netFee, total }), 1600);
@@ -145,23 +145,23 @@ export function EnrollmentConfirmation({ student, session, onConfirm, onBack }: 
           <h3 className="text-[12px] font-bold text-foreground uppercase tracking-wide">Discount / Concession</h3>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="radiogroup" aria-label="Select discount option">
-          {discountTypes.map((d) => {
-            const isSelected = discountType === d.id;
+          {discountTypes.map((discountOption) => {
+            const isSelected = discountType === discountOption.id;
             return (
               <Button
-                key={d.id}
+                key={discountOption.id}
                 variant="outline"
                 role="radio"
                 aria-checked={isSelected}
-                onClick={() => setDiscountType(d.id)}
+                onClick={() => setDiscountType(discountOption.id)}
                 className={`rounded-lg border-2 px-3 py-2.5 text-left transition-all h-auto block hover:bg-transparent ${
                   isSelected
                     ? "border-primary bg-primary/[0.04] hover:bg-primary/[0.04] text-primary hover:text-primary"
                     : "border-border hover:border-primary/30 text-foreground hover:text-foreground"
                 }`}
               >
-                <p className={`text-[12px] font-semibold ${isSelected ? "text-primary" : "text-foreground"}`}>{d.label}</p>
-                <p className="text-[11px] text-muted-foreground">{d.pct === 0 ? "No discount" : `${d.pct}% off`}</p>
+                <p className={`text-[12px] font-semibold ${isSelected ? "text-primary" : "text-foreground"}`}>{discountOption.label}</p>
+                <p className="text-[11px] text-muted-foreground">{discountOption.pct === 0 ? "No discount" : `${discountOption.pct}% off`}</p>
               </Button>
             );
           })}

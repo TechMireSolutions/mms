@@ -8,11 +8,11 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer } from "../ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 
-const fmt = (n: number) => `PKR ${Number(n).toLocaleString()}`;
+const formatMoney = (amount: number) => `PKR ${Number(amount).toLocaleString()}`;
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
   labels: {
     trigger: string;
     title: string;
@@ -35,11 +35,11 @@ export function PaymentTracker({
   columnCustomizer,
 }: PaymentTrackerProps) {
   const { t } = useTranslation();
-  const total = payments.reduce((s, p) => s + p.amount, 0);
+  const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
 
-  const byMethod = payments.reduce((acc, p) => {
-    acc[p.method] = (acc[p.method] || 0) + p.amount;
-    return acc;
+  const paymentsByMethod = payments.reduce((amountByMethod, payment) => {
+    amountByMethod[payment.method] = (amountByMethod[payment.method] || 0) + payment.amount;
+    return amountByMethod;
   }, {} as Record<string, number>);
 
   const showDate = isColumnVisible ? isColumnVisible("date") : true;
@@ -62,12 +62,12 @@ export function PaymentTracker({
   return (
     <section aria-label={t("finance.payments")} className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" aria-label={t("finance.paymentsByMethod")}>
-        {Object.entries(byMethod).map(([method, amount]) => (
+        {Object.entries(paymentsByMethod).map(([method, amount]) => (
           <article key={method} className="rounded-xl border border-border bg-card p-3">
             <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", PAYMENT_METHOD_BADGE[method] || PAYMENT_METHOD_BADGE.Other)}>{method}</span>
-            <p className="text-[15px] font-bold text-foreground mt-2 m-0">{fmt(amount)}</p>
+            <p className="text-[15px] font-bold text-foreground mt-2 m-0">{formatMoney(amount)}</p>
             <p className="text-[10px] text-muted-foreground m-0">
-              {t("finance.paymentCount", { count: payments.filter((p) => p.method === method).length })}
+              {t("finance.paymentCount", { count: payments.filter((payment) => payment.method === method).length })}
             </p>
           </article>
         ))}
@@ -80,7 +80,7 @@ export function PaymentTracker({
             <h3 className="text-sm font-bold text-foreground m-0">{t("finance.paymentLog")}</h3>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] font-semibold text-success">{t("finance.paymentTotal", { amount: fmt(total) })}</span>
+            <span className="text-[11px] font-semibold text-success">{t("finance.paymentTotal", { amount: formatMoney(totalPaid) })}</span>
             {columnCustomizer && (
               <ModuleColumnCustomizer
                 columnRegistry={columnCustomizer.columnRegistry}
@@ -136,36 +136,36 @@ export function PaymentTracker({
               {payments.length === 0 ? (
                 <tr><td colSpan={visibleColCount || 1} className="py-10 text-center text-sm text-muted-foreground">{t("finance.empty.payments")}</td></tr>
               ) : (
-                payments.map((p, i) => (
+                payments.map((payment, index) => (
                   <motion.tr
-                    key={p.id}
+                    key={payment.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.03 }}
+                    transition={{ delay: index * 0.03 }}
                     className="hover:bg-muted/20 transition-colors"
                   >
                     {showDate && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{p.date}</td>
+                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{payment.date}</td>
                     )}
                     {showStudent && (
-                      <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{p.studentName}</td>
+                      <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{payment.studentName}</td>
                     )}
                     {showInvoice && (
-                      <td className="px-4 py-3 text-[11px] font-mono text-muted-foreground">{p.invoiceId}</td>
+                      <td className="px-4 py-3 text-[11px] font-mono text-muted-foreground">{payment.invoiceId}</td>
                     )}
                     {showAmount && (
-                      <td className="px-4 py-3 text-[13px] font-bold text-success whitespace-nowrap">{fmt(p.amount)}</td>
+                      <td className="px-4 py-3 text-[13px] font-bold text-success whitespace-nowrap">{formatMoney(payment.amount)}</td>
                     )}
                     {showMethod && (
                       <td className="px-4 py-3">
-                        <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", PAYMENT_METHOD_BADGE[p.method] || PAYMENT_METHOD_BADGE.Other)}>{p.method}</span>
+                        <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", PAYMENT_METHOD_BADGE[payment.method] || PAYMENT_METHOD_BADGE.Other)}>{payment.method}</span>
                       </td>
                     )}
                     {showReceivedBy && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground">{p.receivedBy || "—"}</td>
+                      <td className="px-4 py-3 text-[12px] text-muted-foreground">{payment.receivedBy || "—"}</td>
                     )}
                     {showNote && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground max-w-[160px] truncate">{p.note || "—"}</td>
+                      <td className="px-4 py-3 text-[12px] text-muted-foreground max-w-[160px] truncate">{payment.note || "—"}</td>
                     )}
                   </motion.tr>
                 ))

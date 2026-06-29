@@ -62,13 +62,13 @@ export function useHasanatDenoms(options?: { enabled?: boolean }) {
 
 export function useHasanatDenomsCollection(options?: { enabled?: boolean }): Denomination[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useHasanatDenoms({ enabled });
-  const fromLocal = useLiveCollection<Denomination>('hasanat_denoms', [], { enabled });
+  const { data: queryDenominations = [] } = useHasanatDenoms({ enabled });
+  const localDenominations = useLiveCollection<Denomination>('hasanat_denoms', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryDenominations.length > 0) {
+    return queryDenominations;
   }
-  return fromLocal;
+  return localDenominations;
 }
 
 export function useHasanatBatches(options?: { enabled?: boolean }) {
@@ -84,13 +84,13 @@ export function useHasanatBatches(options?: { enabled?: boolean }) {
 
 export function useHasanatBatchesCollection(options?: { enabled?: boolean }): StockBatch[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useHasanatBatches({ enabled });
-  const fromLocal = useLiveCollection<StockBatch>('hasanat_batches', [], { enabled });
+  const { data: queryBatches = [] } = useHasanatBatches({ enabled });
+  const localBatches = useLiveCollection<StockBatch>('hasanat_batches', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryBatches.length > 0) {
+    return queryBatches;
   }
-  return fromLocal;
+  return localBatches;
 }
 
 export function useHasanatDistributions(options?: { enabled?: boolean }) {
@@ -106,13 +106,13 @@ export function useHasanatDistributions(options?: { enabled?: boolean }) {
 
 export function useHasanatDistributionsCollection(options?: { enabled?: boolean }): Distribution[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useHasanatDistributions({ enabled });
-  const fromLocal = useLiveCollection<Distribution>('hasanat_distributions', [], { enabled });
+  const { data: queryDistributions = [] } = useHasanatDistributions({ enabled });
+  const localDistributions = useLiveCollection<Distribution>('hasanat_distributions', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryDistributions.length > 0) {
+    return queryDistributions;
   }
-  return fromLocal;
+  return localDistributions;
 }
 
 export function useHasanatRedemptions(options?: { enabled?: boolean }) {
@@ -128,13 +128,13 @@ export function useHasanatRedemptions(options?: { enabled?: boolean }) {
 
 export function useHasanatRedemptionsCollection(options?: { enabled?: boolean }): Redemption[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useHasanatRedemptions({ enabled });
-  const fromLocal = useLiveCollection<Redemption>('hasanat_redemptions', [], { enabled });
+  const { data: queryRedemptions = [] } = useHasanatRedemptions({ enabled });
+  const localRedemptions = useLiveCollection<Redemption>('hasanat_redemptions', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryRedemptions.length > 0) {
+    return queryRedemptions;
   }
-  return fromLocal;
+  return localRedemptions;
 }
 
 export function useHasanatMetrics() {
@@ -159,8 +159,8 @@ export function useHasanatMutations() {
         method: 'PUT',
         body: JSON.stringify(denoms),
       }),
-    onSuccess: (data) => {
-      saveCollection('hasanat_denoms', data.denoms);
+    onSuccess: (response) => {
+      saveCollection('hasanat_denoms', response.denoms);
       void queryClient.invalidateQueries({ queryKey: HASANAT_DENOMS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
     },
@@ -172,8 +172,8 @@ export function useHasanatMutations() {
         method: 'PUT',
         body: JSON.stringify(batches),
       }),
-    onSuccess: (data) => {
-      saveCollection('hasanat_batches', data.batches);
+    onSuccess: (response) => {
+      saveCollection('hasanat_batches', response.batches);
       void queryClient.invalidateQueries({ queryKey: HASANAT_BATCHES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
     },
@@ -185,8 +185,8 @@ export function useHasanatMutations() {
         method: 'PUT',
         body: JSON.stringify(distributions),
       }),
-    onSuccess: (data) => {
-      saveCollection('hasanat_distributions', data.distributions);
+    onSuccess: (response) => {
+      saveCollection('hasanat_distributions', response.distributions);
       void queryClient.invalidateQueries({ queryKey: HASANAT_DISTRIBUTIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
     },
@@ -198,8 +198,8 @@ export function useHasanatMutations() {
         method: 'PUT',
         body: JSON.stringify(redemptions),
       }),
-    onSuccess: (data) => {
-      saveCollection('hasanat_redemptions', data.redemptions);
+    onSuccess: (response) => {
+      saveCollection('hasanat_redemptions', response.redemptions);
       void queryClient.invalidateQueries({ queryKey: HASANAT_REDEMPTIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
     },
@@ -234,8 +234,8 @@ export function useHasanatDistributionColumnPreferencesMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(HASANAT_DISTRIBUTION_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (response) => {
+      queryClient.setQueryData(HASANAT_DISTRIBUTION_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
     },
   });
 }
@@ -261,8 +261,8 @@ export function useHasanatRedemptionColumnPreferencesMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(HASANAT_REDEMPTION_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (response) => {
+      queryClient.setQueryData(HASANAT_REDEMPTION_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
     },
   });
 }

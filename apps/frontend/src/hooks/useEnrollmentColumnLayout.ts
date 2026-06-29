@@ -76,10 +76,10 @@ export function useEnrollmentColumnLayout() {
   );
 
   const updateUserColumnLayout = useCallback(
-    (cols: ModuleColumnRegistryEntry[]) => {
+    (columns: ModuleColumnRegistryEntry[]) => {
       if (!userId) return;
-      saveModuleColumnRegistry(ENROLLMENTS_MODULE_CONTRACT.moduleId, userId, cols);
-      const preferences: ModuleColumnPreference[] = cols.map(({ key, enabled, order }) => ({
+      saveModuleColumnRegistry(ENROLLMENTS_MODULE_CONTRACT.moduleId, userId, columns);
+      const preferences: ModuleColumnPreference[] = columns.map(({ key, enabled, order }) => ({
         key,
         enabled,
         order,

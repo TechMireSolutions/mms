@@ -25,21 +25,21 @@ export function StatusToggle({ value, onChange }: StatusToggleProps) {
       aria-label="Attendance Status Toggle" 
       className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold"
     >
-      {statuses.map((s: AttendanceStatus) => (
+      {statuses.map((status: AttendanceStatus) => (
         <Button
-          key={s.id}
+          key={status.id}
           type="button"
-          onClick={() => onChange(s.id)}
-          title={s.label}
-          aria-pressed={value === s.id}
+          onClick={() => onChange(status.id)}
+          title={status.label}
+          aria-pressed={value === status.id}
           variant="ghost"
           className={`px-2.5 py-1.5 transition-colors rounded-none h-auto ${
-            value === s.id
-              ? `${s.bg} ${s.text} hover:${s.bg} hover:${s.text}`
+            value === status.id
+              ? `${status.bg} ${status.text} hover:${status.bg} hover:${status.text}`
               : "bg-card text-muted-foreground hover:bg-muted"
           }`}
         >
-          {s.short}
+          {status.short}
         </Button>
       ))}
     </div>

@@ -35,13 +35,13 @@ export function useEnrollments(options?: { enabled?: boolean }) {
 
 export function useEnrollmentsCollection(options?: { enabled?: boolean }): Enrollment[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useEnrollments({ enabled });
-  const fromLocal = useLiveCollection<Enrollment>('enrollments', [], { enabled });
+  const { data: queryEnrollments = [] } = useEnrollments({ enabled });
+  const localEnrollments = useLiveCollection<Enrollment>('enrollments', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryEnrollments.length > 0) {
+    return queryEnrollments;
   }
-  return fromLocal;
+  return localEnrollments;
 }
 
 export function useEnrollmentsMetrics() {
@@ -80,8 +80,8 @@ export function useEnrollmentColumnPreferencesMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(ENROLLMENTS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (response) => {
+      queryClient.setQueryData(ENROLLMENTS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
     },
   });
 }
