@@ -76,16 +76,16 @@ export default function Users(): React.JSX.Element {
 
   const saveUsers = useCallback(
     (updater: SystemUser[] | ((prev: SystemUser[]) => SystemUser[])) => {
-      const next = typeof updater === 'function' ? updater(users) : updater;
-      replaceUsers.mutate(next);
+      const nextUsers = typeof updater === 'function' ? updater(users) : updater;
+      replaceUsers.mutate(nextUsers);
     },
     [users, replaceUsers],
   );
 
   const saveLogs = useCallback(
     (updater: ActivityLog[] | ((prev: ActivityLog[]) => ActivityLog[])) => {
-      const next = typeof updater === 'function' ? updater(logs) : updater;
-      replaceLogs.mutate(next);
+      const nextLogs = typeof updater === 'function' ? updater(logs) : updater;
+      replaceLogs.mutate(nextLogs);
     },
     [logs, replaceLogs],
   );

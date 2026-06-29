@@ -88,8 +88,8 @@ function WidgetDrilldownModal({
     const widgetRecords = getFilteredRecords(widget, collections);
     if (!search) return widgetRecords;
     const searchText = search.toLowerCase();
-    return widgetRecords.filter((record) => {
-      return Object.values(record).some((value) => String(value).toLowerCase().includes(searchText));
+    return widgetRecords.filter((widgetRecord) => {
+      return Object.values(widgetRecord).some((fieldValue) => String(fieldValue).toLowerCase().includes(searchText));
     });
   }, [widget, collections, search]);
 
@@ -1876,9 +1876,9 @@ export function WidgetBuilder({
                     onChange={(e) => setBuilderCollection(e.target.value as CustomWidget["collection"])}
                     className={FORM_INPUT_BUILDER}
                   >
-                    {COLLECTION_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value} className="bg-background text-foreground">
-                        {t(`reports.collections.${opt.value}` as any) || opt.label}
+                    {COLLECTION_OPTIONS.map((collectionOption) => (
+                      <option key={collectionOption.value} value={collectionOption.value} className="bg-background text-foreground">
+                        {t(`reports.collections.${collectionOption.value}` as any) || collectionOption.label}
                       </option>
                     ))}
                   </select>
@@ -2108,8 +2108,8 @@ export function WidgetBuilder({
                         }}
                         className={FORM_INPUT_BUILDER}
                       >
-                        {COLLECTION_OPTIONS.map(opt => (
-                          <option key={opt.value} value={opt.value} className="bg-background text-foreground">{t(`reports.collections.${opt.value}` as any) || opt.label}</option>
+                        {COLLECTION_OPTIONS.map((collectionOption) => (
+                          <option key={collectionOption.value} value={collectionOption.value} className="bg-background text-foreground">{t(`reports.collections.${collectionOption.value}` as any) || collectionOption.label}</option>
                         ))}
                       </select>
                     </div>

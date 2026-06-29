@@ -221,9 +221,9 @@ export function getFilteredRecords(
   const collectionRecords = (collections[widget.collection] || []) as Record<string, unknown>[];
   if (!widget.filterField) return collectionRecords;
 
-  return collectionRecords.filter((record) => {
-    if (!record) return false;
-    const fieldValue = record[widget.filterField || ""];
+  return collectionRecords.filter((collectionRecord) => {
+    if (!collectionRecord) return false;
+    const fieldValue = collectionRecord[widget.filterField || ""];
     if (fieldValue === undefined || fieldValue === null) return false;
 
     const stringValue = String(fieldValue).toLowerCase();
@@ -302,20 +302,20 @@ export function computeWidgetSingleValue(
     const targetField = widget.targetField || "";
     let numericTotal = 0;
     let numericRecordCount = 0;
-    filteredRecords.forEach((record) => {
+    filteredRecords.forEach((filteredRecord) => {
       if (widget.collection === "hasanat_distributions" && targetField === "points") {
-        const denominationName = String(record.denominationName || "").toLowerCase();
-        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === record.denominationId);
+        const denominationName = String(filteredRecord.denominationName || "").toLowerCase();
+        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === filteredRecord.denominationId);
         const points = matchedDenomination ? matchedDenomination.points : (
           denominationName.includes("silver") ? 150 :
           denominationName.includes("gold") ? 500 :
           denominationName.includes("platinum") ? 1000 :
           denominationName.includes("diamond") ? 2500 : 50
         );
-        numericTotal += Number(record.quantity || 1) * points;
+        numericTotal += Number(filteredRecord.quantity || 1) * points;
         numericRecordCount++;
       } else {
-        const numericValue = Number(record[targetField]);
+        const numericValue = Number(filteredRecord[targetField]);
         if (!isNaN(numericValue)) {
           numericTotal += numericValue;
           numericRecordCount++;
@@ -372,10 +372,10 @@ export function computeWidgetChartData(
   }
 
   const collectionRecords = collections[widget.collection] || [];
-  const filteredRecords = collectionRecords.filter((record) => {
-    if (!record) return false;
+  const filteredRecords = collectionRecords.filter((collectionRecord) => {
+    if (!collectionRecord) return false;
     if (!widget.filterField) return true;
-    const fieldValue = (record as Record<string, unknown>)[widget.filterField];
+    const fieldValue = (collectionRecord as Record<string, unknown>)[widget.filterField];
     if (fieldValue === undefined || fieldValue === null) return false;
     const stringValue = String(fieldValue).toLowerCase();
     const stringTargetValue = String(widget.filterValue || "").toLowerCase();
@@ -395,11 +395,11 @@ export function computeWidgetChartData(
 
   const xAxis = widget.xAxisField || "status";
   const groups: Record<string, Record<string, unknown>[]> = {};
-  filteredRecords.forEach((record) => {
-    const groupValue = (record as Record<string, unknown>)[xAxis];
+  filteredRecords.forEach((filteredRecord) => {
+    const groupValue = (filteredRecord as Record<string, unknown>)[xAxis];
     const groupKey = groupValue === undefined || groupValue === null || groupValue === "" ? "Unknown" : String(groupValue);
     if (!groups[groupKey]) groups[groupKey] = [];
-    groups[groupKey].push(record as Record<string, unknown>);
+    groups[groupKey].push(filteredRecord as Record<string, unknown>);
   });
 
   const chartData = Object.entries(groups).map(([groupName, groupRecords]) => {
@@ -410,20 +410,20 @@ export function computeWidgetChartData(
       const targetField = widget.targetField || "";
       let numericTotal = 0;
       let numericRecordCount = 0;
-      groupRecords.forEach((record) => {
+      groupRecords.forEach((groupRecord) => {
         if (widget.collection === "hasanat_distributions" && targetField === "points") {
-          const denominationName = String(record.denominationName || "").toLowerCase();
-          const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === record.denominationId);
+          const denominationName = String(groupRecord.denominationName || "").toLowerCase();
+          const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === groupRecord.denominationId);
           const points = matchedDenomination ? matchedDenomination.points : (
             denominationName.includes("silver") ? 150 :
             denominationName.includes("gold") ? 500 :
             denominationName.includes("platinum") ? 1000 :
             denominationName.includes("diamond") ? 2500 : 50
           );
-          numericTotal += Number(record.quantity || 1) * points;
+          numericTotal += Number(groupRecord.quantity || 1) * points;
           numericRecordCount++;
         } else {
-          const numericValue = Number(record[targetField]);
+          const numericValue = Number(groupRecord[targetField]);
           if (!isNaN(numericValue)) {
             numericTotal += numericValue;
             numericRecordCount++;

@@ -72,7 +72,7 @@ export default function Accounting() {
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [configSubTab, setConfigSubTab] = useState<"fields" | "preferences">("fields");
   const accounts = useAccountingAccountsCollection();
-  const entries = useAccountingEntriesCollection();
+  const journalEntries = useAccountingEntriesCollection();
   const fiscalYears = useAccountingFiscalYearsCollection();
   const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
   const { settings } = useAccountingConfig();
@@ -83,28 +83,28 @@ export default function Accounting() {
   const { replaceAccounts, replaceEntries, replaceFiscalYears } = useAccountingMutations();
 
   const setAccounts = useCallback((updater: typeof accounts | ((prev: typeof accounts) => typeof accounts)) => {
-    const next = typeof updater === "function" ? updater(accounts) : updater;
-    replaceAccounts.mutate(next);
+    const nextAccounts = typeof updater === "function" ? updater(accounts) : updater;
+    replaceAccounts.mutate(nextAccounts);
   }, [accounts, replaceAccounts]);
 
-  const setEntries = useCallback((updater: typeof entries | ((prev: typeof entries) => typeof entries)) => {
-    const next = typeof updater === "function" ? updater(entries) : updater;
-    replaceEntries.mutate(next);
-  }, [entries, replaceEntries]);
+  const setEntries = useCallback((updater: typeof journalEntries | ((prev: typeof journalEntries) => typeof journalEntries)) => {
+    const nextJournalEntries = typeof updater === "function" ? updater(journalEntries) : updater;
+    replaceEntries.mutate(nextJournalEntries);
+  }, [journalEntries, replaceEntries]);
 
   const setFiscalYears = useCallback((updater: typeof fiscalYears | ((prev: typeof fiscalYears) => typeof fiscalYears)) => {
-    const next = typeof updater === "function" ? updater(fiscalYears) : updater;
-    replaceFiscalYears.mutate(next);
+    const nextFiscalYears = typeof updater === "function" ? updater(fiscalYears) : updater;
+    replaceFiscalYears.mutate(nextFiscalYears);
   }, [fiscalYears, replaceFiscalYears]);
 
   useEffect(() => {
     if (activeSubTab === 'journal' || activeSubTab === 'coa') return;
-    setFilteredCount(entries.length);
-  }, [activeSubTab, entries.length]);
+    setFilteredCount(journalEntries.length);
+  }, [activeSubTab, journalEntries.length]);
 
-  const activeFY = fiscalYears.find((f) => f.status === "active");
-  const cur = currencies.find((c) => c.code === settings.currency) || currencies[0] || { symbol: "$", code: "USD", name: "US Dollar" };
-  const fmt = (n: number) => `${cur.symbol} ${n.toLocaleString(undefined, { minimumFractionDigits: settings.decimalPlaces })}`;
+  const activeFiscalYear = fiscalYears.find((fiscalYear) => fiscalYear.status === "active");
+  const activeCurrency = currencies.find((currency) => currency.code === settings.currency) || currencies[0] || { symbol: "$", code: "USD", name: "US Dollar" };
+  const formatCurrency = (amount: number) => `${activeCurrency.symbol} ${amount.toLocaleString(undefined, { minimumFractionDigits: settings.decimalPlaces })}`;
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
@@ -113,17 +113,17 @@ export default function Accounting() {
       <PageHeader
         icon={TrendingUp}
         title={t("nav.accounting")}
-        subtitle={`${t("page.accounting.subtitle")}${activeFY ? ` · ${activeFY.label}` : ""} · ${cur.code}`}
+        subtitle={`${t("page.accounting.subtitle")}${activeFiscalYear ? ` · ${activeFiscalYear.label}` : ""} · ${activeCurrency.code}`}
         actions={
-          activeFY && (
+          activeFiscalYear && (
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-success/15 text-success border border-success/30">
-              {activeFY.label} — Active
+              {activeFiscalYear.label} — Active
             </span>
           )
         }
       />
 
-      <AccountingCommandMetrics entryTotal={entries.length} shown={filteredCount} />
+      <AccountingCommandMetrics entryTotal={journalEntries.length} shown={filteredCount} />
 
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
@@ -153,26 +153,26 @@ export default function Accounting() {
               <KPISummary category="accounting" />
               <FinancialReports
                 accounts={accounts}
-                entries={entries}
+                entries={journalEntries}
                 fiscalYears={fiscalYears}
                 settings={settings}
-                fmt={fmt}
+                fmt={formatCurrency}
               />
             </div>
           )}
           
           {activeTab === "work" && activeSubTab === "overview" && (
-            <AccountingDashboard accounts={accounts} entries={entries} settings={settings} fiscalYears={fiscalYears} fmt={fmt} />
+            <AccountingDashboard accounts={accounts} entries={journalEntries} settings={settings} fiscalYears={fiscalYears} fmt={formatCurrency} />
           )}
 
           {activeTab === "work" && activeSubTab === "journal" && (
             <JournalEntries
-              entries={entries}
+              entries={journalEntries}
               accounts={accounts}
               settings={settings}
               fiscalYears={fiscalYears}
               onChange={setEntries}
-              fmt={fmt}
+              fmt={formatCurrency}
               onFilteredCountChange={setFilteredCount}
               isColumnVisible={journalColumnLayout.isColumnVisible}
               columnCustomizer={{
@@ -183,10 +183,10 @@ export default function Accounting() {
             />
           )}
           {activeTab === "work" && activeSubTab === "ledger" && (
-            <GeneralLedger accounts={accounts} entries={entries} fmt={fmt} />
+            <GeneralLedger accounts={accounts} entries={journalEntries} fmt={formatCurrency} />
           )}
           {activeTab === "work" && activeSubTab === "trial" && (
-            <TrialBalance accounts={accounts} entries={entries} fiscalYears={fiscalYears} fmt={fmt} />
+            <TrialBalance accounts={accounts} entries={journalEntries} fiscalYears={fiscalYears} fmt={formatCurrency} />
           )}
           {activeTab === "work" && activeSubTab === "coa" && (
             <ChartOfAccounts

@@ -39,8 +39,8 @@ export default function QuestionBankPage(): React.JSX.Element {
   const { t } = useTranslation();
   const questions = useQuestionBankQuestionsCollection();
   const tests = useQuestionBankTestsCollection();
-  const results = useQuestionBankResultsCollection();
-  const { settings, categories } = useQuestionBankConfig(questions);
+  const questionBankResults = useQuestionBankResultsCollection();
+  const questionBankConfig = useQuestionBankConfig(questions);
   const OPS_SUB_TABS = useMemo(
     () => [
       { id: 'questions', label: t('questionBank.questions'), icon: ClipboardList },
@@ -58,14 +58,14 @@ export default function QuestionBankPage(): React.JSX.Element {
   const [editQuestion, setEditQuestion] = useState<QuestionBankQuestion | null>(null);
   const [filteredCount, setFilteredCount] = useState(0);
   const columnLayout = useQuestionBankColumnLayout();
-  const listLayout = (settings.defaultViewLayout || 'list') === 'list';
+  const listLayout = (questionBankConfig.settings.defaultViewLayout || 'list') === 'list';
 
   const { replaceQuestions, replaceTests } = useQuestionBankMutations();
 
   const setQuestions = useCallback(
     (updater: typeof questions | ((prev: typeof questions) => typeof questions)) => {
-      const next = typeof updater === 'function' ? updater(questions) : updater;
-      replaceQuestions.mutate(next);
+      const nextQuestions = typeof updater === 'function' ? updater(questions) : updater;
+      replaceQuestions.mutate(nextQuestions);
     },
     [questions, replaceQuestions],
   );
@@ -168,12 +168,12 @@ export default function QuestionBankPage(): React.JSX.Element {
                   <ModuleReports category="questionBank" />
                   <PerformanceAnalytics
                     tests={tests}
-                    results={results}
+                    results={questionBankResults}
                     questions={questions}
-                    categories={categories}
+                    categories={questionBankConfig.categories}
                   />
                   {tests.length > 0 && (
-                    <AutoGrading tests={tests} results={results} questions={questions} />
+                    <AutoGrading tests={tests} results={questionBankResults} questions={questions} />
                   )}
                 </div>
               )}

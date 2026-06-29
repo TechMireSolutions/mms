@@ -91,12 +91,12 @@ export function AttendanceRecords({
     1;
 
   const filtered = useMemo(() => {
-    return records.filter((record) => {
-      if (filters.classId && record.classId !== filters.classId) return false;
-      if (statusFilter !== "all" && record.status !== statusFilter) return false;
-      if (dateFrom && record.date < dateFrom) return false;
-      if (dateTo && record.date > dateTo) return false;
-      if (search && !record.studentName.toLowerCase().includes(search.toLowerCase())) return false;
+    return records.filter((attendanceRecord) => {
+      if (filters.classId && attendanceRecord.classId !== filters.classId) return false;
+      if (statusFilter !== "all" && attendanceRecord.status !== statusFilter) return false;
+      if (dateFrom && attendanceRecord.date < dateFrom) return false;
+      if (dateTo && attendanceRecord.date > dateTo) return false;
+      if (search && !attendanceRecord.studentName.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
   }, [records, filters, statusFilter, dateFrom, dateTo, search]);
@@ -105,11 +105,11 @@ export function AttendanceRecords({
   const paginatedRecords = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const updateRecord = <K extends keyof AttendanceRecord>(id: string, key: K, value: AttendanceRecord[K]) =>
-    setRecords((previousRecords) => previousRecords.map((record) => record.id === id ? { ...record, [key]: value } : record));
+    setRecords((previousRecords) => previousRecords.map((attendanceRecord) => attendanceRecord.id === id ? { ...attendanceRecord, [key]: value } : attendanceRecord));
 
   const deleteRecord = (id: string) => {
     if (!can("users.manage")) return;
-    setRecords((previousRecords) => previousRecords.filter((record) => record.id !== id));
+    setRecords((previousRecords) => previousRecords.filter((attendanceRecord) => attendanceRecord.id !== id));
   };
 
   const classLabel = (classId: string) => allClasses.find((sessionClass) => sessionClass.id === classId)?.name || classId;
@@ -222,47 +222,47 @@ export function AttendanceRecords({
             <tbody className="divide-y divide-border">
               {paginatedRecords.length === 0 ? (
                 <tr><td colSpan={visibleColCount} className="px-4 py-12 text-center text-muted-foreground">{t("attendance.empty.records")}</td></tr>
-              ) : paginatedRecords.map((record) => (
-                <motion.tr key={record.id} layout className="hover:bg-muted/20 transition-colors">
+              ) : paginatedRecords.map((attendanceRecord) => (
+                <motion.tr key={attendanceRecord.id} layout className="hover:bg-muted/20 transition-colors">
                   {showDate && (
-                    <td className="px-3 py-2.5 font-mono text-xs text-foreground whitespace-nowrap">{record.date}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-foreground whitespace-nowrap">{attendanceRecord.date}</td>
                   )}
                   {showClass && (
-                    <td className="px-3 py-2.5 text-foreground whitespace-nowrap">{classLabel(record.classId)}</td>
+                    <td className="px-3 py-2.5 text-foreground whitespace-nowrap">{classLabel(attendanceRecord.classId)}</td>
                   )}
                   {showStudent && (
-                    <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{record.studentName}</td>
+                    <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{attendanceRecord.studentName}</td>
                   )}
                   {showStatus && (
                     <td className="px-3 py-2.5">
-                      {editing === record.id
-                        ? <StatusToggle value={record.status} onChange={(value) => updateRecord(record.id, "status", value as AttendanceRecord["status"])} />
-                        : <StatusBadge status={record.status} />
+                      {editing === attendanceRecord.id
+                        ? <StatusToggle value={attendanceRecord.status} onChange={(value) => updateRecord(attendanceRecord.id, "status", value as AttendanceRecord["status"])} />
+                        : <StatusBadge status={attendanceRecord.status} />
                       }
                     </td>
                   )}
                   {showTimeIn && (
                     <td className="px-3 py-2.5">
-                      {editing === record.id
-                        ? <input type="time" value={record.timeIn} onChange={(event) => updateRecord(record.id, "timeIn", event.target.value)}
+                      {editing === attendanceRecord.id
+                        ? <input type="time" value={attendanceRecord.timeIn} onChange={(event) => updateRecord(attendanceRecord.id, "timeIn", event.target.value)}
                             aria-label={t("attendance.columns.timeIn")}
                             className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none" />
-                        : <span className="text-xs text-muted-foreground font-mono">{record.timeIn || "—"}</span>
+                        : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeIn || "—"}</span>
                       }
                     </td>
                   )}
                   {showTimeOut && (
                     <td className="px-3 py-2.5">
-                      {editing === record.id
-                        ? <input type="time" value={record.timeOut} onChange={(event) => updateRecord(record.id, "timeOut", event.target.value)}
+                      {editing === attendanceRecord.id
+                        ? <input type="time" value={attendanceRecord.timeOut} onChange={(event) => updateRecord(attendanceRecord.id, "timeOut", event.target.value)}
                             aria-label={t("attendance.columns.timeOut")}
                             className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none" />
-                        : <span className="text-xs text-muted-foreground font-mono">{record.timeOut || "—"}</span>
+                        : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeOut || "—"}</span>
                       }
                     </td>
                   )}
                   {showNotes && (
-                    <td className="px-3 py-2.5 max-w-[160px] truncate text-xs text-muted-foreground">{record.notes || "—"}</td>
+                    <td className="px-3 py-2.5 max-w-[160px] truncate text-xs text-muted-foreground">{attendanceRecord.notes || "—"}</td>
                   )}
                   <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -271,11 +271,11 @@ export function AttendanceRecords({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => setEditing(editing === record.id ? null : record.id)}
-                          aria-label={editing === record.id ? t("common.cancel") : t("common.edit")}
+                          onClick={() => setEditing(editing === attendanceRecord.id ? null : attendanceRecord.id)}
+                          aria-label={editing === attendanceRecord.id ? t("common.cancel") : t("common.edit")}
                           className="h-8 w-8 text-muted-foreground hover:text-primary"
                         >
-                          {editing === record.id ? <X className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+                          {editing === attendanceRecord.id ? <X className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
                         </Button>
                       )}
                       {can("users.manage") && (
@@ -283,7 +283,7 @@ export function AttendanceRecords({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => deleteRecord(record.id)}
+                          onClick={() => deleteRecord(attendanceRecord.id)}
                           aria-label={t("attendance.deleteRecord")}
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         >

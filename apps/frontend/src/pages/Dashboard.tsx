@@ -241,7 +241,7 @@ export default function Dashboard() {
         }
       }
 
-      const result = computeCustomCardShared(
+      const computedCard = computeCustomCardShared(
         {
           id: widget.id,
           role: widget.role,
@@ -275,13 +275,13 @@ export default function Dashboard() {
       );
 
       return {
-        id: result.id,
+        id: computedCard.id,
         title: resolveWidgetTitle(widget, t),
-        value: result.value,
-        sub: result.sub,
-        icon: result.icon,
-        color: result.color,
-        trend: result.trend || 0,
+        value: computedCard.value,
+        sub: computedCard.sub,
+        icon: computedCard.icon,
+        color: computedCard.color,
+        trend: computedCard.trend || 0,
       };
     });
   }, [

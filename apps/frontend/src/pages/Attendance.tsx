@@ -56,25 +56,25 @@ export default function Attendance() {
   const [activeAnalyticsTab, setActiveAnalyticsTab] = useState("charts");
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const queryClient = useQueryClient();
-  const records = useAttendanceRecordsCollection();
+  const attendanceRecords = useAttendanceRecordsCollection();
   const { replaceAll } = useAttendanceMutations();
   const [subTab, setSubTab] = useState("fields");
   const columnLayout = useAttendanceColumnLayout();
 
   const pageFilteredCount = useMemo(() => {
-    return records.filter((record) => {
-      if (filters.classId && record.classId !== filters.classId) return false;
-      if (filters.date && record.date !== filters.date) return false;
+    return attendanceRecords.filter((attendanceRecord) => {
+      if (filters.classId && attendanceRecord.classId !== filters.classId) return false;
+      if (filters.date && attendanceRecord.date !== filters.date) return false;
       return true;
     }).length;
-  }, [records, filters.classId, filters.date]);
+  }, [attendanceRecords, filters.classId, filters.date]);
 
   const setRecords = useCallback((updater: React.SetStateAction<AttendanceRecord[]>) => {
-    const next = typeof updater === "function" ? updater(records) : updater;
-    saveCollection("attendance_records", next);
-    queryClient.setQueryData(ATTENDANCE_QUERY_KEY, next);
-    replaceAll.mutate(next);
-  }, [records, replaceAll, queryClient]);
+    const nextAttendanceRecords = typeof updater === "function" ? updater(attendanceRecords) : updater;
+    saveCollection("attendance_records", nextAttendanceRecords);
+    queryClient.setQueryData(ATTENDANCE_QUERY_KEY, nextAttendanceRecords);
+    replaceAll.mutate(nextAttendanceRecords);
+  }, [attendanceRecords, replaceAll, queryClient]);
 
 
 
@@ -137,7 +137,7 @@ export default function Attendance() {
           />
 
           {effectiveAnalyticsTab === "charts" ? (
-            <AttendanceAnalytics filters={filters} records={records} />
+            <AttendanceAnalytics filters={filters} records={attendanceRecords} />
           ) : (
             <ModuleReports category="attendance" />
           )}
@@ -158,12 +158,12 @@ export default function Attendance() {
 
         {(() => {
           switch (effectiveOpsTab) {
-            case "mark":    return <MarkAttendance filters={filters} role={role} records={records} setRecords={setRecords} />;
+            case "mark":    return <MarkAttendance filters={filters} role={role} records={attendanceRecords} setRecords={setRecords} />;
             case "records": return (
               <AttendanceRecords
                 filters={filters}
                 role={role}
-                records={records}
+                records={attendanceRecords}
                 setRecords={setRecords}
                 isColumnVisible={columnLayout.isColumnVisible}
                 columnCustomizer={{
@@ -192,7 +192,7 @@ export default function Attendance() {
       />
 
       <AttendanceCommandMetrics
-        total={records.length}
+        total={attendanceRecords.length}
         shown={pageFilteredCount}
         selectedDate={filters.date}
       />

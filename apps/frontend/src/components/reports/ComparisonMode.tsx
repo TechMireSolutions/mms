@@ -68,8 +68,8 @@ function computeDynamicSessionComparison(
     const enrollment = sessionEnrollments.length;
 
     const classIds = new Set(session.classes?.map((sessionClass) => sessionClass.id) || []);
-    const sessionAttendance = attendanceRecords.filter((record) => classIds.has(record.classId));
-    const presentCount = sessionAttendance.filter((record) => record.status === "present" || record.status === "late").length;
+    const sessionAttendance = attendanceRecords.filter((attendanceRecord) => classIds.has(attendanceRecord.classId));
+    const presentCount = sessionAttendance.filter((attendanceRecord) => attendanceRecord.status === "present" || attendanceRecord.status === "late").length;
     const attendancePct = sessionAttendance.length > 0 
       ? Math.round((presentCount / sessionAttendance.length) * 100) 
       : 0;
@@ -86,11 +86,11 @@ function computeDynamicSessionComparison(
 
     const sessionExams = exams.filter((exam) => exam.classIds && exam.classIds.some((classId: string) => classIds.has(classId)));
     const sessionExamIds = new Set(sessionExams.map((exam) => exam.id));
-    const sessionResults = examResults.filter((result) => sessionExamIds.has(result.examId));
+    const sessionResults = examResults.filter((examResult) => sessionExamIds.has(examResult.examId));
     let passCount = 0;
-    sessionResults.forEach((result) => {
-      const exam = sessionExams.find((examOption) => examOption.id === result.examId);
-      if (exam && result.marksObtained >= exam.passingMarks) {
+    sessionResults.forEach((examResult) => {
+      const exam = sessionExams.find((examOption) => examOption.id === examResult.examId);
+      if (exam && examResult.marksObtained >= exam.passingMarks) {
         passCount++;
       }
     });
@@ -182,18 +182,18 @@ function computeDynamicDateRangeComparison(
       }
     });
   } else if (lowerCat === "attendance") {
-    attendanceRecords.forEach((record) => {
-      const isPresent = record.status === "present" || record.status === "late";
+    attendanceRecords.forEach((attendanceRecord) => {
+      const isPresent = attendanceRecord.status === "present" || attendanceRecord.status === "late";
       const attendanceValue = isPresent ? 1 : 0;
-      if (inRange(record.date, rangeA.from, rangeA.to)) {
-        const monthIndex = getMonthIndex(record.date);
+      if (inRange(attendanceRecord.date, rangeA.from, rangeA.to)) {
+        const monthIndex = getMonthIndex(attendanceRecord.date);
         if (monthIndex >= 0) {
           bucketA[monthIndex] += attendanceValue;
           countA[monthIndex] += 1;
         }
       }
-      if (inRange(record.date, rangeB.from, rangeB.to)) {
-        const monthIndex = getMonthIndex(record.date);
+      if (inRange(attendanceRecord.date, rangeB.from, rangeB.to)) {
+        const monthIndex = getMonthIndex(attendanceRecord.date);
         if (monthIndex >= 0) {
           bucketB[monthIndex] += attendanceValue;
           countB[monthIndex] += 1;
@@ -240,10 +240,10 @@ function computeDynamicDateRangeComparison(
     const examMap = new Map<string, any>();
     exams.forEach((exam) => examMap.set(exam.id, exam));
 
-    examResults.forEach((result) => {
-      const exam = examMap.get(result.examId);
+    examResults.forEach((examResult) => {
+      const exam = examMap.get(examResult.examId);
       if (!exam) return;
-      const isPass = result.marksObtained >= exam.passingMarks;
+      const isPass = examResult.marksObtained >= exam.passingMarks;
       const passValue = isPass ? 1 : 0;
       if (inRange(exam.date, rangeA.from, rangeA.to)) {
         const monthIndex = getMonthIndex(exam.date);
@@ -264,7 +264,7 @@ function computeDynamicDateRangeComparison(
     return [];
   }
 
-  const result: DateRangeDataItem[] = [];
+  const dateRangeData: DateRangeDataItem[] = [];
   for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
     const hasData = countA[monthIndex] > 0 || countB[monthIndex] > 0 || bucketA[monthIndex] > 0 || bucketB[monthIndex] > 0;
     if (hasData) {
@@ -276,7 +276,7 @@ function computeDynamicDateRangeComparison(
         valueB = countB[monthIndex] > 0 ? Math.round((bucketB[monthIndex] / countB[monthIndex]) * 100) : 0;
       }
 
-      result.push({
+      dateRangeData.push({
         month: monthNames[monthIndex],
         a: valueA,
         b: valueB
@@ -284,17 +284,17 @@ function computeDynamicDateRangeComparison(
     }
   }
 
-  if (result.length === 0) {
+  if (dateRangeData.length === 0) {
     const startMonth = getMonthIndex(rangeA.from);
     const endMonth = getMonthIndex(rangeA.to);
     const startIndex = startMonth >= 0 ? startMonth : 0;
     const endIndex = endMonth >= 0 ? endMonth : 2;
     for (let monthIndex = startIndex; monthIndex <= endIndex; monthIndex++) {
-      result.push({ month: monthNames[monthIndex], a: 0, b: 0 });
+      dateRangeData.push({ month: monthNames[monthIndex], a: 0, b: 0 });
     }
   }
 
-  return result;
+  return dateRangeData;
 }
 
 function buildContactsDateRangeComparison(
@@ -304,11 +304,11 @@ function buildContactsDateRangeComparison(
 ): DateRangeDataItem[] {
   const yearA = rangeA.from.slice(0, 4);
   const yearB = rangeB.from.slice(0, 4);
-  const seriesA = monthlyByYear?.find((entry) => String(entry.year) === yearA)?.months ?? [];
-  const seriesB = monthlyByYear?.find((entry) => String(entry.year) === yearB)?.months ?? [];
-  return seriesA.map((entry, index) => ({
-    month: entry.month,
-    a: entry.count,
+  const seriesA = monthlyByYear?.find((monthlySeries) => String(monthlySeries.year) === yearA)?.months ?? [];
+  const seriesB = monthlyByYear?.find((monthlySeries) => String(monthlySeries.year) === yearB)?.months ?? [];
+  return seriesA.map((monthBucket, index) => ({
+    month: monthBucket.month,
+    a: monthBucket.count,
     b: seriesB[index]?.count ?? 0,
   }));
 }
@@ -364,8 +364,8 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const denoms = useHasanatDenomsCollection();
 
   const LIFECYCLE_OPTIONS = useMemo(() => {
-    const field = (fieldConfig.fields?.basic || []).find((fieldDefinition) => fieldDefinition.key === "lifecycleStage");
-    const options = field?.options || ["Lead", "Active Student", "Alumnus", "Staff", "Donor", "Volunteer", "Parent"];
+    const lifecycleStageField = (fieldConfig.fields?.basic || []).find((fieldDefinition) => fieldDefinition.key === "lifecycleStage");
+    const options = lifecycleStageField?.options || ["Lead", "Active Student", "Alumnus", "Staff", "Donor", "Volunteer", "Parent"];
     return options.map((option) => ({ id: option, name: option }));
   }, [fieldConfig]);
 
@@ -384,7 +384,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const labelA = mode === "sessions" ? options.find((option) => option.id === valA)?.name : `${rangeA.from} → ${rangeA.to}`;
   const labelB = mode === "sessions" ? options.find((option) => option.id === valB)?.name : `${rangeB.from} → ${rangeB.to}`;
 
-  const data = useMemo(() => {
+  const comparisonData = useMemo(() => {
     if (mode === "sessions") {
       if (isContacts) {
         if (reportData?.analytics) {
@@ -457,12 +457,12 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       }
     };
 
-    if (mode !== "sessions") return data;
-    return (data as ComparisonDataItem[]).map((row) => ({
+    if (mode !== "sessions") return comparisonData;
+    return (comparisonData as ComparisonDataItem[]).map((row) => ({
       ...row,
       metric: translateMetricName(row.metric),
     }));
-  }, [data, mode, t]);
+  }, [comparisonData, mode, t]);
 
   return (
     <motion.div

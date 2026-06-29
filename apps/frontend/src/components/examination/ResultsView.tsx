@@ -64,8 +64,8 @@ export function ResultsView({
   const studentIdsForExam = useMemo(() => {
     if (!exam) return [];
     return results
-      .filter((result) => result.examId === exam.id)
-      .map((result) => result.studentId);
+      .filter((examResult) => examResult.examId === exam.id)
+      .map((examResult) => examResult.studentId);
   }, [exam, results]);
 
   const { data: students = [] } = useStudentsByIds(studentIdsForExam);
@@ -96,22 +96,22 @@ export function ResultsView({
   const rankedResults = useMemo<RankedResult[]>(() => {
     if (!exam) return [];
     return results
-      .filter((result) => result.examId === exam.id)
-      .map((result) => {
-        const student = studentsById.get(String(result.studentId));
-        const classId = classByStudentId.get(String(result.studentId));
-        const percentage = Math.round((result.marksObtained / exam.totalMarks) * 100);
+      .filter((examResult) => examResult.examId === exam.id)
+      .map((examResult) => {
+        const student = studentsById.get(String(examResult.studentId));
+        const classId = classByStudentId.get(String(examResult.studentId));
+        const percentage = Math.round((examResult.marksObtained / exam.totalMarks) * 100);
         return {
-          ...result,
+          ...examResult,
           student: student ? { name: student.name || "Unnamed student", rollNo: student.grNumber || String(student.id) } : undefined,
           cls: classId ? { name: classNamesById.get(classId) || classId } : undefined,
           pct: percentage,
           grade: getGrade(percentage),
-          passed: result.marksObtained >= exam.passingMarks,
+          passed: examResult.marksObtained >= exam.passingMarks,
         };
       })
       .sort((firstResult, secondResult) => secondResult.marksObtained - firstResult.marksObtained)
-      .map((result, index) => ({ ...result, rank: index + 1 }));
+      .map((rankedResult, index) => ({ ...rankedResult, rank: index + 1 }));
   }, [classByStudentId, classNamesById, exam, results, studentsById]);
 
   useEffect(() => {
@@ -120,8 +120,8 @@ export function ResultsView({
 
   const stats = useMemo(() => {
     if (rankedResults.length === 0) return null;
-    const average = Math.round(rankedResults.reduce((sum, result) => sum + result.pct, 0) / rankedResults.length);
-    const passed = rankedResults.filter((result) => result.passed).length;
+    const average = Math.round(rankedResults.reduce((sum, rankedResult) => sum + rankedResult.pct, 0) / rankedResults.length);
+    const passed = rankedResults.filter((rankedResult) => rankedResult.passed).length;
     return { average, passed, failed: rankedResults.length - passed, total: rankedResults.length };
   }, [rankedResults]);
 
@@ -191,22 +191,22 @@ export function ResultsView({
               <div className="py-10 text-center text-sm text-muted-foreground" role="status">{t("examinations.empty.results")}</div>
             ) : (
               <div className="divide-y divide-border/50" role="list">
-                {rankedResults.map((result) => (
+                {rankedResults.map((rankedResult) => (
                   <motion.div
-                    key={result.id}
+                    key={rankedResult.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="flex items-center gap-4 px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer flex-wrap"
-                    onClick={() => setSelectedStudent(result)}
+                    onClick={() => setSelectedStudent(rankedResult)}
                     role="listitem"
-                    aria-label={t("examinations.viewResultAria", { name: result.student?.name || t("examinations.columns.results.student") })}
+                    aria-label={t("examinations.viewResultAria", { name: rankedResult.student?.name || t("examinations.columns.results.student") })}
                   >
                     {showRank && (
                       <div className="w-8 text-center flex-shrink-0">
-                        {result.rank <= 3 ? (
-                          <span className="text-lg" aria-label={t("examinations.rankLabel", { rank: result.rank })}>{RANK_ICONS[result.rank - 1]}</span>
+                        {rankedResult.rank <= 3 ? (
+                          <span className="text-lg" aria-label={t("examinations.rankLabel", { rank: rankedResult.rank })}>{RANK_ICONS[rankedResult.rank - 1]}</span>
                         ) : (
-                          <span className="text-[12px] font-bold text-muted-foreground">{t("examinations.rankLabel", { rank: result.rank })}</span>
+                          <span className="text-[12px] font-bold text-muted-foreground">{t("examinations.rankLabel", { rank: rankedResult.rank })}</span>
                         )}
                       </div>
                     )}
@@ -215,15 +215,15 @@ export function ResultsView({
                       <>
                         <div
                           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white"
-                          style={{ background: result.grade.color }}
+                          style={{ background: rankedResult.grade.color }}
                           aria-hidden="true"
                         >
-                          {result.student?.name.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2) || "S"}
+                          {rankedResult.student?.name.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2) || "S"}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-semibold text-foreground m-0">{result.student?.name}</p>
+                          <p className="text-[13px] font-semibold text-foreground m-0">{rankedResult.student?.name}</p>
                           {showClassRoll && (
-                            <p className="text-[10px] text-muted-foreground m-0">{result.cls?.name} · {result.student?.rollNo}</p>
+                            <p className="text-[10px] text-muted-foreground m-0">{rankedResult.cls?.name} · {rankedResult.student?.rollNo}</p>
                           )}
                         </div>
                       </>
@@ -231,45 +231,45 @@ export function ResultsView({
 
                     {!showStudent && showClassRoll && (
                       <div className="flex-1 min-w-0 text-[12px] text-muted-foreground">
-                        {result.cls?.name} · {result.student?.rollNo}
+                        {rankedResult.cls?.name} · {rankedResult.student?.rollNo}
                       </div>
                     )}
 
                     {showMarks && (
                       <div className="text-right flex-shrink-0">
                         <p className="text-[14px] font-bold text-foreground m-0">
-                          {result.marksObtained}
+                          {rankedResult.marksObtained}
                           <span className="text-[10px] font-normal text-muted-foreground">/{exam.totalMarks}</span>
                         </p>
                         {showPercentage && (
-                          <p className="text-[10px] text-muted-foreground m-0">{result.pct}%</p>
+                          <p className="text-[10px] text-muted-foreground m-0">{rankedResult.pct}%</p>
                         )}
                       </div>
                     )}
 
                     {!showMarks && showPercentage && (
-                      <div className="text-right flex-shrink-0 text-[12px] text-muted-foreground">{result.pct}%</div>
+                      <div className="text-right flex-shrink-0 text-[12px] text-muted-foreground">{rankedResult.pct}%</div>
                     )}
 
                     {showGrade && (
                       <span
                         className="text-[12px] font-bold px-2.5 py-1 rounded-lg flex-shrink-0"
-                        style={{ color: result.grade.color, background: result.grade.bg, border: `1px solid ${result.grade.border}` }}
+                        style={{ color: rankedResult.grade.color, background: rankedResult.grade.bg, border: `1px solid ${rankedResult.grade.border}` }}
                       >
-                        {result.grade.label}
+                        {rankedResult.grade.label}
                       </span>
                     )}
 
                     {showPassFail && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${result.passed ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                        {result.passed ? t("examinations.pass") : t("examinations.fail")}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${rankedResult.passed ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                        {rankedResult.passed ? t("examinations.pass") : t("examinations.fail")}
                       </span>
                     )}
 
-                    {result.passed && result.rank <= 3 && (
+                    {rankedResult.passed && rankedResult.rank <= 3 && (
                        <Button
                         type="button"
-                        onClick={(event) => { event.stopPropagation(); setCertStudent(result); }}
+                        onClick={(event) => { event.stopPropagation(); setCertStudent(rankedResult); }}
                         className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-warning/10 text-warning hover:bg-warning/15 transition-colors flex-shrink-0"
                       >
                         <Award className="w-3 h-3" aria-hidden="true" /> {t("examinations.certificate")}

@@ -352,7 +352,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     }
 
     // 2. Avg Attendance
-    const presentAttendanceCount = attendanceRecords.filter((record) => record.status === "present" || record.status === "late").length;
+    const presentAttendanceCount = attendanceRecords.filter((attendanceRecord) => attendanceRecord.status === "present" || attendanceRecord.status === "late").length;
     const attendanceRate = attendanceRecords.length > 0 ? Math.round((presentAttendanceCount / attendanceRecords.length) * 100) : 0;
     const averageAttendanceValue = `${attendanceRate}%`;
     const averageAttendanceTrend = attendanceRate > 85 ? "up" : "flat";

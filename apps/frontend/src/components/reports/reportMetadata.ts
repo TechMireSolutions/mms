@@ -219,13 +219,13 @@ export const METADATA_FIELDS = {
  * with the preceding 30-day period.
  *
  * @param card - The CustomCard configuration schema.
- * @param list - The array of database records for the collection.
+ * @param collectionRows - The array of database records for the collection.
  * @param collectionName - The name of the collection.
  * @returns The calculated trend percentage.
  */
 function calculateDynamicTrend(
   card: CustomCard,
-  list: Record<string, unknown>[],
+  collectionRows: Record<string, unknown>[],
   collectionName: string,
   denoms?: any[]
 ): number {
@@ -242,12 +242,12 @@ function calculateDynamicTrend(
     assessment_results: "submittedAt"
   }[collectionName];
 
-  if (!dateField || list.length === 0) return 0;
+  if (!dateField || collectionRows.length === 0) return 0;
 
-  // 1. Find the maximum date in the list to pivot the time windows
+  // 1. Find the maximum date in the collection to pivot the time windows
   let maxTime = 0;
-  list.forEach((item) => {
-    const dateValue = item[dateField];
+  collectionRows.forEach((collectionRow) => {
+    const dateValue = collectionRow[dateField];
     if (dateValue) {
       const time = new Date(String(dateValue)).getTime();
       if (!isNaN(time) && time > maxTime) {
@@ -263,12 +263,12 @@ function calculateDynamicTrend(
   const pivotTime = maxTime - thirtyDays;
   const startTime = maxTime - (2 * thirtyDays);
 
-  // Helper to filter and calculate value for a given list of items
-  const computePeriodValue = (items: Record<string, unknown>[]) => {
+  // Helper to filter and calculate value for a given period of rows
+  const computePeriodValue = (periodRows: Record<string, unknown>[]) => {
     // Apply filter
-    const filtered = items.filter((item) => {
+    const filteredRows = periodRows.filter((periodRow) => {
       if (!card.filterField) return true;
-      const fieldValue = item[card.filterField];
+      const fieldValue = periodRow[card.filterField];
       if (fieldValue === undefined || fieldValue === null) return false;
       const fieldText = String(fieldValue).toLowerCase();
       const targetText = String(card.filterValue || "").toLowerCase();
@@ -288,31 +288,31 @@ function calculateDynamicTrend(
     });
 
     if (card.operation === "count") {
-      return filtered.length;
+      return filteredRows.length;
     }
 
     if (card.operation === "percentage") {
-      return items.length > 0 ? (filtered.length / items.length) * 100 : 0;
+      return periodRows.length > 0 ? (filteredRows.length / periodRows.length) * 100 : 0;
     }
 
     // Sum or Avg
-    const field = card.targetField || "";
+    const targetMetricField = card.targetField || "";
     let sum = 0;
     let count = 0;
-    filtered.forEach((item) => {
-      if (card.collection === "hasanat_distributions" && field === "points") {
-        const denominationName = String(item.denominationName || "").toLowerCase();
-        const matchedDenomination = (denoms || []).find((denomination: any) => denomination.id === item.denominationId);
+    filteredRows.forEach((filteredRow) => {
+      if (card.collection === "hasanat_distributions" && targetMetricField === "points") {
+        const denominationName = String(filteredRow.denominationName || "").toLowerCase();
+        const matchedDenomination = (denoms || []).find((denomination: any) => denomination.id === filteredRow.denominationId);
         const points = matchedDenomination ? matchedDenomination.points : (
           denominationName.includes("silver") ? 150 :
           denominationName.includes("gold") ? 500 :
           denominationName.includes("platinum") ? 1000 :
           denominationName.includes("diamond") ? 2500 : 50
         );
-        sum += Number(item.quantity || 1) * points;
+        sum += Number(filteredRow.quantity || 1) * points;
         count++;
       } else {
-        const numericFieldValue = Number(item[field]);
+        const numericFieldValue = Number(filteredRow[targetMetricField]);
         if (!isNaN(numericFieldValue)) {
           sum += numericFieldValue;
           count++;
@@ -323,19 +323,19 @@ function calculateDynamicTrend(
     return card.operation === "sum" ? sum : (count > 0 ? sum / count : 0);
   };
 
-  // Split items into current vs previous periods
+  // Split rows into current vs previous periods
   const currentItems: Record<string, unknown>[] = [];
   const previousItems: Record<string, unknown>[] = [];
 
-  list.forEach((item) => {
-    const dateValue = item[dateField];
+  collectionRows.forEach((collectionRow) => {
+    const dateValue = collectionRow[dateField];
     if (dateValue) {
       const time = new Date(String(dateValue)).getTime();
       if (!isNaN(time)) {
         if (time >= pivotTime && time <= maxTime) {
-          currentItems.push(item);
+          currentItems.push(collectionRow);
         } else if (time >= startTime && time < pivotTime) {
-          previousItems.push(item);
+          previousItems.push(collectionRow);
         }
       }
     }
@@ -366,13 +366,13 @@ export function computeCustomCard(
     hasanat_denoms?: any[];
   }
 ) {
-  const list = (collections[card.collection] as Record<string, unknown>[]) || [];
+  const collectionRows = (collections[card.collection] as Record<string, unknown>[]) || [];
   
-  const filteredList = list.filter((item) => {
-    if (!item) return false;
+  const filteredRows = collectionRows.filter((collectionRow) => {
+    if (!collectionRow) return false;
     if (!card.filterField) return true;
     
-    const fieldValue = item[card.filterField];
+    const fieldValue = collectionRow[card.filterField];
     if (fieldValue === undefined || fieldValue === null) return false;
     
     const fieldText = String(fieldValue).toLowerCase();
@@ -394,23 +394,23 @@ export function computeCustomCard(
 
   let numericValue = 0;
   if (card.operation === "sum" || card.operation === "avg") {
-    const field = card.targetField || "";
+    const targetMetricField = card.targetField || "";
     let sum = 0;
     let count = 0;
-    filteredList.forEach((item) => {
-      if (card.collection === "hasanat_distributions" && field === "points") {
-        const denominationName = String(item.denominationName || "").toLowerCase();
-        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === item.denominationId);
+    filteredRows.forEach((filteredRow) => {
+      if (card.collection === "hasanat_distributions" && targetMetricField === "points") {
+        const denominationName = String(filteredRow.denominationName || "").toLowerCase();
+        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === filteredRow.denominationId);
         const points = matchedDenomination ? matchedDenomination.points : (
           denominationName.includes("silver") ? 150 :
           denominationName.includes("gold") ? 500 :
           denominationName.includes("platinum") ? 1000 :
           denominationName.includes("diamond") ? 2500 : 50
         );
-        sum += Number(item.quantity || 1) * points;
+        sum += Number(filteredRow.quantity || 1) * points;
         count++;
       } else {
-        const numericFieldValue = Number(item[field]);
+        const numericFieldValue = Number(filteredRow[targetMetricField]);
         if (!isNaN(numericFieldValue)) {
           sum += numericFieldValue;
           count++;
@@ -422,9 +422,9 @@ export function computeCustomCard(
 
   let finalValue: string | number = 0;
   if (card.operation === "count") {
-    finalValue = filteredList.length;
+    finalValue = filteredRows.length;
   } else if (card.operation === "percentage") {
-    finalValue = list.length > 0 ? `${Math.round((filteredList.length / list.length) * 100)}%` : "0%";
+    finalValue = collectionRows.length > 0 ? `${Math.round((filteredRows.length / collectionRows.length) * 100)}%` : "0%";
   } else {
     finalValue = numericValue;
   }
@@ -444,12 +444,12 @@ export function computeCustomCard(
   if (card.subTextType === "fixed") {
     subText = card.fixedSubText || "";
   } else {
-    subText = `${filteredList.length} of ${list.length} matched`;
+    subText = `${filteredRows.length} of ${collectionRows.length} matched`;
   }
 
   let trendValue = card.trend || 0;
   if (card.trendType === "database") {
-    trendValue = calculateDynamicTrend(card, list, card.collection, collections.hasanat_denoms);
+    trendValue = calculateDynamicTrend(card, collectionRows, card.collection, collections.hasanat_denoms);
   }
 
   return {

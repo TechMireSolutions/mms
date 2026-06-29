@@ -300,17 +300,17 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
   const [rows, setRows] = useState<AttendanceRow[]>(() => {
     if (!filters.classId || !filters.date) return [];
-    const existing = records.filter((record) => record.classId === filters.classId && record.date === filters.date);
+    const existing = records.filter((attendanceRecord) => attendanceRecord.classId === filters.classId && attendanceRecord.date === filters.date);
     if (existing.length > 0) {
-      return existing.map((record) => ({
-        studentId: record.studentId || "",
-        name: record.studentName || "",
-        rollNo: (record as AttendanceRecord & { rollNo?: string }).rollNo ?? "",
-        status: record.status,
-        timeIn: record.timeIn || "07:00",
-        timeOut: record.timeOut || "08:30",
-        notes: record.notes || "",
-        ...((record as any).customFields || {}),
+      return existing.map((attendanceRecord) => ({
+        studentId: attendanceRecord.studentId || "",
+        name: attendanceRecord.studentName || "",
+        rollNo: (attendanceRecord as AttendanceRecord & { rollNo?: string }).rollNo ?? "",
+        status: attendanceRecord.status,
+        timeIn: attendanceRecord.timeIn || "07:00",
+        timeOut: attendanceRecord.timeOut || "08:30",
+        notes: attendanceRecord.notes || "",
+        ...((attendanceRecord as any).customFields || {}),
       }));
     }
     return buildDefaultRows(students, customFields);
@@ -339,23 +339,23 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
   useEffect(() => {
     if (!filters.classId || !filters.date) return;
-    const existing = records.filter((record) => record.classId === filters.classId && record.date === filters.date);
-    let newRows: AttendanceRow[];
+    const existing = records.filter((attendanceRecord) => attendanceRecord.classId === filters.classId && attendanceRecord.date === filters.date);
+    let nextRows: AttendanceRow[];
     if (existing.length > 0) {
-      newRows = existing.map((record) => ({
-        studentId: record.studentId || "",
-        name: record.studentName || "",
-        rollNo: (record as AttendanceRecord & { rollNo?: string }).rollNo ?? "",
-        status: record.status,
-        timeIn: record.timeIn || "07:00",
-        timeOut: record.timeOut || "08:30",
-        notes: record.notes || "",
-        ...((record as any).customFields || {}),
+      nextRows = existing.map((attendanceRecord) => ({
+        studentId: attendanceRecord.studentId || "",
+        name: attendanceRecord.studentName || "",
+        rollNo: (attendanceRecord as AttendanceRecord & { rollNo?: string }).rollNo ?? "",
+        status: attendanceRecord.status,
+        timeIn: attendanceRecord.timeIn || "07:00",
+        timeOut: attendanceRecord.timeOut || "08:30",
+        notes: attendanceRecord.notes || "",
+        ...((attendanceRecord as any).customFields || {}),
       }));
     } else {
-      newRows = buildDefaultRows(students, customFields);
+      nextRows = buildDefaultRows(students, customFields);
     }
-    setRows(newRows);
+    setRows(nextRows);
     setSubmitted(false);
     setIsDraft(false);
     setGeo(null);
@@ -433,7 +433,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
     });
 
     setRecords((previousRecords) => {
-      const filteredRecords = previousRecords.filter((record) => !(record.classId === filters.classId && record.date === filters.date));
+      const filteredRecords = previousRecords.filter((attendanceRecord) => !(attendanceRecord.classId === filters.classId && attendanceRecord.date === filters.date));
       return [...filteredRecords, ...newRecords];
     });
 
@@ -464,7 +464,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
     });
 
     setRecords((previousRecords) => {
-      const filteredRecords = previousRecords.filter((record) => !(record.classId === filters.classId && record.date === filters.date));
+      const filteredRecords = previousRecords.filter((attendanceRecord) => !(attendanceRecord.classId === filters.classId && attendanceRecord.date === filters.date));
       return [...filteredRecords, ...newRecords];
     });
 
@@ -508,7 +508,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
         } as unknown as AttendanceRecord;
       });
       updatedRecords = updatedRecords.filter(
-        (record) => !(record.classId === payload.classId && record.date === payload.date)
+        (attendanceRecord) => !(attendanceRecord.classId === payload.classId && attendanceRecord.date === payload.date)
       );
       updatedRecords.push(...newRecords);
     });

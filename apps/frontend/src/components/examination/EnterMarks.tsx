@@ -80,8 +80,8 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
   React.useEffect(() => {
     if (!exam) return;
     const prefilledMarks: Record<string, number | string> = {};
-    results.filter((result) => result.examId === exam.id).forEach((result) => {
-      prefilledMarks[result.studentId] = result.marksObtained;
+    results.filter((examResult) => examResult.examId === exam.id).forEach((examResult) => {
+      prefilledMarks[examResult.studentId] = examResult.marksObtained;
     });
     setMarks(prefilledMarks);
     setSaved(false);
