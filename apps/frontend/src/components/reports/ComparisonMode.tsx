@@ -53,44 +53,44 @@ function computeDynamicSessionComparison(
   targetB: string,
   t: (key: any) => string,
 ): ComparisonDataItem[] {
-  const sessA = sessions.find(s => s.id === targetA);
-  const sessB = sessions.find(s => s.id === targetB);
+  const sessionA = sessions.find((session) => session.id === targetA);
+  const sessionB = sessions.find((session) => session.id === targetB);
 
   const getMetrics = (session: Session | undefined) => {
     if (!session) {
       return { enrollment: 0, attendancePct: 0, feeCollected: 0, passRatePct: 0, hasanat: 0 };
     }
 
-    const sessId = session.id;
-    const sessName = session.name;
+    const sessionId = session.id;
+    const sessionName = session.name;
 
-    const sessionEnrollments = enrollments.filter(e => e.sessionId === sessId && e.status !== "cancelled");
+    const sessionEnrollments = enrollments.filter((enrollment) => enrollment.sessionId === sessionId && enrollment.status !== "cancelled");
     const enrollment = sessionEnrollments.length;
 
-    const classIds = new Set(session.classes?.map(c => c.id) || []);
-    const sessionAttendance = attendanceRecords.filter(r => classIds.has(r.classId));
-    const presentCount = sessionAttendance.filter(r => r.status === "present" || r.status === "late").length;
+    const classIds = new Set(session.classes?.map((sessionClass) => sessionClass.id) || []);
+    const sessionAttendance = attendanceRecords.filter((record) => classIds.has(record.classId));
+    const presentCount = sessionAttendance.filter((record) => record.status === "present" || record.status === "late").length;
     const attendancePct = sessionAttendance.length > 0 
       ? Math.round((presentCount / sessionAttendance.length) * 100) 
       : 0;
 
-    const sessionInvoices = financeInvoices.filter(inv => inv.session === sessId || inv.session === sessName);
+    const sessionInvoices = financeInvoices.filter((invoice) => invoice.session === sessionId || invoice.session === sessionName);
     let feeCollected = 0;
-    sessionInvoices.forEach(inv => {
-      if (inv.status === "paid") {
-        feeCollected += inv.finalAmt;
-      } else if (inv.status === "partial") {
-        feeCollected += inv.paidAmt !== undefined ? inv.paidAmt : Math.round(inv.finalAmt / 2);
+    sessionInvoices.forEach((invoice) => {
+      if (invoice.status === "paid") {
+        feeCollected += invoice.finalAmt;
+      } else if (invoice.status === "partial") {
+        feeCollected += invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
       }
     });
 
-    const sessionExams = exams.filter(ex => ex.classIds && ex.classIds.some((cid: string) => classIds.has(cid)));
-    const sessionExamIds = new Set(sessionExams.map(ex => ex.id));
-    const sessionResults = examResults.filter(r => sessionExamIds.has(r.examId));
+    const sessionExams = exams.filter((exam) => exam.classIds && exam.classIds.some((classId: string) => classIds.has(classId)));
+    const sessionExamIds = new Set(sessionExams.map((exam) => exam.id));
+    const sessionResults = examResults.filter((result) => sessionExamIds.has(result.examId));
     let passCount = 0;
-    sessionResults.forEach(r => {
-      const exam = sessionExams.find(ex => ex.id === r.examId);
-      if (exam && r.marksObtained >= exam.passingMarks) {
+    sessionResults.forEach((result) => {
+      const exam = sessionExams.find((examOption) => examOption.id === result.examId);
+      if (exam && result.marksObtained >= exam.passingMarks) {
         passCount++;
       }
     });
@@ -98,9 +98,9 @@ function computeDynamicSessionComparison(
       ? Math.round((passCount / sessionResults.length) * 100)
       : 0;
 
-    const studentIds = new Set(sessionEnrollments.map(e => e.studentId));
+    const studentIds = new Set(sessionEnrollments.map((enrollment) => enrollment.studentId));
     const pointsMap = new Map<string, number>();
-    denoms.forEach(d => pointsMap.set(d.id, d.points));
+    denoms.forEach((denomination) => pointsMap.set(denomination.id, denomination.points));
     const getDenomPoints = (denomId: string) => {
       if (pointsMap.has(denomId)) return pointsMap.get(denomId)!;
       if (denomId === "den1") return 50;
@@ -111,17 +111,17 @@ function computeDynamicSessionComparison(
       return 0;
     };
     let hasanat = 0;
-    hasanatDistributions.forEach(d => {
-      if (d.recipientStudentId && studentIds.has(d.recipientStudentId)) {
-        hasanat += (d.quantity || 1) * getDenomPoints(d.denominationId);
+    hasanatDistributions.forEach((distribution) => {
+      if (distribution.recipientStudentId && studentIds.has(distribution.recipientStudentId)) {
+        hasanat += (distribution.quantity || 1) * getDenomPoints(distribution.denominationId);
       }
     });
 
     return { enrollment, attendancePct, feeCollected, passRatePct, hasanat };
   };
 
-  const metricsA = getMetrics(sessA);
-  const metricsB = getMetrics(sessB);
+  const metricsA = getMetrics(sessionA);
+  const metricsB = getMetrics(sessionB);
 
   return [
     { metric: t("reports.comparison.metricEnrollment"),   a: metricsA.enrollment,     b: metricsB.enrollment },
@@ -164,45 +164,45 @@ function computeDynamicDateRangeComparison(
   const lowerCat = category.toLowerCase();
 
   if (lowerCat === "financial") {
-    financeInvoices.forEach(inv => {
+    financeInvoices.forEach((invoice) => {
       let paid = 0;
-      if (inv.status === "paid") {
-        paid = inv.finalAmt;
-      } else if (inv.status === "partial") {
-        paid = inv.paidAmt !== undefined ? inv.paidAmt : Math.round(inv.finalAmt / 2);
+      if (invoice.status === "paid") {
+        paid = invoice.finalAmt;
+      } else if (invoice.status === "partial") {
+        paid = invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
       }
 
-      if (inRange(inv.dueDate, rangeA.from, rangeA.to)) {
-        const m = getMonthIndex(inv.dueDate);
-        if (m >= 0) bucketA[m] += paid;
+      if (inRange(invoice.dueDate, rangeA.from, rangeA.to)) {
+        const monthIndex = getMonthIndex(invoice.dueDate);
+        if (monthIndex >= 0) bucketA[monthIndex] += paid;
       }
-      if (inRange(inv.dueDate, rangeB.from, rangeB.to)) {
-        const m = getMonthIndex(inv.dueDate);
-        if (m >= 0) bucketB[m] += paid;
+      if (inRange(invoice.dueDate, rangeB.from, rangeB.to)) {
+        const monthIndex = getMonthIndex(invoice.dueDate);
+        if (monthIndex >= 0) bucketB[monthIndex] += paid;
       }
     });
   } else if (lowerCat === "attendance") {
-    attendanceRecords.forEach(rec => {
-      const isPresent = rec.status === "present" || rec.status === "late";
-      const val = isPresent ? 1 : 0;
-      if (inRange(rec.date, rangeA.from, rangeA.to)) {
-        const m = getMonthIndex(rec.date);
-        if (m >= 0) {
-          bucketA[m] += val;
-          countA[m] += 1;
+    attendanceRecords.forEach((record) => {
+      const isPresent = record.status === "present" || record.status === "late";
+      const attendanceValue = isPresent ? 1 : 0;
+      if (inRange(record.date, rangeA.from, rangeA.to)) {
+        const monthIndex = getMonthIndex(record.date);
+        if (monthIndex >= 0) {
+          bucketA[monthIndex] += attendanceValue;
+          countA[monthIndex] += 1;
         }
       }
-      if (inRange(rec.date, rangeB.from, rangeB.to)) {
-        const m = getMonthIndex(rec.date);
-        if (m >= 0) {
-          bucketB[m] += val;
-          countB[m] += 1;
+      if (inRange(record.date, rangeB.from, rangeB.to)) {
+        const monthIndex = getMonthIndex(record.date);
+        if (monthIndex >= 0) {
+          bucketB[monthIndex] += attendanceValue;
+          countB[monthIndex] += 1;
         }
       }
     });
   } else if (lowerCat === "hasanat") {
     const pointsMap = new Map<string, number>();
-    denoms.forEach(d => pointsMap.set(d.id, d.points));
+    denoms.forEach((denomination) => pointsMap.set(denomination.id, denomination.points));
     const getDenomPoints = (denomId: string) => {
       if (pointsMap.has(denomId)) return pointsMap.get(denomId)!;
       if (denomId === "den1") return 50;
@@ -213,50 +213,50 @@ function computeDynamicDateRangeComparison(
       return 0;
     };
 
-    hasanatDistributions.forEach(d => {
-      const pts = (d.quantity || 1) * getDenomPoints(d.denominationId);
-      if (inRange(d.issuedDate, rangeA.from, rangeA.to)) {
-        const m = getMonthIndex(d.issuedDate);
-        if (m >= 0) bucketA[m] += pts;
+    hasanatDistributions.forEach((distribution) => {
+      const points = (distribution.quantity || 1) * getDenomPoints(distribution.denominationId);
+      if (inRange(distribution.issuedDate, rangeA.from, rangeA.to)) {
+        const monthIndex = getMonthIndex(distribution.issuedDate);
+        if (monthIndex >= 0) bucketA[monthIndex] += points;
       }
-      if (inRange(d.issuedDate, rangeB.from, rangeB.to)) {
-        const m = getMonthIndex(d.issuedDate);
-        if (m >= 0) bucketB[m] += pts;
+      if (inRange(distribution.issuedDate, rangeB.from, rangeB.to)) {
+        const monthIndex = getMonthIndex(distribution.issuedDate);
+        if (monthIndex >= 0) bucketB[monthIndex] += points;
       }
     });
   } else if (lowerCat === "students" || lowerCat === "enrollments") {
-    enrollments.forEach(e => {
-      const date = e.enrolledDate || e.createdDate || rangeA.from;
+    enrollments.forEach((enrollment) => {
+      const date = enrollment.enrolledDate || enrollment.createdDate || rangeA.from;
       if (inRange(date, rangeA.from, rangeA.to)) {
-        const m = getMonthIndex(date);
-        if (m >= 0) bucketA[m] += 1;
+        const monthIndex = getMonthIndex(date);
+        if (monthIndex >= 0) bucketA[monthIndex] += 1;
       }
       if (inRange(date, rangeB.from, rangeB.to)) {
-        const m = getMonthIndex(date);
-        if (m >= 0) bucketB[m] += 1;
+        const monthIndex = getMonthIndex(date);
+        if (monthIndex >= 0) bucketB[monthIndex] += 1;
       }
     });
   } else if (lowerCat === "examinations" || lowerCat === "academic") {
     const examMap = new Map<string, any>();
-    exams.forEach(ex => examMap.set(ex.id, ex));
+    exams.forEach((exam) => examMap.set(exam.id, exam));
 
-    examResults.forEach(r => {
-      const ex = examMap.get(r.examId);
-      if (!ex) return;
-      const isPass = r.marksObtained >= ex.passingMarks;
-      const val = isPass ? 1 : 0;
-      if (inRange(ex.date, rangeA.from, rangeA.to)) {
-        const m = getMonthIndex(ex.date);
-        if (m >= 0) {
-          bucketA[m] += val;
-          countA[m] += 1;
+    examResults.forEach((result) => {
+      const exam = examMap.get(result.examId);
+      if (!exam) return;
+      const isPass = result.marksObtained >= exam.passingMarks;
+      const passValue = isPass ? 1 : 0;
+      if (inRange(exam.date, rangeA.from, rangeA.to)) {
+        const monthIndex = getMonthIndex(exam.date);
+        if (monthIndex >= 0) {
+          bucketA[monthIndex] += passValue;
+          countA[monthIndex] += 1;
         }
       }
-      if (inRange(ex.date, rangeB.from, rangeB.to)) {
-        const m = getMonthIndex(ex.date);
-        if (m >= 0) {
-          bucketB[m] += val;
-          countB[m] += 1;
+      if (inRange(exam.date, rangeB.from, rangeB.to)) {
+        const monthIndex = getMonthIndex(exam.date);
+        if (monthIndex >= 0) {
+          bucketB[monthIndex] += passValue;
+          countB[monthIndex] += 1;
         }
       }
     });
@@ -265,32 +265,32 @@ function computeDynamicDateRangeComparison(
   }
 
   const result: DateRangeDataItem[] = [];
-  for (let i = 0; i < 12; i++) {
-    const hasData = countA[i] > 0 || countB[i] > 0 || bucketA[i] > 0 || bucketB[i] > 0;
+  for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
+    const hasData = countA[monthIndex] > 0 || countB[monthIndex] > 0 || bucketA[monthIndex] > 0 || bucketB[monthIndex] > 0;
     if (hasData) {
-      let valA = bucketA[i];
-      let valB = bucketB[i];
+      let valueA = bucketA[monthIndex];
+      let valueB = bucketB[monthIndex];
 
       if (lowerCat === "attendance" || lowerCat === "examinations" || lowerCat === "academic") {
-        valA = countA[i] > 0 ? Math.round((bucketA[i] / countA[i]) * 100) : 0;
-        valB = countB[i] > 0 ? Math.round((bucketB[i] / countB[i]) * 100) : 0;
+        valueA = countA[monthIndex] > 0 ? Math.round((bucketA[monthIndex] / countA[monthIndex]) * 100) : 0;
+        valueB = countB[monthIndex] > 0 ? Math.round((bucketB[monthIndex] / countB[monthIndex]) * 100) : 0;
       }
 
       result.push({
-        month: monthNames[i],
-        a: valA,
-        b: valB
+        month: monthNames[monthIndex],
+        a: valueA,
+        b: valueB
       });
     }
   }
 
   if (result.length === 0) {
-    const startM = getMonthIndex(rangeA.from);
-    const endM = getMonthIndex(rangeA.to);
-    const s = startM >= 0 ? startM : 0;
-    const e = endM >= 0 ? endM : 2;
-    for (let i = s; i <= e; i++) {
-      result.push({ month: monthNames[i], a: 0, b: 0 });
+    const startMonth = getMonthIndex(rangeA.from);
+    const endMonth = getMonthIndex(rangeA.to);
+    const startIndex = startMonth >= 0 ? startMonth : 0;
+    const endIndex = endMonth >= 0 ? endMonth : 2;
+    for (let monthIndex = startIndex; monthIndex <= endIndex; monthIndex++) {
+      result.push({ month: monthNames[monthIndex], a: 0, b: 0 });
     }
   }
 
@@ -341,7 +341,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     if (!isContacts || mode !== "daterange") return undefined;
     const yearA = Number.parseInt(rangeA.from.slice(0, 4), 10);
     const yearB = Number.parseInt(rangeB.from.slice(0, 4), 10);
-    return [yearA, yearB].filter((y) => Number.isFinite(y));
+    return [yearA, yearB].filter((year) => Number.isFinite(year));
   }, [isContacts, mode, rangeA.from, rangeB.from]);
 
 
@@ -350,7 +350,10 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     compareYears,
   });
   const sessions = useSessionsCollection();
-  const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(() => sessions.filter((s) => s.id !== "all").map(s => ({ id: s.id, name: s.name })), [sessions]);
+  const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(
+    () => sessions.filter((session) => session.id !== "all").map((session) => ({ id: session.id, name: session.name })),
+    [sessions],
+  );
 
   const enrollments = useEnrollmentsCollection();
   const attendanceRecords = useAttendanceRecordsCollection();
@@ -361,9 +364,9 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const denoms = useHasanatDenomsCollection();
 
   const LIFECYCLE_OPTIONS = useMemo(() => {
-    const field = (fieldConfig.fields?.basic || []).find((f) => f.key === "lifecycleStage");
-    const opts = field?.options || ["Lead", "Active Student", "Alumnus", "Staff", "Donor", "Volunteer", "Parent"];
-    return opts.map(opt => ({ id: opt, name: opt }));
+    const field = (fieldConfig.fields?.basic || []).find((fieldDefinition) => fieldDefinition.key === "lifecycleStage");
+    const options = field?.options || ["Lead", "Active Student", "Alumnus", "Staff", "Donor", "Volunteer", "Parent"];
+    return options.map((option) => ({ id: option, name: option }));
   }, [fieldConfig]);
 
   // Sync targets when category changes
@@ -378,8 +381,8 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   }, [category, isContacts]);
 
   const options = isContacts ? LIFECYCLE_OPTIONS : SESSIONS_OPTIONS;
-  const labelA = mode === "sessions" ? options.find((s) => s.id === valA)?.name : `${rangeA.from} → ${rangeA.to}`;
-  const labelB = mode === "sessions" ? options.find((s) => s.id === valB)?.name : `${rangeB.from} → ${rangeB.to}`;
+  const labelA = mode === "sessions" ? options.find((option) => option.id === valA)?.name : `${rangeA.from} → ${rangeA.to}`;
+  const labelB = mode === "sessions" ? options.find((option) => option.id === valB)?.name : `${rangeB.from} → ${rangeB.to}`;
 
   const data = useMemo(() => {
     if (mode === "sessions") {
@@ -511,15 +514,15 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         {mode === "sessions" ? (
           <div className="grid grid-cols-2 gap-3 text-left">
             {[
-              { label: "A", val: valA, set: setValA, color: "text-primary" },
-              { label: "B", val: valB, set: setValB, color: "text-warning" }
-            ].map(({ label, val, set, color }) => (
+              { label: "A", value: valA, setValue: setValA, color: "text-primary" },
+              { label: "B", value: valB, setValue: setValB, color: "text-warning" }
+            ].map(({ label, value, setValue, color }) => (
               <div key={label} className="flex flex-col gap-1">
                 <label className={`text-[11px] font-bold uppercase tracking-wide ${color}`}>{isContacts ? t("reports.comparison.stage") : t("reports.comparison.session")} {label}</label>
                 <FormSelect
-                  value={val}
-                  onChange={(newVal) => set(newVal)}
-                  options={options.map((s) => ({ value: s.id, label: s.name }))}
+                  value={value}
+                  onChange={(newValue) => setValue(newValue)}
+                  options={options.map((option) => ({ value: option.id, label: option.name }))}
                   className="w-full"
                 />
               </div>
@@ -528,20 +531,20 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         ) : (
           <div className="grid grid-cols-2 gap-4 text-left">
             {[
-              { label: t("reports.comparison.rangeA"), range: rangeA, set: setRangeA, color: "text-primary" },
-              { label: t("reports.comparison.rangeB"), range: rangeB, set: setRangeB, color: "text-warning" }
-            ].map(({ label, range, set, color }) => (
+              { label: t("reports.comparison.rangeA"), range: rangeA, setRange: setRangeA, color: "text-primary" },
+              { label: t("reports.comparison.rangeB"), range: rangeB, setRange: setRangeB, color: "text-warning" }
+            ].map(({ label, range, setRange, color }) => (
               <div key={label} className="space-y-2">
                 <p className={`text-[11px] font-bold uppercase tracking-wide ${color}`}>{label}</p>
                 <div className="flex gap-2 items-center">
                   <DatePicker
                     value={range.from}
-                    onChange={(val) => set((r) => ({ ...r, from: val }))}
+                    onChange={(value) => setRange((currentRange) => ({ ...currentRange, from: value }))}
                     className="flex-1 text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-1.5"
                   />
                   <DatePicker
                     value={range.to}
-                    onChange={(val) => set((r) => ({ ...r, to: val }))}
+                    onChange={(value) => setRange((currentRange) => ({ ...currentRange, to: value }))}
                     className="flex-1 text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-1.5"
                   />
                 </div>

@@ -184,30 +184,30 @@ export default function DynamicChartVisualizer({
     const dataList = getCollection(activeMeta.dbKey, activeMeta.defaultData as unknown[]) as Record<string, unknown>[];
     const denoms = getCollection<any>("hasanat_denoms", []);
     const pointsMap = new Map<string, number>();
-    denoms.forEach(d => pointsMap.set(d.id, d.points));
+    denoms.forEach((denomination) => pointsMap.set(denomination.id, denomination.points));
     
     // 1. Apply multiple filters
     const filteredList = dataList.filter((item) => {
       if (!item) return false;
       return filters.every((rule) => {
         if (!rule.field || !rule.value) return true;
-        const val = item[rule.field];
-        if (val === undefined || val === null) return false;
+        const fieldValue = item[rule.field];
+        if (fieldValue === undefined || fieldValue === null) return false;
         
-        const strVal = String(val).toLowerCase();
-        const ruleVal = String(rule.value).toLowerCase();
+        const stringValue = String(fieldValue).toLowerCase();
+        const ruleValue = String(rule.value).toLowerCase();
 
         switch (rule.operator) {
           case "equals":
-            return strVal === ruleVal;
+            return stringValue === ruleValue;
           case "contains":
-            return strVal.includes(ruleVal);
+            return stringValue.includes(ruleValue);
           case "startsWith":
-            return strVal.startsWith(ruleVal);
+            return stringValue.startsWith(ruleValue);
           case "gt":
-            return Number(val) > Number(rule.value);
+            return Number(fieldValue) > Number(rule.value);
           case "lt":
-            return Number(val) < Number(rule.value);
+            return Number(fieldValue) < Number(rule.value);
           default:
             return true;
         }
@@ -217,8 +217,8 @@ export default function DynamicChartVisualizer({
     // 2. Group records by xAxisField dimension
     const groups: Record<string, Record<string, unknown>[]> = {};
     filteredList.forEach((item) => {
-      const xVal = item[xAxisField];
-      const key = xVal === undefined || xVal === null || xVal === "" ? "Unknown / Null" : String(xVal);
+      const xAxisValue = item[xAxisField];
+      const key = xAxisValue === undefined || xAxisValue === null || xAxisValue === "" ? "Unknown / Null" : String(xAxisValue);
       if (!groups[key]) groups[key] = [];
       groups[key].push(item);
     });
@@ -246,9 +246,9 @@ export default function DynamicChartVisualizer({
             );
             values.push(Number(item.quantity || 1) * points);
           } else {
-            const num = Number(item[field]);
-            if (!isNaN(num)) {
-              values.push(num);
+            const numericValue = Number(item[field]);
+            if (!isNaN(numericValue)) {
+              values.push(numericValue);
             }
           }
         });
@@ -256,10 +256,10 @@ export default function DynamicChartVisualizer({
         if (values.length > 0) {
           switch (operation) {
             case "sum":
-              finalValue = values.reduce((sum, v) => sum + v, 0);
+              finalValue = values.reduce((sum, value) => sum + value, 0);
               break;
             case "avg":
-              finalValue = Math.round(values.reduce((sum, v) => sum + v, 0) / values.length);
+              finalValue = Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
               break;
             case "min":
               finalValue = Math.min(...values);
@@ -284,11 +284,11 @@ export default function DynamicChartVisualizer({
     const isDateField = /date|time|created|updated|issued|registered/i.test(xAxisField);
     if (isDateField) {
       // Sort chronologically
-      const sorted = result.sort((a, b) => {
-        const timeA = new Date(a.name).getTime();
-        const timeB = new Date(b.name).getTime();
+      const sorted = result.sort((firstItem, secondItem) => {
+        const timeA = new Date(firstItem.name).getTime();
+        const timeB = new Date(secondItem.name).getTime();
         if (isNaN(timeA) || isNaN(timeB)) {
-          return a.name.localeCompare(b.name);
+          return firstItem.name.localeCompare(secondItem.name);
         }
         return timeA - timeB;
       });
@@ -299,7 +299,7 @@ export default function DynamicChartVisualizer({
       return sorted;
     } else {
       // Sort categories descending by value
-      const sortedResult = result.sort((a, b) => b.value - a.value);
+      const sortedResult = result.sort((firstItem, secondItem) => secondItem.value - firstItem.value);
       if (sortedResult.length > 10) {
         const top9 = sortedResult.slice(0, 9);
         const remaining = sortedResult.slice(9);
@@ -315,9 +315,9 @@ export default function DynamicChartVisualizer({
             finalOthersValue = Math.round(weightedSum / totalCount);
           }
         } else if (operation === "min") {
-          finalOthersValue = Math.min(...remaining.map(item => item.value));
+          finalOthersValue = Math.min(...remaining.map((item) => item.value));
         } else if (operation === "max") {
-          finalOthersValue = Math.max(...remaining.map(item => item.value));
+          finalOthersValue = Math.max(...remaining.map((item) => item.value));
         }
 
         return [
@@ -336,27 +336,27 @@ export default function DynamicChartVisualizer({
   // Checks if this chart configuration is pinned to dashboard
   const isPinned = useMemo(() => {
     return dashboardWidgets.some(
-      (w) =>
-        w.collection === collectionKey &&
-        w.xAxisField === xAxisField &&
-        w.operation === (operation === "min" || operation === "max" ? "count" : operation) && // map compatibility
-        w.chartType === chartType &&
-        w.isPinnedToDashboard
+      (widget) =>
+        widget.collection === collectionKey &&
+        widget.xAxisField === xAxisField &&
+        widget.operation === (operation === "min" || operation === "max" ? "count" : operation) && // map compatibility
+        widget.chartType === chartType &&
+        widget.isPinnedToDashboard
     );
   }, [dashboardWidgets, collectionKey, xAxisField, operation, chartType]);
 
   // Toggles pin state in localStorage
   const handleTogglePin = () => {
     const nextWidgets = [...dashboardWidgets];
-    const matchingIdx = nextWidgets.findIndex(
-      (w) =>
-        w.collection === collectionKey &&
-        w.xAxisField === xAxisField &&
-        w.operation === (operation === "min" || operation === "max" ? "count" : operation)
+    const matchingIndex = nextWidgets.findIndex(
+      (widget) =>
+        widget.collection === collectionKey &&
+        widget.xAxisField === xAxisField &&
+        widget.operation === (operation === "min" || operation === "max" ? "count" : operation)
     );
 
-    if (matchingIdx > -1) {
-      nextWidgets[matchingIdx].isPinnedToDashboard = !nextWidgets[matchingIdx].isPinnedToDashboard;
+    if (matchingIndex > -1) {
+      nextWidgets[matchingIndex].isPinnedToDashboard = !nextWidgets[matchingIndex].isPinnedToDashboard;
     } else {
       // Create new custom widget
       const newWidget: CustomWidget = {
@@ -394,18 +394,18 @@ export default function DynamicChartVisualizer({
 
   // Update a filter rule
   const handleUpdateFilter = (id: string, updates: Partial<FilterRule>) => {
-    const updated = filters.map((rule) => {
+    const updatedFilters = filters.map((rule) => {
       if (rule.id === id) {
         return { ...rule, ...updates };
       }
       return rule;
     });
-    setFilters(updated);
+    setFilters(updatedFilters);
   };
 
   // Delete a filter rule
   const handleDeleteFilter = (id: string) => {
-    setFilters(filters.filter((f) => f.id !== id));
+    setFilters(filters.filter((rule) => rule.id !== id));
   };
 
   // Export chart to PNG image file
@@ -423,8 +423,8 @@ export default function DynamicChartVisualizer({
       link.download = `${title.toLowerCase().replace(/\s+/g, "-")}-chart.png`;
       link.href = dataUrl;
       link.click();
-    } catch (e) {
-      console.error("Failed to export chart image", e);
+    } catch (error) {
+      console.error("Failed to export chart image", error);
     }
   };
 
@@ -433,17 +433,17 @@ export default function DynamicChartVisualizer({
     if (processedData.length === 0) return;
     try {
       const XLSX = await import("xlsx");
-      const sheetData = processedData.map(d => ({
-        "Grouping Key": d.name,
-        "Aggregated Value": d.value,
-        "Count": d.count
+      const sheetData = processedData.map((item) => ({
+        "Grouping Key": item.name,
+        "Aggregated Value": item.value,
+        "Count": item.count
       }));
       const worksheet = XLSX.utils.json_to_sheet(sheetData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Analytics");
       XLSX.writeFile(workbook, `${title.replace(/\s+/g, "_")}_${new Date().toISOString().split('T')[0]}.xlsx`);
-    } catch (e) {
-      console.error("Failed to export Excel spreadsheet", e);
+    } catch (error) {
+      console.error("Failed to export Excel spreadsheet", error);
     }
   };
 
@@ -481,9 +481,9 @@ export default function DynamicChartVisualizer({
       }
 
       if (pdfOrientation === "l") {
-        const tmp = formatWidth;
+        const previousFormatWidth = formatWidth;
         formatWidth = formatHeight;
-        formatHeight = tmp;
+        formatHeight = previousFormatWidth;
       }
 
       const doc = new jsPDF({
@@ -516,7 +516,7 @@ export default function DynamicChartVisualizer({
       // Render tabular data
       autoTable(doc, {
         head: [["Grouping Key (X-Axis)", `Aggregated Value (${operation.toUpperCase()})`, "Record Count"]],
-        body: processedData.map(row => [row.name, row.value.toLocaleString(), row.count]),
+        body: processedData.map((row) => [row.name, row.value.toLocaleString(), row.count]),
         startY: chartHeight + 48,
         styles: { fontSize: pdfOrientation === "l" ? 9 : 10 },
         headStyles: { fillColor: [16, 185, 129] }, // emerald theme color
@@ -524,8 +524,8 @@ export default function DynamicChartVisualizer({
       });
 
       doc.save(`${title.toLowerCase().replace(/\s+/g, "-")}-report.pdf`);
-    } catch (e) {
-      console.error("Failed to export PDF report", e);
+    } catch (error) {
+      console.error("Failed to export PDF report", error);
     }
   };
 
@@ -729,7 +729,7 @@ export default function DynamicChartVisualizer({
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.operation")}</label>
                 <select
                   value={operation}
-                  onChange={(e) => setOperation(e.target.value as "count" | "sum" | "avg" | "min" | "max")}
+                  onChange={(event) => setOperation(event.target.value as "count" | "sum" | "avg" | "min" | "max")}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
                 >
                   <option value="count">{t("reports.visualizer.opCount")}</option>
@@ -749,18 +749,18 @@ export default function DynamicChartVisualizer({
                 <select
                   disabled={operation === "count"}
                   value={targetField}
-                  onChange={(e) => setTargetField(e.target.value)}
+                  onChange={(event) => setTargetField(event.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-40"
                 >
                   {activeMeta.numericFields.length === 0 ? (
                     <option value="">{t("reports.widgets.builder.noNumericFields")}</option>
                   ) : (
-                    activeMeta.numericFields.map((f) => {
-                      const transKey = `reports.fields.${f.value}`;
+                    activeMeta.numericFields.map((field) => {
+                      const transKey = `reports.fields.${field.value}`;
                       const translated = t(transKey as any);
                       return (
-                        <option key={f.value} value={f.value}>
-                          {translated === transKey ? f.label : translated}
+                        <option key={field.value} value={field.value}>
+                          {translated === transKey ? field.label : translated}
                         </option>
                       );
                     })
@@ -775,7 +775,7 @@ export default function DynamicChartVisualizer({
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartType")}</label>
                 <select
                   value={chartType}
-                  onChange={(e) => setChartType(e.target.value as "bar" | "line" | "area" | "pie" | "radar")}
+                  onChange={(event) => setChartType(event.target.value as "bar" | "line" | "area" | "pie" | "radar")}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
                 >
                   <option value="bar">{t("reports.visualizer.chartBar")}</option>
@@ -795,7 +795,7 @@ export default function DynamicChartVisualizer({
                 </div>
                 <select
                   value={activePalette}
-                  onChange={(e) => setActivePalette(e.target.value)}
+                  onChange={(event) => setActivePalette(event.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
                 >
                   {CHART_PALETTE_DEFS.filter((def) => def.id !== 'brand' && def.colors.length > 0).map((def) => (
@@ -813,7 +813,7 @@ export default function DynamicChartVisualizer({
                   <input
                     type="checkbox"
                     checked={showGrid}
-                    onChange={(e) => setShowGrid(e.target.checked)}
+                    onChange={(event) => setShowGrid(event.target.checked)}
                     className="rounded text-primary focus:ring-primary/10 cursor-pointer"
                   />
                   {t("reports.visualizer.gridLines")}
@@ -822,7 +822,7 @@ export default function DynamicChartVisualizer({
                   <input
                     type="checkbox"
                     checked={showLegend}
-                    onChange={(e) => setShowLegend(e.target.checked)}
+                    onChange={(event) => setShowLegend(event.target.checked)}
                     className="rounded text-primary focus:ring-primary/10 cursor-pointer"
                   />
                   {t("reports.visualizer.legends")}
@@ -831,7 +831,7 @@ export default function DynamicChartVisualizer({
                   <input
                     type="checkbox"
                     checked={showTooltip}
-                    onChange={(e) => setShowTooltip(e.target.checked)}
+                    onChange={(event) => setShowTooltip(event.target.checked)}
                     className="rounded text-primary focus:ring-primary/10 cursor-pointer"
                   />
                   {t("reports.visualizer.tooltips")}
@@ -872,15 +872,15 @@ export default function DynamicChartVisualizer({
                   {/* Field Selector */}
                   <select
                     value={rule.field}
-                    onChange={(e) => handleUpdateFilter(rule.id, { field: e.target.value })}
+                    onChange={(event) => handleUpdateFilter(rule.id, { field: event.target.value })}
                     className="flex-1 min-w-0 px-2 py-1 text-[11px] rounded-lg border border-border bg-card/60 text-foreground focus:outline-none"
                   >
-                    {activeMeta.fields.map((f) => {
-                      const transKey = `reports.fields.${f.value}`;
+                    {activeMeta.fields.map((field) => {
+                      const transKey = `reports.fields.${field.value}`;
                       const translated = t(transKey as any);
                       return (
-                        <option key={f.value} value={f.value}>
-                          {translated === transKey ? f.label : translated}
+                        <option key={field.value} value={field.value}>
+                          {translated === transKey ? field.label : translated}
                         </option>
                       );
                     })}
@@ -889,13 +889,13 @@ export default function DynamicChartVisualizer({
                   {/* Operator */}
                   <select
                     value={rule.operator}
-                    onChange={(e) => handleUpdateFilter(rule.id, { operator: e.target.value as FilterRule["operator"] })}
+                    onChange={(event) => handleUpdateFilter(rule.id, { operator: event.target.value as FilterRule["operator"] })}
                     className="w-20 px-1 py-1 text-[11px] rounded-lg border border-border bg-card/60 text-foreground focus:outline-none font-medium"
                   >
                     <option value="equals">=</option>
                     <option value="contains">like</option>
                     <option value="startsWith">starts</option>
-                    {activeMeta.fields.find(f => f.value === rule.field)?.isNumeric && (
+                    {activeMeta.fields.find((field) => field.value === rule.field)?.isNumeric && (
                       <>
                         <option value="gt">&gt;</option>
                         <option value="lt">&lt;</option>
@@ -907,7 +907,7 @@ export default function DynamicChartVisualizer({
                   <input
                     type="text"
                     value={rule.value}
-                    onChange={(e) => handleUpdateFilter(rule.id, { value: e.target.value })}
+                    onChange={(event) => handleUpdateFilter(rule.id, { value: event.target.value })}
                     placeholder={t("reports.visualizer.filterValuePlaceholder")}
                     className="flex-1 min-w-0 px-2 py-1 text-[11px] rounded-lg border border-border bg-card/60 text-foreground focus:outline-none font-semibold"
                   />

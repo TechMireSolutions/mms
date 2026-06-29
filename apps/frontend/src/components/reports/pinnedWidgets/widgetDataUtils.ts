@@ -24,8 +24,8 @@ function readContactsWidgetAggregate(widgetId: string): ContactsWidgetAggregateR
   const queries = queryClientInstance.getQueriesData<Record<string, ContactsWidgetAggregateResult>>({
     queryKey: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
   });
-  for (const [, data] of queries) {
-    if (data?.[widgetId]) return data[widgetId];
+  for (const [, aggregateByWidgetId] of queries) {
+    if (aggregateByWidgetId?.[widgetId]) return aggregateByWidgetId[widgetId];
   }
   return undefined;
 }
@@ -39,8 +39,8 @@ function readStudentsWidgetAggregate(widgetId: string): StudentsWidgetAggregateR
   const queries = queryClientInstance.getQueriesData<Record<string, StudentsWidgetAggregateResult>>({
     queryKey: STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
   });
-  for (const [, data] of queries) {
-    if (data?.[widgetId]) return data[widgetId];
+  for (const [, aggregateByWidgetId] of queries) {
+    if (aggregateByWidgetId?.[widgetId]) return aggregateByWidgetId[widgetId];
   }
   return undefined;
 }
@@ -54,8 +54,8 @@ function readTeachersWidgetAggregate(widgetId: string): TeachersWidgetAggregateR
   const queries = queryClientInstance.getQueriesData<Record<string, TeachersWidgetAggregateResult>>({
     queryKey: TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
   });
-  for (const [, data] of queries) {
-    if (data?.[widgetId]) return data[widgetId];
+  for (const [, aggregateByWidgetId] of queries) {
+    if (aggregateByWidgetId?.[widgetId]) return aggregateByWidgetId[widgetId];
   }
   return undefined;
 }
@@ -78,17 +78,17 @@ function formatTeachersWidgetValue(
 
   let isAlert = false;
   if (widget.thresholdEnabled && widget.thresholdValue !== undefined) {
-    const numVal = Number(aggregate.value);
-    const numThreshold = Number(widget.thresholdValue);
+    const numericValue = Number(aggregate.value);
+    const numericThreshold = Number(widget.thresholdValue);
     switch (widget.thresholdCondition) {
       case "lt":
-        isAlert = numVal < numThreshold;
+        isAlert = numericValue < numericThreshold;
         break;
       case "gt":
-        isAlert = numVal > numThreshold;
+        isAlert = numericValue > numericThreshold;
         break;
       case "equals":
-        isAlert = numVal === numThreshold;
+        isAlert = numericValue === numericThreshold;
         break;
     }
   }
@@ -114,17 +114,17 @@ function formatStudentsWidgetValue(
 
   let isAlert = false;
   if (widget.thresholdEnabled && widget.thresholdValue !== undefined) {
-    const numVal = Number(aggregate.value);
-    const numThreshold = Number(widget.thresholdValue);
+    const numericValue = Number(aggregate.value);
+    const numericThreshold = Number(widget.thresholdValue);
     switch (widget.thresholdCondition) {
       case "lt":
-        isAlert = numVal < numThreshold;
+        isAlert = numericValue < numericThreshold;
         break;
       case "gt":
-        isAlert = numVal > numThreshold;
+        isAlert = numericValue > numericThreshold;
         break;
       case "equals":
-        isAlert = numVal === numThreshold;
+        isAlert = numericValue === numericThreshold;
         break;
     }
   }
@@ -150,17 +150,17 @@ function formatContactsWidgetValue(
 
   let isAlert = false;
   if (widget.thresholdEnabled && widget.thresholdValue !== undefined) {
-    const numVal = Number(aggregate.value);
-    const numThreshold = Number(widget.thresholdValue);
+    const numericValue = Number(aggregate.value);
+    const numericThreshold = Number(widget.thresholdValue);
     switch (widget.thresholdCondition) {
       case "lt":
-        isAlert = numVal < numThreshold;
+        isAlert = numericValue < numericThreshold;
         break;
       case "gt":
-        isAlert = numVal > numThreshold;
+        isAlert = numericValue > numericThreshold;
         break;
       case "equals":
-        isAlert = numVal === numThreshold;
+        isAlert = numericValue === numericThreshold;
         break;
     }
   }
@@ -223,21 +223,21 @@ export function getFilteredRecords(
 
   return list.filter((item) => {
     if (!item) return false;
-    const val = item[widget.filterField || ""];
-    if (val === undefined || val === null) return false;
+    const fieldValue = item[widget.filterField || ""];
+    if (fieldValue === undefined || fieldValue === null) return false;
 
-    const strVal = String(val).toLowerCase();
-    const strTargetVal = String(widget.filterValue || "").toLowerCase();
+    const stringValue = String(fieldValue).toLowerCase();
+    const stringTargetValue = String(widget.filterValue || "").toLowerCase();
 
     switch (widget.filterOperator) {
       case "equals":
-        return strVal === strTargetVal;
+        return stringValue === stringTargetValue;
       case "contains":
-        return strVal.includes(strTargetVal);
+        return stringValue.includes(stringTargetValue);
       case "gt":
-        return Number(val) > Number(widget.filterValue);
+        return Number(fieldValue) > Number(widget.filterValue);
       case "lt":
-        return Number(val) < Number(widget.filterValue);
+        return Number(fieldValue) < Number(widget.filterValue);
       default:
         return true;
     }
@@ -292,12 +292,12 @@ export function computeWidgetSingleValue(
 
   const filtered = getFilteredRecords(widget, collections);
   const totalInCollection = (collections[widget.collection] || []).length;
-  let finalVal = 0;
+  let finalValue = 0;
 
   if (widget.operation === "count") {
-    finalVal = filtered.length;
+    finalValue = filtered.length;
   } else if (widget.operation === "percentage") {
-    finalVal = totalInCollection > 0 ? Math.round((filtered.length / totalInCollection) * 100) : 0;
+    finalValue = totalInCollection > 0 ? Math.round((filtered.length / totalInCollection) * 100) : 0;
   } else {
     const field = widget.targetField || "";
     let sum = 0;
@@ -305,7 +305,7 @@ export function computeWidgetSingleValue(
     filtered.forEach((item) => {
       if (widget.collection === "hasanat_distributions" && field === "points") {
         const denomName = String(item.denominationName || "").toLowerCase();
-        const matchedDenom = (collections.hasanat_denoms || []).find((d: any) => d.id === item.denominationId);
+        const matchedDenom = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === item.denominationId);
         const points = matchedDenom ? matchedDenom.points : (
           denomName.includes("silver") ? 150 :
           denomName.includes("gold") ? 500 :
@@ -315,43 +315,43 @@ export function computeWidgetSingleValue(
         sum += Number(item.quantity || 1) * points;
         count++;
       } else {
-        const num = Number(item[field]);
-        if (!isNaN(num)) {
-          sum += num;
+        const numericValue = Number(item[field]);
+        if (!isNaN(numericValue)) {
+          sum += numericValue;
           count++;
         }
       }
     });
-    finalVal = widget.operation === "sum" ? sum : (count > 0 ? Math.round(sum / count) : 0);
+    finalValue = widget.operation === "sum" ? sum : (count > 0 ? Math.round(sum / count) : 0);
   }
 
-  let formattedValue = String(finalVal);
+  let formattedValue = String(finalValue);
   if (widget.widgetType === "progress" || widget.operation === "percentage") {
-    formattedValue = `${finalVal}%`;
+    formattedValue = `${finalValue}%`;
   } else if (widget.collection === "finance_invoices" && widget.operation !== "count") {
-    formattedValue = `₨ ${finalVal.toLocaleString()}`;
+    formattedValue = `₨ ${finalValue.toLocaleString()}`;
   } else {
-    formattedValue = finalVal.toLocaleString();
+    formattedValue = finalValue.toLocaleString();
   }
 
   let isAlert = false;
   if (widget.thresholdEnabled && widget.thresholdValue !== undefined) {
-    const numVal = Number(finalVal);
-    const numThreshold = Number(widget.thresholdValue);
+    const numericValue = Number(finalValue);
+    const numericThreshold = Number(widget.thresholdValue);
     switch (widget.thresholdCondition) {
       case "lt":
-        isAlert = numVal < numThreshold;
+        isAlert = numericValue < numericThreshold;
         break;
       case "gt":
-        isAlert = numVal > numThreshold;
+        isAlert = numericValue > numericThreshold;
         break;
       case "equals":
-        isAlert = numVal === numThreshold;
+        isAlert = numericValue === numericThreshold;
         break;
     }
   }
 
-  return { value: finalVal, formattedValue, isAlert, totalCount: totalInCollection };
+  return { value: finalValue, formattedValue, isAlert, totalCount: totalInCollection };
 }
 
 export function computeWidgetChartData(
@@ -375,19 +375,19 @@ export function computeWidgetChartData(
   const filteredList = list.filter((item) => {
     if (!item) return false;
     if (!widget.filterField) return true;
-    const val = (item as Record<string, unknown>)[widget.filterField];
-    if (val === undefined || val === null) return false;
-    const strVal = String(val).toLowerCase();
-    const strTargetVal = String(widget.filterValue || "").toLowerCase();
+    const fieldValue = (item as Record<string, unknown>)[widget.filterField];
+    if (fieldValue === undefined || fieldValue === null) return false;
+    const stringValue = String(fieldValue).toLowerCase();
+    const stringTargetValue = String(widget.filterValue || "").toLowerCase();
     switch (widget.filterOperator) {
       case "equals":
-        return strVal === strTargetVal;
+        return stringValue === stringTargetValue;
       case "contains":
-        return strVal.includes(strTargetVal);
+        return stringValue.includes(stringTargetValue);
       case "gt":
-        return Number(val) > Number(widget.filterValue);
+        return Number(fieldValue) > Number(widget.filterValue);
       case "lt":
-        return Number(val) < Number(widget.filterValue);
+        return Number(fieldValue) < Number(widget.filterValue);
       default:
         return true;
     }
@@ -403,9 +403,9 @@ export function computeWidgetChartData(
   });
 
   const data = Object.entries(groups).map(([groupName, items]) => {
-    let finalVal = 0;
+    let finalValue = 0;
     if (widget.operation === "count") {
-      finalVal = items.length;
+      finalValue = items.length;
     } else {
       const field = widget.targetField || "";
       let sum = 0;
@@ -413,7 +413,7 @@ export function computeWidgetChartData(
       items.forEach((item) => {
         if (widget.collection === "hasanat_distributions" && field === "points") {
           const denomName = String(item.denominationName || "").toLowerCase();
-          const matchedDenom = (collections.hasanat_denoms || []).find((d: any) => d.id === item.denominationId);
+          const matchedDenom = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === item.denominationId);
           const points = matchedDenom ? matchedDenom.points : (
             denomName.includes("silver") ? 150 :
             denomName.includes("gold") ? 500 :
@@ -423,19 +423,19 @@ export function computeWidgetChartData(
           sum += Number(item.quantity || 1) * points;
           count++;
         } else {
-          const num = Number(item[field]);
-          if (!isNaN(num)) {
-            sum += num;
+          const numericValue = Number(item[field]);
+          if (!isNaN(numericValue)) {
+            sum += numericValue;
             count++;
           }
         }
       });
-      finalVal = widget.operation === "sum" ? sum : (count > 0 ? Math.round(sum / count) : 0);
+      finalValue = widget.operation === "sum" ? sum : (count > 0 ? Math.round(sum / count) : 0);
     }
-    return { name: groupName, value: finalVal };
+    return { name: groupName, value: finalValue };
   });
 
-  return data.sort((a, b) => b.value - a.value).slice(0, 8);
+  return data.sort((firstItem, secondItem) => secondItem.value - firstItem.value).slice(0, 8);
 }
 
 /** Resolve dashboard card values for contacts via server widget aggregates. */

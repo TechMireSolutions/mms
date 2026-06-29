@@ -554,16 +554,16 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
     }
     const parsed = saved.map(withDefaultTitleKey);
     let modified = false;
-    const existingIds = new Set(parsed.map((w) => w.id));
+    const existingIds = new Set(parsed.map((widget) => widget.id));
     const merged = [...parsed];
-    for (const def of defaults) {
-      if (!existingIds.has(def.id)) {
-        merged.push(def);
+    for (const defaultWidget of defaults) {
+      if (!existingIds.has(defaultWidget.id)) {
+        merged.push(defaultWidget);
         modified = true;
       } else {
-        const idx = merged.findIndex((w) => w.id === def.id);
-        if (idx >= 0 && def.titleKey && !merged[idx].titleKey) {
-          merged[idx] = { ...merged[idx], titleKey: def.titleKey };
+        const widgetIndex = merged.findIndex((widget) => widget.id === defaultWidget.id);
+        if (widgetIndex >= 0 && defaultWidget.titleKey && !merged[widgetIndex].titleKey) {
+          merged[widgetIndex] = { ...merged[widgetIndex], titleKey: defaultWidget.titleKey };
           modified = true;
         }
       }
@@ -572,8 +572,8 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
       saveObject(DASHBOARD_WIDGETS_KEY, merged);
     }
     return merged;
-  } catch (e) {
-    console.error("Failed to load custom widgets", e);
+  } catch (error) {
+    console.error("Failed to load custom widgets", error);
     return [];
   }
 }
