@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
   labels: {
     trigger: string;
     title: string;
@@ -60,12 +60,12 @@ export function ResultsView({
   const [selectedStudent, setSelectedStudent] = useState<RankedResult | null>(null);
   const [certStudent, setCertStudent] = useState<RankedResult | null>(null);
 
-  const exam = exams.find((e) => e.id === selectedExam);
+  const exam = exams.find((examOption) => examOption.id === selectedExam);
   const studentIdsForExam = useMemo(() => {
     if (!exam) return [];
     return results
-      .filter((r) => r.examId === exam.id)
-      .map((r) => r.studentId);
+      .filter((result) => result.examId === exam.id)
+      .map((result) => result.studentId);
   }, [exam, results]);
 
   const { data: students = [] } = useStudentsByIds(studentIdsForExam);
@@ -79,7 +79,7 @@ export function ResultsView({
   const classNamesById = useMemo(
     () => new Map(
       sessions.flatMap((session) =>
-        (session.classes || []).map((cls) => [cls.id, `${session.name} - ${cls.name}`] as const),
+        (session.classes || []).map((sessionClass) => [sessionClass.id, `${session.name} - ${sessionClass.name}`] as const),
       ),
     ),
     [sessions],
@@ -96,22 +96,22 @@ export function ResultsView({
   const rankedResults = useMemo<RankedResult[]>(() => {
     if (!exam) return [];
     return results
-      .filter((r) => r.examId === exam.id)
-      .map((r) => {
-        const student = studentsById.get(String(r.studentId));
-        const classId = classByStudentId.get(String(r.studentId));
-        const pct = Math.round((r.marksObtained / exam.totalMarks) * 100);
+      .filter((result) => result.examId === exam.id)
+      .map((result) => {
+        const student = studentsById.get(String(result.studentId));
+        const classId = classByStudentId.get(String(result.studentId));
+        const percentage = Math.round((result.marksObtained / exam.totalMarks) * 100);
         return {
-          ...r,
+          ...result,
           student: student ? { name: student.name || "Unnamed student", rollNo: student.grNumber || String(student.id) } : undefined,
           cls: classId ? { name: classNamesById.get(classId) || classId } : undefined,
-          pct,
-          grade: getGrade(pct),
-          passed: r.marksObtained >= exam.passingMarks,
+          pct: percentage,
+          grade: getGrade(percentage),
+          passed: result.marksObtained >= exam.passingMarks,
         };
       })
-      .sort((a, b) => b.marksObtained - a.marksObtained)
-      .map((r, i) => ({ ...r, rank: i + 1 }));
+      .sort((firstResult, secondResult) => secondResult.marksObtained - firstResult.marksObtained)
+      .map((result, index) => ({ ...result, rank: index + 1 }));
   }, [classByStudentId, classNamesById, exam, results, studentsById]);
 
   useEffect(() => {
@@ -120,9 +120,9 @@ export function ResultsView({
 
   const stats = useMemo(() => {
     if (rankedResults.length === 0) return null;
-    const avg = Math.round(rankedResults.reduce((s, r) => s + r.pct, 0) / rankedResults.length);
-    const passed = rankedResults.filter((r) => r.passed).length;
-    return { avg, passed, failed: rankedResults.length - passed, total: rankedResults.length };
+    const average = Math.round(rankedResults.reduce((sum, result) => sum + result.pct, 0) / rankedResults.length);
+    const passed = rankedResults.filter((result) => result.passed).length;
+    return { average, passed, failed: rankedResults.length - passed, total: rankedResults.length };
   }, [rankedResults]);
 
   const showRank = isColumnVisible ? isColumnVisible("rank") : true;
@@ -139,18 +139,18 @@ export function ResultsView({
 
       <div className="flex flex-wrap items-center gap-2 justify-between">
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("examinations.selectExam")}>
-          {exams.map((e) => {
-            const isSelected = selectedExam === e.id;
+          {exams.map((examOption) => {
+            const isSelected = selectedExam === examOption.id;
             return (
               <Button
-                key={e.id}
+                key={examOption.id}
                 type="button"
                 role="radio"
                 aria-checked={isSelected}
-                onClick={() => setSelectedExam(e.id)}
+                onClick={() => setSelectedExam(examOption.id)}
                 className={`px-3.5 py-2 rounded-lg border text-[12px] font-semibold transition-all ${isSelected ? "border-primary bg-primary/5 text-primary" : "border-border bg-card hover:bg-muted text-foreground"}`}
               >
-                {e.name}
+                {examOption.name}
               </Button>
             );
           })}
@@ -170,13 +170,13 @@ export function ResultsView({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" role="status" aria-label={t("examinations.resultsStats")}>
               {[
                 { label: t("examinations.stats.students"), value: stats.total },
-                { label: t("examinations.stats.classAvg"), value: `${stats.avg}%` },
+                { label: t("examinations.stats.classAvg"), value: `${stats.average}%` },
                 { label: t("examinations.stats.passed"), value: stats.passed },
                 { label: t("examinations.stats.failed"), value: stats.failed },
-              ].map((s) => (
-                <div key={s.label} className="rounded-xl border border-border bg-card p-3.5 text-center">
-                  <p className={`text-[20px] font-bold text-foreground`}>{s.value}</p>
-                  <p className="text-[10px] text-muted-foreground">{s.label}</p>
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-xl border border-border bg-card p-3.5 text-center">
+                  <p className={`text-[20px] font-bold text-foreground`}>{stat.value}</p>
+                  <p className="text-[10px] text-muted-foreground">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -191,22 +191,22 @@ export function ResultsView({
               <div className="py-10 text-center text-sm text-muted-foreground" role="status">{t("examinations.empty.results")}</div>
             ) : (
               <div className="divide-y divide-border/50" role="list">
-                {rankedResults.map((r) => (
+                {rankedResults.map((result) => (
                   <motion.div
-                    key={r.id}
+                    key={result.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="flex items-center gap-4 px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer flex-wrap"
-                    onClick={() => setSelectedStudent(r)}
+                    onClick={() => setSelectedStudent(result)}
                     role="listitem"
-                    aria-label={t("examinations.viewResultAria", { name: r.student?.name || t("examinations.columns.results.student") })}
+                    aria-label={t("examinations.viewResultAria", { name: result.student?.name || t("examinations.columns.results.student") })}
                   >
                     {showRank && (
                       <div className="w-8 text-center flex-shrink-0">
-                        {r.rank <= 3 ? (
-                          <span className="text-lg" aria-label={t("examinations.rankLabel", { rank: r.rank })}>{RANK_ICONS[r.rank - 1]}</span>
+                        {result.rank <= 3 ? (
+                          <span className="text-lg" aria-label={t("examinations.rankLabel", { rank: result.rank })}>{RANK_ICONS[result.rank - 1]}</span>
                         ) : (
-                          <span className="text-[12px] font-bold text-muted-foreground">{t("examinations.rankLabel", { rank: r.rank })}</span>
+                          <span className="text-[12px] font-bold text-muted-foreground">{t("examinations.rankLabel", { rank: result.rank })}</span>
                         )}
                       </div>
                     )}
@@ -215,15 +215,15 @@ export function ResultsView({
                       <>
                         <div
                           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white"
-                          style={{ background: r.grade.color }}
+                          style={{ background: result.grade.color }}
                           aria-hidden="true"
                         >
-                          {r.student?.name.split(" ").map((n) => n[0]).join("").slice(0, 2) || "S"}
+                          {result.student?.name.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2) || "S"}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-semibold text-foreground m-0">{r.student?.name}</p>
+                          <p className="text-[13px] font-semibold text-foreground m-0">{result.student?.name}</p>
                           {showClassRoll && (
-                            <p className="text-[10px] text-muted-foreground m-0">{r.cls?.name} · {r.student?.rollNo}</p>
+                            <p className="text-[10px] text-muted-foreground m-0">{result.cls?.name} · {result.student?.rollNo}</p>
                           )}
                         </div>
                       </>
@@ -231,45 +231,45 @@ export function ResultsView({
 
                     {!showStudent && showClassRoll && (
                       <div className="flex-1 min-w-0 text-[12px] text-muted-foreground">
-                        {r.cls?.name} · {r.student?.rollNo}
+                        {result.cls?.name} · {result.student?.rollNo}
                       </div>
                     )}
 
                     {showMarks && (
                       <div className="text-right flex-shrink-0">
                         <p className="text-[14px] font-bold text-foreground m-0">
-                          {r.marksObtained}
+                          {result.marksObtained}
                           <span className="text-[10px] font-normal text-muted-foreground">/{exam.totalMarks}</span>
                         </p>
                         {showPercentage && (
-                          <p className="text-[10px] text-muted-foreground m-0">{r.pct}%</p>
+                          <p className="text-[10px] text-muted-foreground m-0">{result.pct}%</p>
                         )}
                       </div>
                     )}
 
                     {!showMarks && showPercentage && (
-                      <div className="text-right flex-shrink-0 text-[12px] text-muted-foreground">{r.pct}%</div>
+                      <div className="text-right flex-shrink-0 text-[12px] text-muted-foreground">{result.pct}%</div>
                     )}
 
                     {showGrade && (
                       <span
                         className="text-[12px] font-bold px-2.5 py-1 rounded-lg flex-shrink-0"
-                        style={{ color: r.grade.color, background: r.grade.bg, border: `1px solid ${r.grade.border}` }}
+                        style={{ color: result.grade.color, background: result.grade.bg, border: `1px solid ${result.grade.border}` }}
                       >
-                        {r.grade.label}
+                        {result.grade.label}
                       </span>
                     )}
 
                     {showPassFail && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${r.passed ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                        {r.passed ? t("examinations.pass") : t("examinations.fail")}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${result.passed ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                        {result.passed ? t("examinations.pass") : t("examinations.fail")}
                       </span>
                     )}
 
-                    {r.passed && r.rank <= 3 && (
+                    {result.passed && result.rank <= 3 && (
                        <Button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); setCertStudent(r); }}
+                        onClick={(event) => { event.stopPropagation(); setCertStudent(result); }}
                         className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-warning/10 text-warning hover:bg-warning/15 transition-colors flex-shrink-0"
                       >
                         <Award className="w-3 h-3" aria-hidden="true" /> {t("examinations.certificate")}

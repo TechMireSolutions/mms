@@ -23,7 +23,7 @@ interface ToggleProps {
   label: string;
   description?: string;
   value: boolean;
-  onChange: (val: boolean) => void;
+  onChange: (value: boolean) => void;
 }
 
 function Toggle({ label, description, value, onChange }: ToggleProps): React.ReactElement {
@@ -48,8 +48,8 @@ interface ExaminationsSettingsProps {
 
 function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
   if (!savedOrder || savedOrder.length === 0) return fields;
-  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
-  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
+  const orderByFieldKey = Object.fromEntries(savedOrder.map((key, index) => [key, index]));
+  return [...fields].sort((firstField, secondField) => (orderByFieldKey[firstField.key] ?? 9999) - (orderByFieldKey[secondField.key] ?? 9999)) as FieldDefinition[];
 }
 
 function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
@@ -133,34 +133,34 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
     setEnabledTabs(new Set(settings.enabledTabs || ["basic"]));
     setRequiredTabs(new Set(settings.requiredTabs || []));
 
-    const coreKeys = new Set(EXAMINATIONS_TAB_REGISTRY.map((t: any) => t.key));
-    const customTabs = (settings.formTabs || []).filter((t: any) => !coreKeys.has(t.key));
+    const coreTabKeys = new Set(EXAMINATIONS_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition: any) => !coreTabKeys.has(tabDefinition.key));
     setFormTabs([
       ...EXAMINATIONS_TAB_REGISTRY,
       ...customTabs
-    ].map((t: any) => ({
-      ...t,
-      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    ].map((tabDefinition: any) => ({
+      ...tabDefinition,
+      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     })));
 
     const newTabIds = Array.from(new Set([
-      ...EXAMINATIONS_TAB_REGISTRY.map((t: any) => t.key),
-      ...(settings.formTabs || []).map((t: any) => t.key)
+      ...EXAMINATIONS_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key),
+      ...(settings.formTabs || []).map((tabDefinition: any) => tabDefinition.key)
     ]));
     const currentFields = settings.fields || {};
-    setTabFields(Object.fromEntries(newTabIds.map(tabId => [tabId, currentFields[tabId] || []])));
-    setTabFieldEnabled(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.enabled).map((f: any) => f.key))])));
-    setTabFieldRequired(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.required).map((f: any) => f.key))])));
-    setTabFieldUnique(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((f: any) => f.unique).map((f: any) => f.key))])));
-    setTabFieldDefaultValues(Object.fromEntries(newTabIds.map(tabId => [
+    setTabFields(Object.fromEntries(newTabIds.map((tabId) => [tabId, currentFields[tabId] || []])));
+    setTabFieldEnabled(Object.fromEntries(newTabIds.map((tabId) => [tabId, new Set((currentFields[tabId] || []).filter((field: any) => field.enabled).map((field: any) => field.key))])));
+    setTabFieldRequired(Object.fromEntries(newTabIds.map((tabId) => [tabId, new Set((currentFields[tabId] || []).filter((field: any) => field.required).map((field: any) => field.key))])));
+    setTabFieldUnique(Object.fromEntries(newTabIds.map((tabId) => [tabId, new Set((currentFields[tabId] || []).filter((field: any) => field.unique).map((field: any) => field.key))])));
+    setTabFieldDefaultValues(Object.fromEntries(newTabIds.map((tabId) => [
       tabId,
-      Object.fromEntries((currentFields[tabId] || []).filter((f: any) => f.defaultValue !== undefined).map((f: any) => [f.key, f.defaultValue]))
+      Object.fromEntries((currentFields[tabId] || []).filter((field: any) => field.defaultValue !== undefined).map((field: any) => [field.key, field.defaultValue]))
     ])));
-    setTabFieldPermissions(Object.fromEntries(newTabIds.map(tabId => [
+    setTabFieldPermissions(Object.fromEntries(newTabIds.map((tabId) => [
       tabId,
-      Object.fromEntries((currentFields[tabId] || []).filter((f: any) => f.permissions).map((f: any) => [f.key, f.permissions as string[]]))
+      Object.fromEntries((currentFields[tabId] || []).filter((field: any) => field.permissions).map((field: any) => [field.key, field.permissions as string[]]))
     ])));
-    setTabFieldOrder(Object.fromEntries(newTabIds.map(tabId => [tabId, (currentFields[tabId] || []).map((f: any) => f.key)])));
+    setTabFieldOrder(Object.fromEntries(newTabIds.map((tabId) => [tabId, (currentFields[tabId] || []).map((field: any) => field.key)])));
   }, [settings]);
 
   const handleToggleTabEnabled = (id: string) => { toggleTabEnabled(id); setSaved(false); };
@@ -171,31 +171,31 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
   const handleReorderFields = (tabId: string, reorderedFields: FieldDefinition[]) => { handleReorder(tabId, reorderedFields); setSaved(false); };
 
   const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
-    const newKeys = newFields.map((f) => f.key);
-    setTabFieldOrder((prev) => ({
-      ...prev,
-      [tabId]: syncOrder(prev[tabId] || [], newKeys),
+    const newKeys = newFields.map((field) => field.key);
+    setTabFieldOrder((previousOrder) => ({
+      ...previousOrder,
+      [tabId]: syncOrder(previousOrder[tabId] || [], newKeys),
     }));
-    setTabFields((prev) => ({ ...prev, [tabId]: newFields as unknown as FieldDefinition[] }));
+    setTabFields((previousFields) => ({ ...previousFields, [tabId]: newFields as unknown as FieldDefinition[] }));
     setSaved(false);
   };
 
   const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
-    setTabFields(prev => ({
-      ...prev,
-      [tabId]: (prev[tabId] || []).map(f => f.key === updatedField.key ? updatedField : f)
+    setTabFields((previousFields) => ({
+      ...previousFields,
+      [tabId]: (previousFields[tabId] || []).map((field) => field.key === updatedField.key ? updatedField : field)
     }));
     setSaved(false);
   };
 
   const handleDeleteField = async (tabId: string, fieldId: string) => {
-    setTabFields(prev => ({
-      ...prev,
-      [tabId]: (prev[tabId] || []).filter(f => f.key !== fieldId)
+    setTabFields((previousFields) => ({
+      ...previousFields,
+      [tabId]: (previousFields[tabId] || []).filter((field) => field.key !== fieldId)
     }));
-    setTabFieldOrder(prev => ({
-      ...prev,
-      [tabId]: (prev[tabId] || []).filter(id => id !== fieldId)
+    setTabFieldOrder((previousOrder) => ({
+      ...previousOrder,
+      [tabId]: (previousOrder[tabId] || []).filter((currentFieldId) => currentFieldId !== fieldId)
     }));
     setSaved(false);
   };
@@ -212,61 +212,61 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
       isSystem: false,
     };
 
-    setFormTabs(prev => [...prev, newTab]);
-    setEnabledTabs(prev => {
-      const next = new Set(prev);
-      next.add(key);
-      return next;
+    setFormTabs((previousTabs) => [...previousTabs, newTab]);
+    setEnabledTabs((previousTabs) => {
+      const nextTabs = new Set(previousTabs);
+      nextTabs.add(key);
+      return nextTabs;
     });
 
-    setTabFields(prev => ({ ...prev, [key]: [] }));
-    setTabFieldEnabled(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldRequired(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldUnique(prev => ({ ...prev, [key]: new Set() }));
-    setTabFieldDefaultValues(prev => ({ ...prev, [key]: {} }));
-    setTabFieldPermissions(prev => ({ ...prev, [key]: {} }));
-    setTabFieldOrder(prev => ({ ...prev, [key]: [] }));
+    setTabFields((previousFields) => ({ ...previousFields, [key]: [] }));
+    setTabFieldEnabled((previousEnabled) => ({ ...previousEnabled, [key]: new Set() }));
+    setTabFieldRequired((previousRequired) => ({ ...previousRequired, [key]: new Set() }));
+    setTabFieldUnique((previousUnique) => ({ ...previousUnique, [key]: new Set() }));
+    setTabFieldDefaultValues((previousValues) => ({ ...previousValues, [key]: {} }));
+    setTabFieldPermissions((previousPermissions) => ({ ...previousPermissions, [key]: {} }));
+    setTabFieldOrder((previousOrder) => ({ ...previousOrder, [key]: [] }));
     setSaved(false);
   };
 
   const handleDeleteTab = (key: string) => {
-    setFormTabs(prev => prev.filter(t => t.key !== key));
-    setEnabledTabs(prev => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
+    setFormTabs((previousTabs) => previousTabs.filter((tabDefinition) => tabDefinition.key !== key));
+    setEnabledTabs((previousTabs) => {
+      const nextTabs = new Set(previousTabs);
+      nextTabs.delete(key);
+      return nextTabs;
     });
-    setRequiredTabs(prev => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
+    setRequiredTabs((previousTabs) => {
+      const nextTabs = new Set(previousTabs);
+      nextTabs.delete(key);
+      return nextTabs;
     });
     setSaved(false);
   };
 
   const handleRenameTab = (key: string, newLabel: string) => {
     if (!newLabel.trim()) return;
-    setFormTabs(prev => prev.map(t => t.key === key ? { ...t, label: newLabel.trim() } : t));
+    setFormTabs((previousTabs) => previousTabs.map((tabDefinition) => tabDefinition.key === key ? { ...tabDefinition, label: newLabel.trim() } : tabDefinition));
     setSaved(false);
   };
 
   const buildFieldsMap = (): Record<string, FieldDefinition[]> => {
-    const newFields: Record<string, FieldDefinition[]> = {};
-    formTabs.forEach(tab => {
+    const nextFields: Record<string, FieldDefinition[]> = {};
+    formTabs.forEach((tab) => {
       const tabId = tab.key;
-      const combined = (tabFields[tabId] || []).map(f => {
-        const fieldKey = f.key || (f as { id?: string }).id || "";
-        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? f.enabled  ?? false;
-        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? f.required ?? false;
-        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? f.unique   ?? false;
+      const combined = (tabFields[tabId] || []).map((field) => {
+        const fieldKey = field.key || (field as { id?: string }).id || "";
+        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? field.enabled  ?? false;
+        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? field.required ?? false;
+        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? field.unique   ?? false;
         const orderArray   = tabFieldOrder[tabId] || [];
-        const orderIdx     = orderArray.indexOf(fieldKey);
-        const order        = orderIdx >= 0 ? orderIdx : (f.order ?? 999);
-        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? f.defaultValue;
-        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? f.permissions;
+        const orderIndex   = orderArray.indexOf(fieldKey);
+        const order        = orderIndex >= 0 ? orderIndex : (field.order ?? 999);
+        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? field.defaultValue;
+        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? field.permissions;
 
         return {
-          ...f,
+          ...field,
           key: fieldKey,
           enabled,
           required,
@@ -277,18 +277,18 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
         } as FieldDefinition;
       });
 
-      newFields[tabId] = combined.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+      nextFields[tabId] = combined.sort((firstField, secondField) => (firstField.order ?? 999) - (secondField.order ?? 999));
     });
-    return newFields;
+    return nextFields;
   };
 
   const handleSave = () => {
-    const updatedFormTabs = formTabs.map(t => ({
-      ...t,
-      enabled: enabledTabs.has(t.key)
+    const updatedFormTabs = formTabs.map((tabDefinition) => ({
+      ...tabDefinition,
+      enabled: enabledTabs.has(tabDefinition.key)
     }));
 
-    const cfg: ExaminationsSettingsData = {
+    const nextSettings: ExaminationsSettingsData = {
       ...settings,
       passMark,
       maxMark,
@@ -308,7 +308,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
       fields: buildFieldsMap(),
     };
 
-    updateSettings(cfg);
+    updateSettings(nextSettings);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -333,7 +333,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
               <FormSelect
                 id="exams-grading-system"
                 value={gradingSystem}
-                onChange={(val) => { setGradingSystem(val); setSaved(false); }}
+                onChange={(value) => { setGradingSystem(value); setSaved(false); }}
                 options={[
                   { value: "percentage", label: "Percentage (%)" },
                   { value: "letter", label: "Letter Grade (A, B, C...)" },
@@ -346,7 +346,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
               <FormSelect
                 id="exams-cert-template"
                 value={certificateTemplate}
-                onChange={(val) => { setCertificateTemplate(val); setSaved(false); }}
+                onChange={(value) => { setCertificateTemplate(value); setSaved(false); }}
                 options={[
                   { value: "default", label: "Standard Classical" },
                   { value: "modern", label: "Modern Clean" },
@@ -360,7 +360,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
                 id="exams-pass-mark"
                 className={FORM_INPUT}
                 value={passMark}
-                onChange={(e) => { setPassMark(e.target.value); setSaved(false); }}
+                onChange={(event) => { setPassMark(event.target.value); setSaved(false); }}
               />
             </div>
             <div>
@@ -369,19 +369,19 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
                 id="exams-max-mark"
                 className={FORM_INPUT}
                 value={maxMark}
-                onChange={(e) => { setMaxMark(e.target.value); setSaved(false); }}
+                onChange={(event) => { setMaxMark(event.target.value); setSaved(false); }}
               />
             </div>
           </div>
 
           <div className="space-y-2 pt-1" role="group" aria-label="Examinations registry feature flags toggles">
-            <Toggle label="Show Rankings" description="Show student class rank on result cards" value={showRankings} onChange={(v) => { setShowRankings(v); setSaved(false); }} />
-            <Toggle label="Allow Retakes" description="Enable student retakes for failed exams" value={allowRetake} onChange={(v) => { setAllowRetake(v); setSaved(false); }} />
-            <Toggle label="Auto-publish Results" description="Automatically publish results once grading is finished" value={autoPublishResults} onChange={(v) => { setAutoPublishResults(v); setSaved(false); }} />
-            <Toggle label="Notify on Publish" description="Send push notification when results are published" value={notifyOnResult} onChange={(v) => { setNotifyOnResult(v); setSaved(false); }} />
-            <Toggle label="AI Grading Assistant" description="Leverage AI models to analyze and grade open-text answers" value={aiGrading} onChange={(v) => { setAiGrading(v); setSaved(false); }} />
-            <Toggle label="Distinguish Honours" description="Highlight distinctions/honours on profiles and result sheets" value={distinguishHonours} onChange={(v) => { setDistinguishHonours(v); setSaved(false); }} />
-            <Toggle label="Exam Schedule Reminders" description="Auto-send date reminders to guardians prior to exam start" value={examReminders} onChange={(v) => { setExamReminders(v); setSaved(false); }} />
+            <Toggle label="Show Rankings" description="Show student class rank on result cards" value={showRankings} onChange={(value) => { setShowRankings(value); setSaved(false); }} />
+            <Toggle label="Allow Retakes" description="Enable student retakes for failed exams" value={allowRetake} onChange={(value) => { setAllowRetake(value); setSaved(false); }} />
+            <Toggle label="Auto-publish Results" description="Automatically publish results once grading is finished" value={autoPublishResults} onChange={(value) => { setAutoPublishResults(value); setSaved(false); }} />
+            <Toggle label="Notify on Publish" description="Send push notification when results are published" value={notifyOnResult} onChange={(value) => { setNotifyOnResult(value); setSaved(false); }} />
+            <Toggle label="AI Grading Assistant" description="Leverage AI models to analyze and grade open-text answers" value={aiGrading} onChange={(value) => { setAiGrading(value); setSaved(false); }} />
+            <Toggle label="Distinguish Honours" description="Highlight distinctions/honours on profiles and result sheets" value={distinguishHonours} onChange={(value) => { setDistinguishHonours(value); setSaved(false); }} />
+            <Toggle label="Exam Schedule Reminders" description="Auto-send date reminders to guardians prior to exam start" value={examReminders} onChange={(value) => { setExamReminders(value); setSaved(false); }} />
           </div>
         </>
       )}
@@ -403,7 +403,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
             const tabId = tab.key;
             const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
             const tabDesc = tab.description;
-            const tabDefs = tabFields[tabId] || [];
+            const tabDefinitions = Array.isArray(tabFields[tabId]) ? tabFields[tabId] : [];
             const enabledSet = tabFieldEnabled[tabId] || new Set();
             const requiredSet = tabFieldRequired[tabId] || new Set();
             const isOn = tabId === "basic" ? true : enabledTabs.has(tabId);
@@ -452,7 +452,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
                     <p className="text-xs text-muted-foreground">{tabDesc}</p>
                   </div>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                    {tabDefinitions.filter((field) => enabledSet.has(field.key)).length}/{tabDefinitions.length}
                   </span>
                   {tabId !== "basic" && isOn && (
                     <Button
@@ -475,26 +475,26 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
                   <div className="p-3 space-y-3">
                     <CoreFieldEditorList
                       tabId={tabId}
-                      fields={getOrderedFields(tabDefs, tabFieldOrder[tabId])}
+                      fields={getOrderedFields(tabDefinitions, tabFieldOrder[tabId])}
                       enabledSet={enabledSet}
                       requiredSet={requiredSet}
                       onToggleEnabled={(fieldId: string) => handleToggleFieldEnabled(tabId, fieldId)}
                       onToggleRequired={(fieldId: string) => handleToggleFieldRequired(tabId, fieldId)}
                       onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
                       onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
-                      isUniqueField={(tid: string, fid: string) => tabFieldUnique[tid]?.has(fid) || false}
-                      isCoreField={(key: string) => INITIAL_EXAMINATIONS_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+                      isUniqueField={(targetTabId: string, fieldId: string) => tabFieldUnique[targetTabId]?.has(fieldId) || false}
+                      isCoreField={(key: string) => INITIAL_EXAMINATIONS_FIELD_SEED[tabId]?.some((field: any) => field.key === key) ?? false}
                       defaultValues={tabFieldDefaultValues[tabId]}
                       permissions={tabFieldPermissions[tabId]}
-                      onChangeDefaults={(fieldId: string, val: unknown) => {
-                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                      onChangeDefaults={(fieldId: string, value: unknown) => {
+                        setTabFieldDefaultValues((previousValues) => ({ ...previousValues, [tabId]: { ...previousValues[tabId], [fieldId]: value } }));
                         setSaved(false);
                       }}
                       onChangePermissions={(fieldId: string, roles: string[]) => {
-                        setTabFieldPermissions(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: roles } }));
+                        setTabFieldPermissions((previousPermissions) => ({ ...previousPermissions, [tabId]: { ...previousPermissions[tabId], [fieldId]: roles } }));
                         setSaved(false);
                       }}
-                      onEditField={(f: FieldDefinition) => handleEditField(tabId, f)}
+                      onEditField={(field: FieldDefinition) => handleEditField(tabId, field)}
                       onDeleteField={(id: string) => handleDeleteField(tabId, id)}
                       labels={{
                         required: "Required",
@@ -505,9 +505,9 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
                     />
                     <div className="border-t border-border pt-3">
                       <CustomFieldsBuilder
-                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        fields={(tabFields[tabId] || []).map((field) => ({...field, id: field.key})) as unknown as CustomFieldConfig[]}
                         droppableId={`custom-fields-${tabId}`}
-                        onChange={(f) => handleCustomFieldsChange(tabId, f)}
+                        onChange={(fields) => handleCustomFieldsChange(tabId, fields)}
                       />
                     </div>
                   </div>
@@ -569,7 +569,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
           <Input
             id="newTabLabel"
             value={newTabLabel}
-            onChange={(e) => setNewTabLabel(e.target.value)}
+            onChange={(event) => setNewTabLabel(event.target.value)}
             placeholder="e.g. Extra Info"
             autoFocus
           />
@@ -618,7 +618,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
           <Input
             id="renameTabLabel"
             value={renameTabLabel}
-            onChange={(e) => setRenameTabLabel(e.target.value)}
+            onChange={(event) => setRenameTabLabel(event.target.value)}
             placeholder="e.g. Custom Fields"
             autoFocus
           />

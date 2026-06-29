@@ -109,19 +109,19 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
               minHeight: "420px",
             }}>
               {/* Corner ornaments */}
-              {(["top-left", "top-right", "bottom-left", "bottom-right"] as const).map((pos) => {
-                const styles: React.CSSProperties = {
+              {(["top-left", "top-right", "bottom-left", "bottom-right"] as const).map((cornerPosition) => {
+                const cornerStyles: React.CSSProperties = {
                   position: "absolute",
-                  [pos.includes("top") ? "top" : "bottom"]: "8px",
-                  [pos.includes("left") ? "left" : "right"]: "8px",
+                  [cornerPosition.includes("top") ? "top" : "bottom"]: "8px",
+                  [cornerPosition.includes("left") ? "left" : "right"]: "8px",
                   width: "32px",
                   height: "32px",
-                  borderTop: pos.includes("top") ? `4px solid ${secondary}` : "none",
-                  borderBottom: pos.includes("bottom") ? `4px solid ${secondary}` : "none",
-                  borderLeft: pos.includes("left") ? `4px solid ${secondary}` : "none",
-                  borderRight: pos.includes("right") ? `4px solid ${secondary}` : "none",
+                  borderTop: cornerPosition.includes("top") ? `4px solid ${secondary}` : "none",
+                  borderBottom: cornerPosition.includes("bottom") ? `4px solid ${secondary}` : "none",
+                  borderLeft: cornerPosition.includes("left") ? `4px solid ${secondary}` : "none",
+                  borderRight: cornerPosition.includes("right") ? `4px solid ${secondary}` : "none",
                 };
-                return <div key={pos} style={styles} />;
+                return <div key={cornerPosition} style={cornerStyles} />;
               })}
 
               {/* Arabic bismillah */}

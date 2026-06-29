@@ -127,7 +127,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
     });
 
     return z.object(shape).passthrough().refine(
-      (data: any) => data.passingMarks <= data.totalMarks,
+      (formData: any) => formData.passingMarks <= formData.totalMarks,
       {
         message: "Passing Marks cannot exceed Total Marks.",
         path: ["passingMarks"],
@@ -147,7 +147,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
     t,
   });
 
-  const data = form.watch();
+  const formValues = form.watch();
   const setValue = form.setValue;
 
   const completeness = useMemo(() => {
@@ -165,8 +165,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
       }
 
       const isRequired = !!field.required;
-      const val = data[field.key];
-      const isFilled = val !== undefined && val !== null && val !== "" && (!Array.isArray(val) || val.length > 0);
+      const fieldValue = formValues[field.key];
+      const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "" && (!Array.isArray(fieldValue) || fieldValue.length > 0);
 
       if (isRequired) {
         totalRequired++;
@@ -177,16 +177,16 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
       }
     });
 
-    const reqRatio = totalRequired === 0 ? 0 : filledRequired / totalRequired;
-    const optRatio = totalOptional === 0 ? 0 : filledOptional / totalOptional;
-    const progress = (reqRatio * 0.7) + (optRatio * 0.3);
+    const requiredRatio = totalRequired === 0 ? 0 : filledRequired / totalRequired;
+    const optionalRatio = totalOptional === 0 ? 0 : filledOptional / totalOptional;
+    const progress = (requiredRatio * 0.7) + (optionalRatio * 0.3);
 
     return Math.round(progress * 100);
-  }, [data, fieldsList]);
+  }, [formValues, fieldsList]);
 
   const onSubmit = useCallback(async (formData: ExamFormData) => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
+    await new Promise((resolve) => setTimeout(resolve, 600));
     onSave({
       ...formData,
       name: toTitleCase(formData.name || ""),
@@ -198,9 +198,9 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
 
   const classes = useMemo(
     () => sessions.flatMap((session) =>
-      (session.classes || []).map((cls) => ({
-        id: cls.id,
-        name: `${session.name} - ${cls.name}`,
+      (session.classes || []).map((sessionClass) => ({
+        id: sessionClass.id,
+        name: `${session.name} - ${sessionClass.name}`,
       })),
     ),
     [sessions],
@@ -209,7 +209,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
   const renderFieldByKey = (field: FieldDefinition): React.ReactNode => {
     if (!field.enabled) return null;
 
-    const fieldError = errors.find((e) => e.fieldId === field.key);
+    const fieldError = errors.find((error) => error.fieldId === field.key);
 
     if (field.key === "name") {
       return (
@@ -218,8 +218,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
             <Input
               id="exam-name"
               className={FORM_INPUT}
-              value={data.name || ""}
-              onChange={(e) => setValue("name", e.target.value, { shouldValidate: true, shouldDirty: true })}
+              value={formValues.name || ""}
+              onChange={(event) => setValue("name", event.target.value, { shouldValidate: true, shouldDirty: true })}
               placeholder="e.g. Tajweed Mid-Term"
               required
             />
@@ -234,8 +234,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
           <Field label="Subject" required={field.required} error={fieldError?.message}>
             <FormSelect
               id="exam-subject"
-              value={data.subject || ""}
-              onChange={(val: any) => setValue("subject", val, { shouldValidate: true, shouldDirty: true })}
+              value={formValues.subject || ""}
+              onChange={(value: any) => setValue("subject", value, { shouldValidate: true, shouldDirty: true })}
               placeholder="Select subject…"
               options={SUBJECTS}
             />
@@ -250,8 +250,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
           <Field label="Status" required={field.required} error={fieldError?.message}>
             <FormSelect
               id="exam-status"
-              value={data.status || "upcoming"}
-              onChange={(val: any) => setValue("status", val, { shouldValidate: true, shouldDirty: true })}
+              value={formValues.status || "upcoming"}
+              onChange={(value: any) => setValue("status", value, { shouldValidate: true, shouldDirty: true })}
               options={[
                 { value: "upcoming", label: "Upcoming" },
                 { value: "ongoing", label: "Ongoing" },
@@ -271,8 +271,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               id="exam-total"
               type="number"
               className={FORM_INPUT}
-              value={data.totalMarks ?? 100}
-              onChange={(e) => setValue("totalMarks", e.target.value === "" ? 0 : +e.target.value, { shouldValidate: true, shouldDirty: true })}
+              value={formValues.totalMarks ?? 100}
+              onChange={(event) => setValue("totalMarks", event.target.value === "" ? 0 : +event.target.value, { shouldValidate: true, shouldDirty: true })}
               min={1}
               required={field.required}
             />
@@ -289,10 +289,10 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               id="exam-passing"
               type="number"
               className={FORM_INPUT}
-              value={data.passingMarks ?? 50}
-              onChange={(e) => setValue("passingMarks", e.target.value === "" ? 0 : +e.target.value, { shouldValidate: true, shouldDirty: true })}
+              value={formValues.passingMarks ?? 50}
+              onChange={(event) => setValue("passingMarks", event.target.value === "" ? 0 : +event.target.value, { shouldValidate: true, shouldDirty: true })}
               min={1}
-              max={data.totalMarks ?? 100}
+              max={formValues.totalMarks ?? 100}
               required={field.required}
             />
           </Field>
@@ -308,8 +308,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               id="exam-duration"
               type="number"
               className={FORM_INPUT}
-              value={data.duration ?? 60}
-              onChange={(e) => setValue("duration", e.target.value === "" ? 0 : +e.target.value, { shouldValidate: true, shouldDirty: true })}
+              value={formValues.duration ?? 60}
+              onChange={(event) => setValue("duration", event.target.value === "" ? 0 : +event.target.value, { shouldValidate: true, shouldDirty: true })}
               min={5}
               required={field.required}
             />
@@ -324,8 +324,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
           <Field label="Exam Date" required={field.required} error={fieldError?.message}>
             <DatePicker
               id="exam-date"
-              value={data.date || ""}
-              onChange={(val) => setValue("date", val, { shouldValidate: true, shouldDirty: true })}
+              value={formValues.date || ""}
+              onChange={(value) => setValue("date", value, { shouldValidate: true, shouldDirty: true })}
               required
             />
           </Field>
@@ -338,15 +338,15 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
         <div key="classIds" className="sm:col-span-2">
           <Field label="Assign to Classes" required={field.required} error={fieldError?.message}>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Assign to classes list">
-              {classes.map((cls) => {
-                const active = !!(data.classIds && (data.classIds as string[]).includes(cls.id));
+              {classes.map((sessionClass) => {
+                const active = !!(formValues.classIds && (formValues.classIds as string[]).includes(sessionClass.id));
                 return (
                   <Button
-                    key={cls.id}
+                    key={sessionClass.id}
                     type="button"
                     onClick={() => {
-                      const classIds = data.classIds ? [...(data.classIds as string[])] : [];
-                      const nextClassIds = classIds.includes(cls.id) ? classIds.filter((x) => x !== cls.id) : [...classIds, cls.id];
+                      const classIds = formValues.classIds ? [...(formValues.classIds as string[])] : [];
+                      const nextClassIds = classIds.includes(sessionClass.id) ? classIds.filter((classId) => classId !== sessionClass.id) : [...classIds, sessionClass.id];
                       setValue("classIds", nextClassIds, { shouldValidate: true, shouldDirty: true });
                     }}
                     className={`px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all ${
@@ -355,7 +355,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                         : "border-border bg-muted hover:bg-muted/80 text-foreground"
                     }`}
                   >
-                    {cls.name}
+                    {sessionClass.name}
                   </Button>
                 );
               })}
@@ -373,8 +373,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               id="exam-desc"
               className={FORM_TEXTAREA}
               rows={2}
-              value={data.description || ""}
-              onChange={(e) => setValue("description", e.target.value, { shouldValidate: true, shouldDirty: true })}
+              value={formValues.description || ""}
+              onChange={(event) => setValue("description", event.target.value, { shouldValidate: true, shouldDirty: true })}
               placeholder="Optional notes about this exam…"
               required={field.required}
             />
@@ -384,7 +384,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
     }
 
     // Default custom field rendering
-    const value = data[field.key] ?? getDefaultFieldValue(field);
+    const value = formValues[field.key] ?? getDefaultFieldValue(field);
     return (
       <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
         <Field label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
@@ -411,7 +411,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
     );
   };
 
-  const valid = !!(data.name && data.date && data.classIds && (data.classIds as string[]).length > 0);
+  const valid = !!(formValues.name && formValues.date && formValues.classIds && (formValues.classIds as string[]).length > 0);
 
   return (
     <MmsDynamicForm
@@ -426,15 +426,15 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
       builderPanel={null}
       tabs={[]}
       activeTab={tab}
-      error={errors.map(e => e.message)}
+      error={errors.map((error) => error.message)}
       cancelLabel="Cancel"
       saveLabel={exam ? "Save Changes" : "Create Exam"}
       onSave={() => void handleSave(onSubmit)()}
       saving={saving}
       saveDisabled={!valid}
       fields={fieldsList}
-      data={data}
-      setValue={(key, val, opts) => setValue(key as any, val, opts)}
+      data={formValues}
+      setValue={(key, value, options) => setValue(key as any, value, options)}
       errors={errors}
       renderField={renderFieldByKey}
       renderBasicContent={renderBasicContent}

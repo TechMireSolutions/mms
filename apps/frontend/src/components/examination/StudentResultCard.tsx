@@ -41,10 +41,10 @@ interface StudentResultCardProps {
  * @returns The StudentResultCard component.
  */
 export function StudentResultCard({ result, exam, allResults, onClose, onCertificate }: StudentResultCardProps): React.ReactElement {
-  const pct = result.pct;
+  const percentage = result.pct;
   const grade = result.grade;
   const circumference = 2 * Math.PI * 42;
-  const offset = circumference - (pct / 100) * circumference;
+  const offset = circumference - (percentage / 100) * circumference;
 
   const position = result.rank;
   const total = allResults.length;
@@ -89,7 +89,7 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-[26px] font-bold" style={{ color: grade.color }}>{grade.label}</span>
-              <span className="text-[11px] text-muted-foreground font-semibold">{pct}%</span>
+              <span className="text-[11px] text-muted-foreground font-semibold">{percentage}%</span>
             </div>
           </div>
 
@@ -103,10 +103,10 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
             { label: "Marks", value: `${result.marksObtained}/${exam.totalMarks}`, className: "text-foreground" },
             { label: "Rank", value: getRankSuffix(position) + ` / ${total}`, className: "text-foreground" },
             { label: "Status", value: result.passed ? "PASS" : "FAIL", className: result.passed ? "text-success" : "text-destructive" },
-          ].map((s) => (
-            <div key={s.label} className="px-3 py-3.5 text-center">
-              <p className={`text-[14px] font-bold ${s.className}`}>{s.value}</p>
-              <p className="text-[10px] text-muted-foreground">{s.label}</p>
+          ].map((stat) => (
+            <div key={stat.label} className="px-3 py-3.5 text-center">
+              <p className={`text-[14px] font-bold ${stat.className}`}>{stat.value}</p>
+              <p className="text-[10px] text-muted-foreground">{stat.label}</p>
             </div>
           ))}
         </div>

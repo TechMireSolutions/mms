@@ -39,7 +39,7 @@ const EXAM_STATUSES = ["upcoming", "ongoing", "completed", "scheduled", "cancell
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
   labels: {
     trigger: string;
     title: string;
@@ -80,9 +80,9 @@ export default function ExamsList({
   const enrollments = useLiveCollection<Enrollment>("enrollments");
   const classes = React.useMemo(
     () => sessions.flatMap((session) =>
-      (session.classes || []).map((cls) => ({
-        id: cls.id,
-        name: `${session.name} - ${cls.name}`,
+      (session.classes || []).map((sessionClass) => ({
+        id: sessionClass.id,
+        name: `${session.name} - ${sessionClass.name}`,
       })),
     ),
     [sessions],
@@ -101,10 +101,10 @@ export default function ExamsList({
 
   const filtered = useMemo(() => {
     return exams.filter((exam) => {
-      const q = search.toLowerCase();
-      const matchSearch = !q
-        || exam.name.toLowerCase().includes(q)
-        || exam.subject.toLowerCase().includes(q);
+      const searchText = search.toLowerCase();
+      const matchSearch = !searchText
+        || exam.name.toLowerCase().includes(searchText)
+        || exam.subject.toLowerCase().includes(searchText);
       const matchStatus = filterStatus.length === 0 || filterStatus.includes(exam.status);
       return matchSearch && matchStatus;
     });
@@ -114,8 +114,8 @@ export default function ExamsList({
     onFilteredCountChange?.(filtered.length);
   }, [filtered.length, onFilteredCountChange]);
 
-  const toggleStatus = (s: string) =>
-    setFilterStatus((list) => (list.includes(s) ? list.filter((x) => x !== s) : [...list, s]));
+  const toggleStatus = (status: string) =>
+    setFilterStatus((currentStatuses) => (currentStatuses.includes(status) ? currentStatuses.filter((candidate) => candidate !== status) : [...currentStatuses, status]));
 
   const showName = isColumnVisible ? isColumnVisible("name") : true;
   const showSubject = isColumnVisible ? isColumnVisible("subject") : true;
@@ -127,7 +127,7 @@ export default function ExamsList({
   const showClasses = isColumnVisible ? isColumnVisible("classes") : true;
 
   const renderExamMeta = (exam: Exam) => {
-    const assignedClasses = classes.filter((c) => exam.classIds.includes(c.id));
+    const assignedClasses = classes.filter((sessionClass) => exam.classIds.includes(sessionClass.id));
     const classIds = new Set(exam.classIds);
     const studentCount = new Set(
       enrollments
@@ -151,7 +151,7 @@ export default function ExamsList({
           <Input
             id="search-exams"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder={t("examinations.searchExams")}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
@@ -175,9 +175,9 @@ export default function ExamsList({
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuLabel className="text-xs">{t("examinations.filter.status")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {EXAM_STATUSES.map((k) => (
-              <DropdownMenuCheckboxItem key={k} checked={filterStatus.includes(k)} onCheckedChange={() => toggleStatus(k)}>
-                {statusLabels[k]}
+            {EXAM_STATUSES.map((status) => (
+              <DropdownMenuCheckboxItem key={status} checked={filterStatus.includes(status)} onCheckedChange={() => toggleStatus(status)}>
+                {statusLabels[status]}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
@@ -212,7 +212,7 @@ export default function ExamsList({
         <>
           {/* Card view for mobile/tablet */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:hidden" role="list" aria-label={t("examinations.exams")}>
-            {filtered.map((exam, i) => {
+            {filtered.map((exam, index) => {
               const { assignedClasses, studentCount, statusCls, StatusIcon, statusLabel } = renderExamMeta(exam);
               return (
                 <motion.div
@@ -221,7 +221,7 @@ export default function ExamsList({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
-                  transition={{ delay: i * 0.04 }}
+                  transition={{ delay: index * 0.04 }}
                   className="relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-card/95 via-card/80 to-background/60 backdrop-blur-xl p-5 hover:shadow-md hover:border-primary/20 transition-all duration-300 group"
                   role="listitem"
                 >
@@ -263,7 +263,7 @@ export default function ExamsList({
                       { key: "date", show: showDate, icon: Calendar, label: formatDate(exam.date, true) },
                       { key: "duration", show: showDuration, icon: Clock, label: t("examinations.durationMinutes", { minutes: exam.duration }) },
                       { key: "classes", show: showClasses, icon: Users, label: t("examinations.studentCount", { count: studentCount }) },
-                    ].filter((p) => p.show);
+                    ].filter((pill) => pill.show);
 
                     if (pills.length === 0) return null;
                     return (
@@ -280,9 +280,9 @@ export default function ExamsList({
 
                   {showClasses && assignedClasses.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5" role="list" aria-label={t("examinations.columns.exam.classes")}>
-                      {assignedClasses.map((cls) => (
-                        <span key={cls.id} className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full" role="listitem">
-                          {cls.name}
+                      {assignedClasses.map((sessionClass) => (
+                        <span key={sessionClass.id} className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full" role="listitem">
+                          {sessionClass.name}
                         </span>
                       ))}
                     </div>
@@ -356,10 +356,10 @@ export default function ExamsList({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
-                  {filtered.map((exam, i) => {
+                  {filtered.map((exam, index) => {
                     const { assignedClasses, statusCls, statusLabel } = renderExamMeta(exam);
                     return (
-                      <motion.tr key={exam.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="hover:bg-muted/20 transition-colors group">
+                      <motion.tr key={exam.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.03 }} className="hover:bg-muted/20 transition-colors group">
                         {showName && (
                           <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{exam.name}</td>
                         )}
@@ -387,7 +387,7 @@ export default function ExamsList({
                         )}
                         {showClasses && (
                           <td className="px-4 py-3 text-[11px] text-muted-foreground max-w-[160px] truncate">
-                            {assignedClasses.map((c) => c.name).join(", ") || "—"}
+                            {assignedClasses.map((sessionClass) => sessionClass.name).join(", ") || "—"}
                           </td>
                         )}
                         <td className="px-4 py-3 text-right">
