@@ -51,7 +51,7 @@ export interface AcademicResultItem {
 
 export interface ClassRankingItem {
   class: string;
-  avgMarks: number;
+  averageMarks: number;
   topMarks: number;
   passRate: number;
   topStudent: string;
@@ -137,7 +137,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
       const passingCount = classResults.filter((result) => result.marks >= 50).length;
       return {
         class: className,
-        avgMarks: averageMarks,
+        averageMarks,
         topMarks: sortedClassResults[0]?.marks || 0,
         passRate: Math.round((passingCount / classResults.length) * 100),
         topStudent: sortedClassResults[0]?.studentName || "—"
@@ -150,10 +150,10 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
     return classRankingItems;
   }, [filters, examResults, exams, students]);
 
-  const avgMarks = results.length
+  const averageMarks = results.length
     ? (results.reduce((totalMarks, result) => totalMarks + result.marks, 0) / results.length).toFixed(1)
     : 0;
-  const topMark  = results.length ? Math.max(...results.map((result) => result.marks)) : 0;
+  const topScore = results.length ? Math.max(...results.map((result) => result.marks)) : 0;
   const passRate = results.length
     ? ((results.filter((result) => result.marks >= 50).length / results.length) * 100).toFixed(0)
     : 0;
@@ -162,8 +162,8 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <ReportSummaryCard icon={BookOpen}   label={t("examinations.report.totalRecords")} value={results.length} color="primary" />
-        <ReportSummaryCard icon={TrendingUp} label={t("examinations.report.classAvg")}     value={`${avgMarks}%`} color="blue"    />
-        <ReportSummaryCard icon={Trophy}     label={t("examinations.report.topScore")}     value={`${topMark}%`}  color="amber"   />
+        <ReportSummaryCard icon={TrendingUp} label={t("examinations.report.classAvg")}     value={`${averageMarks}%`} color="blue"    />
+        <ReportSummaryCard icon={Trophy}     label={t("examinations.report.topScore")}     value={`${topScore}%`}      color="amber"   />
         <ReportSummaryCard icon={Star}       label={t("examinations.report.passRate")}     value={`${passRate}%`} color="green"   />
       </div>
 
@@ -191,7 +191,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
                 <YAxis dataKey="class" type="category" tick={{ fontSize: 11 }} width={90} />
                 <Tooltip />
-                <Bar dataKey="avgMarks" fill="hsl(var(--primary))"  radius={[0, 4, 4, 0]} name={t("examinations.report.avgMarks")} />
+                <Bar dataKey="averageMarks" fill="hsl(var(--primary))"  radius={[0, 4, 4, 0]} name={t("examinations.report.avgMarks")} />
                 <Bar dataKey="topMarks" fill="hsl(var(--chart-2))"  radius={[0, 4, 4, 0]} name={t("examinations.report.topMarks")} />
               </BarChart>
             </SafeResponsiveContainer>
@@ -219,7 +219,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                 {t("examinations.report.topStudentLabel")}: <span className="font-semibold text-foreground">{classRanking.topStudent}</span> ({classRanking.topMarks}%)
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {t("examinations.report.classAvg")}: <span className="font-semibold">{classRanking.avgMarks}%</span>
+                {t("examinations.report.classAvg")}: <span className="font-semibold">{classRanking.averageMarks}%</span>
               </p>
               <p className="text-xs text-muted-foreground">
                 {t("examinations.report.passRate")}: <span className="font-semibold text-success">{classRanking.passRate}%</span>

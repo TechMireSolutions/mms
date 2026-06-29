@@ -62,30 +62,30 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
   );
   const financeInvoices = useFinanceInvoicesCollection();
 
-  const feeCollection = useMemo(() => {
+  const monthlyFeeCollection = useMemo(() => {
     // Generate monthly aggregation
-    const months: Record<string, { collected: number, outstanding: number, total: number }> = {};
+    const monthlyTotals: Record<string, { collected: number, outstanding: number, total: number }> = {};
     financeInvoices.forEach((invoice) => {
       // Use due date or creation date for month bucket (mocking logic using due date)
       const dueDate = new Date(invoice.dueDate);
       if (isNaN(dueDate.getTime())) return;
-      const monthStr = dueDate.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      const monthLabel = dueDate.toLocaleDateString("en-US", { month: "short", year: "numeric" });
       
-      if (!months[monthStr]) months[monthStr] = { collected: 0, outstanding: 0, total: 0 };
+      if (!monthlyTotals[monthLabel]) monthlyTotals[monthLabel] = { collected: 0, outstanding: 0, total: 0 };
       
-      months[monthStr].total += invoice.finalAmt;
+      monthlyTotals[monthLabel].total += invoice.finalAmt;
       if (invoice.status === "paid") {
-        months[monthStr].collected += invoice.finalAmt;
+        monthlyTotals[monthLabel].collected += invoice.finalAmt;
       } else if (invoice.status === "partial") {
         const paid = invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
-        months[monthStr].collected += paid;
-        months[monthStr].outstanding += (invoice.finalAmt - paid);
+        monthlyTotals[monthLabel].collected += paid;
+        monthlyTotals[monthLabel].outstanding += (invoice.finalAmt - paid);
       } else if (invoice.status !== "cancelled") {
-        months[monthStr].outstanding += invoice.finalAmt;
+        monthlyTotals[monthLabel].outstanding += invoice.finalAmt;
       }
     });
 
-    return Object.entries(months).map(([month, monthTotals]) => ({
+    return Object.entries(monthlyTotals).map(([month, monthTotals]) => ({
       month,
       collected: monthTotals.collected,
       outstanding: monthTotals.outstanding,
@@ -94,31 +94,31 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
     })).sort((firstMonth, secondMonth) => new Date(firstMonth.month).getTime() - new Date(secondMonth.month).getTime()).slice(-6); // Last 6 months
   }, [financeInvoices]);
 
-  const discountUsage = useMemo(() => {
-    const discounts: Record<string, { count: number, totalDiscounted: number }> = {};
-    let totalAllDiscounts = 0;
+  const discountUsageByType = useMemo(() => {
+    const discountTotalsByType: Record<string, { count: number, totalDiscounted: number }> = {};
+    let totalDiscountAmount = 0;
 
     financeInvoices.forEach((invoice) => {
       if (invoice.discountAmt > 0 && invoice.discountType && invoice.status !== "cancelled") {
         const type = invoice.discountType;
-        if (!discounts[type]) discounts[type] = { count: 0, totalDiscounted: 0 };
-        discounts[type].count++;
-        discounts[type].totalDiscounted += invoice.discountAmt;
-        totalAllDiscounts += invoice.discountAmt;
+        if (!discountTotalsByType[type]) discountTotalsByType[type] = { count: 0, totalDiscounted: 0 };
+        discountTotalsByType[type].count++;
+        discountTotalsByType[type].totalDiscounted += invoice.discountAmt;
+        totalDiscountAmount += invoice.discountAmt;
       }
     });
 
-    return Object.entries(discounts).map(([type, discountTotals]) => ({
+    return Object.entries(discountTotalsByType).map(([type, discountTotals]) => ({
       type,
       count: discountTotals.count,
       totalDiscounted: discountTotals.totalDiscounted,
-      percentage: totalAllDiscounts > 0 ? Math.round((discountTotals.totalDiscounted / totalAllDiscounts) * 100) : 0
+      percentage: totalDiscountAmount > 0 ? Math.round((discountTotals.totalDiscounted / totalDiscountAmount) * 100) : 0
     }));
   }, [financeInvoices]);
 
-  const totalCollected = feeCollection.reduce((total, monthTotals) => total + monthTotals.collected, 0);
-  const totalOutstanding = feeCollection.reduce((total, monthTotals) => total + monthTotals.outstanding, 0);
-  const totalDiscounted = discountUsage.reduce((total, discountTotals) => total + discountTotals.totalDiscounted, 0);
+  const totalCollected = monthlyFeeCollection.reduce((total, monthTotals) => total + monthTotals.collected, 0);
+  const totalOutstanding = monthlyFeeCollection.reduce((total, monthTotals) => total + monthTotals.outstanding, 0);
+  const totalDiscounted = discountUsageByType.reduce((total, discountTotals) => total + discountTotals.totalDiscounted, 0);
 
   const invoices = useMemo(() => {
     let filteredInvoices = financeInvoices;
@@ -146,7 +146,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
         <p className="text-sm font-semibold text-foreground mb-3">{t("finance.report.chartTitle")}</p>
         <SafeResponsiveContainer width="100%" height={200}>
-          <AreaChart data={feeCollection}>
+          <AreaChart data={monthlyFeeCollection}>
             <defs>
               <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%"  stopColor="hsl(var(--primary))" stopOpacity={0.2} />
@@ -168,7 +168,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">{t("finance.report.collectionRateTitle")}</p>
           <div className="space-y-2">
-            {feeCollection.map((monthTotals) => (
+            {monthlyFeeCollection.map((monthTotals) => (
               <div key={monthTotals.month} className="flex items-center gap-3">
                 <span className="text-xs text-muted-foreground w-20 shrink-0">{monthTotals.month}</span>
                 <div className="flex-1 h-2 rounded-full bg-muted">
@@ -185,7 +185,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
           <SafeResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie
-                data={discountUsage}
+                data={discountUsageByType}
                 dataKey="totalDiscounted"
                 nameKey="type"
                 cx="50%"
@@ -194,7 +194,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                 label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
                 labelLine={false}
               >
-                {discountUsage.map((_, index) => (
+                {discountUsageByType.map((_, index) => (
                   <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                 ))}
               </Pie>

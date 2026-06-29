@@ -149,7 +149,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
     ? ((totalRedeemed / totalDistributed) * 100).toFixed(1)
     : 0;
 
-  const facultyData = useMemo<FacultyBarDatum[]>(() => {
+  const facultyChartData = useMemo<FacultyBarDatum[]>(() => {
     return hasanatByFaculty.map((facultyTotals) => ({
       faculty:     facultyTotals.faculty.split(" ").slice(-1)[0] ?? facultyTotals.faculty,
       distributed: facultyTotals.totalDistributed,
@@ -157,7 +157,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
     }));
   }, [hasanatByFaculty]);
 
-  const pieData: PieDatum[] = [
+  const redemptionPieData: PieDatum[] = [
     { name: t("hasanat.report.redeemedPieLabel"), value: totalRedeemed },
     { name: t("hasanat.report.balancePieLabel"),  value: totalBalance  },
   ];
@@ -176,7 +176,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">{t("hasanat.report.distributionByFaculty")}</p>
           <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart data={facultyData} barSize={22}>
+            <BarChart data={facultyChartData} barSize={22}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="faculty" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
@@ -193,14 +193,14 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
             <SafeResponsiveContainer width="60%" height={160}>
               <PieChart>
                 <Pie
-                  data={pieData}
+                  data={redemptionPieData}
                   dataKey="value"
                   cx="50%"
                   cy="50%"
                   innerRadius={45}
                   outerRadius={72}
                 >
-                  {pieData.map((_, index) => (
+                  {redemptionPieData.map((_, index) => (
                     <Cell key={index} fill={PIE_COLORS[index]} />
                   ))}
                 </Pie>
@@ -208,7 +208,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
               </PieChart>
             </SafeResponsiveContainer>
             <div className="space-y-3">
-              {pieData.map((slice, index) => (
+              {redemptionPieData.map((slice, index) => (
                 <div key={slice.name} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-sm" style={{ background: PIE_COLORS[index] }} />
                   <div>

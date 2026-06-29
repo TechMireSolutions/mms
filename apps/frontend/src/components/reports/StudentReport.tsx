@@ -88,7 +88,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
   const [listPage, setListPage] = useState(1);
 
   const { data: metrics } = useStudentsMetrics();
-  const { data: genderAgg } = useStudentsWidgetAggregates([
+  const { data: genderAggregates } = useStudentsWidgetAggregates([
     {
       id: "male",
       collection: "students",
@@ -107,7 +107,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
     },
   ]);
 
-  const { data: studentPage } = useStudentsPaginated({
+  const { data: studentsPage } = useStudentsPaginated({
     page: listPage,
     limit: STUDENTS_MODULE_CONTRACT.defaultPageSize,
     search: filters.student || undefined,
@@ -117,13 +117,13 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
   const enrollmentRecords = useEnrollmentsCollection();
 
   const students = useMemo<ReportStudent[]>(() => {
-    const studentRows = (studentPage?.students ?? []) as unknown as Student[];
+    const studentRows = (studentsPage?.students ?? []) as unknown as Student[];
     let filteredStudents = studentRows.map(mapStudentRow);
     if (filters.class && filters.class !== "all") {
       filteredStudents = filteredStudents.filter((student) => student.class === filters.class);
     }
     return filteredStudents;
-  }, [studentPage, filters.class]);
+  }, [studentsPage, filters.class]);
 
   const enrollments = useMemo<EnrollmentHistoryItem[]>(() => {
     let filteredEnrollments = enrollmentRecords.map((enrollment) => ({
@@ -142,9 +142,9 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
     return filteredEnrollments;
   }, [enrollmentRecords, filters.student]);
 
-  const male = genderAgg?.male?.value ?? 0;
-  const female = genderAgg?.female?.value ?? 0;
-  const hasMoreStudents = Boolean(studentPage?.hasMore);
+  const male = genderAggregates?.male?.value ?? 0;
+  const female = genderAggregates?.female?.value ?? 0;
+  const hasMoreStudents = Boolean(studentsPage?.hasMore);
 
   return (
     <div className="space-y-4">
@@ -240,7 +240,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
             </div>
             {(listPage > 1 || hasMoreStudents) && (
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{t("students.report.paginationPageInfo", { page: listPage, total: studentPage?.total ?? 0 })}</span>
+                <span>{t("students.report.paginationPageInfo", { page: listPage, total: studentsPage?.total ?? 0 })}</span>
                 <div className="flex gap-2">
                   <button
                     type="button"

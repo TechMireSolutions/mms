@@ -52,7 +52,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
   const sessions = useSessionsCollection();
   const allClasses = useMemo(() => sessions.flatMap((session) => session.classes || []), [sessions]);
 
-  const studentAtt = useMemo<StudentAttendanceItem[]>(() => {
+  const studentAttendanceRows = useMemo<StudentAttendanceItem[]>(() => {
     // Group records by student ID
     const attendanceByStudent: Record<string, StudentAttendanceItem> = {};
     
@@ -104,7 +104,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
   const summary = useMemo<AttendanceSummaryItem[]>(() => {
      const classGroups: Record<string, { totalStudents: number, sumRates: number, perfect: number, below: number }> = {};
 
-     studentAtt.forEach((studentAttendance) => {
+     studentAttendanceRows.forEach((studentAttendance) => {
        if (!classGroups[studentAttendance.class]) {
           classGroups[studentAttendance.class] = { totalStudents: 0, sumRates: 0, perfect: 0, below: 0 };
        }
@@ -121,7 +121,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
        perfectAttendance: classGroup.perfect,
        belowThreshold: classGroup.below
      }));
-  }, [studentAtt]);
+  }, [studentAttendanceRows]);
 
   const avgRate = summary.length
     ? (summary.reduce((totalRate, summaryItem) => totalRate + summaryItem.avgRate, 0) / summary.length).toFixed(1)
@@ -227,7 +227,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
         <h3 className="text-sm font-semibold text-foreground">{t("attendance.report.studentDetailTitle")}</h3>
         <ReportExportBar 
           title={t("attendance.report.studentDetailTitle")} 
-          data={studentAtt}
+          data={studentAttendanceRows}
           headers={[
             t("attendance.report.colStudent"),
             t("attendance.report.colStudentClass"),
@@ -239,7 +239,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
           ]}
         />
       </div>
-      {studentAtt.length === 0 ? (
+      {studentAttendanceRows.length === 0 ? (
         <EmptyState icon={Users} title={t("attendance.report.noStudentRecords")} compact />
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
@@ -260,7 +260,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {studentAtt.map((studentAttendance) => (
+              {studentAttendanceRows.map((studentAttendance) => (
                 <tr key={studentAttendance.studentName} className="hover:bg-muted/30">
                   <td className="px-3 py-2.5 font-medium text-foreground">{studentAttendance.studentName}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{studentAttendance.class}</td>

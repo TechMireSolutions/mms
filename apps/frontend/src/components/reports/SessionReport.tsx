@@ -116,7 +116,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
     return trends;
   }, [enrollments]);
 
-  const capacityData = useMemo<SessionCapacityItem[]>(() => {
+  const sessionCapacityData = useMemo<SessionCapacityItem[]>(() => {
     let filteredSessionCapacity = sessionCapacity;
     if (filters.session !== "all") {
       const targetSessionName = sessions.find((session) => session.id === filters.session)?.name;
@@ -127,15 +127,15 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
     return filteredSessionCapacity;
   }, [filters, sessionCapacity, sessions]);
 
-  const totalEnrolled  = capacityData.reduce((total, capacityItem) => total + capacityItem.enrolled, 0);
-  const totalCapacity  = capacityData.reduce((total, capacityItem) => total + capacityItem.capacity, 0);
-  const avgUtil = capacityData.length
-    ? (capacityData.reduce((totalRate, capacityItem) => totalRate + capacityItem.rate, 0) / capacityData.length).toFixed(1)
+  const totalEnrolled  = sessionCapacityData.reduce((total, capacityItem) => total + capacityItem.enrolled, 0);
+  const totalCapacity  = sessionCapacityData.reduce((total, capacityItem) => total + capacityItem.capacity, 0);
+  const averageUtilization = sessionCapacityData.length
+    ? (sessionCapacityData.reduce((totalRate, capacityItem) => totalRate + capacityItem.rate, 0) / sessionCapacityData.length).toFixed(1)
     : 0;
 
   const activeSessionsCount = sessions.filter((session) => session.status === "active").length;
 
-  const barData: CapacityBarDatum[] = capacityData.map((capacityItem) => ({
+  const capacityChartData: CapacityBarDatum[] = sessionCapacityData.map((capacityItem) => ({
     class:     capacityItem.class,
     enrolled:  capacityItem.enrolled,
     available: capacityItem.capacity - capacityItem.enrolled,
@@ -147,7 +147,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
         <ReportSummaryCard icon={CalendarCheck} label={t("sessions.report.activeSessions")}  value={activeSessionsCount} color="primary" />
         <ReportSummaryCard icon={Users}         label={t("sessions.report.totalEnrolled")}   value={totalEnrolled}    color="blue"    />
         <ReportSummaryCard icon={BarChart2}     label={t("sessions.report.totalCapacity")}   value={totalCapacity}    color="violet"  />
-        <ReportSummaryCard icon={TrendingUp}    label={t("sessions.report.avgUtilisation")}  value={`${avgUtil}%`}    color="green"   />
+        <ReportSummaryCard icon={TrendingUp}    label={t("sessions.report.avgUtilisation")}  value={`${averageUtilization}%`} color="green"   />
       </div>
 
       {/* Charts */}
@@ -155,7 +155,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">{t("sessions.report.capacityByClass")}</p>
           <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart data={barData} barSize={28}>
+            <BarChart data={capacityChartData} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="class" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
@@ -183,7 +183,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
       {/* Table */}
       <ReportExportBar 
         title={t("sessions.report.capacityReportTitle")} 
-        data={capacityData}
+        data={sessionCapacityData}
         headers={[
           t("sessions.report.colSession"),
           t("sessions.report.colClass"),
@@ -193,7 +193,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
           t("sessions.report.colStatus"),
         ]}
       />
-      {capacityData.length === 0 ? (
+      {sessionCapacityData.length === 0 ? (
         <EmptyState icon={CalendarCheck} title={t("sessions.report.noData")} compact />
       ) : (
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
@@ -213,7 +213,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {capacityData.map((sessionCapacity, index) => (
+              {sessionCapacityData.map((sessionCapacity, index) => (
                 <tr key={index} className="hover:bg-muted/30">
                   <td className="px-3 py-2.5 font-medium max-w-[180px] truncate">{sessionCapacity.session}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.class}</td>
