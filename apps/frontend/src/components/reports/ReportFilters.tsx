@@ -41,17 +41,16 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
   const rawSessions = useSessionsCollection();
 
   const sessions = useMemo(() => {
-    return [{ id: "all", name: t("reports.filters.allSessions") }, ...rawSessions.map(s => ({ id: s.id, name: s.name }))];
+    return [{ id: "all", name: t("reports.filters.allSessions") }, ...rawSessions.map((session) => ({ id: session.id, name: session.name }))];
   }, [rawSessions, t]);
 
   const classes = useMemo(() => {
     const uniqueClasses = new Set<string>();
-    rawSessions.forEach(s => (s.classes || []).forEach(c => uniqueClasses.add(c.name)));
-    return [{ id: "all", name: t("reports.filters.allClasses") }, ...Array.from(uniqueClasses).map(name => ({ id: name, name }))];
+    rawSessions.forEach((session) => (session.classes || []).forEach((sessionClass) => uniqueClasses.add(sessionClass.name)));
+    return [{ id: "all", name: t("reports.filters.allClasses") }, ...Array.from(uniqueClasses).map((name) => ({ id: name, name }))];
   }, [rawSessions, t]);
 
-    const set = (key: keyof ReportFilterFields, value: string): void => {
-
+  const set = (key: keyof ReportFilterFields, value: string): void => {
     onChange({ ...filters, [key]: value });
   };
 
@@ -78,7 +77,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
     <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden">
       {/* Header */}
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen((isOpen) => !isOpen)}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
         type="button"
       >
@@ -94,8 +93,8 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
         <div className="flex items-center gap-2">
           {activeCount > 0 && (
             <button
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={(event) => {
+                event.stopPropagation();
                 reset();
               }}
               className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1"
@@ -125,11 +124,11 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.session")}</label>
                   <select
                     value={filters.session}
-                    onChange={(e) => set("session", e.target.value)}
+                    onChange={(event) => set("session", event.target.value)}
                     className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
-                    {sessions.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                    {sessions.map((session) => (
+                      <option key={session.id} value={session.id}>{session.name}</option>
                     ))}
                   </select>
                 </div>
@@ -141,11 +140,11 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.class")}</label>
                   <select
                     value={filters.class}
-                    onChange={(e) => set("class", e.target.value)}
+                    onChange={(event) => set("class", event.target.value)}
                     className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
-                    {classes.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
+                    {classes.map((sessionClass) => (
+                      <option key={sessionClass.id} value={sessionClass.id}>{sessionClass.name}</option>
                     ))}
                   </select>
                 </div>
@@ -157,14 +156,14 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.status")}</label>
                   <select
                     value={filters.status}
-                    onChange={(e) => set("status", e.target.value)}
+                    onChange={(event) => set("status", event.target.value)}
                     className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
-                    {STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {s === "all"
+                    {STATUSES.map((status) => (
+                      <option key={status} value={status}>
+                        {status === "all"
                           ? t("reports.filters.allStatuses")
-                          : t(`reports.filters.status${s.charAt(0).toUpperCase() + s.slice(1)}` as any)}
+                          : t(`reports.filters.status${status.charAt(0).toUpperCase() + status.slice(1)}` as any)}
                       </option>
                     ))}
                   </select>
@@ -177,7 +176,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.from")}</label>
                   <DatePicker
                     value={filters.dateFrom}
-                    onChange={(val) => set("dateFrom", val)}
+                    onChange={(value) => set("dateFrom", value)}
                   />
                 </div>
               )}
@@ -188,7 +187,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.to")}</label>
                   <DatePicker
                     value={filters.dateTo}
-                    onChange={(val) => set("dateTo", val)}
+                    onChange={(value) => set("dateTo", value)}
                   />
                 </div>
               )}
@@ -200,7 +199,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
                   <input
                     type="text"
                     value={filters.student}
-                    onChange={(e) => set("student", e.target.value)}
+                    onChange={(event) => set("student", event.target.value)}
                     placeholder={t("reports.filters.searchName")}
                     className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
                   />

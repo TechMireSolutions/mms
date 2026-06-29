@@ -70,7 +70,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
   const examResults = useExaminationsResultsCollection();
   const exams = useExaminationsExamsCollection();
   const studentIds = useMemo(
-    () => uniqueRegistryIds(examResults.map((r) => r.studentId)),
+    () => uniqueRegistryIds(examResults.map((result) => result.studentId)),
     [examResults],
   );
   const { data: students = [] } = useStudentsByIds(studentIds);
@@ -78,35 +78,35 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
   const results = useMemo<AcademicResultItem[]>(() => {
     let list: AcademicResultItem[] = [];
 
-    examResults.forEach(r => {
-      const exam = exams.find(e => e.id === r.examId);
-      const student = students.find((s) => String(s.id) === String(r.studentId));
+    examResults.forEach((result) => {
+      const exam = exams.find((examOption) => examOption.id === result.examId);
+      const student = students.find((studentOption) => String(studentOption.id) === String(result.studentId));
       if (!exam || !student) return;
 
-      const pct = Math.round((r.marksObtained / exam.totalMarks) * 100);
+      const percentage = Math.round((result.marksObtained / exam.totalMarks) * 100);
       list.push({
         studentName: student.name,
         class: exam.name, // using exam name as proxy for class group context here
         subject: exam.subject,
-        marks: pct,
+        marks: percentage,
         total: 100, // normalized to percentage
-        grade: getGrade(pct).label,
+        grade: getGrade(percentage).label,
         rank: 0 // to be computed
       });
     });
 
     // Compute rank
-    list.sort((a, b) => b.marks - a.marks);
+    list.sort((firstResult, secondResult) => secondResult.marks - firstResult.marks);
     list.forEach((item, index) => {
       item.rank = index + 1;
     });
 
     if (filters.class !== "all") {
-      list = list.filter((r) => r.class === filters.class);
+      list = list.filter((result) => result.class === filters.class);
     }
     if (filters.student) {
-      list = list.filter((r) =>
-        r.studentName.toLowerCase().includes(filters.student.toLowerCase()),
+      list = list.filter((result) =>
+        result.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
     return list;
@@ -115,29 +115,29 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
   const classRankings = useMemo<ClassRankingItem[]>(() => {
     // Group by class (exam name)
     const grouped: Record<string, { class: string; studentName: string; marks: number }[]> = {};
-    const baseResults = examResults.map(r => {
-      const exam = exams.find(e => e.id === r.examId);
-      const student = students.find((s) => String(s.id) === String(r.studentId));
+    const baseResults = examResults.map((result) => {
+      const exam = exams.find((examOption) => examOption.id === result.examId);
+      const student = students.find((studentOption) => String(studentOption.id) === String(result.studentId));
       if (!exam || !student) return null;
       return {
         class: exam.name,
         studentName: student.name,
-        marks: Math.round((r.marksObtained / exam.totalMarks) * 100),
+        marks: Math.round((result.marksObtained / exam.totalMarks) * 100),
       };
     }).filter(Boolean) as { class: string, studentName: string, marks: number }[];
 
-    baseResults.forEach(r => {
-      if (!grouped[r.class]) grouped[r.class] = [];
-      grouped[r.class].push(r);
+    baseResults.forEach((result) => {
+      if (!grouped[result.class]) grouped[result.class] = [];
+      grouped[result.class].push(result);
     });
 
     let list = Object.entries(grouped).map(([className, items]) => {
-      const sorted = [...items].sort((a, b) => b.marks - a.marks);
-      const avg = Math.round(items.reduce((s, r) => s + r.marks, 0) / items.length);
-      const passes = items.filter(r => r.marks >= 50).length;
+      const sorted = [...items].sort((firstResult, secondResult) => secondResult.marks - firstResult.marks);
+      const average = Math.round(items.reduce((sum, result) => sum + result.marks, 0) / items.length);
+      const passes = items.filter((result) => result.marks >= 50).length;
       return {
         class: className,
-        avgMarks: avg,
+        avgMarks: average,
         topMarks: sorted[0]?.marks || 0,
         passRate: Math.round((passes / items.length) * 100),
         topStudent: sorted[0]?.studentName || "—"
@@ -145,13 +145,13 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
     });
 
     if (filters.class !== "all") {
-      list = list.filter((r) => r.class === filters.class);
+      list = list.filter((result) => result.class === filters.class);
     }
     return list;
   }, [filters, examResults, exams, students]);
 
   const avgMarks = results.length
-    ? (results.reduce((a, r) => a + r.marks, 0) / results.length).toFixed(1)
+    ? (results.reduce((totalMarks, result) => totalMarks + result.marks, 0) / results.length).toFixed(1)
     : 0;
   const topMark  = results.length ? Math.max(...results.map((r) => r.marks)) : 0;
   const passRate = results.length
@@ -176,7 +176,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="studentName" tick={{ fontSize: 10 }} angle={-25} textAnchor="end" height={40} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v) => v !== undefined ? `${v} / 100` : ""} />
+              <Tooltip formatter={(value) => value !== undefined ? `${value} / 100` : ""} />
               <Bar dataKey="marks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name={t("examinations.report.marksLabel")} />
             </BarChart>
           </SafeResponsiveContainer>

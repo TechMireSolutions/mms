@@ -59,7 +59,7 @@ export default function ReportExportBar({ title, onPrint, data, headers }: Repor
 
     doc.text(title, 14, 15);
     
-    const tableData = data.map(row => Object.values(row as Record<string, unknown>) as (string | number | boolean)[]);
+    const tableData = data.map((row) => Object.values(row as Record<string, unknown>) as (string | number | boolean)[]);
     const tableHeaders = headers || (data.length > 0 ? Object.keys(data[0] as Record<string, unknown>) : []);
 
     autoTable(doc, {
@@ -105,7 +105,7 @@ export default function ReportExportBar({ title, onPrint, data, headers }: Repor
                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.pageSize")}</label>
                <select 
                 value={format}
-                onChange={(e) => setFormat(e.target.value)}
+                onChange={(event) => setFormat(event.target.value)}
                 className="w-full text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20"
                >
                  <option value="a4">{t("reports.builder.formatA4")}</option>

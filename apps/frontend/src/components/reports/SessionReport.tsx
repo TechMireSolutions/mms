@@ -76,15 +76,15 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
 
   const sessionCapacity = useMemo<SessionCapacityItem[]>(() => {
     const list: SessionCapacityItem[] = [];
-    sessions.forEach(s => {
-      (s.classes || []).forEach(c => {
+    sessions.forEach((session) => {
+      (session.classes || []).forEach((sessionClass) => {
         list.push({
-          session: s.name,
-          class: c.name,
-          enrolled: c.enrolled,
-          capacity: c.capacity,
-          rate: c.capacity > 0 ? Math.round((c.enrolled / c.capacity) * 100) : 0,
-          status: s.status
+          session: session.name,
+          class: sessionClass.name,
+          enrolled: sessionClass.enrolled,
+          capacity: sessionClass.capacity,
+          rate: sessionClass.capacity > 0 ? Math.round((sessionClass.enrolled / sessionClass.capacity) * 100) : 0,
+          status: session.status
         });
       });
     });
@@ -93,11 +93,11 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
 
   const enrollmentTrends = useMemo<EnrollmentTrendItem[]>(() => {
     const counts: Record<string, number> = {};
-    enrollments.forEach((e) => {
-      if (e.enrolledDate) {
-        const d = new Date(e.enrolledDate);
-        if (!isNaN(d.getTime())) {
-          const monthStr = d.toLocaleDateString("en-US", { month: "short" });
+    enrollments.forEach((enrollment) => {
+      if (enrollment.enrolledDate) {
+        const enrolledDate = new Date(enrollment.enrolledDate);
+        if (!isNaN(enrolledDate.getTime())) {
+          const monthStr = enrolledDate.toLocaleDateString("en-US", { month: "short" });
           counts[monthStr] = (counts[monthStr] || 0) + 1;
         }
       }
@@ -105,9 +105,9 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
 
     const orderedMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const trends: EnrollmentTrendItem[] = [];
-    orderedMonths.forEach((m) => {
-      if (counts[m] !== undefined) {
-        trends.push({ month: m, students: counts[m] });
+    orderedMonths.forEach((month) => {
+      if (counts[month] !== undefined) {
+        trends.push({ month, students: counts[month] });
       }
     });
     if (trends.length === 0) {
@@ -119,26 +119,26 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
   const capacityData = useMemo<SessionCapacityItem[]>(() => {
     let list = sessionCapacity;
     if (filters.session !== "all") {
-      const targetSession = sessions.find(s => s.id === filters.session)?.name;
+      const targetSession = sessions.find((session) => session.id === filters.session)?.name;
       if (targetSession) {
-        list = list.filter((s) => s.session === targetSession);
+        list = list.filter((capacityItem) => capacityItem.session === targetSession);
       }
     }
     return list;
   }, [filters, sessionCapacity, sessions]);
 
-  const totalEnrolled  = capacityData.reduce((a, s) => a + s.enrolled, 0);
-  const totalCapacity  = capacityData.reduce((a, s) => a + s.capacity, 0);
+  const totalEnrolled  = capacityData.reduce((total, capacityItem) => total + capacityItem.enrolled, 0);
+  const totalCapacity  = capacityData.reduce((total, capacityItem) => total + capacityItem.capacity, 0);
   const avgUtil = capacityData.length
-    ? (capacityData.reduce((a, s) => a + s.rate, 0) / capacityData.length).toFixed(1)
+    ? (capacityData.reduce((totalRate, capacityItem) => totalRate + capacityItem.rate, 0) / capacityData.length).toFixed(1)
     : 0;
 
-  const activeSessionsCount = sessions.filter(s => s.status === "active").length;
+  const activeSessionsCount = sessions.filter((session) => session.status === "active").length;
 
-  const barData: CapacityBarDatum[] = capacityData.map((s) => ({
-    class:     s.class,
-    enrolled:  s.enrolled,
-    available: s.capacity - s.enrolled,
+  const barData: CapacityBarDatum[] = capacityData.map((capacityItem) => ({
+    class:     capacityItem.class,
+    enrolled:  capacityItem.enrolled,
+    available: capacityItem.capacity - capacityItem.enrolled,
   }));
 
   return (

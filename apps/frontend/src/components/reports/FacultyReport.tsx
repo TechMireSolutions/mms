@@ -52,31 +52,31 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
   };
 
   const facultyWorkload = useMemo<FacultyWorkloadItem[]>(() => {
-    const map: Record<string, { classes: Set<string>, sessions: Set<string>, students: number, hours: number }> = {};
-    sessions.forEach(s => {
-       (s.classes || []).forEach(c => {
-         const tName = resolveClassTeacher(c.teacherId, c.teacherName ?? '');
-         if (!map[tName]) map[tName] = { classes: new Set(), sessions: new Set(), students: 0, hours: 0 };
+    const workloadByTeacherName: Record<string, { classes: Set<string>, sessions: Set<string>, students: number, hours: number }> = {};
+    sessions.forEach((session) => {
+       (session.classes || []).forEach((sessionClass) => {
+         const teacherName = resolveClassTeacher(sessionClass.teacherId, sessionClass.teacherName ?? '');
+         if (!workloadByTeacherName[teacherName]) workloadByTeacherName[teacherName] = { classes: new Set(), sessions: new Set(), students: 0, hours: 0 };
          
-         map[tName].classes.add(c.id);
-         map[tName].sessions.add(s.id);
-         map[tName].students += c.enrolled;
-         map[tName].hours += 2; // Assuming 2 hours per class for mock workload calculation
+         workloadByTeacherName[teacherName].classes.add(sessionClass.id);
+         workloadByTeacherName[teacherName].sessions.add(session.id);
+         workloadByTeacherName[teacherName].students += sessionClass.enrolled;
+         workloadByTeacherName[teacherName].hours += 2; // Assuming 2 hours per class for mock workload calculation
        });
     });
     
-    return Object.entries(map).map(([name, data]) => ({
-      faculty: name,
-      classes: data.classes.size,
-      sessions: data.sessions.size,
-      totalStudents: data.students,
-      hoursPerWeek: data.hours
-    })).sort((a, b) => b.totalStudents - a.totalStudents);
+    return Object.entries(workloadByTeacherName).map(([teacherName, workload]) => ({
+      faculty: teacherName,
+      classes: workload.classes.size,
+      sessions: workload.sessions.size,
+      totalStudents: workload.students,
+      hoursPerWeek: workload.hours
+    })).sort((firstFaculty, secondFaculty) => secondFaculty.totalStudents - firstFaculty.totalStudents);
   }, [sessions, teachers]);
 
   const totalFaculty = facultyWorkload.length;
-  const totalStudents = facultyWorkload.reduce((a, f) => a + f.totalStudents, 0);
-  const totalHours = facultyWorkload.reduce((a, f) => a + f.hoursPerWeek, 0);
+  const totalStudents = facultyWorkload.reduce((total, faculty) => total + faculty.totalStudents, 0);
+  const totalHours = facultyWorkload.reduce((total, faculty) => total + faculty.hoursPerWeek, 0);
   const avgStudents = totalFaculty
     ? (totalStudents / totalFaculty).toFixed(1)
     : 0;
@@ -127,27 +127,27 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
                 t("teachers.report.colSessions"),
                 t("teachers.report.colStudents"),
                 t("teachers.report.colHoursWeek"),
-              ].map((h) => (
-                <th key={h} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
+              ].map((heading) => (
+                <th key={heading} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{heading}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {facultyWorkload.map((f) => (
-              <tr key={f.faculty} className="hover:bg-muted/30">
-                <td className="px-3 py-3 font-medium">{f.faculty}</td>
-                <td className="px-3 py-3 text-muted-foreground">{f.classes}</td>
-                <td className="px-3 py-3 text-muted-foreground">{f.sessions}</td>
-                <td className="px-3 py-3 font-semibold text-foreground">{f.totalStudents}</td>
+            {facultyWorkload.map((faculty) => (
+              <tr key={faculty.faculty} className="hover:bg-muted/30">
+                <td className="px-3 py-3 font-medium">{faculty.faculty}</td>
+                <td className="px-3 py-3 text-muted-foreground">{faculty.classes}</td>
+                <td className="px-3 py-3 text-muted-foreground">{faculty.sessions}</td>
+                <td className="px-3 py-3 font-semibold text-foreground">{faculty.totalStudents}</td>
                 <td className="px-3 py-3">
                   <div className="flex items-center gap-2">
                     <div className="w-16 h-1.5 rounded-full bg-muted">
                       <div
                         className="h-1.5 rounded-full bg-primary"
-                        style={{ width: `${(f.hoursPerWeek / 12) * 100}%` }}
+                        style={{ width: `${(faculty.hoursPerWeek / 12) * 100}%` }}
                       />
                     </div>
-                    <span className="text-xs font-bold text-foreground">{f.hoursPerWeek}h</span>
+                    <span className="text-xs font-bold text-foreground">{faculty.hoursPerWeek}h</span>
                   </div>
                 </td>
               </tr>

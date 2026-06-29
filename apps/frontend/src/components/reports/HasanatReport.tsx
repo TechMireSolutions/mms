@@ -84,34 +84,34 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       pointsMap.set(denom.id, denom.points);
     });
 
-    distributions.forEach(d => {
+    distributions.forEach((distributionRecord) => {
       // Resolve points from the database denoms collection
-      const points = pointsMap.get(d.denominationId) || 50;
+      const points = pointsMap.get(distributionRecord.denominationId) || 50;
 
-      const totalPoints = points * d.quantity;
-      const isRedeemed = d.status === "redeemed";
+      const totalPoints = points * distributionRecord.quantity;
+      const isRedeemed = distributionRecord.status === "redeemed";
 
-      if (d.recipientType === "student") {
-        const key = d.recipientStudentId || d.recipientName || "";
-        if (key) {
-          const label = d.recipientName || key;
-          if (!studentMap[key]) {
-            studentMap[key] = {
+      if (distributionRecord.recipientType === "student") {
+        const studentKey = distributionRecord.recipientStudentId || distributionRecord.recipientName || "";
+        if (studentKey) {
+          const label = distributionRecord.recipientName || studentKey;
+          if (!studentMap[studentKey]) {
+            studentMap[studentKey] = {
               studentName: label,
-              class: d.recipientClass,
-              faculty: d.issuedBy || "—",
+              class: distributionRecord.recipientClass,
+              faculty: distributionRecord.issuedBy || "—",
               distributed: 0,
               redeemed: 0,
               balance: 0
             };
           }
-          studentMap[key].distributed += totalPoints;
-          if (isRedeemed) studentMap[key].redeemed += totalPoints;
-          else studentMap[key].balance += totalPoints;
+          studentMap[studentKey].distributed += totalPoints;
+          if (isRedeemed) studentMap[studentKey].redeemed += totalPoints;
+          else studentMap[studentKey].balance += totalPoints;
         }
       }
 
-      const facultyKey = d.issuedBy || "—";
+      const facultyKey = distributionRecord.issuedBy || "—";
       if (!facultyMap[facultyKey]) {
         facultyMap[facultyKey] = {
           faculty: facultyKey,
@@ -132,28 +132,28 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
   const distribution = useMemo<HasanatReportItem[]>(() => {
     let list = distributionData;
     if (filters.class !== "all") {
-      list = list.filter((h) => h.class === filters.class);
+      list = list.filter((hasanatItem) => hasanatItem.class === filters.class);
     }
     if (filters.student) {
-      list = list.filter((h) =>
-        h.studentName.toLowerCase().includes(filters.student.toLowerCase()),
+      list = list.filter((hasanatItem) =>
+        hasanatItem.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
     return list;
   }, [filters, distributionData]);
 
-  const totalDistributed = distribution.reduce((a, h) => a + h.distributed, 0);
-  const totalRedeemed    = distribution.reduce((a, h) => a + h.redeemed, 0);
-  const totalBalance     = distribution.reduce((a, h) => a + h.balance, 0);
+  const totalDistributed = distribution.reduce((total, hasanatItem) => total + hasanatItem.distributed, 0);
+  const totalRedeemed    = distribution.reduce((total, hasanatItem) => total + hasanatItem.redeemed, 0);
+  const totalBalance     = distribution.reduce((total, hasanatItem) => total + hasanatItem.balance, 0);
   const redemptionRate   = totalDistributed
     ? ((totalRedeemed / totalDistributed) * 100).toFixed(1)
     : 0;
 
   const facultyData = useMemo<FacultyBarDatum[]>(() => {
-    return hasanatByFaculty.map((f) => ({
-      faculty:     f.faculty.split(" ").slice(-1)[0] ?? f.faculty,
-      distributed: f.totalDistributed,
-      redeemed:    f.totalRedeemed,
+    return hasanatByFaculty.map((facultyTotals) => ({
+      faculty:     facultyTotals.faculty.split(" ").slice(-1)[0] ?? facultyTotals.faculty,
+      distributed: facultyTotals.totalDistributed,
+      redeemed:    facultyTotals.totalRedeemed,
     }));
   }, [hasanatByFaculty]);
 

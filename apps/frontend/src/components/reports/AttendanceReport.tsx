@@ -50,20 +50,20 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
   const records = useAttendanceRecordsCollection();
 
   const sessions = useSessionsCollection();
-  const allClasses = useMemo(() => sessions.flatMap(s => s.classes || []), [sessions]);
+  const allClasses = useMemo(() => sessions.flatMap((session) => session.classes || []), [sessions]);
 
   const studentAtt = useMemo<StudentAttendanceItem[]>(() => {
     // Group records by student ID
     const grouped: Record<string, StudentAttendanceItem> = {};
     
-    records.forEach(r => {
-       const key = r.studentId;
-       if (!grouped[key]) {
+    records.forEach((record) => {
+       const studentKey = record.studentId;
+       if (!grouped[studentKey]) {
          // Resolve class name
-         const cInfo = allClasses.find(c => c.id === r.classId);
-         grouped[key] = {
-           studentName: r.studentName,
-           class: cInfo ? cInfo.name : r.classId,
+         const classInfo = allClasses.find((sessionClass) => sessionClass.id === record.classId);
+         grouped[studentKey] = {
+           studentName: record.studentName,
+           class: classInfo ? classInfo.name : record.classId,
            present: 0,
            absent: 0,
            late: 0,
@@ -72,19 +72,19 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
          };
        }
        
-       grouped[key].total++;
-       if (r.status === "present" || r.status === "excused") grouped[key].present++;
-       if (r.status === "absent") grouped[key].absent++;
-       if (r.status === "late") {
-         grouped[key].late++;
-         grouped[key].present++; // Late is usually counted as present for general rating
+       grouped[studentKey].total++;
+       if (record.status === "present" || record.status === "excused") grouped[studentKey].present++;
+       if (record.status === "absent") grouped[studentKey].absent++;
+       if (record.status === "late") {
+         grouped[studentKey].late++;
+         grouped[studentKey].present++; // Late is usually counted as present for general rating
        }
     });
 
     // Calculate rates
-    const list = Object.values(grouped).map(s => {
-       s.rate = s.total > 0 ? Math.round((s.present / s.total) * 100) : 0;
-       return s;
+    const list = Object.values(grouped).map((studentAttendance) => {
+       studentAttendance.rate = studentAttendance.total > 0 ? Math.round((studentAttendance.present / studentAttendance.total) * 100) : 0;
+       return studentAttendance;
      });
 
     let filtered = list;
@@ -92,43 +92,43 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
     // Assuming filters.class is the class ID, we should probably group by classId internally, but for display we need name.
     // Let's refine the filter:
     if (filters.class !== "all") {
-       const targetClass = allClasses.find(c => c.id === filters.class)?.name;
-       if (targetClass) filtered = filtered.filter(s => s.class === targetClass);
+       const targetClass = allClasses.find((sessionClass) => sessionClass.id === filters.class)?.name;
+       if (targetClass) filtered = filtered.filter((studentAttendance) => studentAttendance.class === targetClass);
     }
     if (filters.student) {
-      filtered = filtered.filter((s) => s.studentName.toLowerCase().includes(filters.student.toLowerCase()));
+      filtered = filtered.filter((studentAttendance) => studentAttendance.studentName.toLowerCase().includes(filters.student.toLowerCase()));
     }
     return filtered;
   }, [filters, records, allClasses]);
 
   const summary = useMemo<AttendanceSummaryItem[]>(() => {
-     const cGroup: Record<string, { totalStudents: number, sumRates: number, perfect: number, below: number }> = {};
+     const classGroups: Record<string, { totalStudents: number, sumRates: number, perfect: number, below: number }> = {};
 
-     studentAtt.forEach(s => {
-       if (!cGroup[s.class]) {
-          cGroup[s.class] = { totalStudents: 0, sumRates: 0, perfect: 0, below: 0 };
+     studentAtt.forEach((studentAttendance) => {
+       if (!classGroups[studentAttendance.class]) {
+          classGroups[studentAttendance.class] = { totalStudents: 0, sumRates: 0, perfect: 0, below: 0 };
        }
-       cGroup[s.class].totalStudents++;
-       cGroup[s.class].sumRates += s.rate;
-       if (s.rate === 100) cGroup[s.class].perfect++;
-       if (s.rate < 75) cGroup[s.class].below++;
+       classGroups[studentAttendance.class].totalStudents++;
+       classGroups[studentAttendance.class].sumRates += studentAttendance.rate;
+       if (studentAttendance.rate === 100) classGroups[studentAttendance.class].perfect++;
+       if (studentAttendance.rate < 75) classGroups[studentAttendance.class].below++;
      });
 
-     return Object.entries(cGroup).map(([cName, data]) => ({
-       class: cName,
-       total: data.totalStudents,
-       avgRate: data.totalStudents > 0 ? Math.round(data.sumRates / data.totalStudents) : 0,
-       perfectAttendance: data.perfect,
-       belowThreshold: data.below
+     return Object.entries(classGroups).map(([className, classGroup]) => ({
+       class: className,
+       total: classGroup.totalStudents,
+       avgRate: classGroup.totalStudents > 0 ? Math.round(classGroup.sumRates / classGroup.totalStudents) : 0,
+       perfectAttendance: classGroup.perfect,
+       belowThreshold: classGroup.below
      }));
   }, [studentAtt]);
 
   const avgRate = summary.length
-    ? (summary.reduce((a, s) => a + s.avgRate, 0) / summary.length).toFixed(1)
+    ? (summary.reduce((totalRate, summaryItem) => totalRate + summaryItem.avgRate, 0) / summary.length).toFixed(1)
     : "0";
     
-  const perfect = summary.reduce((a, s) => a + s.perfectAttendance, 0);
-  const belowThreshold = summary.reduce((a, s) => a + s.belowThreshold, 0);
+  const perfect = summary.reduce((totalPerfect, summaryItem) => totalPerfect + summaryItem.perfectAttendance, 0);
+  const belowThreshold = summary.reduce((totalBelowThreshold, summaryItem) => totalBelowThreshold + summaryItem.belowThreshold, 0);
 
   const rateColor = (rate: number): string => {
     if (rate >= 90) return "text-success";
@@ -166,7 +166,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="class" tick={{ fontSize: 12 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={(v) => v !== undefined ? `${v}%` : ""} />
+              <Tooltip formatter={(value) => value !== undefined ? `${value}%` : ""} />
               <Bar dataKey="avgRate" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </SafeResponsiveContainer>

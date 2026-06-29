@@ -36,7 +36,7 @@ interface FinancialReportProps {
 }
 
 /** Formats a number as a PKR currency string. */
-const PKR = (n: number): string => `PKR ${Number(n).toLocaleString()}`;
+const PKR = (amount: number): string => `PKR ${Number(amount).toLocaleString()}`;
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
   paid:      "bg-success/10 text-success",
@@ -65,69 +65,69 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
   const feeCollection = useMemo(() => {
     // Generate monthly aggregation
     const months: Record<string, { collected: number, outstanding: number, total: number }> = {};
-    financeInvoices.forEach(inv => {
+    financeInvoices.forEach((invoice) => {
       // Use due date or creation date for month bucket (mocking logic using due date)
-      const d = new Date(inv.dueDate);
-      if (isNaN(d.getTime())) return;
-      const monthStr = d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      const dueDate = new Date(invoice.dueDate);
+      if (isNaN(dueDate.getTime())) return;
+      const monthStr = dueDate.toLocaleDateString("en-US", { month: "short", year: "numeric" });
       
       if (!months[monthStr]) months[monthStr] = { collected: 0, outstanding: 0, total: 0 };
       
-      months[monthStr].total += inv.finalAmt;
-      if (inv.status === "paid") {
-        months[monthStr].collected += inv.finalAmt;
-      } else if (inv.status === "partial") {
-        const paid = inv.paidAmt !== undefined ? inv.paidAmt : Math.round(inv.finalAmt / 2);
+      months[monthStr].total += invoice.finalAmt;
+      if (invoice.status === "paid") {
+        months[monthStr].collected += invoice.finalAmt;
+      } else if (invoice.status === "partial") {
+        const paid = invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
         months[monthStr].collected += paid;
-        months[monthStr].outstanding += (inv.finalAmt - paid);
-      } else if (inv.status !== "cancelled") {
-        months[monthStr].outstanding += inv.finalAmt;
+        months[monthStr].outstanding += (invoice.finalAmt - paid);
+      } else if (invoice.status !== "cancelled") {
+        months[monthStr].outstanding += invoice.finalAmt;
       }
     });
 
-    return Object.entries(months).map(([month, data]) => ({
+    return Object.entries(months).map(([month, monthTotals]) => ({
       month,
-      collected: data.collected,
-      outstanding: data.outstanding,
-      total: data.total,
-      rate: data.total > 0 ? Math.round((data.collected / data.total) * 100) : 0
-    })).sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()).slice(-6); // Last 6 months
+      collected: monthTotals.collected,
+      outstanding: monthTotals.outstanding,
+      total: monthTotals.total,
+      rate: monthTotals.total > 0 ? Math.round((monthTotals.collected / monthTotals.total) * 100) : 0
+    })).sort((firstMonth, secondMonth) => new Date(firstMonth.month).getTime() - new Date(secondMonth.month).getTime()).slice(-6); // Last 6 months
   }, [financeInvoices]);
 
   const discountUsage = useMemo(() => {
     const discounts: Record<string, { count: number, totalDiscounted: number }> = {};
     let totalAllDiscounts = 0;
 
-    financeInvoices.forEach(inv => {
-      if (inv.discountAmt > 0 && inv.discountType && inv.status !== "cancelled") {
-        const type = inv.discountType;
+    financeInvoices.forEach((invoice) => {
+      if (invoice.discountAmt > 0 && invoice.discountType && invoice.status !== "cancelled") {
+        const type = invoice.discountType;
         if (!discounts[type]) discounts[type] = { count: 0, totalDiscounted: 0 };
         discounts[type].count++;
-        discounts[type].totalDiscounted += inv.discountAmt;
-        totalAllDiscounts += inv.discountAmt;
+        discounts[type].totalDiscounted += invoice.discountAmt;
+        totalAllDiscounts += invoice.discountAmt;
       }
     });
 
-    return Object.entries(discounts).map(([type, data]) => ({
+    return Object.entries(discounts).map(([type, discountTotals]) => ({
       type,
-      count: data.count,
-      totalDiscounted: data.totalDiscounted,
-      pct: totalAllDiscounts > 0 ? Math.round((data.totalDiscounted / totalAllDiscounts) * 100) : 0
+      count: discountTotals.count,
+      totalDiscounted: discountTotals.totalDiscounted,
+      pct: totalAllDiscounts > 0 ? Math.round((discountTotals.totalDiscounted / totalAllDiscounts) * 100) : 0
     }));
   }, [financeInvoices]);
 
-  const totalCollected = feeCollection.reduce((a, m) => a + m.collected, 0);
-  const totalOutstanding = feeCollection.reduce((a, m) => a + m.outstanding, 0);
-  const totalDiscounted = discountUsage.reduce((a, d) => a + d.totalDiscounted, 0);
+  const totalCollected = feeCollection.reduce((total, monthTotals) => total + monthTotals.collected, 0);
+  const totalOutstanding = feeCollection.reduce((total, monthTotals) => total + monthTotals.outstanding, 0);
+  const totalDiscounted = discountUsage.reduce((total, discountTotals) => total + discountTotals.totalDiscounted, 0);
 
   const invoices = useMemo(() => {
     let list = financeInvoices;
     if (filters.status !== "all") {
-      list = list.filter((i) => i.status === filters.status);
+      list = list.filter((invoice) => invoice.status === filters.status);
     }
     if (filters.student) {
-      list = list.filter((i) =>
-        i.studentName.toLowerCase().includes(filters.student.toLowerCase()),
+      list = list.filter((invoice) =>
+        invoice.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
     return list;
@@ -155,8 +155,8 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `${v / 1000}k`} />
-            <Tooltip formatter={(v) => v !== undefined ? PKR(Number(v)) : ""} />
+            <YAxis tick={{ fontSize: 11 }} tickFormatter={(value: number) => `${value / 1000}k`} />
+            <Tooltip formatter={(value) => value !== undefined ? PKR(Number(value)) : ""} />
             <Area type="monotone" dataKey="collected"   stroke="hsl(var(--primary))" fill="url(#colorCollected)" strokeWidth={2} name={t("finance.report.collected")}   />
             <Area type="monotone" dataKey="outstanding" stroke={palette.charts[0]} fill="transparent" strokeWidth={2} strokeDasharray="4 2" name={t("finance.report.outstandingLabel")} />
           </AreaChart>
@@ -168,13 +168,13 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
         <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
           <p className="text-sm font-semibold text-foreground mb-3">{t("finance.report.collectionRateTitle")}</p>
           <div className="space-y-2">
-            {feeCollection.map((m) => (
-              <div key={m.month} className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground w-20 shrink-0">{m.month}</span>
+            {feeCollection.map((monthTotals) => (
+              <div key={monthTotals.month} className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground w-20 shrink-0">{monthTotals.month}</span>
                 <div className="flex-1 h-2 rounded-full bg-muted">
-                  <div className="h-2 rounded-full bg-primary" style={{ width: `${m.rate}%` }} />
+                  <div className="h-2 rounded-full bg-primary" style={{ width: `${monthTotals.rate}%` }} />
                 </div>
-                <span className="text-xs font-bold text-foreground w-10 text-right">{m.rate}%</span>
+                <span className="text-xs font-bold text-foreground w-10 text-right">{monthTotals.rate}%</span>
               </div>
             ))}
           </div>
