@@ -40,10 +40,10 @@ export function CategorySelector({
   const selectedIds = toSelectedIds(value);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return categories;
+    const searchQuery = search.trim().toLowerCase();
+    if (!searchQuery) return categories;
     return categories.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q),
+      (category) => category.name.toLowerCase().includes(searchQuery) || category.id.toLowerCase().includes(searchQuery),
     );
   }, [categories, search]);
 
@@ -61,7 +61,7 @@ export function CategorySelector({
       return;
     }
     const next = selectedIds.includes(id)
-      ? selectedIds.filter((x) => x !== id)
+      ? selectedIds.filter((selectedId) => selectedId !== id)
       : [...selectedIds, id];
     applySelection(next);
   };

@@ -35,17 +35,17 @@ export default function SessionsTable({ title }: { title?: string }) {
 
   const sessions: UpcomingSessionItem[] = [];
 
-  dbSessions.forEach((s) => {
-    if (s.status !== "active") return;
+  dbSessions.forEach((session) => {
+    if (session.status !== "active") return;
 
-    const classesList = s.classes || [];
-    classesList.forEach((cls, idx) => {
-      const timetable = s.timetable || [];
+    const classesList = session.classes || [];
+    classesList.forEach((sessionClass, classIndex) => {
+      const timetable = session.timetable || [];
       const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const todayName = weekdayNames[new Date().getDay()];
 
       const classTimetable = timetable.filter(
-        (t) => t.location === cls.room && t.day === todayName
+        (timetableEntry) => timetableEntry.location === sessionClass.room && timetableEntry.day === todayName
       );
 
       const timeStr = classTimetable[0]
@@ -54,12 +54,12 @@ export default function SessionsTable({ title }: { title?: string }) {
       const isLive = classTimetable.length > 0;
 
       sessions.push({
-        id: hashStringToId(`${s.id}-${cls.id}-${idx}`),
-        name: `${s.name} – ${cls.name}`,
-        teacher: cls.teacherName || "Unassigned",
+        id: hashStringToId(`${session.id}-${sessionClass.id}-${classIndex}`),
+        name: `${session.name} – ${sessionClass.name}`,
+        teacher: sessionClass.teacherName || "Unassigned",
         time: timeStr,
-        room: cls.room || "N/A",
-        students: cls.enrolled || 0,
+        room: sessionClass.room || "N/A",
+        students: sessionClass.enrolled || 0,
         status: isLive ? "live" : "upcoming",
       });
     });

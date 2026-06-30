@@ -36,12 +36,12 @@ function StatCard({ label, value, sub, icon: Icon, color = "primary", trend }: S
     amber: { bg: KPI_TONE.warning.bg, text: KPI_TONE.warning.text, iconBg: "bg-warning/15" },
     purple: { bg: KPI_TONE.primary.bg, text: KPI_TONE.primary.text, iconBg: "bg-primary/15" },
   };
-  const c = colorMap[color];
+  const tone = colorMap[color];
   return (
-    <article className={`rounded-xl border border-border ${c.bg} p-4 space-y-2`}>
+    <article className={`rounded-xl border border-border ${tone.bg} p-4 space-y-2`}>
       <header className="flex items-center justify-between">
-        <div className={`w-9 h-9 rounded-xl ${c.iconBg} flex items-center justify-center`} aria-hidden="true">
-          <Icon className={`w-4.5 h-4.5 ${c.text}`} style={{ width: 18, height: 18 }} />
+        <div className={`w-9 h-9 rounded-xl ${tone.iconBg} flex items-center justify-center`} aria-hidden="true">
+          <Icon className={`w-4.5 h-4.5 ${tone.text}`} style={{ width: 18, height: 18 }} />
         </div>
         {trend !== undefined && (
           <span className={`text-[11px] font-bold flex items-center gap-0.5 ${trend >= 0 ? "text-success" : "text-destructive"}`} aria-label={trend >= 0 ? "Positive trend" : "Negative trend"}>
@@ -51,7 +51,7 @@ function StatCard({ label, value, sub, icon: Icon, color = "primary", trend }: S
         )}
       </header>
       <div>
-        <p className={`text-xl font-bold ${c.text} m-0`}>{value}</p>
+        <p className={`text-xl font-bold ${tone.text} m-0`}>{value}</p>
         <h3 className="text-xs font-semibold text-muted-foreground m-0">{label}</h3>
         {sub && <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{sub}</p>}
       </div>
@@ -120,10 +120,10 @@ export function ObligationsSummary({
     if (dateFrom && (c.received_date || "") < dateFrom) return false;
     if (dateTo   && (c.received_date || "") > dateTo)   return false;
     if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase();
+      const searchQuery = debouncedSearch.toLowerCase();
       const repName = reps.find((r) => r.id === c.mujtahid_representative_id)?.name?.toLowerCase() || "";
       const typeName = obligationTypes.find((t) => t.id === c.obligation_type_id)?.name?.toLowerCase() || "";
-      if (!c.receipt_no.toLowerCase().includes(q) && !repName.includes(q) && !typeName.includes(q)) return false;
+      if (!c.receipt_no.toLowerCase().includes(searchQuery) && !repName.includes(searchQuery) && !typeName.includes(searchQuery)) return false;
     }
     return true;
   }), [collections, typeFilter, repFilter, userFilter, dateFrom, dateTo, debouncedSearch, reps, obligationTypes]);

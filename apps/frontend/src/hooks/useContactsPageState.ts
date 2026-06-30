@@ -268,11 +268,11 @@ export function useContactsPageState({
   }, [sortField]);
 
   const handleSelect = useCallback(
-    (id: string | number) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id])),
+    (id: string | number) => setSelected((selectedIds) => (selectedIds.includes(id) ? selectedIds.filter((selectedId) => selectedId !== id) : [...selectedIds, id])),
     [],
   );
   const handleSelectAll = useCallback(
-    () => setSelected((s) => (s.length === rowSource.length ? [] : rowSource.map((c) => c.id))),
+    () => setSelected((selectedIds) => (selectedIds.length === rowSource.length ? [] : rowSource.map((contact) => contact.id))),
     [rowSource],
   );
 

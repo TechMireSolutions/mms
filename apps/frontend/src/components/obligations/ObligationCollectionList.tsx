@@ -83,10 +83,10 @@ export function ObligationCollectionList({
   const filtered = useMemo(() => collections.filter((c) => {
     if (typeFilter !== "all" && c.obligation_type_id !== typeFilter) return false;
     if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase();
+      const searchQuery = debouncedSearch.toLowerCase();
       const sender = getContact(c.sender_id)?.name?.toLowerCase() || "";
       const receipt = c.receipt_no.toLowerCase();
-      if (!sender.includes(q) && !receipt.includes(q)) return false;
+      if (!sender.includes(searchQuery) && !receipt.includes(searchQuery)) return false;
     }
     return true;
   }), [collections, debouncedSearch, typeFilter, contacts]);

@@ -257,11 +257,11 @@ export default function ContactsTable({
       case "whatsapp":
         return <td key="whatsapp" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{hasWhatsApp(c) ? t('common.yes') : t('common.no')}</span></td>;
       case "socials_platform": {
-        const platforms = (c.socials || []).map((s) => s.platform).filter(Boolean);
+        const platforms = (c.socials || []).map((social) => social.platform).filter(Boolean);
         return <td key="socials_platform" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{platforms.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "socials_url": {
-        const urls = (c.socials || []).map((s) => s.url).filter(Boolean);
+        const urls = (c.socials || []).map((social) => social.url).filter(Boolean);
         return <td key="socials_url" className="px-4 py-3"><span className="text-[13px] text-muted-foreground truncate max-w-[150px] block" title={urls.join(", ")}>{urls.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "emergency_contact": {

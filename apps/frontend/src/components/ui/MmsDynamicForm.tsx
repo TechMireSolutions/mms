@@ -47,7 +47,7 @@ export function MmsDynamicForm<K extends string = string>({
     }
 
     // Standardized Dynamic/Custom Tab Rendering
-    const visibleFields = fields.filter((f) => f.enabled);
+    const visibleFields = fields.filter((field) => field.enabled);
 
     return (
       <div className="space-y-5 text-left">

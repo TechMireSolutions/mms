@@ -1116,7 +1116,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 font-sans">
         {visible.map((kpi, i: number) => {
-          const c = COLOR[kpi.color] || COLOR.primary;
+          const kpiColor = COLOR[kpi.color] || COLOR.primary;
           const trendInfo = TREND[kpi.trend] || TREND.flat;
           const Icon = kpi.icon;
 
@@ -1130,8 +1130,8 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
             >
               {/* Header Zone: Icon */}
               <header className="flex items-center justify-between gap-1.5 select-none">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center aspect-square flex-shrink-0 ${c.bg} group-hover:scale-115 transition-transform`}>
-                  <Icon className={`w-4 h-4 ${c.text}`} />
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center aspect-square flex-shrink-0 ${kpiColor.bg} group-hover:scale-115 transition-transform`}>
+                  <Icon className={`w-4 h-4 ${kpiColor.text}`} />
                 </div>
               </header>
 
@@ -1140,7 +1140,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                 <span className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none truncate">
                   {kpi.label}
                 </span>
-                <p className={`text-lg font-black ${c.text} leading-tight mt-0.5 truncate`}>
+                <p className={`text-lg font-black ${kpiColor.text} leading-tight mt-0.5 truncate`}>
                   {kpi.value}
                 </p>
               </main>

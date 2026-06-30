@@ -136,7 +136,7 @@ export function QuestionBank({
     onFilteredCountChange?.(filtered.length);
   }, [filtered.length, onFilteredCountChange]);
 
-  const getCat = (id: string) => config.categories.find((c) => c.id === id);
+  const getCat = (id: string) => config.categories.find((category) => category.id === id);
 
   const renderMetaChip = (q: Question, fieldId: string): React.ReactNode => {
     if (fieldId === 'categoryId') {
@@ -165,9 +165,9 @@ export function QuestionBank({
       );
     }
     if (fieldId === 'difficulty') {
-      const cls = QUESTION_DIFFICULTY_BADGE_CLASSES[q.difficulty] ?? '';
+      const difficultyClassName = QUESTION_DIFFICULTY_BADGE_CLASSES[q.difficulty] ?? '';
       return (
-        <span key="difficulty" className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${cls}`}>
+        <span key="difficulty" className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${difficultyClassName}`}>
           {config.difficultyLabel(q.difficulty)}
         </span>
       );
@@ -226,16 +226,16 @@ export function QuestionBank({
                 {t('questionBank.filterByCategory')}
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-1 h-px bg-border" />
-              {config.categories.map((c) => (
+              {config.categories.map((category) => (
                 <DropdownMenuCheckboxItem
-                  key={c.id}
-                  checked={filterCats.includes(c.id)}
+                  key={category.id}
+                  checked={filterCats.includes(category.id)}
                   onCheckedChange={() =>
-                    setFilterCats((p) => (p.includes(c.id) ? p.filter((x) => x !== c.id) : [...p, c.id]))
+                    setFilterCats((previousCategoryIds) => (previousCategoryIds.includes(category.id) ? previousCategoryIds.filter((categoryId) => categoryId !== category.id) : [...previousCategoryIds, category.id]))
                   }
                   className="cursor-pointer rounded-lg px-2 py-1.5 text-xs hover:bg-muted"
                 >
-                  {c.icon} {c.name}
+                  {category.icon} {category.name}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>
@@ -260,16 +260,16 @@ export function QuestionBank({
                 {t('questionBank.filterDifficulty')}
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-1 h-px bg-border" />
-              {config.enabledDifficulties.map((k) => (
+              {config.enabledDifficulties.map((difficulty) => (
                 <DropdownMenuCheckboxItem
-                  key={k}
-                  checked={filterDiff.includes(k)}
+                  key={difficulty}
+                  checked={filterDiff.includes(difficulty)}
                   onCheckedChange={() =>
-                    setFilterDiff((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k]))
+                    setFilterDiff((previousDifficulties) => (previousDifficulties.includes(difficulty) ? previousDifficulties.filter((selectedDifficulty) => selectedDifficulty !== difficulty) : [...previousDifficulties, difficulty]))
                   }
                   className="cursor-pointer rounded-lg px-2 py-1.5 text-xs hover:bg-muted"
                 >
-                  {config.difficultyLabel(k)}
+                  {config.difficultyLabel(difficulty)}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>
@@ -415,7 +415,7 @@ export function QuestionBank({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => onUpdate(questions.filter((x) => x.id !== q.id))}
+                      onClick={() => onUpdate(questions.filter((question) => question.id !== q.id))}
                       className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       aria-label={t('questionBank.deleteQuestionAria', { text: q.text })}
                     >
@@ -545,7 +545,7 @@ export function QuestionBank({
                               type="button"
                               variant="ghost"
                               size="icon"
-                              onClick={() => onUpdate(questions.filter((x) => x.id !== q.id))}
+                              onClick={() => onUpdate(questions.filter((question) => question.id !== q.id))}
                               className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                               aria-label={t('questionBank.deleteQuestionAria', { text: q.text })}
                             >

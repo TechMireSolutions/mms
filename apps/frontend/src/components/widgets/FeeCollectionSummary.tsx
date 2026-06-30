@@ -92,17 +92,17 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
 
       {/* By-class breakdown */}
       <div className="space-y-3">
-        {byClass.map((cls) => {
-          const pct = cls.target > 0 ? Math.round((cls.collected / cls.target) * 100) : 0;
+        {byClass.map((classSummary) => {
+          const pct = classSummary.target > 0 ? Math.round((classSummary.collected / classSummary.target) * 100) : 0;
           return (
-            <article key={cls.name}>
+            <article key={classSummary.name}>
               <header className="flex items-center justify-between mb-1">
-                <span className="text-[12px] text-foreground font-medium">{cls.name}</span>
+                <span className="text-[12px] text-foreground font-medium">{classSummary.name}</span>
                 <span className="text-[12px] text-muted-foreground">
-                  ₨ {cls.collected.toLocaleString()} / ₨ {cls.target.toLocaleString()}
+                  ₨ {classSummary.collected.toLocaleString()} / ₨ {classSummary.target.toLocaleString()}
                 </span>
               </header>
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden" aria-label={`${cls.name} collection is at ${pct}%`}>
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden" aria-label={`${classSummary.name} collection is at ${pct}%`}>
                 <div
                   className={`h-full rounded-full transition-all duration-700 ${
                     pct >= 90 ? "bg-success" : pct >= 70 ? "bg-warning" : "bg-destructive"

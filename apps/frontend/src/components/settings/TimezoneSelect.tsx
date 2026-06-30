@@ -28,13 +28,13 @@ function filterGrouped(
   grouped: ReturnType<typeof groupTimezoneOptions>,
   query: string,
 ): ReturnType<typeof groupTimezoneOptions> {
-  const q = query.trim().toLowerCase();
-  if (!q) return grouped;
+  const searchQuery = query.trim().toLowerCase();
+  if (!searchQuery) return grouped;
   return grouped
     .map((group) => ({
       ...group,
       options: group.options.filter(
-        (opt) => opt.keywords.includes(q) || opt.label.toLowerCase().includes(q),
+        (option) => option.keywords.includes(searchQuery) || option.label.toLowerCase().includes(searchQuery),
       ),
     }))
     .filter((group) => group.options.length > 0);

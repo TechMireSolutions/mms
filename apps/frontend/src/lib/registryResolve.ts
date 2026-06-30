@@ -10,13 +10,13 @@ export function uniqueRegistryIds(ids: (string | number | null | undefined)[]): 
 export function collectTeacherIdsFromClasses(
   classes: { teacherId?: string | number | null }[] | undefined,
 ): string[] {
-  return uniqueRegistryIds((classes ?? []).map((cls) => cls.teacherId));
+  return uniqueRegistryIds((classes ?? []).map((sessionClass) => sessionClass.teacherId));
 }
 
 export function collectTeacherIdsFromSessions(
   sessions: { classes?: { teacherId?: string | number | null }[] }[],
 ): string[] {
   return uniqueRegistryIds(
-    sessions.flatMap((session) => (session.classes ?? []).map((cls) => cls.teacherId)),
+    sessions.flatMap((session) => (session.classes ?? []).map((sessionClass) => sessionClass.teacherId)),
   );
 }

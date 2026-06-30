@@ -51,14 +51,14 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<number>>(new Set());
 
-  const totalOverdue = overdueStudents.reduce((s, r) => s + r.amount, 0);
+  const totalOverdue = overdueStudents.reduce((sum, overdueStudent) => sum + overdueStudent.amount, 0);
 
   const handleRemind = (id: number) => {
     setRemindedIds((prev) => new Set([...prev, id]));
   };
 
   const handleRemindAll = () => {
-    setRemindedIds(new Set(overdueStudents.map((s) => s.id)));
+    setRemindedIds(new Set(overdueStudents.map((overdueStudent) => overdueStudent.id)));
   };
 
   return (
@@ -114,36 +114,36 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {overdueStudents.map((s) => {
-                const badge = urgencyBadge(s.daysOverdue);
-                const reminded = remindedIds.has(s.id);
+              {overdueStudents.map((overdueStudent) => {
+                const badge = urgencyBadge(overdueStudent.daysOverdue);
+                const reminded = remindedIds.has(overdueStudent.id);
                 return (
-                  <tr key={s.id} className="hover:bg-muted/20 transition-colors">
+                  <tr key={overdueStudent.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
                           <span className="text-[10px] font-bold text-primary">
-                            {s.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                            {overdueStudent.name.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2)}
                           </span>
                         </div>
-                        <span className="font-medium text-foreground text-xs">{s.name}</span>
+                        <span className="font-medium text-foreground text-xs">{overdueStudent.name}</span>
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-1">
                         <Scale className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
-                        <span className="text-xs text-foreground">{s.obligationType}</span>
+                        <span className="text-xs text-foreground">{overdueStudent.obligationType}</span>
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
                       <div>
-                        <p className="text-xs text-foreground m-0">{s.dueDate}</p>
-                        <p className="text-[10px] text-destructive font-semibold m-0">{s.daysOverdue}d overdue</p>
+                        <p className="text-xs text-foreground m-0">{overdueStudent.dueDate}</p>
+                        <p className="text-[10px] text-destructive font-semibold m-0">{overdueStudent.daysOverdue}d overdue</p>
                       </div>
                     </td>
                     <td className="px-3 py-2.5 text-right">
                       <span className="text-xs font-bold text-foreground">
-                        {s.currency} {s.amount.toLocaleString()}
+                        {overdueStudent.currency} {overdueStudent.amount.toLocaleString()}
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-center">
@@ -154,9 +154,9 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                     <td className="px-3 py-2.5 text-center">
                       <Button
                         variant="ghost"
-                        onClick={() => handleRemind(s.id)}
+                        onClick={() => handleRemind(overdueStudent.id)}
                         disabled={reminded}
-                        aria-label={reminded ? `Reminder sent to ${s.name}` : `Send reminder to ${s.name}`}
+                        aria-label={reminded ? `Reminder sent to ${overdueStudent.name}` : `Send reminder to ${overdueStudent.name}`}
                         className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors h-auto shadow-none ${
                           reminded
                             ? "bg-success/10 text-success border border-success/30 cursor-default hover:bg-success/10 hover:text-success"

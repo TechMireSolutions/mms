@@ -60,8 +60,8 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
   const contacts = useMergedObligationContacts(contactIds);
   const users = useMergedObligationUsers();
 
-  const getContact = (id?: string | number | null) => contacts.find((c) => String(c.id) === String(id));
-  const getCurrency = (id: string) => currencies.find((c: any) => c.id === id);
+  const getContact = (id?: string | number | null) => contacts.find((contact) => String(contact.id) === String(id));
+  const getCurrency = (id: string) => currencies.find((currencyOption: any) => currencyOption.id === id);
   const getUser = (id?: string | number | null) => users.find((u) => String(u.id) === String(id));
   const getRep = (id: string) => reps.find((r) => r.id === id);
   const getMujtahid = (repId: string) => {
@@ -70,18 +70,18 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
   };
   const getObType = (id: string) => obligationTypes.find((t) => t.id === id);
 
-  const c = collection;
-  const sender = getContact(c.sender_id);
-  const reference = c.reference_id ? getContact(c.reference_id) : null;
-  const currency = getCurrency(c.currency_id);
-  const user = getUser(c.received_by);
-  const rep = getRep(c.mujtahid_representative_id);
-  const mujtahid = getMujtahid(c.mujtahid_representative_id);
-  const obType = getObType(c.obligation_type_id);
+  const selectedCollection = collection;
+  const sender = getContact(selectedCollection.sender_id);
+  const reference = selectedCollection.reference_id ? getContact(selectedCollection.reference_id) : null;
+  const currency = getCurrency(selectedCollection.currency_id);
+  const user = getUser(selectedCollection.received_by);
+  const rep = getRep(selectedCollection.mujtahid_representative_id);
+  const mujtahid = getMujtahid(selectedCollection.mujtahid_representative_id);
+  const obType = getObType(selectedCollection.obligation_type_id);
 
   // Find applicable Wakala Type and its distributions
   const wakalaType = wakalaTypes.find(
-    (w) => w.obligation_type_id === c.obligation_type_id && w.mujtahid_representative_id === c.mujtahid_representative_id
+    (wakalaTypeItem) => wakalaTypeItem.obligation_type_id === selectedCollection.obligation_type_id && wakalaTypeItem.mujtahid_representative_id === selectedCollection.mujtahid_representative_id
   );
   const dists = wakalaType ? distributions.filter((d) => d.wakala_type_id === wakalaType.id) : [];
 
@@ -93,11 +93,11 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
           <div>
             <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide m-0">Receipt No.</h3>
-            <p className="text-xl font-bold text-primary font-mono m-0">{c.receipt_no}</p>
+            <p className="text-xl font-bold text-primary font-mono m-0">{selectedCollection.receipt_no}</p>
           </div>
           <div className="ms-auto text-end">
             <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Date</h3>
-            <p className="text-sm font-semibold text-foreground m-0">{fmtDate(c.received_date)}</p>
+            <p className="text-sm font-semibold text-foreground m-0">{fmtDate(selectedCollection.received_date)}</p>
           </div>
         </header>
 
@@ -109,10 +109,10 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <Row label="Designated For" value={obType?.designated_for} />
           <Row label="Representative" value={rep?.name} />
           <Row label="Mujtahid" value={mujtahid?.name} />
-          <Row label="Amount" value={`${currency?.code || ""} ${c.amount.toLocaleString()}`} mono />
-          <Row label="Payment Mode" value={c.payment_mode} />
+          <Row label="Amount" value={`${currency?.code || ""} ${selectedCollection.amount.toLocaleString()}`} mono />
+          <Row label="Payment Mode" value={selectedCollection.payment_mode} />
           <Row label="Received By" value={user?.name} />
-          <Row label="Created" value={fmtDate(c.created_at)} />
+          <Row label="Created" value={fmtDate(selectedCollection.created_at)} />
         </section>
 
         {/* Distribution breakdown */}
@@ -121,7 +121,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 m-0">Distribution Breakdown</h4>
             <div className="rounded-xl border border-border overflow-hidden">
               <table className="w-full text-sm">
-                <caption className="sr-only">Distribution breakdown for collection {c.receipt_no}</caption>
+                <caption className="sr-only">Distribution breakdown for collection {selectedCollection.receipt_no}</caption>
                 <thead className="bg-muted/60 border-b border-border">
                   <tr>
                     <th scope="col" className="px-4 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">Name</th>
@@ -131,17 +131,17 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {dists.map((d) => (
-                    <tr key={d.id} className="hover:bg-muted/20">
-                      <td className="px-4 py-2.5 font-medium text-foreground">{d.name}</td>
+                  {dists.map((distribution) => (
+                    <tr key={distribution.id} className="hover:bg-muted/20">
+                      <td className="px-4 py-2.5 font-medium text-foreground">{distribution.name}</td>
                       <td className="px-4 py-2.5">
-                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${d.type === "Income" ? "bg-success/15 text-success" : "bg-info/15 text-info"}`}>
-                          {d.type}
+                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${distribution.type === "Income" ? "bg-success/15 text-success" : "bg-info/15 text-info"}`}>
+                          {distribution.type}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-end font-mono text-xs font-semibold">{d.percentage}%</td>
+                      <td className="px-4 py-2.5 text-end font-mono text-xs font-semibold">{distribution.percentage}%</td>
                       <td className="px-4 py-2.5 text-end font-mono text-xs font-semibold text-foreground">
-                        {currency?.code} {((c.amount * d.percentage) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {currency?.code} {((selectedCollection.amount * distribution.percentage) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   ))}

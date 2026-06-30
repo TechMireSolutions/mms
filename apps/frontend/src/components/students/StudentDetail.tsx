@@ -87,10 +87,10 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
     });
   }, [fields, enabledTabIds, tabOrderMap]);
 
-  const studentContact = contactList.find(c => String(c.id) === String(student.contactId));
-  const fatherContact = contactList.find(c => String(c.id) === String(student.fatherContactId));
-  const motherContact = contactList.find(c => String(c.id) === String(student.motherContactId));
-  const guardianContact = contactList.find(c => String(c.id) === String(student.guardianContactId));
+  const studentContact = contactList.find((contact) => String(contact.id) === String(student.contactId));
+  const fatherContact = contactList.find((contact) => String(contact.id) === String(student.fatherContactId));
+  const motherContact = contactList.find((contact) => String(contact.id) === String(student.motherContactId));
+  const guardianContact = contactList.find((contact) => String(contact.id) === String(student.guardianContactId));
 
   const age = calcAge(student.dob);
   const enrolledSessionDetails = sessions.filter(s => student.enrolledSessions?.includes(s.id));
@@ -430,10 +430,10 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             {session.classes && session.classes.length > 0 ? (
                               <div className="text-[10px] text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg">
                                 <p className="font-semibold uppercase tracking-wider text-[8px] text-muted-foreground/80">Class Assignments</p>
-                                {session.classes.map((cls: { id: string; name?: string; teacherName?: string; room?: string; schedule?: string }) => (
-                                  <div key={cls.id} className="flex justify-between gap-1.5">
-                                    <span className="font-medium text-foreground">{cls.name} (by {cls.teacherName})</span>
-                                    <span>Room: {cls.room || "—"}</span>
+                                {session.classes.map((sessionClass: { id: string; name?: string; teacherName?: string; room?: string; schedule?: string }) => (
+                                  <div key={sessionClass.id} className="flex justify-between gap-1.5">
+                                    <span className="font-medium text-foreground">{sessionClass.name} (by {sessionClass.teacherName})</span>
+                                    <span>Room: {sessionClass.room || "—"}</span>
                                   </div>
                                 ))}
                               </div>

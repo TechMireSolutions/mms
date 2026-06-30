@@ -59,11 +59,11 @@ export function useMmsForm<TFieldValues extends FieldValues = FieldValues>({
 
     // Normalize any loaded data to prevent uncontrolled warnings
     Object.values(fields).forEach((tabFields) => {
-      (tabFields || []).forEach((f) => {
-        if (f.enabled) {
-          const val = initial[f.key];
-          if (val === undefined || (val === null && getDefaultFieldValue(f) !== null)) {
-            initial[f.key] = getDefaultFieldValue(f);
+      (tabFields || []).forEach((field) => {
+        if (field.enabled) {
+          const fieldValue = initial[field.key];
+          if (fieldValue === undefined || (fieldValue === null && getDefaultFieldValue(field) !== null)) {
+            initial[field.key] = getDefaultFieldValue(field);
           }
         }
       });
@@ -265,4 +265,3 @@ export function useMmsForm<TFieldValues extends FieldValues = FieldValues>({
     handleSave,
   };
 }
-

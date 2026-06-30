@@ -64,8 +64,8 @@ export function UsersList({
         if (roleFilter !== 'all' && u.role !== roleFilter) return false;
         if (statusFilter !== 'all' && u.status !== statusFilter) return false;
         if (search) {
-          const q = search.toLowerCase();
-          if (!u.name.toLowerCase().includes(q) && !u.email.toLowerCase().includes(q)) return false;
+          const searchQuery = search.toLowerCase();
+          if (!u.name.toLowerCase().includes(searchQuery) && !u.email.toLowerCase().includes(searchQuery)) return false;
         }
         return true;
       }),

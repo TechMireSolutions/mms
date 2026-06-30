@@ -41,8 +41,8 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
       if (dateFrom && l.ts < dateFrom) return false;
       if (dateTo && l.ts > `${dateTo}T23:59:59`) return false;
       if (search) {
-        const q = search.toLowerCase();
-        if (!userNameFor(l).toLowerCase().includes(q) && !l.detail.toLowerCase().includes(q)) return false;
+        const searchQuery = search.toLowerCase();
+        if (!userNameFor(l).toLowerCase().includes(searchQuery) && !l.detail.toLowerCase().includes(searchQuery)) return false;
       }
       return true;
     });

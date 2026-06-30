@@ -103,7 +103,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
     e.preventDefault();
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, CODE_LENGTH);
     const next = [...code];
-    pasted.split("").forEach((c: string, idx: number) => { next[idx] = c; });
+    pasted.split("").forEach((digit: string, digitIndex: number) => { next[digitIndex] = digit; });
     setCode(next);
     inputs.current[Math.min(pasted.length, CODE_LENGTH - 1)]?.focus();
   };

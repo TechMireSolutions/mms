@@ -163,7 +163,7 @@ export default function ContactCards({
           </span>
         );
       case "socials_platform": {
-        const platforms = (item.socials || []).map((s) => s.platform).filter(Boolean);
+        const platforms = (item.socials || []).map((social) => social.platform).filter(Boolean);
         return platforms.length > 0 ? (
           <span className="truncate">{platforms.join(", ")}</span>
         ) : (
@@ -171,7 +171,7 @@ export default function ContactCards({
         );
       }
       case "socials_url": {
-        const urls = (item.socials || []).map((s) => s.url).filter(Boolean);
+        const urls = (item.socials || []).map((social) => social.url).filter(Boolean);
         return urls.length > 0 ? (
           <span className="truncate" title={urls.join(", ")}>{urls.join(", ")}</span>
         ) : (
