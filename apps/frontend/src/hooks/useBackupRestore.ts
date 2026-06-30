@@ -95,8 +95,8 @@ export function useBackupRestore({
   const storagePrefix = getWorkspaceLocalStoragePrefix();
   const tenantLabel = branding.madrasaName?.trim() || subdomain || 'workspace';
 
-  const persistHistory = useCallback((next: WorkspaceBackupRecord[]): void => {
-    saveCollection('backups', next);
+  const persistHistory = useCallback((backupHistory: WorkspaceBackupRecord[]): void => {
+    saveCollection('backups', backupHistory);
   }, []);
 
   const errorDescription = useCallback(

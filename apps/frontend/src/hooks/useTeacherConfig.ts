@@ -57,8 +57,8 @@ export function useTeacherConfig() {
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
   }, [reloadTeacherConfig]);
 
-  const updateSettings = useCallback((next: TeachersSettings) => {
-    const merged = mergeTeacherSettings(next);
+  const updateSettings = useCallback((settingsDraft: TeachersSettings) => {
+    const merged = mergeTeacherSettings(settingsDraft);
     saveObject(TEACHERS_MODULE_CONTRACT.settingsObjectKey, merged);
     setSettings(merged);
   }, []);

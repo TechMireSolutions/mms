@@ -54,8 +54,8 @@ export function useAccountingConfig() {
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
   }, [reloadAccountingConfig]);
 
-  const updateSettings = useCallback((next: AccountingSettings) => {
-    const merged = mergeAccountingSettings(next);
+  const updateSettings = useCallback((settingsDraft: AccountingSettings) => {
+    const merged = mergeAccountingSettings(settingsDraft);
     saveObject(ACCOUNTING_MODULE_CONTRACT.settingsObjectKey, merged);
     setSettings(merged);
   }, []);
@@ -77,4 +77,3 @@ export function useAccountingConfig() {
     updateSettings,
   };
 }
-

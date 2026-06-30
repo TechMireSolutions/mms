@@ -64,8 +64,8 @@ export function useAttendanceConfig() {
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
   }, [reloadAttendanceConfig]);
 
-  const updateSettings = useCallback((next: AttendanceModuleSettings) => {
-    const merged = mergeAttendanceSettings(next);
+  const updateSettings = useCallback((settingsDraft: AttendanceModuleSettings) => {
+    const merged = mergeAttendanceSettings(settingsDraft);
     saveObject(ATTENDANCE_MODULE_CONTRACT.settingsObjectKey, merged);
     setSettings(merged);
   }, []);
@@ -87,4 +87,3 @@ export function useAttendanceConfig() {
     updateSettings,
   };
 }
-

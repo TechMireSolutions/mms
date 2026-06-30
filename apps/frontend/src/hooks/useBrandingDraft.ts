@@ -42,7 +42,7 @@ export interface UseBrandingDraftResult {
   upd: <K extends keyof BrandingSettings>(field: K, value: BrandingSettings[K]) => void;
   handleSave: (toast?: UseBrandingDraftSaveToast, options?: UseBrandingDraftSaveOptions) => Promise<boolean>;
   handleSaveIdentity: (toast?: UseBrandingDraftSaveToast) => Promise<boolean>;
-  applyPersisted: (next: BrandingSettings) => void;
+  applyPersisted: (brandingSettings: BrandingSettings) => void;
 }
 
 function loadPersistedBranding(): BrandingSettings {
@@ -78,9 +78,9 @@ export function useBrandingDraft({
   useEffect(() => {
     const sync = (): void => {
       if (isDirty) return;
-      const next = loadPersistedBranding();
-      setBaseline(next);
-      setData(next);
+      const persistedBranding = loadPersistedBranding();
+      setBaseline(persistedBranding);
+      setData(persistedBranding);
       clearSaved();
     };
     window.addEventListener('local-database-update', sync);
@@ -92,8 +92,8 @@ export function useBrandingDraft({
     previewBrandingSettings(buildBrandingPreviewPatch(merged, trackKeys));
   }, [data, trackKeys]);
 
-  const applyPersisted = useCallback((next: BrandingSettings): void => {
-    const merged = mergeBrandingSettings(next);
+  const applyPersisted = useCallback((brandingSettings: BrandingSettings): void => {
+    const merged = mergeBrandingSettings(brandingSettings);
     setBaseline(merged);
     setData(merged);
     clearBrandingSettingsPreview();

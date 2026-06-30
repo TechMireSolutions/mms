@@ -54,8 +54,8 @@ export function useFinanceConfig() {
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
   }, [reloadFinanceConfig]);
 
-  const updateSettings = useCallback((next: FinanceSettings) => {
-    const merged = mergeFinanceSettings(next);
+  const updateSettings = useCallback((settingsDraft: FinanceSettings) => {
+    const merged = mergeFinanceSettings(settingsDraft);
     saveObject(FINANCE_MODULE_CONTRACT.settingsObjectKey, merged);
     setSettings(merged);
   }, []);
@@ -77,4 +77,3 @@ export function useFinanceConfig() {
     updateSettings,
   };
 }
-

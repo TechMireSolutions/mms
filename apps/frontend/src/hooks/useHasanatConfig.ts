@@ -54,8 +54,8 @@ export function useHasanatConfig() {
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
   }, [reloadHasanatConfig]);
 
-  const updateSettings = useCallback((next: HasanatSettings) => {
-    const merged = mergeHasanatSettings(next);
+  const updateSettings = useCallback((settingsDraft: HasanatSettings) => {
+    const merged = mergeHasanatSettings(settingsDraft);
     saveObject(HASANAT_MODULE_CONTRACT.settingsObjectKey, merged);
     setSettings(merged);
   }, []);
@@ -77,4 +77,3 @@ export function useHasanatConfig() {
     updateSettings,
   };
 }
-

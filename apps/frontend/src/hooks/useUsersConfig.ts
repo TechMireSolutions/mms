@@ -54,8 +54,8 @@ export function useUsersConfig() {
     return () => window.removeEventListener('local-database-update', handleLocalDatabaseUpdate);
   }, [reloadUsersConfig]);
 
-  const updateSettings = useCallback((next: UsersSettings) => {
-    const merged = mergeUsersSettings(next);
+  const updateSettings = useCallback((settingsDraft: UsersSettings) => {
+    const merged = mergeUsersSettings(settingsDraft);
     saveObject(USERS_MODULE_CONTRACT.settingsObjectKey, merged);
     setSettings(merged);
   }, []);
@@ -77,4 +77,3 @@ export function useUsersConfig() {
     updateSettings,
   };
 }
-

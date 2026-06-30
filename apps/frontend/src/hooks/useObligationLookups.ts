@@ -6,12 +6,11 @@ import type { Contact, WorkspaceUser } from "@mms/shared";
 export function useMergedObligationContacts(
   ids: (string | number | null | undefined)[],
 ): Contact[] {
-  const { data: live = [] } = useContactsByIds(ids);
-  return live;
+  const { data: linkedContacts = [] } = useContactsByIds(ids);
+  return linkedContacts;
 }
 
 /** Live users merged with obligation demo fixtures (deduped by id). */
 export function useMergedObligationUsers(): WorkspaceUser[] {
   return useLiveCollection<WorkspaceUser>("users");
 }
-

@@ -292,10 +292,10 @@ export function useContactsPageState({
   }, [canWrite]);
 
   const handleSave = useCallback(
-    (data: Contact) => {
+    (contactDraft: Contact) => {
       if (!canWrite) return;
       const isCreatingContact = !editContact;
-      const payload = editContact ? { ...editContact, ...data } : data;
+      const payload = editContact ? { ...editContact, ...contactDraft } : contactDraft;
       void saveContact(payload, isCreatingContact)
         .then(() => {
           setShowForm(false);

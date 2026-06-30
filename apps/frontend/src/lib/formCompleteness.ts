@@ -28,7 +28,7 @@ function ratio(filled: number, total: number): number {
  * Scores enabled registry fields against a draft record (0–100).
  */
 export function calculateModuleFieldsCompleteness(
-  data: Record<string, unknown>,
+  draftRecord: Record<string, unknown>,
   orderedFields: readonly ModuleFieldDef[],
   fieldsConfig: Record<string, { enabled?: boolean } | undefined>,
   options?: {
@@ -47,7 +47,7 @@ export function calculateModuleFieldsCompleteness(
     if (fieldsConfig[field.id]?.enabled === false) continue;
     if (field.type && skipTypes.has(field.type)) continue;
     total += 1;
-    const value = options?.resolveValue ? options.resolveValue(field.id) : data[field.id];
+    const value = options?.resolveValue ? options.resolveValue(field.id) : draftRecord[field.id];
     if (hasFieldValue(value)) filled += 1;
   }
 
@@ -58,7 +58,7 @@ export function calculateModuleFieldsCompleteness(
  * Scores explicit keyed units (e.g. contact pickers) against a draft record.
  */
 export function calculateKeyedUnitsCompleteness(
-  data: Record<string, unknown>,
+  draftRecord: Record<string, unknown>,
   units: readonly { key: string; enabled?: boolean }[],
 ): number {
   let total = 0;
@@ -66,7 +66,7 @@ export function calculateKeyedUnitsCompleteness(
   for (const unit of units) {
     if (unit.enabled === false) continue;
     total += 1;
-    if (hasFieldValue(data[unit.key])) filled += 1;
+    if (hasFieldValue(draftRecord[unit.key])) filled += 1;
   }
   return ratio(filled, total);
 }

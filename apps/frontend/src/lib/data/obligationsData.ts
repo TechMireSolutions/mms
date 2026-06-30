@@ -36,6 +36,6 @@ export function generateReceiptNo(existingCollections: ObligationCollection[]): 
   const nums = existingCollections
     .map((c) => parseInt(c.receipt_no.replace("OBL-", ""), 10))
     .filter((n) => !isNaN(n));
-  const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-  return "OBL-" + String(next).padStart(5, "0");
+  const nextReceiptNumber = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  return "OBL-" + String(nextReceiptNumber).padStart(5, "0");
 }

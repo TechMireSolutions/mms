@@ -699,7 +699,7 @@ export function useContactValidation() {
   const viewerRole = role ?? '';
 
   return useCallback(
-    (data: unknown): ValidationError[] => {
+    (contactDraft: unknown): ValidationError[] => {
       const schema = buildDynamicContactSchema(
         fieldConfig,
         enabledTabIds,
@@ -708,11 +708,11 @@ export function useContactValidation() {
         settings.language,
         viewerRole,
       );
-      const result = schema.safeParse(data);
+      const result = schema.safeParse(contactDraft);
       if (result.success) {
         return [];
       }
-      return formatZodIssues(result.error, data, fields);
+      return formatZodIssues(result.error, contactDraft, fields);
     },
     [fieldConfig, enabledTabIds, requiredTabIds, fields, settings.language, viewerRole],
   );

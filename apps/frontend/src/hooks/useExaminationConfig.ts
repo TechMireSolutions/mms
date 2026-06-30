@@ -54,8 +54,8 @@ export function useExaminationConfig() {
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
   }, [reloadExaminationsConfig]);
 
-  const updateSettings = useCallback((next: ExaminationsSettings) => {
-    const merged = mergeExaminationsSettings(next);
+  const updateSettings = useCallback((settingsDraft: ExaminationsSettings) => {
+    const merged = mergeExaminationsSettings(settingsDraft);
     saveObject(EXAMINATIONS_MODULE_CONTRACT.settingsObjectKey, merged);
     setSettings(merged);
   }, []);
@@ -77,4 +77,3 @@ export function useExaminationConfig() {
     updateSettings,
   };
 }
-

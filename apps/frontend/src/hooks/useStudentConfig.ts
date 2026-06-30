@@ -55,9 +55,9 @@ export function useStudentConfig() {
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
   }, [reloadStudentConfig]);
 
-  const updateSettings = useCallback((next: StudentsSettings) => {
-    saveStudentSettings(next);
-    setSettings(next);
+  const updateSettings = useCallback((settingsDraft: StudentsSettings) => {
+    saveStudentSettings(settingsDraft);
+    setSettings(settingsDraft);
   }, []);
 
   return {
@@ -69,4 +69,3 @@ export function useStudentConfig() {
     updateSettings,
   };
 }
-

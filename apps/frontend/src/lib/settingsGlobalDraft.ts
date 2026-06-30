@@ -36,16 +36,16 @@ export function previewGlobalSettingsDraft(draft: GlobalSettings): Partial<Globa
   };
 }
 
-export function isGlobalPreferencesDirty(data: GlobalSettings, baseline: GlobalSettings): boolean {
+export function isGlobalPreferencesDirty(globalSettings: GlobalSettings, baseline: GlobalSettings): boolean {
   return (
-    JSON.stringify(globalSettingsPreviewPatch(data)) !==
+    JSON.stringify(globalSettingsPreviewPatch(globalSettings)) !==
     JSON.stringify(globalSettingsPreviewPatch(baseline))
   );
 }
 
-export function isEnabledModulesDraftDirty(data: GlobalSettings, baseline: GlobalSettings): boolean {
+export function isEnabledModulesDraftDirty(globalSettings: GlobalSettings, baseline: GlobalSettings): boolean {
   return (
-    JSON.stringify(normalizeEnabledModules(data.enabledModules)) !==
+    JSON.stringify(normalizeEnabledModules(globalSettings.enabledModules)) !==
     JSON.stringify(normalizeEnabledModules(baseline.enabledModules))
   );
 }

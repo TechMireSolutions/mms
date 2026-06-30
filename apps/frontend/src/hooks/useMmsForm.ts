@@ -21,7 +21,7 @@ export interface UseMmsFormReturn<TFieldValues extends FieldValues = FieldValues
   setSaving: (saving: boolean) => void;
   errors: ValidationError[];
   errorSummary: string | undefined;
-  handleSave: (onSubmit: (data: TFieldValues) => Promise<void> | void) => (e?: React.BaseSyntheticEvent) => Promise<void>;
+  handleSave: (onSubmit: (formValues: TFieldValues) => Promise<void> | void) => (e?: React.BaseSyntheticEvent) => Promise<void>;
 }
 
 /**
@@ -52,8 +52,8 @@ export function useMmsForm<TFieldValues extends FieldValues = FieldValues>({
     });
 
     if (initialData) {
-      Object.entries(initialData).forEach(([key, val]) => {
-        initial[key] = val;
+      Object.entries(initialData).forEach(([key, fieldValue]) => {
+        initial[key] = fieldValue;
       });
     }
 
@@ -173,8 +173,8 @@ export function useMmsForm<TFieldValues extends FieldValues = FieldValues>({
         return;
       }
 
-      Object.entries(obj).forEach(([key, val]) => {
-        traverse(val, [...path, key]);
+      Object.entries(obj).forEach(([key, fieldValue]) => {
+        traverse(fieldValue, [...path, key]);
       });
     };
 
@@ -186,11 +186,11 @@ export function useMmsForm<TFieldValues extends FieldValues = FieldValues>({
     return errors.length > 0 ? errors[0].message : undefined;
   }, [errors]);
 
-  const handleSave = useCallback((onSubmit: (data: TFieldValues) => Promise<void> | void) => {
-    const onFormSubmit = async (data: TFieldValues) => {
+  const handleSave = useCallback((onSubmit: (formValues: TFieldValues) => Promise<void> | void) => {
+    const onFormSubmit = async (formValues: TFieldValues) => {
       setSaving(true);
       try {
-        await onSubmit(data);
+        await onSubmit(formValues);
       } catch (err: any) {
         notify.error(t('settings.serverSaveFailed'), { description: err.message });
       } finally {

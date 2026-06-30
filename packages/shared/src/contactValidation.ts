@@ -72,17 +72,17 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
       break;
     }
     case "currency": {
-      let currencySchema = z.string().refine((val) => {
-        if (!val) return true;
-        return !isNaN(Number(val));
+      let currencySchema = z.string().refine((currencyValue) => {
+        if (!currencyValue) return true;
+        return !isNaN(Number(currencyValue));
       }, {
         message: `${fieldDefinition.label} must be a valid numeric string.`,
       });
 
       if (fieldDefinition.precision !== undefined) {
-        currencySchema = currencySchema.refine((val) => {
-          if (!val) return true;
-          const decimals = val.split('.')[1] ?? '';
+        currencySchema = currencySchema.refine((currencyValue) => {
+          if (!currencyValue) return true;
+          const decimals = currencyValue.split('.')[1] ?? '';
           return decimals.length <= fieldDefinition.precision!;
         }, {
           message: `Precision exceeded. Max allowed is ${fieldDefinition.precision} decimal places.`,
@@ -311,11 +311,12 @@ export interface ValidationError {
  * Translates Zod validation errors into a human-readable list of structured error objects.
  *
  * @param {z.ZodError} error - The Zod validation error.
- * @param {unknown} data - The input data being validated.
+ * @param {unknown} submittedValue - The input value being validated.
  * @param {Record<string, FieldDefinition[]>} fields - Custom fields by tab to map top-level errors.
  * @returns {ValidationError[]} An array of validation errors.
  */
-export function formatZodIssues(error: z.ZodError, data: unknown, fields: Record<string, FieldDefinition[]>): ValidationError[] {
+export function formatZodIssues(error: z.ZodError, submittedValue: unknown, fields: Record<string, FieldDefinition[]>): ValidationError[] {
+  void submittedValue;
   const errors: ValidationError[] = [];
   error.issues.forEach((issue) => {
     const path = issue.path;
@@ -425,5 +426,3 @@ export function getDefaultModuleFieldValue(field: { id: string; type?: string; d
     label: "",
   });
 }
-
-

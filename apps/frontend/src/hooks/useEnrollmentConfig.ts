@@ -54,8 +54,8 @@ export function useEnrollmentConfig() {
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
   }, [reloadEnrollmentConfig]);
 
-  const updateSettings = useCallback((next: EnrollmentsSettings) => {
-    const merged = mergeEnrollmentsSettings(next);
+  const updateSettings = useCallback((settingsDraft: EnrollmentsSettings) => {
+    const merged = mergeEnrollmentsSettings(settingsDraft);
     saveObject(ENROLLMENTS_MODULE_CONTRACT.settingsObjectKey, merged);
     setSettings(merged);
   }, []);
@@ -77,4 +77,3 @@ export function useEnrollmentConfig() {
     updateSettings,
   };
 }
-

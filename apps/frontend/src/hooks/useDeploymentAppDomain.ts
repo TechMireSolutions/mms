@@ -18,12 +18,12 @@ export function useDeploymentAppDomain(): string {
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const fallback = resolveAppDomainForRequest(hostname, env.appDomain);
 
-  const { data } = useQuery({
+  const { data: appDomain } = useQuery({
     queryKey: DEPLOYMENT_CONFIG_KEY,
     queryFn: fetchDeploymentAppDomain,
     staleTime: 5 * 60_000,
     retry: 1,
   });
 
-  return data ?? fallback;
+  return appDomain ?? fallback;
 }

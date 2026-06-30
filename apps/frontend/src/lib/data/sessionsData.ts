@@ -104,10 +104,10 @@ export type Session = z.infer<typeof SessionSchema>;
 
 export const SESSION_TYPES = ["Hifz", "Qaidah", "Tajweed", "Islamic Studies", "Arabic", "Other"] as const;
 
-export function validateSessions(data: unknown): Session[] {
-  if (!Array.isArray(data)) return [];
+export function validateSessions(sessionInput: unknown): Session[] {
+  if (!Array.isArray(sessionInput)) return [];
   const valid: Session[] = [];
-  for (const item of data) {
+  for (const item of sessionInput) {
     const parsed = SessionSchema.safeParse(item);
     if (parsed.success) valid.push(parsed.data);
   }

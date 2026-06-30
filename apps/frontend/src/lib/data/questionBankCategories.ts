@@ -22,10 +22,10 @@ export function persistQuestionCategory(category: QuestionCategory): QuestionCat
     getObject<QuestionBankSettings>(SETTINGS_KEY, DEFAULT_QUESTION_BANK_SETTINGS),
   );
   const existingCategoryIndex = current.categories.findIndex((existingCategory) => existingCategory.id === category.id);
-  const next =
+  const updatedCategories =
     existingCategoryIndex >= 0
       ? current.categories.map((existingCategory, categoryIndex) => (categoryIndex === existingCategoryIndex ? category : existingCategory))
       : [...current.categories, category];
-  saveObject(SETTINGS_KEY, { ...current, categories: next });
-  return next;
+  saveObject(SETTINGS_KEY, { ...current, categories: updatedCategories });
+  return updatedCategories;
 }

@@ -29,20 +29,20 @@ export function useDashboardConfig() {
     };
   }, [reloadConfig]);
 
-  const updateCustomWidgets = useCallback((next: CustomWidget[]) => {
-    saveObject(DASHBOARD_WIDGETS_KEY, next);
-    setCustomWidgets(next);
+  const updateCustomWidgets = useCallback((customWidgetsDraft: CustomWidget[]) => {
+    saveObject(DASHBOARD_WIDGETS_KEY, customWidgetsDraft);
+    setCustomWidgets(customWidgetsDraft);
     window.dispatchEvent(new Event('local-database-update'));
   }, []);
 
   const toggleCardVisibility = useCallback((cardId: string) => {
-    setDisabledCardIds((prev) => {
-      const next = prev.includes(cardId)
-        ? prev.filter((id) => id !== cardId)
-        : [...prev, cardId];
-      saveObject(DASHBOARD_DISABLED_CARDS_KEY, next);
+    setDisabledCardIds((currentDisabledCardIds) => {
+      const disabledCardIds = currentDisabledCardIds.includes(cardId)
+        ? currentDisabledCardIds.filter((id) => id !== cardId)
+        : [...currentDisabledCardIds, cardId];
+      saveObject(DASHBOARD_DISABLED_CARDS_KEY, disabledCardIds);
       window.dispatchEvent(new Event('local-database-update'));
-      return next;
+      return disabledCardIds;
     });
   }, []);
 

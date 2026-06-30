@@ -35,7 +35,7 @@ export interface UseGlobalSettingsDraftResult {
   upd: <K extends keyof GlobalSettings>(field: K, value: GlobalSettings[K]) => void;
   handleSaveGlobal: (toast?: UseGlobalSettingsDraftSaveToast) => Promise<boolean>;
   handleSaveModules: (toast?: UseGlobalSettingsDraftSaveToast) => Promise<boolean>;
-  applyPersisted: (next: GlobalSettings) => void;
+  applyPersisted: (globalSettings: GlobalSettings) => void;
   clearSaved: () => void;
 }
 
@@ -63,9 +63,9 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
   useEffect(() => {
     const sync = (): void => {
       if (isDirty) return;
-      const next = loadPersistedGlobal();
-      setBaseline(next);
-      setData(next);
+      const persistedGlobalSettings = loadPersistedGlobal();
+      setBaseline(persistedGlobalSettings);
+      setData(persistedGlobalSettings);
       clearSaved();
     };
     window.addEventListener('local-database-update', sync);
@@ -77,8 +77,8 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
     applyDocumentLanguage(data.language);
   }, [data]);
 
-  const applyPersisted = useCallback((next: GlobalSettings): void => {
-    const merged = mergeGlobalSettings(next);
+  const applyPersisted = useCallback((globalSettings: GlobalSettings): void => {
+    const merged = mergeGlobalSettings(globalSettings);
     setBaseline(merged);
     setData(merged);
     clearGlobalSettingsPreview();

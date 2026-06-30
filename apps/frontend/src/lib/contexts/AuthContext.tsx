@@ -25,7 +25,7 @@ export interface AuthContextType {
   navigateToLogin: () => void;
   checkUserAuth: (options?: { force?: boolean }) => Promise<void>;
   checkAppState: () => Promise<void>;
-  onboard: (data: {
+  onboard: (onboardingPayload: {
     madrasaName: string;
     tagline: string;
     adminName: string;
@@ -201,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const onboard = async (data: {
+  const onboard = async (onboardingPayload: {
     madrasaName: string;
     tagline: string;
     adminName: string;
@@ -219,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
     return apiJson<OnboardResult>('/api/auth/onboard', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(onboardingPayload),
     });
   };
 

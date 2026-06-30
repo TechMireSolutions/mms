@@ -64,8 +64,8 @@ export function useSessionConfig() {
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
   }, [reloadSessionConfig]);
 
-  const updateSettings = useCallback((next: SessionsSettings) => {
-    const merged = mergeSessionSettings(next);
+  const updateSettings = useCallback((settingsDraft: SessionsSettings) => {
+    const merged = mergeSessionSettings(settingsDraft);
     saveObject(SESSIONS_MODULE_CONTRACT.settingsObjectKey, merged);
     setSettings(merged);
   }, []);
@@ -88,4 +88,3 @@ export function useSessionConfig() {
     updateSettings,
   };
 }
-

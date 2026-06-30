@@ -33,7 +33,7 @@ export interface QuestionBankConfig {
   difficultyLabel: (difficultyId: string) => string;
   questionLanguageLabel: (languageCode: string) => string;
   refresh: () => void;
-  updateSettings: (next: QuestionBankSettings) => void;
+  updateSettings: (settingsDraft: QuestionBankSettings) => void;
 }
 
 export function useQuestionBankConfig(
@@ -59,8 +59,8 @@ export function useQuestionBankConfig(
     return () => window.removeEventListener('local-database-update', refresh);
   }, [refresh]);
 
-  const updateSettings = useCallback((next: QuestionBankSettings) => {
-    const merged = normalizeQuestionBankSettings(next);
+  const updateSettings = useCallback((settingsDraft: QuestionBankSettings) => {
+    const merged = normalizeQuestionBankSettings(settingsDraft);
     saveObject('question_bank_settings', merged);
     setSettings(merged);
   }, []);
@@ -148,4 +148,3 @@ export function useQuestionBankConfig(
     updateSettings,
   };
 }
-

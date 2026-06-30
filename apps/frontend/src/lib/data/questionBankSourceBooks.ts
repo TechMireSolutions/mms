@@ -23,10 +23,10 @@ export function persistQuestionSourceBook(book: QuestionSourceBook): QuestionSou
   );
   const exists = current.sourceBooks?.findIndex((entry) => entry.id === book.id) ?? -1;
   const books = current.sourceBooks ?? [];
-  const next =
+  const updatedSourceBooks =
     exists >= 0 ? books.map((entry, i) => (i === exists ? book : entry)) : [...books, book];
-  saveObject(SETTINGS_KEY, { ...current, sourceBooks: next });
-  return next;
+  saveObject(SETTINGS_KEY, { ...current, sourceBooks: updatedSourceBooks });
+  return updatedSourceBooks;
 }
 
 /** Removes a source book from the registry. */
@@ -34,7 +34,7 @@ export function removeQuestionSourceBook(bookId: string): QuestionSourceBook[] {
   const current = normalizeQuestionBankSettings(
     getObject<QuestionBankSettings>(SETTINGS_KEY, DEFAULT_QUESTION_BANK_SETTINGS),
   );
-  const next = (current.sourceBooks ?? []).filter((entry) => entry.id !== bookId);
-  saveObject(SETTINGS_KEY, { ...current, sourceBooks: next });
-  return next;
+  const updatedSourceBooks = (current.sourceBooks ?? []).filter((entry) => entry.id !== bookId);
+  saveObject(SETTINGS_KEY, { ...current, sourceBooks: updatedSourceBooks });
+  return updatedSourceBooks;
 }

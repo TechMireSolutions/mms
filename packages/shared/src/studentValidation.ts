@@ -25,7 +25,7 @@ export function buildDynamicStudentSchema(
 
   schemaObject.contactId = z.union([z.string(), z.number()], {
     error: translateApp("students.form.contactRequired" as AppTranslationKey, language) || "Contact is required.",
-  }).refine(val => val !== null && val !== undefined && val !== "", {
+  }).refine((contactIdValue) => contactIdValue !== null && contactIdValue !== undefined && contactIdValue !== "", {
     message: translateApp("students.form.contactRequired" as AppTranslationKey, language) || "Contact is required.",
   });
 
@@ -63,11 +63,11 @@ export function buildDynamicStudentSchema(
         if (field.required) {
           schemaObject[targetKey] = linkSchema;
         } else {
-          schemaObject[targetKey] = z.preprocess((val) => {
-            if (val === "" || val === null || val === undefined) {
+          schemaObject[targetKey] = z.preprocess((contactIdValue) => {
+            if (contactIdValue === "" || contactIdValue === null || contactIdValue === undefined) {
               return undefined;
             }
-            return val;
+            return contactIdValue;
           }, linkSchema.optional());
         }
       } else {
@@ -79,8 +79,8 @@ export function buildDynamicStudentSchema(
   let baseSchema = z.object(schemaObject).passthrough();
 
   if (settings.requireGuardian) {
-    baseSchema = baseSchema.refine((data: any) => {
-      return data.fatherContactId || data.motherContactId || data.guardianContactId;
+    baseSchema = baseSchema.refine((studentDraft: any) => {
+      return studentDraft.fatherContactId || studentDraft.motherContactId || studentDraft.guardianContactId;
     }, {
       message: translateApp("students.form.guardianRequired" as AppTranslationKey, language) || "At least one guardian (father, mother, or other guardian) must be linked.",
       path: ["guardianContactId"], // Highlight guardian select if missing
