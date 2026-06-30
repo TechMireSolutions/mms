@@ -80,16 +80,16 @@ export function useAccountingJournalColumnLayout() {
   );
 
   const updateUserColumnLayout = useCallback(
-    (cols: ModuleColumnRegistryEntry[]) => {
+    (columnRegistry: ModuleColumnRegistryEntry[]) => {
       if (!userId) return;
-      saveModuleColumnRegistry(storageModuleId, userId, cols);
-      const prefs: ModuleColumnPref[] = cols.map(({ key, enabled, order }) => ({
+      saveModuleColumnRegistry(storageModuleId, userId, columnRegistry);
+      const preferences: ModuleColumnPref[] = columnRegistry.map(({ key, enabled, order }) => ({
         key,
         enabled,
         order,
       }));
-      setUserOverlay(prefs);
-      saveColumnPrefs(prefs);
+      setUserOverlay(preferences);
+      saveColumnPrefs(preferences);
     },
     [userId, saveColumnPrefs, storageModuleId],
   );

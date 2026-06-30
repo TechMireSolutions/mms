@@ -285,7 +285,7 @@ export function useContactsPageState({
     [canWrite],
   );
 
-  const handleNew = useCallback(() => {
+  const handleCreateContact = useCallback(() => {
     if (!canWrite) return;
     setEditContact(null);
     setShowForm(true);
@@ -294,9 +294,9 @@ export function useContactsPageState({
   const handleSave = useCallback(
     (data: Contact) => {
       if (!canWrite) return;
-      const isNew = !editContact;
+      const isCreatingContact = !editContact;
       const payload = editContact ? { ...editContact, ...data } : data;
-      void saveContact(payload, isNew)
+      void saveContact(payload, isCreatingContact)
         .then(() => {
           setShowForm(false);
           setEditContact(null);
@@ -508,7 +508,7 @@ export function useContactsPageState({
     handleSelect,
     handleSelectAll,
     handleEdit,
-    handleNew,
+    handleNew: handleCreateContact,
     handleSave,
     handleDelete,
     confirmSingleDelete,

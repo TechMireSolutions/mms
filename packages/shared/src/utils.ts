@@ -19,12 +19,12 @@ const LOWERCASE_WORDS = new Set([
 
 /**
  * Converts a string to Title Case, keeping minor words lowercase unless they are the first word.
- * @param str - The string to convert.
+ * @param value - The string to convert.
  * @returns The title-cased string, or the original value if it is not a string.
  */
-export function toTitleCase(str: unknown): unknown {
-  if (typeof str !== "string") return str;
-  return str
+export function toTitleCase(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  return value
     .trim()
     .split(/\s+/)
     .map((word, index) => {

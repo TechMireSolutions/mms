@@ -19,9 +19,9 @@ export function SettingsGlobalDraftProvider({
 }
 
 export function useSettingsGlobalDraft(): UseGlobalSettingsDraftResult {
-  const ctx = useContext(SettingsGlobalDraftContext);
-  if (!ctx) {
+  const settingsGlobalDraft = useContext(SettingsGlobalDraftContext);
+  if (!settingsGlobalDraft) {
     throw new Error('useSettingsGlobalDraft must be used within SettingsGlobalDraftProvider');
   }
-  return ctx;
+  return settingsGlobalDraft;
 }

@@ -176,14 +176,14 @@ export async function syncWorkspaceFromBranding(
   await saveCollection(WORKSPACES_COLLECTION, workspaces);
 }
 
-export async function createWorkspace(data: {
+export async function createWorkspace(workspaceInput: {
   subdomain: string;
   madrasaName: string;
   tagline?: string;
   country?: string;
 }): Promise<Workspace> {
   return runInTransaction(async () => {
-    const subdomain = normalizeSubdomainInput(data.subdomain);
+    const subdomain = normalizeSubdomainInput(workspaceInput.subdomain);
     if (!isValidSubdomain(subdomain)) {
       throw Object.assign(new Error('Invalid subdomain. Use 2–63 lowercase letters, numbers, and hyphens.'), {
         statusCode: 400,
@@ -208,9 +208,9 @@ export async function createWorkspace(data: {
     const workspace: Workspace = {
       id: randomBytes(8).toString('hex'),
       subdomain,
-      madrasaName: data.madrasaName,
-      tagline: data.tagline,
-      country: data.country,
+      madrasaName: workspaceInput.madrasaName,
+      tagline: workspaceInput.tagline,
+      country: workspaceInput.country,
       createdAt: new Date().toISOString(),
       enabled: true,
     };

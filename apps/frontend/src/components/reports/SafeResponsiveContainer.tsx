@@ -16,11 +16,11 @@ export default function SafeResponsiveContainer({
   children,
   ...props
 }: SafeResponsiveContainerProps): React.JSX.Element {
-  const ref = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
   useLayoutEffect(() => {
-    const node = ref.current;
+    const node = containerRef.current;
     if (!node) return;
 
     const update = () => {
@@ -45,7 +45,7 @@ export default function SafeResponsiveContainer({
   };
 
   return (
-    <div ref={ref} style={wrapperStyle}>
+    <div ref={containerRef} style={wrapperStyle}>
       {size.width > 0 && size.height > 0 ? (
         <ResponsiveContainer
           width="100%"

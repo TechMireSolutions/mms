@@ -5,10 +5,10 @@ import { apiJson } from '@/lib/apiClient';
 export const PUBLIC_BRANDING_QUERY_KEY = ['workspace', 'public-branding'] as const;
 
 async function fetchPublicBranding(): Promise<PublicBranding | null> {
-  const data = await apiJson<{ branding?: PublicBranding }>('/api/workspace/public-branding');
-  if (data.branding) {
-    void import('@/lib/db').then(({ cachePublicBranding }) => cachePublicBranding(data.branding!));
-    return data.branding;
+  const brandingResponse = await apiJson<{ branding?: PublicBranding }>('/api/workspace/public-branding');
+  if (brandingResponse.branding) {
+    void import('@/lib/db').then(({ cachePublicBranding }) => cachePublicBranding(brandingResponse.branding!));
+    return brandingResponse.branding;
   }
   return null;
 }

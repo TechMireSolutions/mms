@@ -76,10 +76,10 @@ export default function Obligations() {
     setFilteredCount(collections.length);
   }, [collections.length]);
 
-  const handleSaveCollection = (data: ObligationCollection) => {
-    const exists = collections.find((c) => c.id === data.id);
+  const handleSaveCollection = (collectionPayload: ObligationCollection) => {
+    const exists = collections.find((collection) => collection.id === collectionPayload.id);
     replaceCollections.mutate(
-      exists ? collections.map((c) => (c.id === data.id ? data : c)) : [data, ...collections],
+      exists ? collections.map((collection) => (collection.id === collectionPayload.id ? collectionPayload : collection)) : [collectionPayload, ...collections],
     );
     setShowForm(false);
   };

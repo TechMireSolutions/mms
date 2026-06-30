@@ -141,16 +141,16 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   };
 
   const deleteEl = (id: string) => {
-    commitUpdate((els) => els.filter((e) => e.id !== id));
+    commitUpdate((templateElements) => templateElements.filter((templateElement) => templateElement.id !== id));
     setSelectedId(null);
   };
 
   const duplicateEl = (id: string) => {
     const templateElement = template.elements.find((element) => element.id === id);
     if (!templateElement) return;
-    const copy: TemplateElement = { ...templateElement, id: newId(), x: templateElement.x + 12, y: templateElement.y + 12, style: { ...templateElement.style } };
-    commitUpdate((elements) => [...elements, copy]);
-    setSelectedId(copy.id);
+    const duplicatedElement: TemplateElement = { ...templateElement, id: newId(), x: templateElement.x + 12, y: templateElement.y + 12, style: { ...templateElement.style } };
+    commitUpdate((elements) => [...elements, duplicatedElement]);
+    setSelectedId(duplicatedElement.id);
   };
 
   const addStaticText = () => {
@@ -198,22 +198,22 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
 
   const onMouseMove = useCallback((e: MouseEvent) => {
     if (dragState.current) {
-      const dx = e.clientX - dragState.current.startX;
-      const dy = e.clientY - dragState.current.startY;
-      updateElements((els) =>
-        els.map((el) => el.id === dragState.current!.id
-          ? { ...el, x: snap(Math.max(0, dragState.current!.origX + dx)), y: snap(Math.max(0, dragState.current!.origY + dy)) }
-          : el
+      const deltaX = e.clientX - dragState.current.startX;
+      const deltaY = e.clientY - dragState.current.startY;
+      updateElements((templateElements) =>
+        templateElements.map((templateElement) => templateElement.id === dragState.current!.id
+          ? { ...templateElement, x: snap(Math.max(0, dragState.current!.origX + deltaX)), y: snap(Math.max(0, dragState.current!.origY + deltaY)) }
+          : templateElement
         )
       );
     }
     if (resizeState.current) {
-      const dx = e.clientX - resizeState.current.startX;
-      const dy = e.clientY - resizeState.current.startY;
-      updateElements((els) =>
-        els.map((el) => el.id === resizeState.current!.id
-          ? { ...el, w: snap(Math.max(20, resizeState.current!.origW + dx)), h: snap(Math.max(8, resizeState.current!.origH + dy)) }
-          : el
+      const deltaX = e.clientX - resizeState.current.startX;
+      const deltaY = e.clientY - resizeState.current.startY;
+      updateElements((templateElements) =>
+        templateElements.map((templateElement) => templateElement.id === resizeState.current!.id
+          ? { ...templateElement, w: snap(Math.max(20, resizeState.current!.origW + deltaX)), h: snap(Math.max(8, resizeState.current!.origH + deltaY)) }
+          : templateElement
         )
       );
     }
@@ -279,16 +279,16 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   });
 
   // ── Render element (draggable) ────────────────────────────────────────────
-  const renderEl = (el: TemplateElement) => {
-    const isSelected = selectedId === el.id;
-    const elementStyle = el.style || {};
+  const renderElement = (templateElement: TemplateElement) => {
+    const isSelected = selectedId === templateElement.id;
+    const elementStyle = templateElement.style || {};
 
     const baseStyle: React.CSSProperties = {
       position: "absolute",
-      left: el.x,
-      top: el.y,
-      width: el.w,
-      height: el.h,
+      left: templateElement.x,
+      top: templateElement.y,
+      width: templateElement.w,
+      height: templateElement.h,
       fontSize: elementStyle.fontSize || 10,
       fontWeight: elementStyle.fontWeight || "normal",
       fontFamily: elementStyle.fontFamily || "inherit",
@@ -306,8 +306,8 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     };
 
     const content = () => {
-      if (el.type === "logo") {
-        const b = (() => {
+      if (templateElement.type === "logo") {
+        const branding = (() => {
           const current = getObject<{logoUrl?: string}>("branding", {});
           if (current && Object.keys(current).length > 0) return current;
           try {
@@ -316,32 +316,32 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
             return {};
           }
         })();
-        return b.logoUrl
-          ? <img src={b.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: elementStyle.objectFit || "contain" }} />
+        return branding.logoUrl
+          ? <img src={branding.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: elementStyle.objectFit || "contain" }} />
           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: printTokens.logoPlaceholderBg, borderRadius: 6, border: `2px dashed ${printTokens.logoPlaceholderBorder}` }}>
               <span style={{ fontSize: 24, fontWeight: "bold", color: printTokens.primary }}>م</span>
             </div>;
       }
-      if (el.type === "divider") {
-        return <div style={{ borderTop: `${el.h || 1}px solid ${elementStyle.color || printTokens.border}`, width: "100%", marginTop: (el.h || 1) / 2 }} />;
+      if (templateElement.type === "divider") {
+        return <div style={{ borderTop: `${templateElement.h || 1}px solid ${elementStyle.color || printTokens.border}`, width: "100%", marginTop: (templateElement.h || 1) / 2 }} />;
       }
-      if (el.type === "field") {
-        return <span style={{ opacity: 0.7, fontStyle: "italic" }}>{el.label}</span>;
+      if (templateElement.type === "field") {
+        return <span style={{ opacity: 0.7, fontStyle: "italic" }}>{templateElement.label}</span>;
       }
-      return <span>{el.label}</span>;
+      return <span>{templateElement.label}</span>;
     };
 
     return (
       <div
-        key={el.id}
+        key={templateElement.id}
         style={baseStyle}
-        onMouseDown={(e) => onMouseDownEl(e, el.id)}
+        onMouseDown={(e) => onMouseDownEl(e, templateElement.id)}
       >
         {content()}
         {/* Resize handle */}
         {isSelected && (
           <div
-            onMouseDown={(e) => onMouseDownResize(e, el.id)}
+            onMouseDown={(e) => onMouseDownResize(e, templateElement.id)}
             style={{
               position: "absolute", bottom: -4, right: -4,
               width: 10, height: 10,
@@ -353,9 +353,9 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         {/* Action strip */}
         {isSelected && (
           <div style={{ position: "absolute", top: -22, left: 0, display: "flex", gap: 2, zIndex: 20 }}>
-            <Button type="button" onClick={(e) => { e.stopPropagation(); duplicateEl(el.id); }}
+            <Button type="button" onClick={(e) => { e.stopPropagation(); duplicateEl(templateElement.id); }}
               style={{ padding: "1px 4px", background: printTokens.primary, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>⧉</Button>
-            <Button type="button" onClick={(e) => { e.stopPropagation(); deleteEl(el.id); }}
+            <Button type="button" onClick={(e) => { e.stopPropagation(); deleteEl(templateElement.id); }}
               style={{ padding: "1px 4px", background: printTokens.destructive, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>✕</Button>
           </div>
         )}
@@ -468,7 +468,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
               </div>
             )}
             {/* Elements */}
-            {template.elements.map(renderEl)}
+            {template.elements.map(renderElement)}
           </div>
         </main>
 

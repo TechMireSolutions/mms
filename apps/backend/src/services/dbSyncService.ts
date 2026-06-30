@@ -75,8 +75,8 @@ export async function fetchCollection(name: string): Promise<unknown[] | null> {
  * @param {unknown[]} data - The collection documents.
  * @returns {Promise<void>}
  */
-export async function persistCollection(name: string, data: unknown[]): Promise<void> {
-  await dbSaveCollection(name, data);
+export async function persistCollection(name: string, collectionItems: unknown[]): Promise<void> {
+  await dbSaveCollection(name, collectionItems);
 }
 
 /**
@@ -96,8 +96,8 @@ export async function fetchObject(key: string): Promise<unknown | null> {
  * @param {unknown} data - The object value data.
  * @returns {Promise<void>}
  */
-export async function persistObject(key: string, data: unknown): Promise<void> {
-  await dbSaveObject(key, data);
+export async function persistObject(key: string, objectValue: unknown): Promise<void> {
+  await dbSaveObject(key, objectValue);
 }
 
 /** Removes a tenant-scoped object by logical key. */

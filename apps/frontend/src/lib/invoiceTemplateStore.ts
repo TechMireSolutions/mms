@@ -427,8 +427,8 @@ export function resolveField(
     }
     case "representative":  return String(findItem(reps, collection.mujtahid_representative_id)?.name || "");
     case "amount": {
-      const cur = findItem(currencies, collection.currency_id);
-      return `${String(cur?.code || "PKR")} ${parseFloat(String(collection.amount || 0)).toLocaleString()}`;
+      const currency = findItem(currencies, collection.currency_id);
+      return `${String(currency?.code || "PKR")} ${parseFloat(String(collection.amount || 0)).toLocaleString()}`;
     }
     case "currency":        return String(findItem(currencies, collection.currency_id)?.code || "");
     case "payment_mode":    return String(collection.payment_mode || "");

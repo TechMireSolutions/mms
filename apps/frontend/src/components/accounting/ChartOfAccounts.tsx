@@ -13,7 +13,7 @@ import { FormSelect } from "../ui/FormSelect";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   labels: {
     trigger: string;
     title: string;

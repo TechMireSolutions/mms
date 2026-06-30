@@ -75,16 +75,16 @@ export function useSessionColumnLayout() {
   );
 
   const updateUserColumnLayout = useCallback(
-    (cols: ModuleColumnRegistryEntry[]) => {
+    (columnRegistry: ModuleColumnRegistryEntry[]) => {
       if (!userId) return;
-      saveModuleColumnRegistry(SESSIONS_MODULE_CONTRACT.moduleId, userId, cols);
-      const prefs: ModuleColumnPref[] = cols.map(({ key, enabled, order }) => ({
+      saveModuleColumnRegistry(SESSIONS_MODULE_CONTRACT.moduleId, userId, columnRegistry);
+      const preferences: ModuleColumnPref[] = columnRegistry.map(({ key, enabled, order }) => ({
         key,
         enabled,
         order,
       }));
-      setUserOverlay(prefs);
-      saveColumnPrefs(prefs);
+      setUserOverlay(preferences);
+      saveColumnPrefs(preferences);
     },
     [userId, saveColumnPrefs],
   );

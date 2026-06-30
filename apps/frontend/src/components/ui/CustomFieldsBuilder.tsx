@@ -466,7 +466,7 @@ export function CustomFieldsBuilder({
     setDraft(newField());
   };
 
-  const handleSaveNew = (field: CustomFieldConfig): void => {
+  const handleCreateField = (field: CustomFieldConfig): void => {
     onChange([...fields, field]);
     setAdding(false);
     setDraft(null);
@@ -518,7 +518,7 @@ export function CustomFieldsBuilder({
         <FieldEditor
           field={draft}
           existingLabels={existingLabels}
-          onSave={handleSaveNew}
+          onSave={handleCreateField}
           onCancel={() => {
             setAdding(false);
             setDraft(null);

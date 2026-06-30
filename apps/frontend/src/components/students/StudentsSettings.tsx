@@ -24,7 +24,7 @@ interface ToggleProps {
   label: string;
   description?: string;
   value: boolean;
-  onChange: (val: boolean) => void;
+  onChange: (enabled: boolean) => void;
   ariaLabel?: string;
 }
 
@@ -422,8 +422,8 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                       isCoreField={(key: string) => INITIAL_STUDENT_FIELD_SEED[tabId]?.some((f) => f.key === key) ?? false}
                       defaultValues={tabFieldDefaultValues[tabId]}
                       permissions={tabFieldPermissions[tabId]}
-                      onChangeDefaults={(fieldId: string, val: unknown) => {
-                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                      onChangeDefaults={(fieldId: string, fieldValue: unknown) => {
+                        setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: fieldValue } }));
                         setSaved(false);
                       }}
                       onChangePermissions={(fieldId: string, roles: string[]) => {

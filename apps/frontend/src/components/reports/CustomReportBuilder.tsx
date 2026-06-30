@@ -338,8 +338,8 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       }));
     }
 
-    const toCamelCase = (str: string): string => {
-      const cleaned = str.replace(/[^a-zA-Z0-9 ]/g, "");
+    const toCamelCase = (value: string): string => {
+      const cleaned = value.replace(/[^a-zA-Z0-9 ]/g, "");
       return cleaned
         .split(" ")
         .map((word, index) => index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())

@@ -38,8 +38,8 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
   const { t, language } = useTranslation();
   const appDomain = getAppDomain();
 
-  const updateField = <K extends keyof OnboardingData>(field: K, val: OnboardingData[K]) => {
-    onChange((prev) => ({ ...prev, [field]: val }));
+  const updateField = <K extends keyof OnboardingData>(field: K, fieldValue: OnboardingData[K]) => {
+    onChange((prev) => ({ ...prev, [field]: fieldValue }));
   };
 
   const previewBranding = useMemo(
@@ -65,18 +65,18 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
     });
   }, [data.primaryColor, data.secondaryColor]);
 
-  const handleNameChange = (val: string) => {
+  const handleNameChange = (nameValue: string) => {
     onChange((prev) => ({
       ...prev,
-      name: val.slice(0, NAME_MAX),
-      subdomain: prev.subdomainTouched ? prev.subdomain : slugifySubdomain(val),
+      name: nameValue.slice(0, NAME_MAX),
+      subdomain: prev.subdomainTouched ? prev.subdomain : slugifySubdomain(nameValue),
     }));
   };
 
-  const handleSubdomainChange = (val: string) => {
+  const handleSubdomainChange = (subdomainValue: string) => {
     onChange((prev) => ({
       ...prev,
-      subdomain: slugifySubdomain(val),
+      subdomain: slugifySubdomain(subdomainValue),
       subdomainTouched: true,
     }));
   };

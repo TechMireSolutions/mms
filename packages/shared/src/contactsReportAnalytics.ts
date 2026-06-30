@@ -65,7 +65,7 @@ export function computeContactsReportAnalytics(
 ): ContactsReportAnalyticsSnapshot {
   const defaultStage = options.defaultStage ?? 'Lead';
   const periodDays = options.periodDays ?? CONTACT_METRICS_DEFAULT_PERIOD_DAYS;
-  const ref = options.referenceDate ?? new Date();
+  const referenceDate = options.referenceDate ?? new Date();
 
   const active = contacts.filter((c) => !isContactDeleted(c));
   const total = active.length;
@@ -100,9 +100,9 @@ export function computeContactsReportAnalytics(
     };
   });
 
-  const thirtyDaysAgo = new Date(ref);
+  const thirtyDaysAgo = new Date(referenceDate);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const sixtyDaysAgo = new Date(ref);
+  const sixtyDaysAgo = new Date(referenceDate);
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
   const newLast30Days = active.filter((c) => c.createdAt && new Date(c.createdAt) >= thirtyDaysAgo).length;

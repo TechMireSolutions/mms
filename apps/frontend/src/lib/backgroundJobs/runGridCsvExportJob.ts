@@ -14,15 +14,15 @@ export function runGridCsvExportJob(options: {
   columns: GridExportColumn[];
   rows: Record<string, unknown>[];
 }): void {
-  const header = options.columns.map((c) => c.header);
-  const data = options.rows.map((row) =>
-    options.columns.map((c) => row[c.key] ?? ''),
+  const header = options.columns.map((column) => column.header);
+  const csvRows = options.rows.map((row) =>
+    options.columns.map((column) => row[column.key] ?? ''),
   );
   runCsvDownloadJob({
     moduleId: options.moduleId,
     label: options.label,
     filename: options.filename.endsWith('.csv') ? options.filename : `${options.filename}.csv`,
-    rows: [header, ...data],
+    rows: [header, ...csvRows],
   });
 }
 
@@ -31,7 +31,7 @@ export function buildGridCsvContent(
   columns: GridExportColumn[],
   rows: Record<string, unknown>[],
 ): string {
-  const header = columns.map((c) => c.header);
-  const data = rows.map((row) => columns.map((c) => row[c.key] ?? ''));
-  return buildCsvContent([header, ...data]);
+  const header = columns.map((column) => column.header);
+  const csvRows = rows.map((row) => columns.map((column) => row[column.key] ?? ''));
+  return buildCsvContent([header, ...csvRows]);
 }

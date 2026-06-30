@@ -84,7 +84,7 @@ export default function ContactCards({
     [columns]
   );
 
-  const handleCopy = (text: string, key: string) => {
+  const handleCopyContactValue = (text: string, key: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedKey(key);
       notify.success(t("contacts.table.copied"));
@@ -294,7 +294,7 @@ export default function ContactCards({
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => handleCopy(phone, `phone:${contact.id}`)}
+                      onClick={() => handleCopyContactValue(phone, `phone:${contact.id}`)}
                       className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/30 hover:bg-muted/50 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
@@ -328,7 +328,7 @@ export default function ContactCards({
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => handleCopy(email, `email:${contact.id}`)}
+                      onClick={() => handleCopyContactValue(email, `email:${contact.id}`)}
                       className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/30 hover:bg-muted/50 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">

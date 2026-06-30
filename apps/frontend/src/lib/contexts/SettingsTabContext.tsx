@@ -19,9 +19,9 @@ export function SettingsTabProvider({
 }
 
 export function useSettingsTab(): SettingsTabContextValue {
-  const ctx = useContext(SettingsTabContext);
-  if (!ctx) {
+  const settingsTab = useContext(SettingsTabContext);
+  if (!settingsTab) {
     throw new Error("useSettingsTab must be used within Settings");
   }
-  return ctx;
+  return settingsTab;
 }

@@ -35,9 +35,9 @@ export function BrandingPaletteProvider({ children }: { children: React.ReactNod
 
 /** Institution brand palette for Recharts and inline chart styles. */
 export function useBrandPalette(): BrandingChartPaletteHex {
-  const ctx = useContext(BrandingPaletteContext);
-  if (!ctx) {
+  const brandingPalette = useContext(BrandingPaletteContext);
+  if (!brandingPalette) {
     return getBrandingChartPalette();
   }
-  return ctx;
+  return brandingPalette;
 }

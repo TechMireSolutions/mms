@@ -12,7 +12,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 interface ContactsToolbarProps {
   search: string;
-  onSearchChange: (val: string) => void;
+  onSearchChange: (searchValue: string) => void;
   filterGender: string;
   onGenderChange: (gender: string) => void;
   filterLifecycleStage?: string;

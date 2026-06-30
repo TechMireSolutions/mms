@@ -58,7 +58,7 @@ function parseNaturalLanguage(text: string): QuickActionType | null {
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   labels: {
     trigger: string;
     title: string;

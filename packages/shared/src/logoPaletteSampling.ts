@@ -98,11 +98,11 @@ function chromaWeight(r: number, g: number, b: number): number {
   return saturationFactor * (0.7 + midLightness * 0.3);
 }
 
-function isSampleNeutral(r: number, g: number, b: number, opts: Required<LogoPaletteSamplingOptions>): boolean {
+function isSampleNeutral(r: number, g: number, b: number, samplingOptions: Required<LogoPaletteSamplingOptions>): boolean {
   const hsl = hexToHslColor(rgbToHex(r, g, b));
   if (!hsl) return true;
-  if (hsl.s < opts.minChromaSaturation) return true;
-  if (hsl.l < opts.minLightness || hsl.l > opts.maxLightness) return true;
+  if (hsl.s < samplingOptions.minChromaSaturation) return true;
+  if (hsl.l < samplingOptions.minLightness || hsl.l > samplingOptions.maxLightness) return true;
   return false;
 }
 

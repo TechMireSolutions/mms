@@ -108,8 +108,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await apiFetch('/api/auth/me');
 
       if (response.ok) {
-        const data = await response.json() as { user: User };
-        await applyAuthSession(data.user);
+        const authResponse = await response.json() as { user: User };
+        await applyAuthSession(authResponse.user);
       } else if (response.status === 401) {
         setUser(null);
         setIsAuthenticated(false);
@@ -137,22 +137,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (response.ok) {
-        const data = await response.json() as {
+        const authResponse = await response.json() as {
           user: User;
           requires2FA?: boolean;
           challengeId?: string;
         };
 
-        if (data.requires2FA && data.challengeId) {
+        if (authResponse.requires2FA && authResponse.challengeId) {
           clear2FAState();
-          setPendingChallengeId(data.challengeId);
-          setUser(data.user);
+          setPendingChallengeId(authResponse.challengeId);
+          setUser(authResponse.user);
           setIsAuthenticated(false);
           setAuthChecked(true);
-          return { requires2FA: true, challengeId: data.challengeId };
+          return { requires2FA: true, challengeId: authResponse.challengeId };
         }
 
-        await applyAuthSession(data.user);
+        await applyAuthSession(authResponse.user);
         mark2FAVerified();
         return { requires2FA: false };
       }
@@ -225,11 +225,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const exchangeHandoff = async (code: string): Promise<void> => {
     setAuthError(null);
-    const data = await apiJson<{ user: User }>('/api/auth/handoff', {
+    const authResponse = await apiJson<{ user: User }>('/api/auth/handoff', {
       method: 'POST',
       body: JSON.stringify({ code }),
     });
-    await applyAuthSession(data.user);
+    await applyAuthSession(authResponse.user);
     mark2FAVerified();
   };
 

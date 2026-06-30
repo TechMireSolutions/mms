@@ -26,14 +26,14 @@ export function applyModuleColumnOverlay(
   preferences: ModuleColumnPreference[] | null,
 ): ModuleColumnRegistryEntry[] {
   if (!preferences?.length) return registry;
-  const map = new Map(preferences.map((p) => [p.key, p]));
-  return registry.map((col) => {
-    const pref = map.get(col.key);
-    if (!pref) return col;
+  const preferenceByKey = new Map(preferences.map((preference) => [preference.key, preference]));
+  return registry.map((column) => {
+    const preference = preferenceByKey.get(column.key);
+    if (!preference) return column;
     return {
-      ...col,
-      enabled: col.fixed ? col.enabled : pref.enabled,
-      order: pref.order,
+      ...column,
+      enabled: column.fixed ? column.enabled : preference.enabled,
+      order: preference.order,
     };
   });
 }
@@ -53,13 +53,13 @@ export function buildStudentWorkColumnRegistry(
 ): ModuleColumnRegistryEntry[] {
   const fields = settings.fields ?? DEFAULT_STUDENTS_SETTINGS.fields ?? {};
   const customFields = settings.customFields ?? [];
-  const cols: ModuleColumnRegistryEntry[] = [
+  const registryColumns: ModuleColumnRegistryEntry[] = [
     { key: 'name', label: labels.name, enabled: true, order: 0, fixed: true },
   ];
   let order = 1;
 
   if (fields.dob?.enabled !== false) {
-    cols.push({ key: 'dob', label: labels.dob, enabled: true, order: order++ });
+    registryColumns.push({ key: 'dob', label: labels.dob, enabled: true, order: order++ });
   }
 
   const parentsEnabled =
@@ -67,14 +67,14 @@ export function buildStudentWorkColumnRegistry(
     fields.motherLink?.enabled !== false ||
     fields.guardianLink?.enabled !== false;
   if (parentsEnabled) {
-    cols.push({ key: 'parents', label: labels.parents, enabled: true, order: order++ });
+    registryColumns.push({ key: 'parents', label: labels.parents, enabled: true, order: order++ });
   }
 
-  cols.push({ key: 'sessions', label: labels.sessions, enabled: true, order: order++ });
-  cols.push({ key: 'status', label: labels.status, enabled: true, order: order++ });
+  registryColumns.push({ key: 'sessions', label: labels.sessions, enabled: true, order: order++ });
+  registryColumns.push({ key: 'status', label: labels.status, enabled: true, order: order++ });
 
   for (const field of customFields) {
-    cols.push({
+    registryColumns.push({
       key: `custom:${field.id}`,
       label: field.label,
       enabled: true,
@@ -82,15 +82,15 @@ export function buildStudentWorkColumnRegistry(
     });
   }
 
-  return cols;
+  return registryColumns;
 }
 
 export function isModuleColumnVisible(
   registry: ModuleColumnRegistryEntry[],
   key: string,
 ): boolean {
-  const col = registry.find((c) => c.key === key);
-  return col?.enabled ?? false;
+  const column = registry.find((registryColumn) => registryColumn.key === key);
+  return column?.enabled ?? false;
 }
 
 export interface TeacherWorkColumnLabels {
@@ -108,24 +108,24 @@ export function buildTeacherWorkColumnRegistry(
 ): ModuleColumnRegistryEntry[] {
   const fields = settings.fields ?? DEFAULT_TEACHERS_SETTINGS.fields ?? {};
   const customFields = settings.customFields ?? [];
-  const cols: ModuleColumnRegistryEntry[] = [
+  const registryColumns: ModuleColumnRegistryEntry[] = [
     { key: 'name', label: labels.name, enabled: true, order: 0, fixed: true },
   ];
   let order = 1;
 
   if (fields.specialization?.enabled !== false) {
-    cols.push({ key: 'specialization', label: labels.specialization, enabled: true, order: order++ });
+    registryColumns.push({ key: 'specialization', label: labels.specialization, enabled: true, order: order++ });
   }
   if (fields.qualification?.enabled !== false) {
-    cols.push({ key: 'qualification', label: labels.qualification, enabled: true, order: order++ });
+    registryColumns.push({ key: 'qualification', label: labels.qualification, enabled: true, order: order++ });
   }
   if (fields.joinDate?.enabled !== false) {
-    cols.push({ key: 'joinDate', label: labels.joinDate, enabled: true, order: order++ });
+    registryColumns.push({ key: 'joinDate', label: labels.joinDate, enabled: true, order: order++ });
   }
-  cols.push({ key: 'status', label: labels.status, enabled: true, order: order++ });
+  registryColumns.push({ key: 'status', label: labels.status, enabled: true, order: order++ });
 
   for (const field of customFields) {
-    cols.push({
+    registryColumns.push({
       key: `custom:${field.id}`,
       label: field.label ?? field.id,
       enabled: true,
@@ -133,7 +133,7 @@ export function buildTeacherWorkColumnRegistry(
     });
   }
 
-  return cols;
+  return registryColumns;
 }
 
 export interface FinanceInvoiceWorkColumnLabels {

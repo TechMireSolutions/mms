@@ -6,8 +6,8 @@ import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 export const PLATFORM_PROFILE_QUERY_KEY = ['platform', 'profile'] as const;
 
 async function fetchPlatformProfile(): Promise<PlatformUserProfile> {
-  const data = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me');
-  return data.user;
+  const profileResponse = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me');
+  return profileResponse.user;
 }
 
 /** Full platform super-user profile (extends session user with timestamps). */
@@ -28,11 +28,11 @@ export function useUpdatePlatformProfileName() {
 
   return useMutation({
     mutationFn: async (name: string) => {
-      const data = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me', {
+      const profileResponse = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me', {
         method: 'PATCH',
         body: JSON.stringify({ name: name.trim() }),
       });
-      return data.user;
+      return profileResponse.user;
     },
     onSuccess: async (user) => {
       queryClient.setQueryData(PLATFORM_PROFILE_QUERY_KEY, user);

@@ -144,8 +144,8 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                     required={field.required}
                   >
                     <option value="">Select option…</option>
-                    {field.options?.map((opt: string) => (
-                      <option key={opt} value={opt}>{opt}</option>
+                    {field.options?.map((option: string) => (
+                      <option key={option} value={option}>{option}</option>
                     ))}
                   </select>
                 ) : field.type === "boolean" ? (

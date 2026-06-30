@@ -106,11 +106,11 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
   const saveEntry = (saveAs?: "draft" | "posted") => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
-    const ref = isEdit ? form.ref : generateJERef(entries);
+    const journalReference = isEdit ? form.ref : generateJERef(entries);
     onSave({
       ...form,
       id: isEdit ? form.id : `je${Date.now()}`,
-      ref,
+      ref: journalReference,
       status: saveAs || form.status,
       created_by: "Admin",
       lines: form.lines.map((journalLine) => ({

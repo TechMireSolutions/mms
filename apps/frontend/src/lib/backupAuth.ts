@@ -12,16 +12,16 @@ export async function verifyAdminBackupPassword(
       body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
     });
 
-    const data = (await response.json()) as {
+    const authProbeResponse = (await response.json()) as {
       requires2FA?: boolean;
       type?: string;
     };
 
-    if (response.ok || data.requires2FA === true) {
+    if (response.ok || authProbeResponse.requires2FA === true) {
       return { ok: true };
     }
 
-    if (data.type === 'invalid_credentials') {
+    if (authProbeResponse.type === 'invalid_credentials') {
       return { ok: false, errorKey: 'backup.invalidAdminPassword' };
     }
 

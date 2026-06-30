@@ -6,8 +6,8 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 export const TENANT_PROFILE_KEY = ['tenant', 'profile'] as const;
 
 async function fetchTenantProfile(): Promise<TenantUserProfile> {
-  const data = await apiJson<{ profile: TenantUserProfile }>('/api/auth/profile');
-  return data.profile;
+  const profileResponse = await apiJson<{ profile: TenantUserProfile }>('/api/auth/profile');
+  return profileResponse.profile;
 }
 
 export function useTenantProfile(enabled = true) {

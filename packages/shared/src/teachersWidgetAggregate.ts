@@ -64,9 +64,9 @@ function aggregateNumericField(
   let sum = 0;
   let count = 0;
   items.forEach((item) => {
-    const num = Number(teacherFieldValue(item, targetField));
-    if (!Number.isNaN(num)) {
-      sum += num;
+    const numericFieldValue = Number(teacherFieldValue(item, targetField));
+    if (!Number.isNaN(numericFieldValue)) {
+      sum += numericFieldValue;
       count += 1;
     }
   });

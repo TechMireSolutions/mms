@@ -221,8 +221,8 @@ export function applySnapshotToLocalCache(snapshot: TenantDatabaseSnapshot): voi
  */
 export async function syncDatabase(): Promise<void> {
   try {
-    const data = await fetchTenantSnapshot();
-    applySnapshotToLocalCache(data);
+    const tenantSnapshot = await fetchTenantSnapshot();
+    applySnapshotToLocalCache(tenantSnapshot);
   } catch (error) {
     console.error("Failed to sync database with backend:", error);
   }
@@ -326,14 +326,14 @@ export function hasCollectionInCache(key: string): boolean {
  *
  * @template T
  * @param {string} key - Unique key for storage.
- * @param {T[]} data - Collection data to save.
+ * @param {T[]} collectionItems - Collection items to save.
  * @returns {void}
  */
-export function saveCollectionCacheOnly<T>(key: string, data: T[]): void {
+export function saveCollectionCacheOnly<T>(key: string, collectionItems: T[]): void {
   try {
-    let dataToSave = data;
+    let dataToSave = collectionItems;
     if (key === "sessions") {
-      dataToSave = validateSessions(data) as unknown as T[];
+      dataToSave = validateSessions(collectionItems) as unknown as T[];
     }
     dataToSave = normalizeLinkedCollection(key, dataToSave);
     localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
@@ -403,14 +403,14 @@ export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]
  *
  * @template T
  * @param {string} key - Unique key for storage.
- * @param {T[]} data - Collection data to save.
+ * @param {T[]} collectionItems - Collection items to save.
  * @returns {void}
  */
-export function saveCollection<T>(key: string, data: T[]): void {
+export function saveCollection<T>(key: string, collectionItems: T[]): void {
   try {
-    let dataToSave = data;
+    let dataToSave = collectionItems;
     if (key === "sessions") {
-      dataToSave = validateSessions(data) as unknown as T[];
+      dataToSave = validateSessions(collectionItems) as unknown as T[];
     }
     dataToSave = normalizeLinkedCollection(key, dataToSave);
     localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
@@ -484,13 +484,13 @@ export function getEffectiveGlobalSettings(): GlobalSettings {
 }
 
 /** Persists merged global settings and dispatches `local-database-update`. */
-export function saveGlobalSettings(data: GlobalSettings): void {
-  saveObject("global_settings", mergeGlobalSettings(data));
+export function saveGlobalSettings(globalSettings: GlobalSettings): void {
+  saveObject("global_settings", mergeGlobalSettings(globalSettings));
 }
 
 /** Persists global settings locally and waits for PostgreSQL sync. */
-export async function saveGlobalSettingsAsync(data: GlobalSettings): Promise<ServerSyncResult> {
-  const merged = mergeGlobalSettings(data);
+export async function saveGlobalSettingsAsync(globalSettings: GlobalSettings): Promise<ServerSyncResult> {
+  const merged = mergeGlobalSettings(globalSettings);
   try {
     writeObjectLocal("global_settings", merged);
     return await syncToServer("/api/db/objects/global_settings", merged);
@@ -525,8 +525,8 @@ export function getEffectiveBrandingSettings(): BrandingSettings {
   });
 }
 
-function writeObjectLocal<T>(key: string, data: T): void {
-  localStorage.setItem(scopedStorageKey(key), JSON.stringify(data));
+function writeObjectLocal<T>(key: string, objectValue: T): void {
+  localStorage.setItem(scopedStorageKey(key), JSON.stringify(objectValue));
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("local-database-update"));
   }
@@ -535,8 +535,8 @@ function writeObjectLocal<T>(key: string, data: T): void {
 /**
  * Persists merged branding locally and waits for PostgreSQL sync to complete.
  */
-export async function saveBrandingSettings(data: BrandingSettings): Promise<ServerSyncResult> {
-  const merged = mergeBrandingSettings(data);
+export async function saveBrandingSettings(brandingSettings: BrandingSettings): Promise<ServerSyncResult> {
+  const merged = mergeBrandingSettings(brandingSettings);
   try {
     writeObjectLocal("branding", merged);
     return await syncToServer("/api/db/objects/branding", merged);
@@ -575,10 +575,10 @@ export function cachePublicBranding(partial: PublicBranding): void {
  * @param {T} data - Object data to save.
  * @returns {void}
  */
-export function saveObject<T>(key: string, data: T): void {
+export function saveObject<T>(key: string, objectValue: T): void {
   try {
-    writeObjectLocal(key, data);
-    void syncToServer(`/api/db/objects/${key}`, data);
+    writeObjectLocal(key, objectValue);
+    void syncToServer(`/api/db/objects/${key}`, objectValue);
   } catch (error) {
     console.error(`Error writing object "${key}" to database:`, error);
   }
@@ -590,13 +590,13 @@ export function saveObject<T>(key: string, data: T): void {
 export function exportLocalDatabaseCache(): string {
   try {
     const prefix = getStoragePrefix();
-    const data: Record<string, string> = {};
+    const scopedLocalStorageEntries: Record<string, string> = {};
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith(prefix)) {
         const storedValue = localStorage.getItem(key);
         if (storedValue !== null) {
-          data[key] = storedValue;
+          scopedLocalStorageEntries[key] = storedValue;
         }
       }
     }
@@ -604,7 +604,7 @@ export function exportLocalDatabaseCache(): string {
       typeof window !== "undefined"
         ? parseTenantFromHost(window.location.hostname, getAppDomain())
         : null;
-    return buildWorkspaceBackupEnvelope(data, { subdomain, dataSource: "local" });
+    return buildWorkspaceBackupEnvelope(scopedLocalStorageEntries, { subdomain, dataSource: "local" });
   } catch (error) {
     console.error("Error exporting database:", error);
     throw error;

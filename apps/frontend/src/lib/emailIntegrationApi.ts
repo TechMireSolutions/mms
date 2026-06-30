@@ -23,19 +23,19 @@ export async function saveEmailIntegration(
 }
 
 export async function testEmailIntegration(): Promise<EmailIntegrationConfig> {
-  const data = await apiJson<{ config: EmailIntegrationConfig }>('/api/email/integration/test', {
+  const integrationResponse = await apiJson<{ config: EmailIntegrationConfig }>('/api/email/integration/test', {
     method: 'POST',
   });
-  return data.config;
+  return integrationResponse.config;
 }
 
 export async function sendVerificationCodeEmail(code: string): Promise<boolean> {
   try {
-    const data = await apiJson<{ delivered?: boolean }>('/api/email/verification-code', {
+    const verificationResponse = await apiJson<{ delivered?: boolean }>('/api/email/verification-code', {
       method: 'POST',
       body: JSON.stringify({ code }),
     });
-    return data.delivered === true;
+    return verificationResponse.delivered === true;
   } catch {
     return false;
   }

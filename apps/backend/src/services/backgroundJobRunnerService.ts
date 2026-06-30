@@ -18,16 +18,16 @@ export function registerDefaultBackgroundJobRunners(): void {
   const moduleId = CONTACTS_MODULE_CONTRACT.moduleId;
 
   registerBackgroundJobRunner(`${moduleId}:export`, async (payload, ctx) => {
-    const data = payload as ContactsExportJobPayload;
+    const exportPayload = payload as ContactsExportJobPayload;
     await ctx.updateProgress(0, 1);
-    const { csv, filename, count } = await buildContactsCsvExport(data.query ?? {}, {
-      columns: data.columns,
-      filename: data.filename,
-      viewerRole: data.viewerRole,
+    const { csv, filename, count } = await buildContactsCsvExport(exportPayload.query ?? {}, {
+      columns: exportPayload.columns,
+      filename: exportPayload.filename,
+      viewerRole: exportPayload.viewerRole,
     });
     await saveExportArtifact(ctx.userId, ctx.jobId, csv, filename);
     await ctx.complete({
-      label: data.label ?? `Exported ${count} contacts`,
+      label: exportPayload.label ?? `Exported ${count} contacts`,
       progress: { current: count, total: count },
       hasDownload: true,
     });

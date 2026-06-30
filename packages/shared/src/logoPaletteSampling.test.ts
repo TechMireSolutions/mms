@@ -3,14 +3,14 @@ import { extractDominantSwatchesFromRgba } from './logoPaletteSampling.js';
 import { deriveBrandColorsFromPalette } from './logoBrandColors.js';
 
 function fillSolidRgba(width: number, height: number, r: number, g: number, b: number, a = 255): Uint8ClampedArray {
-  const data = new Uint8ClampedArray(width * height * 4);
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = r;
-    data[i + 1] = g;
-    data[i + 2] = b;
-    data[i + 3] = a;
+  const rgbaPixels = new Uint8ClampedArray(width * height * 4);
+  for (let pixelOffset = 0; pixelOffset < rgbaPixels.length; pixelOffset += 4) {
+    rgbaPixels[pixelOffset] = r;
+    rgbaPixels[pixelOffset + 1] = g;
+    rgbaPixels[pixelOffset + 2] = b;
+    rgbaPixels[pixelOffset + 3] = a;
   }
-  return data;
+  return rgbaPixels;
 }
 
 function fillWithCenterDisc(
@@ -20,7 +20,7 @@ function fillWithCenterDisc(
   disc: [number, number, number],
   radiusRatio = 0.35,
 ): Uint8ClampedArray {
-  const data = new Uint8ClampedArray(width * height * 4);
+  const rgbaPixels = new Uint8ClampedArray(width * height * 4);
   const centerX = width / 2;
   const centerY = height / 2;
   const radius = Math.min(width, height) * radiusRatio;
@@ -30,19 +30,19 @@ function fillWithCenterDisc(
       const pixelOffset = (yPosition * width + xPosition) * 4;
       const inside = Math.hypot(xPosition - centerX, yPosition - centerY) <= radius;
       const [red, green, blue] = inside ? disc : background;
-      data[pixelOffset] = red;
-      data[pixelOffset + 1] = green;
-      data[pixelOffset + 2] = blue;
-      data[pixelOffset + 3] = 255;
+      rgbaPixels[pixelOffset] = red;
+      rgbaPixels[pixelOffset + 1] = green;
+      rgbaPixels[pixelOffset + 2] = blue;
+      rgbaPixels[pixelOffset + 3] = 255;
     }
   }
-  return data;
+  return rgbaPixels;
 }
 
 describe('extractDominantSwatchesFromRgba', () => {
   it('returns a saturated green for a solid green logo', () => {
-    const data = fillSolidRgba(48, 48, 4, 120, 87);
-    const swatches = extractDominantSwatchesFromRgba(data, 48, 48);
+    const rgbaPixels = fillSolidRgba(48, 48, 4, 120, 87);
+    const swatches = extractDominantSwatchesFromRgba(rgbaPixels, 48, 48);
     expect(swatches.length).toBeGreaterThan(0);
     expect(swatches[0]).toMatch(/^#[0-9a-f]{6}$/);
     const derived = deriveBrandColorsFromPalette(swatches);
@@ -51,14 +51,14 @@ describe('extractDominantSwatchesFromRgba', () => {
   });
 
   it('prefers the centre disc over a white margin', () => {
-    const data = fillWithCenterDisc(64, 64, [255, 255, 255], [180, 30, 60]);
-    const swatches = extractDominantSwatchesFromRgba(data, 64, 64);
+    const rgbaPixels = fillWithCenterDisc(64, 64, [255, 255, 255], [180, 30, 60]);
+    const swatches = extractDominantSwatchesFromRgba(rgbaPixels, 64, 64);
     expect(swatches[0]).toBe('#b41e3c');
   });
 
   it('ignores fully transparent pixels', () => {
-    const data = fillSolidRgba(32, 32, 200, 40, 40, 0);
-    const swatches = extractDominantSwatchesFromRgba(data, 32, 32);
+    const rgbaPixels = fillSolidRgba(32, 32, 200, 40, 40, 0);
+    const swatches = extractDominantSwatchesFromRgba(rgbaPixels, 32, 32);
     expect(swatches).toHaveLength(0);
   });
 });

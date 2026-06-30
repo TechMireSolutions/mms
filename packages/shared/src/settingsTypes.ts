@@ -1538,13 +1538,13 @@ export function optimizeImage(
         canvas.width = width;
         canvas.height = height;
 
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
+        const canvasContext = canvas.getContext("2d");
+        if (!canvasContext) {
           resolve(file);
           return;
         }
 
-        ctx.drawImage(img, 0, 0, width, height);
+        canvasContext.drawImage(img, 0, 0, width, height);
 
         const encoded = await canvasToOptimizedBlob(canvas, quality, formats);
         if (!encoded) {

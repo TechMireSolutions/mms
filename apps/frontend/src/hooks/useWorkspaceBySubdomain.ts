@@ -17,16 +17,16 @@ export interface WorkspaceLookupResult {
 export const WORKSPACE_BY_SUBDOMAIN_KEY = ['workspace', 'by-subdomain'] as const;
 
 async function fetchWorkspaceBySubdomain(subdomain: string): Promise<WorkspaceLookupResult> {
-  const data = await apiJson<{
+  const workspaceResponse = await apiJson<{
     workspace: PublicWorkspace;
     branding?: PublicBranding;
   }>(`/api/workspace/by-subdomain/${encodeURIComponent(subdomain)}`);
-  if (data.branding) {
-    void import('@/lib/db').then(({ cachePublicBranding }) => cachePublicBranding(data.branding!));
+  if (workspaceResponse.branding) {
+    void import('@/lib/db').then(({ cachePublicBranding }) => cachePublicBranding(workspaceResponse.branding!));
   }
   return {
-    workspace: data.workspace,
-    branding: data.branding ?? null,
+    workspace: workspaceResponse.workspace,
+    branding: workspaceResponse.branding ?? null,
   };
 }
 

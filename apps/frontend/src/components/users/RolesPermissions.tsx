@@ -77,8 +77,10 @@ function RoleFormModal({ open, title, role, visibleModules, onSave, onClose }: R
 
   const togglePerm = (moduleId: string, action: PermissionAction): void => {
     setPerms((prev) => {
-      const cur = prev[moduleId] || [];
-      const next = cur.includes(action) ? cur.filter((a) => a !== action) : [...cur, action];
+      const currentActions = prev[moduleId] || [];
+      const next = currentActions.includes(action)
+        ? currentActions.filter((permissionAction) => permissionAction !== action)
+        : [...currentActions, action];
       return { ...prev, [moduleId]: next };
     });
   };
@@ -191,9 +193,9 @@ function PermissionMatrixRow({
   onClearAll: (moduleId: string) => void;
 }): React.JSX.Element {
   const { t } = useTranslation();
-  const cur = perms[mod.id] || [];
-  const allChecked = PERMISSION_ACTIONS.every((a) => cur.includes(a));
-  const hasAny = cur.length > 0;
+  const currentActions = perms[mod.id] || [];
+  const allChecked = PERMISSION_ACTIONS.every((permissionAction) => currentActions.includes(permissionAction));
+  const hasAny = currentActions.length > 0;
 
   return (
     <tr
@@ -204,12 +206,12 @@ function PermissionMatrixRow({
       >
         {t(mod.labelKey)}
       </td>
-      {PERMISSION_ACTIONS.map((a) => (
-        <td key={a} className="px-2 py-2.5">
+      {PERMISSION_ACTIONS.map((permissionAction) => (
+        <td key={permissionAction} className="px-2 py-2.5">
           {readOnly ? (
             <div
               className={`mx-auto flex h-7 w-7 items-center justify-center rounded-lg border-2 ${
-                cur.includes(a)
+                currentActions.includes(permissionAction)
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'border-border bg-card text-transparent'
               }`}
@@ -217,7 +219,7 @@ function PermissionMatrixRow({
               <Check className="h-3.5 w-3.5" />
             </div>
           ) : (
-            <PermCell checked={cur.includes(a)} onChange={() => onToggle(mod.id, a)} />
+            <PermCell checked={currentActions.includes(permissionAction)} onChange={() => onToggle(mod.id, permissionAction)} />
           )}
         </td>
       ))}
@@ -356,8 +358,10 @@ export function RolesPermissions(): React.JSX.Element {
   const togglePermDraft = (moduleId: string, action: PermissionAction): void => {
     setPermDraft((prev) => {
       if (!prev) return prev;
-      const cur = prev[moduleId] || [];
-      const next = cur.includes(action) ? cur.filter((a) => a !== action) : [...cur, action];
+      const currentActions = prev[moduleId] || [];
+      const next = currentActions.includes(action)
+        ? currentActions.filter((permissionAction) => permissionAction !== action)
+        : [...currentActions, action];
       return { ...prev, [moduleId]: next };
     });
   };

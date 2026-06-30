@@ -46,9 +46,9 @@ export function SettingsBrandingDraftProvider({
 }
 
 export function useSettingsBrandingDraft(): SettingsBrandingDraftContextValue {
-  const ctx = useContext(SettingsBrandingDraftContext);
-  if (!ctx) {
+  const settingsBrandingDraft = useContext(SettingsBrandingDraftContext);
+  if (!settingsBrandingDraft) {
     throw new Error('useSettingsBrandingDraft must be used within SettingsBrandingDraftProvider');
   }
-  return ctx;
+  return settingsBrandingDraft;
 }

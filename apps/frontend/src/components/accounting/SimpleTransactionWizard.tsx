@@ -401,11 +401,11 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
     const validationError = validate();
     if (validationError) { alert(validationError); return; }
     const amount = parseFloat(form.amount);
-    const ref = generateJERef(entries);
+    const generatedReference = generateJERef(entries);
     const description = form.description || selectedType!.label;
     onSave({
       id: `je${Date.now()}`,
-      ref: form.ref ? `${form.ref}` : ref,
+      ref: form.ref ? `${form.ref}` : generatedReference,
       date: form.date,
       description,
       status,

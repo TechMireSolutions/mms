@@ -56,9 +56,9 @@ export async function runMigration003(): Promise<void> {
   await runInTransaction(async () => {
     for (const name of names) {
       if (name === WORKSPACES_COLLECTION) continue;
-      const data = await getCollectionByStorageName(name);
-      if (!Array.isArray(data)) continue;
-      await saveCollection(tenantCollectionKey(subdomain, name), data);
+      const collectionRows = await getCollectionByStorageName(name);
+      if (!Array.isArray(collectionRows)) continue;
+      await saveCollection(tenantCollectionKey(subdomain, name), collectionRows);
       await deleteCollectionByStorageName(name);
     }
 
@@ -68,9 +68,9 @@ export async function runMigration003(): Promise<void> {
         await deleteObjectByStorageKey(key);
         continue;
       }
-      const data = await getObjectByStorageKey(key);
-      if (data === null) continue;
-      await saveObject(tenantObjectKey(subdomain, key), data);
+      const objectValue = await getObjectByStorageKey(key);
+      if (objectValue === null) continue;
+      await saveObject(tenantObjectKey(subdomain, key), objectValue);
       await deleteObjectByStorageKey(key);
     }
 

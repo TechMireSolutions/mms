@@ -52,8 +52,8 @@ export default function ContactCreateModal({
     return draft;
   }, [initialName, createDefaults?.gender]);
 
-  const handleSave = (data: Contact): void => {
-    const payload = { ...data, id: data.id ?? crypto.randomUUID() };
+  const handleSave = (contactPayload: Contact): void => {
+    const payload = { ...contactPayload, id: contactPayload.id ?? crypto.randomUUID() };
     void upsertContact
       .mutateAsync(payload)
       .then((res) => {

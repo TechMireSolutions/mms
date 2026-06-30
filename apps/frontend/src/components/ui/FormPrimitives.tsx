@@ -406,7 +406,7 @@ export type CustomFieldConfig = FieldDefinition;
 interface CustomFieldInputProps {
   field: FieldDefinition;
   value: unknown;
-  onChange: (val: unknown) => void;
+  onChange: (fieldValue: unknown) => void;
   disabled?: boolean;
   error?: boolean;
 }

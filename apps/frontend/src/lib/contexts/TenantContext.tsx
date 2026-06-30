@@ -81,9 +81,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 };
 
 export function useTenant(): TenantContextValue {
-  const ctx = useContext(TenantContext);
-  if (!ctx) {
+  const tenantContext = useContext(TenantContext);
+  if (!tenantContext) {
     throw new Error("useTenant must be used within TenantProvider");
   }
-  return ctx;
+  return tenantContext;
 }

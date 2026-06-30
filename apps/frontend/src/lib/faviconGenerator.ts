@@ -19,7 +19,7 @@ function trimAndCenterImage(img: HTMLImageElement): HTMLCanvasElement | null {
 
     tempCtx.drawImage(img, 0, 0);
     const imgData = tempCtx.getImageData(0, 0, width, height);
-    const data = imgData.data;
+    const pixelData = imgData.data;
 
     let minX = width;
     let minY = height;
@@ -30,7 +30,7 @@ function trimAndCenterImage(img: HTMLImageElement): HTMLCanvasElement | null {
     for (let yPosition = 0; yPosition < height; yPosition++) {
       for (let xPosition = 0; xPosition < width; xPosition++) {
         const index = (yPosition * width + xPosition) * 4;
-        const alpha = data[index + 3];
+        const alpha = pixelData[index + 3];
         if (alpha > 10) { // Ignore near-invisible/fully transparent background padding
           if (xPosition < minX) minX = xPosition;
           if (xPosition > maxX) maxX = xPosition;
@@ -78,13 +78,13 @@ export async function generateFaviconFromLogoUrl(logoUrl: string): Promise<strin
         const canvas = document.createElement('canvas');
         canvas.width = 48;
         canvas.height = 48;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
+        const canvasContext = canvas.getContext('2d');
+        if (!canvasContext) {
           throw new Error('Could not get canvas context');
         }
 
         // Clear canvas to preserve alpha channel transparency
-        ctx.clearRect(0, 0, 48, 48);
+        canvasContext.clearRect(0, 0, 48, 48);
 
         let resized = false;
         const trimmedCanvas = trimAndCenterImage(img);
@@ -97,7 +97,7 @@ export async function generateFaviconFromLogoUrl(logoUrl: string): Promise<strin
                 resizeHeight: 48,
                 resizeQuality: 'high',
               });
-              ctx.drawImage(bitmap, 0, 0);
+              canvasContext.drawImage(bitmap, 0, 0);
               bitmap.close();
               resized = true;
             } catch {
@@ -106,9 +106,9 @@ export async function generateFaviconFromLogoUrl(logoUrl: string): Promise<strin
           }
 
           if (!resized) {
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(trimmedCanvas, 0, 0, trimmedCanvas.width, trimmedCanvas.height, 0, 0, 48, 48);
+            canvasContext.imageSmoothingEnabled = true;
+            canvasContext.imageSmoothingQuality = 'high';
+            canvasContext.drawImage(trimmedCanvas, 0, 0, trimmedCanvas.width, trimmedCanvas.height, 0, 0, 48, 48);
             resized = true;
           }
         }
@@ -126,7 +126,7 @@ export async function generateFaviconFromLogoUrl(logoUrl: string): Promise<strin
                 resizeHeight: 48,
                 resizeQuality: 'high',
               });
-              ctx.drawImage(bitmap, 0, 0);
+              canvasContext.drawImage(bitmap, 0, 0);
               bitmap.close();
               resized = true;
             } catch {
@@ -135,9 +135,9 @@ export async function generateFaviconFromLogoUrl(logoUrl: string): Promise<strin
           }
 
           if (!resized) {
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, sx, sy, size, size, 0, 0, 48, 48);
+            canvasContext.imageSmoothingEnabled = true;
+            canvasContext.imageSmoothingQuality = 'high';
+            canvasContext.drawImage(img, sx, sy, size, size, 0, 0, 48, 48);
           }
         }
 

@@ -15,10 +15,10 @@ export interface UpcomingSessionItem {
   status: "live" | "upcoming";
 }
 
-function hashStringToId(str: string): number {
+function hashStringToId(value: string): number {
   let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  for (let index = 0; index < value.length; index++) {
+    hash = value.charCodeAt(index) + ((hash << 5) - hash);
   }
   return Math.abs(hash);
 }

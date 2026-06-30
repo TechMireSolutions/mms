@@ -13,8 +13,8 @@ export function saveDisabledCardIds(ids: string[]): void {
 }
 
 export function loadCustomWidgetsRaw(): string | null {
-  const data = getObject<unknown[] | null>(DASHBOARD_WIDGETS_KEY, null);
-  return data ? JSON.stringify(data) : null;
+  const customWidgets = getObject<unknown[] | null>(DASHBOARD_WIDGETS_KEY, null);
+  return customWidgets ? JSON.stringify(customWidgets) : null;
 }
 
 export function saveCustomWidgetsRaw(json: string): void {
@@ -25,4 +25,3 @@ export function saveCustomWidgetsRaw(json: string): void {
     saveObject(DASHBOARD_WIDGETS_KEY, json);
   }
 }
-

@@ -153,7 +153,7 @@ function pickSecondaryCandidate(
   primaryColor: string,
   primaryHsl: HslColor,
   ranked: RankedSwatch[],
-  opts: Required<DeriveBrandColorsFromPaletteOptions>,
+  deriveOptions: Required<DeriveBrandColorsFromPaletteOptions>,
 ): string {
   const primaryNormalized = normalizeBrandHex(primaryColor);
   const secondaryCandidates = ranked
@@ -164,7 +164,7 @@ function pickSecondaryCandidate(
     );
 
   for (const candidate of secondaryCandidates) {
-    if (hueDistance(candidate.hsl, primaryHsl) < opts.minHueSeparation) continue;
+    if (hueDistance(candidate.hsl, primaryHsl) < deriveOptions.minHueSeparation) continue;
 
     const adjusted = ensureAccentButtonContrast(candidate.hex);
     const adjHsl = hexToHslColor(adjusted);
@@ -172,7 +172,7 @@ function pickSecondaryCandidate(
 
     const textRatio = getContrastRatio('#ffffff', adjusted);
     if (!meetsWcagAaTextContrast(textRatio)) continue;
-    if (hueDistance(adjHsl, primaryHsl) < opts.minHueSeparation) continue;
+    if (hueDistance(adjHsl, primaryHsl) < deriveOptions.minHueSeparation) continue;
     if (!fillsAreDistinct(primaryColor, adjusted)) continue;
 
     return adjusted;
@@ -224,16 +224,16 @@ export function deriveBrandColorsFromPalette(
   swatches: readonly string[],
   options?: DeriveBrandColorsFromPaletteOptions,
 ): LogoBrandColors | null {
-  const opts = { ...DEFAULT_DERIVE_OPTIONS, ...options };
+  const deriveOptions = { ...DEFAULT_DERIVE_OPTIONS, ...options };
   const palette = swatches
     .map((swatch) => normalizeBrandHex(swatch))
     .filter((hex): hex is string => hex !== null);
 
   if (palette.length === 0) return null;
 
-  let ranked = rankSwatches(palette, opts, false);
+  let ranked = rankSwatches(palette, deriveOptions, false);
   if (ranked.length === 0) {
-    ranked = rankSwatches(palette, opts, true);
+    ranked = rankSwatches(palette, deriveOptions, true);
   }
   if (ranked.length === 0) return null;
 
@@ -242,7 +242,7 @@ export function deriveBrandColorsFromPalette(
   const primaryHsl = hexToHslColor(primaryColor);
   if (!primaryHsl) return null;
 
-  const secondaryColor = pickSecondaryCandidate(primaryColor, primaryHsl, ranked, opts);
+  const secondaryColor = pickSecondaryCandidate(primaryColor, primaryHsl, ranked, deriveOptions);
   const finalized = finalizeAccessiblePair(primaryColor, secondaryColor);
 
   return {

@@ -63,29 +63,29 @@ export default async function dbRoutes(
       });
     }
     try {
-      const data = await fetchDatabaseSnapshot();
-      if (data.collections) {
-        delete data.collections[WORKSPACES_COLLECTION];
+      const snapshot = await fetchDatabaseSnapshot();
+      if (snapshot.collections) {
+        delete snapshot.collections[WORKSPACES_COLLECTION];
         // Remove other users' message keys to isolate them
         const userMsgKey = `messages_u:${user.id}`;
-        for (const key of Object.keys(data.collections)) {
+        for (const key of Object.keys(snapshot.collections)) {
           if (key.startsWith('messages_u:') && key !== userMsgKey) {
-            delete data.collections[key];
+            delete snapshot.collections[key];
           }
         }
 
         // Remove other users' template keys to isolate them
         const userTplKey = `whatsappTemplates_u:${user.id}`;
-        for (const key of Object.keys(data.collections)) {
+        for (const key of Object.keys(snapshot.collections)) {
           if (key.startsWith('whatsappTemplates_u:') && key !== userTplKey) {
-            delete data.collections[key];
+            delete snapshot.collections[key];
           }
         }
       }
-      if (data.objects) {
-        delete data.objects[PLATFORM_SUPER_USERS_OBJECT_KEY];
+      if (snapshot.objects) {
+        delete snapshot.objects[PLATFORM_SUPER_USERS_OBJECT_KEY];
       }
-      return reply.send(data);
+      return reply.send(snapshot);
     } catch (error) {
       return reply.status(500).send({
         type: 'database_error',
@@ -225,11 +225,11 @@ export default async function dbRoutes(
     }
     try {
       const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
-      const data = await fetchCollection(storageName);
-      if (data === null) {
+      const collectionRows = await fetchCollection(storageName);
+      if (collectionRows === null) {
         return reply.send([]);
       }
-      return reply.send(data);
+      return reply.send(collectionRows);
     } catch (error) {
       return reply.status(500).send({
         type: 'database_error',
@@ -256,7 +256,7 @@ export default async function dbRoutes(
     try {
       const bodyParsed = parseRequest(collectionSaveBodySchema, request.body);
       if (!bodyParsed.ok) return replyValidationError(reply, bodyParsed.message);
-      let data = normalizeCollectionSaveBody(bodyParsed.data);
+      let collectionRowsToSave = normalizeCollectionSaveBody(bodyParsed.data);
 
       if (name === 'contacts') {
         const tenant = getRequestTenant();
@@ -265,16 +265,16 @@ export default async function dbRoutes(
         }
         try {
           const lang = (request.headers['accept-language'] as string) || 'en';
-          await validateContactDynamic(tenant, data, lang, user.role);
+          await validateContactDynamic(tenant, collectionRowsToSave, lang, user.role);
         } catch (err) {
           return replyValidationError(reply, err instanceof Error ? err.message : String(err));
         }
 
-        data = data.map((item) => applyTitleCaseToContact(item as Record<string, unknown>));
+        collectionRowsToSave = collectionRowsToSave.map((item) => applyTitleCaseToContact(item as Record<string, unknown>));
       }
 
       const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
-      await persistCollection(storageName, data);
+      await persistCollection(storageName, collectionRowsToSave);
       if (AUDITED_COLLECTIONS.has(name)) {
         await recordAudit({
           userId: user.id,
@@ -282,7 +282,7 @@ export default async function dbRoutes(
           action: 'collection.write',
           entityType: 'collection',
           entityId: name,
-          summary: `Wrote ${data.length} row(s)`,
+          summary: `Wrote ${collectionRowsToSave.length} row(s)`,
         });
       }
       return reply.send({ success: true });
@@ -313,14 +313,14 @@ export default async function dbRoutes(
           message: `You do not have permission to read object "${key}"`,
         });
       }
-      const data = await fetchObject(key);
-      if (data === null) {
+      const objectValue = await fetchObject(key);
+      if (objectValue === null) {
         return reply.status(404).send({
           type: 'not_found',
           message: `Object with key "${key}" not found`
         });
       }
-      return reply.send(data);
+      return reply.send(objectValue);
     } catch (error) {
       return reply.status(500).send({
         type: 'database_error',
@@ -349,14 +349,14 @@ export default async function dbRoutes(
     }
     try {
       const raw = request.body;
-      const data =
+      const objectValueToSave =
         key === 'branding'
           ? mergeBrandingSettings(raw as Partial<BrandingSettings>)
           : key === 'global_settings'
             ? mergeGlobalSettings(raw as Partial<GlobalSettings>)
             : raw;
 
-      await persistObject(key, data);
+      await persistObject(key, objectValueToSave);
 
       if (AUDITED_OBJECTS.has(key)) {
         await recordAudit({
@@ -371,7 +371,7 @@ export default async function dbRoutes(
       if (key === 'branding') {
         const tenant = getRequestTenant();
         if (tenant) {
-          await syncWorkspaceFromBranding(tenant, data as BrandingSettings);
+          await syncWorkspaceFromBranding(tenant, objectValueToSave as BrandingSettings);
         }
       }
 

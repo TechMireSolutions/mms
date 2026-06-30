@@ -75,10 +75,10 @@ export function useStudentColumnLayout(settings: StudentsSettings) {
   );
 
   const updateUserColumnLayout = useCallback(
-    (cols: ModuleColumnRegistryEntry[]) => {
+    (columnRegistry: ModuleColumnRegistryEntry[]) => {
       if (!userId) return;
-      saveModuleColumnRegistry(STUDENTS_MODULE_CONTRACT.moduleId, userId, cols);
-      const preferences: ModuleColumnPreference[] = cols.map(({ key, enabled, order }) => ({
+      saveModuleColumnRegistry(STUDENTS_MODULE_CONTRACT.moduleId, userId, columnRegistry);
+      const preferences: ModuleColumnPreference[] = columnRegistry.map(({ key, enabled, order }) => ({
         key,
         enabled,
         order,

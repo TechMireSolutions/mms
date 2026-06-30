@@ -64,16 +64,16 @@ export function InvoicePrintPreview({
   const printTokens = getPrintBrandingTokens();
   const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
 
-  const renderElement = (el: TemplateElement) => {
-    const isSelected = selectedId === el.id;
-    const elementStyle = el.style || {};
+  const renderElement = (templateElement: TemplateElement) => {
+    const isSelected = selectedId === templateElement.id;
+    const elementStyle = templateElement.style || {};
 
     const baseStyle: React.CSSProperties = {
       position: "absolute",
-      left: el.x,
-      top: el.y,
-      width: el.w,
-      height: el.h,
+      left: templateElement.x,
+      top: templateElement.y,
+      width: templateElement.w,
+      height: templateElement.h,
       fontSize: elementStyle.fontSize || 10,
       fontWeight: elementStyle.fontWeight || "normal",
       fontFamily: elementStyle.fontFamily || "inherit",
@@ -90,12 +90,12 @@ export function InvoicePrintPreview({
     };
 
     const handleClick = onSelect
-      ? (e: React.MouseEvent) => { e.stopPropagation(); onSelect(el.id); }
+      ? (e: React.MouseEvent) => { e.stopPropagation(); onSelect(templateElement.id); }
       : undefined;
 
-    if (el.type === "logo") {
+    if (templateElement.type === "logo") {
       return (
-        <div key={el.id} style={baseStyle} onClick={handleClick}>
+        <div key={templateElement.id} style={baseStyle} onClick={handleClick}>
           {branding.logoUrl ? (
             <img src={branding.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: elementStyle.objectFit || "contain" }} />
           ) : (
@@ -107,34 +107,34 @@ export function InvoicePrintPreview({
       );
     }
 
-    if (el.type === "divider") {
+    if (templateElement.type === "divider") {
       return (
-        <div key={el.id} style={{ ...baseStyle, borderTop: `${el.h || 1}px solid ${elementStyle.color || printTokens.border}`, height: undefined }} onClick={handleClick} />
+        <div key={templateElement.id} style={{ ...baseStyle, borderTop: `${templateElement.h || 1}px solid ${elementStyle.color || printTokens.border}`, height: undefined }} onClick={handleClick} />
       );
     }
 
-    if (el.type === "field" && collection) {
-      const fieldValue = resolveField(el.field!, collection as unknown as Record<string, unknown>, lookups);
+    if (templateElement.type === "field" && collection) {
+      const fieldValue = resolveField(templateElement.field!, collection as unknown as Record<string, unknown>, lookups);
       return (
-        <div key={el.id} style={baseStyle} onClick={handleClick}>
+        <div key={templateElement.id} style={baseStyle} onClick={handleClick}>
           {fieldValue || <span style={{ color: printTokens.placeholder, fontStyle: "italic" }}>—</span>}
         </div>
       );
     }
 
-    if (el.type === "field" && !collection) {
+    if (templateElement.type === "field" && !collection) {
       // In editor without collection — show placeholder
       return (
-        <div key={el.id} style={{ ...baseStyle, background: printTokens.fieldPlaceholderBg, border: `1px dashed ${printTokens.fieldPlaceholderBorder}`, borderRadius: 2 }} onClick={handleClick}>
-          <span style={{ color: printTokens.primary, fontSize: Math.min(elementStyle.fontSize || 10, 11), fontStyle: "italic" }}>{el.label}</span>
+        <div key={templateElement.id} style={{ ...baseStyle, background: printTokens.fieldPlaceholderBg, border: `1px dashed ${printTokens.fieldPlaceholderBorder}`, borderRadius: 2 }} onClick={handleClick}>
+          <span style={{ color: printTokens.primary, fontSize: Math.min(elementStyle.fontSize || 10, 11), fontStyle: "italic" }}>{templateElement.label}</span>
         </div>
       );
     }
 
     // type === "static"
     return (
-      <div key={el.id} style={baseStyle} onClick={handleClick}>
-        {el.label}
+      <div key={templateElement.id} style={baseStyle} onClick={handleClick}>
+        {templateElement.label}
       </div>
     );
   };

@@ -206,10 +206,10 @@ export function groupTimezoneOptions(
   options: readonly TimezoneOption[],
 ): { region: string; options: TimezoneOption[] }[] {
   const map = new Map<string, TimezoneOption[]>();
-  for (const opt of options) {
-    const list = map.get(opt.region) ?? [];
-    list.push(opt);
-    map.set(opt.region, list);
+  for (const option of options) {
+    const list = map.get(option.region) ?? [];
+    list.push(option);
+    map.set(option.region, list);
   }
 
   const regions = [...map.keys()].sort((a, b) => {

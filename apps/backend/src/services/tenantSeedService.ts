@@ -16,22 +16,22 @@ export async function seedTenantDefaults(): Promise<void> {
     const existing = await getCollection(name);
     if (Array.isArray(existing) && existing.length > 0) continue;
 
-    let data = rawData;
-    if (subdomain && Array.isArray(data)) {
-      let serialized = JSON.stringify(data);
+    let collectionSeed = rawData;
+    if (subdomain && Array.isArray(collectionSeed)) {
+      let serialized = JSON.stringify(collectionSeed);
       for (let i = 1; i <= 6; i++) {
         serialized = serialized.replaceAll(`"u${i}"`, `"${subdomain}_u${i}"`);
       }
-      data = JSON.parse(serialized) as unknown[];
+      collectionSeed = JSON.parse(serialized) as unknown[];
     }
 
-    await saveCollection(name, data as unknown[]);
+    await saveCollection(name, collectionSeed as unknown[]);
   }
 
   const objects = getMinimalObjects();
-  for (const [key, data] of Object.entries(objects)) {
+  for (const [key, objectSeed] of Object.entries(objects)) {
     const existing = await getObject(key);
     if (existing !== null && existing !== undefined) continue;
-    await saveObject(key, data);
+    await saveObject(key, objectSeed);
   }
 }

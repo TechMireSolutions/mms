@@ -139,8 +139,8 @@ async function loadTenantCollections(
       logical = storageName;
     }
     if (!logical) continue;
-    const data = await getCollectionByStorageName(storageName);
-    if (Array.isArray(data)) collections[logical] = data as Row[];
+    const collectionRows = await getCollectionByStorageName(storageName);
+    if (Array.isArray(collectionRows)) collections[logical] = collectionRows as Row[];
   }
   return collections;
 }

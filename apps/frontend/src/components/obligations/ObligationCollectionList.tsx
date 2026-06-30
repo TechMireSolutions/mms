@@ -17,8 +17,8 @@ import { FormSelect } from "@/components/ui/FormSelect";
 const PrintInvoiceModal = lazy(() => import("./invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
 function fmtAmount(amount: string | number, currencyId: string, currencies: any[]): string {
-  const cur = currencies.find((c) => c.id === currencyId);
-  return `${cur?.code || ""} ${parseFloat(amount as string).toLocaleString()}`;
+  const currency = currencies.find((c) => c.id === currencyId);
+  return `${currency?.code || ""} ${parseFloat(amount as string).toLocaleString()}`;
 }
 
 function fmtDate(d?: string | null): string {
@@ -28,7 +28,7 @@ function fmtDate(d?: string | null): string {
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   labels: {
     trigger: string;
     title: string;
@@ -126,7 +126,7 @@ export function ObligationCollectionList({
           <FormSelect
             aria-label={t("obligations.filter.type")}
             value={typeFilter}
-            onChange={(val) => setTypeFilter(val)}
+            onChange={(selectedType) => setTypeFilter(selectedType)}
             options={selectOptions}
             className="text-sm rounded-xl border border-border bg-background"
           />

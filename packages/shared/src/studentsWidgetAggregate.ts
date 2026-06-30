@@ -64,9 +64,9 @@ function aggregateNumericField(
   let sum = 0;
   let count = 0;
   items.forEach((item) => {
-    const num = Number(studentFieldValue(item, targetField));
-    if (!Number.isNaN(num)) {
-      sum += num;
+    const numericFieldValue = Number(studentFieldValue(item, targetField));
+    if (!Number.isNaN(numericFieldValue)) {
+      sum += numericFieldValue;
       count += 1;
     }
   });
@@ -85,7 +85,7 @@ function buildChartData(items: StudentRow[], query: StudentsWidgetQuery): { name
     groups[key].push(item);
   });
 
-  const data = Object.entries(groups).map(([groupName, groupItems]) => {
+  const chartRows = Object.entries(groups).map(([groupName, groupItems]) => {
     let finalVal = 0;
     if (query.operation === 'count' || query.operation === 'percentage') {
       finalVal = groupItems.length;
@@ -95,7 +95,7 @@ function buildChartData(items: StudentRow[], query: StudentsWidgetQuery): { name
     return { name: groupName, value: finalVal };
   });
 
-  return data.sort((a, b) => b.value - a.value).slice(0, 8);
+  return chartRows.sort((a, b) => b.value - a.value).slice(0, 8);
 }
 
 /** Server/client widget aggregate for students collection (globle2 §10). */

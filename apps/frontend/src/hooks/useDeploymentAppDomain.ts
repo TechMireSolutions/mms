@@ -6,8 +6,8 @@ import { env } from '@/lib/config/env';
 export const DEPLOYMENT_CONFIG_KEY = ['public', 'deployment-config'] as const;
 
 async function fetchDeploymentAppDomain(): Promise<string> {
-  const data = await apiJson<{ appDomain: string }>('/api/public/deployment-config');
-  return data.appDomain;
+  const deploymentConfig = await apiJson<{ appDomain: string }>('/api/public/deployment-config');
+  return deploymentConfig.appDomain;
 }
 
 /**

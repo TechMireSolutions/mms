@@ -223,20 +223,20 @@ export function buildWorkspaceBackupEnvelope(
 }
 
 /** Detects prototype pollution keys recursively in any parsed value. */
-export function hasPrototypePollution(val: unknown): boolean {
-  if (!val || typeof val !== 'object') return false;
-  if (Array.isArray(val)) {
-    for (const item of val) {
+export function hasPrototypePollution(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false;
+  if (Array.isArray(value)) {
+    for (const item of value) {
       if (hasPrototypePollution(item)) return true;
     }
     return false;
   }
-  const obj = val as Record<string, unknown>;
-  for (const key of Object.keys(obj)) {
+  const recordValue = value as Record<string, unknown>;
+  for (const key of Object.keys(recordValue)) {
     if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
       return true;
     }
-    if (hasPrototypePollution(obj[key])) {
+    if (hasPrototypePollution(recordValue[key])) {
       return true;
     }
   }

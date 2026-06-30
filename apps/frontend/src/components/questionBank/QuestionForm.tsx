@@ -278,14 +278,14 @@ export function QuestionForm({
       }
     });
 
-    return z.object(shape).passthrough().superRefine((data: any, ctx) => {
-      const qType = data.type;
+    return z.object(shape).passthrough().superRefine((validationData: any, ctx) => {
+      const qType = validationData.type;
       
       // MCQ answer validation
       if (qType === 'mcq') {
-        const opts = (data.options || []) as string[];
-        const ans = data.answer;
-        if (!ans || !opts.includes(ans)) {
+        const answerOptions = (validationData.options || []) as string[];
+        const answer = validationData.answer;
+        if (!answer || !answerOptions.includes(answer)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['answer'],
@@ -296,7 +296,7 @@ export function QuestionForm({
 
       // True/False answer validation
       if (qType === 'true_false') {
-        if (!data.answer) {
+        if (!validationData.answer) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['answer'],
@@ -307,8 +307,8 @@ export function QuestionForm({
 
       // Fill in blank validation
       if (qType === 'fill_blank') {
-        const blankCount = countFillBlankMarkers(String(data.text ?? ''));
-        const blanks = splitQuestionCompoundAnswer(String(data.answer ?? ''));
+        const blankCount = countFillBlankMarkers(String(validationData.text ?? ''));
+        const blanks = splitQuestionCompoundAnswer(String(validationData.answer ?? ''));
         if (blankCount < 1) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -326,8 +326,8 @@ export function QuestionForm({
 
       // Matching validation
       if (qType === 'matching') {
-        const lefts = ((data.options || []) as string[]).map((v) => String(v).trim()).filter(Boolean);
-        const rights = splitQuestionCompoundAnswer(String(data.answer ?? '')).filter(Boolean);
+        const lefts = ((validationData.options || []) as string[]).map((v) => String(v).trim()).filter(Boolean);
+        const rights = splitQuestionCompoundAnswer(String(validationData.answer ?? '')).filter(Boolean);
         if (lefts.length < 2 || rights.length < 2 || lefts.length !== rights.length) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -339,7 +339,7 @@ export function QuestionForm({
 
       // Ordering validation
       if (qType === 'ordering') {
-        const items = ((data.options || []) as string[]).map((v) => String(v).trim()).filter(Boolean);
+        const items = ((validationData.options || []) as string[]).map((v) => String(v).trim()).filter(Boolean);
         if (items.length < 2) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -351,7 +351,7 @@ export function QuestionForm({
 
       // Numeric validation
       if (qType === 'numeric') {
-        if (data.answer === undefined || data.answer === '' || Number.isNaN(Number(data.answer))) {
+        if (validationData.answer === undefined || validationData.answer === '' || Number.isNaN(Number(validationData.answer))) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['answer'],
@@ -361,7 +361,7 @@ export function QuestionForm({
       }
 
       // Citation fields validation
-      const citations = (data.sourceCitations || []) as any[];
+      const citations = (validationData.sourceCitations || []) as any[];
       const sourceFields = config.orderedFields.filter((field) => isQuestionSourceFieldId(field.id));
       for (const entry of citations) {
         const book = config.sourceBooks.find((b) => b.id === entry.bookId);
@@ -397,14 +397,14 @@ export function QuestionForm({
     t,
   });
 
-  const data = form.watch();
+  const questionValues = form.watch();
   const setValue = form.setValue;
 
   const handleQuestionLanguageChange = useCallback(
     (next: string): void => {
       const prevFormLang = resolveQuestionFormLanguage(
         language,
-        data.questionLanguage as string | undefined,
+        questionValues.questionLanguage as string | undefined,
         questionLanguageFieldEnabled,
       ) as AppLanguageCode;
       const nextFormLang = resolveQuestionFormLanguage(
@@ -416,12 +416,12 @@ export function QuestionForm({
       setValue('questionLanguage', normalizeAppLanguage(next));
       
       if (prevFormLang !== nextFormLang) {
-        const synced = syncTrueFalseLabelsForFormLanguage(data as any, prevFormLang, nextFormLang);
+        const synced = syncTrueFalseLabelsForFormLanguage(questionValues as any, prevFormLang, nextFormLang);
         setValue('options', synced.options || []);
         setValue('answer', synced.answer || '');
       }
     },
-    [language, questionLanguageFieldEnabled, data, setValue]
+    [language, questionLanguageFieldEnabled, questionValues, setValue]
   );
 
   const handleToggleBuilderMode = useCallback((active: boolean) => {
@@ -442,27 +442,27 @@ export function QuestionForm({
     // Categories tab
     if (config.isFieldEnabled('categoryId')) {
       totalRequired++;
-      if (data.categoryIds && data.categoryIds.length > 0) filledRequired++;
+      if (questionValues.categoryIds && questionValues.categoryIds.length > 0) filledRequired++;
     }
     if (config.isFieldEnabled('difficulty')) {
       totalRequired++;
-      if (data.difficulty) filledRequired++;
+      if (questionValues.difficulty) filledRequired++;
     }
     if (config.isFieldEnabled('questionLanguage')) {
       totalRequired++;
-      if (data.questionLanguage) filledRequired++;
+      if (questionValues.questionLanguage) filledRequired++;
     }
 
     // Question content tab
     if (config.isFieldEnabled('text')) {
       totalRequired++;
-      if (data.text) filledRequired++;
+      if (questionValues.text) filledRequired++;
     }
     
     // Core question type answers
-    if (data.type === 'mcq' || data.type === 'true_false' || data.type === 'numeric' || data.type === 'fill_blank') {
+    if (questionValues.type === 'mcq' || questionValues.type === 'true_false' || questionValues.type === 'numeric' || questionValues.type === 'fill_blank') {
       totalRequired++;
-      if (data.answer) filledRequired++;
+      if (questionValues.answer) filledRequired++;
     }
 
     // Other registry fields
@@ -482,7 +482,7 @@ export function QuestionForm({
         }
 
         const isRequired = !!field.required;
-        const fieldValue = data[field.key];
+        const fieldValue = questionValues[field.key];
         const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "";
 
         if (isRequired) {
@@ -500,7 +500,7 @@ export function QuestionForm({
     const progress = (reqRatio * 0.7) + (optRatio * 0.3);
 
     return Math.round(progress * 100);
-  }, [data, fieldsByTab, config]);
+  }, [questionValues, fieldsByTab, config]);
 
   const formTabs = useMemo(() => {
     return [
@@ -544,7 +544,7 @@ export function QuestionForm({
   const renderFieldByKey = (field: FieldDefinition): React.ReactNode => {
     if (!field.enabled) return null;
 
-    const value = data[field.key] ?? getDefaultModuleFieldValue(field as any);
+    const value = questionValues[field.key] ?? getDefaultModuleFieldValue(field as any);
     const fieldError = errors.find((e) => e.fieldId === field.key);
     return (
       <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
@@ -573,7 +573,7 @@ export function QuestionForm({
               id="qb-text"
               className={FORM_TEXTAREA}
               rows={3}
-              value={(data.text as string) || ''}
+              value={(questionValues.text as string) || ''}
               onChange={(e) => setValue('text', e.target.value, { shouldValidate: true, shouldDirty: true })}
               placeholder={tForm('questionBank.questionTextPlaceholder')}
             />
@@ -589,9 +589,9 @@ export function QuestionForm({
             <FormSelect
               id="qb-type"
               className={FORM_SELECT}
-              value={data.type}
-              onChange={(val: any) => {
-                const nextType = val as QuestionType;
+              value={questionValues.type}
+              onChange={(selectedType: any) => {
+                const nextType = selectedType as QuestionType;
                 const trueLabel = tForm('questionBank.true');
                 const falseLabel = tForm('questionBank.false');
                 const payload = defaultPayloadForQuestionType(nextType, trueLabel, falseLabel);
@@ -600,7 +600,7 @@ export function QuestionForm({
                 setValue('options', payload.options);
                 setValue('answer', payload.answer);
 
-                if (nextType === 'fill_blank' && !String(data.text ?? '').includes('___')) {
+                if (nextType === 'fill_blank' && !String(questionValues.text ?? '').includes('___')) {
                   setValue('text', tForm('questionBank.fillBlankTemplate'));
                 }
               }}
@@ -621,8 +621,8 @@ export function QuestionForm({
             <FormSelect
               id="qb-difficulty"
               className={FORM_SELECT}
-              value={(data.difficulty as string) || 'easy'}
-              onChange={(val: any) => setValue('difficulty', val, { shouldValidate: true, shouldDirty: true })}
+              value={(questionValues.difficulty as string) || 'easy'}
+              onChange={(selectedDifficulty: any) => setValue('difficulty', selectedDifficulty, { shouldValidate: true, shouldDirty: true })}
               options={config.enabledDifficulties.map((k) => ({
                 value: k,
                 label: difficultyLabel(k),
@@ -634,7 +634,7 @@ export function QuestionForm({
     }
 
     if (field.key === 'questionLanguage') {
-      const currentLanguage = normalizeAppLanguage(data.questionLanguage as string | undefined);
+      const currentLanguage = normalizeAppLanguage(questionValues.questionLanguage as string | undefined);
       return (
         <div key="questionLanguage">
           <Field label={label} required={field.required} error={fieldError?.message}>
@@ -653,43 +653,43 @@ export function QuestionForm({
       );
     }
 
-    if (field.key === 'options' && data.type === 'mcq') {
-      const options = Array.isArray(data.options) ? data.options : ['', '', '', ''];
-      const optError = errors.find((e) => e.fieldId === 'options');
+    if (field.key === 'options' && questionValues.type === 'mcq') {
+      const options = Array.isArray(questionValues.options) ? questionValues.options : ['', '', '', ''];
+      const optionsError = errors.find((e) => e.fieldId === 'options');
       return (
         <div key="options" className="sm:col-span-2">
           <span className={FORM_LABEL}>{label}{requiredMark}</span>
           <div className="space-y-2 mt-1.5" role="radiogroup">
-            {options.slice(0, 4).map((opt, i) => (
-              <div key={i} className="flex items-center gap-2">
+            {options.slice(0, 4).map((optionValue, optionIndex) => (
+              <div key={optionIndex} className="flex items-center gap-2">
                 <input
                   type="radio"
                   name="answer"
-                  value={opt as string}
-                  checked={data.answer === opt}
-                  onChange={() => setValue('answer', opt, { shouldValidate: true, shouldDirty: true })}
+                  value={optionValue as string}
+                  checked={questionValues.answer === optionValue}
+                  onChange={() => setValue('answer', optionValue, { shouldValidate: true, shouldDirty: true })}
                   className="h-4 w-4 flex-shrink-0 accent-primary"
                 />
                 <Input
                   type="text"
                   className={FORM_INPUT}
-                  value={opt as string}
+                  value={optionValue as string}
                   onChange={(e) => {
-                    const nextOpts = [...options];
-                    nextOpts[i] = e.target.value;
-                    setValue('options', nextOpts, { shouldValidate: true, shouldDirty: true });
+                    const nextOptions = [...options];
+                    nextOptions[optionIndex] = e.target.value;
+                    setValue('options', nextOptions, { shouldValidate: true, shouldDirty: true });
                   }}
-                  placeholder={tForm('questionBank.optionN', { n: i + 1 })}
+                  placeholder={tForm('questionBank.optionN', { n: optionIndex + 1 })}
                 />
               </div>
             ))}
           </div>
-          {optError && <p className="text-[10px] text-destructive mt-1 font-medium">{optError.message}</p>}
+          {optionsError && <p className="text-[10px] text-destructive mt-1 font-medium">{optionsError.message}</p>}
         </div>
       );
     }
 
-    if (field.key === 'answer' && data.type === 'true_false') {
+    if (field.key === 'answer' && questionValues.type === 'true_false') {
       const trueLabel = tForm('questionBank.true');
       const falseLabel = tForm('questionBank.false');
       const ansError = errors.find((e) => e.fieldId === 'answer');
@@ -706,7 +706,7 @@ export function QuestionForm({
                   setValue('answer', v, { shouldValidate: true, shouldDirty: true });
                   setValue('options', [trueLabel, falseLabel]);
                 }}
-                className={`flex-1 rounded-lg border py-2 text-sm font-medium ${data.answer === v ? 'border-primary bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                className={`flex-1 rounded-lg border py-2 text-sm font-medium ${questionValues.answer === v ? 'border-primary bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
               >
                 {v}
               </Button>
@@ -717,7 +717,7 @@ export function QuestionForm({
       );
     }
 
-    if (field.key === 'answer' && data.type === 'short') {
+    if (field.key === 'answer' && questionValues.type === 'short') {
       return (
         <div key="answer-short" className="sm:col-span-2">
           <Field label={tForm('questionBank.modelAnswer')} required={field.required} error={fieldError?.message}>
@@ -725,7 +725,7 @@ export function QuestionForm({
               id="qb-answer"
               className={FORM_TEXTAREA}
               rows={2}
-              value={(data.answer as string) || ''}
+              value={(questionValues.answer as string) || ''}
               onChange={(e) => setValue('answer', e.target.value, { shouldValidate: true, shouldDirty: true })}
               placeholder={tForm('questionBank.modelAnswerPlaceholder')}
             />
@@ -764,10 +764,10 @@ export function QuestionForm({
               <CategorySelector
                 multiple
                 categories={config.categories}
-                value={data.categoryIds as string[]}
+                value={questionValues.categoryIds as string[]}
                 onChange={(ids) => {
-                  const arr = Array.isArray(ids) ? ids : [ids].filter(Boolean);
-                  setValue('categoryIds', arr, { shouldValidate: true, shouldDirty: true });
+                  const categoryIds = Array.isArray(ids) ? ids : [ids].filter(Boolean);
+                  setValue('categoryIds', categoryIds, { shouldValidate: true, shouldDirty: true });
                 }}
                 onCategoriesUpdated={() => config.refresh()}
                 required={categoriesRequired}
@@ -789,7 +789,7 @@ export function QuestionForm({
         <div className="space-y-5 text-left">
           <QuestionSourcesTab
             sourceBooks={config.sourceBooks}
-            citations={data.sourceCitations}
+            citations={questionValues.sourceCitations}
             availableFieldIds={availableSourceFieldIds}
             orderedSourceFields={sourceFields}
             onCitationsChange={(next) => setValue('sourceCitations', next, { shouldValidate: true, shouldDirty: true })}
@@ -808,17 +808,17 @@ export function QuestionForm({
           <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {bodyFields.map((field) => {
-                if (fieldRendersOnForm(field, data.type)) {
+                if (fieldRendersOnForm(field, questionValues.type)) {
                   return renderField(field);
                 }
                 return null;
               })}
-              {COMPOUND_ANSWER_TYPES.has(data.type) && (
+              {COMPOUND_ANSWER_TYPES.has(questionValues.type) && (
                 <QuestionTypeAnswerFields
-                  questionType={data.type}
-                  text={String(data.text ?? '')}
-                  options={Array.isArray(data.options) ? data.options : []}
-                  answer={String(data.answer ?? '')}
+                  questionType={questionValues.type}
+                  text={String(questionValues.text ?? '')}
+                  options={Array.isArray(questionValues.options) ? questionValues.options : []}
+                  answer={String(questionValues.answer ?? '')}
                   onOptionsChange={(next) => setValue('options', next as any, { shouldValidate: true, shouldDirty: true })}
                   onAnswerChange={(next) => setValue('answer', next, { shouldValidate: true, shouldDirty: true })}
                   t={tForm as any}
@@ -833,12 +833,12 @@ export function QuestionForm({
     return null;
   };
 
-  const footerStart = data.text ? (
+  const footerStart = questionValues.text ? (
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      <span className="font-semibold text-foreground truncate max-w-[200px]">{data.text}</span>
+      <span className="font-semibold text-foreground truncate max-w-[200px]">{questionValues.text}</span>
       <div className="flex items-center gap-2 border-s border-border ps-3">
-        <span className="capitalize">{data.type}</span>
-        <span className="border-s border-border ps-2 capitalize">{data.difficulty}</span>
+        <span className="capitalize">{questionValues.type}</span>
+        <span className="border-s border-border ps-2 capitalize">{questionValues.difficulty}</span>
       </div>
     </div>
   ) : (
@@ -869,11 +869,11 @@ export function QuestionForm({
       saveLabel={tForm('questionBank.saveQuestion' as any)}
       onSave={() => void form.handleSubmit(onSubmit, onInvalid)()}
       saving={saving}
-      saveDisabled={!data.text?.trim() || (categoriesRequired && data.categoryIds.length === 0)}
+      saveDisabled={!questionValues.text?.trim() || (categoriesRequired && questionValues.categoryIds.length === 0)}
       footerStart={footerStart}
       fields={fieldsByTab[tab] || []}
-      data={data}
-      setValue={(key, val, opts) => setValue(key as any, val, opts)}
+      data={questionValues}
+      setValue={(key, value, options) => setValue(key as any, value, options)}
       errors={errors}
       renderField={renderField}
       renderBasicContent={renderBasicContent}

@@ -110,11 +110,11 @@ export function createReversalEntry(entry: JournalEntry, allEntries: JournalEntr
 }
 
 export function generateJERef(entries: JournalEntry[]): string {
-  const jeEntries = entries.filter(e => e.ref.startsWith("JE-"));
+  const journalEntries = entries.filter((entry) => entry.ref.startsWith("JE-"));
   let maxId = 0;
-  jeEntries.forEach(e => {
-    const num = parseInt(e.ref.substring(3));
-    if (!isNaN(num) && num > maxId) maxId = num;
+  journalEntries.forEach((entry) => {
+    const referenceNumber = parseInt(entry.ref.substring(3));
+    if (!isNaN(referenceNumber) && referenceNumber > maxId) maxId = referenceNumber;
   });
   return `JE-${(maxId + 1).toString().padStart(4, "0")}`;
 }

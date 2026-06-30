@@ -20,7 +20,7 @@ interface FieldItemProps {
   onEdit?: () => void;
   defaultValue?: unknown;
   permissions?: string[];
-  onChangeDefaults?: (val: unknown) => void;
+  onChangeDefaults?: (fieldValue: unknown) => void;
   onChangePermissions?: (roles: string[]) => void;
   onEditField?: () => void;
   onDeleteField?: () => void;
@@ -255,7 +255,7 @@ export function CoreFieldEditorList({
                           isDragging={snapshot.isDragging}
                           defaultValue={defaultValues[field.key]}
                           permissions={permissions[field.key]}
-                          onChangeDefaults={onChangeDefaults ? (val) => onChangeDefaults(field.key, val) : undefined}
+                          onChangeDefaults={onChangeDefaults ? (fieldValue) => onChangeDefaults(field.key, fieldValue) : undefined}
                           onChangePermissions={onChangePermissions && !core ? (roles) => onChangePermissions(field.key, roles) : undefined}
                           onEdit={() => { setEditingId(editingId === field.key ? null : field.key); setFullEditingId(null); }}
                           onEditField={onEditField && !core ? () => { setFullEditingId(fullEditingId === field.key ? null : field.key); setEditingId(null); } : undefined}

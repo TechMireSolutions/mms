@@ -14,7 +14,7 @@ export interface ModuleColumnCustomizerLabels {
 
 export interface ModuleColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (cols: ModuleColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   labels: ModuleColumnCustomizerLabels;
 }
 

@@ -61,9 +61,9 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setIsCheckingPlatformAuth(true);
     try {
-      const data = await apiJson<{ user: PlatformUser }>('/api/platform/auth/me');
+      const platformSession = await apiJson<{ user: PlatformUser }>('/api/platform/auth/me');
       markPlatformBrowserSession();
-      setPlatformUser(data.user);
+      setPlatformUser(platformSession.user);
       setIsPlatformAuthenticated(true);
     } catch {
       clearPlatformBrowserSession();
@@ -78,13 +78,13 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const platformLogin = useCallback(async (email: string, password: string): Promise<void> => {
     setIsPlatformLoginSubmitting(true);
     try {
-      const data = await apiJson<{ user: PlatformUser }>('/api/platform/auth/login', {
+      const platformSession = await apiJson<{ user: PlatformUser }>('/api/platform/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
       localStorage.removeItem('mms_user');
       markPlatformBrowserSession();
-      setPlatformUser(data.user);
+      setPlatformUser(platformSession.user);
       setIsPlatformAuthenticated(true);
       setPlatformAuthChecked(true);
     } catch (error) {
@@ -145,9 +145,9 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 };
 
 export function usePlatformAuth(): PlatformAuthContextType {
-  const ctx = useContext(PlatformAuthContext);
-  if (!ctx) {
+  const platformAuth = useContext(PlatformAuthContext);
+  if (!platformAuth) {
     throw new Error('usePlatformAuth must be used within PlatformAuthProvider');
   }
-  return ctx;
+  return platformAuth;
 }

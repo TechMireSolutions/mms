@@ -73,7 +73,7 @@ export {
 export interface ContactConfigContextType {
   fieldConfig: FieldConfig;
   prefs: ContactPreferences;
-  updateConfig: (cfg: FieldConfig) => void;
+  updateConfig: (nextConfig: FieldConfig) => void;
   updatePrefs: (newPrefs: Partial<ContactPreferences>) => void;
 
   enabledTabIds: Set<string>;
@@ -105,19 +105,19 @@ export interface ContactConfigContextType {
   visibleColumns: Array<{ id: string; label: string; sortField?: string }>;
 
   // Mutators
-  updateGenders: (val: string[]) => void;
-  updateSocialPlatforms: (val: string[]) => void;
-  updateRelationships: (val: string[]) => void;
-  updateLifecycleStages: (val: string[]) => void;
-  updateLifecycleColors: (val: Record<string, { bg: string; text: string; border: string }>) => void;
-  updateSocialPlaceholders: (val: Record<string, string>) => void;
-  updateWhatsappTemplates: (val: WhatsAppTemplate[]) => void;
-  updatePhoneLabels: (val: string[]) => void;
-  updateEmailLabels: (val: string[]) => void;
-  updateAddressLabels: (val: string[]) => void;
-  updateCountryCodes: (val: Array<{ country: string; code: string }>) => void;
-  updateColumnRegistry: (cols: ColumnRegistryEntry[]) => void;
-  updateUserColumnLayout: (cols: ColumnRegistryEntry[]) => void;
+  updateGenders: (genderOptions: string[]) => void;
+  updateSocialPlatforms: (socialPlatformOptions: string[]) => void;
+  updateRelationships: (relationshipOptions: string[]) => void;
+  updateLifecycleStages: (lifecycleStageOptions: string[]) => void;
+  updateLifecycleColors: (lifecycleColors: Record<string, { bg: string; text: string; border: string }>) => void;
+  updateSocialPlaceholders: (socialPlaceholders: Record<string, string>) => void;
+  updateWhatsappTemplates: (whatsappTemplates: WhatsAppTemplate[]) => void;
+  updatePhoneLabels: (phoneLabelOptions: string[]) => void;
+  updateEmailLabels: (emailLabelOptions: string[]) => void;
+  updateAddressLabels: (addressLabelOptions: string[]) => void;
+  updateCountryCodes: (countryCodeOptions: Array<{ country: string; code: string }>) => void;
+  updateColumnRegistry: (columnRegistry: ColumnRegistryEntry[]) => void;
+  updateUserColumnLayout: (columnRegistry: ColumnRegistryEntry[]) => void;
   systemSortOptions: Array<{ field: string; label: string }>;
   defaultContactRating: number;
 }
@@ -291,18 +291,18 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         const parsed = safeParseEvent(e, subKey);
         if (parsed) {
           const currentTemplatesKey = contactWhatsappTemplatesKey(user?.id);
-          const COLLECTION_SETTERS: Record<string, (val: unknown) => void> = {
-            [CONTACT_CONFIG_COLLECTION_KEYS.genders]: setGendersState as (val: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms]: setSocialPlatformsState as (val: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.relationships]: setRelationshipsState as (val: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.lifecycleStages]: setLifecycleStagesState as (val: unknown) => void,
-            [CONTACT_CONFIG_OBJECT_KEYS.lifecycleColors]: setLifecycleColorsState as (val: unknown) => void,
-            [CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders]: setSocialPlaceholdersState as (val: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels]: setPhoneLabelsState as (val: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.emailLabels]: setEmailLabelsState as (val: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.addressLabels]: setAddressLabelsState as (val: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.countryCodes]: setCountryCodesState as (val: unknown) => void,
-            [currentTemplatesKey]: setWhatsappTemplatesState as (val: unknown) => void,
+          const COLLECTION_SETTERS: Record<string, (storedConfigValue: unknown) => void> = {
+            [CONTACT_CONFIG_COLLECTION_KEYS.genders]: setGendersState as (storedConfigValue: unknown) => void,
+            [CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms]: setSocialPlatformsState as (storedConfigValue: unknown) => void,
+            [CONTACT_CONFIG_COLLECTION_KEYS.relationships]: setRelationshipsState as (storedConfigValue: unknown) => void,
+            [CONTACT_CONFIG_COLLECTION_KEYS.lifecycleStages]: setLifecycleStagesState as (storedConfigValue: unknown) => void,
+            [CONTACT_CONFIG_OBJECT_KEYS.lifecycleColors]: setLifecycleColorsState as (storedConfigValue: unknown) => void,
+            [CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders]: setSocialPlaceholdersState as (storedConfigValue: unknown) => void,
+            [CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels]: setPhoneLabelsState as (storedConfigValue: unknown) => void,
+            [CONTACT_CONFIG_COLLECTION_KEYS.emailLabels]: setEmailLabelsState as (storedConfigValue: unknown) => void,
+            [CONTACT_CONFIG_COLLECTION_KEYS.addressLabels]: setAddressLabelsState as (storedConfigValue: unknown) => void,
+            [CONTACT_CONFIG_COLLECTION_KEYS.countryCodes]: setCountryCodesState as (storedConfigValue: unknown) => void,
+            [currentTemplatesKey]: setWhatsappTemplatesState as (storedConfigValue: unknown) => void,
           };
           COLLECTION_SETTERS[subKey]?.(parsed);
         }
@@ -313,108 +313,108 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   // ── Mutators ──────────────────────────────────────────────────────────────
-  const updateConfig = useCallback((cfg: FieldConfig) => {
-    saveFieldConfig(cfg);
-    setFieldConfigState(cfg);
+  const updateConfig = useCallback((nextConfig: FieldConfig) => {
+    saveFieldConfig(nextConfig);
+    setFieldConfigState(nextConfig);
   }, []);
 
   const updatePrefs = useCallback((newPrefs: Partial<ContactPreferences>) => {
-    setPrefsState((prev) => {
-      const merged = { ...prev, ...newPrefs };
+    setPrefsState((currentPreferences) => {
+      const merged = { ...currentPreferences, ...newPrefs };
       savePreferences(merged);
       return merged;
     });
   }, []);
 
-  const updateGenders = useCallback((val: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, val);
-    setGendersState(val);
-    setFieldConfigState((prev) => {
-      const next = syncOptionsInConfig(prev, "basic", "gender", val);
+  const updateGenders = useCallback((genderOptions: string[]) => {
+    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, genderOptions);
+    setGendersState(genderOptions);
+    setFieldConfigState((currentConfig) => {
+      const next = syncOptionsInConfig(currentConfig, "basic", "gender", genderOptions);
       saveFieldConfig(next);
       return next;
     });
   }, []);
-  const updateSocialPlatforms = useCallback((val: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms, val);
-    setSocialPlatformsState(val);
-    setFieldConfigState((prev) => {
-      const next = syncOptionsInConfig(prev, "socials", "platform", val);
+  const updateSocialPlatforms = useCallback((socialPlatformOptions: string[]) => {
+    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms, socialPlatformOptions);
+    setSocialPlatformsState(socialPlatformOptions);
+    setFieldConfigState((currentConfig) => {
+      const next = syncOptionsInConfig(currentConfig, "socials", "platform", socialPlatformOptions);
       saveFieldConfig(next);
       return next;
     });
   }, []);
-  const updateRelationships = useCallback((val: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, val);
-    setRelationshipsState(val);
-    setFieldConfigState((prev) => {
-      const next = syncOptionsInConfig(prev, "emergency", "relationship", val);
+  const updateRelationships = useCallback((relationshipOptions: string[]) => {
+    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, relationshipOptions);
+    setRelationshipsState(relationshipOptions);
+    setFieldConfigState((currentConfig) => {
+      const next = syncOptionsInConfig(currentConfig, "emergency", "relationship", relationshipOptions);
       saveFieldConfig(next);
       return next;
     });
   }, []);
-  const updateLifecycleStages = useCallback((val: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.lifecycleStages, val);
-    setLifecycleStagesState(val);
-    setFieldConfigState((prev) => {
-      const next = syncOptionsInConfig(prev, "basic", "lifecycleStage", val);
+  const updateLifecycleStages = useCallback((lifecycleStageOptions: string[]) => {
+    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.lifecycleStages, lifecycleStageOptions);
+    setLifecycleStagesState(lifecycleStageOptions);
+    setFieldConfigState((currentConfig) => {
+      const next = syncOptionsInConfig(currentConfig, "basic", "lifecycleStage", lifecycleStageOptions);
       saveFieldConfig(next);
       return next;
     });
   }, []);
-  const updateLifecycleColors = useCallback((val: Record<string, { bg: string; text: string; border: string }>) => {
-    saveObject(CONTACT_CONFIG_OBJECT_KEYS.lifecycleColors, val);
-    setLifecycleColorsState(val);
+  const updateLifecycleColors = useCallback((lifecycleColors: Record<string, { bg: string; text: string; border: string }>) => {
+    saveObject(CONTACT_CONFIG_OBJECT_KEYS.lifecycleColors, lifecycleColors);
+    setLifecycleColorsState(lifecycleColors);
   }, []);
-  const updateSocialPlaceholders = useCallback((val: Record<string, string>) => {
-    saveObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, val);
-    setSocialPlaceholdersState(val);
+  const updateSocialPlaceholders = useCallback((socialPlaceholders: Record<string, string>) => {
+    saveObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, socialPlaceholders);
+    setSocialPlaceholdersState(socialPlaceholders);
   }, []);
-  const updateWhatsappTemplates = useCallback((val: WhatsAppTemplate[]) => {
-    saveCollection(contactWhatsappTemplatesKey(user?.id), val);
-    setWhatsappTemplatesState(val);
+  const updateWhatsappTemplates = useCallback((whatsappTemplates: WhatsAppTemplate[]) => {
+    saveCollection(contactWhatsappTemplatesKey(user?.id), whatsappTemplates);
+    setWhatsappTemplatesState(whatsappTemplates);
   }, [user?.id]);
-  const updatePhoneLabels = useCallback((val: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, val);
-    setPhoneLabelsState(val);
-    setFieldConfigState((prev) => {
-      const next = syncOptionsInConfig(prev, "phones", "label", val);
+  const updatePhoneLabels = useCallback((phoneLabelOptions: string[]) => {
+    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, phoneLabelOptions);
+    setPhoneLabelsState(phoneLabelOptions);
+    setFieldConfigState((currentConfig) => {
+      const next = syncOptionsInConfig(currentConfig, "phones", "label", phoneLabelOptions);
       saveFieldConfig(next);
       return next;
     });
   }, []);
-  const updateEmailLabels = useCallback((val: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, val);
-    setEmailLabelsState(val);
-    setFieldConfigState((prev) => {
-      const next = syncOptionsInConfig(prev, "emails", "label", val);
+  const updateEmailLabels = useCallback((emailLabelOptions: string[]) => {
+    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, emailLabelOptions);
+    setEmailLabelsState(emailLabelOptions);
+    setFieldConfigState((currentConfig) => {
+      const next = syncOptionsInConfig(currentConfig, "emails", "label", emailLabelOptions);
       saveFieldConfig(next);
       return next;
     });
   }, []);
-  const updateAddressLabels = useCallback((val: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.addressLabels, val);
-    setAddressLabelsState(val);
-    setFieldConfigState((prev) => {
-      const next = syncOptionsInConfig(prev, "addresses", "label", val);
+  const updateAddressLabels = useCallback((addressLabelOptions: string[]) => {
+    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.addressLabels, addressLabelOptions);
+    setAddressLabelsState(addressLabelOptions);
+    setFieldConfigState((currentConfig) => {
+      const next = syncOptionsInConfig(currentConfig, "addresses", "label", addressLabelOptions);
       saveFieldConfig(next);
       return next;
     });
   }, []);
-  const updateCountryCodes = useCallback((val: Array<{ country: string; code: string }>) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, val);
-    setCountryCodesState(val);
+  const updateCountryCodes = useCallback((countryCodeOptions: Array<{ country: string; code: string }>) => {
+    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, countryCodeOptions);
+    setCountryCodesState(countryCodeOptions);
   }, []);
 
-  const updateColumnRegistry = useCallback((cols: ColumnRegistryEntry[]) => {
-    updateConfig({ ...fieldConfig, columnRegistry: cols });
+  const updateColumnRegistry = useCallback((columnRegistry: ColumnRegistryEntry[]) => {
+    updateConfig({ ...fieldConfig, columnRegistry });
   }, [fieldConfig, updateConfig]);
 
-  const updateUserColumnLayout = useCallback((cols: ColumnRegistryEntry[]) => {
+  const updateUserColumnLayout = useCallback((columnRegistry: ColumnRegistryEntry[]) => {
     const userId = user?.id ? String(user.id) : "";
     if (!userId) return;
-    saveUserColumnPreferences(userId, cols);
-    const preferences: ContactColumnPreference[] = cols.map(({ key, enabled, order }) => ({ key, enabled, order }));
+    saveUserColumnPreferences(userId, columnRegistry);
+    const preferences: ContactColumnPreference[] = columnRegistry.map(({ key, enabled, order }) => ({ key, enabled, order }));
     setUserColumnOverlay(preferences);
     saveColumnPrefs(preferences);
   }, [user?.id, saveColumnPrefs]);
@@ -673,9 +673,9 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
  * @returns {ContactConfigContextType} The configuration context value.
  */
 export function useContactConfig(): ContactConfigContextType {
-  const ctx = useContext(ContactConfigContext);
-  if (!ctx) throw new Error("useContactConfig must be used inside <ContactConfigProvider>");
-  return ctx;
+  const contactConfig = useContext(ContactConfigContext);
+  if (!contactConfig) throw new Error("useContactConfig must be used inside <ContactConfigProvider>");
+  return contactConfig;
 }
 
 // ── Dynamic column builder hook ───────────────────────────────────────────────

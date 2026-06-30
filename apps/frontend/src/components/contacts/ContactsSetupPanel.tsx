@@ -23,13 +23,13 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 
-const toTitleCase = (str: string): string => sharedToTitleCase(str) as string;
+const toTitleCase = (value: string): string => sharedToTitleCase(value) as string;
 
 interface ToggleProps {
   label: string;
   description?: string;
   value: boolean;
-  onChange: (val: boolean) => void;
+  onChange: (enabled: boolean) => void;
   ariaLabel?: string;
 }
 
@@ -566,8 +566,8 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                         isUniqueField={isUniqueField}
                         defaultValues={tabFieldDefaultValues[tabId]}
                         permissions={tabFieldPermissions[tabId]}
-                        onChangeDefaults={(fieldId: string, val: unknown) => {
-                          setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: val } }));
+                        onChangeDefaults={(fieldId: string, fieldValue: unknown) => {
+                          setTabFieldDefaultValues(prev => ({ ...prev, [tabId]: { ...prev[tabId], [fieldId]: fieldValue } }));
                           setSaved(false);
                         }}
                         onChangePermissions={(fieldId: string, roles: string[]) => {
