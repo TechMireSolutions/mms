@@ -29,37 +29,37 @@ export function hexToHslColor(hex: string): HslColor | null {
   }
   if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return null;
 
-  const r = parseInt(normalized.substring(0, 2), 16) / 255;
-  const g = parseInt(normalized.substring(2, 4), 16) / 255;
-  const b = parseInt(normalized.substring(4, 6), 16) / 255;
+  const red = parseInt(normalized.substring(0, 2), 16) / 255;
+  const green = parseInt(normalized.substring(2, 4), 16) / 255;
+  const blue = parseInt(normalized.substring(4, 6), 16) / 255;
 
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  let h = 0;
-  let s = 0;
-  const l = (max + min) / 2;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  let hue = 0;
+  let saturation = 0;
+  const lightness = (max + min) / 2;
 
   if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    const delta = max - min;
+    saturation = lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min);
     switch (max) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0);
+      case red:
+        hue = (green - blue) / delta + (green < blue ? 6 : 0);
         break;
-      case g:
-        h = (b - r) / d + 2;
+      case green:
+        hue = (blue - red) / delta + 2;
         break;
       default:
-        h = (r - g) / d + 4;
+        hue = (red - green) / delta + 4;
         break;
     }
-    h /= 6;
+    hue /= 6;
   }
 
   return {
-    h: Math.round(h * 360),
-    s: Math.round(s * 100),
-    l: Math.round(l * 100),
+    h: Math.round(hue * 360),
+    s: Math.round(saturation * 100),
+    l: Math.round(lightness * 100),
   };
 }
 
@@ -90,32 +90,32 @@ export function normalizeBrandingHex(raw: string | undefined, fallback: string):
 
 /** Converts HSL components to a `#rrggbb` hex string. */
 export function hslColorToHex(color: HslColor): string {
-  const h = color.h / 360;
-  const s = color.s / 100;
-  const l = color.l / 100;
+  const hue = color.h / 360;
+  const saturation = color.s / 100;
+  const lightness = color.l / 100;
 
-  const hue2rgb = (p: number, q: number, t: number): number => {
-    let tt = t;
-    if (tt < 0) tt += 1;
-    if (tt > 1) tt -= 1;
-    if (tt < 1 / 6) return p + (q - p) * 6 * tt;
-    if (tt < 1 / 2) return q;
-    if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
-    return p;
+  const hueToRgb = (lowerBound: number, upperBound: number, hueOffset: number): number => {
+    let adjustedHue = hueOffset;
+    if (adjustedHue < 0) adjustedHue += 1;
+    if (adjustedHue > 1) adjustedHue -= 1;
+    if (adjustedHue < 1 / 6) return lowerBound + (upperBound - lowerBound) * 6 * adjustedHue;
+    if (adjustedHue < 1 / 2) return upperBound;
+    if (adjustedHue < 2 / 3) return lowerBound + (upperBound - lowerBound) * (2 / 3 - adjustedHue) * 6;
+    return lowerBound;
   };
 
-  let r: number;
-  let g: number;
-  let b: number;
+  let red: number;
+  let green: number;
+  let blue: number;
 
-  if (s === 0) {
-    r = g = b = l;
+  if (saturation === 0) {
+    red = green = blue = lightness;
   } else {
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1 / 3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1 / 3);
+    const upperBound = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+    const lowerBound = 2 * lightness - upperBound;
+    red = hueToRgb(lowerBound, upperBound, hue + 1 / 3);
+    green = hueToRgb(lowerBound, upperBound, hue);
+    blue = hueToRgb(lowerBound, upperBound, hue - 1 / 3);
   }
 
   const toHex = (channel: number) =>
@@ -123,7 +123,7 @@ export function hslColorToHex(color: HslColor): string {
       .toString(16)
       .padStart(2, '0');
 
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  return `#${toHex(red)}${toHex(green)}${toHex(blue)}`;
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
@@ -146,13 +146,13 @@ function relativeLuminance(hex: string): number | null {
   const rgb = hexToRgb(hex);
   if (!rgb) return null;
   const transform = (channel: number) => {
-    const s = channel / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    const scaledChannel = channel / 255;
+    return scaledChannel <= 0.03928 ? scaledChannel / 12.92 : ((scaledChannel + 0.055) / 1.055) ** 2.4;
   };
-  const r = transform(rgb.r);
-  const g = transform(rgb.g);
-  const b = transform(rgb.b);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const red = transform(rgb.r);
+  const green = transform(rgb.g);
+  const blue = transform(rgb.b);
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 }
 
 /**

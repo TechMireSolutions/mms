@@ -491,35 +491,35 @@ export type QuestionSourceRef = {
 };
 
 /** Resolves category ids from `categoryIds` or legacy `categoryId`. */
-export function getQuestionCategoryIds(q: QuestionCategoryRef): string[] {
-  const fromArray = (q.categoryIds ?? []).map((id) => id?.trim()).filter(Boolean) as string[];
+export function getQuestionCategoryIds(question: QuestionCategoryRef): string[] {
+  const fromArray = (question.categoryIds ?? []).map((id) => id?.trim()).filter(Boolean) as string[];
   if (fromArray.length > 0) return [...new Set(fromArray)];
-  const legacy = q.categoryId?.trim();
+  const legacy = question.categoryId?.trim();
   return legacy ? [legacy] : [];
 }
 
 /** Resolves source entries from citations, `sources`, or legacy `source`. */
 export function getQuestionSources(
-  q: QuestionSourceRef,
+  question: QuestionSourceRef,
   books?: readonly QuestionSourceBook[],
 ): QuestionSourceReference[] {
-  const fromCitations = (q.sourceCitations ?? [])
+  const fromCitations = (question.sourceCitations ?? [])
     .map((entry) => resolveQuestionBookCitation(entry, books ?? []))
     .filter((entry): entry is QuestionSourceReference => !!entry);
   if (fromCitations.length > 0) return fromCitations;
 
-  const fromArray = (q.sources ?? [])
+  const fromArray = (question.sources ?? [])
     .map((entry) => compactQuestionSource(entry))
     .filter((entry): entry is QuestionSourceReference => !!entry);
   if (fromArray.length > 0) return fromArray;
-  const legacy = compactQuestionSource(q.source);
+  const legacy = compactQuestionSource(question.source);
   return legacy ? [legacy] : [];
 }
 
 /** Resolves per-question citations (new format). */
-export function getQuestionBookCitations(q: QuestionSourceRef): QuestionBookCitation[] {
-  if (Array.isArray(q.sourceCitations) && q.sourceCitations.length > 0) {
-    return q.sourceCitations.filter((entry) => entry.bookId?.trim());
+export function getQuestionBookCitations(question: QuestionSourceRef): QuestionBookCitation[] {
+  if (Array.isArray(question.sourceCitations) && question.sourceCitations.length > 0) {
+    return question.sourceCitations.filter((entry) => entry.bookId?.trim());
   }
   return [];
 }
@@ -578,11 +578,11 @@ export function normalizeQuestionBankQuestion(
 
 /** Joins multiple source citations for list display. */
 export function formatQuestionSourcesCitation(
-  q: QuestionSourceRef,
+  question: QuestionSourceRef,
   t: QuestionSourceCitationTranslator,
   books?: readonly QuestionSourceBook[],
 ): string | null {
-  const entries = getQuestionSources(q, books);
+  const entries = getQuestionSources(question, books);
   const lines = entries
     .map((entry) => formatQuestionSourceCitation(entry, t))
     .filter((line): line is string => !!line);
@@ -822,23 +822,23 @@ export function mergeQuestionCategories(
   for (const cat of configured) {
     if (cat.id) byId.set(cat.id, cat);
   }
-  for (const q of questions ?? []) {
-    for (const id of getQuestionCategoryIds(q)) {
-    if (!id || byId.has(id)) continue;
-    const inferredName = id.startsWith('cat-')
-      ? id
-          .slice(4)
-          .split('-')
-          .filter(Boolean)
-          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-          .join(' ')
-      : id;
-    byId.set(id, {
-      id,
-      name: inferredName,
-      icon: '📋',
-      color: QUESTION_CATEGORY_COLORS[byId.size % QUESTION_CATEGORY_COLORS.length],
-    });
+  for (const question of questions ?? []) {
+    for (const id of getQuestionCategoryIds(question)) {
+      if (!id || byId.has(id)) continue;
+      const inferredName = id.startsWith('cat-')
+        ? id
+            .slice(4)
+            .split('-')
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ')
+        : id;
+      byId.set(id, {
+        id,
+        name: inferredName,
+        icon: '📋',
+        color: QUESTION_CATEGORY_COLORS[byId.size % QUESTION_CATEGORY_COLORS.length],
+      });
     }
   }
   return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
@@ -851,9 +851,9 @@ export function upsertQuestionCategory(
   categories: readonly QuestionCategory[],
   category: QuestionCategory,
 ): QuestionCategory[] {
-  const idx = categories.findIndex((c) => c.id === category.id);
-  if (idx >= 0) {
-    return categories.map((c, i) => (i === idx ? category : c));
+  const categoryIndex = categories.findIndex((existingCategory) => existingCategory.id === category.id);
+  if (categoryIndex >= 0) {
+    return categories.map((existingCategory, index) => (index === categoryIndex ? category : existingCategory));
   }
   return [...categories, category];
 }
@@ -1074,7 +1074,7 @@ const DEFAULT_QUESTION_BANK_QUESTIONS_RAW: Array<Partial<QuestionBankQuestion> &
 ];
 
 export const DEFAULT_QUESTION_BANK_QUESTIONS: QuestionBankQuestion[] =
-  DEFAULT_QUESTION_BANK_QUESTIONS_RAW.map((q) => normalizeQuestionBankQuestion(q));
+  DEFAULT_QUESTION_BANK_QUESTIONS_RAW.map((question) => normalizeQuestionBankQuestion(question));
 
 export const DEFAULT_QUESTION_BANK_TESTS: QuestionBankTest[] = [
   {

@@ -95,9 +95,9 @@ export default function MessageComposerPanel({
         return;
       }
       setOpening(true);
-      eligibleContacts.forEach((c, index) => {
+      eligibleContacts.forEach((contact, index) => {
         window.setTimeout(() => {
-          openForContact(c, message);
+          openForContact(contact, message);
           if (index === eligibleContacts.length - 1) {
             setOpening(false);
             onClose();

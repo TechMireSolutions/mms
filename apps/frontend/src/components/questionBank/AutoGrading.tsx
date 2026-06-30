@@ -185,7 +185,7 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
     if (!test || testResults.length === 0) return null;
     const totalMarks = testTotalMarks(test, questions) || 100;
     const avg = Math.round(
-      testResults.reduce((s, r) => s + pct(sumScores(r.scores), totalMarks), 0) / testResults.length,
+      testResults.reduce((scoreTotal, result) => scoreTotal + pct(sumScores(result.scores), totalMarks), 0) / testResults.length,
     );
     const highest = Math.max(...testResults.map((r) => sumScores(r.scores)));
     const lowest = Math.min(...testResults.map((r) => sumScores(r.scores)));
@@ -240,13 +240,13 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
                   icon: XCircle,
                   cls: "text-destructive",
                 },
-              ].map((s) => {
-                const Icon = s.icon;
+              ].map((statCard) => {
+                const Icon = statCard.icon;
                 return (
-                  <div key={s.label} className="rounded-xl border border-border bg-card p-3.5">
-                    <Icon className={`mb-1.5 h-4 w-4 ${s.cls}`} aria-hidden />
-                    <p className="text-[18px] font-bold text-foreground m-0">{s.value}</p>
-                    <p className="text-[10px] text-muted-foreground m-0">{s.label}</p>
+                  <div key={statCard.label} className="rounded-xl border border-border bg-card p-3.5">
+                    <Icon className={`mb-1.5 h-4 w-4 ${statCard.cls}`} aria-hidden />
+                    <p className="text-[18px] font-bold text-foreground m-0">{statCard.value}</p>
+                    <p className="text-[10px] text-muted-foreground m-0">{statCard.label}</p>
                   </div>
                 );
               })}

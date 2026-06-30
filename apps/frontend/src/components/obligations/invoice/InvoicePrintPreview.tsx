@@ -66,7 +66,7 @@ export function InvoicePrintPreview({
 
   const renderElement = (el: TemplateElement) => {
     const isSelected = selectedId === el.id;
-    const s = el.style || {};
+    const elementStyle = el.style || {};
 
     const baseStyle: React.CSSProperties = {
       position: "absolute",
@@ -74,13 +74,13 @@ export function InvoicePrintPreview({
       top: el.y,
       width: el.w,
       height: el.h,
-      fontSize: s.fontSize || 10,
-      fontWeight: s.fontWeight || "normal",
-      fontFamily: s.fontFamily || "inherit",
-      fontStyle: s.fontStyle || "normal",
-      textAlign: s.textAlign || "left",
-      color: s.color || PRINT_NEUTRAL.text,
-      direction: s.direction || "ltr",
+      fontSize: elementStyle.fontSize || 10,
+      fontWeight: elementStyle.fontWeight || "normal",
+      fontFamily: elementStyle.fontFamily || "inherit",
+      fontStyle: elementStyle.fontStyle || "normal",
+      textAlign: elementStyle.textAlign || "left",
+      color: elementStyle.color || PRINT_NEUTRAL.text,
+      direction: elementStyle.direction || "ltr",
       overflow: "hidden",
       cursor: onSelect ? "pointer" : "default",
       boxSizing: "border-box",
@@ -97,7 +97,7 @@ export function InvoicePrintPreview({
       return (
         <div key={el.id} style={baseStyle} onClick={handleClick}>
           {branding.logoUrl ? (
-            <img src={branding.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: s.objectFit || "contain" }} />
+            <img src={branding.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: elementStyle.objectFit || "contain" }} />
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: printTokens.logoPlaceholderBg, borderRadius: 8, border: `2px dashed ${printTokens.logoPlaceholderBorder}` }}>
               <span style={{ fontSize: 28, fontWeight: "bold", color: printTokens.primary }}>م</span>
@@ -109,7 +109,7 @@ export function InvoicePrintPreview({
 
     if (el.type === "divider") {
       return (
-        <div key={el.id} style={{ ...baseStyle, borderTop: `${el.h || 1}px solid ${s.color || printTokens.border}`, height: undefined }} onClick={handleClick} />
+        <div key={el.id} style={{ ...baseStyle, borderTop: `${el.h || 1}px solid ${elementStyle.color || printTokens.border}`, height: undefined }} onClick={handleClick} />
       );
     }
 
@@ -126,7 +126,7 @@ export function InvoicePrintPreview({
       // In editor without collection — show placeholder
       return (
         <div key={el.id} style={{ ...baseStyle, background: printTokens.fieldPlaceholderBg, border: `1px dashed ${printTokens.fieldPlaceholderBorder}`, borderRadius: 2 }} onClick={handleClick}>
-          <span style={{ color: printTokens.primary, fontSize: Math.min(s.fontSize || 10, 11), fontStyle: "italic" }}>{el.label}</span>
+          <span style={{ color: printTokens.primary, fontSize: Math.min(elementStyle.fontSize || 10, 11), fontStyle: "italic" }}>{el.label}</span>
         </div>
       );
     }

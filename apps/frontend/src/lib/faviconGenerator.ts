@@ -27,15 +27,15 @@ function trimAndCenterImage(img: HTMLImageElement): HTMLCanvasElement | null {
     let maxY = 0;
     let hasContent = false;
 
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const index = (y * width + x) * 4;
+    for (let yPosition = 0; yPosition < height; yPosition++) {
+      for (let xPosition = 0; xPosition < width; xPosition++) {
+        const index = (yPosition * width + xPosition) * 4;
         const alpha = data[index + 3];
         if (alpha > 10) { // Ignore near-invisible/fully transparent background padding
-          if (x < minX) minX = x;
-          if (x > maxX) maxX = x;
-          if (y < minY) minY = y;
-          if (y > maxY) maxY = y;
+          if (xPosition < minX) minX = xPosition;
+          if (xPosition > maxX) maxX = xPosition;
+          if (yPosition < minY) minY = yPosition;
+          if (yPosition > maxY) maxY = yPosition;
           hasContent = true;
         }
       }

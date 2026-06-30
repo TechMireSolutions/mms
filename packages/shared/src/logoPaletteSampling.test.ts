@@ -21,19 +21,19 @@ function fillWithCenterDisc(
   radiusRatio = 0.35,
 ): Uint8ClampedArray {
   const data = new Uint8ClampedArray(width * height * 4);
-  const cx = width / 2;
-  const cy = height / 2;
+  const centerX = width / 2;
+  const centerY = height / 2;
   const radius = Math.min(width, height) * radiusRatio;
 
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const i = (y * width + x) * 4;
-      const inside = Math.hypot(x - cx, y - cy) <= radius;
-      const [r, g, b] = inside ? disc : background;
-      data[i] = r;
-      data[i + 1] = g;
-      data[i + 2] = b;
-      data[i + 3] = 255;
+  for (let yPosition = 0; yPosition < height; yPosition += 1) {
+    for (let xPosition = 0; xPosition < width; xPosition += 1) {
+      const pixelOffset = (yPosition * width + xPosition) * 4;
+      const inside = Math.hypot(xPosition - centerX, yPosition - centerY) <= radius;
+      const [red, green, blue] = inside ? disc : background;
+      data[pixelOffset] = red;
+      data[pixelOffset + 1] = green;
+      data[pixelOffset + 2] = blue;
+      data[pixelOffset + 3] = 255;
     }
   }
   return data;

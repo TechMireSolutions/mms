@@ -10,11 +10,11 @@ allowBuilds:
 
 minimumReleaseAgeExclude:
   - nodemailer@9.0.1
-  - lucide-react@1.21.0
+  - lucide-react@1.22.0
   - pg-connection-string@2.14.0
   - pg-protocol@1.15.0
   - pg@8.22.0
-  - '@types/node@26.0.0'
+  - '@types/node@26.0.1'
   - react-hook-form@7.80.0
 
 peerDependencyRules:

@@ -260,7 +260,7 @@ export default function DuplicateDetection({
   }, [loadedPairs, contacts, prefs, t]);
 
   const handleLoadMoreDuplicates = useCallback(() => {
-    if (serverPairs?.hasMore) setDupPage((p) => p + 1);
+    if (serverPairs?.hasMore) setDupPage((currentPage) => currentPage + 1);
   }, [serverPairs?.hasMore]);
 
   const activePairs = useMemo<DuplicatePair[]>(() => {
@@ -270,9 +270,9 @@ export default function DuplicateDetection({
   const handleMergeConfirm = (): void => {
     if (!merging) return;
     const pair = merging;
-    const ki = keepIndex[pair.id] ?? 0;
-    const keep = pair.contacts[ki];
-    const other = pair.contacts[1 - ki];
+    const selectedKeepIndex = keepIndex[pair.id] ?? 0;
+    const keep = pair.contacts[selectedKeepIndex];
+    const other = pair.contacts[1 - selectedKeepIndex];
 
     const mergedRaw = mergeContacts(keep, other, { mergedNotePrefix: t('contacts.duplicates.mergedNotePrefix') });
     const mergedResult = applyTitleCaseToContact(mergedRaw as Record<string, unknown>) as Contact;
@@ -360,7 +360,7 @@ export default function DuplicateDetection({
             </div>
           ) : (
             activePairs.map((pair) => {
-              const ki = keepIndex[pair.id] ?? 0;
+              const selectedKeepIndex = keepIndex[pair.id] ?? 0;
               return (
                 <div key={pair.id} className="rounded-xl border border-border bg-muted/10 overflow-hidden">
                   
@@ -401,7 +401,7 @@ export default function DuplicateDetection({
                           key={contact.id}
                           contact={contact}
                           label={contactIndex === 0 ? t('contacts.duplicates.contactA') : t('contacts.duplicates.contactB')}
-                          selected={ki === contactIndex}
+                          selected={selectedKeepIndex === contactIndex}
                           onSelect={() => setKeepIndex((previousSelection) => ({ ...previousSelection, [pair.id]: contactIndex }))}
                         />
                       ))}

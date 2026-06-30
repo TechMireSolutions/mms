@@ -669,9 +669,9 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
     let formattedVal = "";
     if (displayValue) {
       try {
-        const d = new Date(String(displayValue));
-        if (!isNaN(d.getTime())) {
-          formattedVal = d.toISOString().slice(0, 16);
+        const parsedDate = new Date(String(displayValue));
+        if (!isNaN(parsedDate.getTime())) {
+          formattedVal = parsedDate.toISOString().slice(0, 16);
         }
       } catch {
         formattedVal = String(displayValue);
@@ -696,9 +696,9 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
           type="text"
           value={String(displayValue)}
           onChange={(event) => {
-            const val = event.target.value;
-            if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
-              onChange(val);
+            const inputValue = event.target.value;
+            if (inputValue === "" || /^[0-9]*\.?[0-9]*$/.test(inputValue)) {
+              onChange(inputValue);
             }
           }}
           placeholder={field.placeholder || "0.00"}

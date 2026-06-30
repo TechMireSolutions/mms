@@ -43,15 +43,15 @@ export default async function studentsRoutes(
     const queryParsed = parseRequest(studentsListQuerySchema, request.query);
     if (!queryParsed.ok) return replyValidationError(reply, queryParsed.message);
     try {
-      const q = queryParsed.data;
+      const query = queryParsed.data;
       const page = await loadStudentsPage({
-        page: q.page,
-        limit: q.limit ?? STUDENTS_MODULE_CONTRACT.defaultPageSize,
-        search: q.search,
-        status: q.status,
-        gender: q.gender,
-        sortField: q.sortField,
-        sortDir: q.sortDir,
+        page: query.page,
+        limit: query.limit ?? STUDENTS_MODULE_CONTRACT.defaultPageSize,
+        search: query.search,
+        status: query.status,
+        gender: query.gender,
+        sortField: query.sortField,
+        sortDir: query.sortDir,
       });
       return reply.send(page);
     } catch {
@@ -112,11 +112,11 @@ export default async function studentsRoutes(
     const parsed = parseRequest(studentsNextGrNumberQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const q = parsed.data;
-      const grNumber = await computeNextGrNumberForDate(q.registeredDate, {
-        grNumberTemplate: q.template ?? '{seq}-{year}',
-        grNumberDigits: q.digits ?? 4,
-        grNumberRestartAnnually: q.restartAnnually ?? true,
+      const query = parsed.data;
+      const grNumber = await computeNextGrNumberForDate(query.registeredDate, {
+        grNumberTemplate: query.template ?? '{seq}-{year}',
+        grNumberDigits: query.digits ?? 4,
+        grNumberRestartAnnually: query.restartAnnually ?? true,
       });
       return reply.send({ grNumber });
     } catch {

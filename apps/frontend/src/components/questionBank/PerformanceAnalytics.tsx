@@ -93,9 +93,9 @@ export function PerformanceAnalytics({
       map[r.studentId].maxPts += totalMarks;
     });
     return Object.values(map)
-      .map((s) => {
-        const avg = s.scores.length > 0 ? Math.round(s.scores.reduce((a, b) => a + b, 0) / s.scores.length) : 0;
-        return { ...s, avg, overall: pct(s.totalPts, s.maxPts) };
+      .map((studentStat) => {
+        const avg = studentStat.scores.length > 0 ? Math.round(studentStat.scores.reduce((scoreTotal, score) => scoreTotal + score, 0) / studentStat.scores.length) : 0;
+        return { ...studentStat, avg, overall: pct(studentStat.totalPts, studentStat.maxPts) };
       })
       .sort((a, b) => b.avg - a.avg);
   }, [tests, results, questions, t]);
@@ -132,7 +132,7 @@ export function PerformanceAnalytics({
     const totalMarks = testTotalMarks(test, questions) || 100;
     const avg =
       tr.length > 0
-        ? Math.round(tr.reduce((s, r) => s + pct(sumScores(r.scores), totalMarks), 0) / tr.length)
+        ? Math.round(tr.reduce((scoreTotal, result) => scoreTotal + pct(sumScores(result.scores), totalMarks), 0) / tr.length)
         : 0;
     return {
       name: test.name.length > 16 ? `${test.name.slice(0, 16)}…` : test.name,

@@ -56,7 +56,7 @@ export function DatePicker({
   const resolvedPlaceholder = placeholder || dateFormat
 
   const formatValueToDisplay = React.useCallback(
-    (val: string, format: string): string => formatIsoDateToDisplay(val, format),
+    (dateValue: string, format: string): string => formatIsoDateToDisplay(dateValue, format),
     [],
   )
 
@@ -103,25 +103,25 @@ export function DatePicker({
     }
     const y = date.getFullYear()
     const m = String(date.getMonth() + 1).padStart(2, '0')
-    const d = String(date.getDate()).padStart(2, '0')
-    const formatted = `${y}-${m}-${d}`
+    const day = String(date.getDate()).padStart(2, '0')
+    const formatted = `${y}-${m}-${day}`
     onChange?.(formatted)
     setInputValue(formatValueToDisplay(formatted, dateFormat))
     setOpen(false)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setInputValue(val)
+    const nextInputValue = e.target.value
+    setInputValue(nextInputValue)
 
-    const parsed = parseDisplayToValue(val, dateFormat)
+    const parsed = parseDisplayToValue(nextInputValue, dateFormat)
     if (parsed) {
       const [year, month, day] = parsed.split("-").map(Number)
       const parsedDate = new Date(year, month - 1, day)
       if (min && parsedDate < new Date(min)) return
       if (max && parsedDate > new Date(max)) return
       onChange?.(parsed)
-    } else if (val === "") {
+    } else if (nextInputValue === "") {
       onChange?.("")
     }
   }

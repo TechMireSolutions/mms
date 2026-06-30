@@ -179,7 +179,7 @@ export default function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperPr
             onTouchEnd={onMouseUp}
             onWheel={(e) => {
               e.preventDefault();
-              setScale((s) => Math.min(5, Math.max(0.3, s - e.deltaY * 0.002)));
+              setScale((currentScale) => Math.min(5, Math.max(0.3, currentScale - e.deltaY * 0.002)));
             }}
           />
         </div>

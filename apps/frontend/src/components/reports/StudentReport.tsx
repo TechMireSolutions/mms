@@ -245,7 +245,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                   <button
                     type="button"
                     disabled={listPage <= 1}
-                    onClick={() => setListPage((p) => Math.max(1, p - 1))}
+                    onClick={() => setListPage((currentPage) => Math.max(1, currentPage - 1))}
                     className="px-2 py-1 rounded border border-border disabled:opacity-40"
                   >
                     {t("common.previous")}
@@ -253,7 +253,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                   <button
                     type="button"
                     disabled={!hasMoreStudents}
-                    onClick={() => setListPage((p) => p + 1)}
+                    onClick={() => setListPage((currentPage) => currentPage + 1)}
                     className="px-2 py-1 rounded border border-border disabled:opacity-40"
                   >
                     {t("common.next")}

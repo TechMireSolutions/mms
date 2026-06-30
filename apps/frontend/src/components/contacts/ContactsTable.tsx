@@ -149,29 +149,29 @@ export default function ContactsTable({
     </th>
   );
 
-  const renderCell = (col: ColumnConfig, c: Contact): React.JSX.Element => {
+  const renderCell = (col: ColumnConfig, contact: Contact): React.JSX.Element => {
     switch (col.id) {
       case "name":
         return (
           <td key="name" className="px-4 py-3">
             <div className="flex items-center gap-3">
-              <ContactAvatar contact={c} />
+              <ContactAvatar contact={contact} />
               <div>
                 <Button
-                  onClick={() => setViewContact(c)}
+                  onClick={() => setViewContact(contact)}
                   variant="ghost"
                   className="min-h-[44px] h-auto p-0 text-[13px] font-semibold text-foreground hover:text-primary transition-colors text-left justify-start hover:bg-transparent"
                   type="button"
                 >
-                  {getDisplayName(c)}
+                  {getDisplayName(contact)}
                 </Button>
                 <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <GenderIcon gender={c.gender} />
-                  {c.dob && <span>{t('contacts.table.dobLabel')} {formatDate(c.dob)}</span>}
+                  <GenderIcon gender={contact.gender} />
+                  {contact.dob && <span>{t('contacts.table.dobLabel')} {formatDate(contact.dob)}</span>}
                 </p>
-                {showArchived && c.deletionReason && (
+                {showArchived && contact.deletionReason && (
                   <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
-                    {t('contacts.deletionReasonLabel')}: {c.deletionReason}
+                    {t('contacts.deletionReasonLabel')}: {contact.deletionReason}
                   </p>
                 )}
               </div>
@@ -182,25 +182,25 @@ export default function ContactsTable({
         return (
           <td key="phone" className="px-4 py-3">
             <div className="flex items-center gap-2 group/phone">
-              {c.phones?.[0] && (
+              {contact.phones?.[0] && (
                 <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border/60">
-                  <span className="text-[11px] font-semibold text-muted-foreground">{c.phones[0].countryCode}</span>
+                  <span className="text-[11px] font-semibold text-muted-foreground">{contact.phones[0].countryCode}</span>
                   <span className="text-[12px] font-mono text-foreground font-medium tracking-wide">
-                    {c.phones[0].number?.replace(/(\d{3})(\d{7})/, '$1 $2') || c.phones[0].number}
+                    {contact.phones[0].number?.replace(/(\d{3})(\d{7})/, '$1 $2') || contact.phones[0].number}
                   </span>
                 </div>
               )}
-              <CopyBtn text={getPrimaryPhone(c) || ""} />
+              <CopyBtn text={getPrimaryPhone(contact) || ""} />
               <Button
-                disabled={!hasWhatsApp(c)}
+                disabled={!hasWhatsApp(contact)}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onWhatsApp([c]);
+                  onWhatsApp([contact]);
                 }}
-                title={hasWhatsApp(c) ? t('contacts.whatsapp') : t('contacts.table.notRegisteredWhatsApp')}
+                title={hasWhatsApp(contact) ? t('contacts.whatsapp') : t('contacts.table.notRegisteredWhatsApp')}
                 variant="ghost"
                 className={`min-w-[44px] min-h-[44px] flex items-center justify-center p-0 transition-all hover:bg-transparent ${
-                  hasWhatsApp(c)
+                  hasWhatsApp(contact)
                     ? "opacity-0 group-hover/phone:opacity-100 text-success hover:text-success/80 cursor-pointer"
                     : "opacity-30 group-hover/phone:opacity-60 text-muted-foreground cursor-not-allowed"
                 }`}
@@ -215,20 +215,20 @@ export default function ContactsTable({
         return (
           <td key="email" className="px-4 py-3">
             <div className="flex items-center gap-1 group/email">
-              <span className="text-[13px] text-muted-foreground">{getPrimaryEmail(c)}</span>
-              <CopyBtn text={getPrimaryEmail(c) || ""} />
+              <span className="text-[13px] text-muted-foreground">{getPrimaryEmail(contact)}</span>
+              <CopyBtn text={getPrimaryEmail(contact) || ""} />
             </div>
           </td>
         );
       case "line1":
-        return <td key="line1" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.addresses?.[0]?.line1 || (c.line1 as string) || t('contacts.table.emptyDash')}</span></td>;
+        return <td key="line1" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{contact.addresses?.[0]?.line1 || (contact.line1 as string) || t('contacts.table.emptyDash')}</span></td>;
       case "city": {
-        const cityVal = c.addresses?.[0]?.city || (c.city as string);
+        const cityValue = contact.addresses?.[0]?.city || (contact.city as string);
         return (
           <td key="city" className="px-4 py-3">
             <div className="flex items-center gap-1">
               <MapPin className="w-3 h-3 text-muted-foreground" />
-              <span className="text-[13px] text-muted-foreground">{cityVal || t('contacts.table.emptyDash')}</span>
+              <span className="text-[13px] text-muted-foreground">{cityValue || t('contacts.table.emptyDash')}</span>
             </div>
           </td>
         );
@@ -237,35 +237,35 @@ export default function ContactsTable({
         return (
           <td key="gender" className="px-4 py-3">
             <span className="flex items-center gap-1.5 text-sm text-foreground capitalize">
-              <GenderIcon gender={c.gender} />
-              {c.gender}
+              <GenderIcon gender={contact.gender} />
+              {contact.gender}
             </span>
           </td>
         );
       case "dob":
-        return <td key="dob" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.dob ? formatDate(c.dob) : t('contacts.table.emptyDash')}</span></td>;
+        return <td key="dob" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{contact.dob ? formatDate(contact.dob) : t('contacts.table.emptyDash')}</span></td>;
       case "state":
-        return <td key="state" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.addresses?.[0]?.state || (c.state as string) || (c.province as string) || t('contacts.table.emptyDash')}</span></td>;
+        return <td key="state" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{contact.addresses?.[0]?.state || (contact.state as string) || (contact.province as string) || t('contacts.table.emptyDash')}</span></td>;
       case "country":
-        return <td key="country" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{c.addresses?.[0]?.country || (c.country as string) || t('contacts.table.emptyDash')}</span></td>;
+        return <td key="country" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{contact.addresses?.[0]?.country || (contact.country as string) || t('contacts.table.emptyDash')}</span></td>;
       case "isSyed":
         return (
           <td key="isSyed" className="px-4 py-3">
-            {c.isSyed ? <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success border border-success/30">{t('contacts.table.yesSyed')}</span> : <span className="text-muted-foreground/40">{t('contacts.table.emptyDash')}</span>}
+            {contact.isSyed ? <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success border border-success/30">{t('contacts.table.yesSyed')}</span> : <span className="text-muted-foreground/40">{t('contacts.table.emptyDash')}</span>}
           </td>
         );
       case "whatsapp":
-        return <td key="whatsapp" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{hasWhatsApp(c) ? t('common.yes') : t('common.no')}</span></td>;
+        return <td key="whatsapp" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{hasWhatsApp(contact) ? t('common.yes') : t('common.no')}</span></td>;
       case "socials_platform": {
-        const platforms = (c.socials || []).map((social) => social.platform).filter(Boolean);
+        const platforms = (contact.socials || []).map((social) => social.platform).filter(Boolean);
         return <td key="socials_platform" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{platforms.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "socials_url": {
-        const urls = (c.socials || []).map((social) => social.url).filter(Boolean);
+        const urls = (contact.socials || []).map((social) => social.url).filter(Boolean);
         return <td key="socials_url" className="px-4 py-3"><span className="text-[13px] text-muted-foreground truncate max-w-[150px] block" title={urls.join(", ")}>{urls.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "emergency_contact": {
-        const emergencyContactNames = (c.emergencyContacts || []).map((emergencyContact) => {
+        const emergencyContactNames = (contact.emergencyContacts || []).map((emergencyContact) => {
           if (emergencyContact.name) return emergencyContact.name;
           if (emergencyContact.contactId) {
             const linkedContact = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
@@ -276,11 +276,11 @@ export default function ContactsTable({
         return <td key="emergency_contact" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{emergencyContactNames.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "emergency_relationship": {
-        const relationships = (c.emergencyContacts || []).map((ec) => ec.relationship).filter(Boolean);
+        const relationships = (contact.emergencyContacts || []).map((emergencyContact) => emergencyContact.relationship).filter(Boolean);
         return <td key="emergency_relationship" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{relationships.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "lifecycleStage": {
-        const stage = c.lifecycleStage || lifecycleStages[0] || "";
+        const stage = contact.lifecycleStage || lifecycleStages[0] || "";
         const colors = lifecycleColors[stage] || { bg: "bg-muted text-muted-foreground border-border", text: "text-muted-foreground" };
         return (
           <td key="lifecycleStage" className="px-4 py-3">
@@ -291,14 +291,14 @@ export default function ContactsTable({
         );
       }
       case "rating": {
-        const r = c.rating || 0;
+        const contactRating = contact.rating || 0;
         return (
           <td key="rating" className="px-4 py-3">
             <div className="flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 5 }).map((_, ratingIndex) => (
                 <span
-                  key={i}
-                  className={`text-xs ${i < r ? "text-warning font-bold" : "text-muted-foreground/30 font-light"}`}
+                  key={ratingIndex}
+                  className={`text-xs ${ratingIndex < contactRating ? "text-warning font-bold" : "text-muted-foreground/30 font-light"}`}
                 >
                   ★
                 </span>
@@ -308,7 +308,7 @@ export default function ContactsTable({
         );
       }
       default:
-        return <td key={col.id} className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{formatContactCellValue(c[col.id], t)}</span></td>;
+        return <td key={col.id} className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{formatContactCellValue(contact[col.id], t)}</span></td>;
     }
   };
   const COL_SORT_FIELD: Record<string, string> = {
@@ -344,11 +344,11 @@ export default function ContactsTable({
           </thead>
           <tbody className="divide-y divide-border/50">
             <AnimatePresence>
-              {contacts.map((c) => {
-                const isSelected = selected.includes(c.id);
+              {contacts.map((contact) => {
+                const isSelected = selected.includes(contact.id);
                 return (
                   <motion.tr
-                    key={c.id}
+                    key={contact.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -358,11 +358,11 @@ export default function ContactsTable({
                     <td className="px-4 py-3">
                       <Checkbox
                         checked={isSelected}
-                        onCheckedChange={() => onSelect(c.id)}
+                        onCheckedChange={() => onSelect(contact.id)}
                         className="cursor-pointer"
                       />
                     </td>
-                    {columns.map((col) => renderCell(col, c))}
+                    {columns.map((col) => renderCell(col, contact))}
                     <td className="px-4 py-3">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -371,27 +371,27 @@ export default function ContactsTable({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={() => setViewContact(c)}>
+                          <DropdownMenuItem onClick={() => setViewContact(contact)}>
                             <Eye className="w-3.5 h-3.5 mr-2" /> {t('contacts.table.viewProfile')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onEdit(c)} disabled={!canWrite || showArchived}>
+                          <DropdownMenuItem onClick={() => onEdit(contact)} disabled={!canWrite || showArchived}>
                             <Edit2 className="w-3.5 h-3.5 mr-2" /> {t('contacts.table.edit')}
                           </DropdownMenuItem>
                           {!showArchived ? (
                             <>
-                              <DropdownMenuItem disabled={!hasWhatsApp(c)} onClick={() => onWhatsApp([c])}>
-                                <MessageCircle className={`w-3.5 h-3.5 mr-2 ${hasWhatsApp(c) ? "text-success" : "text-muted-foreground"}`} /> {t('contacts.whatsapp')}
+                              <DropdownMenuItem disabled={!hasWhatsApp(contact)} onClick={() => onWhatsApp([contact])}>
+                                <MessageCircle className={`w-3.5 h-3.5 mr-2 ${hasWhatsApp(contact) ? "text-success" : "text-muted-foreground"}`} /> {t('contacts.whatsapp')}
                               </DropdownMenuItem>
-                              <DropdownMenuItem disabled={!getPrimaryPhone(c)} onClick={() => onSms([c])}>
+                              <DropdownMenuItem disabled={!getPrimaryPhone(contact)} onClick={() => onSms([contact])}>
                                 <MessageSquare className="w-3.5 h-3.5 mr-2 text-primary" /> {t("contacts.sms")}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => onDelete(c.id)} disabled={!canDelete} className="text-destructive focus:text-destructive">
+                              <DropdownMenuItem onClick={() => onDelete(contact.id)} disabled={!canDelete} className="text-destructive focus:text-destructive">
                                 <Trash2 className="w-3.5 h-3.5 mr-2" /> {t('contacts.table.deleteContact')}
                               </DropdownMenuItem>
                             </>
                           ) : (
-                            <DropdownMenuItem onClick={() => onRestore?.(c.id)} disabled={!canDelete}>
+                            <DropdownMenuItem onClick={() => onRestore?.(contact.id)} disabled={!canDelete}>
                               <RotateCcw className="w-3.5 h-3.5 mr-2" /> {t("contacts.restoreContact")}
                             </DropdownMenuItem>
                           )}
@@ -418,7 +418,7 @@ export default function ContactsTable({
             <ContactDetailDrawer
               contact={viewContact}
               onClose={() => setViewContact(null)}
-              onEdit={(c) => { setViewContact(null); if (canWrite) onEdit(c); }}
+              onEdit={(contact) => { setViewContact(null); if (canWrite) onEdit(contact); }}
               onWhatsApp={onWhatsApp}
               onSms={onSms}
               allContacts={allContacts}

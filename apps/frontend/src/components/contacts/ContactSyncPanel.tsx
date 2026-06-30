@@ -598,11 +598,11 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
               </Button>
             </div>
             <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-xl p-2 bg-card">
-              {previewList.slice(0, 50).map((c, i) => (
-                <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-muted/50 text-sm">
-                  <span className="font-medium text-foreground truncate">{c.name}</span>
+              {previewList.slice(0, 50).map((contact, contactIndex) => (
+                <div key={contactIndex} className="flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-muted/50 text-sm">
+                  <span className="font-medium text-foreground truncate">{contact.name}</span>
                   <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                    {c.phones?.[0]?.number || c.emails?.[0]?.address || ""}
+                    {contact.phones?.[0]?.number || contact.emails?.[0]?.address || ""}
                   </span>
                 </div>
               ))}

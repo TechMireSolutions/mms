@@ -136,13 +136,13 @@ export function extractDominantSwatchesFromRgba(
   const background = parseHexRgb(samplingOptions.flattenOnto) ?? { r: 255, g: 255, b: 255 };
   const buckets = new Map<string, ColorBucket>();
 
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const i = (y * width + x) * 4;
-      const a = rgbaPixels[i + 3];
-      if (a < samplingOptions.minAlpha) continue;
+  for (let yPosition = 0; yPosition < height; yPosition += 1) {
+    for (let xPosition = 0; xPosition < width; xPosition += 1) {
+      const pixelOffset = (yPosition * width + xPosition) * 4;
+      const alpha = rgbaPixels[pixelOffset + 3];
+      if (alpha < samplingOptions.minAlpha) continue;
 
-      const flat = flattenPixel(rgbaPixels[i], rgbaPixels[i + 1], rgbaPixels[i + 2], a, background);
+      const flat = flattenPixel(rgbaPixels[pixelOffset], rgbaPixels[pixelOffset + 1], rgbaPixels[pixelOffset + 2], alpha, background);
       if (isSampleNeutral(flat.r, flat.g, flat.b, samplingOptions)) continue;
 
       const qr = quantizeChannel(flat.r, samplingOptions.quantizeBits);
@@ -151,7 +151,7 @@ export function extractDominantSwatchesFromRgba(
       const key = `${qr}|${qg}|${qb}`;
 
       const pixelWeight =
-        centerPixelWeight(x, y, width, height, samplingOptions.centerWeight) * chromaWeight(flat.r, flat.g, flat.b);
+        centerPixelWeight(xPosition, yPosition, width, height, samplingOptions.centerWeight) * chromaWeight(flat.r, flat.g, flat.b);
 
       const existing = buckets.get(key);
       if (existing) {

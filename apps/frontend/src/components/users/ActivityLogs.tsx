@@ -148,7 +148,7 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
             variant="outline"
             size="icon"
             disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
+            onClick={() => setPage((currentPage) => currentPage - 1)}
             className="rounded-lg border border-border p-1.5 disabled:opacity-40 h-8 w-8 shadow-none"
             aria-label={t('users.activityPrev')}
           >
@@ -159,7 +159,7 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
             variant="outline"
             size="icon"
             disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
+            onClick={() => setPage((currentPage) => currentPage + 1)}
             className="rounded-lg border border-border p-1.5 disabled:opacity-40 h-8 w-8 shadow-none"
             aria-label={t('users.activityNext')}
           >

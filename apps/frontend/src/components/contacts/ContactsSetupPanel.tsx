@@ -59,8 +59,8 @@ function Toggle({ label, description, value, onChange, ariaLabel }: ToggleProps)
  */
 function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
   if (!savedOrder || savedOrder.length === 0) return fields;
-  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
-  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
+  const orderByKey = Object.fromEntries(savedOrder.map((key, index) => [key, index]));
+  return [...fields].sort((leftField, rightField) => (orderByKey[leftField.key] ?? 9999) - (orderByKey[rightField.key] ?? 9999)) as FieldDefinition[];
 }
 
 /**
@@ -269,8 +269,8 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   };
 
   const [saved, setSaved] = useState<boolean>(false);
-  const updPref = <K extends keyof ContactPreferences>(k: K, v: ContactPreferences[K]): void => {
-    setPrefs((p) => ({ ...p, [k]: v }));
+  const updatePreference = <K extends keyof ContactPreferences>(key: K, value: ContactPreferences[K]): void => {
+    setPrefs((currentPreferences) => ({ ...currentPreferences, [key]: value }));
     setSaved(false);
   };
 
@@ -279,10 +279,10 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
-        setRequiredTabs((r) => {
-          const nr = new Set(r);
-          nr.delete(id);
-          return nr;
+        setRequiredTabs((currentRequiredTabs) => {
+          const nextRequiredTabs = new Set(currentRequiredTabs);
+          nextRequiredTabs.delete(id);
+          return nextRequiredTabs;
         });
       } else {
         next.add(id);
@@ -307,10 +307,10 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
       const updated = new Set(prev[tabId]);
       if (updated.has(fieldId)) {
         updated.delete(fieldId);
-        setTabFieldRequired((r) => {
-          const nr = new Set(r[tabId]);
-          nr.delete(fieldId);
-          return { ...r, [tabId]: nr };
+        setTabFieldRequired((currentRequiredFields) => {
+          const nextRequiredFields = new Set(currentRequiredFields[tabId]);
+          nextRequiredFields.delete(fieldId);
+          return { ...currentRequiredFields, [tabId]: nextRequiredFields };
         });
       } else {
         updated.add(fieldId);
@@ -627,7 +627,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                   <Input
                     id="defaultCountry"
                     value={prefs.defaultCountry || ""}
-                    onChange={(e) => updPref("defaultCountry", e.target.value)}
+                    onChange={(e) => updatePreference("defaultCountry", e.target.value)}
                     placeholder={t('contacts.setup.defaultCountryPlaceholder')}
                   />
                 </div>
@@ -636,7 +636,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                   <Input
                     id="defaultProvince"
                     value={prefs.defaultProvince || ""}
-                    onChange={(e) => updPref("defaultProvince", e.target.value)}
+                    onChange={(e) => updatePreference("defaultProvince", e.target.value)}
                     placeholder={t('contacts.setup.defaultProvincePlaceholder')}
                   />
                 </div>
@@ -645,7 +645,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                   <Input
                     id="defaultCity"
                     value={prefs.defaultCity || ""}
-                    onChange={(e) => updPref("defaultCity", e.target.value)}
+                    onChange={(e) => updatePreference("defaultCity", e.target.value)}
                     placeholder={t('contacts.setup.defaultCityPlaceholder')}
                   />
                 </div>

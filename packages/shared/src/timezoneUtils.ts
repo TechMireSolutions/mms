@@ -161,8 +161,8 @@ export function getTimezoneOptions(locale = 'en'): readonly TimezoneOption[] {
   });
 
   const regionRank = (region: string): number => {
-    const idx = REGION_ORDER.indexOf(region as (typeof REGION_ORDER)[number]);
-    return idx === -1 ? REGION_ORDER.length : idx;
+    const regionIndex = REGION_ORDER.indexOf(region as (typeof REGION_ORDER)[number]);
+    return regionIndex === -1 ? REGION_ORDER.length : regionIndex;
   };
 
   options.sort((a, b) => {
@@ -213,9 +213,9 @@ export function groupTimezoneOptions(
   }
 
   const regions = [...map.keys()].sort((a, b) => {
-    const rank = (r: string) => {
-      const idx = REGION_ORDER.indexOf(r as (typeof REGION_ORDER)[number]);
-      return idx === -1 ? REGION_ORDER.length : idx;
+    const rank = (region: string) => {
+      const regionIndex = REGION_ORDER.indexOf(region as (typeof REGION_ORDER)[number]);
+      return regionIndex === -1 ? REGION_ORDER.length : regionIndex;
     };
     return rank(a) - rank(b);
   });

@@ -81,9 +81,9 @@ export function QuestionBank({
     }
   };
 
-  const setEditQ = (q: Question | null): void => {
-    if (isControlled) onEditQuestionChange?.(q);
-    else setInternalEdit(q);
+  const setEditingQuestion = (question: Question | null): void => {
+    if (isControlled) onEditQuestionChange?.(question);
+    else setInternalEdit(question);
   };
 
   const showText = isColumnVisible ? isColumnVisible('text') : true;
@@ -97,7 +97,7 @@ export function QuestionBank({
     () =>
       showSource &&
       config.orderedFields.some(
-        (f) => isQuestionSourceFieldId(f.id) && config.isFieldEnabled(f.id),
+        (field) => isQuestionSourceFieldId(field.id) && config.isFieldEnabled(field.id),
       ),
     [config.orderedFields, config.isFieldEnabled, showSource],
   );
@@ -105,14 +105,14 @@ export function QuestionBank({
   const listMetaFields = useMemo(
     () =>
       config.orderedFields.filter(
-        (f) => {
-          if (!config.isFieldEnabled(f.id)) return false;
+        (field) => {
+          if (!config.isFieldEnabled(field.id)) return false;
           const colKey =
-            f.id === 'categoryId'
+            field.id === 'categoryId'
               ? 'category'
-              : f.id === 'questionLanguage'
+              : field.id === 'questionLanguage'
                 ? 'language'
-                : f.id;
+                : field.id;
           return isColumnVisible ? isColumnVisible(colKey) : true;
         },
       ),
@@ -121,13 +121,13 @@ export function QuestionBank({
 
   const filtered = useMemo(
     () =>
-      questions.filter((q) => {
-        const mS = !search || q.text.toLowerCase().includes(search.toLowerCase());
-        const mC =
+      questions.filter((question) => {
+        const matchesSearch = !search || question.text.toLowerCase().includes(search.toLowerCase());
+        const matchesCategory =
           filterCats.length === 0 ||
-          getQuestionCategoryIds(q).some((id) => filterCats.includes(id));
-        const mD = filterDiff.length === 0 || filterDiff.includes(q.difficulty);
-        return mS && mC && mD;
+          getQuestionCategoryIds(question).some((id) => filterCats.includes(id));
+        const matchesDifficulty = filterDiff.length === 0 || filterDiff.includes(question.difficulty);
+        return matchesSearch && matchesCategory && matchesDifficulty;
       }),
     [questions, search, filterCats, filterDiff],
   );
@@ -138,9 +138,9 @@ export function QuestionBank({
 
   const getCat = (id: string) => config.categories.find((category) => category.id === id);
 
-  const renderMetaChip = (q: Question, fieldId: string): React.ReactNode => {
+  const renderMetaChip = (question: Question, fieldId: string): React.ReactNode => {
     if (fieldId === 'categoryId') {
-      return getQuestionCategoryIds(q).map((catId) => {
+      return getQuestionCategoryIds(question).map((catId) => {
         const cat = getCat(catId);
         if (!cat) return null;
         return (
@@ -160,22 +160,22 @@ export function QuestionBank({
           key="questionLanguage"
           className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground"
         >
-          {config.questionLanguageLabel(q.questionLanguage)}
+          {config.questionLanguageLabel(question.questionLanguage)}
         </span>
       );
     }
     if (fieldId === 'difficulty') {
-      const difficultyClassName = QUESTION_DIFFICULTY_BADGE_CLASSES[q.difficulty] ?? '';
+      const difficultyClassName = QUESTION_DIFFICULTY_BADGE_CLASSES[question.difficulty] ?? '';
       return (
         <span key="difficulty" className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${difficultyClassName}`}>
-          {config.difficultyLabel(q.difficulty)}
+          {config.difficultyLabel(question.difficulty)}
         </span>
       );
     }
     if (fieldId === 'type') {
       return (
         <span key="type" className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-          {QUESTION_TYPE_ICONS[q.type]} {config.typeLabel(q.type)}
+          {QUESTION_TYPE_ICONS[question.type]} {config.typeLabel(question.type)}
         </span>
       );
     }
@@ -278,7 +278,7 @@ export function QuestionBank({
         {!hideToolbarAdd && (
           <Button
             type="button"
-            onClick={() => { setEditQ(null); setShowModal(true); }}
+            onClick={() => { setEditingQuestion(null); setShowModal(true); }}
             className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 shadow-sm"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
@@ -304,81 +304,81 @@ export function QuestionBank({
         <>
           {/* Card view for mobile/tablet */}
           <div className="space-y-3 lg:hidden" role="list">
-            {filtered.map((q, i) => (
+            {filtered.map((question, questionIndex) => (
               <motion.div
-                key={q.id}
+                key={question.id}
                 layout
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ y: -2, scale: 1.005, transition: { duration: 0.2 } }}
-                transition={{ delay: i * 0.03 }}
+                transition={{ delay: questionIndex * 0.03 }}
                 className="group relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-card/95 via-card/80 to-background/60 backdrop-blur-xl p-4 transition-all duration-300 hover:shadow-sm"
                 role="listitem"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     {showText && config.isFieldEnabled('text') && (
-                      <p className="mb-2 text-[13px] font-semibold leading-snug text-foreground">{q.text}</p>
+                      <p className="mb-2 text-[13px] font-semibold leading-snug text-foreground">{question.text}</p>
                     )}
                     {listMetaFields.length > 0 && (
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        {listMetaFields.map((field) => renderMetaChip(q, field.id))}
+                        {listMetaFields.map((field) => renderMetaChip(question, field.id))}
                       </div>
                     )}
-                    {config.isFieldEnabled('options') && q.type === 'mcq' && q.options && q.options.length > 0 && (
+                    {config.isFieldEnabled('options') && question.type === 'mcq' && question.options && question.options.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {q.options.filter(Boolean).map((o, oi) => (
+                        {question.options.filter(Boolean).map((option, optionIndex) => (
                           <span
-                            key={oi}
-                            className={`rounded-md border px-2 py-0.5 text-[11px] ${o === q.answer ? 'border-primary/30 bg-primary/5 font-semibold text-primary' : 'border-border bg-muted text-muted-foreground'}`}
+                            key={optionIndex}
+                            className={`rounded-md border px-2 py-0.5 text-[11px] ${option === question.answer ? 'border-primary/30 bg-primary/5 font-semibold text-primary' : 'border-border bg-muted text-muted-foreground'}`}
                           >
-                            {o === q.answer ? `✓ ` : ''}{o}
+                            {option === question.answer ? `✓ ` : ''}{option}
                           </span>
                         ))}
                       </div>
                     )}
-                    {config.isFieldEnabled('answer') && q.type === 'true_false' && (
-                      <p className="mt-1.5 text-[11px] font-semibold text-primary">✓ {q.answer}</p>
+                    {config.isFieldEnabled('answer') && question.type === 'true_false' && (
+                      <p className="mt-1.5 text-[11px] font-semibold text-primary">✓ {question.answer}</p>
                     )}
-                    {q.type === 'fill_blank' && q.answer && (
+                    {question.type === 'fill_blank' && question.answer && (
                       <p className="mt-1.5 text-[11px] text-muted-foreground">
                         {t('questionBank.previewFillBlank', {
-                          answers: splitQuestionCompoundAnswer(q.answer).join(', '),
+                          answers: splitQuestionCompoundAnswer(question.answer).join(', '),
                         })}
                       </p>
                     )}
-                    {q.type === 'matching' && q.options.length > 0 && (
+                    {question.type === 'matching' && question.options.length > 0 && (
                       <div className="mt-2 space-y-1">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                           {t('questionBank.previewMatching')}
                         </p>
-                        {q.options.map((left, index) => (
+                        {question.options.map((left, index) => (
                           <p key={index} className="text-[11px] text-foreground">
-                            {left} → {splitQuestionCompoundAnswer(q.answer)[index] ?? '—'}
+                            {left} → {splitQuestionCompoundAnswer(question.answer)[index] ?? '—'}
                           </p>
                         ))}
                       </div>
                     )}
-                    {q.type === 'numeric' && q.answer && (
+                    {question.type === 'numeric' && question.answer && (
                       <p className="mt-1.5 text-[11px] text-muted-foreground">
-                        {t('questionBank.previewNumeric', { answer: q.answer })}
-                        {q.options[0] ? ` (±${q.options[0]})` : ''}
+                        {t('questionBank.previewNumeric', { answer: question.answer })}
+                        {question.options[0] ? ` (±${question.options[0]})` : ''}
                       </p>
                     )}
-                    {q.type === 'ordering' && q.options.length > 0 && (
+                    {question.type === 'ordering' && question.options.length > 0 && (
                       <div className="mt-2">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                           {t('questionBank.previewOrdering')}
                         </p>
                         <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-[11px] text-foreground">
-                          {q.options.filter(Boolean).map((item) => (
+                          {question.options.filter(Boolean).map((item) => (
                             <li key={item}>{item}</li>
                           ))}
                         </ol>
                       </div>
                     )}
                     {showSourceCitation && (() => {
-                      const citation = formatQuestionSourcesCitation(q, t, config.sourceBooks);
+                      const citation = formatQuestionSourcesCitation(question, t, config.sourceBooks);
                       if (!citation) return null;
                       return (
                         <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
@@ -390,7 +390,7 @@ export function QuestionBank({
                     {config.orderedFields
                       .filter((field) => !SYSTEM_FIELD_IDS.has(field.id) && config.isFieldEnabled(field.id) && (isColumnVisible ? isColumnVisible(field.id) : true))
                       .map((field) => {
-                        const fieldValue = (q as unknown as Record<string, unknown>)[field.id];
+                        const fieldValue = (question as unknown as Record<string, unknown>)[field.id];
                         if (fieldValue === undefined || fieldValue === '') return null;
                         return (
                           <p key={field.id} className="mt-1 text-[11px] text-muted-foreground">
@@ -405,9 +405,9 @@ export function QuestionBank({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => { setEditQ(q); setShowModal(true); }}
+                      onClick={() => { setEditingQuestion(question); setShowModal(true); }}
                       className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      aria-label={t('questionBank.editQuestionAria', { text: q.text })}
+                      aria-label={t('questionBank.editQuestionAria', { text: question.text })}
                     >
                       <Edit2 className="h-3.5 w-3.5" aria-hidden />
                     </Button>
@@ -415,9 +415,9 @@ export function QuestionBank({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => onUpdate(questions.filter((question) => question.id !== q.id))}
+                      onClick={() => onUpdate(questions.filter((candidateQuestion) => candidateQuestion.id !== question.id))}
                       className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      aria-label={t('questionBank.deleteQuestionAria', { text: q.text })}
+                      aria-label={t('questionBank.deleteQuestionAria', { text: question.text })}
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden />
                     </Button>
@@ -470,28 +470,28 @@ export function QuestionBank({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
-                  {filtered.map((q, i) => {
+                  {filtered.map((question, questionIndex) => {
                     const citation = showSource
-                      ? formatQuestionSourcesCitation(q, t, config.sourceBooks)
+                      ? formatQuestionSourcesCitation(question, t, config.sourceBooks)
                       : '';
-                    const diffCls = QUESTION_DIFFICULTY_BADGE_CLASSES[q.difficulty] ?? '';
+                    const difficultyClass = QUESTION_DIFFICULTY_BADGE_CLASSES[question.difficulty] ?? '';
                     return (
                       <motion.tr
-                        key={q.id}
+                        key={question.id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: i * 0.03 }}
+                        transition={{ delay: questionIndex * 0.03 }}
                         className="hover:bg-muted/20 transition-colors group"
                       >
                         {showText && (
                           <td className="px-4 py-3 text-[13px] font-semibold text-foreground max-w-[280px]">
-                            <p className="line-clamp-2 m-0">{q.text}</p>
+                            <p className="line-clamp-2 m-0">{question.text}</p>
                           </td>
                         )}
                         {showCategory && (
                           <td className="px-4 py-3">
                             <div className="flex flex-wrap gap-1">
-                              {getQuestionCategoryIds(q).map((catId) => {
+                              {getQuestionCategoryIds(question).map((catId) => {
                                 const cat = getCat(catId);
                                 if (!cat) return null;
                                 return (
@@ -509,18 +509,18 @@ export function QuestionBank({
                         )}
                         {showLanguage && (
                           <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                            {config.questionLanguageLabel(q.questionLanguage)}
+                            {config.questionLanguageLabel(question.questionLanguage)}
                           </td>
                         )}
                         {showType && (
                           <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                            {QUESTION_TYPE_ICONS[q.type]} {config.typeLabel(q.type)}
+                            {QUESTION_TYPE_ICONS[question.type]} {config.typeLabel(question.type)}
                           </td>
                         )}
                         {showDifficulty && (
                           <td className="px-4 py-3">
-                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${diffCls}`}>
-                              {config.difficultyLabel(q.difficulty)}
+                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${difficultyClass}`}>
+                              {config.difficultyLabel(question.difficulty)}
                             </span>
                           </td>
                         )}
@@ -535,9 +535,9 @@ export function QuestionBank({
                               type="button"
                               variant="ghost"
                               size="icon"
-                              onClick={() => { setEditQ(q); setShowModal(true); }}
+                              onClick={() => { setEditingQuestion(question); setShowModal(true); }}
                               className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                              aria-label={t('questionBank.editQuestionAria', { text: q.text })}
+                              aria-label={t('questionBank.editQuestionAria', { text: question.text })}
                             >
                               <Edit2 className="h-3.5 w-3.5" aria-hidden />
                             </Button>
@@ -545,9 +545,9 @@ export function QuestionBank({
                               type="button"
                               variant="ghost"
                               size="icon"
-                              onClick={() => onUpdate(questions.filter((question) => question.id !== q.id))}
+                              onClick={() => onUpdate(questions.filter((candidateQuestion) => candidateQuestion.id !== question.id))}
                               className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                              aria-label={t('questionBank.deleteQuestionAria', { text: q.text })}
+                              aria-label={t('questionBank.deleteQuestionAria', { text: question.text })}
                             >
                               <Trash2 className="h-3.5 w-3.5" aria-hidden />
                             </Button>

@@ -63,7 +63,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
   const handleSaveDist = (form: Partial<ObligationDistribution>) => {
     const existing = getDistributions(form.wakala_type_id!);
     const others = existing.filter((d) => d.id !== form.id);
-    const newTotal = others.reduce((s, d) => s + parseFloat(String(d.percentage ?? 0)), 0) + parseFloat(String(form.percentage ?? 0));
+    const newTotal = others.reduce((sum, distribution) => sum + parseFloat(String(distribution.percentage ?? 0)), 0) + parseFloat(String(form.percentage ?? 0));
     if (newTotal > 100) {
       alert(`Total distribution percentage cannot exceed 100%. Current total would be ${newTotal}%.`);
       return;

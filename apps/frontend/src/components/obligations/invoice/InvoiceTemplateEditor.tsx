@@ -45,7 +45,7 @@ function StyleBtn({ active, onClick, children, title }: StyleBtnProps) {
 interface StyleInputProps {
   label: string;
   value: string | number;
-  onChange: (val: string | number) => void;
+  onChange: (nextValue: string | number) => void;
   type?: string;
   min?: number;
   max?: number;
@@ -281,7 +281,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   // ── Render element (draggable) ────────────────────────────────────────────
   const renderEl = (el: TemplateElement) => {
     const isSelected = selectedId === el.id;
-    const s = el.style || {};
+    const elementStyle = el.style || {};
 
     const baseStyle: React.CSSProperties = {
       position: "absolute",
@@ -289,13 +289,13 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
       top: el.y,
       width: el.w,
       height: el.h,
-      fontSize: s.fontSize || 10,
-      fontWeight: s.fontWeight || "normal",
-      fontFamily: s.fontFamily || "inherit",
-      fontStyle: s.fontStyle || "normal",
-      textAlign: s.textAlign || "left",
-      color: s.color || PRINT_NEUTRAL.text,
-      direction: s.direction || "ltr",
+      fontSize: elementStyle.fontSize || 10,
+      fontWeight: elementStyle.fontWeight || "normal",
+      fontFamily: elementStyle.fontFamily || "inherit",
+      fontStyle: elementStyle.fontStyle || "normal",
+      textAlign: elementStyle.textAlign || "left",
+      color: elementStyle.color || PRINT_NEUTRAL.text,
+      direction: elementStyle.direction || "ltr",
       overflow: "visible",
       cursor: "move",
       boxSizing: "border-box",
@@ -317,13 +317,13 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
           }
         })();
         return b.logoUrl
-          ? <img src={b.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: s.objectFit || "contain" }} />
+          ? <img src={b.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: elementStyle.objectFit || "contain" }} />
           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: printTokens.logoPlaceholderBg, borderRadius: 6, border: `2px dashed ${printTokens.logoPlaceholderBorder}` }}>
               <span style={{ fontSize: 24, fontWeight: "bold", color: printTokens.primary }}>م</span>
             </div>;
       }
       if (el.type === "divider") {
-        return <div style={{ borderTop: `${el.h || 1}px solid ${s.color || printTokens.border}`, width: "100%", marginTop: (el.h || 1) / 2 }} />;
+        return <div style={{ borderTop: `${el.h || 1}px solid ${elementStyle.color || printTokens.border}`, width: "100%", marginTop: (el.h || 1) / 2 }} />;
       }
       if (el.type === "field") {
         return <span style={{ opacity: 0.7, fontStyle: "italic" }}>{el.label}</span>;
@@ -544,7 +544,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
                     <div>
                       <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide block mb-1">Font</span>
                       <FormSelect value={selectedEl.style?.fontFamily || "inherit"}
-                        onChange={(val) => patchStyle(selectedEl.id, { fontFamily: val })}
+                        onChange={(fontFamily) => patchStyle(selectedEl.id, { fontFamily })}
                         className="w-full"
                         options={[
                           { value: "inherit", label: "Default (Inter)" },

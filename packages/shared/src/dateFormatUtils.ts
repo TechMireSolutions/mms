@@ -58,24 +58,24 @@ export function formatDateParts(
   formatId: string,
 ): string {
   const id = normalizeDateFormat(formatId);
-  const d = String(day).padStart(2, '0');
-  const m = String(month).padStart(2, '0');
-  const y = String(year);
+  const paddedDay = String(day).padStart(2, '0');
+  const paddedMonth = String(month).padStart(2, '0');
+  const fullYear = String(year);
 
   switch (id) {
     case 'MM/DD/YYYY':
-      return `${m}/${d}/${y}`;
+      return `${paddedMonth}/${paddedDay}/${fullYear}`;
     case 'YYYY-MM-DD':
-      return `${y}-${m}-${d}`;
+      return `${fullYear}-${paddedMonth}-${paddedDay}`;
     case 'DD-MM-YYYY':
-      return `${d}-${m}-${y}`;
+      return `${paddedDay}-${paddedMonth}-${fullYear}`;
     case 'DD.MM.YYYY':
-      return `${d}.${m}.${y}`;
+      return `${paddedDay}.${paddedMonth}.${fullYear}`;
     case 'YYYY/MM/DD':
-      return `${y}/${m}/${d}`;
+      return `${fullYear}/${paddedMonth}/${paddedDay}`;
     case 'DD/MM/YYYY':
     default:
-      return `${d}/${m}/${y}`;
+      return `${paddedDay}/${paddedMonth}/${fullYear}`;
   }
 }
 
@@ -148,13 +148,13 @@ export function parseDisplayDateToIso(display: string, formatId: string): string
     return '';
   }
 
-  const y = year < 100 ? 2000 + year : year;
-  const probe = new Date(y, month - 1, day);
-  if (probe.getFullYear() !== y || probe.getMonth() !== month - 1 || probe.getDate() !== day) {
+  const normalizedYear = year < 100 ? 2000 + year : year;
+  const probe = new Date(normalizedYear, month - 1, day);
+  if (probe.getFullYear() !== normalizedYear || probe.getMonth() !== month - 1 || probe.getDate() !== day) {
     return '';
   }
 
-  return `${String(y).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return `${String(normalizedYear).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 /**

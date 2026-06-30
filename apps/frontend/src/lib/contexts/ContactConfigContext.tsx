@@ -285,7 +285,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         if (parsed) setFieldConfigState(parsed as FieldConfig);
       } else if (e.key === PREFERENCES_KEY) {
         const parsed = safeParseEvent(e, "preferences");
-        if (parsed) setPrefsState((p) => ({ ...DEFAULT_PREFERENCES, ...p, ...(parsed as Partial<ContactPreferences>) }));
+        if (parsed) setPrefsState((currentPreferences) => ({ ...DEFAULT_PREFERENCES, ...currentPreferences, ...(parsed as Partial<ContactPreferences>) }));
       } else if (e.key && e.key.startsWith(getWorkspaceLocalStoragePrefix())) {
         const subKey = e.key.slice(getWorkspaceLocalStoragePrefix().length);
         const parsed = safeParseEvent(e, subKey);

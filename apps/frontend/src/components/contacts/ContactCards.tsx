@@ -116,13 +116,13 @@ export default function ContactCards({
           <span className="text-muted-foreground/40">—</span>
         );
       case "rating": {
-        const r = item.rating || 0;
+        const contactRating = item.rating || 0;
         return (
           <div className="flex items-center gap-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 5 }).map((_, ratingIndex) => (
               <Star
-                key={i}
-                className={`w-3.5 h-3.5 ${i < r
+                key={ratingIndex}
+                className={`w-3.5 h-3.5 ${ratingIndex < contactRating
                     ? "text-amber-500 fill-amber-500"
                     : "text-muted-foreground/20"
                   }`}

@@ -30,21 +30,21 @@ function matchesWidgetFilter(
   filterValue?: string,
 ): boolean {
   if (!filterField) return true;
-  const val = studentFieldValue(student, filterField);
-  if (val === undefined || val === null) return false;
+  const fieldValue = studentFieldValue(student, filterField);
+  if (fieldValue === undefined || fieldValue === null) return false;
 
-  const strVal = String(val).toLowerCase();
-  const strTargetVal = String(filterValue ?? '').toLowerCase();
+  const normalizedFieldValue = String(fieldValue).toLowerCase();
+  const normalizedTargetValue = String(filterValue ?? '').toLowerCase();
 
   switch (filterOperator) {
     case 'equals':
-      return strVal === strTargetVal;
+      return normalizedFieldValue === normalizedTargetValue;
     case 'contains':
-      return strVal.includes(strTargetVal);
+      return normalizedFieldValue.includes(normalizedTargetValue);
     case 'gt':
-      return Number(val) > Number(filterValue);
+      return Number(fieldValue) > Number(filterValue);
     case 'lt':
-      return Number(val) < Number(filterValue);
+      return Number(fieldValue) < Number(filterValue);
     default:
       return true;
   }

@@ -128,7 +128,7 @@ export function ObligationsSummary({
     return true;
   }), [collections, typeFilter, repFilter, userFilter, dateFrom, dateTo, debouncedSearch, reps, obligationTypes]);
 
-  const totalAmount = filtered.reduce((s, c) => s + c.amount, 0);
+  const totalAmount = filtered.reduce((sum, collection) => sum + collection.amount, 0);
   const totalRecords = filtered.length;
   const uniqueReps = new Set(filtered.map((c) => c.mujtahid_representative_id)).size;
 
@@ -199,7 +199,7 @@ export function ObligationsSummary({
       );
       if (wt) {
         const liabilityDist = distributions.filter((d) => d.wakala_type_id === wt.id && d.type === "Liability");
-        const totalLiabilityPct = liabilityDist.reduce((s, d) => s + d.percentage, 0);
+        const totalLiabilityPct = liabilityDist.reduce((sum, distribution) => sum + distribution.percentage, 0);
         map[key].due += amount * (totalLiabilityPct / 100);
       } else {
         map[key].due += amount; // No wakala config = full amount is due
@@ -542,7 +542,7 @@ export function ObligationsSummary({
                 <tr>
                   <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{repSummary.length} rep{repSummary.length !== 1 ? "s" : ""}</td>
                   <td className="px-3 py-2 text-right font-mono font-bold text-foreground text-xs">{fmt(totalAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{fmt(repSummary.reduce((s, r) => s + r.due, 0))}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{fmt(repSummary.reduce((sum, representativeSummary) => sum + representativeSummary.due, 0))}</td>
                 </tr>
               </tfoot>
             </table>

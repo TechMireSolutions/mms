@@ -21,8 +21,8 @@ export function getGrade(pct: number): GradeInfo {
  * Returns rank format string with correct ordinal suffix (e.g. 1st, 2nd, 3rd, 4th).
  */
 export function getRankSuffix(n: number): string {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  const suffix = s[(v - 20) % 10] || s[v] || s[0];
+  const suffixes = ['th', 'st', 'nd', 'rd'];
+  const ordinalRemainder = n % 100;
+  const suffix = suffixes[(ordinalRemainder - 20) % 10] || suffixes[ordinalRemainder] || suffixes[0];
   return n + suffix;
 }

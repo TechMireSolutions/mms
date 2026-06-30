@@ -80,22 +80,22 @@ export default function SessionsTable({ title }: { title?: string }) {
       </header>
 
       <div className="divide-y divide-border/50">
-        {sessions.map((s, i) => (
+        {sessions.map((session, sessionIndex) => (
           <motion.article
-            key={s.id}
+            key={session.id}
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.06 }}
+            transition={{ delay: sessionIndex * 0.06 }}
             className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/20 transition-colors"
           >
             {/* Time */}
             <div className="w-14 flex-shrink-0 text-center">
-              <p className="text-[13px] font-bold text-foreground m-0">{s.time}</p>
+              <p className="text-[13px] font-bold text-foreground m-0">{session.time}</p>
             </div>
 
             {/* Live indicator or dot */}
             <div className="flex-shrink-0">
-              {s.status === "live" ? (
+              {session.status === "live" ? (
                 <span className="flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full" aria-label="Session is live">
                   <Radio className="w-2.5 h-2.5 animate-pulse" aria-hidden="true" /> LIVE
                 </span>
@@ -106,19 +106,19 @@ export default function SessionsTable({ title }: { title?: string }) {
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-foreground truncate m-0">{s.name}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{s.teacher}</p>
+              <p className="text-[13px] font-semibold text-foreground truncate m-0">{session.name}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{session.teacher}</p>
             </div>
 
             {/* Meta */}
             <div className="hidden sm:flex items-center gap-3 text-[11px] text-muted-foreground flex-shrink-0">
               <span className="flex items-center gap-1">
                 <MapPin className="w-3 h-3" aria-hidden="true" />
-                <span className="sr-only">Room:</span> {s.room}
+                <span className="sr-only">Room:</span> {session.room}
               </span>
               <span className="flex items-center gap-1">
                 <Users className="w-3 h-3" aria-hidden="true" />
-                <span className="sr-only">Students:</span> {s.students}
+                <span className="sr-only">Students:</span> {session.students}
               </span>
             </div>
           </motion.article>

@@ -1351,8 +1351,8 @@ export function formatDate(
   showMonthName = false
 ): string {
   if (!date) return "—";
-  const d = typeof date === "string" ? new Date(date) : date;
-  if (isNaN(d.getTime())) return "—";
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(parsedDate.getTime())) return "—";
 
   let actualDateFormat = "DD/MM/YYYY";
   let actualShowMonthName = showMonthName;
@@ -1400,10 +1400,10 @@ export function formatDate(
     day: "numeric",
     month: "numeric",
     year: "numeric",
-  }).formatToParts(d);
-  const dayNum = Number(parts.find((p) => p.type === "day")?.value ?? d.getDate());
-  const monthNum = Number(parts.find((p) => p.type === "month")?.value ?? d.getMonth() + 1);
-  const yearNum = Number(parts.find((p) => p.type === "year")?.value ?? d.getFullYear());
+  }).formatToParts(parsedDate);
+  const dayNum = Number(parts.find((part) => part.type === "day")?.value ?? parsedDate.getDate());
+  const monthNum = Number(parts.find((part) => part.type === "month")?.value ?? parsedDate.getMonth() + 1);
+  const yearNum = Number(parts.find((part) => part.type === "year")?.value ?? parsedDate.getFullYear());
 
   if (actualShowMonthName) {
     const month =
@@ -1411,8 +1411,8 @@ export function formatDate(
         timeZone: timezone,
         month: "short",
       })
-        .formatToParts(d)
-        .find((p) => p.type === "month")?.value ?? String(monthNum);
+        .formatToParts(parsedDate)
+        .find((part) => part.type === "month")?.value ?? String(monthNum);
     return formatDatePartsWithMonthName(dayNum, month, monthNum, yearNum, actualDateFormat);
   }
 

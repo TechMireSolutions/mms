@@ -40,15 +40,15 @@ export default async function teachersRoutes(
     const queryParsed = parseRequest(teachersListQuerySchema, request.query);
     if (!queryParsed.ok) return replyValidationError(reply, queryParsed.message);
     try {
-      const q = queryParsed.data;
+      const query = queryParsed.data;
       const page = await loadTeachersPage({
-        page: q.page,
-        limit: q.limit ?? TEACHERS_MODULE_CONTRACT.defaultPageSize,
-        search: q.search,
-        status: q.status,
-        specialization: q.specialization,
-        sortField: q.sortField,
-        sortDir: q.sortDir,
+        page: query.page,
+        limit: query.limit ?? TEACHERS_MODULE_CONTRACT.defaultPageSize,
+        search: query.search,
+        status: query.status,
+        specialization: query.specialization,
+        sortField: query.sortField,
+        sortDir: query.sortDir,
       });
       return reply.send(page);
     } catch {

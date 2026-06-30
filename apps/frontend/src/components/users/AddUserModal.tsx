@@ -594,12 +594,12 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
 
   const handleNext = (): void => {
     if (!validate()) return;
-    setStep((s) => s + 1);
+    setStep((currentStep) => currentStep + 1);
   };
 
   const handleBack = (): void => {
     setErrors({});
-    setStep((s) => s - 1);
+    setStep((currentStep) => currentStep - 1);
   };
 
   const handleSubmit = (): void => {
