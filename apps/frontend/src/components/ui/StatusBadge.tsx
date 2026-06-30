@@ -37,12 +37,12 @@ export function StatusBadge({
   size = "md",
 }: StatusBadgeProps): React.ReactElement {
   const map = { ...DEFAULT_CONFIG, ...(config || {}) };
-  const cfg = map[status] || { label: status, cls: SEMANTIC_BADGE.muted };
+  const badgeConfig = map[status] || { label: status, cls: SEMANTIC_BADGE.muted };
   const sizeClass = size === "sm" ? "text-[9px] px-1.5 py-0.5" : "text-[11px] px-2 py-0.5";
 
   return (
-    <span className={cn('inline-flex items-center font-bold rounded-full border', sizeClass, cfg.cls)}>
-      {cfg.label}
+    <span className={cn('inline-flex items-center font-bold rounded-full border', sizeClass, badgeConfig.cls)}>
+      {badgeConfig.label}
     </span>
   );
 }

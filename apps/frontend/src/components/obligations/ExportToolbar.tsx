@@ -83,8 +83,8 @@ async function downloadPDF(columns: ExportColumn[], rows: Record<string, unknown
       doc.rect(startX, y, colW * columns.length, 6.5, "F");
     }
     columns.forEach((col, i) => {
-      const val = String(row[col.key] ?? "");
-      doc.text(val, startX + i * colW + 2, y + 4.5, { maxWidth: colW - 3 });
+      const cellValue = String(row[col.key] ?? "");
+      doc.text(cellValue, startX + i * colW + 2, y + 4.5, { maxWidth: colW - 3 });
     });
     y += 6.5;
   });

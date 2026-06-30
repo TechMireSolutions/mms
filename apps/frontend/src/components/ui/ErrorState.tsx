@@ -28,16 +28,16 @@ export function ErrorState({
     permission: { icon: AlertTriangle, color: "text-warning",   bg: "bg-warning/10",       defaultTitle: "Access denied" },
   };
 
-  const cfg = configs[type] || configs.generic;
-  const Icon = cfg.icon;
+  const stateConfig = configs[type] || configs.generic;
+  const Icon = stateConfig.icon;
 
   return (
     <div className={`flex flex-col items-center justify-center text-center ${compact ? "py-8 px-4" : "py-16 px-6"}`}>
-      <div className={`${cfg.bg} rounded-2xl flex items-center justify-center mb-4 ${compact ? "w-10 h-10" : "w-14 h-14"}`}>
-        <Icon className={`${cfg.color} ${compact ? "w-5 h-5" : "w-7 h-7"}`} />
+      <div className={`${stateConfig.bg} rounded-2xl flex items-center justify-center mb-4 ${compact ? "w-10 h-10" : "w-14 h-14"}`}>
+        <Icon className={`${stateConfig.color} ${compact ? "w-5 h-5" : "w-7 h-7"}`} />
       </div>
       <p className={`font-semibold text-foreground ${compact ? "text-sm" : "text-[15px]"}`}>
-        {title || cfg.defaultTitle}
+        {title || stateConfig.defaultTitle}
       </p>
       {description && (
         <p className={`text-muted-foreground mt-1.5 max-w-xs ${compact ? "text-xs" : "text-sm"}`}>{description}</p>

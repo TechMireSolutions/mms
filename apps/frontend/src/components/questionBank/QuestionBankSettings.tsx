@@ -360,7 +360,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
                       <p className="text-xs text-muted-foreground">{tabDesc}</p>
                     </div>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                      {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                      {tabDefs.filter((field) => enabledSet.has(field.key)).length}/{tabDefs.length}
                     </span>
                     {tabId !== "basic" && isOn && (
                       <Button
@@ -411,7 +411,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
                       />
                       <div className="border-t border-border pt-3">
                         <CustomFieldsBuilder
-                          fields={(tabFields[tabId] || []).map(f => ({ ...f, id: f.key })) as unknown as CustomFieldConfig[]}
+                          fields={(tabFields[tabId] || []).map((field) => ({ ...field, id: field.key })) as unknown as CustomFieldConfig[]}
                           droppableId={`custom-fields-${tabId}`}
                           onChange={(f) => handleCustomFieldsChangeLocal(tabId, f)}
                         />

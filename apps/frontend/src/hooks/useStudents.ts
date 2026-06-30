@@ -29,15 +29,15 @@ export interface StudentsPaginatedParams {
 }
 
 function buildStudentsPageUrl(params: StudentsPaginatedParams): string {
-  const q = new URLSearchParams();
-  q.set('page', String(params.page));
-  q.set('limit', String(params.limit ?? STUDENTS_MODULE_CONTRACT.defaultPageSize));
-  if (params.search?.trim()) q.set('search', params.search.trim());
-  if (params.status?.trim()) q.set('status', params.status.trim());
-  if (params.gender) q.set('gender', params.gender);
-  if (params.sortField) q.set('sortField', params.sortField);
-  if (params.sortDir) q.set('sortDir', params.sortDir);
-  return `${STUDENTS_API}?${q.toString()}`;
+  const queryParams = new URLSearchParams();
+  queryParams.set('page', String(params.page));
+  queryParams.set('limit', String(params.limit ?? STUDENTS_MODULE_CONTRACT.defaultPageSize));
+  if (params.search?.trim()) queryParams.set('search', params.search.trim());
+  if (params.status?.trim()) queryParams.set('status', params.status.trim());
+  if (params.gender) queryParams.set('gender', params.gender);
+  if (params.sortField) queryParams.set('sortField', params.sortField);
+  if (params.sortDir) queryParams.set('sortDir', params.sortDir);
+  return `${STUDENTS_API}?${queryParams.toString()}`;
 }
 
 export function studentsPaginatedQueryKey(params: StudentsPaginatedParams) {
@@ -139,11 +139,11 @@ export function useStudentById(studentId: string | undefined, enabled = true) {
 
 export function useStudentLinkedContactIds(excludeStudentId?: string) {
   const { isAuthenticated } = useAuth();
-  const q = excludeStudentId ? `?excludeId=${encodeURIComponent(excludeStudentId)}` : '';
+  const queryString = excludeStudentId ? `?excludeId=${encodeURIComponent(excludeStudentId)}` : '';
   return useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'linked-contact-ids', excludeStudentId ?? ''] as const,
     queryFn: async () => {
-      const body = await apiJson<{ contactIds: Array<string | number> }>(`${STUDENTS_API}/linked-contact-ids${q}`);
+      const body = await apiJson<{ contactIds: Array<string | number> }>(`${STUDENTS_API}/linked-contact-ids${queryString}`);
       return body.contactIds;
     },
     enabled: isAuthenticated,
@@ -162,16 +162,16 @@ export interface StudentNextGrNumberParams {
 export function useStudentNextGrNumber(params: StudentNextGrNumberParams) {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
-  const q = new URLSearchParams();
-  q.set('registeredDate', params.registeredDate);
-  if (params.template) q.set('template', params.template);
-  if (params.digits != null) q.set('digits', String(params.digits));
-  if (params.restartAnnually != null) q.set('restartAnnually', String(params.restartAnnually));
+  const queryParams = new URLSearchParams();
+  queryParams.set('registeredDate', params.registeredDate);
+  if (params.template) queryParams.set('template', params.template);
+  if (params.digits != null) queryParams.set('digits', String(params.digits));
+  if (params.restartAnnually != null) queryParams.set('restartAnnually', String(params.restartAnnually));
 
   return useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'next-gr-number', params] as const,
     queryFn: async () => {
-      const body = await apiJson<{ grNumber: string }>(`${STUDENTS_API}/next-gr-number?${q.toString()}`);
+      const body = await apiJson<{ grNumber: string }>(`${STUDENTS_API}/next-gr-number?${queryParams.toString()}`);
       return body.grNumber;
     },
     enabled: isAuthenticated && enabled && Boolean(params.registeredDate),

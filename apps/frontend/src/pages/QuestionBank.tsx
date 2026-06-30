@@ -78,9 +78,9 @@ export default function QuestionBankPage(): React.JSX.Element {
   }, [setActiveTab, setActiveSubTab]);
 
   const handleQuestionSave = useCallback(
-    (q: QuestionBankQuestion): void => {
-      const exists = questions.find((x) => x.id === q.id);
-      setQuestions(exists ? questions.map((x) => (x.id === q.id ? q : x)) : [...questions, q]);
+    (question: QuestionBankQuestion): void => {
+      const exists = questions.find((existingQuestion) => existingQuestion.id === question.id);
+      setQuestions(exists ? questions.map((existingQuestion) => (existingQuestion.id === question.id ? question : existingQuestion)) : [...questions, question]);
       setShowQuestionModal(false);
       setEditQuestion(null);
     },

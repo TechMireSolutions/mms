@@ -38,7 +38,7 @@ export function useModuleFieldsEditor({
     Object.fromEntries(
       Object.entries(initialFields).map(([tabId, list]) => [
         tabId,
-        new Set(safeArray<FieldDefinition>(list).filter((f) => f.enabled).map((f) => f.key)),
+        new Set(safeArray<FieldDefinition>(list).filter((field) => field.enabled).map((field) => field.key)),
       ]),
     ),
   );
@@ -47,7 +47,7 @@ export function useModuleFieldsEditor({
     Object.fromEntries(
       Object.entries(initialFields).map(([tabId, list]) => [
         tabId,
-        new Set(safeArray<FieldDefinition>(list).filter((f) => f.required).map((f) => f.key)),
+        new Set(safeArray<FieldDefinition>(list).filter((field) => field.required).map((field) => field.key)),
       ]),
     ),
   );
@@ -56,7 +56,7 @@ export function useModuleFieldsEditor({
     Object.fromEntries(
       Object.entries(initialFields).map(([tabId, list]) => [
         tabId,
-        new Set(safeArray<FieldDefinition>(list).filter((f) => f.unique).map((f) => f.key)),
+        new Set(safeArray<FieldDefinition>(list).filter((field) => field.unique).map((field) => field.key)),
       ]),
     ),
   );
@@ -67,8 +67,8 @@ export function useModuleFieldsEditor({
         tabId,
         Object.fromEntries(
           safeArray<FieldDefinition>(list)
-            .filter((f) => f.defaultValue !== undefined)
-            .map((f) => [f.key, f.defaultValue]),
+            .filter((field) => field.defaultValue !== undefined)
+            .map((field) => [field.key, field.defaultValue]),
         ),
       ]),
     ),
@@ -80,8 +80,8 @@ export function useModuleFieldsEditor({
         tabId,
         Object.fromEntries(
           safeArray<FieldDefinition>(list)
-            .filter((f) => f.permissions)
-            .map((f) => [f.key, f.permissions as string[]]),
+            .filter((field) => field.permissions)
+            .map((field) => [field.key, field.permissions as string[]]),
         ),
       ]),
     ),
@@ -91,7 +91,7 @@ export function useModuleFieldsEditor({
     Object.fromEntries(
       Object.entries(initialFields).map(([tabId, list]) => [
         tabId,
-        safeArray<FieldDefinition>(list).map((f) => f.key),
+        safeArray<FieldDefinition>(list).map((field) => field.key),
       ]),
     ),
   );
@@ -111,7 +111,7 @@ export function useModuleFieldsEditor({
       Object.fromEntries(
         Object.entries(fields).map(([tabId, list]) => [
           tabId,
-          new Set(safeArray<FieldDefinition>(list).filter((f) => f.enabled).map((f) => f.key)),
+          new Set(safeArray<FieldDefinition>(list).filter((field) => field.enabled).map((field) => field.key)),
         ])
       )
     );
@@ -119,7 +119,7 @@ export function useModuleFieldsEditor({
       Object.fromEntries(
         Object.entries(fields).map(([tabId, list]) => [
           tabId,
-          new Set(safeArray<FieldDefinition>(list).filter((f) => f.required).map((f) => f.key)),
+          new Set(safeArray<FieldDefinition>(list).filter((field) => field.required).map((field) => field.key)),
         ])
       )
     );
@@ -127,7 +127,7 @@ export function useModuleFieldsEditor({
       Object.fromEntries(
         Object.entries(fields).map(([tabId, list]) => [
           tabId,
-          new Set(safeArray<FieldDefinition>(list).filter((f) => f.unique).map((f) => f.key)),
+          new Set(safeArray<FieldDefinition>(list).filter((field) => field.unique).map((field) => field.key)),
         ])
       )
     );
@@ -137,8 +137,8 @@ export function useModuleFieldsEditor({
           tabId,
           Object.fromEntries(
             safeArray<FieldDefinition>(list)
-              .filter((f) => f.defaultValue !== undefined)
-              .map((f) => [f.key, f.defaultValue])
+              .filter((field) => field.defaultValue !== undefined)
+              .map((field) => [field.key, field.defaultValue])
           ),
         ])
       )
@@ -149,8 +149,8 @@ export function useModuleFieldsEditor({
           tabId,
           Object.fromEntries(
             safeArray<FieldDefinition>(list)
-              .filter((f) => f.permissions)
-              .map((f) => [f.key, f.permissions as string[]])
+              .filter((field) => field.permissions)
+              .map((field) => [field.key, field.permissions as string[]])
           ),
         ])
       )
@@ -159,7 +159,7 @@ export function useModuleFieldsEditor({
       Object.fromEntries(
         Object.entries(fields).map(([tabId, list]) => [
           tabId,
-          safeArray<FieldDefinition>(list).map((f) => f.key),
+          safeArray<FieldDefinition>(list).map((field) => field.key),
         ])
       )
     );
@@ -234,11 +234,11 @@ export function useModuleFieldsEditor({
   };
 
   const handleReorder = (tabId: string, reorderedFields: FieldDefinition[]) => {
-    setTabFieldOrder((prev) => ({ ...prev, [tabId]: reorderedFields.map((f) => f.key) }));
+    setTabFieldOrder((prev) => ({ ...prev, [tabId]: reorderedFields.map((field) => field.key) }));
   };
 
   const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
-    const newKeys = newFields.map((f) => f.key);
+    const newKeys = newFields.map((field) => field.key);
     setTabFieldOrder((prev) => ({
       ...prev,
       [tabId]: syncOrder(prev[tabId] || [], newKeys),
@@ -249,8 +249,8 @@ export function useModuleFieldsEditor({
   const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
     setTabFields((prev) => ({
       ...prev,
-      [tabId]: safeArray<FieldDefinition>(prev[tabId]).map((f) =>
-        f.key === updatedField.key ? updatedField : f
+      [tabId]: safeArray<FieldDefinition>(prev[tabId]).map((field) =>
+        field.key === updatedField.key ? updatedField : field
       ),
     }));
   };
@@ -258,7 +258,7 @@ export function useModuleFieldsEditor({
   const handleDeleteField = (tabId: string, fieldId: string) => {
     setTabFields((prev) => ({
       ...prev,
-      [tabId]: safeArray<FieldDefinition>(prev[tabId]).filter((f) => f.key !== fieldId),
+      [tabId]: safeArray<FieldDefinition>(prev[tabId]).filter((field) => field.key !== fieldId),
     }));
     setTabFieldOrder((prev) => ({
       ...prev,
@@ -295,7 +295,7 @@ export function useModuleFieldsEditor({
   };
 
   const handleDeleteTab = (key: string) => {
-    setFormTabs((prev) => prev.filter((t) => t.key !== key));
+    setFormTabs((prev) => prev.filter((tab) => tab.key !== key));
     setEnabledTabs((prev) => {
       const next = new Set(prev);
       next.delete(key);
@@ -311,7 +311,7 @@ export function useModuleFieldsEditor({
   const handleRenameTab = (key: string, newLabel: string) => {
     if (!newLabel.trim()) return;
     setFormTabs((prev) =>
-      prev.map((t) => (t.key === key ? { ...t, label: newLabel.trim() } : t))
+      prev.map((tab) => (tab.key === key ? { ...tab, label: newLabel.trim() } : tab))
     );
   };
 
@@ -319,19 +319,19 @@ export function useModuleFieldsEditor({
     const newFields: Record<string, FieldDefinition[]> = {};
     formTabs.forEach((tab) => {
       const tabId = tab.key;
-      const combined = safeArray<FieldDefinition>(tabFields[tabId]).map((f) => {
-        const fieldKey = f.key || (f as { id?: string }).id || "";
-        const enabled = tabFieldEnabled[tabId]?.has(fieldKey) ?? f.enabled ?? false;
-        const required = tabFieldRequired[tabId]?.has(fieldKey) ?? f.required ?? false;
-        const unique = tabFieldUnique[tabId]?.has(fieldKey) ?? f.unique ?? false;
+      const combined = safeArray<FieldDefinition>(tabFields[tabId]).map((field) => {
+        const fieldKey = field.key || (field as { id?: string }).id || "";
+        const enabled = tabFieldEnabled[tabId]?.has(fieldKey) ?? field.enabled ?? false;
+        const required = tabFieldRequired[tabId]?.has(fieldKey) ?? field.required ?? false;
+        const unique = tabFieldUnique[tabId]?.has(fieldKey) ?? field.unique ?? false;
         const orderArray = tabFieldOrder[tabId] || [];
         const orderIdx = orderArray.indexOf(fieldKey);
-        const order = orderIdx >= 0 ? orderIdx : f.order ?? 999;
-        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? f.defaultValue;
-        const permissions = tabFieldPermissions[tabId]?.[fieldKey] ?? f.permissions;
+        const order = orderIdx >= 0 ? orderIdx : field.order ?? 999;
+        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? field.defaultValue;
+        const permissions = tabFieldPermissions[tabId]?.[fieldKey] ?? field.permissions;
 
         return {
-          ...f,
+          ...field,
           key: fieldKey,
           enabled,
           required,

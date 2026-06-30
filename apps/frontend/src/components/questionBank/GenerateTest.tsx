@@ -53,16 +53,16 @@ function AIGenerating({ onDone }: AIGeneratingProps): React.ReactElement {
       </div>
       <p className="text-sm font-bold text-foreground">{t("questionBank.generatingTitle")}</p>
       <div className="max-w-xs mx-auto space-y-2">
-        {steps.map((s, i) => (
-          <div key={s} className={`flex items-center gap-2 text-[12px] transition-all ${i <= step ? "text-foreground" : "text-muted-foreground/40"}`}>
-            {i < step ? (
+        {steps.map((stepLabel, stepIndex) => (
+          <div key={stepLabel} className={`flex items-center gap-2 text-[12px] transition-all ${stepIndex <= step ? "text-foreground" : "text-muted-foreground/40"}`}>
+            {stepIndex < step ? (
               <CheckCircle2 className="w-3.5 h-3.5 text-success flex-shrink-0" aria-hidden="true" />
-            ) : i === step ? (
+            ) : stepIndex === step ? (
               <div className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin flex-shrink-0" aria-hidden="true" />
             ) : (
               <div className="w-3.5 h-3.5 rounded-full border border-border flex-shrink-0" aria-hidden="true" />
             )}
-            <span>{s}</span>
+            <span>{stepLabel}</span>
           </div>
         ))}
       </div>
@@ -109,8 +109,8 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
   }));
   const [generatedQIds, setGeneratedQIds] = useState<string[]>([]);
 
-  const upd = (f: keyof TestConfig, v: TestConfig[keyof TestConfig]) => setConfig((d) => ({ ...d, [f]: v }));
-  const toggleCat = (id: string) => setConfig((d) => ({ ...d, categoryIds: d.categoryIds.includes(id) ? d.categoryIds.filter((x) => x !== id) : [...d.categoryIds, id] }));
+  const updateTestConfig = (field: keyof TestConfig, value: TestConfig[keyof TestConfig]) => setConfig((draftConfig) => ({ ...draftConfig, [field]: value }));
+  const toggleCategory = (id: string) => setConfig((draftConfig) => ({ ...draftConfig, categoryIds: draftConfig.categoryIds.includes(id) ? draftConfig.categoryIds.filter((categoryId) => categoryId !== id) : [...draftConfig.categoryIds, id] }));
 
   const handleGenerate = () => {
     setStep("generating");
@@ -118,17 +118,17 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
 
   const onGeneratingDone = () => {
     // Pick questions matching criteria
-    let pool = questions.filter((q) => {
+    let pool = questions.filter((question) => {
       const mCat =
         config.categoryIds.length === 0 ||
-        getQuestionCategoryIds(q).some((id) => config.categoryIds.includes(id));
-      const mDiff = config.difficulty === "any" || q.difficulty === config.difficulty;
+        getQuestionCategoryIds(question).some((categoryId) => config.categoryIds.includes(categoryId));
+      const mDiff = config.difficulty === "any" || question.difficulty === config.difficulty;
       return mCat && mDiff;
     });
     if (config.shuffle) {
       pool = [...pool].sort(() => Math.random() - 0.5);
     }
-    const picked = pool.slice(0, config.numQuestions).map((q) => q.id);
+    const picked = pool.slice(0, config.numQuestions).map((question) => question.id);
     setGeneratedQIds(picked);
     setStep("preview");
   };
@@ -198,7 +198,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
               id="config-name"
               className={`${FORM_INPUT} shadow-none`}
               value={config.name}
-              onChange={(e) => upd("name", e.target.value)}
+              onChange={(e) => updateTestConfig("name", e.target.value)}
               placeholder={t("questionBank.testNamePlaceholder")}
             />
           </div>
@@ -206,17 +206,17 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
           <div>
             <span className={FORM_LABEL}>{t("questionBank.categoriesHint")}</span>
             <div className="flex flex-wrap gap-2" role="group" aria-label={t("questionBank.selectCategoriesAria")}>
-              {qbConfig.categories.map((c) => {
-                const active = config.categoryIds.includes(c.id);
+              {qbConfig.categories.map((category) => {
+                const active = config.categoryIds.includes(category.id);
                 return (
                   <Button
-                    key={c.id}
+                    key={category.id}
                     type="button"
-                    onClick={() => toggleCat(c.id)}
+                    onClick={() => toggleCategory(category.id)}
                     className={`flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-full border transition-all h-auto shadow-none ${active ? "text-white border-transparent" : "border-border bg-muted text-foreground hover:bg-muted/80"}`}
-                    style={active ? { background: c.color, borderColor: c.color } : {}}
+                    style={active ? { background: category.color, borderColor: category.color } : {}}
                   >
-                    <span>{c.icon}</span> <span>{c.name}</span>
+                    <span>{category.icon}</span> <span>{category.name}</span>
                   </Button>
                 );
               })}
@@ -229,7 +229,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
               <FormSelect
                 id="config-difficulty"
                 value={config.difficulty}
-                onChange={(val) => upd("difficulty", val)}
+                onChange={(val) => updateTestConfig("difficulty", val)}
                 options={diffSelectOptions}
               />
             </div>
@@ -240,7 +240,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
                 type="number"
                 className={`${FORM_INPUT} shadow-none`}
                 value={config.numQuestions}
-                onChange={(e) => upd("numQuestions", +e.target.value)}
+                onChange={(e) => updateTestConfig("numQuestions", +e.target.value)}
                 min={1}
                 max={questions.length}
               />
@@ -252,7 +252,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
                 type="number"
                 className={`${FORM_INPUT} shadow-none`}
                 value={config.duration}
-                onChange={(e) => upd("duration", +e.target.value)}
+                onChange={(e) => updateTestConfig("duration", +e.target.value)}
                 min={5}
               />
             </div>
@@ -261,18 +261,18 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
           <label className="flex items-center gap-2.5 cursor-pointer select-none">
             <Checkbox
               checked={config.shuffle}
-              onCheckedChange={(checked) => upd("shuffle", !!checked)}
+              onCheckedChange={(checked) => updateTestConfig("shuffle", !!checked)}
             />
             <span className="text-sm text-foreground">{t("questionBank.shuffle")}</span>
           </label>
 
           {/* Pool preview */}
           {(() => {
-            const pool = questions.filter((q) => {
+            const pool = questions.filter((question) => {
               const mCat =
         config.categoryIds.length === 0 ||
-        getQuestionCategoryIds(q).some((id) => config.categoryIds.includes(id));
-              const mDiff = config.difficulty === "any" || q.difficulty === config.difficulty;
+        getQuestionCategoryIds(question).some((categoryId) => config.categoryIds.includes(categoryId));
+              const mDiff = config.difficulty === "any" || question.difficulty === config.difficulty;
               return mCat && mDiff;
             });
             const valid = pool.length >= config.numQuestions;
@@ -298,11 +298,11 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
           <Button
             type="button"
             onClick={handleGenerate}
-            disabled={!config.numQuestions || questions.filter((q) => {
+            disabled={!config.numQuestions || questions.filter((question) => {
               const mCat =
         config.categoryIds.length === 0 ||
-        getQuestionCategoryIds(q).some((id) => config.categoryIds.includes(id));
-              const mDiff = config.difficulty === "any" || q.difficulty === config.difficulty;
+        getQuestionCategoryIds(question).some((categoryId) => config.categoryIds.includes(categoryId));
+              const mDiff = config.difficulty === "any" || question.difficulty === config.difficulty;
               return mCat && mDiff;
             }).length < config.numQuestions}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 disabled:opacity-60 h-auto"
@@ -332,19 +332,19 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
               </div>
             </div>
             <div className="max-h-72 space-y-2.5 overflow-y-auto pr-1" role="list" aria-label={t("questionBank.previewTest")}>
-              {generatedQIds.map((id, i) => {
-                const q = questions.find((x) => x.id === id);
-                if (!q) return null;
-                const diffCls = QUESTION_DIFFICULTY_BADGE_CLASSES[q.difficulty] ?? "";
+              {generatedQIds.map((id, questionIndex) => {
+                const question = questions.find((candidateQuestion) => candidateQuestion.id === id);
+                if (!question) return null;
+                const diffCls = QUESTION_DIFFICULTY_BADGE_CLASSES[question.difficulty] ?? "";
                 return (
                   <div key={id} className="flex items-start gap-3 rounded-lg border border-border/50 bg-muted/30 p-3" role="listitem">
                     <span className="mt-0.5 w-5 flex-shrink-0 text-[11px] font-bold text-muted-foreground">
-                      {t("questionBank.previewQuestionLabel", { n: i + 1 })}
+                      {t("questionBank.previewQuestionLabel", { n: questionIndex + 1 })}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-semibold text-foreground leading-snug m-0">{q.text}</p>
+                      <p className="text-[12px] font-semibold text-foreground leading-snug m-0">{question.text}</p>
                       <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                        {getQuestionCategoryIds(q).map((catId) => {
+                        {getQuestionCategoryIds(question).map((catId) => {
                           const cat = getCat(catId);
                           if (!cat) return null;
                           return (
@@ -358,14 +358,14 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
                           );
                         })}
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${diffCls}`}>
-                          {qbConfig.difficultyLabel(q.difficulty)}
+                          {qbConfig.difficultyLabel(question.difficulty)}
                         </span>
                       </div>
                     </div>
                     <Button
                       type="button"
-                      onClick={() => setGeneratedQIds((p) => p.filter((x) => x !== id))}
-                      aria-label={t("questionBank.removeQuestionAria", { n: i + 1 })}
+                      onClick={() => setGeneratedQIds((previousQuestionIds) => previousQuestionIds.filter((questionId) => questionId !== id))}
+                      aria-label={t("questionBank.removeQuestionAria", { n: questionIndex + 1 })}
                       variant="ghost"
                       className="p-1 rounded hover:bg-muted text-muted-foreground flex-shrink-0 h-auto shadow-none"
                     >

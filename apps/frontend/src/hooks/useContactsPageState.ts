@@ -311,8 +311,8 @@ export function useContactsPageState({
   const handleDelete = useCallback(
     (id: string | number) => {
       if (!canDelete) return;
-      const c = rowSource.find((x) => x.id === id) ?? contacts.find((x) => x.id === id);
-      setDeleteTarget({ id, name: c?.name || c?.firstName });
+      const selectedContact = rowSource.find((contact) => contact.id === id) ?? contacts.find((contact) => contact.id === id);
+      setDeleteTarget({ id, name: selectedContact?.name || selectedContact?.firstName });
     },
     [rowSource, contacts, canDelete],
   );
@@ -456,12 +456,12 @@ export function useContactsPageState({
   const handleRestore = useCallback(
     (id: string | number) => {
       if (!canDelete) return;
-      const c = contacts.find((x) => x.id === id);
+      const selectedContact = contacts.find((contact) => contact.id === id);
       void restoreContact(String(id))
         .then(() => {
           notify.success(t("contacts.restoreSuccessTitle"), {
-            description: c?.name
-              ? t("contacts.restoreSuccessDescription", { name: c.name })
+            description: selectedContact?.name
+              ? t("contacts.restoreSuccessDescription", { name: selectedContact.name })
               : t("contacts.restoreSuccessDescriptionDefault"),
           });
         })

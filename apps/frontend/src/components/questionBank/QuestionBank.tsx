@@ -388,14 +388,14 @@ export function QuestionBank({
                       );
                     })()}
                     {config.orderedFields
-                      .filter((f) => !SYSTEM_FIELD_IDS.has(f.id) && config.isFieldEnabled(f.id) && (isColumnVisible ? isColumnVisible(f.id) : true))
+                      .filter((field) => !SYSTEM_FIELD_IDS.has(field.id) && config.isFieldEnabled(field.id) && (isColumnVisible ? isColumnVisible(field.id) : true))
                       .map((field) => {
-                        const val = (q as unknown as Record<string, unknown>)[field.id];
-                        if (val === undefined || val === '') return null;
+                        const fieldValue = (q as unknown as Record<string, unknown>)[field.id];
+                        if (fieldValue === undefined || fieldValue === '') return null;
                         return (
                           <p key={field.id} className="mt-1 text-[11px] text-muted-foreground">
                             <span className="font-semibold">{config.fieldLabel(field.id, field.label)}:</span>{' '}
-                            {Array.isArray(val) ? val.join(', ') : String(val)}
+                            {Array.isArray(fieldValue) ? fieldValue.join(', ') : String(fieldValue)}
                           </p>
                         );
                       })}

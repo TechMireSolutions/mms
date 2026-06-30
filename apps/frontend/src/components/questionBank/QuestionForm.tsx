@@ -362,16 +362,16 @@ export function QuestionForm({
 
       // Citation fields validation
       const citations = (data.sourceCitations || []) as any[];
-      const sourceFields = config.orderedFields.filter((f) => isQuestionSourceFieldId(f.id));
+      const sourceFields = config.orderedFields.filter((field) => isQuestionSourceFieldId(field.id));
       for (const entry of citations) {
         const book = config.sourceBooks.find((b) => b.id === entry.bookId);
         if (!book) continue;
         for (const fieldId of getBookCitationFieldIds(book)) {
-          const field = sourceFields.find((f) => f.id === fieldId);
+          const field = sourceFields.find((sourceField) => sourceField.id === fieldId);
           if (!field?.required) continue;
           const sourceKey = QUESTION_SOURCE_FIELD_TO_KEY[fieldId as QuestionSourceFieldId];
-          const val = entry.citation[sourceKey];
-          if (val === undefined || val === '') {
+          const citationValue = entry.citation[sourceKey];
+          if (citationValue === undefined || citationValue === '') {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
               path: ['sourceCitations'],
@@ -482,8 +482,8 @@ export function QuestionForm({
         }
 
         const isRequired = !!field.required;
-        const val = data[field.key];
-        const isFilled = val !== undefined && val !== null && val !== "";
+        const fieldValue = data[field.key];
+        const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "";
 
         if (isRequired) {
           totalRequired++;
@@ -780,7 +780,7 @@ export function QuestionForm({
     }
 
     if (tab === 'sources') {
-      const sourceFields = config.orderedFields.filter((f) => isQuestionSourceFieldId(f.id));
+      const sourceFields = config.orderedFields.filter((field) => isQuestionSourceFieldId(field.id));
       const availableSourceFieldIds = sourceFields
         .map((field) => field.id)
         .filter((id): id is QuestionSourceFieldId => isQuestionSourceFieldId(id));

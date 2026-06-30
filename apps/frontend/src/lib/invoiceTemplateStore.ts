@@ -396,7 +396,7 @@ export const AVAILABLE_FIELDS = [
 ];
 
 const findItem = (arr?: LookupItem[], id?: unknown): LookupItem | undefined => {
-  return (arr || []).find((x) => String(x.id) === String(id));
+  return (arr || []).find((item) => String(item.id) === String(id));
 };
 
 /**

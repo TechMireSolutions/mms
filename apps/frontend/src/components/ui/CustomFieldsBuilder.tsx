@@ -458,7 +458,7 @@ export function CustomFieldsBuilder({
   const [adding, setAdding] = useState<boolean>(false);
   const [draft, setDraft] = useState<CustomFieldConfig | null>(null);
 
-  const existingLabels = fields.map((f) => f.label);
+  const existingLabels = fields.map((field) => field.label);
 
   const startAdd = (): void => {
     setAdding(true);
@@ -466,19 +466,19 @@ export function CustomFieldsBuilder({
     setDraft(newField());
   };
 
-  const handleSaveNew = (f: CustomFieldConfig): void => {
-    onChange([...fields, f]);
+  const handleSaveNew = (field: CustomFieldConfig): void => {
+    onChange([...fields, field]);
     setAdding(false);
     setDraft(null);
   };
 
-  const handleSaveEdit = (f: CustomFieldConfig): void => {
-    onChange(fields.map((x) => (x.key === f.key ? f : x)));
+  const handleSaveEdit = (field: CustomFieldConfig): void => {
+    onChange(fields.map((existingField) => (existingField.key === field.key ? field : existingField)));
     setEditingId(null);
   };
 
   const handleDelete = (key: string): void => {
-    onChange(fields.filter((f) => f.key !== key));
+    onChange(fields.filter((field) => field.key !== key));
   };
 
   const handleDragEnd = (result: DropResult): void => {

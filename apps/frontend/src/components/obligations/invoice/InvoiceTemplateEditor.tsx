@@ -146,33 +146,33 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   };
 
   const duplicateEl = (id: string) => {
-    const el = template.elements.find((e) => e.id === id);
-    if (!el) return;
-    const copy: TemplateElement = { ...el, id: newId(), x: el.x + 12, y: el.y + 12, style: { ...el.style } };
-    commitUpdate((els) => [...els, copy]);
+    const templateElement = template.elements.find((element) => element.id === id);
+    if (!templateElement) return;
+    const copy: TemplateElement = { ...templateElement, id: newId(), x: templateElement.x + 12, y: templateElement.y + 12, style: { ...templateElement.style } };
+    commitUpdate((elements) => [...elements, copy]);
     setSelectedId(copy.id);
   };
 
   const addStaticText = () => {
-    const el: TemplateElement = { id: newId(), type: "static", label: "New Text", x: 20, y: 20, w: 200, h: 18, style: { fontSize: 11, color: PRINT_NEUTRAL.text } };
-    commitUpdate((els) => [...els, el]);
-    setSelectedId(el.id);
+    const templateElement: TemplateElement = { id: newId(), type: "static", label: "New Text", x: 20, y: 20, w: 200, h: 18, style: { fontSize: 11, color: PRINT_NEUTRAL.text } };
+    commitUpdate((elements) => [...elements, templateElement]);
+    setSelectedId(templateElement.id);
   };
 
   const addDivider = () => {
-    const el: TemplateElement = { id: newId(), type: "divider", label: "", x: 20, y: 20, w: size.width - 40, h: 1, style: { color: PRINT_NEUTRAL.border } };
-    commitUpdate((els) => [...els, el]);
-    setSelectedId(el.id);
+    const templateElement: TemplateElement = { id: newId(), type: "divider", label: "", x: 20, y: 20, w: size.width - 40, h: 1, style: { color: PRINT_NEUTRAL.border } };
+    commitUpdate((elements) => [...elements, templateElement]);
+    setSelectedId(templateElement.id);
   };
 
   const addField = (fieldDef: { field: string, label: string }) => {
-    const el: TemplateElement = {
+    const templateElement: TemplateElement = {
       id: newId(), type: "field", label: fieldDef.label, field: fieldDef.field,
       x: 20, y: 20, w: 160, h: 16,
       style: { fontSize: 10, color: PRINT_NEUTRAL.text },
     };
-    commitUpdate((els) => [...els, el]);
-    setSelectedId(el.id);
+    commitUpdate((elements) => [...elements, templateElement]);
+    setSelectedId(templateElement.id);
   };
 
   // ── Drag ─────────────────────────────────────────────────────────────────
@@ -181,16 +181,16 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     e.preventDefault();
     e.stopPropagation();
     setSelectedId(id);
-    const el = template.elements.find((x) => x.id === id);
-    if (!el) return;
+    const templateElement = template.elements.find((element) => element.id === id);
+    if (!templateElement) return;
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
     dragState.current = {
       id,
       startX: e.clientX,
       startY: e.clientY,
-      origX: el.x,
-      origY: el.y,
+      origX: templateElement.x,
+      origY: templateElement.y,
       canvasLeft: rect.left,
       canvasTop: rect.top,
     };
@@ -244,9 +244,9 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   const onMouseDownResize = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const el = template.elements.find((x) => x.id === id);
-    if (!el) return;
-    resizeState.current = { id, startX: e.clientX, startY: e.clientY, origW: el.w, origH: el.h };
+    const templateElement = template.elements.find((element) => element.id === id);
+    if (!templateElement) return;
+    resizeState.current = { id, startX: e.clientX, startY: e.clientY, origW: templateElement.w, origH: templateElement.h };
   };
 
   // ── Save ──────────────────────────────────────────────────────────────────
@@ -435,11 +435,11 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
           <div>
             <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">Add Fields</p>
             <div className="space-y-1">
-              {AVAILABLE_FIELDS.map((f) => (
-                <Button type="button" key={f.field} onClick={() => addField(f)}
+              {AVAILABLE_FIELDS.map((fieldOption) => (
+                <Button type="button" key={fieldOption.field} onClick={() => addField(fieldOption)}
                   variant="outline"
                   className="w-full text-left px-2.5 py-1.5 h-auto text-[10px] font-medium rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors shadow-none justify-start">
-                  {f.label}
+                  {fieldOption.label}
                 </Button>
               ))}
             </div>

@@ -295,9 +295,9 @@ export function CoreFieldEditorList({
                           <div className="ml-8 mt-1">
                             <FieldEditor
                               field={field}
-                              existingLabels={fields.map(f => f.label)}
-                              onSave={(f) => {
-                                onEditField(f);
+                              existingLabels={fields.map((fieldDefinition) => fieldDefinition.label)}
+                              onSave={(updatedField) => {
+                                onEditField(updatedField);
                                 setFullEditingId(null);
                               }}
                               onCancel={() => setFullEditingId(null)}

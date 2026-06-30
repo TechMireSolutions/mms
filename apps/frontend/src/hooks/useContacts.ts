@@ -47,16 +47,16 @@ export interface ContactsPaginatedParams {
 }
 
 function buildContactsPageUrl(params: ContactsPaginatedParams): string {
-  const q = new URLSearchParams();
-  q.set('page', String(params.page));
-  q.set('limit', String(params.limit ?? CONTACTS_MODULE_CONTRACT.defaultPageSize));
-  if (params.search?.trim()) q.set('search', params.search.trim());
-  if (params.lifecycleStage) q.set('lifecycleStage', params.lifecycleStage);
-  if (params.gender) q.set('gender', params.gender);
-  if (params.includeDeleted) q.set('includeDeleted', 'true');
-  if (params.sortField) q.set('sortField', params.sortField);
-  if (params.sortDir) q.set('sortDir', params.sortDir);
-  return `${CONTACTS_API}?${q.toString()}`;
+  const queryParams = new URLSearchParams();
+  queryParams.set('page', String(params.page));
+  queryParams.set('limit', String(params.limit ?? CONTACTS_MODULE_CONTRACT.defaultPageSize));
+  if (params.search?.trim()) queryParams.set('search', params.search.trim());
+  if (params.lifecycleStage) queryParams.set('lifecycleStage', params.lifecycleStage);
+  if (params.gender) queryParams.set('gender', params.gender);
+  if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
+  if (params.sortField) queryParams.set('sortField', params.sortField);
+  if (params.sortDir) queryParams.set('sortDir', params.sortDir);
+  return `${CONTACTS_API}?${queryParams.toString()}`;
 }
 
 export function contactsPaginatedQueryKey(params: ContactsPaginatedParams) {
@@ -128,8 +128,8 @@ export function useContactsReportAnalytics(params: ContactsReportAnalyticsParams
   return useQuery({
     queryKey: [...CONTACTS_REPORT_ANALYTICS_QUERY_KEY, yearsKey] as const,
     queryFn: async () => {
-      const q = yearsKey ? `?years=${encodeURIComponent(yearsKey)}` : '';
-      return apiJson<ContactsReportAnalyticsResult>(`${CONTACTS_API}/report-analytics${q}`);
+      const queryString = yearsKey ? `?years=${encodeURIComponent(yearsKey)}` : '';
+      return apiJson<ContactsReportAnalyticsResult>(`${CONTACTS_API}/report-analytics${queryString}`);
     },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
@@ -189,8 +189,8 @@ export function useContactsDuplicatePairs(params: ContactsDuplicatesParams = {})
   return useQuery({
     queryKey: [...CONTACTS_DUPLICATES_QUERY_KEY, page, limit] as const,
     queryFn: async () => {
-      const q = new URLSearchParams({ page: String(page), limit: String(limit) });
-      return apiJson<ContactsDuplicatePairsPageResult>(`${CONTACTS_API}/duplicates?${q.toString()}`);
+      const queryParams = new URLSearchParams({ page: String(page), limit: String(limit) });
+      return apiJson<ContactsDuplicatePairsPageResult>(`${CONTACTS_API}/duplicates?${queryParams.toString()}`);
     },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,

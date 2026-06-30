@@ -114,10 +114,10 @@ export function InvoicePrintPreview({
     }
 
     if (el.type === "field" && collection) {
-      const val = resolveField(el.field!, collection as unknown as Record<string, unknown>, lookups);
+      const fieldValue = resolveField(el.field!, collection as unknown as Record<string, unknown>, lookups);
       return (
         <div key={el.id} style={baseStyle} onClick={handleClick}>
-          {val || <span style={{ color: printTokens.placeholder, fontStyle: "italic" }}>—</span>}
+          {fieldValue || <span style={{ color: printTokens.placeholder, fontStyle: "italic" }}>—</span>}
         </div>
       );
     }

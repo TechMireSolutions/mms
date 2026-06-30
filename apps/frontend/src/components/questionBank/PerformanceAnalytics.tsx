@@ -31,8 +31,8 @@ function sumScores(scores: Record<string, number>): number {
 
 function testTotalMarks(test: QuestionBankTest, questions: QuestionBankQuestion[]): number {
   return test.questionIds.reduce((sum, qid) => {
-    const q = questions.find((item) => item.id === qid);
-    return sum + (q?.marks ?? 0);
+    const question = questions.find((item) => item.id === qid);
+    return sum + (question?.marks ?? 0);
   }, 0);
 }
 
@@ -104,16 +104,16 @@ export function PerformanceAnalytics({
     return categories
       .map((cat) => {
         const catQIds = questions
-          .filter((q) => getQuestionCategoryIds(q).includes(cat.id))
-          .map((q) => q.id);
+          .filter((question) => getQuestionCategoryIds(question).includes(cat.id))
+          .map((question) => question.id);
         let correct = 0;
         let total = 0;
         results.forEach((r) => {
           catQIds.forEach((qid) => {
             if (r.answers?.[qid] !== undefined) {
-              const q = questions.find((x) => x.id === qid);
+              const question = questions.find((candidateQuestion) => candidateQuestion.id === qid);
               total++;
-              if (r.answers[qid] === q?.answer) correct++;
+              if (r.answers[qid] === question?.answer) correct++;
             }
           });
         });
@@ -141,15 +141,15 @@ export function PerformanceAnalytics({
   });
 
   const diffData = qbConfig.enabledDifficulties.map((key) => {
-    const qIds = questions.filter((q) => q.difficulty === key).map((q) => q.id);
+    const questionIds = questions.filter((question) => question.difficulty === key).map((question) => question.id);
     let correct = 0;
     let total = 0;
     results.forEach((r) => {
-      qIds.forEach((qid) => {
+      questionIds.forEach((qid) => {
         if (r.answers?.[qid] !== undefined) {
-          const q = questions.find((x) => x.id === qid);
+          const question = questions.find((candidateQuestion) => candidateQuestion.id === qid);
           total++;
-          if (r.answers[qid] === q?.answer) correct++;
+          if (r.answers[qid] === question?.answer) correct++;
         }
       });
     });
@@ -322,19 +322,19 @@ export function PerformanceAnalytics({
             <h3 className="text-[13px] font-bold text-foreground">{t("questionBank.analytics.studentLeaderboard")}</h3>
           </div>
           <div className="space-y-2.5" role="list">
-            {studentStats.map((s, i) => (
-              <div key={s.name} className="flex items-center gap-3" role="listitem">
-                <span className="w-6 flex-shrink-0 text-[12px] font-bold text-muted-foreground">{i + 1}</span>
+            {studentStats.map((studentStat, studentIndex) => (
+              <div key={studentStat.name} className="flex items-center gap-3" role="listitem">
+                <span className="w-6 flex-shrink-0 text-[12px] font-bold text-muted-foreground">{studentIndex + 1}</span>
                 <div className="flex-1">
                   <div className="mb-0.5 flex items-center justify-between">
                     <p className="text-[12px] font-semibold text-foreground">
-                      {s.name}{" "}
-                      <span className="font-normal text-muted-foreground">· {s.class}</span>
+                      {studentStat.name}{" "}
+                      <span className="font-normal text-muted-foreground">· {studentStat.class}</span>
                     </p>
-                    <p className="text-[12px] font-bold text-foreground">{s.avg}%</p>
+                    <p className="text-[12px] font-bold text-foreground">{studentStat.avg}%</p>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
-                    <div className="h-full rounded-full bg-primary" style={{ width: `${s.avg}%` }} />
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${studentStat.avg}%` }} />
                   </div>
                 </div>
               </div>

@@ -30,15 +30,15 @@ export interface TeachersPaginatedParams {
 }
 
 function buildTeachersPageUrl(params: TeachersPaginatedParams): string {
-  const q = new URLSearchParams();
-  q.set('page', String(params.page));
-  q.set('limit', String(params.limit ?? TEACHERS_MODULE_CONTRACT.defaultPageSize));
-  if (params.search?.trim()) q.set('search', params.search.trim());
-  if (params.status?.trim()) q.set('status', params.status.trim());
-  if (params.specialization) q.set('specialization', params.specialization);
-  if (params.sortField) q.set('sortField', params.sortField);
-  if (params.sortDir) q.set('sortDir', params.sortDir);
-  return `${TEACHERS_API}?${q.toString()}`;
+  const queryParams = new URLSearchParams();
+  queryParams.set('page', String(params.page));
+  queryParams.set('limit', String(params.limit ?? TEACHERS_MODULE_CONTRACT.defaultPageSize));
+  if (params.search?.trim()) queryParams.set('search', params.search.trim());
+  if (params.status?.trim()) queryParams.set('status', params.status.trim());
+  if (params.specialization) queryParams.set('specialization', params.specialization);
+  if (params.sortField) queryParams.set('sortField', params.sortField);
+  if (params.sortDir) queryParams.set('sortDir', params.sortDir);
+  return `${TEACHERS_API}?${queryParams.toString()}`;
 }
 
 export function teachersPaginatedQueryKey(params: TeachersPaginatedParams) {
@@ -118,11 +118,11 @@ export function useTeacherById(teacherId: string | undefined, enabled = true) {
 
 export function useTeacherLinkedContactIds(excludeTeacherId?: string) {
   const { isAuthenticated } = useAuth();
-  const q = excludeTeacherId ? `?excludeId=${encodeURIComponent(excludeTeacherId)}` : '';
+  const queryString = excludeTeacherId ? `?excludeId=${encodeURIComponent(excludeTeacherId)}` : '';
   return useQuery({
     queryKey: [...TEACHERS_QUERY_KEY, 'linked-contact-ids', excludeTeacherId ?? ''] as const,
     queryFn: async () => {
-      const body = await apiJson<{ contactIds: Array<string | number> }>(`${TEACHERS_API}/linked-contact-ids${q}`);
+      const body = await apiJson<{ contactIds: Array<string | number> }>(`${TEACHERS_API}/linked-contact-ids${queryString}`);
       return body.contactIds;
     },
     enabled: isAuthenticated,
@@ -138,13 +138,13 @@ export interface TeacherNextEmployeeIdParams {
 export function useTeacherNextEmployeeId(params: TeacherNextEmployeeIdParams = {}) {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
-  const q = new URLSearchParams();
-  if (params.prefix) q.set('prefix', params.prefix);
+  const queryParams = new URLSearchParams();
+  if (params.prefix) queryParams.set('prefix', params.prefix);
 
   return useQuery({
     queryKey: [...TEACHERS_QUERY_KEY, 'next-employee-id', params] as const,
     queryFn: async () => {
-      const suffix = q.toString() ? `?${q.toString()}` : '';
+      const suffix = queryParams.toString() ? `?${queryParams.toString()}` : '';
       const body = await apiJson<{ employeeId: string }>(`${TEACHERS_API}/next-employee-id${suffix}`);
       return body.employeeId;
     },

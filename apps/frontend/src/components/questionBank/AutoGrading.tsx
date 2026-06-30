@@ -22,8 +22,8 @@ function sumScores(scores: Record<string, number>): number {
 
 function testTotalMarks(test: QuestionBankTest, questions: Question[]): number {
   return test.questionIds.reduce((sum, qid) => {
-    const q = questions.find((item) => item.id === qid);
-    return sum + (q?.marks ?? 0);
+    const question = questions.find((item) => item.id === qid);
+    return sum + (question?.marks ?? 0);
   }, 0);
 }
 
@@ -104,18 +104,18 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
             className="overflow-hidden"
           >
             <div className="space-y-2 px-4 pb-3" role="list">
-              {test.questionIds.map((qid, i) => {
-                const q = questions.find((x) => x.id === qid);
-                if (!q) return null;
+              {test.questionIds.map((qid, questionIndex) => {
+                const question = questions.find((candidateQuestion) => candidateQuestion.id === qid);
+                if (!question) return null;
                 const studentAns = result.answers?.[qid];
                 const correct =
-                  q.type === "short"
-                    ? studentAns === q.answer
-                    : isQuestionAnswerCorrect(q, studentAns);
+                  question.type === "short"
+                    ? studentAns === question.answer
+                    : isQuestionAnswerCorrect(question, studentAns);
                 const correctDisplay =
-                  q.type === "matching" || q.type === "fill_blank" || q.type === "ordering"
-                    ? splitQuestionCompoundAnswer(q.answer).join(", ")
-                    : q.answer;
+                  question.type === "matching" || question.type === "fill_blank" || question.type === "ordering"
+                    ? splitQuestionCompoundAnswer(question.answer).join(", ")
+                    : question.answer;
                 return (
                   <div
                     key={qid}
@@ -135,22 +135,22 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
                     )}
                     <div className="min-w-0 flex-1">
                       <p className={`font-semibold m-0 ${correct ? "text-success" : "text-destructive"}`}>
-                        {t("questionBank.grading.questionLabel", { n: i + 1, text: q.text })}
+                        {t("questionBank.grading.questionLabel", { n: questionIndex + 1, text: question.text })}
                       </p>
-                      {!correct && q.type !== "short" && (
+                      {!correct && question.type !== "short" && (
                         <p className="mt-0.5 text-destructive m-0">
                           {t("questionBank.grading.studentAnswer", { answer: studentAns || "—" })}{" "}
                           · {t("questionBank.grading.correctLabel", { answer: correctDisplay })}
                         </p>
                       )}
-                      {q.type === "short" && (
+                      {question.type === "short" && (
                         <p className="mt-0.5 italic text-muted-foreground m-0">
                           {t("questionBank.grading.shortAnswerManual")}
                         </p>
                       )}
                     </div>
                     <span className="text-[10px] font-bold">
-                      {correct ? `+${q.marks}` : "0"}/{q.marks}
+                      {correct ? `+${question.marks}` : "0"}/{question.marks}
                     </span>
                   </div>
                 );
