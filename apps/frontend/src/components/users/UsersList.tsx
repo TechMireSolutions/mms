@@ -73,14 +73,14 @@ export function UsersList({
   );
 
   const toggleSelect = (id: string): void =>
-    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+    setSelected((selectedIds) => (selectedIds.includes(id) ? selectedIds.filter((selectedId) => selectedId !== id) : [...selectedIds, id]));
   const toggleAll = (): void =>
-    setSelected(selected.length === filtered.length ? [] : filtered.map((u) => u.id));
+    setSelected(selected.length === filtered.length ? [] : filtered.map((user) => user.id));
 
   const bulkAction = (action: 'activate' | 'deactivate'): void => {
     selected.forEach((id) => {
-      const u = users.find((x) => x.id === id);
-      if (u) onToggleStatus(id, action === 'activate' ? 'active' : 'inactive');
+      const selectedUser = users.find((user) => user.id === id);
+      if (selectedUser) onToggleStatus(id, action === 'activate' ? 'active' : 'inactive');
     });
     setSelected([]);
   };

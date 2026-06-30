@@ -153,7 +153,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
   const handleReorderFields = (tabId: string, reorderedFields: FieldDefinition[]) => { handleReorder(tabId, reorderedFields); setSaved(false); };
 
   const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
-    const newKeys = newFields.map((f) => f.key);
+    const newKeys = newFields.map((field) => field.key);
     setTabFieldOrder((prev) => ({
       ...prev,
       [tabId]: syncOrder(prev[tabId] || [], newKeys),
@@ -165,7 +165,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
   const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
     setTabFields(prev => ({
       ...prev,
-      [tabId]: (prev[tabId] || []).map(f => f.key === updatedField.key ? updatedField : f)
+      [tabId]: (prev[tabId] || []).map((field) => field.key === updatedField.key ? updatedField : field)
     }));
     setSaved(false);
   };
@@ -173,7 +173,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
   const handleDeleteField = async (tabId: string, fieldId: string) => {
     setTabFields(prev => ({
       ...prev,
-      [tabId]: (prev[tabId] || []).filter(f => f.key !== fieldId)
+      [tabId]: (prev[tabId] || []).filter((field) => field.key !== fieldId)
     }));
     setTabFieldOrder(prev => ({
       ...prev,
@@ -234,21 +234,21 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
 
   const buildFieldsMap = (): Record<string, FieldDefinition[]> => {
     const newFields: Record<string, FieldDefinition[]> = {};
-    formTabs.forEach(tab => {
+    formTabs.forEach((tab) => {
       const tabId = tab.key;
-      const combined = (tabFields[tabId] || []).map(f => {
-        const fieldKey = f.key || (f as { id?: string }).id || "";
-        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? f.enabled  ?? false;
-        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? f.required ?? false;
-        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? f.unique   ?? false;
+      const combined = (tabFields[tabId] || []).map((field) => {
+        const fieldKey = field.key || (field as { id?: string }).id || "";
+        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? field.enabled  ?? false;
+        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? field.required ?? false;
+        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? field.unique   ?? false;
         const orderArray   = tabFieldOrder[tabId] || [];
         const orderIdx     = orderArray.indexOf(fieldKey);
-        const order        = orderIdx >= 0 ? orderIdx : (f.order ?? 999);
-        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? f.defaultValue;
-        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? f.permissions;
+        const order        = orderIdx >= 0 ? orderIdx : (field.order ?? 999);
+        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? field.defaultValue;
+        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? field.permissions;
 
         return {
-          ...f,
+          ...field,
           key: fieldKey,
           enabled,
           required,
@@ -433,7 +433,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
                     />
                     <div className="border-t border-border pt-3">
                       <CustomFieldsBuilder
-                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        fields={(tabFields[tabId] || []).map((field) => ({...field, id: field.key})) as unknown as CustomFieldConfig[]}
                         droppableId={`custom-fields-${tabId}`}
                         onChange={(f) => handleCustomFieldsChange(tabId, f)}
                       />

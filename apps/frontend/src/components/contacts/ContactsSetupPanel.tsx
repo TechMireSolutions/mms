@@ -110,41 +110,41 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   const [tabFieldEnabled, setTabFieldEnabled] = useState<Record<string, Set<string>>>(() => {
     return Object.fromEntries(getInitialTabs().map(tab => [
       tab.key,
-      new Set((config.fields?.[tab.key] || []).filter(f => f.enabled).map(f => f.key))
+      new Set((config.fields?.[tab.key] || []).filter((field) => field.enabled).map((field) => field.key))
     ]));
   });
 
   const [tabFieldRequired, setTabFieldRequired] = useState<Record<string, Set<string>>>(() => {
     return Object.fromEntries(getInitialTabs().map(tab => [
       tab.key,
-      new Set((config.fields?.[tab.key] || []).filter(f => f.required).map(f => f.key))
+      new Set((config.fields?.[tab.key] || []).filter((field) => field.required).map((field) => field.key))
     ]));
   });
 
   const [tabFieldUnique, setTabFieldUnique] = useState<Record<string, Set<string>>>(() => {
     return Object.fromEntries(getInitialTabs().map(tab => [
       tab.key,
-      new Set((config.fields?.[tab.key] || []).filter(f => f.unique).map(f => f.key))
+      new Set((config.fields?.[tab.key] || []).filter((field) => field.unique).map((field) => field.key))
     ]));
   });
 
   const [tabFieldDefaultValues, setTabFieldDefaultValues] = useState<Record<string, Record<string, unknown>>>(() => {
     return Object.fromEntries(getInitialTabs().map(tab => [
       tab.key,
-      Object.fromEntries((config.fields?.[tab.key] || []).filter(f => f.defaultValue !== undefined).map(f => [f.key, f.defaultValue]))
+      Object.fromEntries((config.fields?.[tab.key] || []).filter((field) => field.defaultValue !== undefined).map((field) => [field.key, field.defaultValue]))
     ]));
   });
 
   const [tabFieldPermissions, setTabFieldPermissions] = useState<Record<string, Record<string, string[]>>>(() => {
     return Object.fromEntries(getInitialTabs().map(tab => [
       tab.key,
-      Object.fromEntries((config.fields?.[tab.key] || []).filter(f => f.permissions).map(f => [f.key, f.permissions as string[]]))
+      Object.fromEntries((config.fields?.[tab.key] || []).filter((field) => field.permissions).map((field) => [field.key, field.permissions as string[]]))
     ]));
   });
 
   const [tabFieldOrder, setTabFieldOrder] = useState<Record<string, string[]>>(() => {
     return Object.fromEntries(getInitialTabs().map(tab => {
-      const orderArray = (config.fields?.[tab.key] || []).map(f => f.key);
+      const orderArray = (config.fields?.[tab.key] || []).map((field) => field.key);
       return [tab.key, orderArray];
     }));
   });
@@ -341,11 +341,11 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   };
 
   const handleReorder = (tabId: string, reorderedFields: FieldDefinition[]): void => {
-    setTabFieldOrder((prev) => ({ ...prev, [tabId]: reorderedFields.map((f) => f.key) }));
+    setTabFieldOrder((prev) => ({ ...prev, [tabId]: reorderedFields.map((field) => field.key) }));
     setSaved(false);
   };
   const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
-    const newKeys = newFields.map((f) => f.key);
+    const newKeys = newFields.map((field) => field.key);
     setTabFieldOrder((prev) => ({
       ...prev,
       [tabId]: syncOrder(prev[tabId] || [], newKeys),
@@ -357,7 +357,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
     setTabFields(prev => ({
       ...prev,
-      [tabId]: (prev[tabId] || []).map(f => f.key === updatedField.key ? updatedField : f)
+      [tabId]: (prev[tabId] || []).map((field) => field.key === updatedField.key ? updatedField : field)
     }));
     setSaved(false);
   };
@@ -390,7 +390,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
     }
     setTabFields(prev => ({
       ...prev,
-      [tabId]: (prev[tabId] || []).filter(f => f.key !== fieldId)
+      [tabId]: (prev[tabId] || []).filter((field) => field.key !== fieldId)
     }));
     setTabFieldOrder(prev => ({
       ...prev,
@@ -403,19 +403,19 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
     const newFields: Record<string, FieldDefinition[]> = {};
     formTabs.forEach(tabDef => {
       const tabId = tabDef.key;
-      const combined = (tabFields[tabId] || []).map(f => {
-        const fieldKey = f.key || (f as { id?: string }).id || "";
-        const enabled = tabFieldEnabled[tabId]?.has(fieldKey) ?? f.enabled ?? false;
-        const required = tabFieldRequired[tabId]?.has(fieldKey) ?? f.required ?? false;
+      const combined = (tabFields[tabId] || []).map((field) => {
+        const fieldKey = field.key || (field as { id?: string }).id || "";
+        const enabled = tabFieldEnabled[tabId]?.has(fieldKey) ?? field.enabled ?? false;
+        const required = tabFieldRequired[tabId]?.has(fieldKey) ?? field.required ?? false;
         const orderArray = tabFieldOrder[tabId] || [];
         const orderIdx = orderArray.indexOf(fieldKey);
-        const order = orderIdx >= 0 ? orderIdx : (f.order ?? 999);
-        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? f.defaultValue;
-        const permissions = tabFieldPermissions[tabId]?.[fieldKey] ?? f.permissions;
-        const unique = tabFieldUnique[tabId]?.has(fieldKey) ?? f.unique ?? false;
+        const order = orderIdx >= 0 ? orderIdx : (field.order ?? 999);
+        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? field.defaultValue;
+        const permissions = tabFieldPermissions[tabId]?.[fieldKey] ?? field.permissions;
+        const unique = tabFieldUnique[tabId]?.has(fieldKey) ?? field.unique ?? false;
         
         return {
-          ...f,
+          ...field,
           key: fieldKey,
           enabled,
           required,
@@ -579,7 +579,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                       />
                       <div className="border-t border-border pt-3">
                         <CustomFieldsBuilder
-                           fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                           fields={(tabFields[tabId] || []).map((field) => ({...field, id: field.key})) as unknown as CustomFieldConfig[]}
                            droppableId={`custom-fields-${tabId}`}
                            onChange={(f) => handleCustomFieldsChange(tabId, f)}
                         />

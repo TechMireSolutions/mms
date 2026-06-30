@@ -87,10 +87,10 @@ function ContactCard({ contact, selected, onSelect, label }: ContactCardProps): 
         {selected && <Check className="w-4 h-4 text-primary" />}
       </div>
       <div className="space-y-1.5">
-        {fields.map((f) => (
-          <div key={f} className="flex items-start gap-2">
-            <span className="text-[11px] text-muted-foreground w-14 flex-shrink-0">{getLabelForField(f, t)}:</span>
-            <span className="text-[12px] font-medium text-foreground truncate">{getValueForField(f, contact, emptyDash)}</span>
+        {fields.map((field) => (
+          <div key={field} className="flex items-start gap-2">
+            <span className="text-[11px] text-muted-foreground w-14 flex-shrink-0">{getLabelForField(field, t)}:</span>
+            <span className="text-[12px] font-medium text-foreground truncate">{getValueForField(field, contact, emptyDash)}</span>
           </div>
         ))}
       </div>
@@ -154,17 +154,17 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm }: MergePreviewProps
           <div>
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t('contacts.duplicates.mergedResult')}</p>
             <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-2 text-foreground">
-              {fields.map((f) => {
-                const valKeep = getValueForField(f, keep, emptyDash);
-                const valOther = getValueForField(f, other, emptyDash);
-                const valMerged = getValueForField(f, mergedResult, emptyDash);
+              {fields.map((field) => {
+                const keepValue = getValueForField(field, keep, emptyDash);
+                const otherValue = getValueForField(field, other, emptyDash);
+                const mergedValue = getValueForField(field, mergedResult, emptyDash);
 
-                const fromOther = (!valKeep || valKeep === emptyDash || valKeep === "") && (valOther && valOther !== emptyDash && valOther !== "");
+                const fromOther = (!keepValue || keepValue === emptyDash || keepValue === "") && (otherValue && otherValue !== emptyDash && otherValue !== "");
 
                 return (
-                  <div key={f} className="flex items-center gap-2">
-                    <span className="text-[11px] text-muted-foreground w-24 flex-shrink-0">{getLabelForField(f, t)}:</span>
-                    <span className="text-[13px] font-medium text-foreground flex-1 truncate">{valMerged || emptyDash}</span>
+                  <div key={field} className="flex items-center gap-2">
+                    <span className="text-[11px] text-muted-foreground w-24 flex-shrink-0">{getLabelForField(field, t)}:</span>
+                    <span className="text-[13px] font-medium text-foreground flex-1 truncate">{mergedValue || emptyDash}</span>
                     {fromOther && (
                       <span className={`text-[10px] ${prefs.duplicateDetectionColorHighlight ?? COLOR_PALETTES.blue.bg} px-1.5 py-0.5 rounded-full font-medium`}>
                         {t('contacts.duplicates.fromDuplicate')}

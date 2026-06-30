@@ -265,15 +265,15 @@ export default function ContactsTable({
         return <td key="socials_url" className="px-4 py-3"><span className="text-[13px] text-muted-foreground truncate max-w-[150px] block" title={urls.join(", ")}>{urls.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "emergency_contact": {
-        const ecNames = (c.emergencyContacts || []).map((ec) => {
-          if (ec.name) return ec.name;
-          if (ec.contactId) {
-            const linked = allContacts.find((x) => String(x.id) === String(ec.contactId));
-            return linked ? linked.name : `${t('contacts.table.contactIdPrefix')}${ec.contactId}`;
+        const emergencyContactNames = (c.emergencyContacts || []).map((emergencyContact) => {
+          if (emergencyContact.name) return emergencyContact.name;
+          if (emergencyContact.contactId) {
+            const linkedContact = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
+            return linkedContact ? linkedContact.name : `${t('contacts.table.contactIdPrefix')}${emergencyContact.contactId}`;
           }
           return null;
         }).filter(Boolean);
-        return <td key="emergency_contact" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{ecNames.join(", ") || t('contacts.table.emptyDash')}</span></td>;
+        return <td key="emergency_contact" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{emergencyContactNames.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
       case "emergency_relationship": {
         const relationships = (c.emergencyContacts || []).map((ec) => ec.relationship).filter(Boolean);

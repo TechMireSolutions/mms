@@ -239,7 +239,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   </div>
 
                   {/* Ordered Attributes & Connections list */}
-                  {sortedEnabledFields.some(f => f.key === "fatherLink" ? (fatherContact || student.fatherName) : f.key === "motherLink" ? (motherContact || student.motherName) : f.key === "guardianLink" ? (guardianContact || student.guardianName) : true) && (
+                  {sortedEnabledFields.some((field) => field.key === "fatherLink" ? (fatherContact || student.fatherName) : field.key === "motherLink" ? (motherContact || student.motherName) : field.key === "guardianLink" ? (guardianContact || student.guardianName) : true) && (
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Student Details</h4>
                       <div className="space-y-2.5">

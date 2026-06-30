@@ -352,13 +352,13 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
       </div>
 
       {/* Dynamic custom fields */}
-      {orderedFields.filter(f => !["name", "email", "role"].includes(f.id)).length > 0 && (
+      {orderedFields.filter((field) => !["name", "email", "role"].includes(field.id)).length > 0 && (
         <div className="space-y-4">
           <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">{t("users.addAdditionalDetails")}</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {orderedFields.filter(f => !["name", "email", "role"].includes(f.id)).map((field) => {
+            {orderedFields.filter((field) => !["name", "email", "role"].includes(field.id)).map((field) => {
               const value = (form as any)[field.id] ?? "";
-              const upd = (val: any) => setForm((f) => ({ ...f, [field.id]: val }));
+              const updateFieldValue = (fieldValue: any) => setForm((previousForm) => ({ ...previousForm, [field.id]: fieldValue }));
               return (
                 <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
                   <Label required={field.required}>{field.label}</Label>
@@ -366,14 +366,14 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                     <textarea
                       className={FORM_TEXTAREA + " min-h-[60px]"}
                       value={value as string}
-                      onChange={(e) => upd(e.target.value)}
+                      onChange={(e) => updateFieldValue(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterField", { label: field.label.toLowerCase() })}
                       required={field.required}
                     />
                   ) : field.type === "select" ? (
                     <FormSelect
                       value={value as string}
-                      onChange={upd}
+                      onChange={updateFieldValue}
                       options={field.options || []}
                       placeholder={t("users.addSelectOption")}
                     />
@@ -381,7 +381,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                     <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
                       <Checkbox
                         checked={!!value}
-                        onCheckedChange={(checked) => upd(!!checked)}
+                        onCheckedChange={(checked) => updateFieldValue(!!checked)}
                       />
                       <span className="text-xs font-medium text-foreground">{field.label}</span>
                     </label>
@@ -389,21 +389,21 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                     <UiInput
                       type="number"
                       value={value}
-                      onChange={(e) => upd(e.target.value)}
+                      onChange={(e) => updateFieldValue(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterNumber")}
                       required={field.required}
                     />
                   ) : field.type === "date" ? (
                     <DatePicker
                       value={value as string}
-                      onChange={(val) => upd(val)}
+                      onChange={(val) => updateFieldValue(val)}
                       required={field.required}
                     />
                   ) : (
                     <UiInput
                       type="text"
                       value={value as string}
-                      onChange={(e) => upd(e.target.value)}
+                      onChange={(e) => updateFieldValue(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterField", { label: field.label.toLowerCase() })}
                       required={field.required}
                     />

@@ -441,7 +441,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                     />
                     <div className="border-t border-border pt-3">
                       <CustomFieldsBuilder
-                        fields={(tabFields[tabId] || []).map(f => ({...f, id: f.key})) as unknown as CustomFieldConfig[]}
+                        fields={(tabFields[tabId] || []).map((field) => ({...field, id: field.key})) as unknown as CustomFieldConfig[]}
                         droppableId={`custom-fields-${tabId}`}
                         onChange={(f) => handleCustomFieldsChangeLocal(tabId, f)}
                       />

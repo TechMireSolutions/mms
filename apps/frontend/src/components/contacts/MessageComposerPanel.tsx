@@ -39,8 +39,8 @@ export default function MessageComposerPanel({
 
   const handleTemplateChange = (id: string): void => {
     setTemplate(id);
-    const picked = whatsappTemplates.find((x) => x.id === id);
-    if (picked && picked.id !== 'custom') setMessage(picked.body);
+    const selectedTemplate = whatsappTemplates.find((templateOption) => templateOption.id === id);
+    if (selectedTemplate && selectedTemplate.id !== 'custom') setMessage(selectedTemplate.body);
   };
 
   const openForContact = (contact: Contact, messageBody: string): void => {
