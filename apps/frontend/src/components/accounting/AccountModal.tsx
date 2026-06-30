@@ -105,7 +105,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                 <label htmlFor="account-subtype" className={FORM_LABEL}>Sub-type {isRequired ? "*" : ""}</label>
                 <select id="account-subtype" value={form.subtype || ""} onChange={(e) => setForm({ ...form, subtype: e.target.value })} className={FORM_INPUT} required={isRequired}>
                   <option value="">— None —</option>
-                  {subtypes.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {subtypes.map((subtype) => <option key={subtype} value={subtype}>{subtype}</option>)}
                 </select>
               </div>
             );

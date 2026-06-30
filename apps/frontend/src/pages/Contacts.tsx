@@ -103,12 +103,12 @@ function SettingsPanel({ contacts, onImport, canWrite, canEditSetup }: SettingsP
     const tabsFromConfig = fieldConfig.settingsSubTabs || [];
     return CONTACTS_MODULE_CONTRACT.setupSubTabs
       .map((key, index) => {
-        const cfg = tabsFromConfig.find((tab) => tab.key === key);
+        const setupTabConfig = tabsFromConfig.find((tab) => tab.key === key);
         return {
           key,
-          label: SETUP_TAB_LABEL_KEYS[key] ? t(SETUP_TAB_LABEL_KEYS[key]) : cfg?.label ?? key,
-          order: cfg?.order ?? index,
-          enabled: cfg?.enabled ?? true,
+          label: SETUP_TAB_LABEL_KEYS[key] ? t(SETUP_TAB_LABEL_KEYS[key]) : setupTabConfig?.label ?? key,
+          order: setupTabConfig?.order ?? index,
+          enabled: setupTabConfig?.enabled ?? true,
         };
       })
       .filter((tab) => tab.enabled)

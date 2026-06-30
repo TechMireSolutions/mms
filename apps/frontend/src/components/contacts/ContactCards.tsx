@@ -97,12 +97,12 @@ export default function ContactCards({
   const renderMetadataValue = (colId: string, item: Contact): React.ReactNode => {
     switch (colId) {
       case "gender": {
-        const val = item.gender;
-        if (!val) return <span className="text-muted-foreground/40">—</span>;
+        const genderValue = item.gender;
+        if (!genderValue) return <span className="text-muted-foreground/40">—</span>;
         return (
           <span className="flex items-center gap-1 capitalize">
             <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            {val}
+            {genderValue}
           </span>
         );
       }
@@ -135,12 +135,12 @@ export default function ContactCards({
       case "country":
       case "state":
       case "line1": {
-        const val = item.addresses?.[0]?.[colId as "city" | "country" | "state" | "line1"] || item[colId as keyof Contact];
-        if (!val) return <span className="text-muted-foreground/40">—</span>;
+        const addressValue = item.addresses?.[0]?.[colId as "city" | "country" | "state" | "line1"] || item[colId as keyof Contact];
+        if (!addressValue) return <span className="text-muted-foreground/40">—</span>;
         return (
           <span className="flex items-center gap-1 truncate">
             <MapPin className="w-3.5 h-3.5 text-primary/70 shrink-0" />
-            <span className="truncate">{String(val)}</span>
+            <span className="truncate">{String(addressValue)}</span>
           </span>
         );
       }
@@ -179,22 +179,22 @@ export default function ContactCards({
         );
       }
       case "emergency_contact": {
-        const ecNames = (item.emergencyContacts || []).map((ec) => {
-          if (ec.name) return ec.name;
-          if (ec.contactId) {
-            const linked = allContacts.find((x) => String(x.id) === String(ec.contactId));
-            return linked ? linked.name : `${t("contacts.table.contactIdPrefix")}${ec.contactId}`;
+        const emergencyContactNames = (item.emergencyContacts || []).map((emergencyContact) => {
+          if (emergencyContact.name) return emergencyContact.name;
+          if (emergencyContact.contactId) {
+            const linkedContact = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
+            return linkedContact ? linkedContact.name : `${t("contacts.table.contactIdPrefix")}${emergencyContact.contactId}`;
           }
           return null;
         }).filter(Boolean);
-        return ecNames.length > 0 ? (
-          <span className="truncate">{ecNames.join(", ")}</span>
+        return emergencyContactNames.length > 0 ? (
+          <span className="truncate">{emergencyContactNames.join(", ")}</span>
         ) : (
           <span className="text-muted-foreground/40">—</span>
         );
       }
       case "emergency_relationship": {
-        const relationships = (item.emergencyContacts || []).map((ec) => ec.relationship).filter(Boolean);
+        const relationships = (item.emergencyContacts || []).map((emergencyContact) => emergencyContact.relationship).filter(Boolean);
         return relationships.length > 0 ? (
           <span className="truncate">{relationships.join(", ")}</span>
         ) : (

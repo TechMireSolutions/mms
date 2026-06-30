@@ -594,9 +594,9 @@ export function exportLocalDatabaseCache(): string {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith(prefix)) {
-        const val = localStorage.getItem(key);
-        if (val !== null) {
-          data[key] = val;
+        const storedValue = localStorage.getItem(key);
+        if (storedValue !== null) {
+          data[key] = storedValue;
         }
       }
     }

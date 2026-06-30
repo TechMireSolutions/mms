@@ -199,12 +199,12 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
   };
 
   const handleSave = (): void => {
-    const updatedFormTabs = formTabs.map(t => ({
-      ...t,
-      enabled: enabledTabs.has(t.key)
+    const updatedFormTabs = formTabs.map((tab) => ({
+      ...tab,
+      enabled: enabledTabs.has(tab.key)
     }));
 
-    const cfg: StudentsSettings = {
+    const updatedSettings: StudentsSettings = {
       ...settings,
       idPrefix,
       autoGenerateId,
@@ -227,7 +227,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
       columnRegistry: settings.columnRegistry || DEFAULT_STUDENT_COLUMN_REGISTRY,
     };
 
-    updateSettings(cfg);
+    updateSettings(updatedSettings);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -388,7 +388,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                     <p className="text-xs text-muted-foreground">{tabDesc}</p>
                   </div>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                    {tabDefs.filter((field) => enabledSet.has(field.key)).length}/{tabDefs.length}
                   </span>
                   {tabId !== "basic" && isOn && (
                     <Button

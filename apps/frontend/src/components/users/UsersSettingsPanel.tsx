@@ -265,12 +265,12 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
   };
 
   const handleSave = (): void => {
-    const updatedFormTabs = formTabs.map(t => ({
-      ...t,
-      enabled: enabledTabs.has(t.key)
+    const updatedFormTabs = formTabs.map((tab) => ({
+      ...tab,
+      enabled: enabledTabs.has(tab.key)
     }));
 
-    const cfg: UsersSettingsData = {
+    const updatedSettings: UsersSettingsData = {
       ...settings,
       allowSelfRegistration,
       requireEmailVerification,
@@ -280,7 +280,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
       fields: buildFieldsMap(),
     };
 
-    updateSettings(cfg);
+    updateSettings(updatedSettings);
     setSaved(true);
     notify.success(t("users.settingsSaved"), { description: t("users.settingsSavedDesc") });
     setTimeout(() => setSaved(false), 2500);
@@ -380,7 +380,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
                     <p className="text-xs text-muted-foreground">{tabDesc}</p>
                   </div>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                    {tabDefs.filter((field) => enabledSet.has(field.key)).length}/{tabDefs.length}
                   </span>
                   {tabId !== "basic" && isOn && (
                     <Button

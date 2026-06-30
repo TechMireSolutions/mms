@@ -27,19 +27,19 @@ export const ACTIVITY_TYPE_I18N: Record<string, AppTranslationKey> = {
 
 /** Formats registry-driven custom column values for the contacts table. */
 export function formatContactCellValue(
-  val: unknown,
+  value: unknown,
   t: (key: AppTranslationKey) => string,
 ): string {
-  if (val === null || val === undefined || val === '') return t('contacts.table.emptyDash');
-  if (typeof val === 'boolean') return val ? t('common.yes') : t('common.no');
-  if (Array.isArray(val)) return val.join(', ') || t('contacts.table.emptyDash');
-  if (typeof val === 'object') {
+  if (value === null || value === undefined || value === '') return t('contacts.table.emptyDash');
+  if (typeof value === 'boolean') return value ? t('common.yes') : t('common.no');
+  if (Array.isArray(value)) return value.join(', ') || t('contacts.table.emptyDash');
+  if (typeof value === 'object') {
     try {
-      return JSON.stringify(val);
+      return JSON.stringify(value);
     } catch (err: unknown) {
       console.error('Failed to stringify cell value:', err);
       return t('contacts.table.emptyDash');
     }
   }
-  return String(val);
+  return String(value);
 }

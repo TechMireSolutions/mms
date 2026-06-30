@@ -77,9 +77,9 @@ export function hydrateBackgroundJobsFromServer(serverJobs: BackgroundJob[]): vo
 export function upsertLocalBackgroundJob(job: BackgroundJob): void {
   const store = readStore();
   const list = store[job.moduleId] ?? [];
-  const idx = list.findIndex((j) => j.id === job.id);
-  if (idx >= 0) {
-    list[idx] = job;
+  const jobIndex = list.findIndex((storedJob) => storedJob.id === job.id);
+  if (jobIndex >= 0) {
+    list[jobIndex] = job;
   } else {
     list.unshift(job);
   }
@@ -99,7 +99,7 @@ export function getModuleBackgroundJobs(moduleId: string): BackgroundJob[] {
 }
 
 export function getActiveBackgroundJobs(): BackgroundJob[] {
-  return getAllBackgroundJobs().filter((j) => j.status === 'running');
+  return getAllBackgroundJobs().filter((job) => job.status === 'running');
 }
 
 export function startBackgroundJob(
@@ -129,10 +129,10 @@ export function startBackgroundJob(
 export function updateBackgroundJobProgress(id: string, current: number, total: number): void {
   const store = readStore();
   for (const moduleId of Object.keys(store)) {
-    const idx = store[moduleId].findIndex((j) => j.id === id);
-    if (idx < 0) continue;
-    const job = { ...store[moduleId][idx], progress: { current, total } };
-    store[moduleId][idx] = job;
+    const jobIndex = store[moduleId].findIndex((storedJob) => storedJob.id === id);
+    if (jobIndex < 0) continue;
+    const job = { ...store[moduleId][jobIndex], progress: { current, total } };
+    store[moduleId][jobIndex] = job;
     writeStore(store);
     syncRemote(job);
     return;
@@ -150,10 +150,10 @@ export function failBackgroundJob(id: string, error: string): void {
 function patchJob(id: string, patch: Partial<BackgroundJob>): void {
   const store = readStore();
   for (const moduleId of Object.keys(store)) {
-    const idx = store[moduleId].findIndex((j) => j.id === id);
-    if (idx < 0) continue;
-    const job = { ...store[moduleId][idx], ...patch };
-    store[moduleId][idx] = job;
+    const jobIndex = store[moduleId].findIndex((storedJob) => storedJob.id === id);
+    if (jobIndex < 0) continue;
+    const job = { ...store[moduleId][jobIndex], ...patch };
+    store[moduleId][jobIndex] = job;
     writeStore(store);
     syncRemote(job);
     return;
@@ -163,7 +163,7 @@ function patchJob(id: string, patch: Partial<BackgroundJob>): void {
 export function dismissBackgroundJob(id: string): void {
   const store = readStore();
   for (const moduleId of Object.keys(store)) {
-    store[moduleId] = (store[moduleId] ?? []).filter((j) => j.id !== id);
+    store[moduleId] = (store[moduleId] ?? []).filter((job) => job.id !== id);
   }
   writeStore(store);
   void dismissBackgroundJobRemote(id).catch(() => {});
@@ -172,7 +172,7 @@ export function dismissBackgroundJob(id: string): void {
 export function clearFinishedBackgroundJobs(): void {
   const store = readStore();
   for (const moduleId of Object.keys(store)) {
-    store[moduleId] = (store[moduleId] ?? []).filter((j) => j.status === 'running');
+    store[moduleId] = (store[moduleId] ?? []).filter((job) => job.status === 'running');
   }
   writeStore(store);
   void clearFinishedBackgroundJobsRemote().catch(() => {});

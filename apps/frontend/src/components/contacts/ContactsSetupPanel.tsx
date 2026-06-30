@@ -217,7 +217,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
       return;
     }
 
-    setFormTabs((prev) => prev.filter((t) => t.key !== tabId));
+    setFormTabs((prev) => prev.filter((tab) => tab.key !== tabId));
     setTabFields((prev) => {
       const next = { ...prev };
       delete next[tabId];
@@ -433,7 +433,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
 
   const handleSave = (): void => {
     const applyTitleCaseToTabs = (tabs: TabDefinition[]) => tabs.map((tab) => ({ ...tab, label: toTitleCase(tab.label) }));
-    const cfg: FieldConfig = {
+    const updatedConfig: FieldConfig = {
       version: CONFIG_VERSION,
       enabledTabs: Array.from(enabledTabs),
       requiredTabs: Array.from(requiredTabs),
@@ -444,7 +444,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
       settingsSubTabs: applyTitleCaseToTabs(config.settingsSubTabs || []),
       columnRegistry: config.columnRegistry,
     };
-    onConfigChange(cfg);
+    onConfigChange(updatedConfig);
     const updatedPrefs = {
       ...prefs,
       defaultCountry: prefs.defaultCountry ? toTitleCase(prefs.defaultCountry.trim()) : "",
@@ -526,7 +526,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                       <p className="text-xs text-muted-foreground">{tabDesc}</p>
                     </div>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                      {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                      {tabDefs.filter((field) => enabledSet.has(field.key)).length}/{tabDefs.length}
                     </span>
                     {tabId !== "basic" && isOn && (
                       <Button

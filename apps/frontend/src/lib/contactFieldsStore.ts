@@ -6,7 +6,7 @@
  * active session responsive. The store exposes these operations:
  *
  *  loadFieldConfig()       — load the active (per-session) config
- *  saveFieldConfig(cfg)    — persist the active config
+ *  saveFieldConfig(config) — persist the active config
  *
  * Migration: when a stored config is detected with an older (or missing)
  * CONFIG_VERSION, migrateConfig() fills in any keys that were added in newer
@@ -74,33 +74,33 @@ function migrateConfig(config: unknown): FieldConfig {
     return getSystemDefaults();
   }
 
-  const cfg = { ...rawConfig } as unknown as Partial<FieldConfig>;
+  const workingConfig = { ...rawConfig } as unknown as Partial<FieldConfig>;
   
   // Populate dynamic tab fields if they are missing
   const defaults = getSystemDefaults();
   
   const normalizeTabs = (tabs: any[] | undefined) => {
     if (!Array.isArray(tabs)) return undefined;
-    return tabs.map(t => {
-      if (t && typeof t === "object" && !t.key && t.id) {
-        return { ...t, key: t.id };
+    return tabs.map((tab) => {
+      if (tab && typeof tab === "object" && !tab.key && tab.id) {
+        return { ...tab, key: tab.id };
       }
-      return t;
+      return tab;
     });
   };
 
   const normalizedPageTabs = refreshModuleTierTabLabels(
-    refreshModuleTierTabKeys(normalizeTabs(cfg.pageTabs) ?? defaults.pageTabs ?? DEFAULT_PAGE_TABS),
+    refreshModuleTierTabKeys(normalizeTabs(workingConfig.pageTabs) ?? defaults.pageTabs ?? DEFAULT_PAGE_TABS),
   );
-  cfg.pageTabs = normalizedPageTabs;
-  cfg.formTabs = normalizeTabs(cfg.formTabs) ?? defaults.formTabs;
-  cfg.detailTabs = normalizeTabs(cfg.detailTabs) ?? defaults.detailTabs;
-  cfg.settingsSubTabs = normalizeTabs(cfg.settingsSubTabs) ?? defaults.settingsSubTabs;
-  cfg.columnRegistry = cfg.columnRegistry ?? defaults.columnRegistry;
-  cfg.fields = cfg.fields ?? defaults.fields;
-  delete (cfg as Record<string, unknown>).uiStrings;
+  workingConfig.pageTabs = normalizedPageTabs;
+  workingConfig.formTabs = normalizeTabs(workingConfig.formTabs) ?? defaults.formTabs;
+  workingConfig.detailTabs = normalizeTabs(workingConfig.detailTabs) ?? defaults.detailTabs;
+  workingConfig.settingsSubTabs = normalizeTabs(workingConfig.settingsSubTabs) ?? defaults.settingsSubTabs;
+  workingConfig.columnRegistry = workingConfig.columnRegistry ?? defaults.columnRegistry;
+  workingConfig.fields = workingConfig.fields ?? defaults.fields;
+  delete (workingConfig as Record<string, unknown>).uiStrings;
 
-  return cfg as FieldConfig;
+  return workingConfig as FieldConfig;
 }
 
 /**
@@ -119,40 +119,40 @@ export function sanitizeConfig(config: FieldConfig): FieldConfig {
     return getSystemDefaults();
   }
 
-  const cfg = { ...config };
-  delete (cfg as Record<string, unknown>).uiStrings;
+  const sanitizedConfig = { ...config };
+  delete (sanitizedConfig as Record<string, unknown>).uiStrings;
 
   // Strip fields retired from the form registry from any persisted config.
-  if (REMOVED_FORM_FIELD_KEYS.length > 0 && cfg.fields && typeof cfg.fields === "object") {
+  if (REMOVED_FORM_FIELD_KEYS.length > 0 && sanitizedConfig.fields && typeof sanitizedConfig.fields === "object") {
     const removed = new Set(REMOVED_FORM_FIELD_KEYS);
     const cleanedFields: Record<string, FieldDefinition[]> = {};
-    for (const [tabKey, tabFields] of Object.entries(cfg.fields)) {
+    for (const [tabKey, tabFields] of Object.entries(sanitizedConfig.fields)) {
       cleanedFields[tabKey] = Array.isArray(tabFields)
-        ? tabFields.filter((f) => !removed.has(f.key))
+        ? tabFields.filter((field) => !removed.has(field.key))
         : tabFields;
     }
-    cfg.fields = cleanedFields;
+    sanitizedConfig.fields = cleanedFields;
   }
 
-  if (Array.isArray(cfg.formTabs)) {
-    cfg.formTabs = cfg.formTabs.filter((t) => t && typeof t === "object" && typeof t.key === "string" && t.key.trim().length > 0);
+  if (Array.isArray(sanitizedConfig.formTabs)) {
+    sanitizedConfig.formTabs = sanitizedConfig.formTabs.filter((tab) => tab && typeof tab === "object" && typeof tab.key === "string" && tab.key.trim().length > 0);
   }
 
-  const validPageTabIds = new Set(DEFAULT_PAGE_TABS.map((t) => t.key));
-  if (Array.isArray(cfg.pageTabs)) {
-    cfg.pageTabs = cfg.pageTabs.filter((t) => validPageTabIds.has(t.key));
+  const validPageTabIds = new Set(DEFAULT_PAGE_TABS.map((tab) => tab.key));
+  if (Array.isArray(sanitizedConfig.pageTabs)) {
+    sanitizedConfig.pageTabs = sanitizedConfig.pageTabs.filter((tab) => validPageTabIds.has(tab.key));
   }
 
-  if (Array.isArray(cfg.detailTabs)) {
-    cfg.detailTabs = cfg.detailTabs.filter((t) => t && typeof t === "object" && typeof t.key === "string" && t.key.trim().length > 0);
+  if (Array.isArray(sanitizedConfig.detailTabs)) {
+    sanitizedConfig.detailTabs = sanitizedConfig.detailTabs.filter((tab) => tab && typeof tab === "object" && typeof tab.key === "string" && tab.key.trim().length > 0);
   }
 
-  const validSettingsSubTabIds = new Set(DEFAULT_SETTINGS_SUB_TABS.map((t) => t.key));
-  if (Array.isArray(cfg.settingsSubTabs)) {
-    cfg.settingsSubTabs = cfg.settingsSubTabs.filter((t) => validSettingsSubTabIds.has(t.key));
+  const validSettingsSubTabIds = new Set(DEFAULT_SETTINGS_SUB_TABS.map((tab) => tab.key));
+  if (Array.isArray(sanitizedConfig.settingsSubTabs)) {
+    sanitizedConfig.settingsSubTabs = sanitizedConfig.settingsSubTabs.filter((tab) => validSettingsSubTabIds.has(tab.key));
   }
 
-  return cfg;
+  return sanitizedConfig;
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────

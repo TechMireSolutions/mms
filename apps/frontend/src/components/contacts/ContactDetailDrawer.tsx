@@ -119,12 +119,12 @@ export default function ContactDetailDrawer({
     const tabsFromConfig = fieldConfig.detailTabs || [];
     const sorted = [...tabsFromConfig]
       .sort((a, b) => a.order - b.order)
-      .filter((t) => t.enabled && (["overview", "timeline", "network", "files"].includes(t.key) || enabledTabIds.has(t.key)));
+      .filter((tab) => tab.enabled && (["overview", "timeline", "network", "files"].includes(tab.key) || enabledTabIds.has(tab.key)));
 
-    return sorted.map((t) => ({
-      key: t.key,
-      label: t.label,
-      icon: ICON_MAP[t.icon || t.key] || LayoutDashboard,
+    return sorted.map((tab) => ({
+      key: tab.key,
+      label: tab.label,
+      icon: ICON_MAP[tab.icon || tab.key] || LayoutDashboard,
     }));
   }, [fieldConfig.detailTabs, enabledTabIds]);
 
@@ -148,25 +148,25 @@ export default function ContactDetailDrawer({
   const allFields = useMemo(() => {
     return Object.entries(fields).flatMap(([tabId, tabFields]) =>
       (tabFields || [])
-        .filter((f) => canViewContactField(viewerRole, f))
-        .map((f) => ({
-        key: f.key,
-        label: f.label,
-        type: f.type,
+        .filter((field) => canViewContactField(viewerRole, field))
+        .map((field) => ({
+        key: field.key,
+        label: field.label,
+        type: field.type,
         tab: tabId,
-        group: f.group || t('contacts.detail.extendedProfiles'),
-        description: f.description || "",
+        group: field.group || t('contacts.detail.extendedProfiles'),
+        description: field.description || "",
       }))
     );
   }, [fields, t, viewerRole]);
 
   const visibleCollectionFields = useMemo(
     () => ({
-      phones: (fields.phones || []).filter((f) => f.enabled && canViewContactField(viewerRole, f)),
-      emails: (fields.emails || []).filter((f) => f.enabled && canViewContactField(viewerRole, f)),
-      addresses: (fields.addresses || []).filter((f) => f.enabled && canViewContactField(viewerRole, f)),
-      socials: (fields.socials || []).filter((f) => f.enabled && canViewContactField(viewerRole, f)),
-      emergency: (fields.emergency || []).filter((f) => f.enabled && canViewContactField(viewerRole, f)),
+      phones: (fields.phones || []).filter((field) => field.enabled && canViewContactField(viewerRole, field)),
+      emails: (fields.emails || []).filter((field) => field.enabled && canViewContactField(viewerRole, field)),
+      addresses: (fields.addresses || []).filter((field) => field.enabled && canViewContactField(viewerRole, field)),
+      socials: (fields.socials || []).filter((field) => field.enabled && canViewContactField(viewerRole, field)),
+      emergency: (fields.emergency || []).filter((field) => field.enabled && canViewContactField(viewerRole, field)),
     }),
     [fields, viewerRole],
   );
@@ -187,33 +187,33 @@ export default function ContactDetailDrawer({
   }, [c.activities, userMessages, c.id, user?.name, t]);
 
   const fieldsToRender = allFields.filter(
-    (f) =>
-      !heroFieldSet.has(f.key) &&
-      isTabFieldEnabled(f.tab, f.key) &&
-      c[f.key] !== undefined && c[f.key] !== null && c[f.key] !== "" && c[f.key] !== false &&
-      !(Array.isArray(c[f.key]) && (c[f.key] as unknown[]).length === 0)
+    (field) =>
+      !heroFieldSet.has(field.key) &&
+      isTabFieldEnabled(field.tab, field.key) &&
+      c[field.key] !== undefined && c[field.key] !== null && c[field.key] !== "" && c[field.key] !== false &&
+      !(Array.isArray(c[field.key]) && (c[field.key] as unknown[]).length === 0)
   );
-  const grouped = fieldsToRender.reduce<Record<string, typeof fieldsToRender>>((acc, f) => {
-    const g = f.group || t('contacts.detail.otherGroup');
-    if (!acc[g]) acc[g] = [];
-    acc[g].push(f);
+  const grouped = fieldsToRender.reduce<Record<string, typeof fieldsToRender>>((acc, field) => {
+    const group = field.group || t('contacts.detail.otherGroup');
+    if (!acc[group]) acc[group] = [];
+    acc[group].push(field);
     return acc;
   }, {});
 
   const formatFieldValue = (field: { key: string, type: string }): string | null => {
-    const val = c[field.key];
-    if (val === undefined || val === null || val === "" || val === false) return null;
-    if (Array.isArray(val)) return val.length ? val.join(", ") : null;
+    const fieldValue = c[field.key];
+    if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
+    if (Array.isArray(fieldValue)) return fieldValue.length ? fieldValue.join(", ") : null;
     if (field.key === "dob") {
       try {
         const yrsLabel = t('contacts.detail.yearsOld');
-        return `${formatDate(val as string, true)}${age ? ` (${age} ${yrsLabel})` : ""}`;
+        return `${formatDate(fieldValue as string, true)}${age ? ` (${age} ${yrsLabel})` : ""}`;
       } catch (err) {
-        console.error("Failed parsing DOB value:", val, err);
-        return String(val);
+        console.error("Failed parsing DOB value:", fieldValue, err);
+        return String(fieldValue);
       }
     }
-    return String(val);
+    return String(fieldValue);
   };
 
   const primaryPhone = enabledTabIds.has("phones") ? getPrimaryPhone(c) : null;
@@ -245,7 +245,7 @@ export default function ContactDetailDrawer({
   };
 
   const handleNavigateToContact = (targetId: string | number): void => {
-    const target = allContacts.find((x) => String(x.id) === String(targetId));
+    const target = allContacts.find((contact) => String(contact.id) === String(targetId));
     if (target) {
       setC(target);
       return;
@@ -344,10 +344,10 @@ export default function ContactDetailDrawer({
                       </div>
                       {rating > 0 && (
                         <div className="flex items-center gap-0.5 mt-2">
-                          {Array.from({ length: 5 }).map((_, idx) => (
+                          {Array.from({ length: 5 }).map((_, starIndex) => (
                             <Star
-                              key={idx}
-                              className={`w-3 h-3 ${idx < rating ? DETAIL_STYLES.starActive : DETAIL_STYLES.starInactive}`}
+                              key={starIndex}
+                              className={`w-3 h-3 ${starIndex < rating ? DETAIL_STYLES.starActive : DETAIL_STYLES.starInactive}`}
                             />
                           ))}
                         </div>
@@ -415,22 +415,22 @@ export default function ContactDetailDrawer({
 
                   
                   <div className="space-y-4">
-                    {Object.entries(grouped).filter(([, fields]) => fields.some(f => f.tab === "basic" || !["timeline", "network", "files"].includes(f.tab))).map(([group, fields]) => (
+                    {Object.entries(grouped).filter(([, fields]) => fields.some((field) => field.tab === "basic" || !["timeline", "network", "files"].includes(field.tab))).map(([group, fields]) => (
                       <div key={group} className="space-y-2">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">{group}</h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
-                          {fields.map(f => {
-                             const val = formatFieldValue(f);
-                             if (!val) return null;
-                             const Icon = ICON_MAP[f.key] || Tag;
+                          {fields.map((field) => {
+                             const displayValue = formatFieldValue(field);
+                             if (!displayValue) return null;
+                             const Icon = ICON_MAP[field.key] || Tag;
                              return (
-                               <div key={f.key} className="flex items-center gap-3 p-3 group/row">
+                               <div key={field.key} className="flex items-center gap-3 p-3 group/row">
                                  <div className="p-2 rounded-lg bg-muted group-hover/row:bg-primary/10 transition-colors">
                                    <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover/row:text-primary" />
                                  </div>
                                  <div className="flex-1 min-w-0">
-                                   <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">{f.label}</span>
-                                   <span className="text-sm font-semibold text-foreground truncate">{val}</span>
+                                   <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">{field.label}</span>
+                                   <span className="text-sm font-semibold text-foreground truncate">{displayValue}</span>
                                  </div>
                                </div>
                              );
@@ -446,24 +446,24 @@ export default function ContactDetailDrawer({
                           {t('contacts.form.phonesLabel')}
                         </h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
-                          {c.phones.map((p, idx) => {
-                            const tabFields = visibleCollectionFields.phones.filter(f => f.key !== "label");
+                          {c.phones.map((phone, phoneIndex) => {
+                            const tabFields = visibleCollectionFields.phones.filter((field) => field.key !== "label");
                             return (
-                              <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
+                              <div key={phoneIndex} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                    {p.label || phoneLabels[0] || t('contacts.detail.mobileLabel')}
+                                    {phone.label || phoneLabels[0] || t('contacts.detail.mobileLabel')}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                                  {tabFields.map(f => {
-                                    const val = (p as unknown as Record<string, unknown>)[f.key];
-                                    if (val === undefined || val === null || val === "" || val === false) return null;
-                                    const displayVal = typeof val === "boolean" ? (val ? t('common.yes') : t('common.no')) : String(val);
+                                  {tabFields.map((field) => {
+                                    const fieldValue = (phone as unknown as Record<string, unknown>)[field.key];
+                                    if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
+                                    const displayValue = typeof fieldValue === "boolean" ? (fieldValue ? t('common.yes') : t('common.no')) : String(fieldValue);
                                     return (
-                                      <div key={f.key} className={f.type === "textarea" ? "col-span-2" : ""}>
-                                        <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{f.label}</span>
-                                        <span className="font-semibold text-foreground">{displayVal}</span>
+                                      <div key={field.key} className={field.type === "textarea" ? "col-span-2" : ""}>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{field.label}</span>
+                                        <span className="font-semibold text-foreground">{displayValue}</span>
                                       </div>
                                     );
                                   })}
@@ -481,23 +481,23 @@ export default function ContactDetailDrawer({
                           {t('contacts.form.emailsLabel')}
                         </h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
-                          {c.emails.map((e, idx) => {
-                            const tabFields = visibleCollectionFields.emails.filter(f => f.key !== "label");
+                          {c.emails.map((email, emailIndex) => {
+                            const tabFields = visibleCollectionFields.emails.filter((field) => field.key !== "label");
                             return (
-                              <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
+                              <div key={emailIndex} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                    {e.label || emailLabels[0] || t('contacts.detail.personalLabel')}
+                                    {email.label || emailLabels[0] || t('contacts.detail.personalLabel')}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                                  {tabFields.map(f => {
-                                    const val = (e as unknown as Record<string, unknown>)[f.key];
-                                    if (val === undefined || val === null || val === "" || val === false) return null;
+                                  {tabFields.map((field) => {
+                                    const fieldValue = (email as unknown as Record<string, unknown>)[field.key];
+                                    if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
                                     return (
-                                      <div key={f.key} className={f.type === "textarea" ? "col-span-2" : ""}>
-                                        <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{f.label}</span>
-                                        <span className="font-semibold text-foreground">{String(val)}</span>
+                                      <div key={field.key} className={field.type === "textarea" ? "col-span-2" : ""}>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{field.label}</span>
+                                        <span className="font-semibold text-foreground">{String(fieldValue)}</span>
                                       </div>
                                     );
                                   })}
@@ -515,23 +515,23 @@ export default function ContactDetailDrawer({
                           {t('contacts.detail.addresses')}
                         </h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
-                          {c.addresses.map((a, idx) => {
-                            const tabFields = visibleCollectionFields.addresses.filter(f => f.key !== "label");
+                          {c.addresses.map((address, addressIndex) => {
+                            const tabFields = visibleCollectionFields.addresses.filter((field) => field.key !== "label");
                             return (
-                              <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
+                              <div key={addressIndex} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                    {a.label || addressLabels[0] || t('contacts.detail.homeLabel')}
+                                    {address.label || addressLabels[0] || t('contacts.detail.homeLabel')}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                                  {tabFields.map(f => {
-                                    const val = (a as unknown as Record<string, unknown>)[f.key];
-                                    if (val === undefined || val === null || val === "" || val === false) return null;
+                                  {tabFields.map((field) => {
+                                    const fieldValue = (address as unknown as Record<string, unknown>)[field.key];
+                                    if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
                                     return (
-                                      <div key={f.key} className={f.type === "textarea" || f.key === "line1" ? "col-span-2" : ""}>
-                                        <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{f.label}</span>
-                                        <span className="font-semibold text-foreground">{String(val)}</span>
+                                      <div key={field.key} className={field.type === "textarea" || field.key === "line1" ? "col-span-2" : ""}>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{field.label}</span>
+                                        <span className="font-semibold text-foreground">{String(fieldValue)}</span>
                                       </div>
                                     );
                                   })}
@@ -549,33 +549,33 @@ export default function ContactDetailDrawer({
                           {t('contacts.detail.socials')}
                         </h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
-                          {c.socials.map((s, idx) => {
-                            const tabFields = visibleCollectionFields.socials.filter(f => f.key !== "platform");
+                          {c.socials.map((social, socialIndex) => {
+                            const tabFields = visibleCollectionFields.socials.filter((field) => field.key !== "platform");
                             return (
-                              <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
+                              <div key={socialIndex} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                    {s.platform || socialPlatforms[0] || "—"}
+                                    {social.platform || socialPlatforms[0] || "—"}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                                  {tabFields.map(f => {
-                                    const val = (s as unknown as Record<string, unknown>)[f.key];
-                                    if (val === undefined || val === null || val === "" || val === false) return null;
+                                  {tabFields.map((field) => {
+                                    const fieldValue = (social as unknown as Record<string, unknown>)[field.key];
+                                    if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
                                     return (
-                                      <div key={f.key} className={f.type === "textarea" ? "col-span-2" : ""}>
-                                        <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{f.label}</span>
-                                        {f.type === "url" ? (
+                                      <div key={field.key} className={field.type === "textarea" ? "col-span-2" : ""}>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{field.label}</span>
+                                        {field.type === "url" ? (
                                           <a
-                                            href={String(val).startsWith("http") ? String(val) : `https://${val}`}
+                                            href={String(fieldValue).startsWith("http") ? String(fieldValue) : `https://${fieldValue}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="font-semibold text-primary hover:underline inline-flex items-center gap-1 truncate"
                                           >
-                                            {String(val)} <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                            {String(fieldValue)} <ExternalLink className="w-3 h-3 flex-shrink-0" />
                                           </a>
                                         ) : (
-                                          <span className="font-semibold text-foreground">{String(val)}</span>
+                                          <span className="font-semibold text-foreground">{String(fieldValue)}</span>
                                         )}
                                       </div>
                                     );
@@ -594,22 +594,22 @@ export default function ContactDetailDrawer({
                           {t('contacts.detail.emergency')}
                         </h4>
                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
-                          {c.emergencyContacts.map((ec, idx) => {
+                          {c.emergencyContacts.map((emergencyContact, emergencyContactIndex) => {
                             const tabFields = visibleCollectionFields.emergency;
-                            const target = allContacts.find(x => String(x.id) === String(ec.contactId));
+                            const target = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
                             return (
-                              <div key={idx} className="p-3 border-b border-border/50 last:border-b-0">
+                              <div key={emergencyContactIndex} className="p-3 border-b border-border/50 last:border-b-0">
                                 <div className="flex items-center gap-2 mb-1.5">
                                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${DETAIL_STYLES.emergencyBadge}`}>
                                     {t('contacts.detail.emergencyContact')}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
-                                  {tabFields.map(f => {
-                                    if (f.key === "contactId") {
+                                  {tabFields.map((field) => {
+                                    if (field.key === "contactId") {
                                       return (
-                                        <div key={f.key} className="col-span-2">
-                                          <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{f.label}</span>
+                                        <div key={field.key} className="col-span-2">
+                                          <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{field.label}</span>
                                           {target ? (
                                             <Button
                                               type="button"
@@ -620,17 +620,17 @@ export default function ContactDetailDrawer({
                                               {target.name}
                                             </Button>
                                           ) : (
-                                            <span className="font-semibold text-foreground">{String(ec.contactId || "")}</span>
+                                            <span className="font-semibold text-foreground">{String(emergencyContact.contactId || "")}</span>
                                           )}
                                         </div>
                                       );
                                     }
-                                    const val = (ec as unknown as Record<string, unknown>)[f.key];
-                                    if (val === undefined || val === null || val === "" || val === false) return null;
+                                    const fieldValue = (emergencyContact as unknown as Record<string, unknown>)[field.key];
+                                    if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
                                     return (
-                                      <div key={f.key} className={f.type === "textarea" ? "col-span-2" : ""}>
-                                        <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{f.label}</span>
-                                        <span className="font-semibold text-foreground">{String(val)}</span>
+                                      <div key={field.key} className={field.type === "textarea" ? "col-span-2" : ""}>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">{field.label}</span>
+                                        <span className="font-semibold text-foreground">{String(fieldValue)}</span>
                                       </div>
                                     );
                                   })}
@@ -718,21 +718,21 @@ export default function ContactDetailDrawer({
                            <Button variant="outline" className="mt-4 px-4 min-h-[44px] rounded-xl border border-border text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none" type="button">{t('contacts.detail.addRelationship')}</Button>
                         </div>
                       ) : (
-                        c.relationships.map((rel, i) => {
-                          const target = allContacts.find(x => String(x.id) === String(rel.contactId));
+                        c.relationships.map((relationship, relationshipIndex) => {
+                          const target = allContacts.find((contact) => String(contact.id) === String(relationship.contactId));
                           return (
-                            <div key={i} className={`group flex items-center justify-between gap-3 p-4 rounded-2xl border bg-card transition-all ${DETAIL_STYLES.networkItemCard}`}>
+                            <div key={relationshipIndex} className={`group flex items-center justify-between gap-3 p-4 rounded-2xl border bg-card transition-all ${DETAIL_STYLES.networkItemCard}`}>
                                <div className="flex items-center gap-3 min-w-0">
                                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${DETAIL_STYLES.networkItemIcon}`}>
                                      {target ? target.name.charAt(0) : "?"}
                                   </div>
                                   <div className="min-w-0">
-                                     <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{rel.relationship}</span>
-                                     <h5 className="text-sm font-bold text-foreground truncate">{target ? target.name : `${t('contacts.table.contactIdPrefix')}${rel.contactId}`}</h5>
+                                     <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{relationship.relationship}</span>
+                                     <h5 className="text-sm font-bold text-foreground truncate">{target ? target.name : `${t('contacts.table.contactIdPrefix')}${relationship.contactId}`}</h5>
                                   </div>
                                </div>
                                {target && (
-                                   <Button variant="ghost" onClick={() => handleNavigateToContact(rel.contactId)} className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all shadow-none ${DETAIL_STYLES.networkItemAction}`} type="button">
+                                   <Button variant="ghost" onClick={() => handleNavigateToContact(relationship.contactId)} className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all shadow-none ${DETAIL_STYLES.networkItemAction}`} type="button">
                                      <Search className="w-4 h-4" />
                                   </Button>
                                 )}
@@ -788,23 +788,23 @@ export default function ContactDetailDrawer({
               {!["overview", "timeline", "network", "files"].includes(activeTab) && (
                  <div className="space-y-4">
                     {Object.entries(grouped)
-                       .filter(([, fields]) => fields.some(f => f.tab === activeTab))
+                       .filter(([, fields]) => fields.some((field) => field.tab === activeTab))
                        .map(([group, fields]) => (
                        <div key={group} className="space-y-2">
                          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">{group}</h4>
                          <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
-                           {fields.filter(f => f.tab === activeTab).map(f => {
-                              const val = formatFieldValue(f);
-                              if (!val) return null;
-                              const Icon = ICON_MAP[f.key] || Tag;
+                           {fields.filter((field) => field.tab === activeTab).map((field) => {
+                              const displayValue = formatFieldValue(field);
+                              if (!displayValue) return null;
+                              const Icon = ICON_MAP[field.key] || Tag;
                               return (
-                                <div key={f.key} className="flex items-center gap-3 p-3 group/row">
+                                <div key={field.key} className="flex items-center gap-3 p-3 group/row">
                                   <div className="p-2 rounded-lg bg-muted group-hover/row:bg-primary/10 transition-colors">
                                     <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover/row:text-primary" />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">{f.label}</span>
-                                    <span className="text-sm font-semibold text-foreground truncate">{val}</span>
+                                    <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">{field.label}</span>
+                                    <span className="text-sm font-semibold text-foreground truncate">{displayValue}</span>
                                   </div>
                                 </div>
                               );

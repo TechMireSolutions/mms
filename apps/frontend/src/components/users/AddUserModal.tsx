@@ -52,12 +52,12 @@ interface StepIndicatorProps {
 function StepIndicator({ step, t }: StepIndicatorProps): JSX.Element {
   return (
     <div className="flex items-center gap-0 mb-6">
-      {STEP_DEFS.map((s, i) => {
-        const done    = step > s.id;
-        const active  = step === s.id;
-        const Icon    = s.icon;
+      {STEP_DEFS.map((stepDefinition, stepIndex) => {
+        const done    = step > stepDefinition.id;
+        const active  = step === stepDefinition.id;
+        const Icon    = stepDefinition.icon;
         return (
-          <React.Fragment key={s.id}>
+          <React.Fragment key={stepDefinition.id}>
             <div className="flex flex-col items-center gap-1">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
                 done   ? "bg-primary border-primary text-primary-foreground" :
@@ -67,11 +67,11 @@ function StepIndicator({ step, t }: StepIndicatorProps): JSX.Element {
                 {done ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
               </div>
               <span className={`text-[10px] font-semibold whitespace-nowrap ${active ? "text-primary" : "text-muted-foreground"}`}>
-                {t(s.labelKey)}
+                {t(stepDefinition.labelKey)}
               </span>
             </div>
-            {i < STEP_DEFS.length - 1 && (
-              <div className={`flex-1 h-0.5 mb-4 mx-1 transition-all ${step > s.id ? "bg-primary" : "bg-border"}`} />
+            {stepIndex < STEP_DEFS.length - 1 && (
+              <div className={`flex-1 h-0.5 mb-4 mx-1 transition-all ${step > stepDefinition.id ? "bg-primary" : "bg-border"}`} />
             )}
           </React.Fragment>
         );
@@ -564,11 +564,11 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
     if (step === 2) {
       if (!form.role) e.role = t("users.addErrorRole");
 
-      for (const cf of customFields) {
-        if (cf.required) {
-          const val = (form as unknown as Record<string, unknown>)[cf.id];
-          if (val === undefined || val === null || val === "") {
-            e.role = t("users.addErrorFieldRequired", { label: cf.label });
+      for (const customField of customFields) {
+        if (customField.required) {
+          const fieldValue = (form as unknown as Record<string, unknown>)[customField.id];
+          if (fieldValue === undefined || fieldValue === null || fieldValue === "") {
+            e.role = t("users.addErrorFieldRequired", { label: customField.label });
           }
         }
       }

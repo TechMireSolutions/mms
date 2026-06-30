@@ -39,13 +39,13 @@ interface JournalEntryFormProps {
  */
 export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, fiscalYears }: JournalEntryFormProps) {
   const isEdit = !!initial?.id;
-  const activeFY = (fiscalYears || []).find((f) => f.status === "active")?.label || "";
+  const activeFiscalYear = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
 
   const [form, setForm] = useState<DraftForm>(
     initial
       ? {
           ...initial,
-          lines: initial.lines.map((l) => ({ ...l, debit: l.debit || "", credit: l.credit || "" }))
+          lines: initial.lines.map((entryLine) => ({ ...entryLine, debit: entryLine.debit || "", credit: entryLine.credit || "" }))
         }
       : {
           id: "",
@@ -55,7 +55,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
           status: "draft",
           tags: [],
           attachments: [],
-          fiscal_year: activeFY,
+          fiscal_year: activeFiscalYear,
           lines: [EMPTY_LINE(), EMPTY_LINE()],
           created_by: "Admin"
         }
@@ -145,7 +145,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
       open
       onClose={onClose}
       title={isEdit ? "Edit Journal Entry" : "New Journal Entry"}
-      subtitle={activeFY || undefined}
+      subtitle={activeFiscalYear || undefined}
       icon={BookOpen}
       size="xl"
       tall

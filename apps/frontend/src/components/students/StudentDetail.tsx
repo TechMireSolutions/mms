@@ -46,7 +46,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
   const tabOrderMap = useMemo(() => {
     const tabs = settings.formTabs || [];
-    return Object.fromEntries(tabs.map((t, idx) => [t.key, idx]));
+    return Object.fromEntries(tabs.map((tab, tabIndex) => [tab.key, tabIndex]));
   }, [settings.formTabs]);
 
   const enabledTabIds = useMemo(() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS), [settings.enabledTabs]);
@@ -369,14 +369,14 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                           }
 
                           if (!["gender", "dob", "registeredDate", "fatherLink", "motherLink", "guardianLink"].includes(field.key)) {
-                            const val = (student as unknown as Record<string, unknown>)[field.key];
-                            if (val === undefined || val === null || val === "" || val === false) return null;
+                            const fieldValue = (student as unknown as Record<string, unknown>)[field.key];
+                            if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
 
                             let displayVal = "";
-                            if (typeof val === "boolean") {
-                              displayVal = val ? "Yes" : "No";
+                            if (typeof fieldValue === "boolean") {
+                              displayVal = fieldValue ? "Yes" : "No";
                             } else {
-                              displayVal = String(val);
+                              displayVal = String(fieldValue);
                             }
 
                             return (

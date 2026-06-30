@@ -177,12 +177,12 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
   };
 
   const handleSave = (): void => {
-    const updatedFormTabs = formTabs.map(t => ({
-      ...t,
-      enabled: enabledTabs.has(t.key)
+    const updatedFormTabs = formTabs.map((tab) => ({
+      ...tab,
+      enabled: enabledTabs.has(tab.key)
     }));
 
-    const cfg: TeachersSettingsType = {
+    const updatedSettings: TeachersSettingsType = {
       ...settings,
       idPrefix,
       autoGenerateId,
@@ -194,7 +194,7 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
       fields: buildFieldsMap(),
     };
 
-    updateSettings(cfg);
+    updateSettings(updatedSettings);
     setSaved(true);
     notify.success(t("teachers.settings.saved"));
     setTimeout(() => setSaved(false), 2500);
@@ -312,7 +312,7 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
                     <p className="text-xs text-muted-foreground">{tabDesc}</p>
                   </div>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                    {tabDefs.filter((f) => enabledSet.has(f.key)).length}/{tabDefs.length}
+                    {tabDefs.filter((field) => enabledSet.has(field.key)).length}/{tabDefs.length}
                   </span>
                   {tabId !== "basic" && isOn && (
                     <Button

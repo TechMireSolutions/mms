@@ -37,8 +37,8 @@ const getValueForField = (field: string, contact: Contact, emptyDash: string): s
   if (field === "email") {
     return (contact.emails || [])[0]?.address || contact.email || emptyDash;
   }
-  const val = contact[field as keyof Contact];
-  return (val as string) || emptyDash;
+  const fieldValue = contact[field as keyof Contact];
+  return (fieldValue as string) || emptyDash;
 };
 
 interface ConfidenceBadgeProps {
@@ -396,13 +396,13 @@ export default function DuplicateDetection({
                   <div className="p-4">
                     <p className="text-[11px] text-muted-foreground mb-3 font-medium">{t('contacts.duplicates.selectKeep')}</p>
                     <div className="flex gap-3">
-                      {pair.contacts.map((contact, idx) => (
+                      {pair.contacts.map((contact, contactIndex) => (
                         <ContactCard
                           key={contact.id}
                           contact={contact}
-                          label={idx === 0 ? t('contacts.duplicates.contactA') : t('contacts.duplicates.contactB')}
-                          selected={ki === idx}
-                          onSelect={() => setKeepIndex((k) => ({ ...k, [pair.id]: idx }))}
+                          label={contactIndex === 0 ? t('contacts.duplicates.contactA') : t('contacts.duplicates.contactB')}
+                          selected={ki === contactIndex}
+                          onSelect={() => setKeepIndex((previousSelection) => ({ ...previousSelection, [pair.id]: contactIndex }))}
                         />
                       ))}
                     </div>

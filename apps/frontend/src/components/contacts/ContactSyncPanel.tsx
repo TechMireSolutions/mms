@@ -185,9 +185,9 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
       setError(t('contacts.sync.clientIdRequired'));
       return;
     }
-    const cfg: GoogleOauthConfig = { ...config, clientId: form.clientId.trim(), clientSecret: form.clientSecret.trim() };
-    setConfig(cfg);
-    void saveConfig.mutateAsync(cfg).then(() => {
+    const updatedConfig: GoogleOauthConfig = { ...config, clientId: form.clientId.trim(), clientSecret: form.clientSecret.trim() };
+    setConfig(updatedConfig);
+    void saveConfig.mutateAsync(updatedConfig).then(() => {
       void logSyncAudit.mutateAsync({ action: 'credentials_saved' });
     });
     setShowSetup(false);
@@ -278,8 +278,8 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
   };
 
   const handleDisconnect = (): void => {
-    const cfg: GoogleOauthConfig = { clientId: config.clientId, clientSecret: config.clientSecret };
-    setConfig(cfg);
+    const disconnectedConfig: GoogleOauthConfig = { clientId: config.clientId, clientSecret: config.clientSecret };
+    setConfig(disconnectedConfig);
     void saveConfig.mutateAsync({ clientId: config.clientId, clearTokens: true }).then(() => {
       void logSyncAudit.mutateAsync({ action: 'disconnected' });
       void queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
