@@ -14,8 +14,8 @@ export const ACTIVITY_LOGS_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'logs', 
 export const USERS_COLUMN_PREFS_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'column-preferences'] as const;
 
 async function fetchUsers(): Promise<WorkspaceUser[]> {
-  const body = await apiJson<{ users: WorkspaceUser[] }>(USERS_API);
-  saveCollection('users', body.users);
+  const usersResponse = await apiJson<{ users: WorkspaceUser[] }>(USERS_API);
+  saveCollection('users', usersResponse.users);
   return getCollection<WorkspaceUser>('users', []);
 }
 
@@ -32,18 +32,18 @@ export function useUsers(options?: { enabled?: boolean }) {
 
 export function useUsersCollection(options?: { enabled?: boolean }): WorkspaceUser[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useUsers({ enabled });
-  const fromLocal = useLiveCollection<WorkspaceUser>('users', [], { enabled });
+  const { data: queryUsers = [] } = useUsers({ enabled });
+  const localUsers = useLiveCollection<WorkspaceUser>('users', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryUsers.length > 0) {
+    return queryUsers;
   }
-  return fromLocal;
+  return localUsers;
 }
 
 async function fetchLogs(): Promise<ActivityLog[]> {
-  const body = await apiJson<{ logs: ActivityLog[] }>(`${USERS_API}/activity`);
-  saveCollection('user_activity_logs', body.logs);
+  const logsResponse = await apiJson<{ logs: ActivityLog[] }>(`${USERS_API}/activity`);
+  saveCollection('user_activity_logs', logsResponse.logs);
   return getCollection<ActivityLog>('user_activity_logs', []);
 }
 
@@ -60,13 +60,13 @@ export function useActivityLogs(options?: { enabled?: boolean }) {
 
 export function useActivityLogsCollection(options?: { enabled?: boolean }): ActivityLog[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useActivityLogs({ enabled });
-  const fromLocal = useLiveCollection<ActivityLog>('user_activity_logs', [], { enabled });
+  const { data: queryLogs = [] } = useActivityLogs({ enabled });
+  const localLogs = useLiveCollection<ActivityLog>('user_activity_logs', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryLogs.length > 0) {
+    return queryLogs;
   }
-  return fromLocal;
+  return localLogs;
 }
 
 export function useUsersColumnPrefs() {
@@ -74,8 +74,8 @@ export function useUsersColumnPrefs() {
   return useQuery({
     queryKey: USERS_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(`${USERS_API}/column-preferences`);
-      return readModuleColumnPreferences(body);
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${USERS_API}/column-preferences`);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -90,8 +90,8 @@ export function useUsersColumnPrefsMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(USERS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (preferencesResponse) => {
+      queryClient.setQueryData(USERS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(preferencesResponse));
     },
   });
 }
@@ -110,8 +110,8 @@ export function useUsersMutations() {
         method: 'PUT',
         body: JSON.stringify(users),
       }),
-    onSuccess: (data) => {
-      saveCollection('users', data.users);
+    onSuccess: (usersResponse) => {
+      saveCollection('users', usersResponse.users);
       invalidate();
     },
   });
@@ -122,8 +122,8 @@ export function useUsersMutations() {
         method: 'PUT',
         body: JSON.stringify(logs),
       }),
-    onSuccess: (data) => {
-      saveCollection('user_activity_logs', data.logs);
+    onSuccess: (logsResponse) => {
+      saveCollection('user_activity_logs', logsResponse.logs);
       invalidate();
     },
   });

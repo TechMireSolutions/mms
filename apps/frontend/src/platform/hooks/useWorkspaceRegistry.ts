@@ -6,8 +6,8 @@ import { useTenant } from "@/lib/contexts/TenantContext";
 export const WORKSPACE_REGISTRY_QUERY_KEY = ["workspace", "registry"] as const;
 
 async function fetchWorkspaceRegistry(): Promise<PublicWorkspaceSummary[]> {
-  const body = await apiJson<WorkspaceRegistryResponse>("/api/workspace/registry");
-  return body.workspaces;
+  const registryResponse = await apiJson<WorkspaceRegistryResponse>("/api/workspace/registry");
+  return registryResponse.workspaces;
 }
 
 /** Apex-only list of registered madrasa workspaces (TanStack Query). */

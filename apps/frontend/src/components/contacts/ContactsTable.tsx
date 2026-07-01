@@ -31,15 +31,15 @@ interface CopyBtnProps {
 function CopyBtn({ text }: CopyBtnProps): React.JSX.Element {
   const { t } = useTranslation();
   const [copied, setCopied] = useState<boolean>(false);
-  const copyToClipboard = (e: React.MouseEvent<HTMLButtonElement>): void => {
-    e.stopPropagation();
+  const copyToClipboard = (clickEvent: React.MouseEvent<HTMLButtonElement>): void => {
+    clickEvent.stopPropagation();
     navigator.clipboard.writeText(text)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       })
-      .catch((err: unknown) => {
-        console.error("Failed to copy text to clipboard:", err);
+      .catch((error: unknown) => {
+        console.error("Failed to copy text to clipboard:", error);
       });
   };
   return (
@@ -65,11 +65,11 @@ interface ColumnConfig {
 interface ContactsTableProps {
   contacts: Contact[];
   selected: (number | string)[];
-  onSelect: (id: number | string) => void;
+  onSelect: (contactId: number | string) => void;
   onSelectAll: () => void;
   onEdit: (contact: Contact) => void;
-  onDelete: (id: number | string) => void;
-  onRestore?: (id: number | string) => void;
+  onDelete: (contactId: number | string) => void;
+  onRestore?: (contactId: number | string) => void;
   showArchived?: boolean;
   onWhatsApp: (contacts: Contact[]) => void;
   onSms: (contacts: Contact[]) => void;

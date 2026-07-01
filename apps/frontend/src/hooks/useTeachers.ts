@@ -53,7 +53,7 @@ export function useTeachersPaginated(params: TeachersPaginatedParams) {
     queryFn: async () => apiJson<TeachersListPageResult>(buildTeachersPageUrl(params)),
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
-    placeholderData: (prev) => prev,
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -108,8 +108,8 @@ export function useTeacherById(teacherId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: [...TEACHERS_QUERY_KEY, 'by-id', teacherId] as const,
     queryFn: async () => {
-      const body = await apiJson<{ teacher: TeacherRecord }>(`${TEACHERS_API}/${teacherId}`);
-      return body.teacher as unknown as Teacher;
+      const teacherResponse = await apiJson<{ teacher: TeacherRecord }>(`${TEACHERS_API}/${teacherId}`);
+      return teacherResponse.teacher as unknown as Teacher;
     },
     enabled: isAuthenticated && enabled && Boolean(teacherId),
     staleTime: 30_000,
@@ -122,8 +122,8 @@ export function useTeacherLinkedContactIds(excludeTeacherId?: string) {
   return useQuery({
     queryKey: [...TEACHERS_QUERY_KEY, 'linked-contact-ids', excludeTeacherId ?? ''] as const,
     queryFn: async () => {
-      const body = await apiJson<{ contactIds: Array<string | number> }>(`${TEACHERS_API}/linked-contact-ids${queryString}`);
-      return body.contactIds;
+      const linkedContactsResponse = await apiJson<{ contactIds: Array<string | number> }>(`${TEACHERS_API}/linked-contact-ids${queryString}`);
+      return linkedContactsResponse.contactIds;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -145,8 +145,8 @@ export function useTeacherNextEmployeeId(params: TeacherNextEmployeeIdParams = {
     queryKey: [...TEACHERS_QUERY_KEY, 'next-employee-id', params] as const,
     queryFn: async () => {
       const suffix = queryParams.toString() ? `?${queryParams.toString()}` : '';
-      const body = await apiJson<{ employeeId: string }>(`${TEACHERS_API}/next-employee-id${suffix}`);
-      return body.employeeId;
+      const nextEmployeeIdResponse = await apiJson<{ employeeId: string }>(`${TEACHERS_API}/next-employee-id${suffix}`);
+      return nextEmployeeIdResponse.employeeId;
     },
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
@@ -159,8 +159,8 @@ export function useTeachersMetrics(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: TEACHERS_METRICS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ metrics: TeachersCommandMetricsSnapshot }>(`${TEACHERS_API}/metrics`);
-      return body.metrics;
+      const metricsResponse = await apiJson<{ metrics: TeachersCommandMetricsSnapshot }>(`${TEACHERS_API}/metrics`);
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated && queryEnabled,
     staleTime: 30_000,
@@ -176,11 +176,11 @@ export function useTeachersByIds(ids: (string | number | null | undefined)[]) {
   return useQuery({
     queryKey: [...TEACHERS_QUERY_KEY, 'resolve', signature] as const,
     queryFn: async () => {
-      const body = await apiJson<{ teachers: TeacherRecord[] }>(`${TEACHERS_API}/resolve`, {
+      const teachersResponse = await apiJson<{ teachers: TeacherRecord[] }>(`${TEACHERS_API}/resolve`, {
         method: 'POST',
         body: JSON.stringify({ ids: normalized }),
       });
-      return body.teachers as unknown as Teacher[];
+      return teachersResponse.teachers as unknown as Teacher[];
     },
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,
@@ -212,14 +212,14 @@ export function useTeachersWidgetAggregates(
   return useQuery({
     queryKey: [...TEACHERS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
     queryFn: async () => {
-      const body = await apiJson<{ results: Record<string, TeachersWidgetAggregateResult> }>(
+      const aggregateResponse = await apiJson<{ results: Record<string, TeachersWidgetAggregateResult> }>(
         `${TEACHERS_API}/widget-aggregates`,
         {
           method: 'POST',
           body: JSON.stringify({ widgets: teacherQueries }),
         },
       );
-      return body.results;
+      return aggregateResponse.results;
     },
     enabled: isAuthenticated && enabled && teacherQueries.length > 0,
     staleTime: 30_000,
@@ -231,10 +231,10 @@ export function useTeacherColumnPrefs() {
   return useQuery({
     queryKey: TEACHER_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(
         `${TEACHERS_API}/column-preferences`,
       );
-      return readModuleColumnPreferences(body);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -249,8 +249,8 @@ export function useTeacherColumnPrefsMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(TEACHER_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (preferencesResponse) => {
+      queryClient.setQueryData(TEACHER_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(preferencesResponse));
     },
   });
 }

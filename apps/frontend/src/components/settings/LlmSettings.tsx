@@ -117,7 +117,7 @@ export default function LlmSettings(): React.JSX.Element {
           } else {
             setFetchedModels([]);
           }
-        } catch (err) {
+        } catch {
           setFetchedModels([]);
         } finally {
           setFetchingModels(false);

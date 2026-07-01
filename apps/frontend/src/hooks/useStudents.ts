@@ -52,7 +52,7 @@ export function useStudentsPaginated(params: StudentsPaginatedParams) {
     queryFn: async () => apiJson<StudentsListPageResult>(buildStudentsPageUrl(params)),
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
-    placeholderData: (prev) => prev,
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -67,11 +67,11 @@ export async function fetchAllStudentsForQuery(
   let total = 0;
 
   for (;;) {
-    const body = await apiJson<StudentsListPageResult>(buildStudentsPageUrl({ ...params, page, limit }));
-    all.push(...(body.students as StudentRecord[]));
-    total = body.total;
+    const studentsPage = await apiJson<StudentsListPageResult>(buildStudentsPageUrl({ ...params, page, limit }));
+    all.push(...(studentsPage.students as StudentRecord[]));
+    total = studentsPage.total;
     onProgress?.(all.length, total);
-    if (!body.hasMore || page >= 200) break;
+    if (!studentsPage.hasMore || page >= 200) break;
     page += 1;
   }
 
@@ -129,8 +129,8 @@ export function useStudentById(studentId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'by-id', studentId] as const,
     queryFn: async () => {
-      const body = await apiJson<{ student: StudentRecord }>(`${STUDENTS_API}/${studentId}`);
-      return body.student as unknown as Student;
+      const studentResponse = await apiJson<{ student: StudentRecord }>(`${STUDENTS_API}/${studentId}`);
+      return studentResponse.student as unknown as Student;
     },
     enabled: isAuthenticated && enabled && Boolean(studentId),
     staleTime: 30_000,
@@ -143,8 +143,8 @@ export function useStudentLinkedContactIds(excludeStudentId?: string) {
   return useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'linked-contact-ids', excludeStudentId ?? ''] as const,
     queryFn: async () => {
-      const body = await apiJson<{ contactIds: Array<string | number> }>(`${STUDENTS_API}/linked-contact-ids${queryString}`);
-      return body.contactIds;
+      const linkedContactsResponse = await apiJson<{ contactIds: Array<string | number> }>(`${STUDENTS_API}/linked-contact-ids${queryString}`);
+      return linkedContactsResponse.contactIds;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -171,8 +171,8 @@ export function useStudentNextGrNumber(params: StudentNextGrNumberParams) {
   return useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'next-gr-number', params] as const,
     queryFn: async () => {
-      const body = await apiJson<{ grNumber: string }>(`${STUDENTS_API}/next-gr-number?${queryParams.toString()}`);
-      return body.grNumber;
+      const nextGrNumberResponse = await apiJson<{ grNumber: string }>(`${STUDENTS_API}/next-gr-number?${queryParams.toString()}`);
+      return nextGrNumberResponse.grNumber;
     },
     enabled: isAuthenticated && enabled && Boolean(params.registeredDate),
     staleTime: 15_000,
@@ -182,11 +182,11 @@ export function useStudentNextGrNumber(params: StudentNextGrNumberParams) {
 export async function checkStudentRegistrationDuplicate(
   input: StudentDuplicateCheckInput,
 ): Promise<StudentDuplicateReason | null> {
-  const body = await apiJson<{ reason: StudentDuplicateReason | null }>(`${STUDENTS_API}/duplicate-check`, {
+  const duplicateCheckResponse = await apiJson<{ reason: StudentDuplicateReason | null }>(`${STUDENTS_API}/duplicate-check`, {
     method: 'POST',
     body: JSON.stringify(input),
   });
-  return body.reason;
+  return duplicateCheckResponse.reason;
 }
 
 export function useStudentsMetrics(options?: { enabled?: boolean }) {
@@ -195,8 +195,8 @@ export function useStudentsMetrics(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: STUDENTS_METRICS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ metrics: StudentsCommandMetricsSnapshot }>(`${STUDENTS_API}/metrics`);
-      return body.metrics;
+      const metricsResponse = await apiJson<{ metrics: StudentsCommandMetricsSnapshot }>(`${STUDENTS_API}/metrics`);
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated && queryEnabled,
     staleTime: 30_000,
@@ -212,11 +212,11 @@ export function useStudentsByIds(ids: (string | number | null | undefined)[]) {
   return useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'resolve', signature] as const,
     queryFn: async () => {
-      const body = await apiJson<{ students: StudentRecord[] }>(`${STUDENTS_API}/resolve`, {
+      const studentsResponse = await apiJson<{ students: StudentRecord[] }>(`${STUDENTS_API}/resolve`, {
         method: 'POST',
         body: JSON.stringify({ ids: normalized }),
       });
-      return body.students as unknown as Student[];
+      return studentsResponse.students as unknown as Student[];
     },
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,
@@ -248,14 +248,14 @@ export function useStudentsWidgetAggregates(
   return useQuery({
     queryKey: [...STUDENTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
     queryFn: async () => {
-      const body = await apiJson<{ results: Record<string, StudentsWidgetAggregateResult> }>(
+      const aggregateResponse = await apiJson<{ results: Record<string, StudentsWidgetAggregateResult> }>(
         `${STUDENTS_API}/widget-aggregates`,
         {
           method: 'POST',
           body: JSON.stringify({ widgets: studentQueries }),
         },
       );
-      return body.results;
+      return aggregateResponse.results;
     },
     enabled: isAuthenticated && enabled && studentQueries.length > 0,
     staleTime: 30_000,
@@ -267,10 +267,10 @@ export function useStudentColumnPrefs() {
   return useQuery({
     queryKey: STUDENT_COLUMN_PREFERENCES_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ preferences: ModuleColumnPreference[]; prefs?: ModuleColumnPreference[] }>(
+      const preferencesResponse = await apiJson<{ preferences: ModuleColumnPreference[]; prefs?: ModuleColumnPreference[] }>(
         `${STUDENTS_API}/column-preferences`,
       );
-      return body.preferences ?? body.prefs ?? [];
+      return preferencesResponse.preferences ?? preferencesResponse.prefs ?? [];
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -288,8 +288,11 @@ export function useStudentColumnPrefsMutation() {
         body: JSON.stringify({ preferences }),
         },
       ),
-    onSuccess: (data) => {
-      queryClient.setQueryData(STUDENT_COLUMN_PREFERENCES_QUERY_KEY, data.preferences ?? data.prefs ?? []);
+    onSuccess: (preferencesResponse) => {
+      queryClient.setQueryData(
+        STUDENT_COLUMN_PREFERENCES_QUERY_KEY,
+        preferencesResponse.preferences ?? preferencesResponse.prefs ?? [],
+      );
     },
   });
 }

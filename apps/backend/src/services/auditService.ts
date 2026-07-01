@@ -31,8 +31,8 @@ export async function recordAudit(input: RecordAuditInput): Promise<void> {
       summary: input.summary,
     };
     await persistCollection(AUDIT_LOG_COLLECTION, [...rows, entry]);
-  } catch (err) {
-    console.error('audit_log append failed:', err);
+  } catch (error) {
+    console.error('audit_log append failed:', error);
   }
 }
 

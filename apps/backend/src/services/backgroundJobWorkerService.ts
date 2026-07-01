@@ -98,8 +98,8 @@ export async function executeJob(
 
   try {
     await runner(payload, runContext);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Background job failed';
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Background job failed';
     await runContext.fail(message);
   }
 }

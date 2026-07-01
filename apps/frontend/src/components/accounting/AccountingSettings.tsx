@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from "react";
 import {
   DollarSign, Calendar, Plus, Pencil, Trash2,
-  CheckCircle2, Lock, Clock, Save, BookOpen, Info
+  CheckCircle2, Lock, Clock, Save, BookOpen
 } from "lucide-react";
 import { Account, AccountingSettings as SettingsType, FiscalYear } from '@/lib/data/accountingData';
 import {
   DEFAULT_CURRENCIES,
   ACCOUNTING_TAB_REGISTRY,
   INITIAL_ACCOUNTING_FIELD_SEED,
-  type FieldDefinition,
-  type TabDefinition,
 } from "@mms/shared";
 import { useLiveCollection } from "../../hooks/useLiveCollection";
 import { useAccountingConfig } from "@/hooks/useAccountingConfig";
-import { CustomFieldsBuilder, CustomFieldConfig } from "../ui/CustomFieldsBuilder";
-import { CoreFieldEditorList } from "../ui/CoreFieldEditorList";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { DatePicker } from "../ui/DatePicker";
 import { FormModal } from "../ui/FormModal";
@@ -23,8 +19,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { FormSelect } from "../ui/FormSelect";
 import { Switch } from "../ui/switch";
-import { Checkbox } from "../ui/checkbox";
-import { Modal } from "../ui/Modal";
+import { ModuleFieldsSetup } from "../ui/ModuleFieldsSetup";
 
 const DATE_FORMATS = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"];
 const DECIMAL_SEPARATORS = [
@@ -198,18 +193,6 @@ interface AccountingSettingsProps {
   mode?: "fields" | "preferences";
 }
 
-function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
-  if (!savedOrder || savedOrder.length === 0) return fields;
-  const orderByKey = Object.fromEntries(savedOrder.map((key, index) => [key, index]));
-  return [...fields].sort((firstField, secondField) => (orderByKey[firstField.key] ?? 9999) - (orderByKey[secondField.key] ?? 9999)) as FieldDefinition[];
-}
-
-function syncOrder(previousOrder: string[], newFieldIds: string[]): string[] {
-  const kept = previousOrder.filter((id) => newFieldIds.includes(id));
-  const added = newFieldIds.filter((id) => !kept.includes(id));
-  return [...kept, ...added];
-}
-
 export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, mode }: AccountingSettingsProps) {
   const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
   const { settings, updateSettings } = useAccountingConfig();
@@ -230,44 +213,12 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
   const [accountCodeLength, setAccountCodeLength] = useState(settings.accountCodeLength);
   const [retainedEarningsAccount, setRetainedEarningsAccount] = useState(settings.retainedEarningsAccount);
 
-  const {
-    formTabs,
-    setFormTabs,
-    tabFields,
-    setTabFields,
-    enabledTabs,
-    setEnabledTabs,
-    requiredTabs,
-    setRequiredTabs,
-    tabFieldEnabled,
-    setTabFieldEnabled,
-    tabFieldRequired,
-    setTabFieldRequired,
-    tabFieldUnique,
-    setTabFieldUnique,
-    tabFieldDefaultValues,
-    setTabFieldDefaultValues,
-    tabFieldPermissions,
-    setTabFieldPermissions,
-    tabFieldOrder,
-    setTabFieldOrder,
-    toggleTabEnabled,
-    toggleTabRequired,
-    toggleFieldEnabled,
-    toggleFieldRequired,
-    toggleFieldUnique,
-    handleReorder,
-  } = useModuleFieldsEditor({
+  const fieldsEditor = useModuleFieldsEditor({
     initialTabs: ACCOUNTING_TAB_REGISTRY,
     initialFields: settings.fields || {},
     initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
     initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
   });
-
-  const [isAddTabModalOpen, setIsAddTabModalOpen] = useState(false);
-  const [newTabLabel, setNewTabLabel] = useState("");
-  const [renamingTabKey, setRenamingTabKey] = useState<string | null>(null);
-  const [renameTabLabel, setRenameTabLabel] = useState("");
 
   useEffect(() => {
     if (!settings) return;
@@ -284,162 +235,28 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
     setAccountCodeLength(settings.accountCodeLength);
     setRetainedEarningsAccount(settings.retainedEarningsAccount);
 
-    setEnabledTabs(new Set(settings.enabledTabs || ["basic"]));
-    setRequiredTabs(new Set(settings.requiredTabs || []));
-
     const coreKeys = new Set(ACCOUNTING_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key));
     const customTabs = (settings.formTabs || []).filter((tabDefinition: any) => !coreKeys.has(tabDefinition.key));
-    setFormTabs([
+    const updatedTabs = [
       ...ACCOUNTING_TAB_REGISTRY,
       ...customTabs
     ].map((tabDefinition: any) => ({
       ...tabDefinition,
       enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
-    })));
+    }));
 
-    const newTabIds = Array.from(new Set([
-      ...ACCOUNTING_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key),
-      ...(settings.formTabs || []).map((tabDefinition: any) => tabDefinition.key)
-    ]));
-    const currentFields = settings.fields || {};
-    setTabFields(Object.fromEntries(newTabIds.map(tabId => [tabId, currentFields[tabId] || []])));
-    setTabFieldEnabled(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((fieldDefinition: any) => fieldDefinition.enabled).map((fieldDefinition: any) => fieldDefinition.key))])));
-    setTabFieldRequired(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((fieldDefinition: any) => fieldDefinition.required).map((fieldDefinition: any) => fieldDefinition.key))])));
-    setTabFieldUnique(Object.fromEntries(newTabIds.map(tabId => [tabId, new Set((currentFields[tabId] || []).filter((fieldDefinition: any) => fieldDefinition.unique).map((fieldDefinition: any) => fieldDefinition.key))])));
-    setTabFieldDefaultValues(Object.fromEntries(newTabIds.map(tabId => [
-      tabId,
-      Object.fromEntries((currentFields[tabId] || []).filter((fieldDefinition: any) => fieldDefinition.defaultValue !== undefined).map((fieldDefinition: any) => [fieldDefinition.key, fieldDefinition.defaultValue]))
-    ])));
-    setTabFieldPermissions(Object.fromEntries(newTabIds.map(tabId => [
-      tabId,
-      Object.fromEntries((currentFields[tabId] || []).filter((fieldDefinition: any) => fieldDefinition.permissions).map((fieldDefinition: any) => [fieldDefinition.key, fieldDefinition.permissions as string[]]))
-    ])));
-    setTabFieldOrder(Object.fromEntries(newTabIds.map(tabId => [tabId, (currentFields[tabId] || []).map((fieldDefinition: any) => fieldDefinition.key)])));
+    fieldsEditor.resetAllState(
+      updatedTabs,
+      settings.fields || {},
+      settings.enabledTabs || ["basic"],
+      settings.requiredTabs || []
+    );
   }, [settings]);
 
-  const handleToggleTabEnabled = (id: string) => { toggleTabEnabled(id); setSaved(false); };
-  const handleToggleTabRequired = (id: string) => { toggleTabRequired(id); setSaved(false); };
-  const handleToggleFieldEnabled = (tabId: string, fieldId: string) => { toggleFieldEnabled(tabId, fieldId); setSaved(false); };
-  const handleToggleFieldRequired = (tabId: string, fieldId: string) => { toggleFieldRequired(tabId, fieldId); setSaved(false); };
-  const handleToggleFieldUnique = (tabId: string, fieldId: string) => { toggleFieldUnique(tabId, fieldId); setSaved(false); };
-  const handleReorderFields = (tabId: string, reorderedFields: FieldDefinition[]) => { handleReorder(tabId, reorderedFields); setSaved(false); };
-
-  const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
-    const newKeys = newFields.map((fieldDefinition) => fieldDefinition.key);
-    setTabFieldOrder((prev) => ({
-      ...prev,
-      [tabId]: syncOrder(prev[tabId] || [], newKeys),
-    }));
-    setTabFields((prev) => ({ ...prev, [tabId]: newFields as unknown as FieldDefinition[] }));
-    setSaved(false);
-  };
-
-  const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
-    setTabFields(previousTabFields => ({
-      ...previousTabFields,
-      [tabId]: (previousTabFields[tabId] || []).map(fieldDefinition => fieldDefinition.key === updatedField.key ? updatedField : fieldDefinition)
-    }));
-    setSaved(false);
-  };
-
-  const handleDeleteField = async (tabId: string, fieldId: string) => {
-    setTabFields(previousTabFields => ({
-      ...previousTabFields,
-      [tabId]: (previousTabFields[tabId] || []).filter(fieldDefinition => fieldDefinition.key !== fieldId)
-    }));
-    setTabFieldOrder(previousFieldOrder => ({
-      ...previousFieldOrder,
-      [tabId]: (previousFieldOrder[tabId] || []).filter(id => id !== fieldId)
-    }));
-    setSaved(false);
-  };
-
-  const handleAddTab = (label: string) => {
-    if (!label.trim()) return;
-    const key = `custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 5)}`;
-    const newTab: TabDefinition = {
-      key,
-      label: label.trim(),
-      description: "Custom user-defined tab",
-      enabled: true,
-      order: formTabs.length,
-      isSystem: false,
-    };
-
-    setFormTabs(previousFormTabs => [...previousFormTabs, newTab]);
-    setEnabledTabs(previousEnabledTabs => {
-      const next = new Set(previousEnabledTabs);
-      next.add(key);
-      return next;
-    });
-
-    setTabFields(previousTabFields => ({ ...previousTabFields, [key]: [] }));
-    setTabFieldEnabled(previousEnabledFields => ({ ...previousEnabledFields, [key]: new Set() }));
-    setTabFieldRequired(previousRequiredFields => ({ ...previousRequiredFields, [key]: new Set() }));
-    setTabFieldUnique(previousUniqueFields => ({ ...previousUniqueFields, [key]: new Set() }));
-    setTabFieldDefaultValues(previousDefaultValues => ({ ...previousDefaultValues, [key]: {} }));
-    setTabFieldPermissions(previousPermissions => ({ ...previousPermissions, [key]: {} }));
-    setTabFieldOrder(previousFieldOrder => ({ ...previousFieldOrder, [key]: [] }));
-    setSaved(false);
-  };
-
-  const handleDeleteTab = (key: string) => {
-    setFormTabs(previousFormTabs => previousFormTabs.filter(tabDefinition => tabDefinition.key !== key));
-    setEnabledTabs(previousEnabledTabs => {
-      const next = new Set(previousEnabledTabs);
-      next.delete(key);
-      return next;
-    });
-    setRequiredTabs(previousRequiredTabs => {
-      const next = new Set(previousRequiredTabs);
-      next.delete(key);
-      return next;
-    });
-    setSaved(false);
-  };
-
-  const handleRenameTab = (key: string, newLabel: string) => {
-    if (!newLabel.trim()) return;
-    setFormTabs(previousFormTabs => previousFormTabs.map(tabDefinition => tabDefinition.key === key ? { ...tabDefinition, label: newLabel.trim() } : tabDefinition));
-    setSaved(false);
-  };
-
-  const buildFieldsMap = (): Record<string, FieldDefinition[]> => {
-    const newFields: Record<string, FieldDefinition[]> = {};
-    formTabs.forEach(tabDefinition => {
-      const tabId = tabDefinition.key;
-      const combined = (tabFields[tabId] || []).map(fieldDefinition => {
-        const fieldKey = fieldDefinition.key || (fieldDefinition as { id?: string }).id || "";
-        const enabled      = tabFieldEnabled[tabId]?.has(fieldKey)  ?? fieldDefinition.enabled  ?? false;
-        const required     = tabFieldRequired[tabId]?.has(fieldKey) ?? fieldDefinition.required ?? false;
-        const unique       = tabFieldUnique[tabId]?.has(fieldKey)   ?? fieldDefinition.unique   ?? false;
-        const orderArray   = tabFieldOrder[tabId] || [];
-        const orderIndex   = orderArray.indexOf(fieldKey);
-        const order        = orderIndex >= 0 ? orderIndex : (fieldDefinition.order ?? 999);
-        const defaultValue = tabFieldDefaultValues[tabId]?.[fieldKey] ?? fieldDefinition.defaultValue;
-        const permissions  = tabFieldPermissions[tabId]?.[fieldKey]  ?? fieldDefinition.permissions;
-
-        return {
-          ...fieldDefinition,
-          key: fieldKey,
-          enabled,
-          required,
-          unique,
-          order,
-          defaultValue,
-          permissions,
-        } as FieldDefinition;
-      });
-
-      newFields[tabId] = combined.sort((firstField, secondField) => (firstField.order ?? 999) - (secondField.order ?? 999));
-    });
-    return newFields;
-  };
-
   const handleSave = () => {
-    const updatedFormTabs = formTabs.map(tabDefinition => ({
+    const updatedFormTabs = fieldsEditor.formTabs.map(tabDefinition => ({
       ...tabDefinition,
-      enabled: enabledTabs.has(tabDefinition.key)
+      enabled: fieldsEditor.enabledTabs.has(tabDefinition.key)
     }));
 
     const nextSettings: SettingsType = {
@@ -456,10 +273,10 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
       autoPostDrafts,
       accountCodeLength,
       retainedEarningsAccount,
-      enabledTabs: Array.from(enabledTabs),
-      requiredTabs: Array.from(requiredTabs),
+      enabledTabs: Array.from(fieldsEditor.enabledTabs),
+      requiredTabs: Array.from(fieldsEditor.requiredTabs),
       formTabs: updatedFormTabs,
-      fields: buildFieldsMap(),
+      fields: fieldsEditor.buildFieldsMap(),
     };
 
     updateSettings(nextSettings);
@@ -686,242 +503,12 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
       )}
 
       {showFields && (
-        <div className="space-y-4 text-left">
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-left">
-            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-xs">Dynamic Fields Manager</h4>
-              <p className="text-[11px] mt-0.5 text-info/90">
-                Configure visible sections, reorder fields, and manage custom metadata definitions.
-              </p>
-            </div>
-          </div>
-
-          {formTabs.map((tabDefinition) => {
-            const tabId = tabDefinition.key;
-            const tabLabel = tabDefinition.label.charAt(0).toUpperCase() + tabDefinition.label.slice(1);
-            const tabDescription = tabDefinition.description;
-            const tabDefs = tabFields[tabId] || [];
-            const enabledSet = tabFieldEnabled[tabId] || new Set();
-            const requiredSet = tabFieldRequired[tabId] || new Set();
-            const isOn = tabId === "basic" ? true : enabledTabs.has(tabId);
-            const isReq = requiredTabs.has(tabId);
-
-            return (
-              <section key={tabId} className="rounded-xl border border-border bg-card overflow-hidden text-left">
-                <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
-                  <div className="flex items-center justify-center">
-                    <Checkbox
-                      checked={isOn}
-                      onCheckedChange={tabId !== "basic" ? () => handleToggleTabEnabled(tabId) : undefined}
-                      aria-label={`Enable Tab ${tabLabel}`}
-                      disabled={tabId === "basic"}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0 ml-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-foreground">{tabLabel}</span>
-                      {!tabDefinition.isSystem && (
-                        <div className="flex items-center gap-1.5 ml-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => {
-                              setRenamingTabKey(tabId);
-                              setRenameTabLabel(tabDefinition.label);
-                            }}
-                            className="p-1 h-6 w-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none flex items-center justify-center"
-                            title="Rename Tab"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => handleDeleteTab(tabId)}
-                            className="p-1 h-6 w-6 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
-                            title="Delete Tab"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{tabDescription}</p>
-                  </div>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                    {tabDefs.filter((fieldDefinition) => enabledSet.has(fieldDefinition.key)).length}/{tabDefs.length}
-                  </span>
-                  {tabId !== "basic" && isOn && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => handleToggleTabRequired(tabId)}
-                      className={`flex-shrink-0 px-2.5 py-1 h-auto text-[10px] font-bold border transition-all shadow-none ml-2
-                        ${
-                          isReq
-                            ? "bg-destructive/10 border-destructive/30 text-destructive hover:bg-destructive/20 hover:text-destructive"
-                            : "bg-muted border-border text-muted-foreground hover:text-foreground"
-                        }`}
-                    >
-                      {isReq ? "Required" : "Optional"}
-                    </Button>
-                  )}
-                </div>
-
-                {isOn && (
-                  <div className="p-3 space-y-3">
-                    <CoreFieldEditorList
-                      tabId={tabId}
-                      fields={getOrderedFields(tabDefs, tabFieldOrder[tabId])}
-                      enabledSet={enabledSet}
-                      requiredSet={requiredSet}
-                      onToggleEnabled={(fieldId: string) => handleToggleFieldEnabled(tabId, fieldId)}
-                      onToggleRequired={(fieldId: string) => handleToggleFieldRequired(tabId, fieldId)}
-                      onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
-                      onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
-                      isUniqueField={(targetTabId: string, fieldId: string) => tabFieldUnique[targetTabId]?.has(fieldId) || false}
-                      isCoreField={(key: string) => INITIAL_ACCOUNTING_FIELD_SEED[tabId]?.some((fieldDefinition: any) => fieldDefinition.key === key) ?? false}
-                      defaultValues={tabFieldDefaultValues[tabId]}
-                      permissions={tabFieldPermissions[tabId]}
-                      onChangeDefaults={(fieldId: string, fieldValue: unknown) => {
-                        setTabFieldDefaultValues(previousDefaultValues => ({ ...previousDefaultValues, [tabId]: { ...previousDefaultValues[tabId], [fieldId]: fieldValue } }));
-                        setSaved(false);
-                      }}
-                      onChangePermissions={(fieldId: string, roles: string[]) => {
-                        setTabFieldPermissions(previousPermissions => ({ ...previousPermissions, [tabId]: { ...previousPermissions[tabId], [fieldId]: roles } }));
-                        setSaved(false);
-                      }}
-                      onEditField={(fieldDefinition: FieldDefinition) => handleEditField(tabId, fieldDefinition)}
-                      onDeleteField={(fieldId: string) => handleDeleteField(tabId, fieldId)}
-                      labels={{
-                        required: "Required",
-                        optional: "Optional",
-                        unique: "Unique",
-                        standard: "Standard",
-                      }}
-                    />
-                    <div className="border-t border-border pt-3">
-                      <CustomFieldsBuilder
-                        fields={(tabFields[tabId] || []).map(fieldDefinition => ({...fieldDefinition, id: fieldDefinition.key})) as unknown as CustomFieldConfig[]}
-                        droppableId={`custom-fields-${tabId}`}
-                        onChange={(fieldDefinitions) => handleCustomFieldsChange(tabId, fieldDefinitions)}
-                      />
-                    </div>
-                  </div>
-                )}
-              </section>
-            );
-          })}
-
-          <div className="flex justify-end pt-2">
-            <Button
-              type="button"
-              onClick={() => setIsAddTabModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-none"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Custom Tab</span>
-            </Button>
-          </div>
-        </div>
+        <ModuleFieldsSetup
+          editor={fieldsEditor}
+          isCoreField={(tabId, key) => INITIAL_ACCOUNTING_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+          onStateChange={() => setSaved(false)}
+        />
       )}
-
-      {/* Add Tab Modal */}
-      <Modal
-        open={isAddTabModalOpen}
-        onClose={() => {
-          setIsAddTabModalOpen(false);
-          setNewTabLabel("");
-        }}
-        title="Add Custom Tab"
-        icon={Plus}
-        footer={
-          <div className="flex justify-end gap-2.5">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsAddTabModalOpen(false);
-                setNewTabLabel("");
-              }}
-              type="button"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                handleAddTab(newTabLabel);
-                setIsAddTabModalOpen(false);
-                setNewTabLabel("");
-              }}
-              disabled={!newTabLabel.trim()}
-              type="button"
-            >
-              Add Tab
-            </Button>
-          </div>
-        }
-      >
-        <div className="space-y-3 text-left">
-          <label htmlFor="newTabLabel" className="text-xs font-semibold text-foreground">Tab Name *</label>
-          <Input
-            id="newTabLabel"
-            value={newTabLabel}
-            onChange={(event) => setNewTabLabel(event.target.value)}
-            placeholder="e.g. Extra Info"
-            autoFocus
-          />
-        </div>
-      </Modal>
-
-      {/* Rename Tab Modal */}
-      <Modal
-        open={renamingTabKey !== null}
-        onClose={() => {
-          setRenamingTabKey(null);
-          setRenameTabLabel("");
-        }}
-        title="Rename Custom Tab"
-        icon={Pencil}
-        footer={
-          <div className="flex justify-end gap-2.5">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setRenamingTabKey(null);
-                setRenameTabLabel("");
-              }}
-              type="button"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (renamingTabKey) {
-                  handleRenameTab(renamingTabKey, renameTabLabel);
-                }
-                setRenamingTabKey(null);
-                setRenameTabLabel("");
-              }}
-              disabled={!renameTabLabel.trim()}
-              type="button"
-            >
-              Rename Tab
-            </Button>
-          </div>
-        }
-      >
-        <div className="space-y-3 text-left">
-          <label htmlFor="renameTabLabel" className="text-xs font-semibold text-foreground">Tab Name *</label>
-          <Input
-            id="renameTabLabel"
-            value={renameTabLabel}
-            onChange={(event) => setRenameTabLabel(event.target.value)}
-            placeholder="e.g. Custom Fields"
-            autoFocus
-          />
-        </div>
-      </Modal>
 
       <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
         <Button

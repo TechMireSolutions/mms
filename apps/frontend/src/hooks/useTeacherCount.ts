@@ -5,8 +5,8 @@ import { apiJson } from '@/lib/apiClient';
 export const TEACHER_COUNT_QUERY_KEY = ['teachers', 'count'] as const;
 
 async function fetchTeacherCount(): Promise<number> {
-  const body = await apiJson<{ count: number }>('/api/teachers/count');
-  return body.count;
+  const countResponse = await apiJson<{ count: number }>('/api/teachers/count');
+  return countResponse.count;
 }
 
 /** Server-first: teacher count via dedicated API route. */
@@ -19,4 +19,3 @@ export function useTeacherCount() {
     staleTime: 30_000,
   });
 }
-

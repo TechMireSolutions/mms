@@ -80,8 +80,8 @@ interface AuditEntry {
 function loadQueue(): OfflinePayload[] {
   try { 
     return JSON.parse(localStorage.getItem("att_offline_queue") || "[]"); 
-  } catch (err) { 
-    console.warn("Failed to load offline queue:", err);
+  } catch (error) {
+    console.warn("Failed to load offline queue:", error);
     return []; 
   }
 }
@@ -89,8 +89,8 @@ function loadQueue(): OfflinePayload[] {
 function saveQueue(queue: OfflinePayload[]) {
   try {
     localStorage.setItem("att_offline_queue", JSON.stringify(queue));
-  } catch (err) {
-    console.error("Failed to save offline queue:", err);
+  } catch (error) {
+    console.error("Failed to save offline queue:", error);
   }
 }
 
@@ -101,8 +101,8 @@ function addAuditEntry(classId: string, date: string, entry: AuditEntry) {
     const existing: AuditEntry[] = JSON.parse(localStorage.getItem(key) || "[]");
     existing.unshift({ ...entry, ts: new Date().toISOString() });
     localStorage.setItem(key, JSON.stringify(existing.slice(0, 50)));
-  } catch (err) {
-    console.error("Failed to save audit entry:", err);
+  } catch (error) {
+    console.error("Failed to save audit entry:", error);
   }
 }
 
@@ -113,8 +113,8 @@ export function getAuditLog(classId: string, date: string): AuditEntry[] {
   try {
     const key = `att_audit_${classId}_${date}`;
     return JSON.parse(localStorage.getItem(key) || "[]");
-  } catch (err) {
-    console.error("Failed to read audit log:", err);
+  } catch (error) {
+    console.error("Failed to read audit log:", error);
     return [];
   }
 }

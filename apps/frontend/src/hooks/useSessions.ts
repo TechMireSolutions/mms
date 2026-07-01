@@ -23,8 +23,8 @@ export interface SessionRecord {
 }
 
 async function fetchSessions(): Promise<SessionRecord[]> {
-  const body = await apiJson<{ sessions: SessionRecord[] }>(SESSIONS_API);
-  saveCollection('sessions', body.sessions);
+  const sessionsResponse = await apiJson<{ sessions: SessionRecord[] }>(SESSIONS_API);
+  saveCollection('sessions', sessionsResponse.sessions);
   return getCollection<SessionRecord>('sessions', []);
 }
 
@@ -90,8 +90,8 @@ export function useSessionsMetrics() {
   return useQuery({
     queryKey: SESSIONS_METRICS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ metrics: SessionsCommandMetricsSnapshot }>(`${SESSIONS_API}/metrics`);
-      return body.metrics;
+      const metricsResponse = await apiJson<{ metrics: SessionsCommandMetricsSnapshot }>(`${SESSIONS_API}/metrics`);
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -103,10 +103,10 @@ export function useSessionColumnPrefs() {
   return useQuery({
     queryKey: SESSION_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(
         `${SESSIONS_API}/column-preferences`,
       );
-      return readModuleColumnPreferences(body);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,

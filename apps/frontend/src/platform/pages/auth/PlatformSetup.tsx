@@ -95,8 +95,8 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       setStep("verify");
       setCode(createEmptyOtp());
       setInfo(result.emailSent ? t("platform.setupEmailSent") : null);
-    } catch (err) {
-      setError(err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"));
+    } catch (error) {
+      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
     } finally {
       setLoading(false);
     }
@@ -115,8 +115,8 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       });
       invalidateSetupStatus();
       await checkPlatformAuth();
-    } catch (err) {
-      setError(err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"));
+    } catch (error) {
+      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
     } finally {
       setLoading(false);
     }
@@ -134,8 +134,8 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       setSetupSession(result);
       setInfo(result.emailSent ? t("platform.setupEmailSent") : null);
       setResendCycle((value) => value + 1);
-    } catch (err) {
-      setError(err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"));
+    } catch (error) {
+      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
     } finally {
       setLoading(false);
     }

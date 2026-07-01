@@ -67,14 +67,14 @@ export default function Enrollments() {
     createEnrollment.mutate(enrollment, {
       onSuccess: async () => {
         try {
-          const body = await apiJson<{ students: StudentRecord[] }>(
+          const studentsResponse = await apiJson<{ students: StudentRecord[] }>(
             `${STUDENTS_MODULE_CONTRACT.restBasePath}/resolve`,
             {
               method: 'POST',
               body: JSON.stringify({ ids: [String(enrollment.studentId)] }),
             },
           );
-          const student = body.students[0];
+          const student = studentsResponse.students[0];
           if (student) {
             const enrolled = (student.enrolledSessions as string[] | undefined) ?? [];
             if (!enrolled.includes(enrollment.sessionId)) {
@@ -84,8 +84,8 @@ export default function Enrollments() {
               });
             }
           }
-        } catch (err) {
-          console.error('Failed to update student enrolled sessions', err);
+        } catch (error) {
+          console.error('Failed to update student enrolled sessions', error);
         }
         setShowWizard(false);
         setActiveSubTab("list");

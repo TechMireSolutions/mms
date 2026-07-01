@@ -88,9 +88,9 @@ export default function PlatformAdmins(): React.JSX.Element {
       setName("");
       setEmail("");
       setPassword("");
-    } catch (err) {
+    } catch (error) {
       setSubmitError(
-        err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"),
+        error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"),
       );
     }
   };

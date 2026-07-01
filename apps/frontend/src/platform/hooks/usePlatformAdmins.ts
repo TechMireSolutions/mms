@@ -8,8 +8,8 @@ import { notify } from '@/lib/notify';
 export const PLATFORM_ADMINS_QUERY_KEY = ['platform', 'admins'] as const;
 
 async function fetchPlatformAdmins(): Promise<PlatformUserProfile[]> {
-  const body = await apiJson<{ users: PlatformUserProfile[] }>('/api/platform/users');
-  return body.users;
+  const usersResponse = await apiJson<{ users: PlatformUserProfile[] }>('/api/platform/users');
+  return usersResponse.users;
 }
 
 /** Hook for super-users to retrieve the list of platform operators. */

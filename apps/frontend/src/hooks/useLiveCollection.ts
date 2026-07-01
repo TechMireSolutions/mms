@@ -48,8 +48,8 @@ export function useLiveCollection<T = any>(
             console.warn(`Failed to fetch collection "${dbKey}" on-demand (status: ${res.status})`);
           }
         })
-        .catch((err) => {
-          console.error(`Error fetching collection "${dbKey}" on-demand:`, err);
+        .catch((error) => {
+          console.error(`Error fetching collection "${dbKey}" on-demand:`, error);
         });
     }
 

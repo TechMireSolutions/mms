@@ -29,7 +29,7 @@ type DataSource = "students" | "contacts" | "attendance" | "financial" | "academ
 
 /** Map of all selectable fields grouped by data source (non-contacts legacy labels). */
 const ALL_FIELDS: Record<Exclude<DataSource, "contacts">, readonly string[]> = {
-  students:   ["Name", "Gender", "Class", "Session", "City", "Age", "Status", "Registration Date", "CNIC", "Discount Type", "Discount %", "Roll No", "Blood Group"],
+  students:   ["Name", "Gender", "Class", "Session", "City", "Age", "Status", "Registration Date", "CNIC", "Discount Type", "Discount %", "Roll No"],
   attendance: ["Student Name", "Class", "Status", "Present", "Absent", "Late", "Excused", "Total Days", "Rate %", "Last Marked"],
   financial:  ["Invoice ID", "Student Name", "Class", "Base Fee", "Discount", "Tax", "Final Amount", "Status", "Due Date", "Payment Method", "Issued Date"],
   academic:   ["Student Name", "Class", "Subject", "Marks", "Total", "Grade", "Rank", "Exam Name", "Date"],
@@ -52,7 +52,6 @@ const FIELD_KEY_MAP: Record<string, string> = {
   "Discount Type": "reports.fields.discountType",
   "Discount %": "reports.fields.discountPct",
   "Roll No": "reports.fields.rollNo",
-  "Blood Group": "reports.fields.bloodGroup",
   "Student Name": "reports.fields.studentName",
   "Present": "reports.fields.present",
   "Absent": "reports.fields.absent",

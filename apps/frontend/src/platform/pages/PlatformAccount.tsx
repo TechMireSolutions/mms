@@ -76,9 +76,9 @@ export default function PlatformAccount(): React.JSX.Element {
     try {
       await updateName.mutateAsync(name);
       notify.success(t("platform.profileSaved"));
-    } catch (err) {
+    } catch (error) {
       setNameError(
-        err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"),
+        error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"),
       );
     }
   };
@@ -112,9 +112,9 @@ export default function PlatformAccount(): React.JSX.Element {
       setNewPassword("");
       setConfirmPassword("");
       notify.success(t("platform.profilePasswordUpdated"));
-    } catch (err) {
+    } catch (error) {
       setPasswordError(
-        err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"),
+        error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"),
       );
     } finally {
       setSavingPassword(false);

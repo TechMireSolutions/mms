@@ -27,9 +27,9 @@ export default function PlatformSignIn(): React.JSX.Element {
     setError(null);
     try {
       await platformLogin(email.trim(), password);
-    } catch (err) {
+    } catch (error) {
       setError(
-        err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"),
+        error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"),
       );
     }
   };

@@ -31,9 +31,9 @@ export function clearGoogleContactsOAuthUrlParams(): void {
   params.delete('scope');
   params.delete('authuser');
   params.delete('prompt');
-  const qs = params.toString();
-  const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-  window.history.replaceState({}, '', next);
+  const queryString = params.toString();
+  const cleanedUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+  window.history.replaceState({}, '', cleanedUrl);
 }
 
 export function stashGoogleContactsOAuthCode(code: string): void {

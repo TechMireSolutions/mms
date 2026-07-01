@@ -75,8 +75,8 @@ export default function BrandingFieldsForm({ data, upd }: BrandingFieldsFormProp
                   try {
                     const favUrl = await generateFaviconFromLogoUrl(url);
                     upd('faviconUrl', favUrl);
-                  } catch (err) {
-                    console.error('Failed to auto-generate favicon from logo:', err);
+                  } catch (error) {
+                    console.error('Failed to auto-generate favicon from logo:', error);
                   }
                 }
               }}

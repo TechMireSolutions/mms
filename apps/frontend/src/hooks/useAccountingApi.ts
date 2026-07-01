@@ -34,8 +34,8 @@ export const ACCOUNTING_ENTRIES_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId
 export const ACCOUNTING_FISCAL_YEARS_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId, 'fiscal_years', 'list'] as const;
 
 async function fetchAccounts(): Promise<Account[]> {
-  const body = await apiJson<{ accounts: Account[] }>(`${ACCOUNTING_API}/accounts`);
-  saveCollection('accounting_accounts', body.accounts);
+  const accountsResponse = await apiJson<{ accounts: Account[] }>(`${ACCOUNTING_API}/accounts`);
+  saveCollection('accounting_accounts', accountsResponse.accounts);
   return getCollection<Account>('accounting_accounts', []);
 }
 
@@ -52,18 +52,18 @@ export function useAccountingAccounts(options?: { enabled?: boolean }) {
 
 export function useAccountingAccountsCollection(options?: { enabled?: boolean }): Account[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useAccountingAccounts({ enabled });
-  const fromLocal = useLiveCollection<Account>('accounting_accounts', [], { enabled });
+  const { data: queryAccounts = [] } = useAccountingAccounts({ enabled });
+  const localAccounts = useLiveCollection<Account>('accounting_accounts', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryAccounts.length > 0) {
+    return queryAccounts;
   }
-  return fromLocal;
+  return localAccounts;
 }
 
 async function fetchEntries(): Promise<JournalEntry[]> {
-  const body = await apiJson<{ entries: JournalEntry[] }>(`${ACCOUNTING_API}/entries`);
-  saveCollection('accounting_entries', body.entries);
+  const entriesResponse = await apiJson<{ entries: JournalEntry[] }>(`${ACCOUNTING_API}/entries`);
+  saveCollection('accounting_entries', entriesResponse.entries);
   return getCollection<JournalEntry>('accounting_entries', []);
 }
 
@@ -80,18 +80,18 @@ export function useAccountingEntries(options?: { enabled?: boolean }) {
 
 export function useAccountingEntriesCollection(options?: { enabled?: boolean }): JournalEntry[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useAccountingEntries({ enabled });
-  const fromLocal = useLiveCollection<JournalEntry>('accounting_entries', [], { enabled });
+  const { data: queryEntries = [] } = useAccountingEntries({ enabled });
+  const localEntries = useLiveCollection<JournalEntry>('accounting_entries', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryEntries.length > 0) {
+    return queryEntries;
   }
-  return fromLocal;
+  return localEntries;
 }
 
 async function fetchFiscalYears(): Promise<FiscalYear[]> {
-  const body = await apiJson<{ fiscalYears: FiscalYear[] }>(`${ACCOUNTING_API}/fiscal-years`);
-  saveCollection('accounting_fiscal_years', body.fiscalYears);
+  const fiscalYearsResponse = await apiJson<{ fiscalYears: FiscalYear[] }>(`${ACCOUNTING_API}/fiscal-years`);
+  saveCollection('accounting_fiscal_years', fiscalYearsResponse.fiscalYears);
   return getCollection<FiscalYear>('accounting_fiscal_years', []);
 }
 
@@ -108,13 +108,13 @@ export function useAccountingFiscalYears(options?: { enabled?: boolean }) {
 
 export function useAccountingFiscalYearsCollection(options?: { enabled?: boolean }): FiscalYear[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useAccountingFiscalYears({ enabled });
-  const fromLocal = useLiveCollection<FiscalYear>('accounting_fiscal_years', [], { enabled });
+  const { data: queryFiscalYears = [] } = useAccountingFiscalYears({ enabled });
+  const localFiscalYears = useLiveCollection<FiscalYear>('accounting_fiscal_years', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryFiscalYears.length > 0) {
+    return queryFiscalYears;
   }
-  return fromLocal;
+  return localFiscalYears;
 }
 
 export function useAccountingMutations() {
@@ -133,8 +133,8 @@ export function useAccountingMutations() {
         method: 'PUT',
         body: JSON.stringify(accounts),
       }),
-    onSuccess: (data) => {
-      saveCollection('accounting_accounts', data.accounts);
+    onSuccess: (accountsResponse) => {
+      saveCollection('accounting_accounts', accountsResponse.accounts);
       invalidate();
     },
   });
@@ -145,8 +145,8 @@ export function useAccountingMutations() {
         method: 'PUT',
         body: JSON.stringify(entries),
       }),
-    onSuccess: (data) => {
-      saveCollection('accounting_entries', data.entries);
+    onSuccess: (entriesResponse) => {
+      saveCollection('accounting_entries', entriesResponse.entries);
       invalidate();
     },
   });
@@ -157,8 +157,8 @@ export function useAccountingMutations() {
         method: 'PUT',
         body: JSON.stringify(fiscalYears),
       }),
-    onSuccess: (data) => {
-      saveCollection('accounting_fiscal_years', data.fiscalYears);
+    onSuccess: (fiscalYearsResponse) => {
+      saveCollection('accounting_fiscal_years', fiscalYearsResponse.fiscalYears);
       invalidate();
     },
   });
@@ -171,8 +171,8 @@ export function useAccountingMetrics() {
   return useQuery({
     queryKey: ACCOUNTING_METRICS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ metrics: AccountingCommandMetricsSnapshot }>(`${ACCOUNTING_API}/metrics`);
-      return body.metrics;
+      const metricsResponse = await apiJson<{ metrics: AccountingCommandMetricsSnapshot }>(`${ACCOUNTING_API}/metrics`);
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -184,8 +184,8 @@ export function useAccountingJournalColumnPrefs() {
   return useQuery({
     queryKey: ACCOUNTING_JOURNAL_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(`${ACCOUNTING_API}/journal/column-preferences`);
-      return readModuleColumnPreferences(body);
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${ACCOUNTING_API}/journal/column-preferences`);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -200,8 +200,8 @@ export function useAccountingJournalColumnPrefsMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(ACCOUNTING_JOURNAL_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (preferencesResponse) => {
+      queryClient.setQueryData(ACCOUNTING_JOURNAL_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(preferencesResponse));
     },
   });
 }
@@ -211,8 +211,8 @@ export function useAccountingAccountColumnPrefs() {
   return useQuery({
     queryKey: ACCOUNTING_ACCOUNT_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(`${ACCOUNTING_API}/accounts/column-preferences`);
-      return readModuleColumnPreferences(body);
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${ACCOUNTING_API}/accounts/column-preferences`);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -227,8 +227,8 @@ export function useAccountingAccountColumnPrefsMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(ACCOUNTING_ACCOUNT_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (preferencesResponse) => {
+      queryClient.setQueryData(ACCOUNTING_ACCOUNT_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(preferencesResponse));
     },
   });
 }

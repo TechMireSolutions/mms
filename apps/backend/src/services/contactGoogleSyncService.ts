@@ -317,9 +317,9 @@ async function fetchGoogleConnectionsWithRefresh(userId: string): Promise<Google
 
   try {
     return await fetchAllGoogleConnections(config.accessToken);
-  } catch (err) {
-    if (!(err instanceof GoogleSyncError) || err.code !== 'session_expired') {
-      throw err;
+  } catch (error) {
+    if (!(error instanceof GoogleSyncError) || error.code !== 'session_expired') {
+      throw error;
     }
     const refreshed = await refreshGoogleAccessToken(userId);
     return fetchAllGoogleConnections(refreshed);

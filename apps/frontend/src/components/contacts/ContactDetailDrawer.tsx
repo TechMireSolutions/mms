@@ -208,8 +208,8 @@ export default function ContactDetailDrawer({
       try {
         const yrsLabel = t('contacts.detail.yearsOld');
         return `${formatDate(fieldValue as string, true)}${age ? ` (${age} ${yrsLabel})` : ""}`;
-      } catch (err) {
-        console.error("Failed parsing DOB value:", fieldValue, err);
+      } catch (error) {
+        console.error("Failed parsing DOB value:", fieldValue, error);
         return String(fieldValue);
       }
     }

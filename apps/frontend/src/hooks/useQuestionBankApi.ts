@@ -27,8 +27,8 @@ export const QUESTION_BANK_TESTS_QUERY_KEY = [QUESTION_BANK_MODULE_CONTRACT.modu
 export const QUESTION_BANK_RESULTS_QUERY_KEY = [QUESTION_BANK_MODULE_CONTRACT.moduleId, 'results', 'list'] as const;
 
 async function fetchQuestions(): Promise<QuestionBankQuestion[]> {
-  const body = await apiJson<{ questions: QuestionBankQuestion[] }>(`${QUESTION_BANK_API}/questions`);
-  saveCollection('questions', body.questions);
+  const questionsResponse = await apiJson<{ questions: QuestionBankQuestion[] }>(`${QUESTION_BANK_API}/questions`);
+  saveCollection('questions', questionsResponse.questions);
   return getCollection<QuestionBankQuestion>('questions', []);
 }
 
@@ -45,18 +45,18 @@ export function useQuestionBankQuestions(options?: { enabled?: boolean }) {
 
 export function useQuestionBankQuestionsCollection(options?: { enabled?: boolean }): QuestionBankQuestion[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useQuestionBankQuestions({ enabled });
-  const fromLocal = useLiveCollection<QuestionBankQuestion>('questions', [], { enabled });
+  const { data: queryQuestions = [] } = useQuestionBankQuestions({ enabled });
+  const localQuestions = useLiveCollection<QuestionBankQuestion>('questions', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryQuestions.length > 0) {
+    return queryQuestions;
   }
-  return fromLocal;
+  return localQuestions;
 }
 
 async function fetchTests(): Promise<QuestionBankTest[]> {
-  const body = await apiJson<{ tests: QuestionBankTest[] }>(`${QUESTION_BANK_API}/tests`);
-  saveCollection('tests', body.tests);
+  const testsResponse = await apiJson<{ tests: QuestionBankTest[] }>(`${QUESTION_BANK_API}/tests`);
+  saveCollection('tests', testsResponse.tests);
   return getCollection<QuestionBankTest>('tests', []);
 }
 
@@ -73,18 +73,18 @@ export function useQuestionBankTests(options?: { enabled?: boolean }) {
 
 export function useQuestionBankTestsCollection(options?: { enabled?: boolean }): QuestionBankTest[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useQuestionBankTests({ enabled });
-  const fromLocal = useLiveCollection<QuestionBankTest>('tests', [], { enabled });
+  const { data: queryTests = [] } = useQuestionBankTests({ enabled });
+  const localTests = useLiveCollection<QuestionBankTest>('tests', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryTests.length > 0) {
+    return queryTests;
   }
-  return fromLocal;
+  return localTests;
 }
 
 async function fetchResults(): Promise<QuestionBankResult[]> {
-  const body = await apiJson<{ results: QuestionBankResult[] }>(`${QUESTION_BANK_API}/assessment-results`);
-  saveCollection('assessment_results', body.results);
+  const resultsResponse = await apiJson<{ results: QuestionBankResult[] }>(`${QUESTION_BANK_API}/assessment-results`);
+  saveCollection('assessment_results', resultsResponse.results);
   return getCollection<QuestionBankResult>('assessment_results', []);
 }
 
@@ -101,13 +101,13 @@ export function useQuestionBankResults(options?: { enabled?: boolean }) {
 
 export function useQuestionBankResultsCollection(options?: { enabled?: boolean }): QuestionBankResult[] {
   const enabled = options?.enabled ?? true;
-  const { data: fromQuery = [] } = useQuestionBankResults({ enabled });
-  const fromLocal = useLiveCollection<QuestionBankResult>('assessment_results', [], { enabled });
+  const { data: queryResults = [] } = useQuestionBankResults({ enabled });
+  const localResults = useLiveCollection<QuestionBankResult>('assessment_results', [], { enabled });
   if (!enabled) return [];
-  if (fromQuery.length > 0) {
-    return fromQuery;
+  if (queryResults.length > 0) {
+    return queryResults;
   }
-  return fromLocal;
+  return localResults;
 }
 
 export function useQuestionBankMutations() {
@@ -126,8 +126,8 @@ export function useQuestionBankMutations() {
         method: 'PUT',
         body: JSON.stringify(questions),
       }),
-    onSuccess: (data) => {
-      saveCollection('questions', data.questions);
+    onSuccess: (questionsResponse) => {
+      saveCollection('questions', questionsResponse.questions);
       invalidate();
     },
   });
@@ -138,8 +138,8 @@ export function useQuestionBankMutations() {
         method: 'PUT',
         body: JSON.stringify(tests),
       }),
-    onSuccess: (data) => {
-      saveCollection('tests', data.tests);
+    onSuccess: (testsResponse) => {
+      saveCollection('tests', testsResponse.tests);
       invalidate();
     },
   });
@@ -150,8 +150,8 @@ export function useQuestionBankMutations() {
         method: 'PUT',
         body: JSON.stringify(results),
       }),
-    onSuccess: (data) => {
-      saveCollection('assessment_results', data.results);
+    onSuccess: (resultsResponse) => {
+      saveCollection('assessment_results', resultsResponse.results);
       invalidate();
     },
   });
@@ -164,8 +164,8 @@ export function useQuestionBankMetrics() {
   return useQuery({
     queryKey: QUESTION_BANK_METRICS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ metrics: QuestionBankCommandMetricsSnapshot }>(`${QUESTION_BANK_API}/metrics`);
-      return body.metrics;
+      const metricsResponse = await apiJson<{ metrics: QuestionBankCommandMetricsSnapshot }>(`${QUESTION_BANK_API}/metrics`);
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -177,8 +177,8 @@ export function useQuestionBankColumnPrefs() {
   return useQuery({
     queryKey: QUESTION_BANK_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(`${QUESTION_BANK_API}/column-preferences`);
-      return readModuleColumnPreferences(body);
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${QUESTION_BANK_API}/column-preferences`);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -193,8 +193,8 @@ export function useQuestionBankColumnPrefsMutation() {
         method: 'PUT',
         body: writeModuleColumnPreferences(preferences),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(QUESTION_BANK_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(data));
+    onSuccess: (preferencesResponse) => {
+      queryClient.setQueryData(QUESTION_BANK_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(preferencesResponse));
     },
   });
 }

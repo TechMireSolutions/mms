@@ -71,12 +71,12 @@ async function pollQueue(): Promise<void> {
       console.log(`[Worker] Spawning child process for job ${job.id} (${job.moduleId}:${job.kind}) for tenant ${job.tenantId}`);
 
       const runnerScript = path.join(__dirname, __filename.endsWith('.ts') ? 'jobRunnerProcess.ts' : 'jobRunnerProcess.js');
-      
+
       const child = fork(runnerScript, [job.id]);
       activeChildProcesses.set(job.id, child);
 
-      child.on('error', (err) => {
-        console.error(`[Worker] Error spawning child process for job ${job.id}:`, err);
+      child.on('error', (error) => {
+        console.error(`[Worker] Error spawning child process for job ${job.id}:`, error);
       });
 
       child.on('exit', async (code, signal) => {
@@ -171,5 +171,4 @@ if (process.env.NODE_ENV !== 'test') {
     process.exit(1);
   });
 }
-
 

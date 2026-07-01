@@ -259,8 +259,8 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
       if (e.newValue === null) return null;
       try {
         return JSON.parse(e.newValue);
-      } catch (err) {
-        console.warn(`[ContactConfigContext] Failed to parse storage event for "${label}":`, err);
+      } catch (error) {
+        console.warn(`[ContactConfigContext] Failed to parse storage event for "${label}":`, error);
         return null;
       }
     };

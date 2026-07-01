@@ -5,8 +5,8 @@ import { apiJson } from "@/lib/apiClient";
 export const STUDENT_COUNT_QUERY_KEY = ["students", "count"] as const;
 
 async function fetchStudentCount(): Promise<number> {
-  const body = await apiJson<{ count: number }>("/api/students/count");
-  return body.count;
+  const countResponse = await apiJson<{ count: number }>("/api/students/count");
+  return countResponse.count;
 }
 
 /** Server-first: student count via dedicated API route. */
@@ -19,4 +19,3 @@ export function useStudentCount() {
     staleTime: 30_000,
   });
 }
-

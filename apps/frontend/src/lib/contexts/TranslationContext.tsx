@@ -50,7 +50,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 
     promise
       .then(() => {
-        setLoadedLanguages(prev => ({ ...prev, [language]: true }));
+        setLoadedLanguages((currentLoadedLanguages) => ({ ...currentLoadedLanguages, [language]: true }));
         setIsLoading(false);
       })
       .catch(err => {

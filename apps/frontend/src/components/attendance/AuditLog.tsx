@@ -84,8 +84,8 @@ export function AuditLog({ filters }: AuditLogProps) {
     try {
       const result = getAuditLog(classId, date);
       setLog(Array.isArray(result) ? result : []);
-    } catch (err) {
-      console.error("Failed to load audit log", err);
+    } catch (error) {
+      console.error("Failed to load audit log", error);
       setLog([]);
     }
   };

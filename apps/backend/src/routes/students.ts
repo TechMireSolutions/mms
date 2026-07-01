@@ -213,8 +213,8 @@ export default async function studentsRoutes(
     try {
       const lang = (request.headers['accept-language'] as string) || 'en';
       await validateStudentDynamic(tenant, parsed.data, lang);
-    } catch (err) {
-      return replyValidationError(reply, err instanceof Error ? err.message : String(err));
+    } catch (error) {
+      return replyValidationError(reply, error instanceof Error ? error.message : String(error));
     }
 
     try {
@@ -244,8 +244,8 @@ export default async function studentsRoutes(
     try {
       const lang = (request.headers['accept-language'] as string) || 'en';
       await validateStudentDynamic(tenant, body.data, lang);
-    } catch (err) {
-      return replyValidationError(reply, err instanceof Error ? err.message : String(err));
+    } catch (error) {
+      return replyValidationError(reply, error instanceof Error ? error.message : String(error));
     }
 
     try {

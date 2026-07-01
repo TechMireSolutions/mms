@@ -143,8 +143,8 @@ export async function generateFaviconFromLogoUrl(logoUrl: string): Promise<strin
 
         const faviconUrl = await uploadCanvasImage(canvas, 'favicon');
         resolve(faviconUrl);
-      } catch (err) {
-        reject(err);
+      } catch (error) {
+        reject(error);
       }
     };
     img.onerror = () => reject(new Error('Failed to load logo image'));

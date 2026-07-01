@@ -9,8 +9,8 @@ import { notify } from '@/lib/notify';
 export const PLATFORM_WORKSPACES_QUERY_KEY = ['platform', 'workspaces'] as const;
 
 async function fetchPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> {
-  const body = await apiJson<PlatformWorkspaceListResponse>('/api/platform/workspaces');
-  return body.workspaces;
+  const workspacesResponse = await apiJson<PlatformWorkspaceListResponse>('/api/platform/workspaces');
+  return workspacesResponse.workspaces;
 }
 
 /** Platform super-user list of all madrasas (includes disabled). */

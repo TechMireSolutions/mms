@@ -10,8 +10,8 @@ function rowToContact(row: typeof contacts.$inferSelect): Contact {
       ...extra,
       id: row.id,
     } as Contact;
-  } catch (err) {
-    console.error(`Failed to parse contact customData for id=${row.id}:`, err);
+  } catch (error) {
+    console.error(`Failed to parse contact customData for id=${row.id}:`, error);
     return { id: row.id } as Contact;
   }
 }

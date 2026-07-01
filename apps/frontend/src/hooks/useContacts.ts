@@ -69,7 +69,7 @@ export function useContactsPaginated(params: ContactsPaginatedParams) {
     queryFn: async () => apiJson<ContactsListPageResult>(buildContactsPageUrl(params)),
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
-    placeholderData: (prev) => prev,
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -84,11 +84,11 @@ export async function fetchAllContactsForQuery(
   let total = 0;
 
   for (;;) {
-    const body = await apiJson<ContactsListPageResult>(buildContactsPageUrl({ ...params, page, limit }));
-    all.push(...body.contacts);
-    total = body.total;
+    const contactsPage = await apiJson<ContactsListPageResult>(buildContactsPageUrl({ ...params, page, limit }));
+    all.push(...contactsPage.contacts);
+    total = contactsPage.total;
     onProgress?.(all.length, total);
-    if (!body.hasMore || page >= 200) break;
+    if (!contactsPage.hasMore || page >= 200) break;
     page += 1;
   }
 
@@ -101,8 +101,8 @@ export function useContactsMetrics(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: CONTACTS_METRICS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ metrics: ContactsCommandMetricsSnapshot }>(`${CONTACTS_API}/metrics`);
-      return body.metrics;
+      const metricsResponse = await apiJson<{ metrics: ContactsCommandMetricsSnapshot }>(`${CONTACTS_API}/metrics`);
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
@@ -159,14 +159,14 @@ export function useContactsWidgetAggregates(
   return useQuery({
     queryKey: [...CONTACTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
     queryFn: async () => {
-      const body = await apiJson<{ results: Record<string, ContactsWidgetAggregateResult> }>(
+      const aggregateResponse = await apiJson<{ results: Record<string, ContactsWidgetAggregateResult> }>(
         `${CONTACTS_API}/widget-aggregates`,
         {
           method: 'POST',
           body: JSON.stringify({ widgets: contactQueries }),
         },
       );
-      return body.results;
+      return aggregateResponse.results;
     },
     enabled: isAuthenticated && enabled && contactQueries.length > 0,
     staleTime: 30_000,
@@ -200,8 +200,8 @@ export function useContactById(contactId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, 'detail', contactId] as const,
     queryFn: async () => {
-      const body = await apiJson<{ contact: Contact }>(`${CONTACTS_API}/${contactId}`);
-      return body.contact;
+      const contactResponse = await apiJson<{ contact: Contact }>(`${CONTACTS_API}/${contactId}`);
+      return contactResponse.contact;
     },
     enabled: isAuthenticated && enabled && Boolean(contactId),
     staleTime: 10_000,
@@ -220,11 +220,11 @@ export function useContactsByIds(ids: (string | number | null | undefined)[]) {
   return useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, 'resolve', signature] as const,
     queryFn: async () => {
-      const body = await apiJson<{ contacts: Contact[] }>(`${CONTACTS_API}/resolve`, {
+      const contactsResponse = await apiJson<{ contacts: Contact[] }>(`${CONTACTS_API}/resolve`, {
         method: 'POST',
         body: JSON.stringify({ ids: normalized }),
       });
-      return body.contacts;
+      return contactsResponse.contacts;
     },
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,
@@ -253,8 +253,8 @@ export function useContactGoogleSyncConfig() {
   return useQuery({
     queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ config: ContactGoogleSyncConfigClient }>(`${CONTACTS_API}/google-sync`);
-      return body.config;
+      const googleSyncResponse = await apiJson<{ config: ContactGoogleSyncConfigClient }>(`${CONTACTS_API}/google-sync`);
+      return googleSyncResponse.config;
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -269,8 +269,8 @@ export function useContactGoogleSyncMutations() {
         method: 'PUT',
         body: JSON.stringify(config),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, data.config);
+    onSuccess: (configResponse) => {
+      queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, configResponse.config);
     },
   });
   const clearConfig = useMutation({
@@ -280,7 +280,7 @@ export function useContactGoogleSyncMutations() {
     },
   });
   const logSyncAudit = useMutation({
-    mutationFn: async (body: {
+    mutationFn: async (auditPayload: {
       action: 'credentials_saved' | 'oauth_connected' | 'sync_complete' | 'disconnected';
       imported?: number;
       total?: number;
@@ -288,17 +288,17 @@ export function useContactGoogleSyncMutations() {
     }) =>
       apiJson<{ success: boolean }>(`${CONTACTS_API}/google-sync/audit`, {
         method: 'POST',
-        body: JSON.stringify(body),
+        body: JSON.stringify(auditPayload),
       }),
   });
   const exchangeOAuth = useMutation({
-    mutationFn: async (body: { code: string; redirectUri: string }) =>
+    mutationFn: async (oauthPayload: { code: string; redirectUri: string }) =>
       apiJson<{ config: ContactGoogleSyncConfigClient }>(`${CONTACTS_API}/google-sync/exchange`, {
         method: 'POST',
-        body: JSON.stringify(body),
+        body: JSON.stringify(oauthPayload),
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, data.config);
+    onSuccess: (configResponse) => {
+      queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, configResponse.config);
     },
   });
   const runGoogleSync = useMutation({
@@ -318,9 +318,9 @@ export function contactsListQueryKey(includeDeleted = false) {
 
 async function fetchContacts(includeDeleted = false): Promise<Contact[]> {
   const url = includeDeleted ? `${CONTACTS_API}?includeDeleted=true` : CONTACTS_API;
-  const body = await apiJson<{ contacts: Contact[] }>(url);
-  saveCollection(CONTACTS_MODULE_CONTRACT.collectionKey, filterActiveContacts(body.contacts));
-  return body.contacts;
+  const contactsResponse = await apiJson<{ contacts: Contact[] }>(url);
+  saveCollection(CONTACTS_MODULE_CONTRACT.collectionKey, filterActiveContacts(contactsResponse.contacts));
+  return contactsResponse.contacts;
 }
 
 export function useContacts(options?: { enabled?: boolean; includeDeleted?: boolean }) {
@@ -458,10 +458,10 @@ export function useContactColumnPrefs() {
   return useQuery({
     queryKey: CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ preferences: ContactColumnPreference[]; prefs?: ContactColumnPreference[] }>(
+      const preferencesResponse = await apiJson<{ preferences: ContactColumnPreference[]; prefs?: ContactColumnPreference[] }>(
         `${CONTACTS_API}/column-preferences`,
       );
-      return body.preferences ?? body.prefs ?? [];
+      return preferencesResponse.preferences ?? preferencesResponse.prefs ?? [];
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -492,8 +492,11 @@ export function useContactColumnPrefsMutation() {
         },
       );
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(CONTACT_COLUMN_PREFERENCES_QUERY_KEY, data.preferences ?? data.prefs ?? []);
+    onSuccess: (preferencesResponse) => {
+      queryClient.setQueryData(
+        CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
+        preferencesResponse.preferences ?? preferencesResponse.prefs ?? [],
+      );
     },
   });
 }
@@ -503,8 +506,8 @@ export function useContactsSavedReports() {
   return useQuery({
     queryKey: CONTACTS_SAVED_REPORTS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ reports: ContactsSavedReport[] }>(`${CONTACTS_API}/saved-reports`);
-      return body.reports;
+      const reportsResponse = await apiJson<{ reports: ContactsSavedReport[] }>(`${CONTACTS_API}/saved-reports`);
+      return reportsResponse.reports;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -555,11 +558,11 @@ export function useContactsSavedReportMutations() {
 export function useContactsCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Contact[] {
   const enabled = options?.enabled ?? true;
   const includeDeleted = options?.includeDeleted ?? false;
-  const { data: fromQuery, isSuccess } = useContacts({ enabled, includeDeleted });
-  const fromLocal = useLiveCollection<Contact>(CONTACTS_MODULE_CONTRACT.collectionKey, [], { enabled });
+  const { data: queryContacts, isSuccess } = useContacts({ enabled, includeDeleted });
+  const localContacts = useLiveCollection<Contact>(CONTACTS_MODULE_CONTRACT.collectionKey, [], { enabled });
   if (!enabled) return [];
   if (isSuccess) {
-    return fromQuery ?? [];
+    return queryContacts ?? [];
   }
-  return fromLocal;
+  return localContacts;
 }

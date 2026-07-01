@@ -948,8 +948,6 @@ export interface StudentsSettings {
   minAge: string;
   /** Whether sibling discounts are enabled in the fee structure. */
   allowSiblingDiscount: boolean;
-  /** Whether health/medical notes can be recorded on student profiles. */
-  trackHealthRecords: boolean;
   /** Format pattern for auto-generated GR Numbers, e.g. "{seq}-{year}" or "GR-{seq}". */
   grNumberTemplate: string;
   /** Zero-padding length for the GR number sequence. */
@@ -980,7 +978,6 @@ export const DEFAULT_STUDENTS_SETTINGS: StudentsSettings = {
   maxAge: "25",
   minAge: "5",
   allowSiblingDiscount: true,
-  trackHealthRecords: false,
   grNumberTemplate: "{seq}-{year}",
   grNumberDigits: 4,
   grNumberRestartAnnually: true,
@@ -1637,7 +1634,6 @@ export const STUDENT_TAB_REGISTRY: TabDefinition[] = [
   { key: "basic", label: "Identity", enabled: true, order: 0, isSystem: true },
   { key: "guardian", label: "Guardian Connections", enabled: true, order: 1, isSystem: true },
   { key: "academic", label: "Enrollment Info", enabled: true, order: 2, isSystem: true },
-  { key: "health", label: "Health & Medical", enabled: false, order: 3, isSystem: true },
 ];
 
 export const INITIAL_STUDENT_FIELD_SEED: Record<string, FieldDefinition[]> = {
@@ -1652,10 +1648,6 @@ export const INITIAL_STUDENT_FIELD_SEED: Record<string, FieldDefinition[]> = {
   ],
   academic: [
     { key: "registeredDate", label: "Registration Date", type: "date", enabled: true, order: 0, required: true, description: "Date/Time field indicating when the student profile was registered." },
-  ],
-  health: [
-    { key: "bloodGroup", label: "Blood Group", type: "select", options: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], enabled: true, order: 0, required: false },
-    { key: "allergies", label: "Allergies / Conditions", type: "textarea", enabled: true, order: 1, required: false },
   ]
 };
 

@@ -13,14 +13,14 @@ export const FINANCE_METRICS_QUERY_KEY = ['finance', 'metrics'] as const;
 const FINANCE_API = FINANCE_MODULE_CONTRACT.restBasePath;
 
 async function fetchInvoices(): Promise<Invoice[]> {
-  const body = await apiJson<{ invoices: Invoice[] }>(`${FINANCE_API}/invoices`);
-  saveCollection('finance_invoices', body.invoices);
+  const invoicesResponse = await apiJson<{ invoices: Invoice[] }>(`${FINANCE_API}/invoices`);
+  saveCollection('finance_invoices', invoicesResponse.invoices);
   return getCollection<Invoice>('finance_invoices', []);
 }
 
 async function fetchPayments(): Promise<Payment[]> {
-  const body = await apiJson<{ payments: Payment[] }>(`${FINANCE_API}/payments`);
-  saveCollection('finance_payments', body.payments);
+  const paymentsResponse = await apiJson<{ payments: Payment[] }>(`${FINANCE_API}/payments`);
+  saveCollection('finance_payments', paymentsResponse.payments);
   return getCollection<Payment>('finance_payments', []);
 }
 

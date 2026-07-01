@@ -12,8 +12,6 @@ import {
   STUDENTS_MODULE_CONTRACT,
   getDefaultFieldValue,
   buildDynamicStudentSchema,
-  canViewContactTab,
-  canViewContactField,
   isRtlLanguage,
   hasFieldValue,
   toTitleCase,
@@ -121,35 +119,6 @@ export default function StudentForm({
 
   const enabledTabsSet = useMemo(() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS), [settings.enabledTabs]);
   const requiredTabsSet = useMemo(() => new Set(settings.requiredTabs || DEFAULT_STUDENT_REQUIRED_TABS), [settings.requiredTabs]);
-
-  const visibleTabs = useMemo(() => {
-    const tabsFromConfig = settings.formTabs || [];
-    return [...tabsFromConfig]
-      .sort((a, b) => a.order - b.order)
-      .filter((tabDef) => {
-        if (!tabDef.enabled) return false;
-        if (tabDef.key === "basic") return true;
-        if (!enabledTabsSet.has(tabDef.key)) return false;
-        if (!canViewContactTab(viewerRole, tabDef)) return false;
-
-        // Ghost Tab Prevention (Rule 13.3)
-        const tabFields = settingsFields[tabDef.key] || [];
-        if (tabFields.length > 0) {
-          const hasVisibleFields = tabFields.some(
-            (field) => field.enabled && canViewContactField(viewerRole, field)
-          );
-          if (!hasVisibleFields) return false;
-        }
-        return true;
-      });
-  }, [settings.formTabs, enabledTabsSet, settingsFields, viewerRole]);
-
-  const formTabs = useMemo(() => {
-    return visibleTabs.map((t) => ({
-      key: t.key,
-      label: t.label,
-    }));
-  }, [visibleTabs]);
 
   const { language } = useGlobalSettings();
 
@@ -287,7 +256,7 @@ export default function StudentForm({
 
   const onSubmit = useCallback(async (formData: StudentFormData) => {
     setManualError("");
-    
+
     // Gender & DOB requirements checks since they are part of contact
     const basicFields = settingsFields.basic || [];
     const genderField = basicFields.find((field: FieldDefinition) => field.key === "gender");
@@ -486,9 +455,9 @@ export default function StudentForm({
             createDefaults={
               guardianContactDefaults.fatherLink?.createGender
                 ? {
-                    gender: guardianContactDefaults.fatherLink.createGender,
-                    lockGender: guardianContactDefaults.fatherLink.lockGender ?? true,
-                  }
+                  gender: guardianContactDefaults.fatherLink.createGender,
+                  lockGender: guardianContactDefaults.fatherLink.lockGender ?? true,
+                }
                 : undefined
             }
             searchPlaceholder={t("teachers.form.searchContact")}
@@ -516,9 +485,9 @@ export default function StudentForm({
             createDefaults={
               guardianContactDefaults.motherLink?.createGender
                 ? {
-                    gender: guardianContactDefaults.motherLink.createGender,
-                    lockGender: guardianContactDefaults.motherLink.lockGender ?? true,
-                  }
+                  gender: guardianContactDefaults.motherLink.createGender,
+                  lockGender: guardianContactDefaults.motherLink.lockGender ?? true,
+                }
                 : undefined
             }
             searchPlaceholder={t("teachers.form.searchContact")}
@@ -591,16 +560,41 @@ export default function StudentForm({
       return null;
     }
 
-    const basicFields = (settingsFields.basic || []).filter((field: FieldDefinition) => field.enabled);
+    const guardianFields = settingsFields.guardian || [];
+    const hasGuardianFields = guardianFields.some((f) => f.enabled);
+
+    // Extract all dynamic custom or system fields from settingsFields
+    const additionalFields = (() => {
+      const list: FieldDefinition[] = [];
+      Object.entries(settingsFields).forEach(([tabId, tabFields]) => {
+        if (tabId === "guardian") return;
+        (tabFields || []).forEach((field) => {
+          if (!field.enabled) return;
+          if (
+            field.key === "gender" ||
+            field.key === "dob" ||
+            field.key === "registeredDate" ||
+            field.key === "fatherLink" ||
+            field.key === "motherLink" ||
+            field.key === "guardianLink"
+          ) {
+            return;
+          }
+          list.push(field);
+        });
+      });
+      return list;
+    })();
 
     return (
-      <div className="space-y-5 text-left">
-        {/* Contact Picker Section */}
-        <section className="rounded-xl border border-border bg-card/50 p-4 space-y-3">
+      <div className="space-y-6 text-left pb-4">
+        {/* Section 1: Contact Registry Link */}
+        <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
           <div>
-            <h3 className="text-xs font-bold text-foreground">{t("students.form.contactLabel")}</h3>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.contactLabel")}</h3>
             <p className="text-[10px] text-muted-foreground mt-0.5">{t("students.form.contactHint")}</p>
           </div>
+
           <ContactPicker
             label={t("students.form.contactLabel")}
             value={studentDraft.contactId}
@@ -617,12 +611,24 @@ export default function StudentForm({
               {errors.find((error) => error.fieldId === "contactId")?.message}
             </p>
           )}
+
+          {/* Inline Profile fields revealed when Contact is selected */}
+          {studentDraft.contactId && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
+              {settingsFields.basic?.some((f) => f.key === "gender" && f.enabled) && (
+                renderFieldByKey(settingsFields.basic.find((f) => f.key === "gender")!)
+              )}
+              {settingsFields.basic?.some((f) => f.key === "dob" && f.enabled) && (
+                renderFieldByKey(settingsFields.basic.find((f) => f.key === "dob")!)
+              )}
+            </div>
+          )}
         </section>
 
-        {/* Identity Fields Section */}
-        <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
+        {/* Section 2: Registration Details */}
+        <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
           <div>
-            <h3 className="text-xs font-bold text-foreground">{t("students.form.registrationSection")}</h3>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.registrationSection")}</h3>
             <p className="text-[10px] text-muted-foreground mt-0.5">
               {t("students.form.registrationSectionDesc")}
             </p>
@@ -655,18 +661,44 @@ export default function StudentForm({
               </Field>
             </div>
 
-            {basicFields.map((field: FieldDefinition) => {
-              if (field.key !== "registeredDate") {
-                return renderFieldByKey(field);
-              }
-              return null;
-            })}
-
-            {basicFields.some((field: FieldDefinition) => field.key === "registeredDate") && renderFieldByKey(
-              basicFields.find((field: FieldDefinition) => field.key === "registeredDate")!
+            {/* Registration Date if enabled */}
+            {Object.values(settingsFields).flat().some((f) => f.key === "registeredDate" && f.enabled) && (
+              renderFieldByKey(Object.values(settingsFields).flat().find((f) => f.key === "registeredDate")!)
             )}
           </div>
         </section>
+
+        {/* Section 3: Family & Guardians */}
+        {hasGuardianFields && (
+          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+            <div>
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Family & Guardians</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Link parents or guardians for emergency and system notifications.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {guardianFields.map((field) => renderFieldByKey(field))}
+            </div>
+          </section>
+        )}
+
+        {/* Section 4: Additional Information */}
+        {additionalFields.length > 0 && (
+          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+            <div>
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Additional Information</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Extra information configured in fields registry settings.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {additionalFields.map((field) => renderFieldByKey(field))}
+            </div>
+          </section>
+        )}
       </div>
     );
   };
@@ -699,9 +731,9 @@ export default function StudentForm({
         showBuilderToggle={canEditSetup}
         isBuilderMode={isBuilderMode}
         onBuilderModeChange={handleToggleBuilderMode}
-        tabs={formTabs}
-        activeTab={tab}
-        onTabChange={setTab}
+        tabs={undefined}
+        activeTab={undefined}
+        onTabChange={undefined}
         tabPanelIdPrefix="student-form-tab"
         dir={isRtlLanguage(language) ? "rtl" : "ltr"}
         lang={language}

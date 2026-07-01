@@ -123,8 +123,8 @@ export function useBackupRestore({
         await importDatabase(jsonText);
         notify.success(t('backup.restoreSuccess'), { description: t('backup.restoreSuccessDesc') });
         window.location.reload();
-      } catch (err) {
-        const error = err as Error;
+      } catch (restoreError) {
+        const error = restoreError as Error;
         notify.error(t('backup.restoreFailed'), { description: errorDescription(error.message) });
         setRestoreId(null);
       }

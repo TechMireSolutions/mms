@@ -19,8 +19,8 @@ export const ATTENDANCE_COLUMN_PREFS_QUERY_KEY = [
 const ATTENDANCE_API = ATTENDANCE_MODULE_CONTRACT.restBasePath;
 
 async function fetchAttendanceRecords(): Promise<AttendanceRecord[]> {
-  const body = await apiJson<{ records: AttendanceRecord[] }>(ATTENDANCE_API);
-  saveCollection('attendance_records', body.records);
+  const recordsResponse = await apiJson<{ records: AttendanceRecord[] }>(ATTENDANCE_API);
+  saveCollection('attendance_records', recordsResponse.records);
   return getCollection<AttendanceRecord>('attendance_records', []);
 }
 
@@ -99,10 +99,10 @@ export function useAttendanceMetrics(selectedDate: string) {
     queryKey: [...ATTENDANCE_METRICS_QUERY_KEY, selectedDate] as const,
     queryFn: async () => {
       const queryString = selectedDate ? `?date=${encodeURIComponent(selectedDate)}` : '';
-      const body = await apiJson<{ metrics: AttendanceCommandMetricsSnapshot }>(
+      const metricsResponse = await apiJson<{ metrics: AttendanceCommandMetricsSnapshot }>(
         `${ATTENDANCE_API}/metrics${queryString}`,
       );
-      return body.metrics;
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -114,10 +114,10 @@ export function useAttendanceColumnPrefs() {
   return useQuery({
     queryKey: ATTENDANCE_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(
         `${ATTENDANCE_API}/column-preferences`,
       );
-      return readModuleColumnPreferences(body);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,

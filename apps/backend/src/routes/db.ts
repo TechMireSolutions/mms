@@ -131,8 +131,8 @@ export default async function dbRoutes(
           try {
             const lang = (request.headers['accept-language'] as string) || 'en';
             await validateContactDynamic(tenant, payload.collections.contacts, lang, user.role);
-          } catch (err) {
-            return replyValidationError(reply, err instanceof Error ? err.message : String(err));
+          } catch (error) {
+            return replyValidationError(reply, error instanceof Error ? error.message : String(error));
           }
 
           payload.collections.contacts = payload.collections.contacts.map((item) =>
@@ -266,8 +266,8 @@ export default async function dbRoutes(
         try {
           const lang = (request.headers['accept-language'] as string) || 'en';
           await validateContactDynamic(tenant, collectionRowsToSave, lang, user.role);
-        } catch (err) {
-          return replyValidationError(reply, err instanceof Error ? err.message : String(err));
+        } catch (error) {
+          return replyValidationError(reply, error instanceof Error ? error.message : String(error));
         }
 
         collectionRowsToSave = collectionRowsToSave.map((item) => applyTitleCaseToContact(item as Record<string, unknown>));

@@ -27,11 +27,11 @@ import { apiJson } from "@/lib/apiClient";
 import { useReadOnlyContactFieldKeys } from '@/hooks/useVisibleContactFields';
 import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
-import BasicTab     from "./form/BasicTab";
-import PhoneTab     from "./form/PhoneTab";
-import EmailTab     from "./form/EmailTab";
-import AddressTab   from "./form/AddressTab";
-import SocialTab    from "./form/SocialTab";
+import BasicTab from "./form/BasicTab";
+import PhoneTab from "./form/PhoneTab";
+import EmailTab from "./form/EmailTab";
+import AddressTab from "./form/AddressTab";
+import SocialTab from "./form/SocialTab";
 import EmergencyTab from "./form/EmergencyTab";
 import RelationshipsTab from "./form/RelationshipsTab";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -261,8 +261,8 @@ export default function ContactForm({
   // Unified helper for formatting, normalizing, and applying title case to a Contact record
   const prepareContactData = useCallback((formData: Partial<Contact>, isSubmit = false): Contact => {
     const firstName = toTitleCase(formData.firstName?.trim() || "") as string;
-    const lastName  = toTitleCase(formData.lastName?.trim() || "") as string;
-    
+    const lastName = toTitleCase(formData.lastName?.trim() || "") as string;
+
     const defaultCode = countryCodesMap[defaultCountryProp] || defaultPhoneCountryCode;
     const normalizedPhones = (formData.phones || []).map((phone) => {
       const e164PhoneNumber = normalizeToE164(phone.countryCode || defaultCode, phone.number);
@@ -322,8 +322,8 @@ export default function ContactForm({
         if (isMounted) {
           setTypedDuplicateCount(matchCount);
         }
-      } catch (err) {
-        console.error("Background duplicate check failed", err);
+      } catch (error) {
+        console.error("Background duplicate check failed", error);
       }
     };
 
@@ -379,8 +379,8 @@ export default function ContactForm({
     commitSave(contactToSave);
   }, [commitSave, prepareContactData, t]);
 
-  const defaultCountry  = prefs.defaultCountry  || defaultCountryProp;
-  const defaultCity     = prefs.defaultCity     || defaultCityProp;
+  const defaultCountry = prefs.defaultCountry || defaultCountryProp;
+  const defaultCity = prefs.defaultCity || defaultCityProp;
   const defaultProvince = prefs.defaultProvince || defaultProvinceProp;
 
   const completeness = useMemo(() => calculateProfileCompleteness(contactDraft, fieldConfig), [contactDraft, fieldConfig]);

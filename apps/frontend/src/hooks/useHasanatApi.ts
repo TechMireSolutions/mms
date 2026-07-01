@@ -26,26 +26,26 @@ export const HASANAT_REDEMPTION_COLUMN_PREFS_QUERY_KEY = [
 const HASANAT_API = HASANAT_MODULE_CONTRACT.restBasePath;
 
 async function fetchDenoms(): Promise<Denomination[]> {
-  const body = await apiJson<{ denoms: Denomination[] }>(`${HASANAT_API}/denoms`);
-  saveCollection('hasanat_denoms', body.denoms);
+  const denomsResponse = await apiJson<{ denoms: Denomination[] }>(`${HASANAT_API}/denoms`);
+  saveCollection('hasanat_denoms', denomsResponse.denoms);
   return getCollection<Denomination>('hasanat_denoms', []);
 }
 
 async function fetchBatches(): Promise<StockBatch[]> {
-  const body = await apiJson<{ batches: StockBatch[] }>(`${HASANAT_API}/batches`);
-  saveCollection('hasanat_batches', body.batches);
+  const batchesResponse = await apiJson<{ batches: StockBatch[] }>(`${HASANAT_API}/batches`);
+  saveCollection('hasanat_batches', batchesResponse.batches);
   return getCollection<StockBatch>('hasanat_batches', []);
 }
 
 async function fetchDistributions(): Promise<Distribution[]> {
-  const body = await apiJson<{ distributions: Distribution[] }>(`${HASANAT_API}/distributions`);
-  saveCollection('hasanat_distributions', body.distributions);
+  const distributionsResponse = await apiJson<{ distributions: Distribution[] }>(`${HASANAT_API}/distributions`);
+  saveCollection('hasanat_distributions', distributionsResponse.distributions);
   return getCollection<Distribution>('hasanat_distributions', []);
 }
 
 async function fetchRedemptions(): Promise<Redemption[]> {
-  const body = await apiJson<{ redemptions: Redemption[] }>(`${HASANAT_API}/redemptions`);
-  saveCollection('hasanat_redemptions', body.redemptions);
+  const redemptionsResponse = await apiJson<{ redemptions: Redemption[] }>(`${HASANAT_API}/redemptions`);
+  saveCollection('hasanat_redemptions', redemptionsResponse.redemptions);
   return getCollection<Redemption>('hasanat_redemptions', []);
 }
 
@@ -142,8 +142,8 @@ export function useHasanatMetrics() {
   return useQuery({
     queryKey: HASANAT_METRICS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ metrics: HasanatCommandMetricsSnapshot }>(`${HASANAT_API}/metrics`);
-      return body.metrics;
+      const metricsResponse = await apiJson<{ metrics: HasanatCommandMetricsSnapshot }>(`${HASANAT_API}/metrics`);
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -218,8 +218,8 @@ export function useHasanatDistributionColumnPreferences() {
   return useQuery({
     queryKey: HASANAT_DISTRIBUTION_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(`${HASANAT_API}/distributions/column-preferences`);
-      return readModuleColumnPreferences(body);
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${HASANAT_API}/distributions/column-preferences`);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -245,8 +245,8 @@ export function useHasanatRedemptionColumnPreferences() {
   return useQuery({
     queryKey: HASANAT_REDEMPTION_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(`${HASANAT_API}/redemptions/column-preferences`);
-      return readModuleColumnPreferences(body);
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${HASANAT_API}/redemptions/column-preferences`);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,

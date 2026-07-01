@@ -28,9 +28,9 @@ export function runCsvDownloadJob(options: {
   try {
     triggerDownload(buildCsvContent(options.rows), options.filename);
     completeBackgroundJob(jobId);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Export failed';
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Export failed';
     failBackgroundJob(jobId, message);
-    throw err;
+    throw error;
   }
 }

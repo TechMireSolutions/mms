@@ -67,8 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (response.ok) {
         setAppPublicSettings({ id: 'app-online', public_settings: {} });
       }
-    } catch (err) {
-      console.warn('API server seems to be offline:', err);
+    } catch (error) {
+      console.warn('API server seems to be offline:', error);
     } finally {
       setIsLoadingPublicSettings(false);
     }

@@ -24,14 +24,14 @@ export const EXAMINATIONS_RESULTS_COLUMN_PREFS_QUERY_KEY = [
 const EXAMINATIONS_API = EXAMINATIONS_MODULE_CONTRACT.restBasePath;
 
 async function fetchExams(): Promise<Exam[]> {
-  const body = await apiJson<{ exams: Exam[] }>(`${EXAMINATIONS_API}/exams`);
-  saveCollection('exams', body.exams);
+  const examsResponse = await apiJson<{ exams: Exam[] }>(`${EXAMINATIONS_API}/exams`);
+  saveCollection('exams', examsResponse.exams);
   return getCollection<Exam>('exams', []);
 }
 
 async function fetchExamResults(): Promise<ExamResult[]> {
-  const body = await apiJson<{ results: ExamResult[] }>(`${EXAMINATIONS_API}/results`);
-  saveCollection('exam_results', body.results);
+  const resultsResponse = await apiJson<{ results: ExamResult[] }>(`${EXAMINATIONS_API}/results`);
+  saveCollection('exam_results', resultsResponse.results);
   return getCollection<ExamResult>('exam_results', []);
 }
 
@@ -84,8 +84,8 @@ export function useExaminationsMetrics() {
   return useQuery({
     queryKey: EXAMINATIONS_METRICS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ metrics: ExaminationsCommandMetricsSnapshot }>(`${EXAMINATIONS_API}/metrics`);
-      return body.metrics;
+      const metricsResponse = await apiJson<{ metrics: ExaminationsCommandMetricsSnapshot }>(`${EXAMINATIONS_API}/metrics`);
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -132,8 +132,8 @@ export function useExaminationExamColumnPreferences() {
   return useQuery({
     queryKey: EXAMINATIONS_EXAM_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(`${EXAMINATIONS_API}/exams/column-preferences`);
-      return readModuleColumnPreferences(body);
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${EXAMINATIONS_API}/exams/column-preferences`);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -159,8 +159,8 @@ export function useExaminationResultsColumnPreferences() {
   return useQuery({
     queryKey: EXAMINATIONS_RESULTS_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(`${EXAMINATIONS_API}/results/column-preferences`);
-      return readModuleColumnPreferences(body);
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${EXAMINATIONS_API}/results/column-preferences`);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,

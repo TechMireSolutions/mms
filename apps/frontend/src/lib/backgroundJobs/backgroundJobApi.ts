@@ -2,16 +2,16 @@ import { BACKGROUND_JOBS_API_PATH, type BackgroundJobRecord } from '@mms/shared'
 import { apiFetch, apiJson } from '@/lib/apiClient';
 
 export async function fetchBackgroundJobs(): Promise<BackgroundJobRecord[]> {
-  const body = await apiJson<{ jobs: BackgroundJobRecord[] }>(BACKGROUND_JOBS_API_PATH);
-  return body.jobs;
+  const jobsResponse = await apiJson<{ jobs: BackgroundJobRecord[] }>(BACKGROUND_JOBS_API_PATH);
+  return jobsResponse.jobs;
 }
 
 export async function upsertBackgroundJobRemote(job: BackgroundJobRecord): Promise<BackgroundJobRecord> {
-  const body = await apiJson<{ job: BackgroundJobRecord }>(`${BACKGROUND_JOBS_API_PATH}/${job.id}`, {
+  const jobResponse = await apiJson<{ job: BackgroundJobRecord }>(`${BACKGROUND_JOBS_API_PATH}/${job.id}`, {
     method: 'PUT',
     body: JSON.stringify(job),
   });
-  return body.job;
+  return jobResponse.job;
 }
 
 export async function dismissBackgroundJobRemote(jobId: string): Promise<void> {

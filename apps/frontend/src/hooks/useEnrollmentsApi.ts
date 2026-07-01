@@ -17,8 +17,8 @@ export const ENROLLMENTS_COLUMN_PREFS_QUERY_KEY = [
 const ENROLLMENTS_API = ENROLLMENTS_MODULE_CONTRACT.restBasePath;
 
 async function fetchEnrollments(): Promise<Enrollment[]> {
-  const body = await apiJson<{ enrollments: Enrollment[] }>(ENROLLMENTS_API);
-  saveCollection('enrollments', body.enrollments);
+  const enrollmentsResponse = await apiJson<{ enrollments: Enrollment[] }>(ENROLLMENTS_API);
+  saveCollection('enrollments', enrollmentsResponse.enrollments);
   return getCollection<Enrollment>('enrollments', []);
 }
 
@@ -49,8 +49,8 @@ export function useEnrollmentsMetrics() {
   return useQuery({
     queryKey: ENROLLMENTS_METRICS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ metrics: EnrollmentsCommandMetricsSnapshot }>(`${ENROLLMENTS_API}/metrics`);
-      return body.metrics;
+      const metricsResponse = await apiJson<{ metrics: EnrollmentsCommandMetricsSnapshot }>(`${ENROLLMENTS_API}/metrics`);
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -62,10 +62,10 @@ export function useEnrollmentColumnPreferences() {
   return useQuery({
     queryKey: ENROLLMENTS_COLUMN_PREFS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<ModuleColumnPreferencesResponse>(
+      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(
         `${ENROLLMENTS_API}/column-preferences`,
       );
-      return readModuleColumnPreferences(body);
+      return readModuleColumnPreferences(preferencesResponse);
     },
     enabled: isAuthenticated,
     staleTime: 60_000,

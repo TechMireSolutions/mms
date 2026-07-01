@@ -41,7 +41,7 @@ interface ConfirmData {
 interface EnrollmentConfirmationProps {
   student: Partial<Student>;
   session: StudentSession;
-  onConfirm: (data: ConfirmData) => void;
+  onConfirm: (confirmationData: ConfirmData) => void;
   onBack: () => void;
 }
 
@@ -78,8 +78,8 @@ export function EnrollmentConfirmation({ student, session, onConfirm, onBack }: 
       setConfirmed(true);
       setSubmitting(false);
       setTimeout(() => onConfirm({ student, session, discountType, netFee, total }), 1600);
-    } catch (err) {
-      console.error("Failed to confirm enrollment:", err);
+    } catch (error) {
+      console.error("Failed to confirm enrollment:", error);
       setSubmitting(false);
     }
   };

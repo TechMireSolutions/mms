@@ -19,10 +19,10 @@ export function usePersistedTabState<T extends string>(
   });
 
   const setPersisted = useCallback(
-    (next: T) => {
-      setValue(next);
+    (tabValue: T) => {
+      setValue(tabValue);
       try {
-        sessionStorage.setItem(key, next);
+        sessionStorage.setItem(key, tabValue);
       } catch {
         /* sessionStorage unavailable */
       }

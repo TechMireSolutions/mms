@@ -82,8 +82,8 @@ export default function PlatformForgotPassword(): React.JSX.Element {
         setDevHint(t("platform.forgotDevResetHint", { code: result.devReset.code, resetId: result.devReset.resetId }));
         setResetId(result.devReset.resetId);
       }
-    } catch (err) {
-      setError(err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"));
+    } catch (error) {
+      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
     } finally {
       setLoading(false);
     }
@@ -119,8 +119,8 @@ export default function PlatformForgotPassword(): React.JSX.Element {
       });
       await checkPlatformAuth();
       navigate(ROUTES.home, { replace: true });
-    } catch (err) {
-      setError(err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"));
+    } catch (error) {
+      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
     } finally {
       setLoading(false);
     }
@@ -139,8 +139,8 @@ export default function PlatformForgotPassword(): React.JSX.Element {
         setDevHint(t("platform.forgotDevResetHint", { code: result.devReset.code, resetId: result.devReset.resetId }));
       }
       setResendCycle((value) => value + 1);
-    } catch (err) {
-      setError(err instanceof ApiError ? mapPlatformAuthError(err, t) : t("errors.boundary.description"));
+    } catch (error) {
+      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
     } finally {
       setLoading(false);
     }

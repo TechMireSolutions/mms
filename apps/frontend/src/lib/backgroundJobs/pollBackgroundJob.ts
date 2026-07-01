@@ -12,8 +12,8 @@ function sleep(ms: number): Promise<void> {
 
 export async function fetchBackgroundJob(jobId: string): Promise<BackgroundJobRecord | null> {
   try {
-    const body = await apiJson<{ job: BackgroundJobRecord }>(`${BACKGROUND_JOBS_API_PATH}/${jobId}`);
-    return body.job;
+    const jobResponse = await apiJson<{ job: BackgroundJobRecord }>(`${BACKGROUND_JOBS_API_PATH}/${jobId}`);
+    return jobResponse.job;
   } catch {
     return null;
   }

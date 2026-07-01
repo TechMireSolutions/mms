@@ -25,8 +25,8 @@ export function useFinanceMetrics() {
   return useQuery({
     queryKey: FINANCE_METRICS_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ metrics: FinanceCommandMetricsSnapshot }>(`${FINANCE_API}/metrics`);
-      return body.metrics;
+      const metricsResponse = await apiJson<{ metrics: FinanceCommandMetricsSnapshot }>(`${FINANCE_API}/metrics`);
+      return metricsResponse.metrics;
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -38,8 +38,8 @@ export function useFinanceInvoiceColumnPreferences() {
   return useQuery({
     queryKey: FINANCE_INVOICE_COLUMN_PREFERENCES_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ preferences: ModuleColumnPreference[] }>(`${FINANCE_API}/invoices/column-preferences`);
-      return body.preferences;
+      const preferencesResponse = await apiJson<{ preferences: ModuleColumnPreference[] }>(`${FINANCE_API}/invoices/column-preferences`);
+      return preferencesResponse.preferences;
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -65,8 +65,8 @@ export function useFinancePaymentColumnPreferences() {
   return useQuery({
     queryKey: FINANCE_PAYMENT_COLUMN_PREFERENCES_QUERY_KEY,
     queryFn: async () => {
-      const body = await apiJson<{ preferences: ModuleColumnPreference[] }>(`${FINANCE_API}/payments/column-preferences`);
-      return body.preferences;
+      const preferencesResponse = await apiJson<{ preferences: ModuleColumnPreference[] }>(`${FINANCE_API}/payments/column-preferences`);
+      return preferencesResponse.preferences;
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
