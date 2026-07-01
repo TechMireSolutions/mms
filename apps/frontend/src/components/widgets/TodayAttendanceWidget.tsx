@@ -51,23 +51,23 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
   const sessions = useSessionsCollection();
 
   const allClasses = useMemo(() => {
-    return sessions.flatMap((s) =>
-      (s.classes || []).map((c) => ({ ...c, sessionId: s.id, sessionName: s.name }))
+    return sessions.flatMap((session) =>
+      (session.classes || []).map((classInfo) => ({ ...classInfo, sessionId: session.id, sessionName: session.name }))
     );
   }, [sessions]);
 
   const today = new Date().toISOString().slice(0, 10);
 
   const todayRecords = useMemo(() =>
-    attendanceRecords.filter((r) => r.date === today),
+    attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === today),
     [attendanceRecords, today]
   );
 
   // Use most recent date if no records today (demo data)
   const displayRecords = useMemo(() => {
     if (todayRecords.length > 0) return todayRecords;
-    const dates = Array.from(new Set(attendanceRecords.map((r) => r.date))).sort().reverse();
-    return dates.length > 0 ? attendanceRecords.filter((r) => r.date === dates[0]) : [];
+    const dates = Array.from(new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date))).sort().reverse();
+    return dates.length > 0 ? attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === dates[0]) : [];
   }, [todayRecords, attendanceRecords]);
 
   const displayDate = displayRecords.length > 0 ? displayRecords[0].date : today;
@@ -75,8 +75,8 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
 
   const stats = useMemo(() => {
     const counts: Record<string, number> = { total: displayRecords.length };
-    displayRecords.forEach((r) => {
-      counts[r.status] = (counts[r.status] || 0) + 1;
+    displayRecords.forEach((attendanceRecord) => {
+      counts[attendanceRecord.status] = (counts[attendanceRecord.status] || 0) + 1;
     });
     return counts;
   }, [displayRecords]);
@@ -85,21 +85,22 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
 
   // Per-class breakdown
   const classBreakdown = useMemo(() => {
-    const map: Record<string, Record<string, number>> = {};
-    displayRecords.forEach((r) => {
-      if (!map[r.classId]) map[r.classId] = { total: 0 };
-      map[r.classId][r.status] = (map[r.classId][r.status] || 0) + 1;
-      map[r.classId].total++;
+    const attendanceByClassId: Record<string, Record<string, number>> = {};
+    displayRecords.forEach((attendanceRecord) => {
+      if (!attendanceByClassId[attendanceRecord.classId]) attendanceByClassId[attendanceRecord.classId] = { total: 0 };
+      attendanceByClassId[attendanceRecord.classId][attendanceRecord.status] =
+        (attendanceByClassId[attendanceRecord.classId][attendanceRecord.status] || 0) + 1;
+      attendanceByClassId[attendanceRecord.classId].total++;
     });
-    return Object.entries(map).map(([classId, s]) => ({
+    return Object.entries(attendanceByClassId).map(([classId, statusCounts]) => ({
       classId,
-      name: allClasses.find((c) => c.id === classId)?.name || classId,
-      present: s.present || 0,
-      absent: s.absent || 0,
-      late: s.late || 0,
-      excused: s.excused || 0,
-      total: s.total,
-      rate: s.total ? Math.round((((s.present || 0) + (s.late || 0)) / s.total) * 100) : 0,
+      name: allClasses.find((classInfo) => classInfo.id === classId)?.name || classId,
+      present: statusCounts.present || 0,
+      absent: statusCounts.absent || 0,
+      late: statusCounts.late || 0,
+      excused: statusCounts.excused || 0,
+      total: statusCounts.total,
+      rate: statusCounts.total ? Math.round((((statusCounts.present || 0) + (statusCounts.late || 0)) / statusCounts.total) * 100) : 0,
     })) as ClassBreakdown[];
   }, [displayRecords, allClasses]);
 
@@ -177,14 +178,14 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
             {/* Class breakdown */}
             <div className="space-y-2">
               <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">By Class</h3>
-              {classBreakdown.map((c) => (
-                <div key={c.classId} className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-foreground w-28 truncate">{c.name}</span>
+              {classBreakdown.map((classStats) => (
+                <div key={classStats.classId} className="flex items-center gap-3">
+                  <span className="text-xs font-semibold text-foreground w-28 truncate">{classStats.name}</span>
                   <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                    <div className={`h-full rounded-full ${c.rate >= 90 ? "bg-success" : c.rate >= 75 ? "bg-warning" : "bg-destructive"}`}
-                      style={{ width: `${c.rate}%` }} />
+                    <div className={`h-full rounded-full ${classStats.rate >= 90 ? "bg-success" : classStats.rate >= 75 ? "bg-warning" : "bg-destructive"}`}
+                      style={{ width: `${classStats.rate}%` }} />
                   </div>
-                  <span className={`text-xs font-bold w-10 text-right ${c.rate >= 90 ? "text-success" : c.rate >= 75 ? "text-warning" : "text-destructive"}`}>{c.rate}%</span>
+                  <span className={`text-xs font-bold w-10 text-right ${classStats.rate >= 90 ? "text-success" : classStats.rate >= 75 ? "text-warning" : "text-destructive"}`}>{classStats.rate}%</span>
                 </div>
               ))}
             </div>

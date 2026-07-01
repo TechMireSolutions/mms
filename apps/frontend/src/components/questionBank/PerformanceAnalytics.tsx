@@ -72,30 +72,30 @@ export function PerformanceAnalytics({
   const qbConfig = useQuestionBankConfig(questions);
 
   const studentStats = useMemo<StudentStatItem[]>(() => {
-    const map: Record<string, { name: string; class: string; scores: number[]; totalPts: number; maxPts: number }> = {};
-    results.forEach((r) => {
-      const test = tests.find((item) => item.id === r.testId);
+    const statsByStudentId: Record<string, { name: string; class: string; scores: number[]; totalPts: number; maxPts: number }> = {};
+    results.forEach((result) => {
+      const test = tests.find((item) => item.id === result.testId);
       if (!test) return;
       const totalMarks = testTotalMarks(test, questions) || 100;
-      const marksObtained = sumScores(r.scores);
-      const p = pct(marksObtained, totalMarks);
-      if (!map[r.studentId]) {
-        map[r.studentId] = {
-          name: r.studentName,
+      const marksObtained = sumScores(result.scores);
+      const percentageScore = pct(marksObtained, totalMarks);
+      if (!statsByStudentId[result.studentId]) {
+        statsByStudentId[result.studentId] = {
+          name: result.studentName,
           class: t("questionBank.analytics.classLabel"),
           scores: [],
           totalPts: 0,
           maxPts: 0,
         };
       }
-      map[r.studentId].scores.push(p);
-      map[r.studentId].totalPts += marksObtained;
-      map[r.studentId].maxPts += totalMarks;
+      statsByStudentId[result.studentId].scores.push(percentageScore);
+      statsByStudentId[result.studentId].totalPts += marksObtained;
+      statsByStudentId[result.studentId].maxPts += totalMarks;
     });
-    return Object.values(map)
+    return Object.values(statsByStudentId)
       .map((studentStat) => {
-        const avg = studentStat.scores.length > 0 ? Math.round(studentStat.scores.reduce((scoreTotal, score) => scoreTotal + score, 0) / studentStat.scores.length) : 0;
-        return { ...studentStat, avg, overall: pct(studentStat.totalPts, studentStat.maxPts) };
+        const averageScore = studentStat.scores.length > 0 ? Math.round(studentStat.scores.reduce((scoreTotal, score) => scoreTotal + score, 0) / studentStat.scores.length) : 0;
+        return { ...studentStat, avg: averageScore, overall: pct(studentStat.totalPts, studentStat.maxPts) };
       })
       .sort((a, b) => b.avg - a.avg);
   }, [tests, results, questions, t]);
@@ -120,23 +120,23 @@ export function PerformanceAnalytics({
         const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
         return { name: cat.name, icon: cat.icon, color: cat.color, accuracy, correct, total };
       })
-      .filter((c) => c.total > 0);
+      .filter((categoryResult) => categoryResult.total > 0);
   }, [categories, questions, results]);
 
   const weakAreas = catPerformance
-    .filter((c) => c.accuracy < QUESTION_ACCURACY_WEAK_THRESHOLD)
+    .filter((categoryResult) => categoryResult.accuracy < QUESTION_ACCURACY_WEAK_THRESHOLD)
     .sort((a, b) => a.accuracy - b.accuracy);
 
   const trendData = tests.map((test) => {
-    const tr = results.filter((r) => r.testId === test.id);
+    const testResults = results.filter((result) => result.testId === test.id);
     const totalMarks = testTotalMarks(test, questions) || 100;
-    const avg =
-      tr.length > 0
-        ? Math.round(tr.reduce((scoreTotal, result) => scoreTotal + pct(sumScores(result.scores), totalMarks), 0) / tr.length)
+    const averageScore =
+      testResults.length > 0
+        ? Math.round(testResults.reduce((scoreTotal, result) => scoreTotal + pct(sumScores(result.scores), totalMarks), 0) / testResults.length)
         : 0;
     return {
       name: test.name.length > 16 ? `${test.name.slice(0, 16)}…` : test.name,
-      avg,
+      avg: averageScore,
     };
   });
 
@@ -144,12 +144,12 @@ export function PerformanceAnalytics({
     const questionIds = questions.filter((question) => question.difficulty === key).map((question) => question.id);
     let correct = 0;
     let total = 0;
-    results.forEach((r) => {
-      questionIds.forEach((qid) => {
-        if (r.answers?.[qid] !== undefined) {
-          const question = questions.find((candidateQuestion) => candidateQuestion.id === qid);
+    results.forEach((result) => {
+      questionIds.forEach((questionId) => {
+        if (result.answers?.[questionId] !== undefined) {
+          const question = questions.find((candidateQuestion) => candidateQuestion.id === questionId);
           total++;
-          if (r.answers[qid] === question?.answer) correct++;
+          if (result.answers[questionId] === question?.answer) correct++;
         }
       });
     });
@@ -159,7 +159,7 @@ export function PerformanceAnalytics({
     };
   });
 
-  const radarData = catPerformance.map((c) => ({ subject: `${c.icon} ${c.name}`, accuracy: c.accuracy }));
+  const radarData = catPerformance.map((categoryResult) => ({ subject: `${categoryResult.icon} ${categoryResult.name}`, accuracy: categoryResult.accuracy }));
 
   return (
     <div className="space-y-6">
@@ -175,17 +175,17 @@ export function PerformanceAnalytics({
             <h3 className="text-[13px] font-bold text-warning">{t("questionBank.analytics.weakAreas")}</h3>
           </div>
           <div className="flex flex-wrap gap-2.5" role="list">
-            {weakAreas.map((c) => (
+            {weakAreas.map((categoryResult) => (
               <div
-                key={c.name}
+                key={categoryResult.name}
                 className="flex items-center gap-1.5 rounded-lg border border-warning/30 bg-card px-2.5 py-1.5"
                 role="listitem"
               >
-                <span className="text-base" aria-hidden>{c.icon}</span>
+                <span className="text-base" aria-hidden>{categoryResult.icon}</span>
                 <div>
-                  <p className="text-[12px] font-bold text-warning">{c.name}</p>
+                  <p className="text-[12px] font-bold text-warning">{categoryResult.name}</p>
                   <p className="text-[10px] text-warning/90">
-                    {t("questionBank.analytics.accuracy", { percent: c.accuracy })}
+                    {t("questionBank.analytics.accuracy", { percent: categoryResult.accuracy })}
                   </p>
                 </div>
               </div>
@@ -280,31 +280,31 @@ export function PerformanceAnalytics({
           <h3 className="text-[13px] font-bold text-foreground">{t("questionBank.analytics.categoryBreakdown")}</h3>
         </div>
         <div className="divide-y divide-border/50" role="list">
-          {catPerformance.sort((a, b) => a.accuracy - b.accuracy).map((c) => (
-            <div key={c.name} className="flex items-center gap-4 px-4 py-3" role="listitem">
-              <span className="flex-shrink-0 text-xl" aria-hidden>{c.icon}</span>
+          {catPerformance.sort((a, b) => a.accuracy - b.accuracy).map((categoryResult) => (
+            <div key={categoryResult.name} className="flex items-center gap-4 px-4 py-3" role="listitem">
+              <span className="flex-shrink-0 text-xl" aria-hidden>{categoryResult.icon}</span>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center justify-between">
-                  <p className="text-[12px] font-semibold text-foreground">{c.name}</p>
-                  <span className={`text-[11px] font-bold ${questionAccuracyTextClass(c.accuracy)}`}>{c.accuracy}%</span>
+                  <p className="text-[12px] font-semibold text-foreground">{categoryResult.name}</p>
+                  <span className={`text-[11px] font-bold ${questionAccuracyTextClass(categoryResult.accuracy)}`}>{categoryResult.accuracy}%</span>
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
                   <div
-                    className={`h-full rounded-full transition-all ${questionAccuracyBarClass(c.accuracy)}`}
-                    style={{ width: `${c.accuracy}%` }}
+                    className={`h-full rounded-full transition-all ${questionAccuracyBarClass(categoryResult.accuracy)}`}
+                    style={{ width: `${categoryResult.accuracy}%` }}
                   />
                 </div>
                 <p className="mt-0.5 text-[10px] text-muted-foreground">
-                  {t("questionBank.analytics.correctRatio", { correct: c.correct, total: c.total })}
+                  {t("questionBank.analytics.correctRatio", { correct: categoryResult.correct, total: categoryResult.total })}
                 </p>
               </div>
-              {c.accuracy < QUESTION_ACCURACY_WEAK_THRESHOLD && (
+              {categoryResult.accuracy < QUESTION_ACCURACY_WEAK_THRESHOLD && (
                 <AlertTriangle
                   className="h-4 w-4 flex-shrink-0 text-warning"
                   aria-label={t("questionBank.analytics.lowPerformanceWarning")}
                 />
               )}
-              {c.accuracy >= QUESTION_ACCURACY_EXCELLENT_THRESHOLD && (
+              {categoryResult.accuracy >= QUESTION_ACCURACY_EXCELLENT_THRESHOLD && (
                 <Trophy
                   className="h-4 w-4 flex-shrink-0 text-warning"
                   aria-label={t("questionBank.analytics.highPerformanceAward")}

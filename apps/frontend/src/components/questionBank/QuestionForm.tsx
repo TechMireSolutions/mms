@@ -231,7 +231,7 @@ export function QuestionForm({
   }, [question, queryClient, defaultQuestionLanguage, config.orderedFields, config.enabledQuestionTypes, config.enabledDifficulties, config.categories, language, questionLanguageFieldEnabled]);
 
   const categoriesRequired = useMemo(
-    () => config.orderedFields.find((f) => f.id === 'categoryId')?.required ?? false,
+    () => config.orderedFields.find((field) => field.id === 'categoryId')?.required ?? false,
     [config.orderedFields]
   );
 
@@ -278,15 +278,15 @@ export function QuestionForm({
       }
     });
 
-    return z.object(shape).passthrough().superRefine((validationData: any, ctx) => {
-      const qType = validationData.type;
+    return z.object(shape).passthrough().superRefine((validationData: any, validationContext) => {
+      const questionType = validationData.type;
       
       // MCQ answer validation
-      if (qType === 'mcq') {
+      if (questionType === 'mcq') {
         const answerOptions = (validationData.options || []) as string[];
         const answer = validationData.answer;
         if (!answer || !answerOptions.includes(answer)) {
-          ctx.addIssue({
+          validationContext.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['answer'],
             message: requiredMsg('answer', tForm('questionBank.answer' as any)),
@@ -295,9 +295,9 @@ export function QuestionForm({
       }
 
       // True/False answer validation
-      if (qType === 'true_false') {
+      if (questionType === 'true_false') {
         if (!validationData.answer) {
-          ctx.addIssue({
+          validationContext.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['answer'],
             message: requiredMsg('answer', tForm('questionBank.answer' as any)),
@@ -306,17 +306,17 @@ export function QuestionForm({
       }
 
       // Fill in blank validation
-      if (qType === 'fill_blank') {
+      if (questionType === 'fill_blank') {
         const blankCount = countFillBlankMarkers(String(validationData.text ?? ''));
         const blanks = splitQuestionCompoundAnswer(String(validationData.answer ?? ''));
         if (blankCount < 1) {
-          ctx.addIssue({
+          validationContext.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['text'],
             message: tForm('questionBank.errorFillBlankMarkerMissing' as any),
           });
-        } else if (blanks.length < blankCount || blanks.some((b) => !b.trim())) {
-          ctx.addIssue({
+        } else if (blanks.length < blankCount || blanks.some((blankAnswer) => !blankAnswer.trim())) {
+          validationContext.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['answer'],
             message: tForm('questionBank.errorFillBlankAnswerRequired' as any),
@@ -325,11 +325,11 @@ export function QuestionForm({
       }
 
       // Matching validation
-      if (qType === 'matching') {
-        const lefts = ((validationData.options || []) as string[]).map((v) => String(v).trim()).filter(Boolean);
+      if (questionType === 'matching') {
+        const lefts = ((validationData.options || []) as string[]).map((optionValue) => String(optionValue).trim()).filter(Boolean);
         const rights = splitQuestionCompoundAnswer(String(validationData.answer ?? '')).filter(Boolean);
         if (lefts.length < 2 || rights.length < 2 || lefts.length !== rights.length) {
-          ctx.addIssue({
+          validationContext.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['answer'],
             message: tForm('questionBank.errorMatchingPairRequired' as any),
@@ -338,10 +338,10 @@ export function QuestionForm({
       }
 
       // Ordering validation
-      if (qType === 'ordering') {
-        const items = ((validationData.options || []) as string[]).map((v) => String(v).trim()).filter(Boolean);
+      if (questionType === 'ordering') {
+        const items = ((validationData.options || []) as string[]).map((optionValue) => String(optionValue).trim()).filter(Boolean);
         if (items.length < 2) {
-          ctx.addIssue({
+          validationContext.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['options'],
             message: tForm('questionBank.errorOrderingItemRequired' as any),
@@ -350,9 +350,9 @@ export function QuestionForm({
       }
 
       // Numeric validation
-      if (qType === 'numeric') {
+      if (questionType === 'numeric') {
         if (validationData.answer === undefined || validationData.answer === '' || Number.isNaN(Number(validationData.answer))) {
-          ctx.addIssue({
+          validationContext.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['answer'],
             message: tForm('questionBank.errorNumericAnswerRequired' as any),
@@ -364,7 +364,7 @@ export function QuestionForm({
       const citations = (validationData.sourceCitations || []) as any[];
       const sourceFields = config.orderedFields.filter((field) => isQuestionSourceFieldId(field.id));
       for (const entry of citations) {
-        const book = config.sourceBooks.find((b) => b.id === entry.bookId);
+        const book = config.sourceBooks.find((sourceBook) => sourceBook.id === entry.bookId);
         if (!book) continue;
         for (const fieldId of getBookCitationFieldIds(book)) {
           const field = sourceFields.find((sourceField) => sourceField.id === fieldId);
@@ -372,7 +372,7 @@ export function QuestionForm({
           const sourceKey = QUESTION_SOURCE_FIELD_TO_KEY[fieldId as QuestionSourceFieldId];
           const citationValue = entry.citation[sourceKey];
           if (citationValue === undefined || citationValue === '') {
-            ctx.addIssue({
+            validationContext.addIssue({
               code: z.ZodIssueCode.custom,
               path: ['sourceCitations'],
               message: requiredMsg(field.id, field.label),
@@ -545,7 +545,7 @@ export function QuestionForm({
     if (!field.enabled) return null;
 
     const value = questionValues[field.key] ?? getDefaultModuleFieldValue(field as any);
-    const fieldError = errors.find((e) => e.fieldId === field.key);
+    const fieldError = errors.find((validationError) => validationError.fieldId === field.key);
     return (
       <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
         <Field label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
@@ -563,7 +563,7 @@ export function QuestionForm({
   const renderSystemField = (field: FieldDefinition): React.ReactNode => {
     const requiredMark = field.required ? ' *' : '';
     const label = translateFieldLabel(field.key, field.label);
-    const fieldError = errors.find((e) => e.fieldId === field.key);
+    const fieldError = errors.find((validationError) => validationError.fieldId === field.key);
 
     if (field.key === 'text') {
       return (
@@ -574,7 +574,7 @@ export function QuestionForm({
               className={FORM_TEXTAREA}
               rows={3}
               value={(questionValues.text as string) || ''}
-              onChange={(e) => setValue('text', e.target.value, { shouldValidate: true, shouldDirty: true })}
+              onChange={(event) => setValue('text', event.target.value, { shouldValidate: true, shouldDirty: true })}
               placeholder={tForm('questionBank.questionTextPlaceholder')}
             />
           </Field>
@@ -604,9 +604,9 @@ export function QuestionForm({
                   setValue('text', tForm('questionBank.fillBlankTemplate'));
                 }
               }}
-              options={config.enabledQuestionTypes.map((k) => ({
-                value: k,
-                label: `${QUESTION_TYPE_ICONS[k]} ${typeLabel(k)}`,
+              options={config.enabledQuestionTypes.map((questionType) => ({
+                value: questionType,
+                label: `${QUESTION_TYPE_ICONS[questionType]} ${typeLabel(questionType)}`,
               }))}
             />
           </Field>
@@ -623,9 +623,9 @@ export function QuestionForm({
               className={FORM_SELECT}
               value={(questionValues.difficulty as string) || 'easy'}
               onChange={(selectedDifficulty: any) => setValue('difficulty', selectedDifficulty, { shouldValidate: true, shouldDirty: true })}
-              options={config.enabledDifficulties.map((k) => ({
-                value: k,
-                label: difficultyLabel(k),
+              options={config.enabledDifficulties.map((difficulty) => ({
+                value: difficulty,
+                label: difficultyLabel(difficulty),
               }))}
             />
           </Field>
@@ -655,7 +655,7 @@ export function QuestionForm({
 
     if (field.key === 'options' && questionValues.type === 'mcq') {
       const options = Array.isArray(questionValues.options) ? questionValues.options : ['', '', '', ''];
-      const optionsError = errors.find((e) => e.fieldId === 'options');
+      const optionsError = errors.find((validationError) => validationError.fieldId === 'options');
       return (
         <div key="options" className="sm:col-span-2">
           <span className={FORM_LABEL}>{label}{requiredMark}</span>
@@ -674,9 +674,9 @@ export function QuestionForm({
                   type="text"
                   className={FORM_INPUT}
                   value={optionValue as string}
-                  onChange={(e) => {
+                  onChange={(event) => {
                     const nextOptions = [...options];
-                    nextOptions[optionIndex] = e.target.value;
+                    nextOptions[optionIndex] = event.target.value;
                     setValue('options', nextOptions, { shouldValidate: true, shouldDirty: true });
                   }}
                   placeholder={tForm('questionBank.optionN', { n: optionIndex + 1 })}
@@ -692,27 +692,27 @@ export function QuestionForm({
     if (field.key === 'answer' && questionValues.type === 'true_false') {
       const trueLabel = tForm('questionBank.true');
       const falseLabel = tForm('questionBank.false');
-      const ansError = errors.find((e) => e.fieldId === 'answer');
+      const answerError = errors.find((validationError) => validationError.fieldId === 'answer');
       return (
         <div key="answer" className="sm:col-span-2">
           <span className={FORM_LABEL}>{label}{requiredMark}</span>
           <div className="flex gap-3 mt-1.5">
-            {[trueLabel, falseLabel].map((v) => (
+            {[trueLabel, falseLabel].map((answerValue) => (
               <Button
-                key={v}
+                key={answerValue}
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setValue('answer', v, { shouldValidate: true, shouldDirty: true });
+                  setValue('answer', answerValue, { shouldValidate: true, shouldDirty: true });
                   setValue('options', [trueLabel, falseLabel]);
                 }}
-                className={`flex-1 rounded-lg border py-2 text-sm font-medium ${questionValues.answer === v ? 'border-primary bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                className={`flex-1 rounded-lg border py-2 text-sm font-medium ${questionValues.answer === answerValue ? 'border-primary bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
               >
-                {v}
+                {answerValue}
               </Button>
             ))}
           </div>
-          {ansError && <p className="text-[10px] text-destructive mt-1 font-medium">{ansError.message}</p>}
+          {answerError && <p className="text-[10px] text-destructive mt-1 font-medium">{answerError.message}</p>}
         </div>
       );
     }
@@ -726,7 +726,7 @@ export function QuestionForm({
               className={FORM_TEXTAREA}
               rows={2}
               value={(questionValues.answer as string) || ''}
-              onChange={(e) => setValue('answer', e.target.value, { shouldValidate: true, shouldDirty: true })}
+              onChange={(event) => setValue('answer', event.target.value, { shouldValidate: true, shouldDirty: true })}
               placeholder={tForm('questionBank.modelAnswerPlaceholder')}
             />
           </Field>
@@ -749,8 +749,8 @@ export function QuestionForm({
       const categoriesEnabled = config.isFieldEnabled('categoryId');
       const difficultyEnabled = config.isFieldEnabled('difficulty');
       const questionLanguageEnabled = config.isFieldEnabled('questionLanguage');
-      const qLangField = fieldsByTab.categories.find((f) => f.key === 'questionLanguage');
-      const diffField = fieldsByTab.categories.find((f) => f.key === 'difficulty');
+      const questionLanguageField = fieldsByTab.categories.find((field) => field.key === 'questionLanguage');
+      const difficultyField = fieldsByTab.categories.find((field) => field.key === 'difficulty');
 
       if (!categoriesEnabled && !difficultyEnabled && !questionLanguageEnabled) {
         return <p className="text-sm text-muted-foreground">{tForm('questionBank.categoriesDisabledHint' as any)}</p>;
@@ -758,8 +758,8 @@ export function QuestionForm({
       return (
         <div className="space-y-5 text-left">
           <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
-            {questionLanguageEnabled && qLangField ? renderField(qLangField) : null}
-            {difficultyEnabled && diffField ? renderField(diffField) : null}
+            {questionLanguageEnabled && questionLanguageField ? renderField(questionLanguageField) : null}
+            {difficultyEnabled && difficultyField ? renderField(difficultyField) : null}
             {categoriesEnabled ? (
               <CategorySelector
                 multiple
@@ -783,7 +783,7 @@ export function QuestionForm({
       const sourceFields = config.orderedFields.filter((field) => isQuestionSourceFieldId(field.id));
       const availableSourceFieldIds = sourceFields
         .map((field) => field.id)
-        .filter((id): id is QuestionSourceFieldId => isQuestionSourceFieldId(id));
+        .filter((fieldId): fieldId is QuestionSourceFieldId => isQuestionSourceFieldId(fieldId));
 
       return (
         <div className="space-y-5 text-left">

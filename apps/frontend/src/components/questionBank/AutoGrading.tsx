@@ -32,12 +32,12 @@ interface GradeResult {
   status: string;
 }
 
-function grade(p: number): GradeResult {
-  if (p >= 90) return { label: "A+", status: "excellent" };
-  if (p >= 80) return { label: "A", status: "excellent" };
-  if (p >= 70) return { label: "B", status: "good" };
-  if (p >= 60) return { label: "C", status: "warning" };
-  if (p >= 50) return { label: "D", status: "warning" };
+function grade(percentageScore: number): GradeResult {
+  if (percentageScore >= 90) return { label: "A+", status: "excellent" };
+  if (percentageScore >= 80) return { label: "A", status: "excellent" };
+  if (percentageScore >= 70) return { label: "B", status: "good" };
+  if (percentageScore >= 60) return { label: "C", status: "warning" };
+  if (percentageScore >= 50) return { label: "D", status: "warning" };
   return { label: "F", status: "failed" };
 }
 
@@ -59,8 +59,8 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
   const [open, setOpen] = useState(false);
   const totalMarks = testTotalMarks(test, questions) || 100;
   const marksObtained = sumScores(result.scores);
-  const p = pct(marksObtained, totalMarks);
-  const g = grade(p);
+  const percentageScore = pct(marksObtained, totalMarks);
+  const gradeLabel = grade(percentageScore);
 
   return (
     <div className="border-b border-border/50 last:border-0">
@@ -74,18 +74,18 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground">
-            {result.studentName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+            {result.studentName.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2)}
           </div>
           <p className="text-[13px] font-semibold text-foreground m-0">{result.studentName}</p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-4">
           <div className="text-right">
             <p className="text-[13px] font-bold text-foreground m-0">{marksObtained}/{totalMarks}</p>
-            <p className="text-[10px] text-muted-foreground m-0">{p}%</p>
+            <p className="text-[10px] text-muted-foreground m-0">{percentageScore}%</p>
           </div>
           <StatusBadge
-            status={g.status}
-            config={{ [g.status]: { ...GRADE_BADGE_CONFIG[g.status], label: g.label } }}
+            status={gradeLabel.status}
+            config={{ [gradeLabel.status]: { ...GRADE_BADGE_CONFIG[gradeLabel.status], label: gradeLabel.label } }}
           />
           {open ? (
             <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
@@ -179,17 +179,17 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
   const { t } = useTranslation();
   const [selectedTest, setSelectedTest] = useState<string>(tests[0]?.id || "");
   const test = tests.find((item) => item.id === selectedTest);
-  const testResults = results.filter((r) => r.testId === selectedTest);
+  const testResults = results.filter((result) => result.testId === selectedTest);
 
   const stats = useMemo<StatsSummary | null>(() => {
     if (!test || testResults.length === 0) return null;
     const totalMarks = testTotalMarks(test, questions) || 100;
-    const avg = Math.round(
+    const averageScore = Math.round(
       testResults.reduce((scoreTotal, result) => scoreTotal + pct(sumScores(result.scores), totalMarks), 0) / testResults.length,
     );
-    const highest = Math.max(...testResults.map((r) => sumScores(r.scores)));
-    const lowest = Math.min(...testResults.map((r) => sumScores(r.scores)));
-    return { avg, highest, lowest };
+    const highest = Math.max(...testResults.map((result) => sumScores(result.scores)));
+    const lowest = Math.min(...testResults.map((result) => sumScores(result.scores)));
+    return { avg: averageScore, highest, lowest };
   }, [test, testResults, questions]);
 
   return (
@@ -201,7 +201,7 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("questionBank.grading.selectTestAria")}>
           {tests.map((item) => {
             const isSelected = selectedTest === item.id;
-            const count = results.filter((r) => r.testId === item.id).length;
+            const count = results.filter((result) => result.testId === item.id).length;
             return (
               <Button
                 key={item.id}
@@ -270,8 +270,8 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
               <div role="list">
                 {testResults
                   .sort((a, b) => sumScores(b.scores) - sumScores(a.scores))
-                  .map((r) => (
-                    <ResultRow key={r.id} result={r} test={test} questions={questions} />
+                  .map((result) => (
+                    <ResultRow key={result.id} result={result} test={test} questions={questions} />
                   ))}
               </div>
             )}
