@@ -324,7 +324,14 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
  * drawer read them directly), but must never be re-rendered as form inputs.
  * `sanitizeConfig` strips these from any persisted field config.
  */
-export const REMOVED_FORM_FIELD_KEYS: readonly string[] = ["countryCode"];
+export const REMOVED_FORM_FIELD_KEYS: readonly string[] = [
+  "countryCode",
+  "lifecycleStage",
+  "rating",
+  "notes",
+  "occupation",
+  "communicationPreference"
+];
 
 export const DEFAULT_PAGE_TABS: TabDefinition[] = [
   { key: "work",    label: DEFAULT_MODULE_TIER_TAB_LABELS.work,    enabled: true, order: 0, isSystem: true },

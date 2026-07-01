@@ -166,103 +166,103 @@ export function useModuleFieldsEditor({
   };
 
   const toggleTabEnabled = (id: string): void => {
-    setEnabledTabs((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-        setRequiredTabs((r) => {
-          const nr = new Set(r);
-          nr.delete(id);
-          return nr;
+    setEnabledTabs((currentEnabledTabs) => {
+      const updatedEnabledTabs = new Set(currentEnabledTabs);
+      if (updatedEnabledTabs.has(id)) {
+        updatedEnabledTabs.delete(id);
+        setRequiredTabs((currentRequiredTabs) => {
+          const updatedRequiredTabs = new Set(currentRequiredTabs);
+          updatedRequiredTabs.delete(id);
+          return updatedRequiredTabs;
         });
       } else {
-        next.add(id);
+        updatedEnabledTabs.add(id);
       }
-      return next;
+      return updatedEnabledTabs;
     });
   };
 
   const toggleTabRequired = (id: string): void => {
-    setRequiredTabs((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+    setRequiredTabs((currentRequiredTabs) => {
+      const updatedRequiredTabs = new Set(currentRequiredTabs);
+      if (updatedRequiredTabs.has(id)) updatedRequiredTabs.delete(id);
+      else updatedRequiredTabs.add(id);
+      return updatedRequiredTabs;
     });
   };
 
   const toggleFieldEnabled = (tabId: string, fieldId: string) => {
-    setTabFieldEnabled((prev) => {
-      const updated = new Set(prev[tabId]);
-      if (updated.has(fieldId)) {
-        updated.delete(fieldId);
+    setTabFieldEnabled((currentEnabledFields) => {
+      const updatedFieldIds = new Set(currentEnabledFields[tabId]);
+      if (updatedFieldIds.has(fieldId)) {
+        updatedFieldIds.delete(fieldId);
         // Force-disable requirement if disabled
-        setTabFieldRequired((r) => {
-          const nextReq = new Set(r[tabId]);
-          nextReq.delete(fieldId);
-          return { ...r, [tabId]: nextReq };
+        setTabFieldRequired((currentRequiredFields) => {
+          const updatedRequiredFieldIds = new Set(currentRequiredFields[tabId]);
+          updatedRequiredFieldIds.delete(fieldId);
+          return { ...currentRequiredFields, [tabId]: updatedRequiredFieldIds };
         });
       } else {
-        updated.add(fieldId);
+        updatedFieldIds.add(fieldId);
       }
-      return { ...prev, [tabId]: updated };
+      return { ...currentEnabledFields, [tabId]: updatedFieldIds };
     });
   };
 
   const toggleFieldRequired = (tabId: string, fieldId: string) => {
-    setTabFieldRequired((prev) => {
-      const updated = new Set(prev[tabId]);
-      if (updated.has(fieldId)) {
-        updated.delete(fieldId);
+    setTabFieldRequired((currentRequiredFields) => {
+      const updatedFieldIds = new Set(currentRequiredFields[tabId]);
+      if (updatedFieldIds.has(fieldId)) {
+        updatedFieldIds.delete(fieldId);
       } else {
-        updated.add(fieldId);
+        updatedFieldIds.add(fieldId);
       }
-      return { ...prev, [tabId]: updated };
+      return { ...currentRequiredFields, [tabId]: updatedFieldIds };
     });
   };
 
   const toggleFieldUnique = (tabId: string, fieldId: string) => {
-    setTabFieldUnique((prev) => {
-      const updated = new Set(prev[tabId] || []);
-      if (updated.has(fieldId)) {
-        updated.delete(fieldId);
+    setTabFieldUnique((currentUniqueFields) => {
+      const updatedFieldIds = new Set(currentUniqueFields[tabId] || []);
+      if (updatedFieldIds.has(fieldId)) {
+        updatedFieldIds.delete(fieldId);
       } else {
-        updated.add(fieldId);
+        updatedFieldIds.add(fieldId);
       }
-      return { ...prev, [tabId]: updated };
+      return { ...currentUniqueFields, [tabId]: updatedFieldIds };
     });
   };
 
   const handleReorder = (tabId: string, reorderedFields: FieldDefinition[]) => {
-    setTabFieldOrder((prev) => ({ ...prev, [tabId]: reorderedFields.map((field) => field.key) }));
+    setTabFieldOrder((currentFieldOrder) => ({ ...currentFieldOrder, [tabId]: reorderedFields.map((field) => field.key) }));
   };
 
   const handleCustomFieldsChange = (tabId: string, newFields: CustomFieldConfig[]): void => {
     const newKeys = newFields.map((field) => field.key);
-    setTabFieldOrder((prev) => ({
-      ...prev,
-      [tabId]: syncOrder(prev[tabId] || [], newKeys),
+    setTabFieldOrder((currentFieldOrder) => ({
+      ...currentFieldOrder,
+      [tabId]: syncOrder(currentFieldOrder[tabId] || [], newKeys),
     }));
-    setTabFields((prev) => ({ ...prev, [tabId]: newFields as unknown as FieldDefinition[] }));
+    setTabFields((currentTabFields) => ({ ...currentTabFields, [tabId]: newFields as unknown as FieldDefinition[] }));
   };
 
   const handleEditField = (tabId: string, updatedField: FieldDefinition) => {
-    setTabFields((prev) => ({
-      ...prev,
-      [tabId]: safeArray<FieldDefinition>(prev[tabId]).map((field) =>
+    setTabFields((currentTabFields) => ({
+      ...currentTabFields,
+      [tabId]: safeArray<FieldDefinition>(currentTabFields[tabId]).map((field) =>
         field.key === updatedField.key ? updatedField : field
       ),
     }));
   };
 
   const handleDeleteField = (tabId: string, fieldId: string) => {
-    setTabFields((prev) => ({
-      ...prev,
-      [tabId]: safeArray<FieldDefinition>(prev[tabId]).filter((field) => field.key !== fieldId),
+    setTabFields((currentTabFields) => ({
+      ...currentTabFields,
+      [tabId]: safeArray<FieldDefinition>(currentTabFields[tabId]).filter((field) => field.key !== fieldId),
     }));
-    setTabFieldOrder((prev) => ({
-      ...prev,
-      [tabId]: safeArray<string>(prev[tabId]).filter((id) => id !== fieldId),
+    setTabFieldOrder((currentFieldOrder) => ({
+      ...currentFieldOrder,
+      [tabId]: safeArray<string>(currentFieldOrder[tabId]).filter((id) => id !== fieldId),
     }));
   };
 
@@ -278,40 +278,40 @@ export function useModuleFieldsEditor({
       isSystem: false,
     };
 
-    setFormTabs((prev) => [...prev, newTab]);
-    setEnabledTabs((prev) => {
-      const next = new Set(prev);
-      next.add(key);
-      return next;
+    setFormTabs((currentTabs) => [...currentTabs, newTab]);
+    setEnabledTabs((currentEnabledTabs) => {
+      const updatedEnabledTabs = new Set(currentEnabledTabs);
+      updatedEnabledTabs.add(key);
+      return updatedEnabledTabs;
     });
 
-    setTabFields((prev) => ({ ...prev, [key]: [] }));
-    setTabFieldEnabled((prev) => ({ ...prev, [key]: new Set() }));
-    setTabFieldRequired((prev) => ({ ...prev, [key]: new Set() }));
-    setTabFieldUnique((prev) => ({ ...prev, [key]: new Set() }));
-    setTabFieldDefaultValues((prev) => ({ ...prev, [key]: {} }));
-    setTabFieldPermissions((prev) => ({ ...prev, [key]: {} }));
-    setTabFieldOrder((prev) => ({ ...prev, [key]: [] }));
+    setTabFields((currentTabFields) => ({ ...currentTabFields, [key]: [] }));
+    setTabFieldEnabled((currentEnabledFields) => ({ ...currentEnabledFields, [key]: new Set() }));
+    setTabFieldRequired((currentRequiredFields) => ({ ...currentRequiredFields, [key]: new Set() }));
+    setTabFieldUnique((currentUniqueFields) => ({ ...currentUniqueFields, [key]: new Set() }));
+    setTabFieldDefaultValues((currentDefaultValues) => ({ ...currentDefaultValues, [key]: {} }));
+    setTabFieldPermissions((currentPermissions) => ({ ...currentPermissions, [key]: {} }));
+    setTabFieldOrder((currentFieldOrder) => ({ ...currentFieldOrder, [key]: [] }));
   };
 
   const handleDeleteTab = (key: string) => {
-    setFormTabs((prev) => prev.filter((tab) => tab.key !== key));
-    setEnabledTabs((prev) => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
+    setFormTabs((currentTabs) => currentTabs.filter((tab) => tab.key !== key));
+    setEnabledTabs((currentEnabledTabs) => {
+      const updatedEnabledTabs = new Set(currentEnabledTabs);
+      updatedEnabledTabs.delete(key);
+      return updatedEnabledTabs;
     });
-    setRequiredTabs((prev) => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
+    setRequiredTabs((currentRequiredTabs) => {
+      const updatedRequiredTabs = new Set(currentRequiredTabs);
+      updatedRequiredTabs.delete(key);
+      return updatedRequiredTabs;
     });
   };
 
   const handleRenameTab = (key: string, newLabel: string) => {
     if (!newLabel.trim()) return;
-    setFormTabs((prev) =>
-      prev.map((tab) => (tab.key === key ? { ...tab, label: newLabel.trim() } : tab))
+    setFormTabs((currentTabs) =>
+      currentTabs.map((tab) => (tab.key === key ? { ...tab, label: newLabel.trim() } : tab))
     );
   };
 

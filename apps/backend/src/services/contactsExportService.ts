@@ -16,7 +16,6 @@ const DEFAULT_EXPORT_COLUMNS: ContactExportColumn[] = [
   { id: 'name', label: 'Name' },
   { id: 'phone', label: 'Phone' },
   { id: 'email', label: 'Email' },
-  { id: 'lifecycleStage', label: 'Stage' },
   { id: 'gender', label: 'Gender' },
   { id: 'city', label: 'City' },
 ];

@@ -315,27 +315,27 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, genderOptions);
     setGendersState(genderOptions);
     setFieldConfigState((currentConfig) => {
-      const next = syncOptionsInConfig(currentConfig, "basic", "gender", genderOptions);
-      saveFieldConfig(next);
-      return next;
+      const updatedConfig = syncOptionsInConfig(currentConfig, "basic", "gender", genderOptions);
+      saveFieldConfig(updatedConfig);
+      return updatedConfig;
     });
   }, []);
   const updateSocialPlatforms = useCallback((socialPlatformOptions: string[]) => {
     saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms, socialPlatformOptions);
     setSocialPlatformsState(socialPlatformOptions);
     setFieldConfigState((currentConfig) => {
-      const next = syncOptionsInConfig(currentConfig, "socials", "platform", socialPlatformOptions);
-      saveFieldConfig(next);
-      return next;
+      const updatedConfig = syncOptionsInConfig(currentConfig, "socials", "platform", socialPlatformOptions);
+      saveFieldConfig(updatedConfig);
+      return updatedConfig;
     });
   }, []);
   const updateRelationships = useCallback((relationshipOptions: string[]) => {
     saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, relationshipOptions);
     setRelationshipsState(relationshipOptions);
     setFieldConfigState((currentConfig) => {
-      const next = syncOptionsInConfig(currentConfig, "emergency", "relationship", relationshipOptions);
-      saveFieldConfig(next);
-      return next;
+      const updatedConfig = syncOptionsInConfig(currentConfig, "emergency", "relationship", relationshipOptions);
+      saveFieldConfig(updatedConfig);
+      return updatedConfig;
     });
   }, []);
 
@@ -351,27 +351,27 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, phoneLabelOptions);
     setPhoneLabelsState(phoneLabelOptions);
     setFieldConfigState((currentConfig) => {
-      const next = syncOptionsInConfig(currentConfig, "phones", "label", phoneLabelOptions);
-      saveFieldConfig(next);
-      return next;
+      const updatedConfig = syncOptionsInConfig(currentConfig, "phones", "label", phoneLabelOptions);
+      saveFieldConfig(updatedConfig);
+      return updatedConfig;
     });
   }, []);
   const updateEmailLabels = useCallback((emailLabelOptions: string[]) => {
     saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, emailLabelOptions);
     setEmailLabelsState(emailLabelOptions);
     setFieldConfigState((currentConfig) => {
-      const next = syncOptionsInConfig(currentConfig, "emails", "label", emailLabelOptions);
-      saveFieldConfig(next);
-      return next;
+      const updatedConfig = syncOptionsInConfig(currentConfig, "emails", "label", emailLabelOptions);
+      saveFieldConfig(updatedConfig);
+      return updatedConfig;
     });
   }, []);
   const updateAddressLabels = useCallback((addressLabelOptions: string[]) => {
     saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.addressLabels, addressLabelOptions);
     setAddressLabelsState(addressLabelOptions);
     setFieldConfigState((currentConfig) => {
-      const next = syncOptionsInConfig(currentConfig, "addresses", "label", addressLabelOptions);
-      saveFieldConfig(next);
-      return next;
+      const updatedConfig = syncOptionsInConfig(currentConfig, "addresses", "label", addressLabelOptions);
+      saveFieldConfig(updatedConfig);
+      return updatedConfig;
     });
   }, []);
   const updateCountryCodes = useCallback((countryCodeOptions: Array<{ country: string; code: string }>) => {

@@ -66,14 +66,6 @@ export function resolveContactColumnField(
   if (columnKey === 'dob') {
     return isTabFieldEnabled('basic', 'dob') ? findField(fields, 'basic', 'dob') : null;
   }
-  if (columnKey === 'lifecycleStage') {
-    return isTabFieldEnabled('basic', 'lifecycleStage')
-      ? findField(fields, 'basic', 'lifecycleStage')
-      : null;
-  }
-  if (columnKey === 'rating') {
-    return isTabFieldEnabled('basic', 'rating') ? findField(fields, 'basic', 'rating') : null;
-  }
   if (columnKey === 'isSyed') {
     return isTabFieldEnabled('basic', 'isSyed') ? findField(fields, 'basic', 'isSyed') : null;
   }

@@ -1,63 +1,277 @@
 {
   "DEFAULT_COLLECTIONS": {
     "currencies": [
-      { "id": "cur1", "code": "PKR", "name": "Pakistani Rupee", "symbol": "₨" },
-      { "id": "cur2", "code": "USD", "name": "US Dollar", "symbol": "$" },
-      { "id": "cur3", "code": "GBP", "name": "British Pound", "symbol": "£" }
+      {
+        "id": "cur1",
+        "code": "PKR",
+        "name": "Pakistani Rupee",
+        "symbol": "₨"
+      },
+      {
+        "id": "cur2",
+        "code": "USD",
+        "name": "US Dollar",
+        "symbol": "$"
+      },
+      {
+        "id": "cur3",
+        "code": "GBP",
+        "name": "British Pound",
+        "symbol": "£"
+      }
     ],
-    "genders": ["male", "female"],
-    "studentStatuses": ["active", "inactive", "suspended"],
-    "studentGenderFilters": ["male", "female", "other"],
-    "teacherStatuses": ["active", "inactive", "on_leave"],
-    "teacherSpecializations": ["Hifz", "Qaidah", "Tajweed", "Islamic Studies", "Arabic", "General", "Other"],
-    "sessionStatuses": ["active", "upcoming", "completed", "cancelled"],
-    "sessionTypes": ["Hifz", "Qaidah", "Tajweed", "Islamic Studies", "Arabic", "Other"],
+    "genders": [
+      "male",
+      "female"
+    ],
+    "studentStatuses": [
+      "active",
+      "inactive",
+      "suspended"
+    ],
+    "studentGenderFilters": [
+      "male",
+      "female",
+      "other"
+    ],
+    "teacherStatuses": [
+      "active",
+      "inactive",
+      "on_leave"
+    ],
+    "teacherSpecializations": [
+      "Hifz",
+      "Qaidah",
+      "Tajweed",
+      "Islamic Studies",
+      "Arabic",
+      "General",
+      "Other"
+    ],
+    "sessionStatuses": [
+      "active",
+      "upcoming",
+      "completed",
+      "cancelled"
+    ],
+    "sessionTypes": [
+      "Hifz",
+      "Qaidah",
+      "Tajweed",
+      "Islamic Studies",
+      "Arabic",
+      "Other"
+    ],
     "attendanceStatuses": [
-      { "id": "present", "label": "Present", "short": "P", "color": "emerald", "bg": "bg-success/10", "text": "text-success", "border": "border-success/30", "dot": "bg-success" },
-      { "id": "absent",  "label": "Absent",  "short": "A", "color": "red",     "bg": "bg-destructive/10",     "text": "text-destructive",     "border": "border-destructive/30",     "dot": "bg-destructive" },
-      { "id": "late",    "label": "Late",    "short": "L", "color": "amber",   "bg": "bg-warning/10",   "text": "text-warning",   "border": "border-warning/30",   "dot": "bg-warning" },
-      { "id": "excused", "label": "Excused", "short": "E", "color": "blue",    "bg": "bg-info/10",    "text": "text-info",    "border": "border-info/30",    "dot": "bg-info" }
+      {
+        "id": "present",
+        "label": "Present",
+        "short": "P",
+        "color": "emerald",
+        "bg": "bg-success/10",
+        "text": "text-success",
+        "border": "border-success/30",
+        "dot": "bg-success"
+      },
+      {
+        "id": "absent",
+        "label": "Absent",
+        "short": "A",
+        "color": "red",
+        "bg": "bg-destructive/10",
+        "text": "text-destructive",
+        "border": "border-destructive/30",
+        "dot": "bg-destructive"
+      },
+      {
+        "id": "late",
+        "label": "Late",
+        "short": "L",
+        "color": "amber",
+        "bg": "bg-warning/10",
+        "text": "text-warning",
+        "border": "border-warning/30",
+        "dot": "bg-warning"
+      },
+      {
+        "id": "excused",
+        "label": "Excused",
+        "short": "E",
+        "color": "blue",
+        "bg": "bg-info/10",
+        "text": "text-info",
+        "border": "border-info/30",
+        "dot": "bg-info"
+      }
     ],
     "studentDiscountTypes": [
-      { "id": "none", "label": "No Discount", "pct": 0 },
-      { "id": "sibling", "label": "Sibling Discount", "pct": 10 },
-      { "id": "financial_aid", "label": "Financial Aid", "pct": 25 },
-      { "id": "staff", "label": "Staff Child", "pct": 50 },
-      { "id": "scholarship", "label": "Full Scholarship", "pct": 100 }
+      {
+        "id": "none",
+        "label": "No Discount",
+        "pct": 0
+      },
+      {
+        "id": "sibling",
+        "label": "Sibling Discount",
+        "pct": 10
+      },
+      {
+        "id": "financial_aid",
+        "label": "Financial Aid",
+        "pct": 25
+      },
+      {
+        "id": "staff",
+        "label": "Staff Child",
+        "pct": 50
+      },
+      {
+        "id": "scholarship",
+        "label": "Full Scholarship",
+        "pct": 100
+      }
     ],
-    "socialPlatforms": ["Facebook", "Twitter / X", "Instagram", "LinkedIn", "TikTok", "YouTube", "WhatsApp", "Telegram", "Snapchat"],
-    "relationships": ["Father", "Mother", "Son", "Daughter", "Brother", "Sister", "Guardian", "Spouse", "Other"],
-    "lifecycleStages": ["Lead", "Active Student", "Alumnus", "Staff", "Donor", "Volunteer", "Parent"],
+    "socialPlatforms": [
+      "Facebook",
+      "Twitter / X",
+      "Instagram",
+      "LinkedIn",
+      "TikTok",
+      "YouTube",
+      "WhatsApp",
+      "Telegram",
+      "Snapchat"
+    ],
+    "relationships": [
+      "Father",
+      "Mother",
+      "Son",
+      "Daughter",
+      "Brother",
+      "Sister",
+      "Guardian",
+      "Spouse",
+      "Other"
+    ],
     "whatsappTemplates": [
-      { "id": "fee", "label": "Fee Reminder", "body": "Assalamu Alaikum! This is a friendly reminder that your fee payment for this month is due. Please contact us at your earliest convenience. JazakAllah Khair." },
-      { "id": "event", "label": "Event Invitation", "body": "Assalamu Alaikum! You are cordially invited to our upcoming event at the madrasa. Please confirm your attendance. JazakAllah Khair." },
-      { "id": "absence", "label": "Absence Notice", "body": "Assalamu Alaikum! We noticed your child was absent today. Please inform us if there is an issue. JazakAllah Khair." },
-      { "id": "custom", "label": "Custom Message", "body": "" }
+      {
+        "id": "fee",
+        "label": "Fee Reminder",
+        "body": "Assalamu Alaikum! This is a friendly reminder that your fee payment for this month is due. Please contact us at your earliest convenience. JazakAllah Khair."
+      },
+      {
+        "id": "event",
+        "label": "Event Invitation",
+        "body": "Assalamu Alaikum! You are cordially invited to our upcoming event at the madrasa. Please confirm your attendance. JazakAllah Khair."
+      },
+      {
+        "id": "absence",
+        "label": "Absence Notice",
+        "body": "Assalamu Alaikum! We noticed your child was absent today. Please inform us if there is an issue. JazakAllah Khair."
+      },
+      {
+        "id": "custom",
+        "label": "Custom Message",
+        "body": ""
+      }
     ],
-    "phoneLabels": ["Mobile", "Home", "Work", "Other"],
-    "emailLabels": ["Personal", "Work", "Other"],
-    "addressLabels": ["Home", "Work", "Other"],
+    "phoneLabels": [
+      "Mobile",
+      "Home",
+      "Work",
+      "Other"
+    ],
+    "emailLabels": [
+      "Personal",
+      "Work",
+      "Other"
+    ],
+    "addressLabels": [
+      "Home",
+      "Work",
+      "Other"
+    ],
     "countryCodes": [
-      { "country": "Pakistan", "code": "+92" },
-      { "country": "United States", "code": "+1" },
-      { "country": "United Kingdom", "code": "+44" },
-      { "country": "Canada", "code": "+1" },
-      { "country": "Australia", "code": "+61" },
-      { "country": "India", "code": "+91" },
-      { "country": "Bangladesh", "code": "+880" },
-      { "country": "Egypt", "code": "+20" },
-      { "country": "Nigeria", "code": "+234" },
-      { "country": "Ghana", "code": "+233" },
-      { "country": "Saudi Arabia", "code": "+966" },
-      { "country": "United Arab Emirates", "code": "+971" },
-      { "country": "Qatar", "code": "+974" },
-      { "country": "Kuwait", "code": "+965" },
-      { "country": "Bahrain", "code": "+973" },
-      { "country": "Oman", "code": "+968" },
-      { "country": "Malaysia", "code": "+60" },
-      { "country": "Singapore", "code": "+65" },
-      { "country": "Thailand", "code": "+66" },
-      { "country": "Indonesia", "code": "+62" }
+      {
+        "country": "Pakistan",
+        "code": "+92"
+      },
+      {
+        "country": "United States",
+        "code": "+1"
+      },
+      {
+        "country": "United Kingdom",
+        "code": "+44"
+      },
+      {
+        "country": "Canada",
+        "code": "+1"
+      },
+      {
+        "country": "Australia",
+        "code": "+61"
+      },
+      {
+        "country": "India",
+        "code": "+91"
+      },
+      {
+        "country": "Bangladesh",
+        "code": "+880"
+      },
+      {
+        "country": "Egypt",
+        "code": "+20"
+      },
+      {
+        "country": "Nigeria",
+        "code": "+234"
+      },
+      {
+        "country": "Ghana",
+        "code": "+233"
+      },
+      {
+        "country": "Saudi Arabia",
+        "code": "+966"
+      },
+      {
+        "country": "United Arab Emirates",
+        "code": "+971"
+      },
+      {
+        "country": "Qatar",
+        "code": "+974"
+      },
+      {
+        "country": "Kuwait",
+        "code": "+965"
+      },
+      {
+        "country": "Bahrain",
+        "code": "+973"
+      },
+      {
+        "country": "Oman",
+        "code": "+968"
+      },
+      {
+        "country": "Malaysia",
+        "code": "+60"
+      },
+      {
+        "country": "Singapore",
+        "code": "+65"
+      },
+      {
+        "country": "Thailand",
+        "code": "+66"
+      },
+      {
+        "country": "Indonesia",
+        "code": "+62"
+      }
     ],
     "contacts": [
       {
@@ -98,8 +312,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 5,
         "relationships": [],
         "activities": [
           {
@@ -148,8 +360,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 5,
         "relationships": [],
         "activities": [
           {
@@ -198,8 +408,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 5,
         "relationships": [],
         "activities": [
           {
@@ -248,8 +456,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 5,
         "relationships": [],
         "activities": [
           {
@@ -298,8 +504,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 5,
         "relationships": [],
         "activities": [
           {
@@ -348,8 +552,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 5,
         "relationships": [],
         "activities": [
           {
@@ -398,8 +600,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 5,
         "relationships": [],
         "activities": [
           {
@@ -441,8 +641,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -477,8 +675,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -513,8 +709,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -549,8 +743,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -585,8 +777,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -621,8 +811,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -657,8 +845,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -693,8 +879,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -729,8 +913,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -765,8 +947,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -801,8 +981,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -837,8 +1015,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -873,8 +1049,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Employee",
-        "rating": 4,
         "relationships": [],
         "activities": []
       },
@@ -916,8 +1090,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -959,8 +1131,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1002,8 +1172,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1045,8 +1213,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1088,8 +1254,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1131,8 +1295,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1174,8 +1336,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1217,8 +1377,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1260,8 +1418,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1303,8 +1459,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1346,8 +1500,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1389,8 +1541,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1432,8 +1582,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1475,8 +1623,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1518,8 +1664,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1561,8 +1705,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1604,8 +1746,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1647,8 +1787,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1690,8 +1828,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1733,8 +1869,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1776,8 +1910,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1819,8 +1951,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1862,8 +1992,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1905,8 +2033,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1948,8 +2074,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -1991,8 +2115,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2034,8 +2156,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2077,8 +2197,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2120,8 +2238,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2163,8 +2279,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2206,8 +2320,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2249,8 +2361,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2292,8 +2402,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2335,8 +2443,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2378,8 +2484,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2421,8 +2525,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2464,8 +2566,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2507,8 +2607,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2550,8 +2648,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2593,8 +2689,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2636,8 +2730,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2679,8 +2771,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2722,8 +2812,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2765,8 +2853,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2808,8 +2894,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2851,8 +2935,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2894,8 +2976,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2937,8 +3017,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -2980,8 +3058,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3023,8 +3099,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3066,8 +3140,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3109,8 +3181,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3152,8 +3222,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3195,8 +3263,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3238,8 +3304,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3281,8 +3345,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3324,8 +3386,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3367,8 +3427,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3410,8 +3468,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3453,8 +3509,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Subscriber",
-        "rating": 3,
         "relationships": [],
         "activities": []
       },
@@ -3496,8 +3550,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 30,
@@ -3544,8 +3596,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 80,
@@ -3592,8 +3642,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 28,
@@ -3640,8 +3688,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 24,
@@ -3688,8 +3734,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 21,
@@ -3736,8 +3780,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 37,
@@ -3784,8 +3826,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 66,
@@ -3832,8 +3872,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 66,
@@ -3880,8 +3918,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 31,
@@ -3928,8 +3964,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 46,
@@ -3976,8 +4010,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 50,
@@ -4024,8 +4056,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 33,
@@ -4072,8 +4102,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 54,
@@ -4120,8 +4148,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 68,
@@ -4168,8 +4194,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 32,
@@ -4216,8 +4240,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 61,
@@ -4264,8 +4286,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 30,
@@ -4312,8 +4332,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 45,
@@ -4360,8 +4378,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 39,
@@ -4408,8 +4424,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 26,
@@ -4456,8 +4470,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 39,
@@ -4504,8 +4516,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 73,
@@ -4552,8 +4562,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 35,
@@ -4600,8 +4608,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 69,
@@ -4648,8 +4654,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 38,
@@ -4696,8 +4700,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 24,
@@ -4744,8 +4746,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 23,
@@ -4792,8 +4792,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 27,
@@ -4840,8 +4838,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 60,
@@ -4888,8 +4884,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 69,
@@ -4936,8 +4930,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 44,
@@ -4984,8 +4976,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 37,
@@ -5032,8 +5022,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 34,
@@ -5080,8 +5068,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 55,
@@ -5128,8 +5114,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 72,
@@ -5176,8 +5160,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 29,
@@ -5224,8 +5206,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 42,
@@ -5272,8 +5252,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 51,
@@ -5320,8 +5298,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 26,
@@ -5368,8 +5344,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 77,
@@ -5416,8 +5390,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 44,
@@ -5464,8 +5436,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 77,
@@ -5512,8 +5482,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 71,
@@ -5560,8 +5528,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 75,
@@ -5608,8 +5574,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 54,
@@ -5656,8 +5620,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 37,
@@ -5704,8 +5666,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 75,
@@ -5752,8 +5712,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 43,
@@ -5800,8 +5758,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 25,
@@ -5848,8 +5804,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 31,
@@ -5896,8 +5850,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 45,
@@ -5944,8 +5896,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 22,
@@ -5992,8 +5942,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 62,
@@ -6040,8 +5988,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 46,
@@ -6088,8 +6034,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 57,
@@ -6136,8 +6080,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 32,
@@ -6184,8 +6126,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 67,
@@ -6232,8 +6172,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 57,
@@ -6280,8 +6218,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 26,
@@ -6328,8 +6264,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 39,
@@ -6376,8 +6310,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 31,
@@ -6424,8 +6356,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 29,
@@ -6472,8 +6402,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 33,
@@ -6520,8 +6448,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 22,
@@ -6568,8 +6494,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 37,
@@ -6616,8 +6540,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 65,
@@ -6664,8 +6586,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 35,
@@ -6712,8 +6632,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 31,
@@ -6760,8 +6678,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 30,
@@ -6808,8 +6724,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 77,
@@ -6856,8 +6770,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 34,
@@ -6904,8 +6816,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 61,
@@ -6952,8 +6862,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 79,
@@ -7000,8 +6908,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 43,
@@ -7048,8 +6954,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 39,
@@ -7096,8 +7000,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 36,
@@ -7144,8 +7046,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 33,
@@ -7192,8 +7092,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 30,
@@ -7240,8 +7138,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 57,
@@ -7288,8 +7184,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 79,
@@ -7336,8 +7230,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 35,
@@ -7384,8 +7276,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 69,
@@ -7432,8 +7322,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 54,
@@ -7480,8 +7368,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 55,
@@ -7528,8 +7414,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 50,
@@ -7576,8 +7460,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 32,
@@ -7624,8 +7506,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 63,
@@ -7672,8 +7552,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 36,
@@ -7720,8 +7598,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 44,
@@ -7768,8 +7644,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 64,
@@ -7816,8 +7690,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 76,
@@ -7864,8 +7736,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 41,
@@ -7912,8 +7782,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 53,
@@ -7960,8 +7828,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 36,
@@ -8008,8 +7874,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 37,
@@ -8056,8 +7920,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 51,
@@ -8104,8 +7966,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 23,
@@ -8152,8 +8012,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 30,
@@ -8200,8 +8058,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 71,
@@ -8248,8 +8104,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 80,
@@ -8296,8 +8150,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 70,
@@ -8344,8 +8196,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 33,
@@ -8392,8 +8242,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 78,
@@ -8440,8 +8288,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 72,
@@ -8488,8 +8334,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 65,
@@ -8536,8 +8380,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 66,
@@ -8584,8 +8426,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 76,
@@ -8632,8 +8472,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 35,
@@ -8680,8 +8518,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 47,
@@ -8728,8 +8564,6 @@
           }
         ],
         "socials": [],
-        "lifecycleStage": "Opportunity",
-        "rating": 4,
         "relationships": [
           {
             "contactId": 22,
@@ -8769,8 +8603,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -8805,8 +8637,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -8841,8 +8671,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -8877,8 +8705,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -8913,8 +8739,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -8949,8 +8773,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -8985,8 +8807,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9021,8 +8841,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9057,8 +8875,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9093,8 +8909,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9129,8 +8943,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9165,8 +8977,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9201,8 +9011,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9237,8 +9045,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9273,8 +9079,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9309,8 +9113,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9345,8 +9147,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9381,8 +9181,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9417,8 +9215,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9453,8 +9249,6 @@
         ],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Active Donor",
-        "rating": 5,
         "relationships": [],
         "activities": []
       },
@@ -9479,8 +9273,6 @@
         "emails": [],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Lead",
-        "rating": 2,
         "relationships": [],
         "activities": []
       },
@@ -9505,8 +9297,6 @@
         "emails": [],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Lead",
-        "rating": 2,
         "relationships": [],
         "activities": []
       },
@@ -9531,8 +9321,6 @@
         "emails": [],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Lead",
-        "rating": 2,
         "relationships": [],
         "activities": []
       },
@@ -9557,8 +9345,6 @@
         "emails": [],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Lead",
-        "rating": 2,
         "relationships": [],
         "activities": []
       },
@@ -9583,8 +9369,6 @@
         "emails": [],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Lead",
-        "rating": 2,
         "relationships": [],
         "activities": []
       },
@@ -9609,8 +9393,6 @@
         "emails": [],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Lead",
-        "rating": 2,
         "relationships": [],
         "activities": []
       },
@@ -9635,8 +9417,6 @@
         "emails": [],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Lead",
-        "rating": 2,
         "relationships": [],
         "activities": []
       },
@@ -9661,8 +9441,6 @@
         "emails": [],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Lead",
-        "rating": 2,
         "relationships": [],
         "activities": []
       },
@@ -9687,8 +9465,6 @@
         "emails": [],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Lead",
-        "rating": 2,
         "relationships": [],
         "activities": []
       },
@@ -9713,8 +9489,6 @@
         "emails": [],
         "addresses": [],
         "socials": [],
-        "lifecycleStage": "Lead",
-        "rating": 2,
         "relationships": [],
         "activities": []
       }
@@ -32224,13 +31998,41 @@
   },
   "DEFAULT_OBJECTS": {
     "lifecycleColors": {
-      "Lead": { "bg": "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50", "text": "text-blue-700 dark:text-blue-400", "border": "border-blue-200 dark:border-blue-900/50" },
-      "Active Student": { "bg": "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50", "text": "text-emerald-700 dark:text-emerald-400", "border": "border-emerald-200 dark:border-emerald-900/50" },
-      "Alumnus": { "bg": "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/20 dark:text-violet-400 dark:border-violet-900/50", "text": "text-violet-700 dark:text-violet-400", "border": "border-violet-200 dark:border-violet-900/50" },
-      "Staff": { "bg": "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50", "text": "text-amber-700 dark:text-amber-400", "border": "border-amber-200 dark:border-amber-900/50" },
-      "Donor": { "bg": "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/50", "text": "text-rose-700 dark:text-rose-400", "border": "border-rose-200 dark:border-rose-900/50" },
-      "Volunteer": { "bg": "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-900/50", "text": "text-indigo-700 dark:text-indigo-400", "border": "border-indigo-200 dark:border-indigo-900/50" },
-      "Parent": { "bg": "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/20 dark:text-cyan-400 dark:border-cyan-900/50", "text": "text-cyan-700 dark:text-cyan-400", "border": "border-cyan-200 dark:border-cyan-900/50" }
+      "Lead": {
+        "bg": "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50",
+        "text": "text-blue-700 dark:text-blue-400",
+        "border": "border-blue-200 dark:border-blue-900/50"
+      },
+      "Active Student": {
+        "bg": "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50",
+        "text": "text-emerald-700 dark:text-emerald-400",
+        "border": "border-emerald-200 dark:border-emerald-900/50"
+      },
+      "Alumnus": {
+        "bg": "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/20 dark:text-violet-400 dark:border-violet-900/50",
+        "text": "text-violet-700 dark:text-violet-400",
+        "border": "border-violet-200 dark:border-violet-900/50"
+      },
+      "Staff": {
+        "bg": "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50",
+        "text": "text-amber-700 dark:text-amber-400",
+        "border": "border-amber-200 dark:border-amber-900/50"
+      },
+      "Donor": {
+        "bg": "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/50",
+        "text": "text-rose-700 dark:text-rose-400",
+        "border": "border-rose-200 dark:border-rose-900/50"
+      },
+      "Volunteer": {
+        "bg": "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-900/50",
+        "text": "text-indigo-700 dark:text-indigo-400",
+        "border": "border-indigo-200 dark:border-indigo-900/50"
+      },
+      "Parent": {
+        "bg": "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/20 dark:text-cyan-400 dark:border-cyan-900/50",
+        "text": "text-cyan-700 dark:text-cyan-400",
+        "border": "border-cyan-200 dark:border-cyan-900/50"
+      }
     },
     "socialPlaceholders": {
       "Facebook": "https://facebook.com/username",
@@ -32323,37 +32125,6 @@
             "permissions": [],
             "enabled": true,
             "order": 5,
-            "required": false
-          },
-          {
-            "key": "lifecycleStage",
-            "label": "Lifecycle Stage",
-            "type": "select",
-            "description": "Current stage of the contact in the system.",
-            "options": [
-              "Lead",
-              "Active Student",
-              "Alumnus",
-              "Staff",
-              "Donor",
-              "Volunteer",
-              "Parent"
-            ],
-            "defaultValue": "Lead",
-            "permissions": [],
-            "enabled": true,
-            "order": 6,
-            "required": false
-          },
-          {
-            "key": "rating",
-            "label": "CRM Rating",
-            "type": "number",
-            "description": "1-5 star rating for the contact.",
-            "defaultValue": 0,
-            "permissions": [],
-            "enabled": true,
-            "order": 7,
             "required": false
           }
         ],
@@ -32821,37 +32592,6 @@
             "permissions": [],
             "enabled": true,
             "order": 5,
-            "required": false
-          },
-          {
-            "key": "lifecycleStage",
-            "label": "Lifecycle Stage",
-            "type": "select",
-            "description": "Current stage of the contact in the system.",
-            "options": [
-              "Lead",
-              "Active Student",
-              "Alumnus",
-              "Staff",
-              "Donor",
-              "Volunteer",
-              "Parent"
-            ],
-            "defaultValue": "Lead",
-            "permissions": [],
-            "enabled": true,
-            "order": 6,
-            "required": false
-          },
-          {
-            "key": "rating",
-            "label": "CRM Rating",
-            "type": "number",
-            "description": "1-5 star rating for the contact.",
-            "defaultValue": 0,
-            "permissions": [],
-            "enabled": true,
-            "order": 7,
             "required": false
           }
         ],
@@ -33334,15 +33074,40 @@
       "grNumberRestartAnnually": true,
       "defaultViewLayout": "list",
       "fields": {
-        "gender": { "enabled": true, "required": true },
-        "dob": { "enabled": true, "required": false },
-        "fatherLink": { "enabled": true, "required": false },
-        "motherLink": { "enabled": true, "required": false },
-        "guardianLink": { "enabled": true, "required": false },
-        "registeredDate": { "enabled": true, "required": true }
+        "gender": {
+          "enabled": true,
+          "required": true
+        },
+        "dob": {
+          "enabled": true,
+          "required": false
+        },
+        "fatherLink": {
+          "enabled": true,
+          "required": false
+        },
+        "motherLink": {
+          "enabled": true,
+          "required": false
+        },
+        "guardianLink": {
+          "enabled": true,
+          "required": false
+        },
+        "registeredDate": {
+          "enabled": true,
+          "required": true
+        }
       },
       "customFields": [],
-      "fieldOrder": ["gender", "dob", "fatherLink", "motherLink", "guardianLink", "registeredDate"]
+      "fieldOrder": [
+        "gender",
+        "dob",
+        "fatherLink",
+        "motherLink",
+        "guardianLink",
+        "registeredDate"
+      ]
     },
     "studentGuardianContactDefaults": {
       "fatherLink": {
