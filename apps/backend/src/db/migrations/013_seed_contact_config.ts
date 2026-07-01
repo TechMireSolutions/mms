@@ -17,16 +17,14 @@ const CONTACT_CONFIG_COLLECTIONS = [
   'genders',
   'socialPlatforms',
   'relationships',
-  'lifecycleStages',
   'whatsappTemplates',
   'phoneLabels',
   'emailLabels',
   'addressLabels',
   'countryCodes',
-] as const;
+ ] as const;
 
 const CONTACT_CONFIG_OBJECTS = [
-  'lifecycleColors',
   'socialPlaceholders',
 ] as const;
 

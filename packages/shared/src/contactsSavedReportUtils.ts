@@ -45,21 +45,10 @@ export function canDeleteContactsSavedReport(
 export function validateContactsSavedReportDrillDown(
   drillDown: ContactsWorkDrillDown,
   options: {
-    lifecycleStages: string[];
     genders?: string[];
   },
 ): ContactsSavedReportIssue[] {
   const issues: ContactsSavedReportIssue[] = [];
-  if (
-    drillDown.lifecycleStage &&
-    !options.lifecycleStages.includes(drillDown.lifecycleStage)
-  ) {
-    issues.push({
-      kind: 'stale_lifecycle_stage',
-      field: 'lifecycleStage',
-      value: drillDown.lifecycleStage,
-    });
-  }
   if (drillDown.gender && options.genders?.length && !options.genders.includes(drillDown.gender)) {
     issues.push({
       kind: 'stale_gender',

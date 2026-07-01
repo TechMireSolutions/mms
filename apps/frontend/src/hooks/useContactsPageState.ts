@@ -38,8 +38,6 @@ export interface UseContactsPageStateOptions {
     defaultProvince?: string;
   };
   countryCodesMap: Record<string, string>;
-  lifecycleStages: string[];
-  defaultContactRating: number;
   tableColumns: Array<{ id: string; label: string }>;
   canWrite: boolean;
   canDelete: boolean;
@@ -59,8 +57,6 @@ export function useContactsPageState({
   rawContacts,
   prefs,
   countryCodesMap,
-  lifecycleStages,
-  defaultContactRating,
   tableColumns,
   canWrite,
   canDelete,
@@ -96,8 +92,6 @@ export function useContactsPageState({
       : filterActiveContacts(rawContacts);
     return source.map((c) => {
       const base = {
-        lifecycleStage: lifecycleStages[0] || "",
-        rating: defaultContactRating,
         relationships: [],
         activities: [],
         ...c,
@@ -118,11 +112,10 @@ export function useContactsPageState({
       }
       return base;
     });
-  }, [rawContacts, showDeletedArchives, prefs?.defaultCountry, countryCodesMap, lifecycleStages, defaultContactRating]);
+  }, [rawContacts, showDeletedArchives, prefs?.defaultCountry, countryCodesMap]);
 
   const [search, setSearch] = useState("");
   const [filterGender, setFilterGender] = useState("");
-  const [filterLifecycleStage, setFilterLifecycleStage] = useState("");
   const [sortField, setSortField] = useState("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selected, setSelected] = useState<(string | number)[]>([]);
@@ -139,15 +132,11 @@ export function useContactsPageState({
 
   const applyDrillDown = useCallback(
     (filter: ContactsWorkDrillDown) => {
-      if (filter.lifecycleStage) setFilterLifecycleStage(filter.lifecycleStage);
       if (filter.gender) setFilterGender(filter.gender);
       if (filter.search) setSearch(filter.search);
       setActiveTab("work");
-      if (filter.lifecycleStage) {
-        notify.info(t("contacts.drillDownApplied", { stage: filter.lifecycleStage }));
-      }
     },
-    [t],
+    [],
   );
 
   useEffect(() => {
@@ -234,10 +223,6 @@ export function useContactsPageState({
     const list = contacts.filter((c) => {
       if (!contactMatchesSearch(c, search)) return false;
       if (filterGender && c.gender !== filterGender) return false;
-      if (filterLifecycleStage) {
-        const stage = c.lifecycleStage || lifecycleStages[0] || "";
-        if (stage !== filterLifecycleStage) return false;
-      }
       return true;
     });
     return [...list].sort((a, b) => {
@@ -252,12 +237,12 @@ export function useContactsPageState({
       }
       return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
     });
-  }, [contacts, search, filterGender, filterLifecycleStage, lifecycleStages, sortField, sortDir]);
+  }, [contacts, search, filterGender, sortField, sortDir]);
 
   const rowSource = directoryRowsRef?.current ?? directoryRows ?? filtered;
 
-  const hasActiveFilters = !!(filterGender || filterLifecycleStage || search);
-  const activeFilterCount = (filterGender ? 1 : 0) + (filterLifecycleStage ? 1 : 0);
+  const hasActiveFilters = !!(filterGender || search);
+  const activeFilterCount = (filterGender ? 1 : 0);
 
   const handleSort = useCallback((field: string) => {
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -350,7 +335,6 @@ export function useContactsPageState({
       const job = await startServerContactsCsvExport({
         query: {
           search,
-          lifecycleStage: filterLifecycleStage || undefined,
           gender: filterGender || undefined,
           sortField,
           sortDir,
@@ -377,7 +361,6 @@ export function useContactsPageState({
     canExport,
     showDeletedArchives,
     search,
-    filterLifecycleStage,
     filterGender,
     sortField,
     sortDir,
@@ -433,7 +416,6 @@ export function useContactsPageState({
 
   const clearFilters = useCallback(() => {
     setFilterGender("");
-    setFilterLifecycleStage("");
     setSearch("");
   }, []);
 
@@ -484,8 +466,6 @@ export function useContactsPageState({
     setSearch,
     filterGender,
     setFilterGender,
-    filterLifecycleStage,
-    setFilterLifecycleStage,
     sortField,
     sortDir,
     selected,

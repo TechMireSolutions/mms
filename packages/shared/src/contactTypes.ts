@@ -96,13 +96,8 @@ export interface Contact {
   addresses?: Address[];
   socials?: SocialLink[];
   emergencyContacts?: EmergencyContact[];
-  notes?: string;
-  occupation?: string;
-  communicationPreference?: string;
   phone?: string;
   email?: string;
-  lifecycleStage?: string;
-  rating?: number;
   relationships?: ContactRelationship[];
   activities?: ContactActivity[];
   attachments?: ContactAttachment[];
@@ -216,10 +211,6 @@ export const DEFAULT_REQUIRED_TABS: string[] = [];
 
 export const GENDERS = ["male", "female"];
 
-export const LIFECYCLE_STAGES = [
-  "Lead", "Active Student", "Alumnus", "Staff", "Donor", "Volunteer", "Parent",
-];
-
 export const COLOR_PALETTES = {
   blue: { bg: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50", text: "text-blue-700 dark:text-blue-400", border: "border-blue-200 dark:border-blue-900/50" },
   emerald: { bg: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50", text: "text-emerald-700 dark:text-emerald-400", border: "border-emerald-200 dark:border-emerald-900/50" },
@@ -237,17 +228,7 @@ export const COLOR_PALETTES = {
   destructive: { bg: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/15 dark:border-destructive/25", text: "text-destructive", border: "border-destructive/20 dark:border-destructive/25" },
 };
 
-export const DEFAULT_LIFECYCLE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  "Lead": COLOR_PALETTES.blue,
-  "Active Student": COLOR_PALETTES.emerald,
-  "Alumnus": COLOR_PALETTES.violet,
-  "Staff": COLOR_PALETTES.amber,
-  "Donor": COLOR_PALETTES.rose,
-  "Volunteer": COLOR_PALETTES.indigo,
-  "Parent": COLOR_PALETTES.cyan,
-};
 
-export const LIFECYCLE_COLORS = DEFAULT_LIFECYCLE_COLORS;
 
 export const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
   { id: "fee", label: "Fee Reminder", body: "Assalamu Alaikum! This is a friendly reminder that your fee payment for this month is due. Please contact us at your earliest convenience. JazakAllah Khair." },
@@ -343,7 +324,7 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
  * drawer read them directly), but must never be re-rendered as form inputs.
  * `sanitizeConfig` strips these from any persisted field config.
  */
-export const REMOVED_FORM_FIELD_KEYS: readonly string[] = ["lifecycleStage", "rating", "countryCode"];
+export const REMOVED_FORM_FIELD_KEYS: readonly string[] = ["countryCode"];
 
 export const DEFAULT_PAGE_TABS: TabDefinition[] = [
   { key: "work",    label: DEFAULT_MODULE_TIER_TAB_LABELS.work,    enabled: true, order: 0, isSystem: true },
@@ -376,13 +357,11 @@ export const DEFAULT_SETTINGS_SUB_TABS: TabDefinition[] = [
 export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "name",           label: "Name",           enabled: true,  order: 0, sortable: true,  width: 0,   fixed: true },
   { key: "gender",         label: "Gender",         enabled: true,  order: 1, sortable: true,  width: 100 },
-  { key: "lifecycleStage", label: "Stage",          enabled: true,  order: 2, sortable: true,  width: 120 },
-  { key: "phone",          label: "Phone",          enabled: true,  order: 3, sortable: false, width: 140 },
-  { key: "whatsapp",       label: "WhatsApp",       enabled: true,  order: 4, sortable: false, width: 90  },
-  { key: "email",          label: "Email",          enabled: false, order: 5, sortable: false, width: 180 },
-  { key: "city",           label: "City",           enabled: false, order: 6, sortable: true,  width: 110 },
-  { key: "dob",            label: "Date of Birth",  enabled: false, order: 7, sortable: true,  width: 130 },
-  { key: "rating",         label: "Rating",         enabled: false, order: 8, sortable: true,  width: 80  },
+  { key: "phone",          label: "Phone",          enabled: true,  order: 2, sortable: false, width: 140 },
+  { key: "whatsapp",       label: "WhatsApp",       enabled: true,  order: 3, sortable: false, width: 90  },
+  { key: "email",          label: "Email",          enabled: false, order: 4, sortable: false, width: 180 },
+  { key: "city",           label: "City",           enabled: false, order: 5, sortable: true,  width: 110 },
+  { key: "dob",            label: "Date of Birth",  enabled: false, order: 6, sortable: true,  width: 130 },
 ];
 
 export interface Message {

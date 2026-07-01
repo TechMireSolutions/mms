@@ -8,7 +8,6 @@ const base: Contact = {
   firstName: 'Ali',
   lastName: 'Khan',
   gender: 'male',
-  lifecycleStage: 'lead',
   phone: '+923001234567',
   email: 'ali@example.com',
   city: 'Lahore',
@@ -19,10 +18,10 @@ const base: Contact = {
 
 describe('diffContactForSync', () => {
   it('returns diffs when server differs', () => {
-    const server = { ...base, lifecycleStage: 'student' };
+    const server = { ...base, city: 'Karachi', addresses: [{ city: 'Karachi', label: 'home' }] };
     const diffs = diffContactForSync(base, server);
-    expect(diffs.some((d) => d.field === 'lifecycleStage')).toBe(true);
-    expect(diffs.find((d) => d.field === 'lifecycleStage')?.server).toBe('student');
+    expect(diffs.some((d) => d.field === 'city')).toBe(true);
+    expect(diffs.find((d) => d.field === 'city')?.server).toBe('Karachi');
   });
 
   it('returns empty when server matches', () => {
@@ -50,9 +49,9 @@ describe('resolveSyncConflictContactId', () => {
 
 describe('mergeContactForSync', () => {
   it('merges picked fields from local and server', () => {
-    const server = { ...base, lifecycleStage: 'student', gender: 'female' };
-    const merged = mergeContactForSync(base, server, { lifecycleStage: 'local', gender: 'server' });
-    expect(merged.lifecycleStage).toBe('lead');
+    const server = { ...base, firstName: 'Aisha', gender: 'female' };
+    const merged = mergeContactForSync(base, server, { firstName: 'local', gender: 'server' });
+    expect(merged.firstName).toBe('Ali');
     expect(merged.gender).toBe('female');
   });
 });

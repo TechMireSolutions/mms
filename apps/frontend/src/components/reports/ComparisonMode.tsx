@@ -10,9 +10,8 @@ import {
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactsReportAnalytics } from '@/hooks/useContacts';
-import { computeContactsStageComparison } from '@mms/shared';
 import { useSessionsCollection } from '@/hooks/useSessions';
+import { useContactsReportAnalytics } from '@/hooks/useContacts';
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { useEnrollmentsCollection } from "@/hooks/useEnrollmentsApi";
 import { useAttendanceRecordsCollection } from "@/hooks/useAttendance";
@@ -363,33 +362,26 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const exams = useExaminationsExamsCollection();
   const denoms = useHasanatDenomsCollection();
 
-  const LIFECYCLE_OPTIONS = useMemo(() => {
-    const lifecycleStageField = (fieldConfig.fields?.basic || []).find((fieldDefinition) => fieldDefinition.key === "lifecycleStage");
-    const options = lifecycleStageField?.options || ["Lead", "Active Student", "Alumnus", "Staff", "Donor", "Volunteer", "Parent"];
-    return options.map((option) => ({ id: option, name: option }));
-  }, [fieldConfig]);
+
 
   // Sync targets when category changes
   useEffect(() => {
     if (isContacts) {
-      setValA("Lead");
-      setValB("Active Student");
+      setMode("daterange");
     } else {
+      setMode("sessions");
       setValA("s1");
       setValB("s2");
     }
   }, [category, isContacts]);
 
-  const options = isContacts ? LIFECYCLE_OPTIONS : SESSIONS_OPTIONS;
+  const options = SESSIONS_OPTIONS;
   const labelA = mode === "sessions" ? options.find((option) => option.id === valA)?.name : `${rangeA.from} → ${rangeA.to}`;
   const labelB = mode === "sessions" ? options.find((option) => option.id === valB)?.name : `${rangeB.from} → ${rangeB.to}`;
 
   const comparisonData = useMemo(() => {
     if (mode === "sessions") {
       if (isContacts) {
-        if (reportData?.analytics) {
-          return computeContactsStageComparison(reportData.analytics, valA, valB);
-        }
         return [];
       }
       return computeDynamicSessionComparison(
@@ -478,24 +470,26 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
           <span className="text-sm font-bold text-foreground">{t("reports.comparison.title")}</span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex rounded-lg border border-border/50 overflow-hidden text-xs font-semibold">
-            <Button
-              onClick={() => setMode("sessions")}
-              variant={mode === "sessions" ? "default" : "ghost"}
-              className={`px-3 py-1.5 h-auto text-xs font-semibold rounded-none ${mode === "sessions" ? "bg-primary text-primary-foreground hover:bg-primary/95" : "bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
-              type="button"
-            >
-              {isContacts ? t("reports.comparison.stages") : t("reports.comparison.sessions")}
-            </Button>
-            <Button
-              onClick={() => setMode("daterange")}
-              variant={mode === "daterange" ? "default" : "ghost"}
-              className={`px-3 py-1.5 h-auto text-xs font-semibold rounded-none ${mode === "daterange" ? "bg-primary text-primary-foreground hover:bg-primary/95" : "bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
-              type="button"
-            >
-              {t("reports.comparison.dateRanges")}
-            </Button>
-          </div>
+          {!isContacts && (
+            <div className="flex rounded-lg border border-border/50 overflow-hidden text-xs font-semibold">
+              <Button
+                onClick={() => setMode("sessions")}
+                variant={mode === "sessions" ? "default" : "ghost"}
+                className={`px-3 py-1.5 h-auto text-xs font-semibold rounded-none ${mode === "sessions" ? "bg-primary text-primary-foreground hover:bg-primary/95" : "bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                type="button"
+              >
+                {t("reports.comparison.sessions")}
+              </Button>
+              <Button
+                onClick={() => setMode("daterange")}
+                variant={mode === "daterange" ? "default" : "ghost"}
+                className={`px-3 py-1.5 h-auto text-xs font-semibold rounded-none ${mode === "daterange" ? "bg-primary text-primary-foreground hover:bg-primary/95" : "bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                type="button"
+              >
+                {t("reports.comparison.dateRanges")}
+              </Button>
+            </div>
+          )}
           <Button
             onClick={onClose}
             variant="ghost"

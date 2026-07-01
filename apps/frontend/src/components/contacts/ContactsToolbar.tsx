@@ -15,8 +15,6 @@ interface ContactsToolbarProps {
   onSearchChange: (searchValue: string) => void;
   filterGender: string;
   onGenderChange: (gender: string) => void;
-  filterLifecycleStage?: string;
-  onLifecycleStageChange?: (stage: string) => void;
   sortField: string;
   onSort: (field: string) => void;
   hasActiveFilters: boolean;
@@ -38,8 +36,6 @@ export default function ContactsToolbar({
   onSearchChange,
   filterGender,
   onGenderChange,
-  filterLifecycleStage = "",
-  onLifecycleStageChange,
   sortField,
   onSort,
   hasActiveFilters,
@@ -49,7 +45,7 @@ export default function ContactsToolbar({
   onShowDeletedChange,
   canViewDeleted = false,
 }: ContactsToolbarProps): React.JSX.Element {
-  const { availableColumns, genders, systemSortOptions, lifecycleStages } = useContactConfig();
+  const { availableColumns, genders, systemSortOptions } = useContactConfig();
   const { t } = useTranslation();
  
   const sortOptions = React.useMemo(() => {
@@ -128,22 +124,7 @@ export default function ContactsToolbar({
                 {g ? g.charAt(0).toUpperCase() + g.slice(1) : t("contacts.allGenders")}
               </DropdownMenuCheckboxItem>
             ))}
-            {onLifecycleStageChange && lifecycleStages.length > 0 && (
-              <>
-                <DropdownMenuSeparator className="bg-border" />
-                <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.lifecycleFilter")}</DropdownMenuLabel>
-                {["", ...lifecycleStages].map((stage) => (
-                  <DropdownMenuCheckboxItem
-                    key={stage || "all"}
-                    checked={filterLifecycleStage === stage}
-                    onCheckedChange={() => onLifecycleStageChange(stage)}
-                    className="text-sm"
-                  >
-                    {stage || t("contacts.allLifecycleStages")}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </>
-            )}
+
             <DropdownMenuSeparator className="bg-border" />
             <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.sortBy")}</DropdownMenuLabel>
             {sortOptions.map((s) => (

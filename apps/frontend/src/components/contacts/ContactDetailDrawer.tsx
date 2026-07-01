@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Edit2, MessageCircle, MessageSquare, Phone, Mail,
   ExternalLink, Calendar, User, Clock, Tag,
-  Star, Send, LucideIcon,
+  Send, LucideIcon,
   LayoutDashboard, History, Users as UsersIcon, FileText, BrainCircuit, ShieldCheck, Search, Zap
 } from "lucide-react";
 import { Contact, ContactActivity, canViewContactField, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
@@ -91,7 +91,7 @@ export default function ContactDetailDrawer({
   allContacts = [],
   onUpdateContact,
 }: ContactDetailDrawerProps): React.JSX.Element {
-  const { enabledTabIds, isTabFieldEnabled, fieldConfig, lifecycleColors, lifecycleStages, fields, phoneLabels, emailLabels, addressLabels, socialPlatforms } = useContactConfig();
+  const { enabledTabIds, isTabFieldEnabled, fieldConfig, fields, phoneLabels, emailLabels, addressLabels, socialPlatforms } = useContactConfig();
   const { user } = useAuth();
   const { role } = usePermissions();
   const viewerRole = role ?? '';
@@ -141,7 +141,7 @@ export default function ContactDetailDrawer({
     setC(initialContact);
   }, [initialContact]);
 
-  const rating = c.rating || 0;
+
 
   const age = calcAge(c.dob as string | null);
 
@@ -255,8 +255,7 @@ export default function ContactDetailDrawer({
       .catch(() => undefined);
   };
 
-  const stage = c.lifecycleStage || lifecycleStages[0] || "";
-  const stageColors = lifecycleColors[stage] || { bg: "bg-muted text-muted-foreground border-border", text: "text-muted-foreground", border: "border-border" };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-end">
@@ -333,25 +332,14 @@ export default function ContactDetailDrawer({
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-bold text-foreground truncate leading-tight">{getDisplayName(c)}</h3>
                       <div className="flex flex-wrap gap-1.5 mt-2 items-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black border ${stageColors.bg} uppercase tracking-wider`}>
-                          {stage}
-                        </span>
+
                         {c.isSyed && (
                           <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider ${DETAIL_STYLES.syedBadge}`}>
                             {t('contacts.table.yesSyed')}
                           </span>
                         )}
                       </div>
-                      {rating > 0 && (
-                        <div className="flex items-center gap-0.5 mt-2">
-                          {Array.from({ length: 5 }).map((_, starIndex) => (
-                            <Star
-                              key={starIndex}
-                              className={`w-3 h-3 ${starIndex < rating ? DETAIL_STYLES.starActive : DETAIL_STYLES.starInactive}`}
-                            />
-                          ))}
-                        </div>
-                      )}
+
                     </div>
                   </div>
 

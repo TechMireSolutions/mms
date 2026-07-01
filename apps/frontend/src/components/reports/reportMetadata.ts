@@ -160,17 +160,13 @@ export const METADATA_FIELDS = {
     dbKey: "contacts",
     defaultData: [] as Contact[],
     fields: [
-      { value: "lifecycleStage", label: "Lifecycle Stage (Lead/Employee/Student/Parent...)" },
       { value: "gender", label: "Gender (male/female)" },
       { value: "city", label: "City" },
       { value: "state", label: "State" },
-      { value: "rating", label: "Rating (1-5)", isNumeric: true },
       { value: "createdAt", label: "Created Date" },
       { value: "updatedAt", label: "Last Updated Date" }
     ],
-    numericFields: [
-      { value: "rating", label: "Rating (1-5)" }
-    ]
+    numericFields: []
   },
   questions: {
     name: "Question Bank Questions",
@@ -504,12 +500,12 @@ export const DEFAULT_VISUALS: Record<string, VisualizerConfig> = {
     targetField: "discountAmt",
     activePalette: "accessibleColorblind"
   },
-  "visual-contacts-stage": {
-    id: "visual-contacts-stage",
-    title: "Contacts Volume by Lifecycle Stages",
+  "visual-contacts-gender": {
+    id: "visual-contacts-gender",
+    title: "Contacts Volume by Gender",
     collection: "contacts",
     chartType: "pie",
-    xAxisField: "lifecycleStage",
+    xAxisField: "gender",
     operation: "count",
     activePalette: "accessibleColorblind"
   },

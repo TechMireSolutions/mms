@@ -2,7 +2,7 @@ import React, { useState, lazy, Suspense, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal, MessageCircle, MessageSquare, Edit2, Trash2, Eye, Phone, Mail, RotateCcw, Copy, Check,
-  MapPin, User, Star, Calendar, CheckCircle2
+  MapPin, User, Calendar, CheckCircle2
 } from "lucide-react";
 import { type Contact, formatDate } from "@mms/shared";
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp } from "@mms/shared";
@@ -11,7 +11,6 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { notify } from "@/lib/notify";
 import ContactAvatar from "./ContactAvatar";
 import { formatContactCellValue } from "@/lib/contacts/contactI18n";
@@ -63,7 +62,6 @@ export default function ContactCards({
   onSelectAll,
   allSelected = false,
 }: ContactCardsProps): React.JSX.Element {
-  const { lifecycleColors, lifecycleStages } = useContactConfig();
   const { t } = useTranslation();
   const [viewContact, setViewContact] = useState<Contact | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -79,7 +77,7 @@ export default function ContactCards({
   // Exclude core fields that are already displayed in the card header or as primary pills
   const otherColumns = useMemo(
     () => columns.filter(
-      (col) => col.id !== "name" && col.id !== "lifecycleStage" && col.id !== "phone" && col.id !== "email"
+      (col) => col.id !== "name" && col.id !== "phone" && col.id !== "email"
     ),
     [columns]
   );
@@ -115,22 +113,7 @@ export default function ContactCards({
         ) : (
           <span className="text-muted-foreground/40">—</span>
         );
-      case "rating": {
-        const contactRating = item.rating || 0;
-        return (
-          <div className="flex items-center gap-0.5">
-            {Array.from({ length: 5 }).map((_, ratingIndex) => (
-              <Star
-                key={ratingIndex}
-                className={`w-3.5 h-3.5 ${ratingIndex < contactRating
-                    ? "text-amber-500 fill-amber-500"
-                    : "text-muted-foreground/20"
-                  }`}
-              />
-            ))}
-          </div>
-        );
-      }
+
       case "city":
       case "country":
       case "state":
@@ -231,12 +214,7 @@ export default function ContactCards({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {contacts.map((contact) => {
           const isSelected = selected.includes(contact.id);
-          const stage = contact.lifecycleStage || lifecycleStages[0] || "";
-          const stageColors = lifecycleColors[stage] || {
-            bg: "bg-muted text-muted-foreground border-border",
-            text: "text-muted-foreground",
-            border: "border-border",
-          };
+
           const phone = getPrimaryPhone(contact);
           const email = getPrimaryEmail(contact);
 
@@ -252,11 +230,7 @@ export default function ContactCards({
                   : "border-border/30 hover:border-primary/20"
                 }`}
             >
-              {/* Stage Badge */}
-              <span className={`absolute top-4 right-4 text-[9px] uppercase tracking-widest font-black px-2.5 py-1 rounded-full border shadow-sm flex items-center justify-center ${stageColors.bg}`}>
-                <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current animate-pulse" />
-                {stage}
-              </span>
+
 
               {/* Core Profile Area */}
               <div className="flex gap-3 pr-16 items-start">
@@ -280,9 +254,7 @@ export default function ContactCards({
                     <h4 className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
                       {getDisplayName(contact)}
                     </h4>
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5">
-                      {stage}
-                    </p>
+
                   </div>
                 </Button>
               </div>

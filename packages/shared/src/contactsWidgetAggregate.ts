@@ -77,7 +77,7 @@ function aggregateNumericField(
 }
 
 function buildChartData(items: Contact[], query: ContactsWidgetQuery): { name: string; value: number }[] {
-  const xAxis = query.xAxisField || 'lifecycleStage';
+  const xAxis = query.xAxisField || 'gender';
   const groups: Record<string, Contact[]> = {};
 
   items.forEach((item) => {

@@ -122,7 +122,7 @@ export default function ContactsTable({
   canWrite = false,
   canDelete = false,
 }: ContactsTableProps): React.JSX.Element {
-  const { lifecycleColors, lifecycleStages, visibleColumns } = useContactConfig();
+  const { visibleColumns } = useContactConfig();
   const { t } = useTranslation();
   const visibleColumnIds = React.useMemo(
     () => new Set(visibleColumns.map((col) => col.id)),
@@ -279,34 +279,7 @@ export default function ContactsTable({
         const relationships = (contact.emergencyContacts || []).map((emergencyContact) => emergencyContact.relationship).filter(Boolean);
         return <td key="emergency_relationship" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{relationships.join(", ") || t('contacts.table.emptyDash')}</span></td>;
       }
-      case "lifecycleStage": {
-        const stage = contact.lifecycleStage || lifecycleStages[0] || "";
-        const colors = lifecycleColors[stage] || { bg: "bg-muted text-muted-foreground border-border", text: "text-muted-foreground" };
-        return (
-          <td key="lifecycleStage" className="px-4 py-3">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${colors.bg}`}>
-              {stage}
-            </span>
-          </td>
-        );
-      }
-      case "rating": {
-        const contactRating = contact.rating || 0;
-        return (
-          <td key="rating" className="px-4 py-3">
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, ratingIndex) => (
-                <span
-                  key={ratingIndex}
-                  className={`text-xs ${ratingIndex < contactRating ? "text-warning font-bold" : "text-muted-foreground/30 font-light"}`}
-                >
-                  ★
-                </span>
-              ))}
-            </div>
-          </td>
-        );
-      }
+
       default:
         return <td key={col.id} className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{formatContactCellValue(contact[col.id], t)}</span></td>;
     }
@@ -317,8 +290,6 @@ export default function ContactsTable({
     city: "city",
     gender: "gender",
     dob: "dob",
-    lifecycleStage: "lifecycleStage",
-    rating: "rating",
   };
 
   return (

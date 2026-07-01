@@ -237,7 +237,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
   const academicColl = useExaminationsResultsCollection() as unknown as Record<string, unknown>[];
 
   const [selectedFields, setSelectedFields] = useState<string[]>(() => {
-    if (initialSource === "contacts") return ["fullName", "lifecycleStage", "city"];
+    if (initialSource === "contacts") return ["fullName", "gender", "city"];
     if (initialSource === "financial") return ["Student Name", "Class", "Base Fee", "Discount", "Final Amount", "Status"];
     if (initialSource === "attendance") return ["Student Name", "Class", "Status", "Rate %"];
     if (initialSource === "academic") return ["Student Name", "Class", "Subject", "Marks", "Grade"];
@@ -554,7 +554,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               onChange={(value) => {
                 const newSource = value as DataSource;
                 setSource(newSource);
-                if (newSource === "contacts") setSelectedFields(["fullName", "lifecycleStage", "city"]);
+                if (newSource === "contacts") setSelectedFields(["fullName", "gender", "city"]);
                 else if (newSource === "financial") setSelectedFields(["Student Name", "Class", "Base Fee", "Final Amount"]);
                 else if (newSource === "attendance") setSelectedFields(["Student Name", "Class", "Status", "Rate %"]);
                 else if (newSource === "academic") setSelectedFields(["Student Name", "Class", "Subject", "Marks", "Grade"]);

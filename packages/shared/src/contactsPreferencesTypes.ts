@@ -1,6 +1,5 @@
 /** Report segment → Work directory drill-down (globle1 §4.3). */
 export interface ContactsWorkDrillDown {
-  lifecycleStage?: string;
   gender?: string;
   search?: string;
 }

@@ -22,16 +22,16 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         isPinnedToDashboard: true
       },
       {
-        id: "def-contacts-conversion",
-        title: "Active Leads Rate",
+        id: "def-contacts-whatsapp",
+        title: "WhatsApp Verified Rate",
         category: "contacts",
         collection: "contacts",
         widgetType: "progress",
         operation: "percentage",
-        filterField: "lifecycleStage",
+        filterField: "whatsappStatus",
         filterOperator: "equals",
-        filterValue: "lead",
-        color: "violet",
+        filterValue: "REGISTERED",
+        color: "amber",
         isPinnedToDashboard: false
       }
     ],

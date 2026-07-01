@@ -38,7 +38,6 @@ export interface ContactsPaginatedParams {
   page: number;
   limit?: number;
   search?: string;
-  lifecycleStage?: string;
   gender?: string;
   includeDeleted?: boolean;
   sortField?: string;
@@ -51,7 +50,6 @@ function buildContactsPageUrl(params: ContactsPaginatedParams): string {
   queryParams.set('page', String(params.page));
   queryParams.set('limit', String(params.limit ?? CONTACTS_MODULE_CONTRACT.defaultPageSize));
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
-  if (params.lifecycleStage) queryParams.set('lifecycleStage', params.lifecycleStage);
   if (params.gender) queryParams.set('gender', params.gender);
   if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
   if (params.sortField) queryParams.set('sortField', params.sortField);

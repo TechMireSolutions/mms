@@ -6,7 +6,6 @@ export interface ContactsListQuery {
   page?: number;
   limit?: number;
   search?: string;
-  lifecycleStage?: string;
   gender?: string;
   includeDeleted?: boolean;
   sortField?: string;
@@ -23,9 +22,6 @@ export interface ContactsListPageResult {
 
 export function filterContactsForQuery(contacts: Contact[], query: ContactsListQuery): Contact[] {
   let rows = query.includeDeleted ? contacts : filterActiveContacts(contacts);
-  if (query.lifecycleStage) {
-    rows = rows.filter((c) => (c.lifecycleStage || 'Lead') === query.lifecycleStage);
-  }
   if (query.gender) {
     rows = rows.filter((c) => c.gender === query.gender);
   }

@@ -12,8 +12,7 @@ const base = (overrides: Partial<Contact> = {}): Contact => ({
   addresses: [],
   socials: [],
   emergencyContacts: [],
-  lifecycleStage: 'Lead',
-  rating: 4,
+  gender: 'male',
   ...overrides,
 });
 
@@ -25,36 +24,36 @@ describe('contactsWidgetAggregate', () => {
     expect(result.totalCount).toBe(2);
   });
 
-  it('computes lifecycle stage percentage case-insensitively', () => {
+  it('computes gender percentage case-insensitively', () => {
     const contacts = [
-      base({ lifecycleStage: 'Lead' }),
-      base({ id: 2, lifecycleStage: 'Active Student' }),
+      base({ gender: 'male' }),
+      base({ id: 2, gender: 'female' }),
     ];
     const result = computeContactsWidgetAggregate(contacts, {
-      id: 'leads',
+      id: 'males',
       operation: 'percentage',
-      filterField: 'lifecycleStage',
+      filterField: 'gender',
       filterOperator: 'equals',
-      filterValue: 'lead',
+      filterValue: 'male',
     });
     expect(result.value).toBe(50);
   });
 
-  it('groups chart data by lifecycle stage', () => {
+  it('groups chart data by gender', () => {
     const contacts = [
-      base({ lifecycleStage: 'Lead' }),
-      base({ id: 2, lifecycleStage: 'Lead' }),
-      base({ id: 3, lifecycleStage: 'Donor' }),
+      base({ gender: 'male' }),
+      base({ id: 2, gender: 'male' }),
+      base({ id: 3, gender: 'female' }),
     ];
     const result = computeContactsWidgetAggregate(contacts, {
       id: 'chart',
       operation: 'count',
-      xAxisField: 'lifecycleStage',
+      xAxisField: 'gender',
     });
     expect(result.chartData).toEqual(
       expect.arrayContaining([
-        { name: 'Lead', value: 2 },
-        { name: 'Donor', value: 1 },
+        { name: 'male', value: 2 },
+        { name: 'female', value: 1 },
       ]),
     );
   });

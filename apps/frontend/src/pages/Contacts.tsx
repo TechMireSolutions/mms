@@ -157,7 +157,7 @@ function ContactsInner() {
   const canViewReports = can(perms.reports);
   const canViewSetup = can(perms.setupView);
   const canEditSetup = can(perms.setupWrite);
-  const { fieldConfig, prefs, countryCodesMap, lifecycleStages, defaultContactRating, updatePrefs } = useContactConfig();
+  const { fieldConfig, prefs, countryCodesMap, updatePrefs } = useContactConfig();
   const tableColumns = useContactColumns();
   const [showDeletedArchives, setShowDeletedArchives] = useState(false);
   const [listPage, setListPage] = useState(1);
@@ -194,8 +194,6 @@ function ContactsInner() {
     rawContacts,
     prefs,
     countryCodesMap,
-    lifecycleStages,
-    defaultContactRating,
     tableColumns,
     canWrite,
     canDelete,
@@ -220,8 +218,6 @@ function ContactsInner() {
     setSearch,
     filterGender,
     setFilterGender,
-    filterLifecycleStage,
-    setFilterLifecycleStage,
     sortField,
     sortDir,
     selected,
@@ -280,7 +276,6 @@ function ContactsInner() {
     page: isListView ? listPage : 1,
     limit: workLimit,
     search,
-    lifecycleStage: filterLifecycleStage,
     gender: filterGender,
     sortField,
     sortDir,
@@ -289,7 +284,7 @@ function ContactsInner() {
 
   React.useEffect(() => {
     setListPage(1);
-  }, [search, filterGender, filterLifecycleStage, sortField, sortDir, showDeletedArchives]);
+  }, [search, filterGender, sortField, sortDir, showDeletedArchives]);
 
   useEffect(() => {
     if (prevConflictCount.current === 0 && conflictCount > 0) {
@@ -419,8 +414,6 @@ function ContactsInner() {
               <ContactsToolbar
                 search={search}             onSearchChange={setSearch}
                 filterGender={filterGender} onGenderChange={setFilterGender}
-                filterLifecycleStage={filterLifecycleStage}
-                onLifecycleStageChange={setFilterLifecycleStage}
                 sortField={sortField}       onSort={handleSort}
                 hasActiveFilters={hasActiveFilters}
                 activeFilterCount={activeFilterCount}
@@ -448,18 +441,11 @@ function ContactsInner() {
             )}
 
             <AnimatePresence>
-              {(filterGender || filterLifecycleStage) && (
+              {filterGender && (
                 <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="flex flex-wrap gap-1.5">
-                  {filterGender && (
                   <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
                     {t("contacts.genderFilter")}: {genderLabel(filterGender)} <button type="button" onClick={() => setFilterGender("")} className="hover:opacity-70" aria-label={t("contacts.clearFilters")}><X className="w-3 h-3" /></button>
                   </span>
-                  )}
-                  {filterLifecycleStage && (
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-                    {t("contacts.lifecycleFilter")}: {filterLifecycleStage} <button type="button" onClick={() => setFilterLifecycleStage("")} className="hover:opacity-70" aria-label={t("contacts.clearFilters")}><X className="w-3 h-3" /></button>
-                  </span>
-                  )}
                 </motion.div>
               )}
             </AnimatePresence>

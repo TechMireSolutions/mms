@@ -161,7 +161,6 @@ export async function contactRoutes(
           page: contactsListQuery.page,
           limit: contactsListQuery.limit ?? CONTACTS_MODULE_CONTRACT.defaultPageSize,
           search: contactsListQuery.search,
-          lifecycleStage: contactsListQuery.lifecycleStage,
           gender: contactsListQuery.gender,
           includeDeleted,
           sortField: contactsListQuery.sortField,

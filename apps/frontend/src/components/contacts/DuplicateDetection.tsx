@@ -111,7 +111,7 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm }: MergePreviewProps
   const emptyDash = t('contacts.table.emptyDash');
   const keep = pair.contacts[keepIndex];
   const other = pair.contacts[1 - keepIndex];
-  const mergedResult = mergeContacts(keep, other, { mergedNotePrefix: t('contacts.duplicates.mergedNotePrefix') });
+  const mergedResult = mergeContacts(keep, other);
   const fields = prefs.duplicateDetectionFields || [];
 
   return (
@@ -274,7 +274,7 @@ export default function DuplicateDetection({
     const keep = pair.contacts[selectedKeepIndex];
     const other = pair.contacts[1 - selectedKeepIndex];
 
-    const mergedRaw = mergeContacts(keep, other, { mergedNotePrefix: t('contacts.duplicates.mergedNotePrefix') });
+    const mergedRaw = mergeContacts(keep, other);
     const mergedResult = applyTitleCaseToContact(mergedRaw as Record<string, unknown>) as Contact;
     onMerge(keep.id, other.id, mergedResult);
     setMergedPairIds((prev) => {

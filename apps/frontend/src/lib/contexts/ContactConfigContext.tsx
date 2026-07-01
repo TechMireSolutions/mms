@@ -57,7 +57,6 @@ import {
   CONTACT_CONFIG_OBJECT_KEYS,
   contactWhatsappTemplatesKey,
   getContactConfigCollectionDefaults,
-  getDefaultLifecycleColors,
   getDefaultSocialPlaceholders,
 } from "../contactConfig/contactConfigSeeds";
 
@@ -86,8 +85,6 @@ export interface ContactConfigContextType {
   genders: string[];
   socialPlatforms: string[];
   relationships: string[];
-  lifecycleStages: string[];
-  lifecycleColors: Record<string, { bg: string; text: string; border: string }>;
   socialPlaceholders: Record<string, string>;
   whatsappTemplates: WhatsAppTemplate[];
   phoneLabels: string[];
@@ -108,8 +105,6 @@ export interface ContactConfigContextType {
   updateGenders: (genderOptions: string[]) => void;
   updateSocialPlatforms: (socialPlatformOptions: string[]) => void;
   updateRelationships: (relationshipOptions: string[]) => void;
-  updateLifecycleStages: (lifecycleStageOptions: string[]) => void;
-  updateLifecycleColors: (lifecycleColors: Record<string, { bg: string; text: string; border: string }>) => void;
   updateSocialPlaceholders: (socialPlaceholders: Record<string, string>) => void;
   updateWhatsappTemplates: (whatsappTemplates: WhatsAppTemplate[]) => void;
   updatePhoneLabels: (phoneLabelOptions: string[]) => void;
@@ -119,7 +114,6 @@ export interface ContactConfigContextType {
   updateColumnRegistry: (columnRegistry: ColumnRegistryEntry[]) => void;
   updateUserColumnLayout: (columnRegistry: ColumnRegistryEntry[]) => void;
   systemSortOptions: Array<{ field: string; label: string }>;
-  defaultContactRating: number;
 }
 
 const ContactConfigContext = createContext<ContactConfigContextType | null>(null);
@@ -156,12 +150,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const [relationships, setRelationshipsState] = useState<string[]>(() =>
     getCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, contactConfigDefaults.relationships)
   );
-  const [lifecycleStages, setLifecycleStagesState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.lifecycleStages, contactConfigDefaults.lifecycleStages)
-  );
-  const [lifecycleColors, setLifecycleColorsState] = useState<Record<string, { bg: string; text: string; border: string }>>(() =>
-    getObject(CONTACT_CONFIG_OBJECT_KEYS.lifecycleColors, getDefaultLifecycleColors())
-  );
+
   const [socialPlaceholders, setSocialPlaceholdersState] = useState<Record<string, string>>(() =>
     getObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, getDefaultSocialPlaceholders())
   );
@@ -194,10 +183,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     setRelationshipsState(
       getCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, contactConfigDefaults.relationships),
     );
-    setLifecycleStagesState(
-      getCollection(CONTACT_CONFIG_COLLECTION_KEYS.lifecycleStages, contactConfigDefaults.lifecycleStages),
-    );
-    setLifecycleColorsState(getObject(CONTACT_CONFIG_OBJECT_KEYS.lifecycleColors, getDefaultLifecycleColors()));
+
     setSocialPlaceholdersState(
       getObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, getDefaultSocialPlaceholders()),
     );
@@ -295,8 +281,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
             [CONTACT_CONFIG_COLLECTION_KEYS.genders]: setGendersState as (storedConfigValue: unknown) => void,
             [CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms]: setSocialPlatformsState as (storedConfigValue: unknown) => void,
             [CONTACT_CONFIG_COLLECTION_KEYS.relationships]: setRelationshipsState as (storedConfigValue: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.lifecycleStages]: setLifecycleStagesState as (storedConfigValue: unknown) => void,
-            [CONTACT_CONFIG_OBJECT_KEYS.lifecycleColors]: setLifecycleColorsState as (storedConfigValue: unknown) => void,
+
             [CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders]: setSocialPlaceholdersState as (storedConfigValue: unknown) => void,
             [CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels]: setPhoneLabelsState as (storedConfigValue: unknown) => void,
             [CONTACT_CONFIG_COLLECTION_KEYS.emailLabels]: setEmailLabelsState as (storedConfigValue: unknown) => void,
@@ -353,19 +338,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
       return next;
     });
   }, []);
-  const updateLifecycleStages = useCallback((lifecycleStageOptions: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.lifecycleStages, lifecycleStageOptions);
-    setLifecycleStagesState(lifecycleStageOptions);
-    setFieldConfigState((currentConfig) => {
-      const next = syncOptionsInConfig(currentConfig, "basic", "lifecycleStage", lifecycleStageOptions);
-      saveFieldConfig(next);
-      return next;
-    });
-  }, []);
-  const updateLifecycleColors = useCallback((lifecycleColors: Record<string, { bg: string; text: string; border: string }>) => {
-    saveObject(CONTACT_CONFIG_OBJECT_KEYS.lifecycleColors, lifecycleColors);
-    setLifecycleColorsState(lifecycleColors);
-  }, []);
+
   const updateSocialPlaceholders = useCallback((socialPlaceholders: Record<string, string>) => {
     saveObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, socialPlaceholders);
     setSocialPlaceholdersState(socialPlaceholders);
@@ -531,12 +504,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
       if (c.key === "dob") {
         return isTabFieldEnabled("basic", "dob");
       }
-      if (c.key === "lifecycleStage") {
-        return isTabFieldEnabled("basic", "lifecycleStage");
-      }
-      if (c.key === "rating") {
-        return isTabFieldEnabled("basic", "rating");
-      }
+
       if (c.key === "isSyed") {
         return isTabFieldEnabled("basic", "isSyed");
       }
@@ -604,7 +572,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     { field: "updatedAt", label: translateApp("contacts.table.lastUpdated", settings.language) },
   ], [settings.language]);
 
-  const defaultContactRating = fieldConfig.defaultRating ?? 3;
+
 
 
 
@@ -626,8 +594,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         genders,
         socialPlatforms,
         relationships,
-        lifecycleStages,
-        lifecycleColors,
         socialPlaceholders,
         whatsappTemplates,
         phoneLabels,
@@ -648,8 +614,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         updateGenders,
         updateSocialPlatforms,
         updateRelationships,
-        updateLifecycleStages,
-        updateLifecycleColors,
         updateSocialPlaceholders,
         updateWhatsappTemplates,
         updatePhoneLabels,
@@ -659,7 +623,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         updateColumnRegistry,
         updateUserColumnLayout,
         systemSortOptions,
-        defaultContactRating,
       }}
     >
       {children}

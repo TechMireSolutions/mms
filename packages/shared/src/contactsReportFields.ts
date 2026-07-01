@@ -10,15 +10,12 @@ export const CONTACTS_REPORT_FIELD_IDS = [
   'gender',
   'dob',
   'isSyed',
-  'lifecycleStage',
-  'rating',
   'phone',
   'email',
   'streetAddress',
   'city',
   'state',
   'country',
-  'occupation',
   'emergencyContact',
   'lastActivity',
   'notesCount',
@@ -38,15 +35,12 @@ export const CONTACTS_REPORT_FIELDS: ContactsReportFieldDef[] = [
   { id: 'gender', labelKey: 'contacts.reportFields.gender' },
   { id: 'dob', labelKey: 'contacts.reportFields.dob' },
   { id: 'isSyed', labelKey: 'contacts.reportFields.isSyed' },
-  { id: 'lifecycleStage', labelKey: 'contacts.reportFields.lifecycleStage' },
-  { id: 'rating', labelKey: 'contacts.reportFields.rating' },
   { id: 'phone', labelKey: 'contacts.reportFields.phone' },
   { id: 'email', labelKey: 'contacts.reportFields.email' },
   { id: 'streetAddress', labelKey: 'contacts.reportFields.streetAddress' },
   { id: 'city', labelKey: 'contacts.reportFields.city' },
   { id: 'state', labelKey: 'contacts.reportFields.state' },
   { id: 'country', labelKey: 'contacts.reportFields.country' },
-  { id: 'occupation', labelKey: 'contacts.reportFields.occupation' },
   { id: 'emergencyContact', labelKey: 'contacts.reportFields.emergencyContact' },
   { id: 'lastActivity', labelKey: 'contacts.reportFields.lastActivity' },
   { id: 'notesCount', labelKey: 'contacts.reportFields.notesCount' },
@@ -146,8 +140,7 @@ export function getContactReportCellValue(
       return String(contact.lastName || '—');
     case 'isSyed':
       return contact.isSyed ? labels.yes : labels.no;
-    case 'lifecycleStage':
-      return String(contact.lifecycleStage || 'Lead');
+
     case 'phone': {
       const phones = contact.phones;
       return getPrimaryPhone(contact) || (phones?.[0]?.number ?? String(contact.phone || '—'));
@@ -175,9 +168,8 @@ export function getContactReportCellValue(
       return activities?.[0]?.date || '—';
     }
     case 'notesCount': {
-      const notes = contact.notes;
       const noteActivities = contact.activities?.filter((a) => a.type === 'note') ?? [];
-      return (notes?.length ? 1 : 0) + noteActivities.length;
+      return noteActivities.length;
     }
     default: {
       const value = contact[fieldId as keyof Contact];

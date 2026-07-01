@@ -4,7 +4,7 @@ import {
   Users, UserCheck, DollarSign, TrendingUp, Star, 
   AlertCircle, GraduationCap, BarChart2, LucideIcon, 
   Target, Zap, Activity, SlidersHorizontal,
-  Plus, Trash2, ShieldCheck, Receipt, CalendarCheck
+  Plus, Trash2, ShieldCheck, Receipt, CalendarCheck, MessageCircle
 } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/hooks/useFinanceApi";
 import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/hooks/useExaminationsApi";
@@ -263,31 +263,23 @@ function getDefaultCardConfig(category: string, label: string): CustomCard {
       defaultCardConfig.icon = "TrendingUp";
       defaultCardConfig.color = "emerald";
       break;
-    case "Lead Conversion":
+    case "WhatsApp Verified":
       defaultCardConfig.collection = "contacts";
       defaultCardConfig.operation = "percentage";
-      defaultCardConfig.filterField = "lifecycleStage";
+      defaultCardConfig.filterField = "whatsappStatus";
       defaultCardConfig.filterOperator = "equals";
-      defaultCardConfig.filterValue = "Lead";
-      defaultCardConfig.icon = "Target";
-      defaultCardConfig.color = "violet";
-      break;
-    case "Active Enquiries":
-      defaultCardConfig.collection = "contacts";
-      defaultCardConfig.operation = "count";
-      defaultCardConfig.filterField = "lifecycleStage";
-      defaultCardConfig.filterOperator = "equals";
-      defaultCardConfig.filterValue = "Lead";
-      defaultCardConfig.icon = "Zap";
+      defaultCardConfig.filterValue = "REGISTERED";
+      defaultCardConfig.icon = "MessageCircle";
       defaultCardConfig.color = "amber";
       break;
-    case "Engagement Index":
+    case "Active Contacts":
       defaultCardConfig.collection = "contacts";
-      defaultCardConfig.operation = "avg";
-      defaultCardConfig.targetField = "rating";
-      defaultCardConfig.filterField = "";
-      defaultCardConfig.icon = "Activity";
-      defaultCardConfig.color = "emerald";
+      defaultCardConfig.operation = "percentage";
+      defaultCardConfig.filterField = "isActive";
+      defaultCardConfig.filterOperator = "equals";
+      defaultCardConfig.filterValue = "true";
+      defaultCardConfig.icon = "UserCheck";
+      defaultCardConfig.color = "green";
       break;
   }
 
@@ -446,21 +438,6 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       growthSub = "No signup dates";
     }
 
-    // 9. Lead Conversion
-    const conversionVal =
-      contactAnalytics
-        ? `${contactAnalytics.conversionRate}%`
-        : "0%";
-
-    // 10. Active Enquiries
-    const enquiriesVal = contactAnalytics
-      ? String(contactAnalytics.enquiriesCount)
-      : "0";
-    const recentEnquiries = contactAnalytics?.recentEnquiries7d ?? 0;
-    const enquiriesSub = t("reports.contacts.kpi.activeEnquiriesSub", { count: recentEnquiries });
-
-    // 11. Engagement Index
-    const engagementVal = contactAnalytics?.engagementIndex ?? "0.0";
     const contactsRecent30 = contactAnalytics?.newThisPeriod ?? 0;
 
     const kpiItems: (KPIItem & { categories: string[] })[] = [
@@ -550,34 +527,24 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         isAvailable: needsContactAnalytics ? Boolean(contactAnalytics?.hasSignupDates) : false
       },
       {
-        icon: Target,
-        label: t("reports.contacts.kpi.leadConversion"),
-        value: conversionVal,
-        sub: t("reports.contacts.kpi.leadConversionSub"),
-        color: "violet",
-        trend: "up",
+        icon: MessageCircle,
+        label: t("reports.contacts.kpi.whatsappVerified") || "WhatsApp Verified",
+        value: contactAnalytics ? `${contactAnalytics.whatsappRate}%` : "0%",
+        sub: t("reports.contacts.kpi.whatsappSub") || "Contacts with WhatsApp",
+        color: "amber",
+        trend: "flat",
         categories: ["contacts"],
         isAvailable: (contactAnalytics?.total ?? 0) > 0
       },
       {
-        icon: Zap,
-        label: t("reports.contacts.kpi.activeEnquiries"),
-        value: enquiriesVal,
-        sub: enquiriesSub,
-        color: "amber",
-        trend: "up",
-        categories: ["contacts"],
-        isAvailable: (contactAnalytics?.enquiriesCount ?? 0) > 0
-      },
-      {
-        icon: Activity,
-        label: t("reports.contacts.kpi.engagementIndex"),
-        value: engagementVal,
-        sub: t("reports.contacts.kpi.engagementSub"),
+        icon: UserCheck,
+        label: t("reports.contacts.kpi.activeContacts") || "Active Contacts",
+        value: contactAnalytics ? String(contactAnalytics.activeCount) : "0",
+        sub: t("reports.contacts.kpi.activeContactsSub") || "Currently active",
         color: "green",
         trend: "flat",
         categories: ["contacts"],
-        isAvailable: (contactAnalytics?.ratedCount ?? 0) > 0
+        isAvailable: (contactAnalytics?.total ?? 0) > 0
       },
       {
         icon: Users,

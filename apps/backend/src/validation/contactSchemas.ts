@@ -82,10 +82,6 @@ export const contactRecordSchema = z
     deletedAt: z.string().optional(),
     deletedBy: z.string().optional(),
     deletionReason: z.string().optional(),
-    notes: z.string().optional(),
-    occupation: z.string().optional(),
-    lifecycleStage: z.string().optional(),
-    rating: z.number().optional(),
     whatsappStatus: z.enum(['PENDING', 'REGISTERED', 'NOT_REGISTERED', 'FAILED']).optional(),
     lastCheckedAt: z.string().nullable().optional(),
     phones: z.array(phoneNumberSchema).optional(),
@@ -132,7 +128,6 @@ export const contactColumnPreferencesBodySchema = z.object({
 });
 
 export const contactsWorkDrillDownSchema = z.object({
-  lifecycleStage: z.string().optional(),
   gender: z.string().optional(),
   search: z.string().max(500).optional(),
 });
@@ -174,7 +169,6 @@ export const contactsListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(500).optional(),
   search: z.string().max(500).optional(),
-  lifecycleStage: z.string().optional(),
   gender: z.string().optional(),
   includeDeleted: z.enum(['true', 'false']).optional(),
   sortField: z.string().optional(),

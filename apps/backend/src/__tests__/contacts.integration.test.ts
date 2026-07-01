@@ -169,7 +169,7 @@ describe('contacts REST routes', () => {
     mockCreateContactsSavedReport.mockReset().mockResolvedValue({
       id: 'csr_test',
       name: 'Leads',
-      drillDown: { lifecycleStage: 'Lead' },
+      drillDown: { gender: 'male' },
       createdBy: 'u-teacher',
       createdByName: 'Teacher',
       createdAt: '2026-06-21T00:00:00.000Z',
@@ -187,7 +187,7 @@ describe('contacts REST routes', () => {
     mockTouchContactsSavedReportRun.mockReset().mockResolvedValue({
       id: 'csr_test',
       name: 'Leads',
-      drillDown: { lifecycleStage: 'Lead' },
+      drillDown: { gender: 'male' },
       createdBy: 'u-teacher',
       createdAt: '2026-06-21T00:00:00.000Z',
       lastRunAt: '2026-06-21T12:00:00.000Z',
@@ -647,7 +647,7 @@ describe('contacts REST routes', () => {
         host: 'demo.localhost',
         authorization: `Bearer ${teacherToken(app)}`,
       },
-      payload: { name: 'Leads', drillDown: { lifecycleStage: 'Lead' } },
+      payload: { name: 'Leads', drillDown: { gender: 'male' } },
     });
     expect(res.statusCode).toBe(201);
     expect(res.json().report).toMatchObject({ id: 'csr_test', name: 'Leads' });

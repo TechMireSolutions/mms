@@ -8,10 +8,7 @@ import type {
 } from "./contactTypes.js";
 import { CONTACTS_MODULE_CONTRACT } from "./contactsModuleContract.js";
 
-export interface MergeContactsOptions {
-  /** Separator line inserted between merged note blocks. Defaults to module contract constant. */
-  mergedNotePrefix?: string;
-}
+
 
 const LOWERCASE_WORDS = new Set([
   "a", "an", "the", "and", "but", "or", "for", "nor", "on", "at", "to", "by", "in", "of", "up", "as", "so", "yet"
@@ -48,7 +45,6 @@ export function applyTitleCaseToContact(contact: Record<string, unknown>): Recor
     "firstName",
     "lastName",
     "name",
-    "occupation",
     "preferredName",
     "fatherName",
     "grandfatherName",
@@ -363,11 +359,8 @@ export const cleanName = (name: unknown, prefixesToIgnore?: string[]): string =>
 export const mergeContacts = (
   keep: Contact,
   other: Contact,
-  options: MergeContactsOptions = {},
 ): Contact => {
   const merged: Contact = { ...keep };
-  const mergedNotePrefix =
-    options.mergedNotePrefix ?? CONTACTS_MODULE_CONTRACT.mergedNotePrefix;
 
   // Merge all basic properties dynamically
   Object.keys(other).forEach((key) => {
@@ -395,12 +388,7 @@ export const mergeContacts = (
   const last = (merged.lastName as string | undefined) || "";
   merged.name = [first, last].filter(Boolean).join(" ") || merged.name;
 
-  // Concatenate notes
-  if (keep.notes && other.notes && keep.notes !== other.notes) {
-    merged.notes = `${keep.notes}\n${mergedNotePrefix}\n${other.notes}`;
-  } else if (other.notes) {
-    merged.notes = other.notes;
-  }
+
 
   // Merge phones list: match by normalized number
   const seenNumbers = new Set<string>();

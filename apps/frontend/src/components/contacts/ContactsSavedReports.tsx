@@ -33,11 +33,9 @@ interface ContactsSavedReportsProps {
 
 function formatDrillDownSummary(
   drillDown: ContactsWorkDrillDown,
-  stageLabel: string,
   searchLabel: string,
 ): string {
   const parts: string[] = [];
-  if (drillDown.lifecycleStage) parts.push(`${stageLabel}: ${drillDown.lifecycleStage}`);
   if (drillDown.gender) parts.push(drillDown.gender);
   if (drillDown.search?.trim()) parts.push(`${searchLabel}: ${drillDown.search.trim()}`);
   return parts.join(" · ") || "—";
@@ -53,19 +51,17 @@ export default function ContactsSavedReports({
   const settings = useGlobalSettings();
   const { user } = useAuth();
   const { role } = usePermissions();
-  const { lifecycleStages, genders } = useContactConfig();
+  const { genders } = useContactConfig();
   const { data: reports = [], isLoading } = useContactsSavedReports();
   const { createSavedReport, deleteSavedReport, runSavedReport } = useContactsSavedReportMutations();
 
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState("");
-  const [stage, setStage] = useState(suggestedDrillDown.lifecycleStage ?? "");
   const [search, setSearch] = useState(suggestedDrillDown.search ?? "");
   const [shareScope, setShareScope] = useState<ContactsSavedReportShareScope>("private");
   const [sharedWithUserIds, setSharedWithUserIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const stageLabel = t("contacts.savedReports.stageLabel");
   const searchLabel = t("contacts.savedReports.searchLabel");
 
   const shareScopeOptions = useMemo(() => {
@@ -76,12 +72,11 @@ export default function ContactsSavedReports({
 
   const openSaveDialog = useCallback(() => {
     setName("");
-    setStage(suggestedDrillDown.lifecycleStage ?? "");
     setSearch(suggestedDrillDown.search ?? "");
     setShareScope("private");
     setSharedWithUserIds([]);
     setSaveOpen(true);
-  }, [suggestedDrillDown.lifecycleStage, suggestedDrillDown.search]);
+  }, [suggestedDrillDown.search]);
 
   const handleSave = useCallback(async () => {
     const trimmedName = name.trim();
@@ -91,7 +86,6 @@ export default function ContactsSavedReports({
       return;
     }
     const drillDown: ContactsWorkDrillDown = {
-      ...(stage ? { lifecycleStage: stage } : {}),
       ...(search.trim() ? { search: search.trim() } : {}),
     };
     setSaving(true);
@@ -110,12 +104,11 @@ export default function ContactsSavedReports({
     } finally {
       setSaving(false);
     }
-  }, [name, stage, search, shareScope, sharedWithUserIds, role, createSavedReport, t]);
+  }, [name, search, shareScope, sharedWithUserIds, role, createSavedReport, t]);
 
   const handleRun = useCallback(
     async (report: ContactsSavedReport) => {
       const issues = validateContactsSavedReportDrillDown(report.drillDown, {
-        lifecycleStages,
         genders: genders,
       });
       if (issues.length > 0) {
@@ -133,7 +126,7 @@ export default function ContactsSavedReports({
         notify.error(t("settings.serverSaveFailed"));
       }
     },
-    [runSavedReport, t, lifecycleStages, genders],
+    [runSavedReport, t, genders],
   );
 
   const handleDelete = useCallback(
@@ -194,7 +187,6 @@ export default function ContactsSavedReports({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {reports.map((r) => {
             const issues = validateContactsSavedReportDrillDown(r.drillDown, {
-              lifecycleStages,
               genders: genders,
             });
             return (
@@ -206,7 +198,7 @@ export default function ContactsSavedReports({
                   <div>
                     <h4 className="text-sm font-semibold text-foreground">{r.name}</h4>
                     <p className="text-[11px] text-muted-foreground mt-1">
-                      {formatDrillDownSummary(r.drillDown, stageLabel, searchLabel)}
+                      {formatDrillDownSummary(r.drillDown, searchLabel)}
                     </p>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary">
@@ -282,22 +274,7 @@ export default function ContactsSavedReports({
               placeholder={t("contacts.savedReports.namePlaceholder")}
             />
           </div>
-          <div className="space-y-1.5">
-            <Label>{stageLabel}</Label>
-            <Select value={stage || "__any__"} onValueChange={(v) => setStage(v === "__any__" ? "" : v)}>
-              <SelectTrigger>
-                <SelectValue placeholder={t("contacts.savedReports.stageAny")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__any__">{t("contacts.savedReports.stageAny")}</SelectItem>
-                {lifecycleStages.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="saved-report-search">{searchLabel}</Label>
             <Input

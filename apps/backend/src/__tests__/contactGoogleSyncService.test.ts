@@ -32,7 +32,6 @@ describe('contactGoogleSyncService', () => {
       defaultPhoneCountryCode: '+92',
       phoneLabel: 'Work',
       emailLabel: 'Work',
-      lifecycleStage: 'Lead',
     });
     vi.stubGlobal('fetch', vi.fn());
   });

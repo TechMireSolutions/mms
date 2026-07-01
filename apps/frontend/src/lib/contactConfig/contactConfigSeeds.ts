@@ -2,7 +2,6 @@ export const CONTACT_CONFIG_COLLECTION_KEYS = {
   genders: "genders",
   socialPlatforms: "socialPlatforms",
   relationships: "relationships",
-  lifecycleStages: "lifecycleStages",
   whatsappTemplates: "whatsappTemplates",
   phoneLabels: "phoneLabels",
   emailLabels: "emailLabels",
@@ -11,7 +10,6 @@ export const CONTACT_CONFIG_COLLECTION_KEYS = {
 } as const;
 
 export const CONTACT_CONFIG_OBJECT_KEYS = {
-  lifecycleColors: "lifecycleColors",
   socialPlaceholders: "socialPlaceholders",
 } as const;
 
@@ -25,7 +23,6 @@ export function getContactConfigCollectionDefaults(): {
   genders: string[];
   socialPlatforms: string[];
   relationships: string[];
-  lifecycleStages: string[];
   whatsappTemplates: WhatsAppTemplate[];
   phoneLabels: string[];
   emailLabels: string[];
@@ -36,17 +33,12 @@ export function getContactConfigCollectionDefaults(): {
     genders: [],
     socialPlatforms: [],
     relationships: [],
-    lifecycleStages: [],
     whatsappTemplates: [],
     phoneLabels: [],
     emailLabels: [],
     addressLabels: [],
     countryCodes: [],
   };
-}
-
-export function getDefaultLifecycleColors() {
-  return {} as Record<string, { bg: string; text: string; border: string }>;
 }
 
 export function getDefaultSocialPlaceholders() {

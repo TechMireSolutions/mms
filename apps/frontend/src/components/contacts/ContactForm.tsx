@@ -154,7 +154,7 @@ export default function ContactForm({
   initialDraft,
   lockGender = false,
 }: ContactFormProps): React.JSX.Element {
-  const { fieldConfig, prefs, enabledTabIds, requiredTabIds, fields, countryCodesMap, lifecycleStages, defaultContactRating, defaultPhoneCountryCode, updateConfig } = useContactConfig();
+  const { fieldConfig, prefs, enabledTabIds, requiredTabIds, fields, countryCodesMap, defaultPhoneCountryCode, updateConfig } = useContactConfig();
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
   const { role, can } = usePermissions();
@@ -169,8 +169,6 @@ export default function ContactForm({
   const initialValues = useMemo<Partial<Contact>>(() => {
     const initial: Record<string, unknown> = {
       name: "",
-      lifecycleStage: lifecycleStages[0] || "",
-      rating: defaultContactRating,
       avatar: null,
       phones: [],
       emails: [],
@@ -187,13 +185,6 @@ export default function ContactForm({
       ...initial,
       ...target,
     };
-
-    if (!merged.lifecycleStage) {
-      merged.lifecycleStage = lifecycleStages[0] || "";
-    }
-    if (typeof merged.rating !== "number") {
-      merged.rating = defaultContactRating;
-    }
 
     const defaultCode = countryCodesMap[defaultCountryProp] || defaultPhoneCountryCode;
     const phones = ((merged.phones as PhoneNumber[] | undefined) || []).map((phone) => {
@@ -219,7 +210,7 @@ export default function ContactForm({
       phones,
       emergencyContacts,
     } as Partial<Contact>;
-  }, [contact, initialDraft, queryClient, countryCodesMap, defaultCountryProp, defaultPhoneCountryCode, lifecycleStages, defaultContactRating]);
+  }, [contact, initialDraft, queryClient, countryCodesMap, defaultCountryProp, defaultPhoneCountryCode]);
 
   // Set up React Hook Form with dynamic validation schema
   const schema = useMemo(() => {

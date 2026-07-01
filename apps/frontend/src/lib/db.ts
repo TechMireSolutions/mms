@@ -285,7 +285,6 @@ const BUSINESS_COLLECTIONS = new Set([
   "studentDiscountTypes",
   "socialPlatforms",
   "relationships",
-  "lifecycleStages",
   "whatsappTemplates",
   "phoneLabels",
   "emailLabels",

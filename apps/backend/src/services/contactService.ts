@@ -37,7 +37,6 @@ export interface ContactRuntimeDefaults {
   defaultPhoneCountryCode: string;
   phoneLabel: string;
   emailLabel: string;
-  lifecycleStage: string;
 }
 
 export async function loadContacts(options?: { includeDeleted?: boolean }): Promise<Contact[]> {
@@ -84,28 +83,17 @@ function firstCountryCode(rows: unknown[] | null): string {
   return first?.code ?? '';
 }
 
-async function resolveDefaultLifecycleStage(fieldConfig: FieldConfig): Promise<string> {
-  const field = (fieldConfig.fields?.basic ?? []).find((fieldItem) => fieldItem.key === 'lifecycleStage');
-  return (
-    field?.options?.[0]
-    || firstCollectionString(await fetchCollection('lifecycleStages'))
-    || ''
-  );
-}
-
 export async function loadContactRuntimeDefaults(): Promise<ContactRuntimeDefaults> {
-  const [countryCodes, phoneLabels, emailLabels, lifecycleStages] = await Promise.all([
+  const [countryCodes, phoneLabels, emailLabels] = await Promise.all([
     fetchCollection('countryCodes'),
     fetchCollection('phoneLabels'),
     fetchCollection('emailLabels'),
-    fetchCollection('lifecycleStages'),
   ]);
 
   return {
     defaultPhoneCountryCode: firstCountryCode(countryCodes),
     phoneLabel: firstCollectionString(phoneLabels),
     emailLabel: firstCollectionString(emailLabels),
-    lifecycleStage: firstCollectionString(lifecycleStages),
   };
 }
 
@@ -113,9 +101,7 @@ export async function loadContactsReportAnalytics(options?: {
   compareYears?: number[];
 }): Promise<{ analytics: ContactsReportAnalyticsSnapshot; monthlyByYear?: ContactsMonthlyYearCounts[] }> {
   const contacts = await loadContacts();
-  const fieldConfig = metricsFieldConfig(await loadContactFieldConfig());
-  const defaultStage = await resolveDefaultLifecycleStage(fieldConfig);
-  const analytics = computeContactsReportAnalytics(contacts, { defaultStage });
+  const analytics = computeContactsReportAnalytics(contacts);
 
   const years = options?.compareYears?.filter(Boolean) ?? [];
   if (years.length === 0) {

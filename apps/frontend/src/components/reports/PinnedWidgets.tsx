@@ -110,8 +110,8 @@ function WidgetDrilldownModal({
             const nextStatus = storedRecord.status === "present" ? "absent" : "present";
             return { ...storedRecord, status: nextStatus };
           } else if (collectionName === "contacts") {
-            const nextStage = storedRecord.lifecycleStage === "customer" ? "lead" : "customer";
-            return { ...storedRecord, lifecycleStage: nextStage };
+            const nextActive = storedRecord.isActive === false ? true : false;
+            return { ...storedRecord, isActive: nextActive };
           } else if (collectionName === "sessions") {
             const nextStatus = storedRecord.status === "active" ? "inactive" : "active";
             return { ...storedRecord, status: nextStatus };
@@ -226,9 +226,8 @@ function WidgetDrilldownModal({
                       status = t("reports.widgets.pointsText", { points: displayRecord.points || 50 });
                       hasAction = false; // deleting is the action instead of toggling status
                     } else if (widget.collection === "contacts") {
-                      name = String(displayRecord.name || "");
-                      detailText = `${displayRecord.email || t("reports.widgets.noEmail")} • ${t(`reports.status.${displayRecord.lifecycleStage}` as any) || displayRecord.lifecycleStage}`;
-                      status = String(displayRecord.lifecycleStage || "lead");
+                      detailText = `${displayRecord.email || t("reports.widgets.noEmail")} • ${displayRecord.gender || "male"}`;
+                      status = displayRecord.isActive !== false ? "active" : "inactive";
                     } else if (widget.collection === "sessions") {
                       name = String(displayRecord.name || "");
                       detailText = t("reports.widgets.roomText", { type: displayRecord.type || "Hifz", room: displayRecord.room || "N/A" });
@@ -898,10 +897,6 @@ export function DashboardWidgets({
   const handleMetricClick = useCallback((widget: CustomWidget) => {
     if (widget.collection === "contacts") {
       applyContactsWorkDrillDown({
-        lifecycleStage:
-          widget.filterField === "lifecycleStage" && widget.filterValue
-            ? widget.filterValue
-            : undefined,
         gender: widget.filterField === "gender" && widget.filterValue ? widget.filterValue : undefined,
       });
       window.location.assign("/contacts");

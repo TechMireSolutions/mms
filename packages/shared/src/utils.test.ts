@@ -39,7 +39,6 @@ describe("mergeContacts", () => {
     lastName: "Khan",
     name: "Ali Khan",
     phones: [{ label: "Mobile", number: "3001111111", countryCode: "+92" }],
-    notes: "Primary note",
   };
 
   const other: Contact = {
@@ -48,19 +47,11 @@ describe("mergeContacts", () => {
     lastName: "Khan",
     name: "Ali Khan",
     emails: [{ label: "Personal", address: "ali@example.com" }],
-    notes: "Duplicate note",
   };
 
-  it("merges collection fields and uses default note prefix", () => {
+  it("merges collection fields", () => {
     const merged = mergeContacts(base, other);
     expect(merged.emails).toHaveLength(1);
     expect(merged.phones).toHaveLength(1);
-    expect(merged.notes).toContain("--- Merged from Duplicate ---");
-    expect(merged.notes).toContain("Duplicate note");
-  });
-
-  it("accepts a custom merged note prefix", () => {
-    const merged = mergeContacts(base, other, { mergedNotePrefix: "[merged]" });
-    expect(merged.notes).toContain("[merged]");
   });
 });
