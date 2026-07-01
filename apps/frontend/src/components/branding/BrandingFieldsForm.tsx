@@ -40,7 +40,7 @@ export default function BrandingFieldsForm({ data, upd }: BrandingFieldsFormProp
                 maxLength={NAME_MAX}
                 placeholder={t('branding.madrasaNamePlaceholder')}
                 aria-describedby="madrasaName-hint"
-                onChange={(e) => upd('madrasaName', e.target.value)}
+                onChange={(event) => upd('madrasaName', event.target.value)}
               />
               <FieldHint id="madrasaName-hint">{t('branding.madrasaNameHint')}</FieldHint>
             </div>
@@ -57,7 +57,7 @@ export default function BrandingFieldsForm({ data, upd }: BrandingFieldsFormProp
                 maxLength={TAGLINE_MAX}
                 placeholder={t('branding.taglinePlaceholder')}
                 aria-describedby="tagline-hint"
-                onChange={(e) => upd('tagline', e.target.value)}
+                onChange={(event) => upd('tagline', event.target.value)}
               />
               <FieldHint id="tagline-hint">{t('branding.taglineHint')}</FieldHint>
             </div>
@@ -114,7 +114,7 @@ export default function BrandingFieldsForm({ data, upd }: BrandingFieldsFormProp
                 value={data.email}
                 placeholder={t('branding.emailPlaceholder')}
                 className="ps-9"
-                onChange={(e) => upd('email', e.target.value)}
+                onChange={(event) => upd('email', event.target.value)}
               />
             </div>
           </div>
@@ -130,7 +130,7 @@ export default function BrandingFieldsForm({ data, upd }: BrandingFieldsFormProp
                 value={data.phone}
                 placeholder={t('branding.phonePlaceholder')}
                 className="ps-9"
-                onChange={(e) => upd('phone', e.target.value)}
+                onChange={(event) => upd('phone', event.target.value)}
               />
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function BrandingFieldsForm({ data, upd }: BrandingFieldsFormProp
                 value={data.website}
                 placeholder={t('branding.websitePlaceholder')}
                 className="ps-9"
-                onChange={(e) => upd('website', e.target.value)}
+                onChange={(event) => upd('website', event.target.value)}
               />
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function BrandingFieldsForm({ data, upd }: BrandingFieldsFormProp
               id="addressLine1"
               value={data.addressLine1}
               autoComplete="address-line1"
-              onChange={(e) => upd('addressLine1', e.target.value)}
+              onChange={(event) => upd('addressLine1', event.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -169,25 +169,25 @@ export default function BrandingFieldsForm({ data, upd }: BrandingFieldsFormProp
               id="addressLine2"
               value={data.addressLine2}
               autoComplete="address-line2"
-              onChange={(e) => upd('addressLine2', e.target.value)}
+              onChange={(event) => upd('addressLine2', event.target.value)}
             />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="city">{t('branding.city')}</Label>
-              <Input id="city" value={data.city} autoComplete="address-level2" onChange={(e) => upd('city', e.target.value)} />
+              <Input id="city" value={data.city} autoComplete="address-level2" onChange={(event) => upd('city', event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="region">{t('branding.region')}</Label>
-              <Input id="region" value={data.region} autoComplete="address-level1" onChange={(e) => upd('region', e.target.value)} />
+              <Input id="region" value={data.region} autoComplete="address-level1" onChange={(event) => upd('region', event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="postalCode">{t('branding.postalCode')}</Label>
-              <Input id="postalCode" value={data.postalCode} autoComplete="postal-code" onChange={(e) => upd('postalCode', e.target.value)} />
+              <Input id="postalCode" value={data.postalCode} autoComplete="postal-code" onChange={(event) => upd('postalCode', event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="country">{t('branding.country')}</Label>
-              <Input id="country" value={data.country} autoComplete="country-name" onChange={(e) => upd('country', e.target.value)} />
+              <Input id="country" value={data.country} autoComplete="country-name" onChange={(event) => upd('country', event.target.value)} />
             </div>
           </div>
         </div>
@@ -198,11 +198,11 @@ export default function BrandingFieldsForm({ data, upd }: BrandingFieldsFormProp
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="legalName">{t('branding.legalName')}</Label>
-              <Input id="legalName" value={data.legalName} onChange={(e) => upd('legalName', e.target.value)} />
+              <Input id="legalName" value={data.legalName} onChange={(event) => upd('legalName', event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="registrationNumber">{t('branding.registrationNumber')}</Label>
-              <Input id="registrationNumber" value={data.registrationNumber} onChange={(e) => upd('registrationNumber', e.target.value)} />
+              <Input id="registrationNumber" value={data.registrationNumber} onChange={(event) => upd('registrationNumber', event.target.value)} />
             </div>
           </div>
         </SectionCard>

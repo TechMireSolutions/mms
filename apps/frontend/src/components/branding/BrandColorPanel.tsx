@@ -59,16 +59,16 @@ function ColorField({ id, label, description, value, onChange }: ColorFieldProps
           id={id}
           type="color"
           value={value}
-          onChange={(e) => onChange(e.target.value.toLowerCase())}
+          onChange={(event) => onChange(event.target.value.toLowerCase())}
           className="h-11 w-11 shrink-0 cursor-pointer rounded-lg border border-input bg-background p-0.5"
         />
         <Input
           value={hexDraft}
-          onChange={(e) => setHexDraft(e.target.value)}
+          onChange={(event) => setHexDraft(event.target.value)}
           onBlur={commitHex}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
               commitHex();
             }
           }}

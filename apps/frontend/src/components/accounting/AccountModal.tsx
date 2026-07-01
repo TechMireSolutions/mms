@@ -73,7 +73,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="code">
                 <label htmlFor="account-code" className={FORM_LABEL}>Account Code *</label>
-                <input id="account-code" value={form.code || ""} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="e.g. 1000" className={FORM_INPUT} required />
+                <input id="account-code" value={form.code || ""} onChange={(event) => setForm({ ...form, code: event.target.value })} placeholder="e.g. 1000" className={FORM_INPUT} required />
               </div>
             );
           }
@@ -82,8 +82,8 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="type">
                 <label htmlFor="account-type" className={FORM_LABEL}>Type *</label>
-                <select id="account-type" value={form.type || "Asset"} onChange={(e) => setForm({ ...form, type: e.target.value as AccountType, subtype: "" })} className={FORM_INPUT} required>
-                  {ACCOUNT_TYPES.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                <select id="account-type" value={form.type || "Asset"} onChange={(event) => setForm({ ...form, type: event.target.value as AccountType, subtype: "" })} className={FORM_INPUT} required>
+                  {ACCOUNT_TYPES.map((accountType) => <option key={accountType} value={accountType}>{accountType}</option>)}
                 </select>
               </div>
             );
@@ -93,7 +93,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="name" className="sm:col-span-2">
                 <label htmlFor="account-name" className={FORM_LABEL}>Account Name *</label>
-                <input id="account-name" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Cash in Hand" className={FORM_INPUT} required />
+                <input id="account-name" value={form.name || ""} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Cash in Hand" className={FORM_INPUT} required />
               </div>
             );
           }
@@ -103,7 +103,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="subtype" className="sm:col-span-2">
                 <label htmlFor="account-subtype" className={FORM_LABEL}>Sub-type {isRequired ? "*" : ""}</label>
-                <select id="account-subtype" value={form.subtype || ""} onChange={(e) => setForm({ ...form, subtype: e.target.value })} className={FORM_INPUT} required={isRequired}>
+                <select id="account-subtype" value={form.subtype || ""} onChange={(event) => setForm({ ...form, subtype: event.target.value })} className={FORM_INPUT} required={isRequired}>
                   <option value="">— None —</option>
                   {subtypes.map((subtype) => <option key={subtype} value={subtype}>{subtype}</option>)}
                 </select>
@@ -116,7 +116,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="description" className="sm:col-span-2">
                 <label htmlFor="account-description" className={FORM_LABEL}>Description {isRequired ? "*" : ""}</label>
-                <input id="account-description" value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Optional description…" className={FORM_INPUT} required={isRequired} />
+                <input id="account-description" value={form.description || ""} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Optional description…" className={FORM_INPUT} required={isRequired} />
               </div>
             );
           }
@@ -132,7 +132,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                   <textarea
                     className={FORM_TEXTAREA}
                     value={value as string}
-                    onChange={(e) => setForm((d) => ({ ...d, [field.id]: e.target.value }))}
+                    onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
                     required={field.required}
                   />
@@ -140,7 +140,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                   <select
                     className={FORM_SELECT}
                     value={value as string}
-                    onChange={(e) => setForm((d) => ({ ...d, [field.id]: e.target.value }))}
+                    onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
                     required={field.required}
                   >
                     <option value="">Select option…</option>
@@ -178,7 +178,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                     type="text"
                     className={FORM_INPUT}
                     value={value as string}
-                    onChange={(e) => setForm((d) => ({ ...d, [field.id]: e.target.value }))}
+                    onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
                     required={field.required}
                   />

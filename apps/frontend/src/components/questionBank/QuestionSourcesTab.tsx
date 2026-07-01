@@ -56,7 +56,7 @@ function renderSourceInput(
           className={`${FORM_INPUT} resize-none`}
           rows={2}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(event) => onChange(event.target.value)}
         />
       </div>
     );
@@ -69,7 +69,7 @@ function renderSourceInput(
         type={field.type === 'date' ? 'date' : 'text'}
         className={FORM_INPUT}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
       />
     </div>
   );
@@ -114,7 +114,7 @@ export function QuestionSourcesTab({
     if (!draftBook) return;
     const has = draftBook.fieldIds.includes(fieldId);
     const nextIds = has
-      ? draftBook.fieldIds.filter((id) => id !== fieldId)
+      ? draftBook.fieldIds.filter((sourceFieldId) => sourceFieldId !== fieldId)
       : [...draftBook.fieldIds, fieldId];
     if (!nextIds.includes('sourceBookName')) nextIds.unshift('sourceBookName');
     setDraftBook({ ...draftBook, fieldIds: nextIds });
@@ -154,8 +154,8 @@ export function QuestionSourcesTab({
   };
 
   const updCitation = (index: number, patch: Partial<QuestionBookCitation>): void => {
-    const next = citationEntries.map((entry, i) => (i === index ? { ...entry, ...patch } : entry));
-    onCitationsChange(next.filter((entry) => entry.bookId));
+    const updatedCitations = citationEntries.map((entry, entryIndex) => (entryIndex === index ? { ...entry, ...patch } : entry));
+    onCitationsChange(updatedCitations.filter((entry) => entry.bookId));
   };
 
   const updCitationField = (
@@ -170,12 +170,12 @@ export function QuestionSourcesTab({
   };
 
   const addCitation = (): void => {
-    onCitationsChange([...citationEntries.filter((e) => e.bookId), { bookId: '', citation: {} }]);
+    onCitationsChange([...citationEntries.filter((citationEntry) => citationEntry.bookId), { bookId: '', citation: {} }]);
   };
 
   const removeCitation = (index: number): void => {
-    const next = citationEntries.filter((_, i) => i !== index);
-    onCitationsChange(next.filter((entry) => entry.bookId));
+    const updatedCitations = citationEntries.filter((_, entryIndex) => entryIndex !== index);
+    onCitationsChange(updatedCitations.filter((entry) => entry.bookId));
   };
 
   if (availableFieldIds.length === 0) {
@@ -309,7 +309,7 @@ export function QuestionSourcesTab({
           <p className="text-sm text-muted-foreground">{t('questionBank.addBookBeforeCitation')}</p>
         ) : (
           citationEntries.map((entry, index) => {
-            const book = sourceBooks.find((b) => b.id === entry.bookId);
+            const book = sourceBooks.find((sourceBook) => sourceBook.id === entry.bookId);
             const citationFieldIds = book ? getBookCitationFieldIds(book) : [];
 
             return (

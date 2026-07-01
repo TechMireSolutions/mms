@@ -81,7 +81,7 @@ export default function BackupCredentialsModal({
               type="email"
               value={email}
               readOnly={emailReadOnly}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
               className="pl-9"
               autoComplete="username"
               disabled={loading || emailReadOnly}
@@ -94,7 +94,7 @@ export default function BackupCredentialsModal({
             id="backup-admin-password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setPassword(event.target.value)}
             autoComplete={mode === 'export' ? 'current-password' : 'current-password'}
             disabled={loading}
           />

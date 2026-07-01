@@ -127,7 +127,7 @@ export default function BackupRestoreConfirmModal({
           <Input
             id="backup-confirm-phrase"
             value={typed}
-            onChange={(e) => setTyped(e.target.value)}
+            onChange={(event) => setTyped(event.target.value)}
             placeholder={t('backup.confirmTypePlaceholder')}
             autoComplete="off"
             disabled={restoring}

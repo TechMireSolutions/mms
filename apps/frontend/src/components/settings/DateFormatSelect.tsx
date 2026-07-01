@@ -41,13 +41,13 @@ export default function DateFormatSelect({
     DEFAULT_GLOBAL_SETTINGS.dateFormat as DateFormatId,
   );
   const options = useMemo(() => getDateFormatOptions(language), [language]);
-  const selected = options.find((opt) => opt.value === normalizedValue) ?? options[0];
+  const selected = options.find((dateFormatOption) => dateFormatOption.value === normalizedValue) ?? options[0];
 
   const applyLocaleFormat = (): void => {
     const detected = detectLocaleDateFormat(language);
     onChange(detected);
     setOpen(false);
-    const sample = options.find((opt) => opt.value === detected)?.sample ?? detected;
+    const sample = options.find((dateFormatOption) => dateFormatOption.value === detected)?.sample ?? detected;
     notify.success(t('global.dateFormatMatchSuccess'), {
       description: t('global.dateFormatMatchSuccessDesc', { pattern: detected, sample }),
     });
@@ -79,32 +79,32 @@ export default function DateFormatSelect({
         </PopoverTrigger>
         <PopoverContent className="w-[min(100vw-2rem,22rem)] p-1" align="start">
           <div className="max-h-[min(50vh,18rem)] overflow-y-auto">
-            {options.map((opt) => (
+            {options.map((dateFormatOption) => (
               <Button
-                key={opt.value}
+                key={dateFormatOption.value}
                 type="button"
                 variant="ghost"
                 className={cn(
                   'h-auto w-full justify-start items-start gap-2 rounded-sm px-2 py-2 text-left font-normal hover:bg-accent hover:text-accent-foreground',
-                  normalizedValue === opt.value && 'bg-accent text-accent-foreground',
+                  normalizedValue === dateFormatOption.value && 'bg-accent text-accent-foreground',
                 )}
                 onClick={() => {
-                  onChange(opt.value);
+                  onChange(dateFormatOption.value);
                   setOpen(false);
                 }}
               >
                 <Check
                   className={cn(
                     'mt-0.5 h-4 w-4 shrink-0',
-                    normalizedValue === opt.value ? 'opacity-100' : 'opacity-0',
+                    normalizedValue === dateFormatOption.value ? 'opacity-100' : 'opacity-0',
                   )}
                   aria-hidden
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block font-mono text-xs">{opt.pattern}</span>
-                  <span className="block text-muted-foreground text-left">{opt.sample}</span>
+                  <span className="block font-mono text-xs">{dateFormatOption.pattern}</span>
+                  <span className="block text-muted-foreground text-left">{dateFormatOption.sample}</span>
                   <span className="block text-left text-[11px] text-muted-foreground/80">
-                    {t(opt.hintKey as AppTranslationKey)}
+                    {t(dateFormatOption.hintKey as AppTranslationKey)}
                   </span>
                 </span>
               </Button>

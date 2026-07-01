@@ -19,11 +19,11 @@ export interface ExportToolbarProps {
 }
 
 function toCSV(columns: ExportColumn[], rows: Record<string, unknown>[]): string {
-  const header = columns.map((c) => `"${c.header}"`).join(",");
-  const body = rows.map((r) =>
-    columns.map((c) => {
-      const v = r[c.key] ?? "";
-      return `"${String(v).replace(/"/g, '""')}"`;
+  const header = columns.map((column) => `"${column.header}"`).join(",");
+  const body = rows.map((row) =>
+    columns.map((column) => {
+      const cellValue = row[column.key] ?? "";
+      return `"${String(cellValue).replace(/"/g, '""')}"`;
     }).join(",")
   );
   return [header, ...body].join("\r\n");

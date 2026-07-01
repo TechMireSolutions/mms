@@ -126,10 +126,10 @@ function ClassModal({ open, sessionClass, onClose, onSave }: ClassModalProps) {
   );
 
   const teachers = useMemo(() => {
-    const map = new Map<string, Teacher>();
-    for (const teacher of activeTeachers) map.set(String(teacher.id), teacher);
-    for (const teacher of extraTeachers) map.set(String(teacher.id), teacher);
-    return [...map.values()];
+    const teacherById = new Map<string, Teacher>();
+    for (const teacher of activeTeachers) teacherById.set(String(teacher.id), teacher);
+    for (const teacher of extraTeachers) teacherById.set(String(teacher.id), teacher);
+    return [...teacherById.values()];
   }, [activeTeachers, extraTeachers]);
 
   const teacherOptions = useMemo(

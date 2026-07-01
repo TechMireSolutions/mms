@@ -120,15 +120,15 @@ export function InviteUserModal({
               <FormItem>
                 <FormLabel>{t('users.fieldRole')}</FormLabel>
                 <div className="mt-1.5 flex flex-wrap gap-2">
-                  {workspaceRoles.map((r) => (
+                  {workspaceRoles.map((workspaceRole) => (
                     <Button
-                      key={r.id}
+                      key={workspaceRole.id}
                       type="button"
                       size="sm"
-                      variant={field.value === r.id ? 'default' : 'outline'}
-                      onClick={() => field.onChange(r.id)}
+                      variant={field.value === workspaceRole.id ? 'default' : 'outline'}
+                      onClick={() => field.onChange(workspaceRole.id)}
                     >
-                      {r.customLabel?.trim() || t(r.labelKey)}
+                      {workspaceRole.customLabel?.trim() || t(workspaceRole.labelKey)}
                     </Button>
                   ))}
                 </div>
@@ -146,12 +146,12 @@ export function InviteUserModal({
                   <select
                     id="invite-status"
                     value={field.value}
-                    onChange={(e) => field.onChange(e.target.value as SystemUser['status'])}
+                    onChange={(event) => field.onChange(event.target.value as SystemUser['status'])}
                     className={FORM_SELECT}
                   >
-                    {USER_STATUS_VALUES.map((s) => (
-                      <option key={s} value={s}>
-                        {t(`users.status.${s}`)}
+                    {USER_STATUS_VALUES.map((status) => (
+                      <option key={status} value={status}>
+                        {t(`users.status.${status}`)}
                       </option>
                     ))}
                   </select>
@@ -168,7 +168,7 @@ export function InviteUserModal({
                   <input
                     type="checkbox"
                     checked={field.value}
-                    onChange={(e) => field.onChange(e.target.checked)}
+                    onChange={(event) => field.onChange(event.target.checked)}
                     className="rounded"
                   />
                   <span className="text-xs font-medium text-foreground">{t('users.inviteSendEmail')}</span>

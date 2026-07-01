@@ -18,7 +18,7 @@ export function CategoryManager({
   const { t } = useTranslation();
 
   const update = (id: string, patch: Partial<QuestionCategory>): void => {
-    onChange(categories.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+    onChange(categories.map((category) => (category.id === id ? { ...category, ...patch } : category)));
   };
 
   const addCategory = (): void => {
@@ -26,7 +26,7 @@ export function CategoryManager({
   };
 
   const removeCategory = (id: string): void => {
-    onChange(categories.filter((c) => c.id !== id));
+    onChange(categories.filter((category) => category.id !== id));
   };
 
   return (
@@ -55,21 +55,21 @@ export function CategoryManager({
               type="text"
               className="w-12 rounded-lg border border-border bg-background px-2 py-1.5 h-9 text-center text-sm shadow-none"
               value={cat.icon}
-              onChange={(e) => update(cat.id, { icon: e.target.value })}
+              onChange={(event) => update(cat.id, { icon: event.target.value })}
               aria-label={t('questionBank.categoryIcon')}
             />
             <Input
               type="text"
               className={`${FORM_INPUT} h-9 shadow-none`}
               value={cat.name}
-              onChange={(e) => update(cat.id, { name: e.target.value })}
+              onChange={(event) => update(cat.id, { name: event.target.value })}
               aria-label={t('questionBank.categoryName')}
             />
             <Input
               type="color"
               className="h-9 w-full cursor-pointer rounded-lg border border-border bg-background p-0.5 shadow-none"
               value={cat.color}
-              onChange={(e) => update(cat.id, { color: e.target.value })}
+              onChange={(event) => update(cat.id, { color: event.target.value })}
               aria-label={t('questionBank.categoryColor')}
             />
             <span

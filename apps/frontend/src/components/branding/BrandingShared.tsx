@@ -148,9 +148,9 @@ export function ImageUploadField({
         tabIndex={0}
         aria-labelledby={id}
         aria-describedby={error ? `${hintId} ${errorId}` : hintId}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
             inputRef.current?.click();
           }
         }}
@@ -201,8 +201,8 @@ export function ImageUploadField({
             size="icon"
             className="shrink-0"
             aria-label={t('branding.imageRemoveAria', { label })}
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={(event) => {
+              event.stopPropagation();
               onClear();
               setError(null);
             }}
@@ -217,8 +217,8 @@ export function ImageUploadField({
           type="file"
           accept="image/png,image/jpeg,image/webp,image/avif,image/svg+xml"
           className="sr-only"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
+          onChange={(event) => {
+            const file = event.target.files?.[0];
             if (file) void processFile(file);
           }}
           disabled={uploading}
@@ -284,7 +284,7 @@ export function SocialLinksEditor({ links, onChange }: SocialLinksEditorProps): 
                   inputMode={link.platform === 'WhatsApp' ? 'tel' : 'url'}
                   value={link.url}
                   placeholder={BRANDING_SOCIAL_PLACEHOLDERS[link.platform] ?? 'https://'}
-                  onChange={(e) => updateLink(index, { url: e.target.value })}
+                  onChange={(event) => updateLink(index, { url: event.target.value })}
                 />
               </div>
               <div className="flex items-end">

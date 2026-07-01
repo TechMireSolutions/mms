@@ -154,7 +154,7 @@ export default function TimezoneSelect({
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
             <Input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(event) => setQuery(event.target.value)}
               placeholder={t('global.timezoneSearch')}
               className="h-10 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
               aria-label={t('global.timezoneSearch')}
@@ -193,27 +193,27 @@ export default function TimezoneSelect({
               filtered.map(({ region, options: regionOptions }) => (
                 <div key={region} className="mb-1">
                   <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{region}</p>
-                  {regionOptions.map((opt) => (
+                  {regionOptions.map((timezoneOption) => (
                     <Button
-                      key={opt.value}
+                      key={timezoneOption.value}
                       type="button"
                       variant="ghost"
                       className={cn(
                         'w-full justify-start items-center gap-2 rounded-sm px-2 py-1.5 text-left font-normal hover:bg-accent hover:text-accent-foreground',
-                        normalizedValue === opt.value && 'bg-accent text-accent-foreground',
+                        normalizedValue === timezoneOption.value && 'bg-accent text-accent-foreground',
                       )}
-                      onClick={() => applyTimezone(opt.value, true)}
+                      onClick={() => applyTimezone(timezoneOption.value, true)}
                     >
                       <Check
                         className={cn(
                           'h-4 w-4 shrink-0',
-                          normalizedValue === opt.value ? 'opacity-100' : 'opacity-0',
+                          normalizedValue === timezoneOption.value ? 'opacity-100' : 'opacity-0',
                         )}
                         aria-hidden
                       />
-                      <span className="truncate">{opt.label}</span>
+                      <span className="truncate">{timezoneOption.label}</span>
                       <span className="ml-auto pl-2 font-mono text-[10px] text-muted-foreground">
-                        {opt.value}
+                        {timezoneOption.value}
                       </span>
                     </Button>
                   ))}

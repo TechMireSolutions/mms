@@ -76,12 +76,12 @@ function RoleFormModal({ open, title, role, visibleModules, onSave, onClose }: R
   }, [role, open]);
 
   const togglePerm = (moduleId: string, action: PermissionAction): void => {
-    setPerms((prev) => {
-      const currentActions = prev[moduleId] || [];
-      const next = currentActions.includes(action)
+    setPerms((previousPermissions) => {
+      const currentActions = previousPermissions[moduleId] || [];
+      const updatedActions = currentActions.includes(action)
         ? currentActions.filter((permissionAction) => permissionAction !== action)
         : [...currentActions, action];
-      return { ...prev, [moduleId]: next };
+      return { ...previousPermissions, [moduleId]: updatedActions };
     });
   };
 
@@ -131,7 +131,7 @@ function RoleFormModal({ open, title, role, visibleModules, onSave, onClose }: R
             <Input
               id="role-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
               placeholder={t('users.permissions.fieldNamePlaceholder')}
             />
           </div>
@@ -142,7 +142,7 @@ function RoleFormModal({ open, title, role, visibleModules, onSave, onClose }: R
             <Input
               id="role-desc"
               value={desc}
-              onChange={(e) => setDesc(e.target.value)}
+              onChange={(event) => setDesc(event.target.value)}
               placeholder={t('users.permissions.fieldDescriptionPlaceholder')}
             />
           </div>
@@ -294,10 +294,10 @@ function PermissionMatrix({
                     </td>
                   </tr>
                 ) : null}
-                {group.modules.map((m) => (
+                {group.modules.map((moduleItem) => (
                   <PermissionMatrixRow
-                    key={m.id}
-                    mod={m}
+                    key={moduleItem.id}
+                    mod={moduleItem}
                     perms={perms}
                     readOnly={readOnly}
                     inGroup={!!group.labelKey}
@@ -356,22 +356,22 @@ export function RolesPermissions(): React.JSX.Element {
   }, [displayRole, permDraft]);
 
   const togglePermDraft = (moduleId: string, action: PermissionAction): void => {
-    setPermDraft((prev) => {
-      if (!prev) return prev;
-      const currentActions = prev[moduleId] || [];
-      const next = currentActions.includes(action)
+    setPermDraft((previousPermissions) => {
+      if (!previousPermissions) return previousPermissions;
+      const currentActions = previousPermissions[moduleId] || [];
+      const updatedActions = currentActions.includes(action)
         ? currentActions.filter((permissionAction) => permissionAction !== action)
         : [...currentActions, action];
-      return { ...prev, [moduleId]: next };
+      return { ...previousPermissions, [moduleId]: updatedActions };
     });
   };
 
   const selectAllDraft = (moduleId: string): void => {
-    setPermDraft((prev) => (prev ? { ...prev, [moduleId]: [...PERMISSION_ACTIONS] } : prev));
+    setPermDraft((previousPermissions) => (previousPermissions ? { ...previousPermissions, [moduleId]: [...PERMISSION_ACTIONS] } : previousPermissions));
   };
 
   const clearAllDraft = (moduleId: string): void => {
-    setPermDraft((prev) => (prev ? { ...prev, [moduleId]: [] } : prev));
+    setPermDraft((previousPermissions) => (previousPermissions ? { ...previousPermissions, [moduleId]: [] } : previousPermissions));
   };
 
   const resetPermDraft = (): void => {
@@ -381,11 +381,13 @@ export function RolesPermissions(): React.JSX.Element {
   };
 
   const commitRole = (role: WorkspaceRole, toastKey: 'role' | 'permissions'): void => {
-    setRoles((prev) => {
-      const exists = prev.find((r) => r.id === role.id);
-      const next = exists ? prev.map((r) => (r.id === role.id ? role : r)) : [...prev, role];
-      persistWorkspaceRoles(next);
-      return next;
+    setRoles((previousRoles) => {
+      const existingRole = previousRoles.find((workspaceRole) => workspaceRole.id === role.id);
+      const updatedRoles = existingRole
+        ? previousRoles.map((workspaceRole) => (workspaceRole.id === role.id ? role : workspaceRole))
+        : [...previousRoles, role];
+      persistWorkspaceRoles(updatedRoles);
+      return updatedRoles;
     });
     setEdit(null);
     setSel(role);
@@ -433,20 +435,20 @@ export function RolesPermissions(): React.JSX.Element {
               {t('users.permissions.emptyRoles')}
             </div>
           ) : null}
-          {roles.map((r) => (
+          {roles.map((workspaceRole) => (
             <div
-              key={r.id}
+              key={workspaceRole.id}
               role="button"
               tabIndex={0}
-              onClick={() => setSel(r)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setSel(r);
+              onClick={() => setSel(workspaceRole)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setSel(workspaceRole);
                 }
               }}
               className={`w-full cursor-pointer rounded-xl border-2 p-3 text-left transition-all ${
-                displayRole?.id === r.id
+                displayRole?.id === workspaceRole.id
                   ? 'border-primary bg-primary/5'
                   : 'border-border bg-card hover:border-primary/40'
               }`}
@@ -454,29 +456,29 @@ export function RolesPermissions(): React.JSX.Element {
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    {r.isSystem ? (
-                      <UserRoleBadge roleId={r.id} />
+                    {workspaceRole.isSystem ? (
+                      <UserRoleBadge roleId={workspaceRole.id} />
                     ) : (
-                      <SettingsMetaBadge variant={r.badgeVariant}>{workspaceRoleLabel(r, t)}</SettingsMetaBadge>
+                      <SettingsMetaBadge variant={workspaceRole.badgeVariant}>{workspaceRoleLabel(workspaceRole, t)}</SettingsMetaBadge>
                     )}
-                    {r.isSystem ? (
+                    {workspaceRole.isSystem ? (
                       <SettingsMetaBadge variant="muted">{t('users.permissions.systemBadge')}</SettingsMetaBadge>
                     ) : null}
                   </div>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {workspaceRoleDescription(r, t)}
+                    {workspaceRoleDescription(workspaceRole, t)}
                   </p>
                 </div>
-                 {!r.isSystem && isAdmin ? (
+                 {!workspaceRole.isSystem && isAdmin ? (
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEdit(r);
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setEdit(workspaceRole);
                     }}
                     className="rounded p-1 text-muted-foreground transition-colors hover:text-primary h-auto w-auto p-1 shadow-none hover:bg-transparent"
-                    aria-label={t('users.permissions.editRoleDetails', { name: workspaceRoleLabel(r, t) })}
+                    aria-label={t('users.permissions.editRoleDetails', { name: workspaceRoleLabel(workspaceRole, t) })}
                   >
                     <Pencil className="h-3 w-3" />
                   </Button>

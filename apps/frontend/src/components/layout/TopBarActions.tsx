@@ -106,17 +106,17 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
                 All caught up! No notifications.
               </div>
             ) : (
-              notifications.map((n) => (
+              notifications.map((notification) => (
                 <div
-                  key={n.id}
+                  key={notification.id}
                   className="border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors bg-primary/[0.02]"
                 >
                   <div className="flex items-start gap-3">
                     <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                     <div>
-                      <p className="text-sm font-medium">{n.title}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p>
-                      <p className="mt-1 text-[11px] text-muted-foreground/60">{n.time}</p>
+                      <p className="text-sm font-medium">{notification.title}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{notification.desc}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground/60">{notification.time}</p>
                     </div>
                   </div>
                 </div>

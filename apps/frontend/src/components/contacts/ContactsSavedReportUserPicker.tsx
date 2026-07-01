@@ -25,7 +25,7 @@ export default function ContactsSavedReportUserPicker({
 
   const toggle = (userId: string) => {
     if (value.includes(userId)) {
-      onChange(value.filter((id) => id !== userId));
+      onChange(value.filter((selectedUserId) => selectedUserId !== userId));
     } else {
       onChange([...value, userId]);
     }

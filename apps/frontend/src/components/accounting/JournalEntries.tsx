@@ -287,7 +287,7 @@ export function JournalEntries({
               <form onSubmit={handleNlSubmit} className="flex gap-2">
                 <div className="relative flex-1">
                   <label htmlFor="nl-input" className="sr-only">Natural Language Transaction Entry</label>
-                  <Input id="nl-input" value={nlInput} onChange={(e) => handleNlChange(e.target.value)}
+                  <Input id="nl-input" value={nlInput} onChange={(event) => handleNlChange(event.target.value)}
                     placeholder="e.g. Paid electricity bill 12000 · Received donation 50000 · Collected Ahmad fee"
                     className="w-full px-4 py-3" />
                   {nlSuggestion && (
@@ -396,13 +396,13 @@ export function JournalEntries({
         <div className="flex-1" />
         <div className="relative min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <Input 
+          <Input
             type="search"
             aria-label="Search entries"
-            value={search} 
-            onChange={(e) => setSearch(e.target.value)} 
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by ref or description…"
-            className="pl-9 pr-4" 
+            className="pl-9 pr-4"
           />
         </div>
         <FormSelect 

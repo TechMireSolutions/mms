@@ -185,25 +185,25 @@ export default function ContactsSavedReports({
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {reports.map((r) => {
-            const issues = validateContactsSavedReportDrillDown(r.drillDown, {
+          {reports.map((savedReport) => {
+            const issues = validateContactsSavedReportDrillDown(savedReport.drillDown, {
               genders: genders,
             });
             return (
               <div
-                key={r.id}
+                key={savedReport.id}
                 className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm flex flex-col gap-3 text-left"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h4 className="text-sm font-semibold text-foreground">{r.name}</h4>
+                    <h4 className="text-sm font-semibold text-foreground">{savedReport.name}</h4>
                     <p className="text-[11px] text-muted-foreground mt-1">
-                      {formatDrillDownSummary(r.drillDown, searchLabel)}
+                      {formatDrillDownSummary(savedReport.drillDown, searchLabel)}
                     </p>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                         <Users className="w-3 h-3" />
-                        {shareLabel(r.shareScope)}
+                        {shareLabel(savedReport.shareScope)}
                       </span>
                       {issues.length > 0 && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-warning/15 text-warning">
@@ -218,12 +218,12 @@ export default function ContactsSavedReports({
                 <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {formatLastRun(r.lastRunAt)}
+                    {formatLastRun(savedReport.lastRunAt)}
                   </span>
-                  {(r.createdByName || r.createdBy) && (
+                  {(savedReport.createdByName || savedReport.createdBy) && (
                     <span className="flex items-center gap-1">
                       <User className="w-3 h-3" />
-                      {r.createdByName || r.createdBy}
+                      {savedReport.createdByName || savedReport.createdBy}
                     </span>
                   )}
                 </div>
@@ -231,7 +231,7 @@ export default function ContactsSavedReports({
                   <Button
                     type="button"
                     variant="link"
-                    onClick={() => void handleRun(r)}
+                    onClick={() => void handleRun(savedReport)}
                     className="flex items-center gap-1 text-xs font-medium text-primary hover:underline p-0 h-auto shadow-none"
                   >
                     <Play className="w-3 h-3" />
@@ -240,7 +240,7 @@ export default function ContactsSavedReports({
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={() => void handleDelete(r.id)}
+                    onClick={() => void handleDelete(savedReport.id)}
                     className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto p-0 h-auto hover:bg-transparent shadow-none"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -270,7 +270,7 @@ export default function ContactsSavedReports({
             <Input
               id="saved-report-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
               placeholder={t("contacts.savedReports.namePlaceholder")}
             />
           </div>
@@ -280,7 +280,7 @@ export default function ContactsSavedReports({
             <Input
               id="saved-report-search"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(event) => setSearch(event.target.value)}
               placeholder={t("contacts.savedReports.searchPlaceholder")}
             />
           </div>

@@ -45,8 +45,8 @@ export default function AppLayout(): React.JSX.Element {
           variant="ghost"
           size="icon"
           aria-label="Open navigation menu"
-          onClick={(e) => {
-            e.stopPropagation();
+          onClick={(event) => {
+            event.stopPropagation();
             setMobileOpen(true);
           }}
           className="shrink-0 rounded-lg p-2 transition-colors hover:bg-muted"

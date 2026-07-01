@@ -177,7 +177,7 @@ export default function ThemeSettings(): React.JSX.Element {
             rows={2}
             placeholder={defaultFooterPreview}
             aria-describedby="footerText-hint"
-            onChange={(e) => upd('footerText', e.target.value)}
+            onChange={(event) => upd('footerText', event.target.value)}
           />
           <FieldHint id="footerText-hint">{t('theme.footerHint')}</FieldHint>
         </div>

@@ -149,11 +149,11 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
     setStep("done");
   };
 
-  const getCat = (id: string) => qbConfig.categories.find((c) => c.id === id);
+  const getCat = (categoryId: string) => qbConfig.categories.find((category) => category.id === categoryId);
 
   const diffSelectOptions = useMemo(() => [
     { value: "any", label: t("questionBank.difficultyAny") },
-    ...qbConfig.enabledDifficulties.map((k) => ({ value: k, label: qbConfig.difficultyLabel(k) }))
+    ...qbConfig.enabledDifficulties.map((difficulty) => ({ value: difficulty, label: qbConfig.difficultyLabel(difficulty) }))
   ], [qbConfig, t]);
 
   if (step === "done") {
@@ -198,7 +198,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
               id="config-name"
               className={`${FORM_INPUT} shadow-none`}
               value={config.name}
-              onChange={(e) => updateTestConfig("name", e.target.value)}
+              onChange={(event) => updateTestConfig("name", event.target.value)}
               placeholder={t("questionBank.testNamePlaceholder")}
             />
           </div>
@@ -229,7 +229,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
               <FormSelect
                 id="config-difficulty"
                 value={config.difficulty}
-                onChange={(val) => updateTestConfig("difficulty", val)}
+                onChange={(difficulty) => updateTestConfig("difficulty", difficulty)}
                 options={diffSelectOptions}
               />
             </div>
@@ -240,7 +240,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
                 type="number"
                 className={`${FORM_INPUT} shadow-none`}
                 value={config.numQuestions}
-                onChange={(e) => updateTestConfig("numQuestions", +e.target.value)}
+                onChange={(event) => updateTestConfig("numQuestions", +event.target.value)}
                 min={1}
                 max={questions.length}
               />
@@ -252,7 +252,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
                 type="number"
                 className={`${FORM_INPUT} shadow-none`}
                 value={config.duration}
-                onChange={(e) => updateTestConfig("duration", +e.target.value)}
+                onChange={(event) => updateTestConfig("duration", +event.target.value)}
                 min={5}
               />
             </div>
@@ -332,12 +332,12 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
               </div>
             </div>
             <div className="max-h-72 space-y-2.5 overflow-y-auto pr-1" role="list" aria-label={t("questionBank.previewTest")}>
-              {generatedQIds.map((id, questionIndex) => {
-                const question = questions.find((candidateQuestion) => candidateQuestion.id === id);
+              {generatedQIds.map((questionId, questionIndex) => {
+                const question = questions.find((candidateQuestion) => candidateQuestion.id === questionId);
                 if (!question) return null;
                 const diffCls = QUESTION_DIFFICULTY_BADGE_CLASSES[question.difficulty] ?? "";
                 return (
-                  <div key={id} className="flex items-start gap-3 rounded-lg border border-border/50 bg-muted/30 p-3" role="listitem">
+                  <div key={questionId} className="flex items-start gap-3 rounded-lg border border-border/50 bg-muted/30 p-3" role="listitem">
                     <span className="mt-0.5 w-5 flex-shrink-0 text-[11px] font-bold text-muted-foreground">
                       {t("questionBank.previewQuestionLabel", { n: questionIndex + 1 })}
                     </span>
@@ -364,7 +364,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
                     </div>
                     <Button
                       type="button"
-                      onClick={() => setGeneratedQIds((previousQuestionIds) => previousQuestionIds.filter((questionId) => questionId !== id))}
+                      onClick={() => setGeneratedQIds((previousQuestionIds) => previousQuestionIds.filter((generatedQuestionId) => generatedQuestionId !== questionId))}
                       aria-label={t("questionBank.removeQuestionAria", { n: questionIndex + 1 })}
                       variant="ghost"
                       className="p-1 rounded hover:bg-muted text-muted-foreground flex-shrink-0 h-auto shadow-none"

@@ -97,27 +97,27 @@ export function UsersList({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder={t('users.searchPlaceholder')}
             className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <select
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
+          onChange={(event) => setRoleFilter(event.target.value)}
           className="rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           aria-label={t('users.filterRole')}
         >
           <option value="all">{t('users.filterAllRoles')}</option>
-          {workspaceRoles.map((r) => (
-            <option key={r.id} value={r.id}>
-              {workspaceRoleLabel(r, t)}
+          {workspaceRoles.map((workspaceRole) => (
+            <option key={workspaceRole.id} value={workspaceRole.id}>
+              {workspaceRoleLabel(workspaceRole, t)}
             </option>
           ))}
         </select>
         <select
           value={statusFilter}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(event) => setStatus(event.target.value)}
           className="rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           aria-label={t('users.filterStatus')}
         >
