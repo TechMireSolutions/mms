@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useModuleTierTabs } from '@/hooks/useModuleTierTabs';
-import { useConfigSubTabs } from '@/hooks/useConfigSubTabs';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermissions } from '@/hooks/usePermissions';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,7 +10,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
-import { SubTabBar } from '@/components/ui/SubTabBar';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { ActionButton } from '@/components/ui/ActionButton';
@@ -43,7 +41,6 @@ function teacherStatusLabel(t: (key: AppTranslationKey) => string, status: strin
  */
 export default function Teachers(): React.JSX.Element {
   const PAGE_TABS = useModuleTierTabs();
-  const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const { can } = usePermissions();
   const canWrite = can('teachers.write');
@@ -69,7 +66,6 @@ export default function Teachers(): React.JSX.Element {
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
-  const [subTab, setSubTab] = useState('fields');
 
   const useServerWork = activeTab === 'work';
   const { data: workPageData, isFetching: isWorkPageFetching, isLoading: isWorkPageLoading } = useTeachersPaginated({
@@ -332,15 +328,7 @@ export default function Teachers(): React.JSX.Element {
               transition={{ duration: 0.18 }}
             >
               <ErrorBoundary>
-                <div className="space-y-4">
-                  <SubTabBar
-                    tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-                    value={subTab}
-                    onChange={setSubTab}
-                  />
-                  {subTab === 'fields' && <TeachersSettingsPanel mode="fields" />}
-                  {subTab === 'preferences' && <TeachersSettingsPanel mode="preferences" />}
-                </div>
+                <TeachersSettingsPanel mode="preferences" />
               </ErrorBoundary>
             </motion.div>
           ) : null}

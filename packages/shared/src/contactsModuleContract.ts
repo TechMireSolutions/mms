@@ -29,7 +29,7 @@ export const CONTACTS_MODULE_CONTRACT = {
     bulkActions: ['whatsapp', 'sms', 'export', 'delete'] as const,
     integrityTools: ['duplicates'] as const,
   },
-  setupSubTabs: ['sync'] as const,
+  setupSubTabs: ['preferences', 'sync'] as const,
   defaultExportFilename: 'contacts.csv',
   defaultLifecycleStage: 'Lead',
   heroFieldKeys: ['avatar', 'firstName', 'lastName', 'dob', 'gender', 'isSyed'] as const,

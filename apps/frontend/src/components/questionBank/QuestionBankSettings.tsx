@@ -4,7 +4,6 @@ import {
   type QuestionBankSettings as QuestionBankSettingsData,
   type QuestionDifficultyRegistryEntry,
   type QuestionTypeRegistryEntry,
-  type FieldDefinition,
   QUESTION_BANK_TAB_REGISTRY,
   INITIAL_QUESTION_BANK_FIELD_SEED,
 } from '@mms/shared';
@@ -24,18 +23,6 @@ import { ModuleFieldsSetup } from "../ui/ModuleFieldsSetup";
 
 interface QuestionBankSettingsProps {
   mode?: 'fields' | 'preferences';
-}
-
-function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
-  if (!savedOrder || savedOrder.length === 0) return fields;
-  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
-  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
-}
-
-function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
-  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
-  const added = newFieldIds.filter((id) => !kept.includes(id));
-  return [...kept, ...added];
 }
 
 export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React.JSX.Element {
@@ -110,18 +97,18 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
     onSave(nextData);
   };
 
-  const toggleQuestionType = (id: string): void => {
+  const toggleQuestionType = (questionTypeId: string): void => {
     const types = data.questionTypes ?? [];
     const updated = types.map((entry) =>
-      entry.id === id ? { ...entry, enabled: !entry.enabled } : entry,
+      entry.id === questionTypeId ? { ...entry, enabled: !entry.enabled } : entry,
     );
     upd('questionTypes', updated);
   };
 
-  const toggleDifficulty = (id: string): void => {
+  const toggleDifficulty = (difficultyId: string): void => {
     const diffs = data.difficultyLevels ?? [];
     const updated = diffs.map((entry) =>
-      entry.id === id ? { ...entry, enabled: !entry.enabled } : entry,
+      entry.id === difficultyId ? { ...entry, enabled: !entry.enabled } : entry,
     );
     upd('difficultyLevels', updated);
   };
@@ -171,7 +158,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
               min={5}
               className={FORM_INPUT}
               value={data.defaultTestDuration}
-              onChange={(e) => upd('defaultTestDuration', Number(e.target.value) || 30)}
+              onChange={(event) => upd('defaultTestDuration', Number(event.target.value) || 30)}
             />
           </div>
 
@@ -223,7 +210,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
       {showFields && (
         <ModuleFieldsSetup
           editor={fieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_QUESTION_BANK_FIELD_SEED[tabId]?.some((f) => f.key === key) ?? false}
+          isCoreField={(tabId, key) => INITIAL_QUESTION_BANK_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => executeSave()}
         />
       )}

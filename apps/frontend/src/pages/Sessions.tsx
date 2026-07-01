@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,7 +8,6 @@ import {
 } from "lucide-react";
 import { PageHeader } from "../components/ui/PageHeader";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { SearchBar } from "../components/ui/SearchBar";
 import { FilterChips } from "../components/ui/FilterChips";
 import { ActionButton } from "../components/ui/ActionButton";
@@ -129,7 +127,6 @@ function SessionCard({ session, onClick, statusLabel }: SessionCardProps) {
  */
 export default function Sessions() {
   const PAGE_TABS = useModuleTierTabs();
-  const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const { createSession, updateSession } = useSessionMutations();
@@ -153,7 +150,6 @@ export default function Sessions() {
   const [editSession, setEditSession] = useState<Session | null>(null);
   const [detailSession, setDetailSession] = useState<Session | null>(null);
   const [activeTab, setActiveTab] = useState("work");
-  const [subTab, setSubTab] = useState("fields");
 
   const filtered = useMemo(() => {
     return sessions.filter((sessionItem) => {
@@ -412,14 +408,7 @@ export default function Sessions() {
             transition={{ duration: 0.18 }}
           >
             <ErrorBoundary>
-              <div className="space-y-4">
-                <SubTabBar
-                  tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-                  value={subTab}
-                  onChange={setSubTab}
-                />
-                <SessionsSettings mode={subTab as "fields" | "preferences"} />
-              </div>
+              <SessionsSettings mode="preferences" />
             </ErrorBoundary>
           </motion.div>
         ) : null}

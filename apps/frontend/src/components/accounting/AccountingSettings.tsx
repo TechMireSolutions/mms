@@ -194,7 +194,7 @@ interface AccountingSettingsProps {
 }
 
 export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, mode }: AccountingSettingsProps) {
-  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
+  const currencies = useLiveCollection<(typeof DEFAULT_CURRENCIES)[number]>("currencies", DEFAULT_CURRENCIES);
   const { settings, updateSettings } = useAccountingConfig();
   const [saved, setSaved] = useState(false);
   const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);
@@ -235,12 +235,12 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
     setAccountCodeLength(settings.accountCodeLength);
     setRetainedEarningsAccount(settings.retainedEarningsAccount);
 
-    const coreKeys = new Set(ACCOUNTING_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition: any) => !coreKeys.has(tabDefinition.key));
+    const coreKeys = new Set(ACCOUNTING_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreKeys.has(tabDefinition.key));
     const updatedTabs = [
       ...ACCOUNTING_TAB_REGISTRY,
       ...customTabs
-    ].map((tabDefinition: any) => ({
+    ].map((tabDefinition) => ({
       ...tabDefinition,
       enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     }));
@@ -292,13 +292,13 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
     setFyModal(null);
   };
 
-  const handleDeleteFY = (id: string) => {
-    const fiscalYear = fiscalYears.find((existingFiscalYear) => existingFiscalYear.id === id);
+  const handleDeleteFY = (fiscalYearId: string) => {
+    const fiscalYear = fiscalYears.find((existingFiscalYear) => existingFiscalYear.id === fiscalYearId);
     if (fiscalYear?.status === "active") { alert("Cannot delete the active financial year."); return; }
-    if (confirm("Delete this financial year?")) onSaveFiscalYears(fiscalYears.filter((existingFiscalYear) => existingFiscalYear.id !== id));
+    if (confirm("Delete this financial year?")) onSaveFiscalYears(fiscalYears.filter((existingFiscalYear) => existingFiscalYear.id !== fiscalYearId));
   };
 
-  const activeCurrency = currencies.find((currencyOption: any) => currencyOption.code === currency);
+  const activeCurrency = currencies.find((currencyOption) => currencyOption.code === currency);
   const formatDate   = (dateValue: string) => dateValue ? new Date(dateValue).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
   const showPrefs = mode === "preferences";
@@ -331,12 +331,12 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                 aria-label="Base Currency"
                 value={currency}
                 onChange={(currencyValue) => {
-                  const selectedCurrency = currencies.find((currencyOption: any) => currencyOption.code === currencyValue);
+                  const selectedCurrency = currencies.find((currencyOption) => currencyOption.code === currencyValue);
                   setCurrency(currencyValue);
                   if (selectedCurrency) setCurrencySymbol(selectedCurrency.symbol);
                   setSaved(false);
                 }}
-                options={currencies.map((currencyOption: any) => ({
+                options={currencies.map((currencyOption) => ({
                   value: currencyOption.code,
                   label: `${currencyOption.symbol} ${currencyOption.code} – ${currencyOption.name}`
                 }))}
@@ -505,7 +505,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
       {showFields && (
         <ModuleFieldsSetup
           editor={fieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_ACCOUNTING_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+          isCoreField={(tabId, key) => INITIAL_ACCOUNTING_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setSaved(false)}
         />
       )}

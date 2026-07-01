@@ -117,7 +117,7 @@ function SettingsPanel({ contacts, onImport, canWrite, canEditSetup }: SettingsP
 
   const [sub, setSub] = useState<string>(() => {
     if (shouldOpenContactsSyncSetup()) return 'sync';
-    return settingsSubTabs[0]?.key || "fields";
+    return settingsSubTabs[0]?.key || "preferences";
   });
   return (
     <div className="space-y-4">
@@ -127,14 +127,11 @@ function SettingsPanel({ contacts, onImport, canWrite, canEditSetup }: SettingsP
         onChange={setSub}
       />
       <Suspense fallback={<LazyFallback />}>
-        {(sub === "fields" || sub === "preferences") && !canEditSetup ? (
+        {sub === "preferences" && !canEditSetup ? (
           <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
             {t("contacts.setupReadOnly")}
           </p>
         ) : null}
-        {sub === "fields" && canEditSetup && (
-          <ContactsSetupPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="fields" />
-        )}
         {sub === "preferences" && canEditSetup && (
           <ContactsSetupPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="preferences" />
         )}
@@ -157,7 +154,7 @@ function ContactsInner() {
   const canViewReports = can(perms.reports);
   const canViewSetup = can(perms.setupView);
   const canEditSetup = can(perms.setupWrite);
-  const { fieldConfig, prefs, countryCodesMap, updatePrefs } = useContactConfig();
+  const { prefs, countryCodesMap, updatePrefs } = useContactConfig();
   const tableColumns = useContactColumns();
   const [showDeletedArchives, setShowDeletedArchives] = useState(false);
   const [listPage, setListPage] = useState(1);

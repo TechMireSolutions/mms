@@ -72,12 +72,12 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
     setAllowTransfers(settings.allowTransfers);
     setReenrollmentReminder(settings.reenrollmentReminder);
 
-    const coreTabKeys = new Set(ENROLLMENTS_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition: any) => !coreTabKeys.has(tabDefinition.key));
+    const coreTabKeys = new Set(ENROLLMENTS_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreTabKeys.has(tabDefinition.key));
     const updatedTabs = [
       ...ENROLLMENTS_TAB_REGISTRY,
       ...customTabs
-    ].map((tabDefinition: any) => ({
+    ].map((tabDefinition) => ({
       ...tabDefinition,
       enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     }));

@@ -62,12 +62,12 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
     setAutoApprovePayouts(settings.autoApprovePayouts);
     setDefaultViewLayout(settings.defaultViewLayout);
 
-    const coreTabKeys = new Set(HASANAT_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition: any) => !coreTabKeys.has(tabDefinition.key));
+    const coreTabKeys = new Set(HASANAT_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreTabKeys.has(tabDefinition.key));
     const updatedTabs = [
       ...HASANAT_TAB_REGISTRY,
       ...customTabs
-    ].map((tabDefinition: any) => ({
+    ].map((tabDefinition) => ({
       ...tabDefinition,
       enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     }));

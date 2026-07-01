@@ -159,7 +159,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                   id="gr-template"
                   className={FORM_INPUT}
                   value={grNumberTemplate || ""}
-                  onChange={(e) => { setGrNumberTemplate(e.target.value); setSaved(false); }}
+                  onChange={(event) => { setGrNumberTemplate(event.target.value); setSaved(false); }}
                   placeholder="e.g. {seq}-{year}"
                 />
                 <span className="text-[9px] text-muted-foreground mt-1 block">Use placeholders: <code>{`{seq}`}</code>, <code>{`{year}`}</code></span>
@@ -173,7 +173,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                   max="8"
                   className={FORM_INPUT}
                   value={grNumberDigits || 4}
-                  onChange={(e) => { setGrNumberDigits(Number(e.target.value)); setSaved(false); }}
+                  onChange={(event) => { setGrNumberDigits(Number(event.target.value)); setSaved(false); }}
                 />
                 <span className="text-[9px] text-muted-foreground mt-1 block">e.g., 4 is "0001", 3 is "001"</span>
               </div>
@@ -230,7 +230,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
       {showFields && (
         <ModuleFieldsSetup
           editor={fieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_STUDENT_FIELD_SEED[tabId]?.some((f) => f.key === key) ?? false}
+          isCoreField={(tabId, key) => INITIAL_STUDENT_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setSaved(false)}
         />
       )}

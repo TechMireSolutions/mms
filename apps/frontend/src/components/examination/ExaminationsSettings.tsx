@@ -4,7 +4,6 @@ import {
   type ExaminationsSettings as ExaminationsSettingsData,
   EXAMINATIONS_TAB_REGISTRY,
   INITIAL_EXAMINATIONS_FIELD_SEED,
-  type FieldDefinition,
 } from "@mms/shared";
 import { useExaminationConfig } from "@/hooks/useExaminationConfig";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
@@ -40,18 +39,6 @@ function Toggle({ label, description, value, onChange }: ToggleProps): React.Rea
 
 interface ExaminationsSettingsProps {
   mode?: "fields" | "preferences";
-}
-
-function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
-  if (!savedOrder || savedOrder.length === 0) return fields;
-  const orderByFieldKey = Object.fromEntries(savedOrder.map((key, index) => [key, index]));
-  return [...fields].sort((firstField, secondField) => (orderByFieldKey[firstField.key] ?? 9999) - (orderByFieldKey[secondField.key] ?? 9999)) as FieldDefinition[];
-}
-
-function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
-  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
-  const added = newFieldIds.filter((id) => !kept.includes(id));
-  return [...kept, ...added];
 }
 
 export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React.ReactElement {
@@ -94,12 +81,12 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
     setExamReminders(settings.examReminders);
     setDefaultViewLayout(settings.defaultViewLayout);
 
-    const coreTabKeys = new Set(EXAMINATIONS_TAB_REGISTRY.map((tabDefinition: any) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition: any) => !coreTabKeys.has(tabDefinition.key));
+    const coreTabKeys = new Set(EXAMINATIONS_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreTabKeys.has(tabDefinition.key));
     const updatedTabs = [
       ...EXAMINATIONS_TAB_REGISTRY,
       ...customTabs
-    ].map((tabDefinition: any) => ({
+    ].map((tabDefinition) => ({
       ...tabDefinition,
       enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     }));
@@ -220,7 +207,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
       {showFields && (
         <ModuleFieldsSetup
           editor={fieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_EXAMINATIONS_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+          isCoreField={(tabId, key) => INITIAL_EXAMINATIONS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setSaved(false)}
         />
       )}

@@ -9,7 +9,6 @@ export interface ConfigSubTab {
 export function useConfigSubTabs(): ConfigSubTab[] {
   const { t } = useTranslation();
   return [
-    { id: "fields", label: t("module.fields") },
     { id: "preferences", label: t("module.preferences") },
   ];
 }

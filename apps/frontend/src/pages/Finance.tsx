@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
-import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReceiptText, CreditCard, Plus, DollarSign } from "lucide-react";
@@ -34,7 +33,6 @@ import { FinanceCommandMetrics } from "@/components/finance/FinanceCommandMetric
  */
 export default function Finance() {
   const PAGE_TABS = useModuleTierTabs();
-  const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const SUB_TABS = useMemo(
     () => [
@@ -45,7 +43,6 @@ export default function Finance() {
   );
   const [activeTab, setActiveTab] = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("invoices");
-  const [subTab, setSubTab] = useState("fields");
   const invoices = useFinanceInvoicesCollection();
   const payments = useFinancePaymentsCollection();
   const { createInvoice, createPayment } = useFinanceMutations();
@@ -123,14 +120,7 @@ export default function Finance() {
               </div>
             )}
             {activeTab === "setup" && (
-              <div className="space-y-4">
-                <SubTabBar
-                  tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-                  value={subTab}
-                  onChange={setSubTab}
-                />
-                <FinanceSettings mode={subTab as "fields" | "preferences"} />
-              </div>
+              <FinanceSettings mode="preferences" />
             )}
 
             {activeTab === "work" && activeSubTab === "invoices" && (

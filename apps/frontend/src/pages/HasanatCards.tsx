@@ -39,7 +39,7 @@ export default function HasanatCards() {
   const HASANAT_CONFIG_TABS = useMemo(
     () => [
       { id: "denominations" as const, label: t("hasanat.denominations") },
-      ...configSubTabs.map((tab) => ({ id: tab.id as "fields" | "preferences", label: tab.label })),
+      ...configSubTabs.map((tab) => ({ id: tab.id as "preferences", label: tab.label })),
     ],
     [configSubTabs, t],
   );
@@ -54,7 +54,7 @@ export default function HasanatCards() {
   );
   const [activeTab, setActiveTab] = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
-  const [configSubTab, setConfigSubTab] = useState<"denominations" | "fields" | "preferences">("denominations");
+  const [configSubTab, setConfigSubTab] = useState<"denominations" | "preferences">("denominations");
   const denoms = useHasanatDenomsCollection();
   const batches = useHasanatBatchesCollection();
   const distributions = useHasanatDistributionsCollection();
@@ -126,7 +126,6 @@ export default function HasanatCards() {
                 onChange={(tabKey) => setConfigSubTab(tabKey as typeof configSubTab)}
               />
               {configSubTab === "denominations" && <DenominationsManager denoms={denoms} onUpdate={(denominations) => replaceDenoms.mutate(denominations)} />}
-              {configSubTab === "fields" && <HasanatSettings mode="fields" />}
               {configSubTab === "preferences" && <HasanatSettings mode="preferences" />}
             </div>
           )}

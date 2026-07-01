@@ -9,7 +9,6 @@ import {
 import { PageHeader } from "../components/ui/PageHeader";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
-import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
 import { ChartOfAccounts } from "../components/accounting/ChartOfAccounts";
 import { JournalEntries } from "../components/accounting/JournalEntries";
 import { GeneralLedger } from "../components/accounting/GeneralLedger";
@@ -58,7 +57,6 @@ const SUB_TAB_KEYS: Record<SubTabId, "accounting.tabs.overview" | "accounting.ta
  */
 export default function Accounting() {
   const PAGE_TABS = useModuleTierTabs();
-  const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const SUB_TABS = useMemo(
     () => SUB_TAB_IDS.map((id) => ({
@@ -70,7 +68,6 @@ export default function Accounting() {
   );
   const [activeTab, setActiveTab]     = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
-  const [configSubTab, setConfigSubTab] = useState<"fields" | "preferences">("fields");
   const accounts = useAccountingAccountsCollection();
   const journalEntries = useAccountingEntriesCollection();
   const fiscalYears = useAccountingFiscalYearsCollection();
@@ -202,19 +199,12 @@ export default function Accounting() {
             />
           )}
           {activeTab === "setup" && (
-            <div className="space-y-4">
-              <SubTabBar
-                tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-                value={configSubTab}
-                onChange={(key) => setConfigSubTab(key as typeof configSubTab)}
-              />
-              <AccountingSettings
-                accounts={accounts}
-                fiscalYears={fiscalYears}
-                onSaveFiscalYears={setFiscalYears}
-                mode={configSubTab}
-              />
-            </div>
+            <AccountingSettings
+              accounts={accounts}
+              fiscalYears={fiscalYears}
+              onSaveFiscalYears={setFiscalYears}
+              mode="preferences"
+            />
           )}
           </ErrorBoundary>
         </motion.div>

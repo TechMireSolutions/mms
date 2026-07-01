@@ -5,7 +5,6 @@ import {
   type FinanceSettings as FinanceSettingsData,
   FINANCE_TAB_REGISTRY,
   INITIAL_FINANCE_FIELD_SEED,
-  type FieldDefinition,
 } from "@mms/shared";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
@@ -40,18 +39,6 @@ function Toggle({ label, description, value, onChange }: ToggleProps): React.Rea
 
 interface FinanceSettingsProps {
   mode?: "fields" | "preferences";
-}
-
-function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
-  if (!savedOrder || savedOrder.length === 0) return fields;
-  const orderByFieldKey = Object.fromEntries(savedOrder.map((key, index) => [key, index]));
-  return [...fields].sort((firstField, secondField) => (orderByFieldKey[firstField.key] ?? 9999) - (orderByFieldKey[secondField.key] ?? 9999)) as FieldDefinition[];
-}
-
-function syncOrder(previousOrder: string[], newFieldIds: string[]): string[] {
-  const keptFieldIds = previousOrder.filter((fieldId) => newFieldIds.includes(fieldId));
-  const addedFieldIds = newFieldIds.filter((fieldId) => !keptFieldIds.includes(fieldId));
-  return [...keptFieldIds, ...addedFieldIds];
 }
 
 export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElement {
@@ -277,7 +264,7 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
       {showFields && (
         <ModuleFieldsSetup
           editor={fieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_FINANCE_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+          isCoreField={(tabId, key) => INITIAL_FINANCE_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setSaved(false)}
         />
       )}

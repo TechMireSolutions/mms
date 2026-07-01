@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,7 +46,6 @@ const DEFAULT_FILTERS = {
  */
 export default function Attendance() {
   const PAGE_TABS = useModuleTierTabs();
-  const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const role = useViewerRole();
   const { can } = usePermissions();
@@ -58,7 +56,6 @@ export default function Attendance() {
   const queryClient = useQueryClient();
   const attendanceRecords = useAttendanceRecordsCollection();
   const { replaceAll } = useAttendanceMutations();
-  const [subTab, setSubTab] = useState("fields");
   const columnLayout = useAttendanceColumnLayout();
 
   const pageFilteredCount = useMemo(() => {
@@ -115,14 +112,7 @@ export default function Attendance() {
     if (!effectiveTab) return null;
     if (effectiveTab === "setup") {
       return (
-        <div className="space-y-4">
-          <SubTabBar
-            tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-            value={subTab}
-            onChange={setSubTab}
-          />
-          <AttendanceSettings role={role} mode={subTab as "fields" | "preferences"} />
-        </div>
+        <AttendanceSettings role={role} mode="preferences" />
       );
     }
 

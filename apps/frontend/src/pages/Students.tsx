@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
-import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "../components/ui/PageHeader";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { SearchBar } from "../components/ui/SearchBar";
 import { FilterChips } from "../components/ui/FilterChips";
 import { ActionButton } from "../components/ui/ActionButton";
@@ -88,7 +86,6 @@ function applyGrNumberMigration(
  */
 export default function Students() {
   const PAGE_TABS = useModuleTierTabs();
-  const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const { data: serverCount } = useStudentCount();
   const { createStudent, updateStudent, deleteStudent } = useStudentMutations();
@@ -142,7 +139,6 @@ export default function Students() {
   const [studentFilterStatus, setStudentFilterStatus] = useState<string[]>([]);
   const [studentFilterGender, setStudentFilterGender] = useState("");
   const [editStudent, setEditStudent] = useState<Student | null>(null);
-  const [subTab, setSubTab] = useState("fields");
 
   const useServerWork = activeTab === "work";
   const isListView = settings.defaultViewLayout === "list";
@@ -412,15 +408,7 @@ export default function Students() {
             transition={{ duration: 0.18 }}
           >
             <ErrorBoundary>
-              <div className="space-y-4">
-                <SubTabBar
-                  tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-                  value={subTab}
-                  onChange={setSubTab}
-                />
-                {subTab === "fields" && <StudentsSettingsPanel mode="fields" />}
-                {subTab === "preferences" && <StudentsSettingsPanel mode="preferences" />}
-              </div>
+              <StudentsSettingsPanel mode="preferences" />
             </ErrorBoundary>
           </motion.div>
         ) : null}

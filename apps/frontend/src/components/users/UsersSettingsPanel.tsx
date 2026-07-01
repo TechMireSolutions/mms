@@ -4,7 +4,6 @@ import {
   type UsersSettings as UsersSettingsData,
   USERS_TAB_REGISTRY,
   INITIAL_USERS_FIELD_SEED,
-  type FieldDefinition,
 } from "@mms/shared";
 import { useUsersConfig } from "@/hooks/useUsersConfig";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -42,18 +41,6 @@ interface UsersSettingsPanelProps {
   mode?: "fields" | "preferences";
 }
 
-function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
-  if (!savedOrder || savedOrder.length === 0) return fields;
-  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
-  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
-}
-
-function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
-  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
-  const added = newFieldIds.filter((id) => !kept.includes(id));
-  return [...kept, ...added];
-}
-
 export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const { settings, updateSettings } = useUsersConfig();
@@ -75,14 +62,14 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
     setAllowSelfRegistration(settings.allowSelfRegistration);
     setRequireEmailVerification(settings.requireEmailVerification);
 
-    const coreKeys = new Set(USERS_TAB_REGISTRY.map((t: any) => t.key));
-    const customTabs = (settings.formTabs || []).filter((t: any) => !coreKeys.has(t.key));
+    const coreKeys = new Set(USERS_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreKeys.has(tabDefinition.key));
     const updatedTabs = [
       ...USERS_TAB_REGISTRY,
       ...customTabs
-    ].map((t: any) => ({
-      ...t,
-      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    ].map((tabDefinition) => ({
+      ...tabDefinition,
+      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     }));
 
     fieldsEditor.resetAllState(
@@ -147,7 +134,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
       {showFields && (
         <ModuleFieldsSetup
           editor={fieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_USERS_FIELD_SEED[tabId]?.some((f: any) => f.key === key) ?? false}
+          isCoreField={(tabId, key) => INITIAL_USERS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setSaved(false)}
         />
       )}

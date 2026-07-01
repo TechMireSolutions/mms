@@ -5,7 +5,6 @@ import {
   TEACHERS_TAB_REGISTRY,
   INITIAL_TEACHERS_FIELD_SEED,
   TEACHER_SPECIALIZATION_VALUES,
-  type FieldDefinition,
 } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useTeacherConfig";
 import { useModuleFieldsEditor } from "../../hooks/useModuleFieldsEditor";
@@ -41,18 +40,6 @@ function Toggle({ label, description, value, onChange }: ToggleProps): React.JSX
   );
 }
 
-function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
-  if (!savedOrder || savedOrder.length === 0) return fields;
-  const map = Object.fromEntries(savedOrder.map((key, i) => [key, i]));
-  return [...fields].sort((a, b) => (map[a.key] ?? 9999) - (map[b.key] ?? 9999)) as FieldDefinition[];
-}
-
-function syncOrder(prevOrder: string[], newFieldIds: string[]): string[] {
-  const kept = prevOrder.filter((id) => newFieldIds.includes(id));
-  const added = newFieldIds.filter((id) => !kept.includes(id));
-  return [...kept, ...added];
-}
-
 export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }): React.JSX.Element {
   const { t } = useTranslation();
   const { settings, specializations, updateSettings } = useTeacherConfig();
@@ -78,14 +65,14 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
     setRequireContactLink(settings.requireContactLink);
     setDefaultSpecialization(settings.defaultSpecialization);
 
-    const coreKeys = new Set(TEACHERS_TAB_REGISTRY.map(t => t.key));
-    const customTabs = (settings.formTabs || []).filter(t => !coreKeys.has(t.key));
+    const coreKeys = new Set(TEACHERS_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreKeys.has(tabDefinition.key));
     const updatedTabs = [
       ...TEACHERS_TAB_REGISTRY,
       ...customTabs
-    ].map(t => ({
-      ...t,
-      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    ].map((tabDefinition) => ({
+      ...tabDefinition,
+      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     }));
 
     fieldsEditor.resetAllState(
@@ -141,7 +128,7 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
             <Input
               id="teacher-idPrefix"
               value={idPrefix}
-              onChange={(e) => { setIdPrefix(e.target.value); setSaved(false); }}
+              onChange={(event) => { setIdPrefix(event.target.value); setSaved(false); }}
             />
           </div>
 
@@ -162,7 +149,7 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
             <FormSelect
               id="teacher-defaultSpecialization"
               value={defaultSpecialization}
-              onChange={(val) => { setDefaultSpecialization(val); setSaved(false); }}
+            onChange={(specialization) => { setDefaultSpecialization(specialization); setSaved(false); }}
               options={specializationOptions}
             />
           </div>
@@ -172,7 +159,7 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
       {showFields && (
         <ModuleFieldsSetup
           editor={fieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_TEACHERS_FIELD_SEED[tabId]?.some((f) => f.key === key) ?? false}
+          isCoreField={(tabId, key) => INITIAL_TEACHERS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setSaved(false)}
         />
       )}

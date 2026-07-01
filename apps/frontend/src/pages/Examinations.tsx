@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,8 +6,8 @@ import { BookOpen, FileText, PenTool, Layers } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
 import { PageHeader } from "../components/ui/PageHeader";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { SubTabBar } from "@/components/ui/SubTabBar";
 import { Modal } from "@/components/ui/Modal";
 import ExamsList from "../components/examination/ExamsList";
 import ExamForm from "../components/examination/ExamForm";
@@ -33,7 +32,6 @@ import {
  */
 export default function Examinations(): React.JSX.Element {
   const PAGE_TABS = useModuleTierTabs();
-  const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const OPS_SUB_TABS = useMemo(
     () => [
@@ -44,7 +42,6 @@ export default function Examinations(): React.JSX.Element {
   );
   const [activeTab, setActiveTab] = useState("work");
   const [activeSubTab, setActiveSubTab] = useState("exams");
-  const [configSubTab, setConfigSubTab] = useState<"fields" | "preferences">("fields");
 
   const exams = useExaminationsExamsCollection();
   const examResults = useExaminationsResultsCollection();
@@ -125,7 +122,7 @@ export default function Examinations(): React.JSX.Element {
         <ErrorBoundary>
           <AnimatePresence mode="wait">
             <motion.div
-              key={`${effectiveTab}-${effectiveSubTab}-${configSubTab}`}
+              key={`${effectiveTab}-${effectiveSubTab}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -133,14 +130,7 @@ export default function Examinations(): React.JSX.Element {
               className="space-y-4"
             >
               {effectiveTab === "setup" && (
-                <div className="space-y-4">
-                  <SubTabBar
-                    tabs={configSubTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-                    value={configSubTab}
-                    onChange={(tabKey) => setConfigSubTab(tabKey as typeof configSubTab)}
-                  />
-                  <ExaminationsSettings mode={configSubTab} />
-                </div>
+                <ExaminationsSettings mode="preferences" />
               )}
 
               {effectiveTab === "reports" && (

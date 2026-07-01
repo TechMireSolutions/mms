@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useConfigSubTabs } from "@/hooks/useConfigSubTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,7 +31,6 @@ import { useEnrollmentColumnLayout } from "@/hooks/useEnrollmentColumnLayout";
  * @returns {React.ReactElement} The Enrollments page component.
  */
 export default function Enrollments() {
-  const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const SUB_TABS = useMemo(
     () => [
@@ -51,7 +49,6 @@ export default function Enrollments() {
   const { createEnrollment, updateEnrollment } = useEnrollmentMutations();
   const { updateStudent } = useStudentMutations();
   const [viewing, setViewing]         = useState<Enrollment | null>(null);
-  const [subTab, setSubTab]           = useState("fields");
   const [showWizard, setShowWizard]   = useState(false);
   const [filteredCount, setFilteredCount] = useState(0);
   const columnLayout = useEnrollmentColumnLayout();
@@ -209,14 +206,7 @@ export default function Enrollments() {
 
           {tab === "setup" && (
             <ErrorBoundary>
-              <div className="space-y-4">
-                <SubTabBar
-                  tabs={configSubTabs.map((item) => ({ key: item.id, label: item.label }))}
-                  value={subTab}
-                  onChange={setSubTab}
-                />
-                <EnrollmentsSettings mode={subTab as "fields" | "preferences"} />
-              </div>
+              <EnrollmentsSettings mode="preferences" />
             </ErrorBoundary>
           )}
         </motion.div>

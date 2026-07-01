@@ -304,7 +304,7 @@ export function ModuleFieldsSetup({
           <Input
             id="newTabLabel"
             value={newTabLabel}
-            onChange={(e) => setNewTabLabel(e.target.value)}
+            onChange={(event) => setNewTabLabel(event.target.value)}
             placeholder={t("contacts.setup.addCustomTabPlaceholder") || "e.g. Extra Info"}
             autoFocus
           />
@@ -355,7 +355,7 @@ export function ModuleFieldsSetup({
           <Input
             id="renameTabLabel"
             value={renameTabLabel}
-            onChange={(e) => setRenameTabLabel(e.target.value)}
+            onChange={(event) => setRenameTabLabel(event.target.value)}
             placeholder={t("contacts.setup.addCustomTabPlaceholder") || "e.g. Extra Info"}
             autoFocus
           />

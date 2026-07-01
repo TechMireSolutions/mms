@@ -237,7 +237,6 @@ export default function Users(): React.JSX.Element {
                     onChange={(key) => setConfigSubTab(key as typeof configSubTab)}
                   />
                   {configSubTab === 'permissions' && <RolesPermissions />}
-                  {configSubTab === 'fields' && <UsersSettingsPanel mode="fields" />}
                   {configSubTab === 'preferences' && <UsersSettingsPanel mode="preferences" />}
                 </div>
               )}
