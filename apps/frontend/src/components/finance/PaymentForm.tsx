@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ReceiptText } from "lucide-react";
+import { ReceiptText, Coins, DollarSign, FileText } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "../ui/DatePicker";
@@ -86,10 +86,14 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
   };
 
   const footerStart = invoice ? (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      <span className="font-semibold text-foreground truncate max-w-[200px]">{invoice.studentName}</span>
-      <div className="flex items-center gap-2 border-s border-border ps-3">
-        <span>Balance: {formatMoney(balance - Number(paymentDraft.amount || 0))}</span>
+    <div className="flex flex-wrap items-center gap-2.5 text-xs">
+      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
+        {invoice.studentName}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20 text-[10px]">
+          Balance: {formatMoney(balance - Number(paymentDraft.amount || 0))}
+        </span>
       </div>
     </div>
   ) : null;
@@ -109,26 +113,43 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     >
       <div className="space-y-5 text-left">
         {invoice && (
-          <article className="rounded-xl border border-border bg-card p-4">
-            <h4 className="text-[14px] font-bold text-foreground m-0">{invoice.studentName}</h4>
-            <p className="text-[11px] text-muted-foreground m-0 mt-0.5">{invoice.id} · {invoice.class}</p>
-            <p className="text-[12px] font-semibold text-primary m-0 mt-2">Balance due: {formatMoney(balance)}</p>
+          <article className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 px-6 space-y-2 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h4 className="text-[14px] font-bold text-foreground m-0">{invoice.studentName}</h4>
+                <p className="text-[11px] text-muted-foreground m-0 mt-0.5">{invoice.id} · {invoice.class}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase font-bold text-muted-foreground">Balance Due</p>
+                <p className="text-[14px] font-bold text-primary m-0 mt-0.5">{formatMoney(balance)}</p>
+              </div>
+            </div>
           </article>
         )}
 
-        <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
+        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
+            <Coins className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Payment Details</h3>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <Field label="Amount (PKR) *" error={errors.amount}>
-                <input
-                  type="number"
-                  className={FORM_INPUT}
-                  value={paymentDraft.amount || ""}
-                  onChange={(e) => updateDraft({ amount: e.target.value === "" ? 0 : Number(e.target.value) })}
-                  max={balance}
-                  min={1}
-                  required
-                />
+                <div className="relative flex items-center group/input">
+                  <DollarSign className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-emerald-500 transition-colors pointer-events-none" />
+                  <input
+                    type="number"
+                    className={`${FORM_INPUT} pl-10`}
+                    value={paymentDraft.amount || ""}
+                    onChange={(e) => updateDraft({ amount: e.target.value === "" ? 0 : Number(e.target.value) })}
+                    max={balance}
+                    min={1}
+                    required
+                  />
+                </div>
                 {Number(paymentDraft.amount) < balance && Number(paymentDraft.amount) > 0 && (
                   <p className="m-0 mt-1 text-[10px] text-warning">
                     Partial payment — balance remaining: {formatMoney(balance - Number(paymentDraft.amount))}
@@ -170,12 +191,15 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
 
             <div className="sm:col-span-2">
               <Field label="Note" error={errors.note}>
-                <Input
-                  className={FORM_INPUT}
-                  value={paymentDraft.note || ""}
-                  onChange={(e) => updateDraft({ note: e.target.value })}
-                  placeholder="e.g. Cash received, receipt #123"
-                />
+                <div className="relative flex items-center group/input">
+                  <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-emerald-500 transition-colors pointer-events-none" />
+                  <Input
+                    className={`${FORM_INPUT} pl-10`}
+                    value={paymentDraft.note || ""}
+                    onChange={(e) => updateDraft({ note: e.target.value })}
+                    placeholder="e.g. Cash received, receipt #123"
+                  />
+                </div>
               </Field>
             </div>
           </div>

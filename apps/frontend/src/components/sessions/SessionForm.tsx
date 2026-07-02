@@ -106,27 +106,44 @@ export function SessionForm({
   };
 
   const footerStart = sessionDraft.name ? (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      <span className="font-semibold text-foreground">{sessionDraft.name}</span>
-      <div className="flex items-center gap-2 border-s border-border ps-3">
-        <span>{sessionDraft.type}</span>
-        <span className="border-s border-border ps-2 capitalize">{sessionDraft.status}</span>
+    <div className="flex flex-wrap items-center gap-2.5 text-xs">
+      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
+        {sessionDraft.name}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
+          {sessionDraft.type}
+        </span>
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20 text-[10px] capitalize">
+          {sessionDraft.status}
+        </span>
       </div>
     </div>
   ) : (
-    <span className="text-xs text-destructive">Session Name is required</span>
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
+      Session Name is required
+    </span>
   );
 
   const renderBasic = () => (
     <div className="space-y-4 text-left">
-      <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+      <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
+          <Calendar className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Session Details</h3>
+        </div>
+
         <Field label="Session Name" required error={errors.name}>
-          <Input
-            value={sessionDraft.name || ""}
-            onChange={(e) => updateDraft({ name: e.target.value })}
-            placeholder="e.g. Hifz Morning Session 2026"
-            className={FORM_INPUT}
-          />
+          <div className="relative flex items-center group/input">
+            <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+            <Input
+              value={sessionDraft.name || ""}
+              onChange={(e) => updateDraft({ name: e.target.value })}
+              placeholder="e.g. Hifz Morning Session 2026"
+              className={`${FORM_INPUT} pl-10`}
+            />
+          </div>
         </Field>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -190,14 +207,23 @@ export function SessionForm({
 
   const renderFinancial = () => (
     <div className="space-y-4 text-left">
-      <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+      <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
+        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
+          <DollarSign className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Financial Settings</h3>
+        </div>
+
         <Field label="Base Fee">
-          <Input
-            type="number"
-            value={sessionDraft.baseFee ?? 0}
-            onChange={(e) => updateDraft({ baseFee: Number(e.target.value) })}
-            className={FORM_INPUT}
-          />
+          <div className="relative flex items-center group/input">
+            <DollarSign className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+            <Input
+              type="number"
+              value={sessionDraft.baseFee ?? 0}
+              onChange={(e) => updateDraft({ baseFee: Number(e.target.value) })}
+              className={`${FORM_INPUT} pl-10`}
+            />
+          </div>
         </Field>
 
         <Field label="Currency">

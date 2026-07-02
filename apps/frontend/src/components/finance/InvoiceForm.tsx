@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ReceiptText } from "lucide-react";
+import { ReceiptText, User, Hash, School, Calendar, DollarSign, Tag } from "lucide-react";
 import type { Invoice } from "@/lib/data/financeData";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -123,125 +123,152 @@ export function InvoiceForm({
       }
     >
       <div className="space-y-5 text-left">
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className={FORM_LABEL} htmlFor="invoice-student-name">
-              Student name
-            </label>
-            <Input
-              id="invoice-student-name"
-              className={FORM_INPUT}
-              value={draft.studentName}
-              onChange={(event) => setField("studentName", event.target.value)}
-              required
-            />
+        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
+            <ReceiptText className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Invoice Information</h3>
           </div>
-          <div>
-            <label className={FORM_LABEL} htmlFor="invoice-student-id">
-              Student ID
-            </label>
-            <Input
-              id="invoice-student-id"
-              className={FORM_INPUT}
-              value={draft.studentId}
-              onChange={(event) => setField("studentId", event.target.value)}
-            />
-          </div>
-          <div>
-            <label className={FORM_LABEL} htmlFor="invoice-class">
-              Class
-            </label>
-            <Input
-              id="invoice-class"
-              className={FORM_INPUT}
-              value={draft.class}
-              onChange={(event) => setField("class", event.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className={FORM_LABEL} htmlFor="invoice-session">
-              Session
-            </label>
-            <Input
-              id="invoice-session"
-              className={FORM_INPUT}
-              value={draft.session}
-              onChange={(event) => setField("session", event.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className={FORM_LABEL} htmlFor="invoice-base-fee">
-              Base fee
-            </label>
-            <Input
-              id="invoice-base-fee"
-              type="number"
-              min="0"
-              step="0.01"
-              className={FORM_INPUT}
-              value={draft.baseFee}
-              onChange={(event) => setField("baseFee", event.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className={FORM_LABEL} htmlFor="invoice-due-date">
-              Due date
-            </label>
-            <DatePicker
-              value={draft.dueDate}
-              onChange={(value) => setField("dueDate", value)}
-              required
-            />
-          </div>
-          <div>
-            <label className={FORM_LABEL} htmlFor="invoice-discount-type">
-              Discount type
-            </label>
-            <select
-              id="invoice-discount-type"
-              className={FORM_SELECT}
-              value={draft.discountType}
-              onChange={(event) => setField("discountType", event.target.value)}
-            >
-              <option value="">None</option>
-              <option value="manual">Manual</option>
-              <option value="sibling">Sibling</option>
-              <option value="scholarship">Scholarship</option>
-              <option value="staff">Staff</option>
-            </select>
-          </div>
-          <div>
-            <label className={FORM_LABEL} htmlFor="invoice-discount-value">
-              Discount amount
-            </label>
-            <Input
-              id="invoice-discount-value"
-              type="number"
-              min="0"
-              step="0.01"
-              className={FORM_INPUT}
-              value={draft.discountValue}
-              onChange={(event) => setField("discountValue", event.target.value)}
-            />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className={FORM_LABEL} htmlFor="invoice-student-name">
+                Student name
+              </label>
+              <div className="relative flex items-center group/input">
+                <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  id="invoice-student-name"
+                  className={`${FORM_INPUT} pl-10`}
+                  value={draft.studentName}
+                  onChange={(event) => setField("studentName", event.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className={FORM_LABEL} htmlFor="invoice-student-id">
+                Student ID
+              </label>
+              <div className="relative flex items-center group/input">
+                <Hash className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  id="invoice-student-id"
+                  className={`${FORM_INPUT} pl-10`}
+                  value={draft.studentId}
+                  onChange={(event) => setField("studentId", event.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <label className={FORM_LABEL} htmlFor="invoice-class">
+                Class
+              </label>
+              <div className="relative flex items-center group/input">
+                <School className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  id="invoice-class"
+                  className={`${FORM_INPUT} pl-10`}
+                  value={draft.class}
+                  onChange={(event) => setField("class", event.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className={FORM_LABEL} htmlFor="invoice-session">
+                Session
+              </label>
+              <div className="relative flex items-center group/input">
+                <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  id="invoice-session"
+                  className={`${FORM_INPUT} pl-10`}
+                  value={draft.session}
+                  onChange={(event) => setField("session", event.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className={FORM_LABEL} htmlFor="invoice-base-fee">
+                Base fee
+              </label>
+              <div className="relative flex items-center group/input">
+                <DollarSign className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  id="invoice-base-fee"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className={`${FORM_INPUT} pl-10`}
+                  value={draft.baseFee}
+                  onChange={(event) => setField("baseFee", event.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className={FORM_LABEL} htmlFor="invoice-due-date">
+                Due date
+              </label>
+              <DatePicker
+                value={draft.dueDate}
+                onChange={(value) => setField("dueDate", value)}
+                required
+              />
+            </div>
+            <div>
+              <label className={FORM_LABEL} htmlFor="invoice-discount-type">
+                Discount type
+              </label>
+              <select
+                id="invoice-discount-type"
+                className={FORM_SELECT}
+                value={draft.discountType}
+                onChange={(event) => setField("discountType", event.target.value)}
+              >
+                <option value="">None</option>
+                <option value="manual">Manual</option>
+                <option value="sibling">Sibling</option>
+                <option value="scholarship">Scholarship</option>
+                <option value="staff">Staff</option>
+              </select>
+            </div>
+            <div>
+              <label className={FORM_LABEL} htmlFor="invoice-discount-value">
+                Discount amount
+              </label>
+              <div className="relative flex items-center group/input">
+                <Tag className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  id="invoice-discount-value"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className={`${FORM_INPUT} pl-10`}
+                  value={draft.discountValue}
+                  onChange={(event) => setField("discountValue", event.target.value)}
+                />
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="rounded-lg border border-border bg-muted/30 px-4 py-3">
+        <section className="relative overflow-hidden group rounded-2xl border border-border/85 bg-card/45 backdrop-blur-sm p-5 px-6 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
           <div className="grid grid-cols-3 gap-3 text-sm">
             <div>
-              <p className="m-0 text-[11px] font-semibold uppercase text-muted-foreground">Base</p>
-              <p className="m-0 font-bold text-foreground">{formatMoney(baseFee)}</p>
+              <p className="m-0 text-[10px] font-bold uppercase text-muted-foreground">Base Fee</p>
+              <p className="m-0 mt-0.5 font-bold text-foreground text-sm">{formatMoney(baseFee)}</p>
             </div>
             <div>
-              <p className="m-0 text-[11px] font-semibold uppercase text-muted-foreground">Discount</p>
-              <p className="m-0 font-bold text-warning">-{formatMoney(discountAmt)}</p>
+              <p className="m-0 text-[10px] font-bold uppercase text-muted-foreground">Discount</p>
+              <p className="m-0 mt-0.5 font-bold text-warning text-sm">-{formatMoney(discountAmt)}</p>
             </div>
             <div>
-              <p className="m-0 text-[11px] font-semibold uppercase text-muted-foreground">Final</p>
-              <p className="m-0 font-bold text-primary">{formatMoney(finalAmt)}</p>
+              <p className="m-0 text-[10px] font-bold uppercase text-muted-foreground">Final Amount</p>
+              <p className="m-0 mt-0.5 font-extrabold text-primary text-sm">{formatMoney(finalAmt)}</p>
             </div>
           </div>
         </section>
