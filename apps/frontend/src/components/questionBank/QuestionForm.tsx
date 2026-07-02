@@ -15,7 +15,6 @@ import {
   APP_LANGUAGES,
   formatLanguageSelectLabel,
   getLanguageDirection,
-  getBookCitationFieldIds,
   normalizeAppLanguage,
   type AppLanguageCode,
   type QuestionType,

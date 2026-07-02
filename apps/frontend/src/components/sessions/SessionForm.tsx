@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { Calendar, DollarSign, BookOpen } from "lucide-react";
+import React, { useState } from "react";
+import { Calendar, DollarSign } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "../ui/DatePicker";

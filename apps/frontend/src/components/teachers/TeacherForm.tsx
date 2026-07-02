@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { School, User, Briefcase } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,6 @@ import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/hooks/us
 import { notify } from "@/lib/notify";
 import {
   Teacher,
-  Contact,
   TEACHER_STATUS_VALUES,
   TEACHER_SPECIALIZATION_VALUES,
   AppTranslationKey,
