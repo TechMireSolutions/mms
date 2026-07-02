@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from "react";
-import { User, Phone, Mail, MapPin, Share2, Heart, Users, Plus } from "lucide-react";
+import React, { useState, useCallback, useMemo } from "react";
+import { User, Phone, Mail, MapPin, Share2, Heart, Users, Plus, Camera } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,11 +9,18 @@ import ContactPicker from "@/components/contactLink/ContactPicker";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/hooks/useGlobalSettings";
+import { AvatarCropper } from "@/components/ui/AvatarCropper";
+import {
+  useContactConfig,
+  useContactValidation,
+  ValidationError,
+} from "@/lib/contexts/ContactConfigContext";
 import {
   toTitleCase,
   applyTitleCaseToContact,
   normalizeToE164,
   parsePhoneNumber,
+  getInitials,
   Contact,
   PhoneNumber,
   EmailAddress,
@@ -67,10 +75,23 @@ export default function ContactForm({
 }: ContactFormProps): React.JSX.Element {
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
+  const {
+    enabledTabIds,
+    isTabFieldEnabled,
+    fields,
+    phoneLabels,
+    emailLabels,
+    addressLabels,
+    socialPlatforms,
+    relationships: relationshipOptions,
+    genders,
+  } = useContactConfig();
+  const validate = useContactValidation();
 
   const [tab, setTab] = useState<TabKey>("basic");
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() => {
     const initial: Partial<Contact> = {
@@ -108,6 +129,43 @@ export default function ContactForm({
     return initial;
   });
 
+  const visibleTabs = useMemo(() => {
+    return CONTACT_TABS.filter((tabItem) => {
+      if (tabItem.key === "basic" || tabItem.key === "relationships") return true;
+      return enabledTabIds.has(tabItem.key);
+    });
+  }, [enabledTabIds]);
+
+  const isFieldEnabled = useCallback(
+    (tabId: string, fieldId: string) => {
+      const tabFields = fields[tabId] || [];
+      const exists = tabFields.some((f) => f.key === fieldId);
+      if (!exists) return true; // Default standard database columns to true if not registered in fields
+      return isTabFieldEnabled(tabId, fieldId);
+    },
+    [fields, isTabFieldEnabled]
+  );
+
+  const getFieldError = useCallback(
+    (fieldId: string) => {
+      const found = validationErrors.find(
+        (err) => err.fieldId === fieldId && err.index === undefined
+      );
+      return found?.message;
+    },
+    [validationErrors]
+  );
+
+  const getListItemError = useCallback(
+    (tabId: string, fieldId: string, index: number) => {
+      const found = validationErrors.find(
+        (err) => err.tabId === tabId && err.fieldId === fieldId && err.index === index
+      );
+      return found?.message;
+    },
+    [validationErrors]
+  );
+
   const updateDraft = useCallback((patch: Partial<Contact>) => {
     setContactDraft((prev) => {
       const next = { ...prev, ...patch };
@@ -119,6 +177,21 @@ export default function ContactForm({
       return next;
     });
   }, []);
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        if (typeof readerEvent.target?.result === "string") {
+          setCropSrc(readerEvent.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+      event.target.value = "";
+    }
+  };
 
   const handlePhoneBlur = (index: number) => {
     const phone = (contactDraft.phones || [])[index];
@@ -143,22 +216,27 @@ export default function ContactForm({
   };
 
   const handleSave = () => {
-    setErrors({});
-    const newErrors: Record<string, string> = {};
-    if (!contactDraft.firstName?.trim()) {
-      newErrors.firstName = t("contacts.form.firstNameRequired") || "First name is required";
-    }
+    setValidationErrors([]);
+    const formErrors = validate(contactDraft);
 
+    // Custom Pakistani CNIC validation (13 digits)
     if (contactDraft.cnic) {
       const cleanCnic = contactDraft.cnic.replace(/\D/g, "");
       if (cleanCnic.length > 0 && cleanCnic.length !== 13) {
-        newErrors.cnic = t("contacts.form.cnicInvalid") || "CNIC must be in the format 99999 9999999 9";
+        formErrors.push({
+          fieldId: "cnic",
+          tabId: "basic",
+          message: t("contacts.form.cnicInvalid") || "CNIC must be in the format 99999 9999999 9",
+        });
       }
     }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setTab("basic");
+    if (formErrors.length > 0) {
+      setValidationErrors(formErrors);
+      const firstError = formErrors[0];
+      if (firstError.tabId) {
+        setTab(firstError.tabId as TabKey);
+      }
       notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
       return;
     }
@@ -212,75 +290,177 @@ export default function ContactForm({
 
   // Tab sub-renders
   const renderBasic = () => (
-    <div className="space-y-4 text-left">
-      <Field label={t("contacts.reportFields.firstName")} required error={errors.firstName} id="firstName">
-        <Input
-          value={contactDraft.firstName || ""}
-          onChange={(e) => updateDraft({ firstName: e.target.value })}
-          placeholder={t("contacts.reportFields.firstName")}
-          className="min-h-[44px]"
-        />
-      </Field>
+    <div className="space-y-6 text-left">
+      {isFieldEnabled("basic", "avatar") && (
+        <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 mb-2 border-b border-border/60">
+          {cropSrc && (
+            <AvatarCropper
+              src={cropSrc}
+              onCrop={(url) => {
+                updateDraft({ avatar: url });
+                setCropSrc(null);
+              }}
+              onCancel={() => setCropSrc(null)}
+            />
+          )}
+          <div className="relative flex-shrink-0 group">
+            <div className="w-20 h-20 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center border-2 border-primary/20 shadow-inner transition-all duration-300 group-hover:border-primary/40 relative">
+              {contactDraft.avatar ? (
+                <img
+                  src={contactDraft.avatar}
+                  alt="Profile"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              ) : (
+                <span className="text-2xl font-bold text-primary select-none">
+                  {getInitials(
+                    contactDraft.name ||
+                      `${contactDraft.firstName || ""} ${contactDraft.lastName || ""}`.trim()
+                  )}
+                </span>
+              )}
 
-      <Field label={t("contacts.reportFields.lastName")} id="lastName">
-        <Input
-          value={contactDraft.lastName || ""}
-          onChange={(e) => updateDraft({ lastName: e.target.value })}
-          placeholder={t("contacts.reportFields.lastName")}
-          className="min-h-[44px]"
-        />
-      </Field>
+              <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white gap-1 rounded-full">
+                <Camera className="w-4 h-4" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">
+                  {t("account.changePhoto") || "Change"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+              </label>
+            </div>
+          </div>
 
-      <Field label={t("contacts.reportFields.gender")} id="gender">
-        <EditableSelect
-          options={["Male", "Female", "Other", "Unspecified"]}
-          value={contactDraft.gender || "Unspecified"}
-          onChange={(val) => updateDraft({ gender: val })}
-          placeholder={t("contacts.form.selectOption")}
-          className="w-full"
-        />
-      </Field>
+          <div className="text-center sm:text-left flex-1 min-w-0">
+            <h3 className="text-base font-bold text-foreground truncate">
+              {contactDraft.name || t("contacts.form.createNewContact") || "New Contact"}
+            </h3>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
+              {contactDraft.gender && contactDraft.gender !== "Unspecified" && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground border border-border/80">
+                  {contactDraft.gender}
+                </span>
+              )}
+              {contactDraft.isSyed && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/15 text-primary border border-primary/20">
+                  {t("contacts.reportFields.isSyed") || "Syed"}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
-      <Field label={t("contacts.reportFields.dob")} id="dob">
-        <Input
-          type="date"
-          value={contactDraft.dob || ""}
-          onChange={(e) => updateDraft({ dob: e.target.value })}
-          className="min-h-[44px]"
-        />
-      </Field>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {isFieldEnabled("basic", "firstName") && (
+          <Field
+            label={t("contacts.reportFields.firstName")}
+            required
+            error={getFieldError("firstName")}
+            id="firstName"
+          >
+            <Input
+              value={contactDraft.firstName || ""}
+              onChange={(e) => updateDraft({ firstName: e.target.value })}
+              placeholder={t("contacts.reportFields.firstName")}
+              className="min-h-[44px]"
+            />
+          </Field>
+        )}
 
-      <Field label={t("contacts.form.cnic") || "CNIC"} id="cnic" error={errors.cnic}>
-        <Input
-          value={contactDraft.cnic || ""}
-          onChange={(e) => {
-            const formatted = formatCnic(e.target.value);
-            updateDraft({ cnic: formatted });
-          }}
-          placeholder={t("contacts.form.cnicPlaceholder") || "99999 9999999 9"}
-          className="min-h-[44px]"
-        />
-      </Field>
+        {isFieldEnabled("basic", "lastName") && (
+          <Field
+            label={t("contacts.reportFields.lastName")}
+            error={getFieldError("lastName")}
+            id="lastName"
+          >
+            <Input
+              value={contactDraft.lastName || ""}
+              onChange={(e) => updateDraft({ lastName: e.target.value })}
+              placeholder={t("contacts.reportFields.lastName")}
+              className="min-h-[44px]"
+            />
+          </Field>
+        )}
 
-      <div className="flex items-center gap-2.5 py-1">
-        <Checkbox
-          id="isSyed"
-          checked={!!contactDraft.isSyed}
-          onCheckedChange={(checked) => updateDraft({ isSyed: !!checked })}
-        />
-        <label htmlFor="isSyed" className="text-xs font-semibold select-none cursor-pointer">
-          {t("contacts.reportFields.isSyed")}
-        </label>
+        {isFieldEnabled("basic", "gender") && (
+          <Field
+            label={t("contacts.reportFields.gender")}
+            error={getFieldError("gender")}
+            id="gender"
+          >
+            <EditableSelect
+              options={genders.length > 0 ? genders : ["Male", "Female", "Other", "Unspecified"]}
+              value={contactDraft.gender || "Unspecified"}
+              onChange={(val) => updateDraft({ gender: val })}
+              placeholder={t("contacts.form.selectOption")}
+              className="w-full"
+            />
+          </Field>
+        )}
+
+        {isFieldEnabled("basic", "dob") && (
+          <Field label={t("contacts.reportFields.dob")} error={getFieldError("dob")} id="dob">
+            <Input
+              type="date"
+              value={contactDraft.dob || ""}
+              onChange={(e) => updateDraft({ dob: e.target.value })}
+              className="min-h-[44px]"
+            />
+          </Field>
+        )}
+
+        {isFieldEnabled("basic", "cnic") && (
+          <Field
+            label={t("contacts.form.cnic") || "CNIC"}
+            id="cnic"
+            error={getFieldError("cnic")}
+          >
+            <Input
+              value={contactDraft.cnic || ""}
+              onChange={(e) => {
+                const formatted = formatCnic(e.target.value);
+                updateDraft({ cnic: formatted });
+              }}
+              placeholder={t("contacts.form.cnicPlaceholder") || "99999 9999999 9"}
+              className="min-h-[44px]"
+            />
+          </Field>
+        )}
+
+        {isFieldEnabled("basic", "isSyed") && (
+          <div className="flex flex-col justify-end min-h-[44px]">
+            <div className="flex items-center gap-2.5 py-3 px-4 rounded-xl border border-border/80 bg-muted/5 select-none cursor-pointer hover:bg-muted/10 transition-colors">
+              <Checkbox
+                id="isSyed"
+                checked={!!contactDraft.isSyed}
+                onCheckedChange={(checked) => updateDraft({ isSyed: !!checked })}
+              />
+              <label
+                htmlFor="isSyed"
+                className="text-xs font-semibold select-none cursor-pointer flex-1"
+              >
+                {t("contacts.reportFields.isSyed")}
+              </label>
+            </div>
+          </div>
+        )}
       </div>
 
-      <Field label={t("teachers.field.notes")} id="notes">
-        <textarea
-          value={(contactDraft.notes as string) || ""}
-          onChange={(e) => updateDraft({ notes: e.target.value })}
-          placeholder={t("teachers.field.notes")}
-          className="w-full min-h-[80px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
-        />
-      </Field>
+      {isFieldEnabled("basic", "notes") && (
+        <Field label={t("teachers.field.notes")} id="notes" error={getFieldError("notes")}>
+          <textarea
+            value={(contactDraft.notes as string) || ""}
+            onChange={(e) => updateDraft({ notes: e.target.value })}
+            placeholder={t("teachers.field.notes")}
+            className="w-full min-h-[88px] p-3.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
+          />
+        </Field>
+      )}
     </div>
   );
 
@@ -295,66 +475,83 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {phones.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border rounded-xl bg-card">
-            <Phone className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <div className="text-center py-8 border-2 border-dashed border-border/85 rounded-xl bg-muted/5 backdrop-blur-sm">
+            <Phone className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noPhoneNumbersYet")}</p>
           </div>
         )}
 
-        {phones.map((phone, idx) => (
-          <div key={idx} className={COLLECTION_CARD}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
-                <EditableSelect
-                  options={["Mobile", "Home", "Work", "WhatsApp", "Other"]}
-                  value={phone.label || "Mobile"}
-                  onChange={(val) => updatePhone(idx, { label: val })}
-                  className={TYPE_SELECT_WIDTH}
-                />
-              </div>
-              <CardRemoveButton onClick={() => removePhone(idx)} label="Remove Phone" />
-            </div>
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {phones.map((phone, idx) => {
+              const numError = getListItemError("phones", "number", idx);
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
+                      <EditableSelect
+                        options={phoneLabels.length > 0 ? phoneLabels : ["Mobile", "Home", "Work", "WhatsApp", "Other"]}
+                        value={phone.label || "Mobile"}
+                        onChange={(val) => updatePhone(idx, { label: val })}
+                        className={TYPE_SELECT_WIDTH}
+                      />
+                    </div>
+                    <CardRemoveButton onClick={() => removePhone(idx)} label="Remove Phone" />
+                  </div>
 
-            <div className="flex gap-2">
-              <div className="w-20 flex-shrink-0">
-                <Input
-                  value={phone.countryCode || "+92"}
-                  onChange={(e) => updatePhone(idx, { countryCode: e.target.value })}
-                  onBlur={() => handlePhoneBlur(idx)}
-                  placeholder="+92"
-                  className="min-h-[44px]"
-                />
-              </div>
-              <div className="flex-1">
-                <Input
-                  value={phone.number || ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const trimmed = val.trim();
-                    if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
-                      if (trimmed.length > 6) {
-                        const parsed = parsePhoneNumber(val, phone.countryCode || "+92", ["+92", "+1", "+44"]);
-                        updatePhone(idx, { countryCode: parsed.countryCode, number: parsed.number });
-                        return;
-                      }
-                    }
-                    updatePhone(idx, { number: val });
-                  }}
-                  onBlur={() => handlePhoneBlur(idx)}
-                  placeholder={t("contacts.form.phoneNumberPlaceholder")}
-                  className="min-h-[44px]"
-                />
-              </div>
-            </div>
-          </div>
-        ))}
+                  <div className="flex gap-2">
+                    <div className="w-20 flex-shrink-0">
+                      <Input
+                        value={phone.countryCode || "+92"}
+                        onChange={(e) => updatePhone(idx, { countryCode: e.target.value })}
+                        onBlur={() => handlePhoneBlur(idx)}
+                        placeholder="+92"
+                        className="min-h-[44px]"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        value={phone.number || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const trimmed = val.trim();
+                          if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
+                            if (trimmed.length > 6) {
+                              const parsed = parsePhoneNumber(val, phone.countryCode || "+92", ["+92", "+1", "+44"]);
+                              updatePhone(idx, { countryCode: parsed.countryCode, number: parsed.number });
+                              return;
+                            }
+                          }
+                          updatePhone(idx, { number: val });
+                        }}
+                        onBlur={() => handlePhoneBlur(idx)}
+                        placeholder={t("contacts.form.phoneNumberPlaceholder")}
+                        className={`min-h-[44px] ${numError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                      />
+                    </div>
+                  </div>
+                  {numError && (
+                    <p className="text-[10px] text-destructive mt-1 font-medium">{numError}</p>
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
         <Button
           type="button"
           variant="ghost"
           onClick={addPhone}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addPhoneNumber")}</span>
@@ -374,42 +571,59 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {emails.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border rounded-xl bg-card">
-            <Mail className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <div className="text-center py-8 border-2 border-dashed border-border/80 rounded-xl bg-muted/5 backdrop-blur-sm">
+            <Mail className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noEmailAddressesYet")}</p>
           </div>
         )}
 
-        {emails.map((email, idx) => (
-          <div key={idx} className={COLLECTION_CARD}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
-                <EditableSelect
-                  options={["Personal", "Work", "Other"]}
-                  value={email.label || "Personal"}
-                  onChange={(val) => updateEmail(idx, { label: val })}
-                  className={TYPE_SELECT_WIDTH}
-                />
-              </div>
-              <CardRemoveButton onClick={() => removeEmail(idx)} label="Remove Email" />
-            </div>
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {emails.map((email, idx) => {
+              const emailError = getListItemError("emails", "address", idx);
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
+                      <EditableSelect
+                        options={emailLabels.length > 0 ? emailLabels : ["Personal", "Work", "Other"]}
+                        value={email.label || "Personal"}
+                        onChange={(val) => updateEmail(idx, { label: val })}
+                        className={TYPE_SELECT_WIDTH}
+                      />
+                    </div>
+                    <CardRemoveButton onClick={() => removeEmail(idx)} label="Remove Email" />
+                  </div>
 
-            <Input
-              type="email"
-              value={email.address || ""}
-              onChange={(e) => updateEmail(idx, { address: e.target.value })}
-              placeholder={t("auth.emailAddress")}
-              className="min-h-[44px]"
-            />
-          </div>
-        ))}
+                  <Input
+                    type="email"
+                    value={email.address || ""}
+                    onChange={(e) => updateEmail(idx, { address: e.target.value })}
+                    placeholder={t("auth.emailAddress")}
+                    className={`min-h-[44px] ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                  />
+                  {emailError && (
+                    <p className="text-[10px] text-destructive mt-1 font-medium">{emailError}</p>
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
         <Button
           type="button"
           variant="ghost"
           onClick={addEmail}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addEmailAddress")}</span>
@@ -435,63 +649,88 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {addresses.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border rounded-xl bg-card">
-            <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <div className="text-center py-8 border-2 border-dashed border-border/80 rounded-xl bg-muted/5 backdrop-blur-sm">
+            <MapPin className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noAddressesYet")}</p>
           </div>
         )}
 
-        {addresses.map((addr, idx) => (
-          <div key={idx} className={COLLECTION_CARD}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
-                <EditableSelect
-                  options={["Home", "Work", "Billing", "Other"]}
-                  value={addr.label || "Home"}
-                  onChange={(val) => updateAddress(idx, { label: val })}
-                  className={TYPE_SELECT_WIDTH}
-                />
-              </div>
-              <CardRemoveButton onClick={() => removeAddress(idx)} label="Remove Address" />
-            </div>
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {addresses.map((addr, idx) => {
+              const line1Error = getListItemError("addresses", "line1", idx);
+              const cityError = getListItemError("addresses", "city", idx);
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
+                      <EditableSelect
+                        options={addressLabels.length > 0 ? addressLabels : ["Home", "Work", "Billing", "Other"]}
+                        value={addr.label || "Home"}
+                        onChange={(val) => updateAddress(idx, { label: val })}
+                        className={TYPE_SELECT_WIDTH}
+                      />
+                    </div>
+                    <CardRemoveButton onClick={() => removeAddress(idx)} label="Remove Address" />
+                  </div>
 
-            <div className="space-y-2">
-              <Input
-                value={addr.line1 || ""}
-                onChange={(e) => updateAddress(idx, { line1: e.target.value })}
-                placeholder={t("contacts.reportFields.streetAddress")}
-                className="min-h-[44px]"
-              />
-              <div className="grid grid-cols-3 gap-2">
-                <Input
-                  value={addr.city || ""}
-                  onChange={(e) => updateAddress(idx, { city: e.target.value })}
-                  placeholder={t("contacts.reportFields.city")}
-                  className="min-h-[44px]"
-                />
-                <Input
-                  value={addr.state || ""}
-                  onChange={(e) => updateAddress(idx, { state: e.target.value })}
-                  placeholder={t("contacts.reportFields.state")}
-                  className="min-h-[44px]"
-                />
-                <Input
-                  value={addr.country || ""}
-                  onChange={(e) => updateAddress(idx, { country: e.target.value })}
-                  placeholder={t("contacts.reportFields.country")}
-                  className="min-h-[44px]"
-                />
-              </div>
-            </div>
-          </div>
-        ))}
+                  <div className="space-y-2.5">
+                    <div>
+                      <Input
+                        value={addr.line1 || ""}
+                        onChange={(e) => updateAddress(idx, { line1: e.target.value })}
+                        placeholder={t("contacts.reportFields.streetAddress")}
+                        className={`min-h-[44px] ${line1Error ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                      />
+                      {line1Error && (
+                        <p className="text-[10px] text-destructive mt-1 font-medium">{line1Error}</p>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <Input
+                          value={addr.city || ""}
+                          onChange={(e) => updateAddress(idx, { city: e.target.value })}
+                          placeholder={t("contacts.reportFields.city")}
+                          className={`min-h-[44px] ${cityError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        />
+                        {cityError && (
+                          <p className="text-[10px] text-destructive mt-1 font-medium">{cityError}</p>
+                        )}
+                      </div>
+                      <Input
+                        value={addr.state || ""}
+                        onChange={(e) => updateAddress(idx, { state: e.target.value })}
+                        placeholder={t("contacts.reportFields.state")}
+                        className="min-h-[44px]"
+                      />
+                      <Input
+                        value={addr.country || ""}
+                        onChange={(e) => updateAddress(idx, { country: e.target.value })}
+                        placeholder={t("contacts.reportFields.country")}
+                        className="min-h-[44px]"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
         <Button
           type="button"
           variant="ghost"
           onClick={addAddress}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addAddress")}</span>
@@ -511,41 +750,58 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {socials.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border rounded-xl bg-card">
-            <Share2 className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <div className="text-center py-8 border-2 border-dashed border-border/80 rounded-xl bg-muted/5 backdrop-blur-sm">
+            <Share2 className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noSocialLinksYet")}</p>
           </div>
         )}
 
-        {socials.map((soc, idx) => (
-          <div key={idx} className={COLLECTION_CARD}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
-                <EditableSelect
-                  options={["WhatsApp", "Facebook", "Twitter/X", "LinkedIn", "Instagram", "YouTube", "Other"]}
-                  value={soc.platform || "WhatsApp"}
-                  onChange={(val) => updateSocial(idx, { platform: val })}
-                  className={TYPE_SELECT_WIDTH}
-                />
-              </div>
-              <CardRemoveButton onClick={() => removeSocial(idx)} label="Remove Social" />
-            </div>
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {socials.map((soc, idx) => {
+              const urlError = getListItemError("socials", "url", idx);
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
+                      <EditableSelect
+                        options={socialPlatforms.length > 0 ? socialPlatforms : ["WhatsApp", "Facebook", "Twitter/X", "LinkedIn", "Instagram", "YouTube", "Other"]}
+                        value={soc.platform || "WhatsApp"}
+                        onChange={(val) => updateSocial(idx, { platform: val })}
+                        className={TYPE_SELECT_WIDTH}
+                      />
+                    </div>
+                    <CardRemoveButton onClick={() => removeSocial(idx)} label="Remove Social" />
+                  </div>
 
-            <Input
-              value={soc.url || ""}
-              onChange={(e) => updateSocial(idx, { url: e.target.value })}
-              placeholder="Username, Handle or Link URL"
-              className="min-h-[44px]"
-            />
-          </div>
-        ))}
+                  <Input
+                    value={soc.url || ""}
+                    onChange={(e) => updateSocial(idx, { url: e.target.value })}
+                    placeholder="Username, Handle or Link URL"
+                    className={`min-h-[44px] ${urlError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                  />
+                  {urlError && (
+                    <p className="text-[10px] text-destructive mt-1 font-medium">{urlError}</p>
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
         <Button
           type="button"
           variant="ghost"
           onClick={addSocial}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addSocialLink")}</span>
@@ -579,66 +835,86 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {emergencyContacts.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border rounded-xl bg-card">
-            <Heart className="w-8 h-8 text-destructive mx-auto mb-2" />
+          <div className="text-center py-8 border-2 border-dashed border-destructive/20 rounded-xl bg-destructive/5 backdrop-blur-sm">
+            <Heart className="w-8 h-8 text-destructive/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noEmergencyContactsYet")}</p>
           </div>
         )}
 
-        {emergencyContacts.map((em, idx) => (
-          <div key={idx} className={COLLECTION_CARD}>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase">{t("contacts.form.contact")} {idx + 1}</span>
-              <CardRemoveButton onClick={() => removeEmergency(idx)} label="Remove Emergency Contact" />
-            </div>
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {emergencyContacts.map((em, idx) => {
+              const pickerError = getListItemError("emergency", "contactId", idx);
+              const nameError = getListItemError("emergency", "name", idx);
+              const phoneError = getListItemError("emergency", "phone", idx);
+              
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">{t("contacts.form.contact")} {idx + 1}</span>
+                    <CardRemoveButton onClick={() => removeEmergency(idx)} label="Remove Emergency Contact" />
+                  </div>
 
-            <div className="space-y-3">
-              <ContactPicker
-                label={t("contacts.form.linkContact")}
-                value={em.contactId ?? null}
-                onChange={(id) => updateEmergency(idx, { contactId: id != null ? String(id) : "" })}
-                excludeIds={excludeIds(idx)}
-                allowCreate={false}
-                searchPlaceholder={t("contacts.form.searchByName")}
-                emptyTitle={t("contacts.form.noContactsFound")}
-              />
+                  <div className="space-y-3">
+                    <ContactPicker
+                      label={t("contacts.form.linkContact")}
+                      value={em.contactId ?? null}
+                      onChange={(id) => updateEmergency(idx, { contactId: id != null ? String(id) : "" })}
+                      excludeIds={excludeIds(idx)}
+                      allowCreate={false}
+                      searchPlaceholder={t("contacts.form.searchByName")}
+                      emptyTitle={t("contacts.form.noContactsFound")}
+                    />
+                    {pickerError && (
+                      <p className="text-[10px] text-destructive mt-0.5 font-medium">{pickerError}</p>
+                    )}
 
-              <Field label={t("contacts.form.relationshipType")}>
-                <EditableSelect
-                  options={["Father", "Mother", "Guardian", "Spouse", "Sibling", "Uncle", "Aunt", "Other"]}
-                  value={em.relationship || "Father"}
-                  onChange={(val) => updateEmergency(idx, { relationship: val })}
-                  className="w-full"
-                />
-              </Field>
+                    <Field label={t("contacts.form.relationshipType")}>
+                      <EditableSelect
+                        options={relationshipOptions.length > 0 ? relationshipOptions : ["Father", "Mother", "Guardian", "Spouse", "Sibling", "Uncle", "Aunt", "Other"]}
+                        value={em.relationship || "Father"}
+                        onChange={(val) => updateEmergency(idx, { relationship: val })}
+                        className="w-full"
+                      />
+                    </Field>
 
-              <div className="grid grid-cols-2 gap-2">
-                <Field label={t("contacts.reportFields.fullName")}>
-                  <Input
-                    value={em.name || ""}
-                    onChange={(e) => updateEmergency(idx, { name: e.target.value })}
-                    placeholder="Emergency Contact Name"
-                    className="min-h-[44px]"
-                  />
-                </Field>
-                <Field label={t("contacts.form.phoneNumber")}>
-                  <Input
-                    value={em.phone || ""}
-                    onChange={(e) => updateEmergency(idx, { phone: e.target.value })}
-                    placeholder="Emergency Contact Phone"
-                    className="min-h-[44px]"
-                  />
-                </Field>
-              </div>
-            </div>
-          </div>
-        ))}
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field label={t("contacts.reportFields.fullName")} error={nameError}>
+                        <Input
+                          value={em.name || ""}
+                          onChange={(e) => updateEmergency(idx, { name: e.target.value })}
+                          placeholder="Emergency Contact Name"
+                          className="min-h-[44px]"
+                        />
+                      </Field>
+                      <Field label={t("contacts.form.phoneNumber")} error={phoneError}>
+                        <Input
+                          value={em.phone || ""}
+                          onChange={(e) => updateEmergency(idx, { phone: e.target.value })}
+                          placeholder="Emergency Contact Phone"
+                          className="min-h-[44px]"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
         <Button
           type="button"
           variant="ghost"
           onClick={addEmergency}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addEmergencyContact")}</span>
@@ -669,47 +945,64 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {relationships.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border rounded-xl bg-card">
-            <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <div className="text-center py-8 border-2 border-dashed border-border/80 rounded-xl bg-muted/5 backdrop-blur-sm">
+            <Users className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noRelationshipsSet")}</p>
           </div>
         )}
 
-        {relationships.map((rel, idx) => (
-          <div key={idx} className={COLLECTION_CARD}>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase">{t("contacts.form.link")} {idx + 1}</span>
-              <CardRemoveButton onClick={() => removeRelationship(idx)} label="Remove Relationship" />
-            </div>
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {relationships.map((rel, idx) => {
+              const pickerError = getListItemError("relationships", "contactId", idx);
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">{t("contacts.form.link")} {idx + 1}</span>
+                    <CardRemoveButton onClick={() => removeRelationship(idx)} label="Remove Relationship" />
+                  </div>
 
-            <div className="space-y-3">
-              <ContactPicker
-                label={t("contacts.form.linkContact")}
-                value={rel.contactId ?? null}
-                onChange={(id) => updateRelationship(idx, { contactId: id != null ? String(id) : "" })}
-                excludeIds={excludeIds(idx)}
-                allowCreate={false}
-                searchPlaceholder={t("contacts.form.searchByName")}
-                emptyTitle={t("contacts.form.noContactsFound")}
-              />
+                  <div className="space-y-3">
+                    <ContactPicker
+                      label={t("contacts.form.linkContact")}
+                      value={rel.contactId ?? null}
+                      onChange={(id) => updateRelationship(idx, { contactId: id != null ? String(id) : "" })}
+                      excludeIds={excludeIds(idx)}
+                      allowCreate={false}
+                      searchPlaceholder={t("contacts.form.searchByName")}
+                      emptyTitle={t("contacts.form.noContactsFound")}
+                    />
+                    {pickerError && (
+                      <p className="text-[10px] text-destructive mt-0.5 font-medium">{pickerError}</p>
+                    )}
 
-              <Field label={t("contacts.form.relationshipType")}>
-                <EditableSelect
-                  options={["Father", "Mother", "Guardian", "Spouse", "Sibling", "Uncle", "Aunt", "Other"]}
-                  value={rel.relationship || "Father"}
-                  onChange={(val) => updateRelationship(idx, { relationship: val })}
-                  className="w-full"
-                />
-              </Field>
-            </div>
-          </div>
-        ))}
+                    <Field label={t("contacts.form.relationshipType")}>
+                      <EditableSelect
+                        options={relationshipOptions.length > 0 ? relationshipOptions : ["Father", "Mother", "Guardian", "Spouse", "Sibling", "Uncle", "Aunt", "Other"]}
+                        value={rel.relationship || "Father"}
+                        onChange={(val) => updateRelationship(idx, { relationship: val })}
+                        className="w-full"
+                      />
+                    </Field>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
         <Button
           type="button"
           variant="ghost"
           onClick={addRelationship}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addRelationshipLink")}</span>
@@ -767,7 +1060,7 @@ export default function ContactForm({
       }
       icon={User}
       tall
-      tabs={CONTACT_TABS}
+      tabs={visibleTabs}
       activeTab={tab}
       onTabChange={setTab}
       tabPanelIdPrefix="contact-form-tab"
