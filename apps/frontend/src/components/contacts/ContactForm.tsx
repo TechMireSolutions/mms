@@ -79,6 +79,7 @@ export default function ContactForm({
       name: "",
       gender: "Unspecified",
       dob: "",
+      cnic: "",
       isSyed: false,
       notes: "",
       phones: [],
@@ -143,17 +144,29 @@ export default function ContactForm({
 
   const handleSave = () => {
     setErrors({});
+    const newErrors: Record<string, string> = {};
     if (!contactDraft.firstName?.trim()) {
-      setErrors({ firstName: t("contacts.form.firstNameRequired") });
+      newErrors.firstName = t("contacts.form.firstNameRequired") || "First name is required";
+    }
+
+    if (contactDraft.cnic) {
+      const cleanCnic = contactDraft.cnic.replace(/\D/g, "");
+      if (cleanCnic.length > 0 && cleanCnic.length !== 13) {
+        newErrors.cnic = t("contacts.form.cnicInvalid") || "CNIC must be in the format 99999 9999999 9";
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       setTab("basic");
-      notify.error(t("contacts.form.pleaseFixErrors"));
+      notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
       return;
     }
 
     setSaving(true);
     try {
       // Normalize and format data
-      const firstName = toTitleCase(contactDraft.firstName.trim());
+      const firstName = toTitleCase((contactDraft.firstName || "").trim());
       const lastName = toTitleCase((contactDraft.lastName || "").trim());
 
       const normalizedPhones = (contactDraft.phones || []).map((phone) => {
@@ -233,6 +246,18 @@ export default function ContactForm({
           type="date"
           value={contactDraft.dob || ""}
           onChange={(e) => updateDraft({ dob: e.target.value })}
+          className="min-h-[44px]"
+        />
+      </Field>
+
+      <Field label={t("contacts.form.cnic") || "CNIC"} id="cnic" error={errors.cnic}>
+        <Input
+          value={contactDraft.cnic || ""}
+          onChange={(e) => {
+            const formatted = formatCnic(e.target.value);
+            updateDraft({ cnic: formatted });
+          }}
+          placeholder={t("contacts.form.cnicPlaceholder") || "99999 9999999 9"}
           className="min-h-[44px]"
         />
       </Field>
@@ -757,4 +782,13 @@ export default function ContactForm({
       {renderActiveTabContent()}
     </FormModal>
   );
+}
+
+function formatCnic(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 13);
+  if (digits.length <= 5) return digits;
+  if (digits.length <= 12) {
+    return `${digits.slice(0, 5)} ${digits.slice(5)}`;
+  }
+  return `${digits.slice(0, 5)} ${digits.slice(5, 12)} ${digits.slice(12)}`;
 }

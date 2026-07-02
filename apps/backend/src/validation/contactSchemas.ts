@@ -75,6 +75,7 @@ export const contactRecordSchema = z
     name: z.string().optional(),
     gender: z.string().optional(),
     dob: z.string().optional(),
+    cnic: z.string().optional(),
     isSyed: z.boolean().optional(),
     avatar: z.union([z.string(), z.null()]).optional(),
     createdAt: z.string().optional(),

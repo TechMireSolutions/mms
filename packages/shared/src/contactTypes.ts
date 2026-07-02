@@ -84,6 +84,7 @@ export interface Contact {
   lastName?: string;
   gender?: string;
   dob?: string;
+  cnic?: string;
   isSyed?: boolean;
   avatar?: string | null;
   createdAt?: string;
