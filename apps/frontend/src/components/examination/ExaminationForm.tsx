@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Trophy, CheckCircle2, Clock } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -113,18 +113,27 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
       saveDisabled={!valid}
     >
       <div className="space-y-5 text-left">
-        <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
+        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
+            <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Exam Parameters</h3>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <Field label="Exam Name" required error={errors.name}>
-                <Input
-                  id="exam-name"
-                  className={FORM_INPUT}
-                  value={examDraft.name || ""}
-                  onChange={(e) => updateDraft({ name: e.target.value })}
-                  placeholder="e.g. Tajweed Mid-Term"
-                  required
-                />
+                <div className="relative flex items-center group/input">
+                  <BookOpen className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                  <Input
+                    id="exam-name"
+                    className={`${FORM_INPUT} pl-10`}
+                    value={examDraft.name || ""}
+                    onChange={(e) => updateDraft({ name: e.target.value })}
+                    placeholder="e.g. Tajweed Mid-Term"
+                    required
+                  />
+                </div>
               </Field>
             </div>
 
@@ -152,41 +161,52 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
             </Field>
 
             <Field label="Total Marks">
-              <Input
-                id="exam-total"
-                type="number"
-                className={FORM_INPUT}
-                value={examDraft.totalMarks ?? 100}
-                onChange={(e) => updateDraft({ totalMarks: Number(e.target.value) })}
-                min={1}
-                required
-              />
+              <div className="relative flex items-center group/input">
+                <Trophy className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  id="exam-total"
+                  type="number"
+                  className={`${FORM_INPUT} pl-10`}
+                  value={examDraft.totalMarks ?? 100}
+                  onChange={(e) => updateDraft({ totalMarks: Number(e.target.value) })}
+                  min={1}
+                  required
+                />
+              </div>
             </Field>
 
             <Field label="Passing Marks" error={errors.passingMarks}>
-              <Input
-                id="exam-passing"
-                type="number"
-                className={FORM_INPUT}
-                value={examDraft.passingMarks ?? 50}
-                onChange={(e) => updateDraft({ passingMarks: Number(e.target.value) })}
-                min={1}
-                max={examDraft.totalMarks ?? 100}
-                required
-              />
+              <div className="relative flex items-center group/input">
+                <CheckCircle2 className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  id="exam-passing"
+                  type="number"
+                  className={`${FORM_INPUT} pl-10`}
+                  value={examDraft.passingMarks ?? 50}
+                  onChange={(e) => updateDraft({ passingMarks: Number(e.target.value) })}
+                  min={1}
+                  max={examDraft.totalMarks ?? 100}
+                  required
+                />
+              </div>
             </Field>
 
-            <Field label="Duration (min)">
-              <Input
-                id="exam-duration"
-                type="number"
-                className={FORM_INPUT}
-                value={examDraft.duration ?? 60}
-                onChange={(e) => updateDraft({ duration: Number(e.target.value) })}
-                min={5}
-                required
-              />
-            </Field>
+            <div className="sm:col-span-2">
+              <Field label="Duration (min)">
+                <div className="relative flex items-center group/input">
+                  <Clock className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                  <Input
+                    id="exam-duration"
+                    type="number"
+                    className={`${FORM_INPUT} pl-10`}
+                    value={examDraft.duration ?? 60}
+                    onChange={(e) => updateDraft({ duration: Number(e.target.value) })}
+                    min={5}
+                    required
+                  />
+                </div>
+              </Field>
+            </div>
 
             <div className="sm:col-span-2">
               <Field label="Exam Date" required error={errors.date}>

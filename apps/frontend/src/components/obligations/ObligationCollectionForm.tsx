@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Receipt } from "lucide-react";
+import { Receipt, Coins, DollarSign, User, Users } from "lucide-react";
 import {
   PAYMENT_MODES, generateReceiptNo,
   ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
@@ -153,9 +153,10 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
       onSave={handleSave}
       error={Object.values(errors)}
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         {/* Receipt No (read-only) */}
-        <header className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20">
+        <header className="relative overflow-hidden group rounded-2xl border border-primary/25 bg-primary/5 backdrop-blur-sm p-4 px-5.5 flex items-center gap-3.5 shadow-sm transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/70" />
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
           <div>
             <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide m-0">Auto-Generated Receipt No.</h3>
@@ -163,85 +164,116 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
           </div>
         </header>
 
-        <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
-          {formField("received_date", "Received Date", true,
-            <DatePicker
-              value={form.received_date}
-              onChange={(val) => setForm({ ...form, received_date: val })}
-              required
-            />
-          )}
-          {formField("payment_mode", "Payment Mode", true,
-            <select value={form.payment_mode} onChange={(event) => setForm({ ...form, payment_mode: event.target.value })} className={FORM_SELECT}>
-              {PAYMENT_MODES.map((paymentMode) => <option key={paymentMode} value={paymentMode}>{paymentMode}</option>)}
-            </select>
-          )}
-        </fieldset>
-
-        <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
-          {formField("sender_id", "Sender (Contact)", true,
-            <ContactPicker
-              label="Sender (Contact)"
-              value={form.sender_id || null}
-              onChange={(contactId) => setForm({ ...form, sender_id: contactId != null ? String(contactId) : "" })}
-              searchPlaceholder="Search contacts…"
-            />
-          )}
-          {formField("reference_id", "Reference Contact", false,
-            <ContactPicker
-              label="Reference Contact"
-              value={form.reference_id || null}
-              onChange={(contactId) => setForm({ ...form, reference_id: contactId != null ? String(contactId) : "" })}
-              allowCreate={false}
-              searchPlaceholder="Search contacts…"
-            />
-          )}
-        </fieldset>
-
-        <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
-          {formField("amount", "Amount", true,
-            <input type="number" min="0.01" step="0.01" value={form.amount}
-              onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="0.00" className={FORM_INPUT} />
-          )}
-          {formField("currency_id", "Currency", true,
-            <select value={form.currency_id} onChange={(event) => setForm({ ...form, currency_id: event.target.value })} className={FORM_SELECT}>
-              {currencies.map((currency) => <option key={currency.id} value={currency.id}>{currency.code} – {currency.name}</option>)}
-            </select>
-          )}
-        </fieldset>
-
-        <fieldset className="border-0 p-0 m-0 space-y-4">
-          {formField("obligation_type_id", "Obligation Type", true,
-            <select value={form.obligation_type_id} onChange={(event) => setForm({ ...form, obligation_type_id: event.target.value })} className={FORM_SELECT}>
-              <option value="">Select obligation type…</option>
-              {obligationTypes.map((obligationType) => <option key={obligationType.id} value={obligationType.id}>{obligationType.name} ({obligationType.designated_for})</option>)}
-            </select>
-          )}
-
-          {formField("mujtahid_representative_id", "Mujtahid Representative", true,
-            <div>
-              <select value={form.mujtahid_representative_id}
-                onChange={(event) => setForm({ ...form, mujtahid_representative_id: event.target.value })}
-                disabled={!form.obligation_type_id}
-                className={`${FORM_SELECT} ${!form.obligation_type_id ? "opacity-50 cursor-not-allowed" : ""}`}>
-                <option value="">{form.obligation_type_id ? "Select representative…" : "Select obligation type first"}</option>
-                {eligibleReps.map((rep) => {
-                  const mujtahid = getMujtahid(rep.id);
-                  return <option key={rep.id} value={rep.id}>{rep.name}{mujtahid ? ` (${mujtahid.name})` : ""}</option>;
-                })}
+        <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
+            <Receipt className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Collection Metadata</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {formField("received_date", "Received Date", true,
+              <DatePicker
+                value={form.received_date}
+                onChange={(val) => setForm({ ...form, received_date: val })}
+                required
+              />
+            )}
+            {formField("payment_mode", "Payment Mode", true,
+              <select value={form.payment_mode} onChange={(event) => setForm({ ...form, payment_mode: event.target.value })} className={FORM_SELECT}>
+                {PAYMENT_MODES.map((paymentMode) => <option key={paymentMode} value={paymentMode}>{paymentMode}</option>)}
               </select>
-              {selectedMujtahid && (
-                <p className="text-xs text-muted-foreground mt-1">Mujtahid: <span className="font-semibold text-foreground">{selectedMujtahid.name}</span></p>
-              )}
-            </div>
-          )}
+            )}
+          </div>
+        </fieldset>
 
-          {formField("received_by", "Received By (User)", true,
-            <select value={form.received_by} onChange={(event) => setForm({ ...form, received_by: event.target.value })} className={FORM_SELECT}>
-              <option value="">Select user…</option>
-              {users.map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}
-            </select>
-          )}
+        <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-purple-500/60 transition-colors group-hover:bg-purple-500" />
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
+            <Users className="w-4 h-4 text-purple-500/70 group-hover:text-purple-500 transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Sender Details</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {formField("sender_id", "Sender (Contact)", true,
+              <ContactPicker
+                label="Sender (Contact)"
+                value={form.sender_id || null}
+                onChange={(contactId) => setForm({ ...form, sender_id: contactId != null ? String(contactId) : "" })}
+                searchPlaceholder="Search contacts…"
+              />
+            )}
+            {formField("reference_id", "Reference Contact", false,
+              <ContactPicker
+                label="Reference Contact"
+                value={form.reference_id || null}
+                onChange={(contactId) => setForm({ ...form, reference_id: contactId != null ? String(contactId) : "" })}
+                allowCreate={false}
+                searchPlaceholder="Search contacts…"
+              />
+            )}
+          </div>
+        </fieldset>
+
+        <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
+            <Coins className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Financial Value</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {formField("amount", "Amount", true,
+              <div className="relative flex items-center group/input">
+                <DollarSign className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-emerald-500 transition-colors pointer-events-none" />
+                <input type="number" min="0.01" step="0.01" value={form.amount}
+                  onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="0.00" className={`${FORM_INPUT} pl-10`} />
+              </div>
+            )}
+            {formField("currency_id", "Currency", true,
+              <select value={form.currency_id} onChange={(event) => setForm({ ...form, currency_id: event.target.value })} className={FORM_SELECT}>
+                {currencies.map((currency) => <option key={currency.id} value={currency.id}>{currency.code} – {currency.name}</option>)}
+              </select>
+            )}
+          </div>
+        </fieldset>
+
+        <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500/60 transition-colors group-hover:bg-rose-500" />
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
+            <User className="w-4 h-4 text-rose-500/70 group-hover:text-rose-500 transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Islamic Jurisprudence / Wakala</h3>
+          </div>
+          <div className="space-y-4">
+            {formField("obligation_type_id", "Obligation Type", true,
+              <select value={form.obligation_type_id} onChange={(event) => setForm({ ...form, obligation_type_id: event.target.value })} className={FORM_SELECT}>
+                <option value="">Select obligation type…</option>
+                {obligationTypes.map((obligationType) => <option key={obligationType.id} value={obligationType.id}>{obligationType.name} ({obligationType.designated_for})</option>)}
+              </select>
+            )}
+
+            {formField("mujtahid_representative_id", "Mujtahid Representative", true,
+              <div>
+                <select value={form.mujtahid_representative_id}
+                  onChange={(event) => setForm({ ...form, mujtahid_representative_id: event.target.value })}
+                  disabled={!form.obligation_type_id}
+                  className={`${FORM_SELECT} ${!form.obligation_type_id ? "opacity-50 cursor-not-allowed" : ""}`}>
+                  <option value="">{form.obligation_type_id ? "Select representative…" : "Select obligation type first"}</option>
+                  {eligibleReps.map((rep) => {
+                    const mujtahid = getMujtahid(rep.id);
+                    return <option key={rep.id} value={rep.id}>{rep.name}{mujtahid ? ` (${mujtahid.name})` : ""}</option>;
+                  })}
+                </select>
+                {selectedMujtahid && (
+                  <p className="text-xs text-muted-foreground mt-1">Mujtahid: <span className="font-semibold text-foreground">{selectedMujtahid.name}</span></p>
+                )}
+              </div>
+            )}
+
+            {formField("received_by", "Received By (User)", true,
+              <select value={form.received_by} onChange={(event) => setForm({ ...form, received_by: event.target.value })} className={FORM_SELECT}>
+                <option value="">Select user…</option>
+                {users.map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}
+              </select>
+            )}
+          </div>
         </fieldset>
       </div>
     </FormModal>
