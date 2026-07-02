@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { GraduationCap } from "lucide-react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { GraduationCap, User, Users } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -12,6 +12,7 @@ import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { useContactMutations, useContactById } from "@/hooks/useContacts";
+import { useStudentConfig } from "@/hooks/useStudentConfig";
 import {
   checkStudentRegistrationDuplicate,
   useStudentLinkedContactIds,
@@ -26,6 +27,11 @@ import {
   toTitleCase,
   type StudentDuplicateReason,
   type AppTranslationKey,
+  buildDynamicStudentSchema,
+  formatStudentZodIssues,
+  type ValidationError,
+  STUDENT_TAB_REGISTRY,
+  type FieldDefinition,
 } from "@mms/shared";
 
 export interface StudentFormProps {
@@ -48,9 +54,11 @@ export default function StudentForm({
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
   const { updateContact } = useContactMutations();
+  const { settings, statuses: configStatuses, discountTypes } = useStudentConfig();
 
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [tab, setTab] = useState<string>("basic");
   const [manualError, setManualError] = useState("");
 
   const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => ({
@@ -72,6 +80,51 @@ export default function StudentForm({
 
   const updateDraft = (patch: Partial<Student>) => {
     setStudentDraft((prev) => ({ ...prev, ...patch }));
+  };
+
+  const enabledTabs = useMemo(() => new Set(settings.enabledTabs || ["guardian", "academic"]), [settings.enabledTabs]);
+
+  const isTabEnabled = useCallback(
+    (tabId: string) => {
+      if (tabId === "basic") return true;
+      return enabledTabs.has(tabId);
+    },
+    [enabledTabs]
+  );
+
+  const isFieldEnabled = useCallback(
+    (tabId: string, fieldId: string) => {
+      const tabFields = (settings.fields?.[tabId] || []) as FieldDefinition[];
+      const fieldDef = tabFields.find((f) => f.key === fieldId);
+      if (!fieldDef) return true;
+      return fieldDef.enabled !== false;
+    },
+    [settings.fields]
+  );
+
+  const isFieldRequired = useCallback(
+    (tabId: string, fieldId: string) => {
+      const tabFields = (settings.fields?.[tabId] || []) as FieldDefinition[];
+      const fieldDef = tabFields.find((f) => f.key === fieldId);
+      if (!fieldDef) return false;
+      return fieldDef.required === true;
+    },
+    [settings.fields]
+  );
+
+  const visibleTabs = useMemo(() => {
+    return STUDENT_TAB_REGISTRY.filter((tabItem) => {
+      return isTabEnabled(tabItem.key);
+    });
+  }, [isTabEnabled]);
+
+  const getFieldError = (fieldId: string) => {
+    const err = validationErrors.find((e) => e.fieldId === fieldId);
+    return err ? err.message : undefined;
+  };
+
+  const getTabHasError = (tabId: string) => {
+    return validationErrors.some((e) => e.tabId === tabId);
   };
 
   const { data: linkedContact } = useContactById(
@@ -125,22 +178,30 @@ export default function StudentForm({
   };
 
   const handleSave = async () => {
-    setErrors({});
+    setValidationErrors([]);
     setManualError("");
 
-    const newErrors: Record<string, string> = {};
-    if (!studentDraft.contactId) {
-      newErrors.contactId = t("students.form.contactRequired") || "Contact is required";
-    }
-    if (!studentDraft.grNumber?.trim()) {
-      newErrors.grNumber = t("students.form.grNumber") || "GR Number is required";
-    }
-    if (!studentDraft.status) {
-      newErrors.status = "Status is required";
-    }
+    const requiredTabs = new Set(settings.requiredTabs || []);
+    const schema = buildDynamicStudentSchema(
+      settings,
+      enabledTabs,
+      requiredTabs,
+      settings.fields || {},
+      language
+    );
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    const parseResult = schema.safeParse(studentDraft);
+    if (!parseResult.success) {
+      const zodErrors = formatStudentZodIssues(parseResult.error, studentDraft, settings.fields || {});
+      setValidationErrors(zodErrors);
+
+      if (zodErrors.length > 0) {
+        const firstErrTab = zodErrors[0].tabId;
+        if (firstErrTab && firstErrTab !== tab) {
+          setTab(firstErrTab);
+        }
+      }
+
       notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
       return;
     }
@@ -240,6 +301,234 @@ export default function StudentForm({
     <span className="text-xs text-destructive">{t("students.form.contactRequired")}</span>
   );
 
+  const renderBasic = () => {
+    return (
+      <div className="space-y-6">
+        {/* Contact Link */}
+        <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+          <div>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.contactLabel") || "Linked Contact"}</h3>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{t("students.form.contactHint")}</p>
+          </div>
+
+          <ContactPicker
+            label={t("students.form.contactLabel") || "Linked Contact"}
+            value={studentDraft.contactId ? String(studentDraft.contactId) : null}
+            onChange={handleContactSelect}
+            excludeIds={excludeIds}
+            onAvatarChange={handleStudentAvatarChange}
+            searchPlaceholder={t("teachers.form.searchContact")}
+            emptyTitle={t("teachers.form.noContacts")}
+            emptyHint={t("teachers.form.noContactsHint")}
+            error={!!getFieldError("contactId")}
+          />
+          {getFieldError("contactId") && (
+            <p className="text-[10px] text-destructive mt-1 font-medium">{getFieldError("contactId")}</p>
+          )}
+
+          {studentDraft.contactId && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
+              <Field label="Gender (contact)" hint="From contact profile">
+                <Input disabled value={linkedGender || "—"} className={FORM_INPUT} />
+              </Field>
+              <Field label="Date of Birth (contact)" hint="From contact profile">
+                <Input disabled value={linkedDob || "—"} className={FORM_INPUT} />
+              </Field>
+            </div>
+          )}
+        </section>
+
+        {/* Identity details (GR Number, Status, Registration Type) */}
+        <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+          <div>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.registrationSection") || "Registration Details"}</h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label={t("students.form.grNumber")} required error={getFieldError("grNumber")}>
+              <Input
+                required
+                value={studentDraft.grNumber || ""}
+                onChange={(e) => updateDraft({ grNumber: e.target.value })}
+                placeholder={t("students.form.grNumberPlaceholder") || "Enter GR Number"}
+                className={FORM_INPUT}
+              />
+            </Field>
+
+            <Field label={t("students.form.status")} required error={getFieldError("status")}>
+              <FormSelect
+                value={studentDraft.status || "active"}
+                onChange={(val) => updateDraft({ status: val as StudentStatus })}
+                options={(configStatuses.length > 0 ? configStatuses : STUDENT_STATUS_VALUES).map((s) => ({
+                  value: s,
+                  label: t(`students.form.status.${s}` as AppTranslationKey) || s,
+                }))}
+              />
+            </Field>
+
+            <div className="sm:col-span-2">
+              <Field label="Registration Type">
+                <Input
+                  value={studentDraft.registrationType || ""}
+                  onChange={(e) => updateDraft({ registrationType: e.target.value })}
+                  placeholder="e.g. Regular, Online"
+                  className={FORM_INPUT}
+                />
+              </Field>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  };
+
+  const renderGuardian = () => {
+    return (
+      <div className="space-y-6">
+        <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+          <div>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Family & Guardians</h3>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Link parent/guardian contacts</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {isFieldEnabled("guardian", "fatherLink") && (
+              <div className="space-y-1">
+                <ContactPicker
+                  label={t("students.form.fatherLink") || "Father"}
+                  value={studentDraft.fatherContactId ? String(studentDraft.fatherContactId) : null}
+                  onChange={handleFatherSelect}
+                  filterGender="Male"
+                  excludeIds={[studentDraft.contactId, studentDraft.motherContactId, studentDraft.guardianContactId].filter(Boolean).map(String)}
+                  searchPlaceholder={t("teachers.form.searchContact")}
+                  emptyTitle={t("teachers.form.noContacts")}
+                  error={!!getFieldError("fatherLink")}
+                />
+                {getFieldError("fatherLink") && (
+                  <p className="text-[10px] text-destructive mt-1 font-medium">{getFieldError("fatherLink")}</p>
+                )}
+              </div>
+            )}
+
+            {isFieldEnabled("guardian", "motherLink") && (
+              <div className="space-y-1">
+                <ContactPicker
+                  label={t("students.form.motherLink") || "Mother"}
+                  value={studentDraft.motherContactId ? String(studentDraft.motherContactId) : null}
+                  onChange={handleMotherSelect}
+                  filterGender="Female"
+                  excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.guardianContactId].filter(Boolean).map(String)}
+                  searchPlaceholder={t("teachers.form.searchContact")}
+                  emptyTitle={t("teachers.form.noContacts")}
+                  error={!!getFieldError("motherLink")}
+                />
+                {getFieldError("motherLink") && (
+                  <p className="text-[10px] text-destructive mt-1 font-medium">{getFieldError("motherLink")}</p>
+                )}
+              </div>
+            )}
+
+            {isFieldEnabled("guardian", "guardianLink") && (
+              <div className="sm:col-span-2 space-y-1">
+                <ContactPicker
+                  label={t("students.form.guardianLink") || "Guardian (Other)"}
+                  value={studentDraft.guardianContactId ? String(studentDraft.guardianContactId) : null}
+                  onChange={handleGuardianSelect}
+                  excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.motherContactId].filter(Boolean).map(String)}
+                  searchPlaceholder={t("teachers.form.searchContact")}
+                  emptyTitle={t("teachers.form.noContacts")}
+                  error={!!getFieldError("guardianLink")}
+                />
+                {getFieldError("guardianLink") && (
+                  <p className="text-[10px] text-destructive mt-1 font-medium">{getFieldError("guardianLink")}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    );
+  };
+
+  const renderAcademic = () => {
+    return (
+      <div className="space-y-6">
+        {/* Registration date & Finance Details */}
+        <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+          <div>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Enrollment & Finance</h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {isFieldEnabled("academic", "registeredDate") && (
+              <Field label={t("students.form.registeredDate") || "Registration Date"} required={isFieldRequired("academic", "registeredDate")} error={getFieldError("registeredDate")}>
+                <DatePicker
+                  value={studentDraft.registeredDate || undefined}
+                  onChange={(dateStr) => updateDraft({ registeredDate: dateStr })}
+                />
+              </Field>
+            )}
+
+            <Field label="Discount Type">
+              <Input
+                value={studentDraft.discountType || ""}
+                onChange={(e) => updateDraft({ discountType: e.target.value })}
+                placeholder="e.g. Sibling, Need-based"
+                className={FORM_INPUT}
+              />
+            </Field>
+
+            <Field label="Discount %">
+              <Input
+                type="number"
+                value={studentDraft.discountPct ?? 0}
+                onChange={(e) => updateDraft({ discountPct: Number(e.target.value) })}
+                className={FORM_INPUT}
+              />
+            </Field>
+          </div>
+        </section>
+
+        {/* Notes */}
+        <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+          <Field label={t("teachers.field.notes") || "Notes"}>
+            <textarea
+              value={studentDraft.notes || ""}
+              onChange={(e) => updateDraft({ notes: e.target.value })}
+              placeholder="Additional notes..."
+              className="w-full min-h-[120px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
+            />
+          </Field>
+        </section>
+      </div>
+    );
+  };
+
+  const renderActiveTabContent = () => {
+    switch (tab) {
+      case "basic":
+        return renderBasic();
+      case "guardian":
+        return renderGuardian();
+      case "academic":
+        return renderAcademic();
+      default:
+        return null;
+    }
+  };
+
+  const TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+    basic: User,
+    guardian: Users,
+    academic: GraduationCap,
+  };
+
+  const modalTabs = visibleTabs.map((t) => ({
+    ...t,
+    icon: TAB_ICONS[t.key],
+    label: getTabHasError(t.key) ? `${t.label} 🔴` : t.label,
+  }));
+
   return (
     <>
       <FormModal
@@ -249,6 +538,9 @@ export default function StudentForm({
         subtitle={t("students.form.subtitle")}
         icon={GraduationCap}
         tall
+        tabs={modalTabs}
+        activeTab={tab}
+        onTabChange={setTab}
         lang={language}
         cancelLabel={t("common.cancel") || "Cancel"}
         saveLabel={saving ? (t("students.form.saving") || "Saving...") : (student ? (t("students.form.saveUpdate") || "Update") : (t("students.form.saveRegister") || "Register"))}
@@ -258,169 +550,7 @@ export default function StudentForm({
         error={errorSummary || undefined}
         footerStart={footerStart}
       >
-        <div className="space-y-6 text-left pb-4">
-          {/* Section 1: Contact Link */}
-          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
-            <div>
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.contactLabel") || "Linked Contact"}</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{t("students.form.contactHint")}</p>
-            </div>
-
-            <ContactPicker
-              label={t("students.form.contactLabel") || "Linked Contact"}
-              value={studentDraft.contactId ? String(studentDraft.contactId) : null}
-              onChange={handleContactSelect}
-              excludeIds={excludeIds}
-              onAvatarChange={handleStudentAvatarChange}
-              searchPlaceholder={t("teachers.form.searchContact")}
-              emptyTitle={t("teachers.form.noContacts")}
-              emptyHint={t("teachers.form.noContactsHint")}
-              error={!!errors.contactId}
-            />
-            {errors.contactId && (
-              <p className="text-[10px] text-destructive mt-1 font-medium">{errors.contactId}</p>
-            )}
-
-            {studentDraft.contactId && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
-                <Field label="Gender (contact)" hint="From contact profile">
-                  <Input disabled value={linkedGender || "—"} className={FORM_INPUT} />
-                </Field>
-                <Field label="Date of Birth (contact)" hint="From contact profile">
-                  <Input disabled value={linkedDob || "—"} className={FORM_INPUT} />
-                </Field>
-              </div>
-            )}
-          </section>
-
-          {/* Section 2: Registration details */}
-          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
-            <div>
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.registrationSection") || "Registration"}</h3>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label={t("students.form.grNumber")} required error={errors.grNumber}>
-                <Input
-                  required
-                  value={studentDraft.grNumber || ""}
-                  onChange={(e) => updateDraft({ grNumber: e.target.value })}
-                  placeholder={t("students.form.grNumberPlaceholder") || "Enter GR Number"}
-                  className={FORM_INPUT}
-                />
-              </Field>
-
-              <Field label={t("students.form.status")}>
-                <FormSelect
-                  value={studentDraft.status || "active"}
-                  onChange={(val) => updateDraft({ status: val as StudentStatus })}
-                  options={STUDENT_STATUS_VALUES.map((s) => ({
-                    value: s,
-                    label: t(`students.form.status.${s}` as AppTranslationKey) || s,
-                  }))}
-                />
-              </Field>
-
-              <Field label={t("students.form.registeredDate") || "Registration Date"}>
-                <DatePicker
-                  value={studentDraft.registeredDate || undefined}
-                  onChange={(dateStr) => updateDraft({ registeredDate: dateStr })}
-                />
-              </Field>
-            </div>
-          </section>
-
-          {/* Section 3: Family & Guardians */}
-          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
-            <div>
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Family & Guardians</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Link parent/guardian contacts</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <ContactPicker
-                label={t("students.form.fatherLink") || "Father"}
-                value={studentDraft.fatherContactId ? String(studentDraft.fatherContactId) : null}
-                onChange={handleFatherSelect}
-                filterGender="Male"
-                excludeIds={[studentDraft.contactId, studentDraft.motherContactId, studentDraft.guardianContactId].filter(Boolean).map(String)}
-                searchPlaceholder={t("teachers.form.searchContact")}
-                emptyTitle={t("teachers.form.noContacts")}
-              />
-
-              <ContactPicker
-                label={t("students.form.motherLink") || "Mother"}
-                value={studentDraft.motherContactId ? String(studentDraft.motherContactId) : null}
-                onChange={handleMotherSelect}
-                filterGender="Female"
-                excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.guardianContactId].filter(Boolean).map(String)}
-                searchPlaceholder={t("teachers.form.searchContact")}
-                emptyTitle={t("teachers.form.noContacts")}
-              />
-
-              <div className="sm:col-span-2">
-                <ContactPicker
-                  label={t("students.form.guardianLink") || "Guardian (Other)"}
-                  value={studentDraft.guardianContactId ? String(studentDraft.guardianContactId) : null}
-                  onChange={handleGuardianSelect}
-                  excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.motherContactId].filter(Boolean).map(String)}
-                  searchPlaceholder={t("teachers.form.searchContact")}
-                  emptyTitle={t("teachers.form.noContacts")}
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Section 4: Finance details */}
-          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
-            <div>
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Finance & Discount</h3>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Discount Type">
-                <Input
-                  value={studentDraft.discountType || ""}
-                  onChange={(e) => updateDraft({ discountType: e.target.value })}
-                  placeholder="e.g. Sibling, Need-based"
-                  className={FORM_INPUT}
-                />
-              </Field>
-
-              <Field label="Discount %">
-                <Input
-                  type="number"
-                  value={studentDraft.discountPct ?? 0}
-                  onChange={(e) => updateDraft({ discountPct: Number(e.target.value) })}
-                  className={FORM_INPUT}
-                />
-              </Field>
-
-              <div className="sm:col-span-2">
-                <Field label="Registration Type">
-                  <Input
-                    value={studentDraft.registrationType || ""}
-                    onChange={(e) => updateDraft({ registrationType: e.target.value })}
-                    placeholder="e.g. Regular, Online"
-                    className={FORM_INPUT}
-                  />
-                </Field>
-              </div>
-            </div>
-          </section>
-
-          {/* Section 5: Notes */}
-          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
-            <Field label={t("teachers.field.notes") || "Notes"}>
-              <textarea
-                value={studentDraft.notes || ""}
-                onChange={(e) => updateDraft({ notes: e.target.value })}
-                placeholder="Additional notes..."
-                className="w-full min-h-[80px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
-              />
-            </Field>
-          </section>
-        </div>
+        {renderActiveTabContent()}
       </FormModal>
       <ConfirmAlertDialog
         open={duplicateConfirmOpen}

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { User, Phone, Mail, MapPin, Share2, Heart, Users, Plus, Camera } from "lucide-react";
+import { User, Phone, Mail, MapPin, Share2, Heart, Plus, Camera } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,6 @@ import {
   Address,
   SocialLink,
   EmergencyContact,
-  ContactRelationship,
 } from "@mms/shared";
 import {
   Field,
@@ -57,7 +56,6 @@ const CONTACT_TABS = [
   { key: "addresses", label: "Addresses", icon: MapPin },
   { key: "socials", label: "Socials", icon: Share2 },
   { key: "emergency", label: "Emergency", icon: Heart },
-  { key: "relationships", label: "Relationships", icon: Users },
 ] as const;
 
 type TabKey = (typeof CONTACT_TABS)[number]["key"];
@@ -131,7 +129,7 @@ export default function ContactForm({
 
   const visibleTabs = useMemo(() => {
     return CONTACT_TABS.filter((tabItem) => {
-      if (tabItem.key === "basic" || tabItem.key === "relationships") return true;
+      if (tabItem.key === "basic") return true;
       return enabledTabIds.has(tabItem.key);
     });
   }, [enabledTabIds]);
@@ -923,94 +921,6 @@ export default function ContactForm({
     );
   };
 
-  const renderRelationships = () => {
-    const relationships = contactDraft.relationships || [];
-    const addRelationship = () => updateDraft({ relationships: [...relationships, { contactId: "", relationship: "Father" }] });
-    const removeRelationship = (idx: number) =>
-      updateDraft({ relationships: relationships.filter((_, i) => i !== idx) });
-    const updateRelationship = (idx: number, patch: Partial<ContactRelationship>) => {
-      updateDraft({
-        relationships: relationships.map((r, i) => (i === idx ? { ...r, ...patch } : r)),
-      });
-    };
-    const excludeIds = (idx: number): (string | number)[] => {
-      const linked = relationships
-        .filter((_, i) => i !== idx)
-        .map((r) => r.contactId)
-        .filter((cid) => cid != null && String(cid).length > 0) as (string | number)[];
-      if (contactDraft.id != null) linked.unshift(contactDraft.id);
-      return linked;
-    };
-
-    return (
-      <div className="space-y-3 text-left">
-        {relationships.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border/80 rounded-xl bg-muted/5 backdrop-blur-sm">
-            <Users className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">{t("contacts.form.noRelationshipsSet")}</p>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <AnimatePresence initial={false}>
-            {relationships.map((rel, idx) => {
-              const pickerError = getListItemError("relationships", "contactId", idx);
-              return (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">{t("contacts.form.link")} {idx + 1}</span>
-                    <CardRemoveButton onClick={() => removeRelationship(idx)} label="Remove Relationship" />
-                  </div>
-
-                  <div className="space-y-3">
-                    <ContactPicker
-                      label={t("contacts.form.linkContact")}
-                      value={rel.contactId ?? null}
-                      onChange={(id) => updateRelationship(idx, { contactId: id != null ? String(id) : "" })}
-                      excludeIds={excludeIds(idx)}
-                      allowCreate={false}
-                      searchPlaceholder={t("contacts.form.searchByName")}
-                      emptyTitle={t("contacts.form.noContactsFound")}
-                    />
-                    {pickerError && (
-                      <p className="text-[10px] text-destructive mt-0.5 font-medium">{pickerError}</p>
-                    )}
-
-                    <Field label={t("contacts.form.relationshipType")}>
-                      <EditableSelect
-                        options={relationshipOptions.length > 0 ? relationshipOptions : ["Father", "Mother", "Guardian", "Spouse", "Sibling", "Uncle", "Aunt", "Other"]}
-                        value={rel.relationship || "Father"}
-                        onChange={(val) => updateRelationship(idx, { relationship: val })}
-                        className="w-full"
-                      />
-                    </Field>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={addRelationship}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t("contacts.form.addRelationshipLink")}</span>
-        </Button>
-      </div>
-    );
-  };
-
   const renderActiveTabContent = () => {
     switch (tab) {
       case "basic":
@@ -1025,8 +935,6 @@ export default function ContactForm({
         return renderSocials();
       case "emergency":
         return renderEmergency();
-      case "relationships":
-        return renderRelationships();
       default:
         return null;
     }
