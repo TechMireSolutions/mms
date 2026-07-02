@@ -2,12 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { 
   LayoutDashboard, Pin, X, PinOff, Trash2,
-  SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users, PieChart
+  SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, Pie, Cell 
-} from "recharts";
-import SafeResponsiveContainer from "./SafeResponsiveContainer";
+const CustomWidgetChartFallback = React.lazy(() => import("./pinnedWidgets/CustomWidgetChartFallback"));
 import { getCollection, saveCollection, getObject, saveObject } from "../../lib/db";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveThresholdChartHex, resolveWidgetChartHex } from "@/lib/brandingChartPalette";
@@ -33,7 +31,6 @@ const HasanatChart = React.lazy(() =>
 import {
   CustomWidget,
   ALERT_COLOR_MAP,
-  THEME_PALETTES,
   COLOR_MAP,
   ICONS_LIST,
 } from "./pinnedWidgets/types";
@@ -42,7 +39,6 @@ import {
   getWidgetCollections,
   getFilteredRecords,
   computeWidgetSingleValue,
-  computeWidgetChartData,
   computeContactsCustomCardValue,
   computeStudentsCustomCardValue,
   computeTeachersCustomCardValue,
@@ -815,7 +811,9 @@ function CustomWidgetRenderer({
 
         {resolvedWidgetType === "chart" && (
           <div className="w-full h-[80px] -mb-2">
-            <CustomWidgetChartFallback widget={widget} collections={collections} />
+            <React.Suspense fallback={<div className="w-full h-full bg-muted/20 animate-pulse rounded-xl" />}>
+              <CustomWidgetChartFallback widget={widget} collections={collections} />
+            </React.Suspense>
           </div>
         )}
       </div>
@@ -823,65 +821,6 @@ function CustomWidgetRenderer({
   );
 }
 
-/**
- * Compatibility Recharts chart drawer for older Visualizer configs.
- */
-function CustomWidgetChartFallback({
-  widget,
-  collections
-}: {
-  widget: CustomWidget;
-  collections: ReturnType<typeof getWidgetCollections>;
-}): React.JSX.Element | null {
-  const { t } = useTranslation();
-  const palette = useBrandPalette();
-  const chartData = useMemo(() => {
-    return computeWidgetChartData(widget, collections);
-  }, [widget, collections]);
-
-  const colorHex = resolveWidgetChartHex(widget.color, palette);
-
-  if (chartData.length === 0) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border/40 rounded-xl bg-card/20">
-        <span className="text-[8px] font-bold uppercase tracking-wider">{t("reports.widgets.noChartData")}</span>
-      </div>
-    );
-  }
-
-  if (widget.chartType === "pie") {
-    const colors = THEME_PALETTES[widget.color] || THEME_PALETTES.emerald;
-    return (
-      <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
-        <PieChart>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            innerRadius={14}
-            outerRadius={28}
-            paddingAngle={2}
-            dataKey="value"
-          >
-            {chartData.map((_, index) => (
-              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-            ))}
-          </Pie>
-        </PieChart>
-      </SafeResponsiveContainer>
-    );
-  }
-
-  return (
-    <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
-      <BarChart data={chartData} barSize={8} margin={{ top: 2, right: 2, left: -25, bottom: 2 }}>
-        <XAxis dataKey="name" tick={false} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fontSize: 6 }} axisLine={false} tickLine={false} />
-        <Bar dataKey="value" fill={colorHex} radius={[2, 2, 0, 0]} />
-      </BarChart>
-    </SafeResponsiveContainer>
-  );
-}
 
 interface DashboardWidgetsProps {
   widgets?: CustomWidget[];

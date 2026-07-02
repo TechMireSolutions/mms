@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { type BrandingSettings } from "@mms/shared";
+import { useLocation } from "react-router-dom";
+import { type BrandingSettings, type AppTranslationKey } from "@mms/shared";
 import { applyAppTheme } from "../lib/brandingTheme";
 import { getScopedBrandingSettings } from "../lib/settingsPreviewStore";
 import { SETTINGS_PREVIEW_EVENT } from "../lib/settingsPreview";
 import { isTenantHost } from "@/platform/lib/themeScope";
-import { isEntryPath } from "@/lib/config/routes";
+import { ROUTES, isEntryPath } from "@/lib/config/routes";
+import { useTranslation } from "@/hooks/useTranslation";
 
 /**
  * Custom React hook to load and track real-time changes to the institution's branding settings.
@@ -13,6 +15,8 @@ import { isEntryPath } from "@/lib/config/routes";
  */
 export function useBranding(): BrandingSettings {
   const [branding, setBranding] = useState<BrandingSettings>(() => getScopedBrandingSettings());
+  const location = useLocation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleUpdate = (): void => {
@@ -35,7 +39,7 @@ export function useBranding(): BrandingSettings {
   }, [branding.primaryColor, branding.secondaryColor, branding.cornerStyle, branding.logoUrl, branding.faviconUrl]);
 
   useEffect(() => {
-    const pathname = window.location.pathname;
+    const pathname = location.pathname;
     if (isEntryPath(pathname, { isApex: !isTenantHost() })) {
       return;
     }
@@ -45,9 +49,31 @@ export function useBranding(): BrandingSettings {
       if (link) link.href = "/favicon.svg";
       return;
     }
-    if (branding.madrasaName) {
-      document.title = `${branding.madrasaName} - Madrasa MS`;
+
+    let pageLabel = "";
+    if (pathname === "/" || pathname === "") {
+      pageLabel = t("nav.dashboard");
+    } else {
+      const matchedKey = Object.keys(ROUTES).find(
+        (key) => ROUTES[key as keyof typeof ROUTES] === pathname
+      );
+      if (matchedKey) {
+        if (matchedKey === "hasanatCards") {
+          pageLabel = t("nav.hasanatCards");
+        } else if (matchedKey === "questionBank") {
+          pageLabel = t("nav.questionBank");
+        } else {
+          pageLabel = t(`nav.${matchedKey}` as AppTranslationKey);
+        }
+      }
     }
+
+    if (branding.madrasaName) {
+      document.title = pageLabel
+        ? `${pageLabel} | ${branding.madrasaName}`
+        : `${branding.madrasaName} - Madrasa MS`;
+    }
+
     const favicon = branding.faviconUrl || branding.logoUrl;
     if (favicon) {
       let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
@@ -58,7 +84,7 @@ export function useBranding(): BrandingSettings {
       }
       link.href = favicon;
     }
-  }, [branding]);
+  }, [location.pathname, branding, t]);
 
   return branding;
 }
