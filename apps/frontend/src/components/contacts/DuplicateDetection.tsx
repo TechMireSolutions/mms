@@ -125,7 +125,7 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm }: MergePreviewProps
       <motion.div
         initial={{ scale: 0.95, y: 16 }}
         animate={{ scale: 1, y: 0 }}
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-lg z-10 text-left"
+        className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-lg z-10 text-left backdrop-blur-xl"
       >
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -301,7 +301,7 @@ export default function DuplicateDetection({
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col z-10 text-left"
+        className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col z-10 text-left backdrop-blur-xl"
       >
         
         <div className="px-6 py-4 border-b border-border flex items-center justify-between flex-shrink-0">

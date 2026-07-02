@@ -70,10 +70,10 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col z-10"
+        className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col z-10 backdrop-blur-xl"
       >
         {/* Header */}
-        <header className="px-6 py-4 border-b border-border flex-shrink-0 bg-gradient-to-r from-primary/5 to-transparent">
+        <header className="px-6 py-4 border-b border-border/40 flex-shrink-0 bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">

@@ -66,10 +66,10 @@ export function Modal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className={`relative bg-card rounded-2xl border border-border shadow-2xl w-full ${SIZE[size]} z-10 max-h-[90vh] flex flex-col ${panelClassName ?? ""}`}
+            className={`relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full ${SIZE[size]} z-10 max-h-[90vh] flex flex-col backdrop-blur-xl ${panelClassName ?? ""}`}
           >
             {/* Header */}
-            <div className="flex-shrink-0 border-b border-border px-5 py-4">
+            <div className="flex-shrink-0 border-b border-border/40 px-5 py-4 bg-muted/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   {Icon && (

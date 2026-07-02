@@ -38,10 +38,10 @@ export function JournalEntryDetail({ entry, accounts, formatCurrency, onClose, o
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }}
         role="dialog" aria-modal="true" aria-labelledby="modal-title"
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto backdrop-blur-xl">
 
         {/* Header */}
-        <header className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card z-10">
+        <header className="flex items-center justify-between px-6 py-4 border-b border-border/40 sticky top-0 bg-card/75 backdrop-blur-md z-10">
           <div className="flex items-center gap-3">
             <h2 id="modal-title" className="text-base font-bold text-foreground font-mono m-0">{entry.ref}</h2>
             <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
@@ -100,15 +100,16 @@ export function JournalEntryDetail({ entry, accounts, formatCurrency, onClose, o
           )}
 
           {/* Lines table */}
-          <section aria-label="Entry Lines" className="rounded-xl border border-border overflow-hidden">
+          <section aria-label="Entry Lines" className="relative overflow-hidden group/lines rounded-xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/60 transition-colors group-hover/lines:bg-primary" />
             <table className="w-full text-sm">
               <caption className="sr-only">Line items for journal entry {entry.ref}</caption>
-              <thead className="bg-muted/60 border-b border-border">
+              <thead className="bg-muted/60 border-b border-border/40">
                 <tr>
-                  <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">Account</th>
+                  <th scope="col" className="px-5 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">Account</th>
                   <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden sm:table-cell">Note</th>
                   <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">Debit</th>
-                  <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">Credit</th>
+                  <th scope="col" className="px-5 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">Credit</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
