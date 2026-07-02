@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { User, Phone, Mail, MapPin, Share2, Heart, Plus, Camera } from "lucide-react";
+import { User, Phone, Mail, MapPin, Share2, Heart, Plus, Camera, Calendar, FileText, Star } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { AvatarCropper } from "@/components/ui/AvatarCropper";
+import { cn } from "@/lib/utils";
 import {
   useContactConfig,
   useContactValidation,
@@ -30,10 +31,8 @@ import {
 } from "@mms/shared";
 import {
   Field,
-  CardTypeLabel,
   CardRemoveButton,
   EditableSelect,
-  COLLECTION_CARD,
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/FormPrimitives";
 
@@ -302,7 +301,8 @@ export default function ContactForm({
             />
           )}
           <div className="relative flex-shrink-0 group">
-            <div className="w-20 h-20 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center border-2 border-primary/20 shadow-inner transition-all duration-300 group-hover:border-primary/40 relative">
+            <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-primary/30 via-accent/30 to-secondary/30 group-hover:from-primary/60 group-hover:via-accent/60 group-hover:to-secondary/60 blur-[2px] transition-all duration-500 opacity-75 group-hover:opacity-100" />
+            <div className="relative w-20 h-20 rounded-full bg-card overflow-hidden flex items-center justify-center border border-border/80 shadow-surface group-hover:scale-[1.02] transition-transform duration-300">
               {contactDraft.avatar ? (
                 <img
                   src={contactDraft.avatar}
@@ -318,7 +318,7 @@ export default function ContactForm({
                 </span>
               )}
 
-              <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white gap-1 rounded-full">
+              <label className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white gap-1 rounded-full">
                 <Camera className="w-4 h-4" />
                 <span className="text-[10px] font-bold uppercase tracking-wider">
                   {t("account.changePhoto") || "Change"}
@@ -361,12 +361,15 @@ export default function ContactForm({
             error={getFieldError("firstName")}
             id="firstName"
           >
-            <Input
-              value={contactDraft.firstName || ""}
-              onChange={(e) => updateDraft({ firstName: e.target.value })}
-              placeholder={t("contacts.reportFields.firstName")}
-              className="min-h-[44px]"
-            />
+            <div className="relative flex items-center group/input">
+              <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+              <Input
+                value={contactDraft.firstName || ""}
+                onChange={(e) => updateDraft({ firstName: e.target.value })}
+                placeholder={t("contacts.reportFields.firstName")}
+                className="min-h-[44px] pl-10"
+              />
+            </div>
           </Field>
         )}
 
@@ -376,12 +379,15 @@ export default function ContactForm({
             error={getFieldError("lastName")}
             id="lastName"
           >
-            <Input
-              value={contactDraft.lastName || ""}
-              onChange={(e) => updateDraft({ lastName: e.target.value })}
-              placeholder={t("contacts.reportFields.lastName")}
-              className="min-h-[44px]"
-            />
+            <div className="relative flex items-center group/input">
+              <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+              <Input
+                value={contactDraft.lastName || ""}
+                onChange={(e) => updateDraft({ lastName: e.target.value })}
+                placeholder={t("contacts.reportFields.lastName")}
+                className="min-h-[44px] pl-10"
+              />
+            </div>
           </Field>
         )}
 
@@ -403,12 +409,15 @@ export default function ContactForm({
 
         {isFieldEnabled("basic", "dob") && (
           <Field label={t("contacts.reportFields.dob")} error={getFieldError("dob")} id="dob">
-            <Input
-              type="date"
-              value={contactDraft.dob || ""}
-              onChange={(e) => updateDraft({ dob: e.target.value })}
-              className="min-h-[44px]"
-            />
+            <div className="relative flex items-center group/input">
+              <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+              <Input
+                type="date"
+                value={contactDraft.dob || ""}
+                onChange={(e) => updateDraft({ dob: e.target.value })}
+                className="min-h-[44px] pl-10"
+              />
+            </div>
           </Field>
         )}
 
@@ -418,33 +427,52 @@ export default function ContactForm({
             id="cnic"
             error={getFieldError("cnic")}
           >
-            <Input
-              value={contactDraft.cnic || ""}
-              onChange={(e) => {
-                const formatted = formatCnic(e.target.value);
-                updateDraft({ cnic: formatted });
-              }}
-              placeholder={t("contacts.form.cnicPlaceholder") || "99999 9999999 9"}
-              className="min-h-[44px]"
-            />
+            <div className="relative flex items-center group/input">
+              <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+              <Input
+                value={contactDraft.cnic || ""}
+                onChange={(e) => {
+                  const formatted = formatCnic(e.target.value);
+                  updateDraft({ cnic: formatted });
+                }}
+                placeholder={t("contacts.form.cnicPlaceholder") || "99999 9999999 9"}
+                className="min-h-[44px] pl-10"
+              />
+            </div>
           </Field>
         )}
 
         {isFieldEnabled("basic", "isSyed") && (
           <div className="flex flex-col justify-end min-h-[44px]">
-            <div className="flex items-center gap-2.5 py-3 px-4 rounded-xl border border-border/80 bg-muted/5 select-none cursor-pointer hover:bg-muted/10 transition-colors">
+            <label
+              htmlFor="isSyed"
+              className={cn(
+                "flex items-center gap-3 py-3 px-4.5 rounded-xl border select-none cursor-pointer transition-all duration-300",
+                contactDraft.isSyed
+                  ? "bg-primary/10 border-primary/45 shadow-sm"
+                  : "bg-muted/5 border-border/80 hover:bg-muted/10 hover:border-border"
+              )}
+            >
               <Checkbox
                 id="isSyed"
                 checked={!!contactDraft.isSyed}
                 onCheckedChange={(checked) => updateDraft({ isSyed: !!checked })}
+                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
               />
-              <label
-                htmlFor="isSyed"
-                className="text-xs font-semibold select-none cursor-pointer flex-1"
-              >
-                {t("contacts.reportFields.isSyed")}
-              </label>
-            </div>
+              <div className="flex-1 flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground">
+                  {t("contacts.reportFields.isSyed")}
+                </span>
+                <Star
+                  className={cn(
+                    "w-4 h-4 transition-all duration-300",
+                    contactDraft.isSyed
+                      ? "text-amber-500 fill-amber-500 scale-110"
+                      : "text-muted-foreground/40"
+                  )}
+                />
+              </div>
+            </label>
           </div>
         )}
       </div>
@@ -473,7 +501,7 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {phones.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border/85 rounded-xl bg-muted/5 backdrop-blur-sm">
+          <div className="text-center py-8 border border-dashed border-border/85 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <Phone className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noPhoneNumbersYet")}</p>
           </div>
@@ -490,11 +518,13 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                  className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 ps-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+                  <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+                    <div className="flex items-center gap-2.5">
+                      <Phone className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+                      <span className="text-xs font-semibold text-foreground/80">{t("contacts.form.type")}:</span>
                       <EditableSelect
                         options={phoneLabels.length > 0 ? phoneLabels : ["Mobile", "Home", "Work", "WhatsApp", "Other"]}
                         value={phone.label || "Mobile"}
@@ -505,17 +535,19 @@ export default function ContactForm({
                     <CardRemoveButton onClick={() => removePhone(idx)} label="Remove Phone" />
                   </div>
 
-                  <div className="flex gap-2">
-                    <div className="w-20 flex-shrink-0">
+                  <div className="flex gap-2.5">
+                    <div className="w-24 flex-shrink-0 relative flex items-center group/input">
+                      <span className="absolute left-3.5 text-xs text-muted-foreground/60 font-semibold select-none pointer-events-none">cc</span>
                       <Input
                         value={phone.countryCode || "+92"}
                         onChange={(e) => updatePhone(idx, { countryCode: e.target.value })}
                         onBlur={() => handlePhoneBlur(idx)}
                         placeholder="+92"
-                        className="min-h-[44px]"
+                        className="min-h-[44px] pl-9 font-medium"
                       />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 relative flex items-center group/input">
+                      <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                       <Input
                         value={phone.number || ""}
                         onChange={(e) => {
@@ -532,7 +564,7 @@ export default function ContactForm({
                         }}
                         onBlur={() => handlePhoneBlur(idx)}
                         placeholder={t("contacts.form.phoneNumberPlaceholder")}
-                        className={`min-h-[44px] ${numError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        className={`min-h-[44px] pl-10 ${numError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                       />
                     </div>
                   </div>
@@ -549,7 +581,7 @@ export default function ContactForm({
           type="button"
           variant="ghost"
           onClick={addPhone}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addPhoneNumber")}</span>
@@ -569,7 +601,7 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {emails.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border/80 rounded-xl bg-muted/5 backdrop-blur-sm">
+          <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <Mail className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noEmailAddressesYet")}</p>
           </div>
@@ -586,11 +618,13 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                  className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 ps-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500/60 transition-colors group-hover:bg-amber-500" />
+                  <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+                    <div className="flex items-center gap-2.5">
+                      <Mail className="w-4 h-4 text-amber-500/70 group-hover:text-amber-500 transition-colors" />
+                      <span className="text-xs font-semibold text-foreground/80">{t("contacts.form.type")}:</span>
                       <EditableSelect
                         options={emailLabels.length > 0 ? emailLabels : ["Personal", "Work", "Other"]}
                         value={email.label || "Personal"}
@@ -601,13 +635,16 @@ export default function ContactForm({
                     <CardRemoveButton onClick={() => removeEmail(idx)} label="Remove Email" />
                   </div>
 
-                  <Input
-                    type="email"
-                    value={email.address || ""}
-                    onChange={(e) => updateEmail(idx, { address: e.target.value })}
-                    placeholder={t("auth.emailAddress")}
-                    className={`min-h-[44px] ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                  />
+                  <div className="relative flex items-center group/input">
+                    <Mail className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                    <Input
+                      type="email"
+                      value={email.address || ""}
+                      onChange={(e) => updateEmail(idx, { address: e.target.value })}
+                      placeholder={t("auth.emailAddress")}
+                      className={`min-h-[44px] pl-10 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    />
+                  </div>
                   {emailError && (
                     <p className="text-[10px] text-destructive mt-1 font-medium">{emailError}</p>
                   )}
@@ -621,7 +658,7 @@ export default function ContactForm({
           type="button"
           variant="ghost"
           onClick={addEmail}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addEmailAddress")}</span>
@@ -647,7 +684,7 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {addresses.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border/80 rounded-xl bg-muted/5 backdrop-blur-sm">
+          <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <MapPin className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noAddressesYet")}</p>
           </div>
@@ -665,11 +702,13 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                  className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 ps-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
+                  <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+                    <div className="flex items-center gap-2.5">
+                      <MapPin className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
+                      <span className="text-xs font-semibold text-foreground/80">{t("contacts.form.type")}:</span>
                       <EditableSelect
                         options={addressLabels.length > 0 ? addressLabels : ["Home", "Work", "Billing", "Other"]}
                         value={addr.label || "Home"}
@@ -680,19 +719,22 @@ export default function ContactForm({
                     <CardRemoveButton onClick={() => removeAddress(idx)} label="Remove Address" />
                   </div>
 
-                  <div className="space-y-2.5">
+                  <div className="space-y-3">
                     <div>
-                      <Input
-                        value={addr.line1 || ""}
-                        onChange={(e) => updateAddress(idx, { line1: e.target.value })}
-                        placeholder={t("contacts.reportFields.streetAddress")}
-                        className={`min-h-[44px] ${line1Error ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                      />
+                      <div className="relative flex items-center group/input">
+                        <MapPin className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                        <Input
+                          value={addr.line1 || ""}
+                          onChange={(e) => updateAddress(idx, { line1: e.target.value })}
+                          placeholder={t("contacts.reportFields.streetAddress")}
+                          className={`min-h-[44px] pl-10 ${line1Error ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        />
+                      </div>
                       {line1Error && (
                         <p className="text-[10px] text-destructive mt-1 font-medium">{line1Error}</p>
                       )}
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div>
                         <Input
                           value={addr.city || ""}
@@ -728,7 +770,7 @@ export default function ContactForm({
           type="button"
           variant="ghost"
           onClick={addAddress}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addAddress")}</span>
@@ -748,7 +790,7 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {socials.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-border/80 rounded-xl bg-muted/5 backdrop-blur-sm">
+          <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <Share2 className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noSocialLinksYet")}</p>
           </div>
@@ -765,11 +807,13 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                  className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 ps-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CardTypeLabel>{t("contacts.form.type")}</CardTypeLabel>
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
+                  <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+                    <div className="flex items-center gap-2.5">
+                      <Share2 className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
+                      <span className="text-xs font-semibold text-foreground/80">{t("contacts.form.type")}:</span>
                       <EditableSelect
                         options={socialPlatforms.length > 0 ? socialPlatforms : ["WhatsApp", "Facebook", "Twitter/X", "LinkedIn", "Instagram", "YouTube", "Other"]}
                         value={soc.platform || "WhatsApp"}
@@ -780,12 +824,15 @@ export default function ContactForm({
                     <CardRemoveButton onClick={() => removeSocial(idx)} label="Remove Social" />
                   </div>
 
-                  <Input
-                    value={soc.url || ""}
-                    onChange={(e) => updateSocial(idx, { url: e.target.value })}
-                    placeholder="Username, Handle or Link URL"
-                    className={`min-h-[44px] ${urlError ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                  />
+                  <div className="relative flex items-center group/input">
+                    <Share2 className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                    <Input
+                      value={soc.url || ""}
+                      onChange={(e) => updateSocial(idx, { url: e.target.value })}
+                      placeholder="Username, Handle or Link URL"
+                      className={`min-h-[44px] pl-10 ${urlError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    />
+                  </div>
                   {urlError && (
                     <p className="text-[10px] text-destructive mt-1 font-medium">{urlError}</p>
                   )}
@@ -799,7 +846,7 @@ export default function ContactForm({
           type="button"
           variant="ghost"
           onClick={addSocial}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addSocialLink")}</span>
@@ -833,8 +880,8 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {emergencyContacts.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-destructive/20 rounded-xl bg-destructive/5 backdrop-blur-sm">
-            <Heart className="w-8 h-8 text-destructive/60 mx-auto mb-2" />
+          <div className="text-center py-8 border border-dashed border-rose-500/20 rounded-2xl bg-rose-500/5 backdrop-blur-sm">
+            <Heart className="w-8 h-8 text-rose-500/60 mx-auto mb-2" />
             <p className="text-xs text-muted-foreground">{t("contacts.form.noEmergencyContactsYet")}</p>
           </div>
         )}
@@ -853,10 +900,16 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className={`${COLLECTION_CARD} bg-muted/10 border-border/60 hover:bg-muted/20 hover:border-primary/20 focus-within:border-primary/30 transition-all duration-300 shadow-sm`}
+                  className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 ps-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">{t("contacts.form.contact")} {idx + 1}</span>
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500/60 transition-colors group-hover:bg-rose-500" />
+                  <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+                    <div className="flex items-center gap-2.5">
+                      <Heart className="w-4 h-4 text-rose-500/70 group-hover:text-rose-500 transition-colors" />
+                      <span className="text-xs font-semibold text-foreground/80">
+                        {t("contacts.form.contact")} {idx + 1}
+                      </span>
+                    </div>
                     <CardRemoveButton onClick={() => removeEmergency(idx)} label="Remove Emergency Contact" />
                   </div>
 
@@ -883,22 +936,28 @@ export default function ContactForm({
                       />
                     </Field>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <Field label={t("contacts.reportFields.fullName")} error={nameError}>
-                        <Input
-                          value={em.name || ""}
-                          onChange={(e) => updateEmergency(idx, { name: e.target.value })}
-                          placeholder="Emergency Contact Name"
-                          className="min-h-[44px]"
-                        />
+                        <div className="relative flex items-center group/input">
+                          <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                          <Input
+                            value={em.name || ""}
+                            onChange={(e) => updateEmergency(idx, { name: e.target.value })}
+                            placeholder="Emergency Contact Name"
+                            className="min-h-[44px] pl-10"
+                          />
+                        </div>
                       </Field>
                       <Field label={t("contacts.form.phoneNumber")} error={phoneError}>
-                        <Input
-                          value={em.phone || ""}
-                          onChange={(e) => updateEmergency(idx, { phone: e.target.value })}
-                          placeholder="Emergency Contact Phone"
-                          className="min-h-[44px]"
-                        />
+                        <div className="relative flex items-center group/input">
+                          <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                          <Input
+                            value={em.phone || ""}
+                            onChange={(e) => updateEmergency(idx, { phone: e.target.value })}
+                            placeholder="Emergency Contact Phone"
+                            className="min-h-[44px] pl-10"
+                          />
+                        </div>
                       </Field>
                     </div>
                   </div>
@@ -912,7 +971,7 @@ export default function ContactForm({
           type="button"
           variant="ghost"
           onClick={addEmergency}
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2"
+          className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>{t("contacts.form.addEmergencyContact")}</span>
@@ -941,19 +1000,28 @@ export default function ContactForm({
   };
 
   const footerStart = contactDraft.firstName ? (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      <span className="font-semibold text-foreground">{contactDraft.name || contactDraft.firstName}</span>
-      <div className="flex items-center gap-2 border-s border-border ps-3">
-        <span>
+    <div className="flex flex-wrap items-center gap-2.5 text-xs">
+      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
+        {contactDraft.name || contactDraft.firstName}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
           {contactDraft.phones?.length || 0} {t("contacts.form.phonesLabel")}
         </span>
-        <span className="border-s border-border ps-2">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/20 text-[10px]">
           {contactDraft.emails?.length || 0} {t("contacts.form.emailsLabel")}
         </span>
+        {contactDraft.emergencyContacts && contactDraft.emergencyContacts.length > 0 && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/20 text-[10px]">
+            {contactDraft.emergencyContacts.length} {t("contacts.detail.emergency")}
+          </span>
+        )}
       </div>
     </div>
   ) : (
-    <span className="text-xs text-destructive">{t("contacts.form.firstNameRequired")}</span>
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
+      {t("contacts.form.firstNameRequired")}
+    </span>
   );
 
   return (
