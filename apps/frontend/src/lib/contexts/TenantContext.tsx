@@ -4,8 +4,8 @@ import {
   isApexHost,
   buildTenantUrl,
   buildApexUrl,
-  type PublicBranding,
-} from "@mms/shared";
+} from "@mms/shared/tenantUtils";
+import type { PublicBranding } from "@mms/shared";
 import { getTenantUrlOptions } from "../config/tenantConfig";
 import { useDeploymentAppDomain } from "@/hooks/useDeploymentAppDomain";
 import { usePublicBranding } from "@/hooks/usePublicBranding";

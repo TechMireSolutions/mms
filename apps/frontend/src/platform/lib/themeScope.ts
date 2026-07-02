@@ -1,12 +1,12 @@
 import {
   DEFAULT_BRANDING_SETTINGS,
   DEFAULT_GLOBAL_SETTINGS,
-  isApexHost,
   mergeBrandingSettings,
   mergeGlobalSettings,
   type BrandingSettings,
   type GlobalSettings,
 } from '@mms/shared';
+import { isApexHost } from '@mms/shared/tenantUtils';
 import { getAppDomain } from '@/lib/config/tenantConfig';
 
 /**

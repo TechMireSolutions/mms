@@ -1,7 +1,12 @@
 import React from "react";
 import { useIsTenantHost } from "@/lib/host/useIsTenantHost";
-import { ApexRoutesWithSuspense } from "@/platform/routes/ApexRoutes";
-import TenantRoutes from "@/tenant/routes/TenantRoutes";
+
+const ApexRoutesWithSuspense = React.lazy(() =>
+  import("@/platform/routes/ApexRoutes").then((module) => ({
+    default: module.ApexRoutesWithSuspense,
+  })),
+);
+const TenantRoutes = React.lazy(() => import("@/tenant/routes/TenantRoutes"));
 
 /**
  * Host switch — renders exactly one of platform apex or tenant madrasa trees.

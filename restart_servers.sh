@@ -170,12 +170,10 @@ kill_repo_dev_processes() {
   while IFS= read -r pid; do
     [ -z "$pid" ] && continue
     cmd="$(ps -p "$pid" -o args= 2>/dev/null || true)"
-    [[ "$cmd" == *"$ROOT_DIR"* ]] || continue
+    [[ "$cmd" == *"$ROOT_DIR"* || "$cmd" == *"mms-"* || "$cmd" == *"tsx"* || "$cmd" == *"pnpm"* || "$cmd" == *"vite"* ]] || continue
     case "$cmd" in
-      *"turbo"*"run dev"*|*"$ROOT_DIR"*"pnpm dev"*|\
-      *"pnpm"*"--filter"*"mms-frontend"*"dev"*|*"pnpm"*"--filter"*"mms-backend"*"dev"*|\
-      *"pnpm"*"--filter"*"mms-backend"*"worker"*|\
-      *"$ROOT_DIR/apps/frontend"*"vite"*|*"$ROOT_DIR/apps/backend"*"tsx"*)
+      *"turbo"*"run dev"*|*"pnpm"*"dev"*|*"pnpm"*"worker"*|\
+      *"/apps/frontend"*"vite"*|*"/apps/backend"*"tsx"*)
         log "Stopping orphan dev process (pid $pid)..."
         kill -TERM "$pid" 2>/dev/null || true
         ;;
@@ -185,12 +183,10 @@ kill_repo_dev_processes() {
   while IFS= read -r pid; do
     [ -z "$pid" ] && continue
     cmd="$(ps -p "$pid" -o args= 2>/dev/null || true)"
-    [[ "$cmd" == *"$ROOT_DIR"* ]] || continue
+    [[ "$cmd" == *"$ROOT_DIR"* || "$cmd" == *"mms-"* || "$cmd" == *"tsx"* || "$cmd" == *"pnpm"* || "$cmd" == *"vite"* ]] || continue
     case "$cmd" in
-      *"turbo"*"run dev"*|*"$ROOT_DIR"*"pnpm dev"*|\
-      *"pnpm"*"--filter"*"mms-frontend"*"dev"*|*"pnpm"*"--filter"*"mms-backend"*"dev"*|\
-      *"pnpm"*"--filter"*"mms-backend"*"worker"*|\
-      *"$ROOT_DIR/apps/frontend"*"vite"*|*"$ROOT_DIR/apps/backend"*"tsx"*)
+      *"turbo"*"run dev"*|*"pnpm"*"dev"*|*"pnpm"*"worker"*|\
+      *"/apps/frontend"*"vite"*|*"/apps/backend"*"tsx"*)
         kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
         ;;
     esac
@@ -294,9 +290,11 @@ run_dev_foreground() {
   echo "  Backend   http://localhost:$BACKEND_PORT/health"
   echo ""
   trap 'kill 0 2>/dev/null; exit 0' INT TERM
-  pnpm --filter mms-backend dev &
-  pnpm --filter mms-backend worker &
-  pnpm --filter mms-frontend dev &
+  (cd apps/backend && npx tsx watch src/index.ts) &
+  sleep 2
+  (cd apps/backend && npx tsx watch src/worker.ts) &
+  sleep 2
+  (cd apps/frontend && npx vite) &
   wait
 }
 
@@ -369,22 +367,34 @@ show_status() {
     warn "Screen session '$SCREEN_SESSION' not running"
   fi
 
-  local db_file="apps/backend/mms.db"
   if [ -f "apps/backend/.env" ]; then
-    local configured_db
-    configured_db="$(grep '^DATABASE_URL=' apps/backend/.env | sed 's/DATABASE_URL=//' | sed 's/sqlite:\/\///')"
-    if [ -n "$configured_db" ]; then
-      db_file="$configured_db"
+    local db_url db_host db_port
+    db_url="$(grep '^DATABASE_URL=' apps/backend/.env | sed 's/DATABASE_URL=//')"
+    if [[ "$db_url" == postgres://* || "$db_url" == postgresql://* ]]; then
+      local temp="${db_url#*//}"
+      temp="${temp#*@}"
+      local host_port="${temp%%/*}"
+      db_host="${host_port%%:*}"
+      db_port="${host_port#*:}"
+      [ "$db_port" = "$host_port" ] && db_port=5432
+      if nc -z "$db_host" "$db_port" 2>/dev/null; then
+        ok "PostgreSQL: database host listening ($db_host:$db_port)"
+      else
+        warn "PostgreSQL: host not listening ($db_host:$db_port) — verify Docker/Postgres is running"
+      fi
+    else
+      local db_file="${db_url#sqlite://}"
       if [[ "$db_file" != /* ]]; then
         db_file="apps/backend/$db_file"
       fi
+      if [ -f "$db_file" ]; then
+        ok "SQLite: database file exists ($db_file, $(stat -f%z "$db_file" 2>/dev/null || stat -c%s "$db_file" 2>/dev/null) bytes)"
+      else
+        warn "SQLite: database file not found ($db_file)"
+      fi
     fi
-  fi
-
-  if [ -f "$db_file" ]; then
-    ok "SQLite: database file exists ($db_file, $(stat -f%z "$db_file" 2>/dev/null || stat -c%s "$db_file" 2>/dev/null) bytes)"
   else
-    warn "SQLite: database file not found ($db_file)"
+    warn "Database: missing apps/backend/.env"
   fi
 
   local be fe

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { resolveAppDomainForRequest } from '@mms/shared';
+import { resolveAppDomainForRequest } from '@mms/shared/tenantUtils';
 import { apiJson } from '@/lib/apiClient';
 import { env } from '@/lib/config/env';
 

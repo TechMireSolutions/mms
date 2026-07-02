@@ -47,14 +47,23 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('/packages/shared/dist/')) {
+            if (id.includes('/appTranslations')) {
+              return 'mms-shared-i18n';
+            }
+            if (id.includes('/tenantUtils')) {
+              return 'mms-shared-tenant';
+            }
+            return 'mms-shared';
+          }
           if (!id.includes('node_modules')) {
             return undefined;
           }
-          if (id.includes('react-dom') || id.includes('/react/') || id.includes('react-router')) {
-            return 'vendor-react';
-          }
           if (id.includes('@tanstack/react-query')) {
             return 'vendor-query';
+          }
+          if (id.includes('@radix-ui') || id.includes('@floating-ui') || id.includes('react-remove-scroll') || id.includes('aria-hidden')) {
+            return 'vendor-radix';
           }
           if (id.includes('recharts') || id.includes('d3-')) {
             return 'vendor-charts';
@@ -62,11 +71,14 @@ export default defineConfig({
           if (id.includes('framer-motion')) {
             return 'vendor-motion';
           }
-          if (id.includes('@radix-ui')) {
-            return 'vendor-radix';
-          }
           if (id.includes('lucide-react')) {
             return 'vendor-icons';
+          }
+          if (id.includes('/zod/')) {
+            return 'vendor-validation';
+          }
+          if (id.includes('/react-dom/') || id.includes('/react/') || id.includes('react-router') || id.includes('/scheduler/')) {
+            return 'vendor-react';
           }
           return undefined;
         },
