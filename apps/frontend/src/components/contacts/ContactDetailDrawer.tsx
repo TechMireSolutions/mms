@@ -265,11 +265,11 @@ export default function ContactDetailDrawer({
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: "100%", opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 260 }}
-        className="relative w-full max-w-sm h-full bg-card border-l border-border shadow-2xl flex flex-col z-10"
+        className="relative w-full max-w-sm h-full bg-card/90 border-l border-border/80 shadow-2xl flex flex-col z-10 backdrop-blur-xl"
         aria-label={t('contacts.detail.title')}
       >
         
-        <div className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 px-5 pt-4 border-b border-border space-y-4">
+        <div className="sticky top-0 bg-card/75 backdrop-blur-md z-10 px-5 pt-4 border-b border-border/40 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-[13px] font-bold text-foreground leading-tight">{t('contacts.detail.title')}</h2>
             <div className="flex items-center gap-2">
@@ -406,7 +406,7 @@ export default function ContactDetailDrawer({
                     {Object.entries(grouped).filter(([, fields]) => fields.some((field) => field.tab === "basic" || !["timeline", "network", "files"].includes(field.tab))).map(([group, fields]) => (
                       <div key={group} className="space-y-2">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">{group}</h4>
-                        <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
+                        <div className="relative overflow-hidden group/card bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 divide-y divide-border/50">
                           {fields.map((field) => {
                              const displayValue = formatFieldValue(field);
                              if (!displayValue) return null;
@@ -433,7 +433,7 @@ export default function ContactDetailDrawer({
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
                           {t('contacts.form.phonesLabel')}
                         </h4>
-                        <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
+                        <div className="relative overflow-hidden group/card bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 divide-y divide-border/50">
                           {c.phones.map((phone, phoneIndex) => {
                             const tabFields = visibleCollectionFields.phones.filter((field) => field.key !== "label");
                             return (
@@ -468,7 +468,7 @@ export default function ContactDetailDrawer({
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
                           {t('contacts.form.emailsLabel')}
                         </h4>
-                        <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
+                        <div className="relative overflow-hidden group/card bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 divide-y divide-border/50">
                           {c.emails.map((email, emailIndex) => {
                             const tabFields = visibleCollectionFields.emails.filter((field) => field.key !== "label");
                             return (
@@ -502,7 +502,7 @@ export default function ContactDetailDrawer({
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
                           {t('contacts.detail.addresses')}
                         </h4>
-                        <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
+                        <div className="relative overflow-hidden group/card bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 divide-y divide-border/50">
                           {c.addresses.map((address, addressIndex) => {
                             const tabFields = visibleCollectionFields.addresses.filter((field) => field.key !== "label");
                             return (
@@ -536,7 +536,7 @@ export default function ContactDetailDrawer({
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
                           {t('contacts.detail.socials')}
                         </h4>
-                        <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
+                        <div className="relative overflow-hidden group/card bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 divide-y divide-border/50">
                           {c.socials.map((social, socialIndex) => {
                             const tabFields = visibleCollectionFields.socials.filter((field) => field.key !== "platform");
                             return (
@@ -581,7 +581,7 @@ export default function ContactDetailDrawer({
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
                           {t('contacts.detail.emergency')}
                         </h4>
-                        <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
+                        <div className="relative overflow-hidden group/card bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 divide-y divide-border/50">
                           {c.emergencyContacts.map((emergencyContact, emergencyContactIndex) => {
                             const tabFields = visibleCollectionFields.emergency;
                             const target = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
@@ -780,7 +780,7 @@ export default function ContactDetailDrawer({
                        .map(([group, fields]) => (
                        <div key={group} className="space-y-2">
                          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">{group}</h4>
-                         <div className="bg-card rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
+                         <div className="relative overflow-hidden group/card bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 divide-y divide-border/50">
                            {fields.filter((field) => field.tab === activeTab).map((field) => {
                               const displayValue = formatFieldValue(field);
                               if (!displayValue) return null;

@@ -118,11 +118,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: "100%", opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 260 }}
-        className="relative w-full max-w-sm h-full bg-card border-l border-border shadow-2xl flex flex-col z-10"
+        className="relative w-full max-w-sm h-full bg-card/90 border-l border-border/80 shadow-2xl flex flex-col z-10 backdrop-blur-xl"
         aria-label="Student Details Drawer"
       >
         {/* Sticky Header */}
-        <div className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 px-5 pt-4 border-b border-border space-y-4 flex-shrink-0">
+        <div className="sticky top-0 bg-card/75 backdrop-blur-md z-10 px-5 pt-4 border-b border-border/40 space-y-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -197,7 +197,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
               {activeTab === "overview" && (
                 <>
                   {/* Hero card */}
-                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50 shadow-sm">
+                  <div className="relative overflow-hidden group/hero flex items-center gap-4 p-4 rounded-2xl bg-muted/35 border border-border/50 shadow-sm transition-all duration-200">
                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white text-xl font-bold flex-shrink-0 shadow-sm`}>
                       {initials}
                     </div>
@@ -219,7 +219,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                     {primaryPhone && (
                       <a
                         href={`tel:${primaryPhone.replace(/[^\d+]/g, "")}`}
-                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card hover:bg-info/10 hover:border-info/30 transition-all text-info text-center"
+                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-info/10 hover:border-info/30 transition-all text-info text-center"
                       >
                         <Phone className="w-4 h-4 mx-auto" />
                         <span className="text-[10px] font-bold">Call Student</span>
@@ -230,7 +230,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                         href={`https://wa.me/${primaryPhone.replace(/[^\d]/g, "")}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card hover:bg-success/10 hover:border-success/30 transition-all text-success text-center"
+                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center"
                       >
                         <MessageCircle className="w-4 h-4 mx-auto" />
                         <span className="text-[10px] font-bold">WhatsApp</span>
@@ -246,8 +246,9 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                         {sortedEnabledFields.map((field) => {
                           if (field.key === "gender") {
                             return (
-                              <div key="gender" className="flex items-center gap-3 p-3 bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-                                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
+                              <div key="gender" className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
+                                <div className="p-2 rounded-lg bg-muted text-muted-foreground ml-1">
                                   <User className="w-3.5 h-3.5" />
                                 </div>
                                 <div className="flex-1 min-w-0 text-left">
@@ -260,8 +261,9 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
                           if (field.key === "dob") {
                             return (
-                              <div key="dob" className="flex items-center gap-3 p-3 bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-                                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
+                              <div key="dob" className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
+                                <div className="p-2 rounded-lg bg-muted text-muted-foreground ml-1">
                                   <Calendar className="w-3.5 h-3.5" />
                                 </div>
                                 <div className="flex-1 min-w-0 text-left">
@@ -276,8 +278,9 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
                           if (field.key === "registeredDate") {
                             return (
-                              <div key="registeredDate" className="flex items-center gap-3 p-3 bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-                                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
+                              <div key="registeredDate" className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
+                                <div className="p-2 rounded-lg bg-muted text-muted-foreground ml-1">
                                   <Clock className="w-3.5 h-3.5" />
                                 </div>
                                 <div className="flex-1 min-w-0 text-left">
@@ -293,8 +296,9 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                           if (field.key === "fatherLink") {
                             if (!fatherContact && !student.fatherName) return null;
                             return (
-                              <div key="fatherLink" className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-card shadow-sm">
-                                <div className="flex items-center gap-3 min-w-0 text-left">
+                              <div key="fatherLink" className="relative overflow-hidden group/row flex items-center justify-between gap-3 p-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-200">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
+                                <div className="flex items-center gap-3 min-w-0 text-left ml-1">
                                   <div className="w-8 h-8 rounded-lg bg-info/10 text-info flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                                     FA
                                   </div>
@@ -307,7 +311,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                                 {fatherPhone && (
                                   <a
                                     href={`tel:${fatherPhone.replace(/[^\d+]/g, "")}`}
-                                    className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                    className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors mr-1"
                                   >
                                     <Phone className="w-3.5 h-3.5" />
                                   </a>
@@ -319,8 +323,9 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                           if (field.key === "motherLink") {
                             if (!motherContact && !student.motherName) return null;
                             return (
-                              <div key="motherLink" className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-card shadow-sm">
-                                <div className="flex items-center gap-3 min-w-0 text-left">
+                              <div key="motherLink" className="relative overflow-hidden group/row flex items-center justify-between gap-3 p-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-200">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
+                                <div className="flex items-center gap-3 min-w-0 text-left ml-1">
                                   <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                                     MO
                                   </div>
@@ -333,7 +338,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                                 {motherPhone && (
                                   <a
                                     href={`tel:${motherPhone.replace(/[^\d+]/g, "")}`}
-                                    className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                    className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors mr-1"
                                   >
                                     <Phone className="w-3.5 h-3.5" />
                                   </a>
@@ -345,8 +350,9 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                           if (field.key === "guardianLink") {
                             if (!guardianContact && !student.guardianName) return null;
                             return (
-                              <div key="guardianLink" className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border bg-card shadow-sm">
-                                <div className="flex items-center gap-3 min-w-0 text-left">
+                              <div key="guardianLink" className="relative overflow-hidden group/row flex items-center justify-between gap-3 p-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-200">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
+                                <div className="flex items-center gap-3 min-w-0 text-left ml-1">
                                   <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                                     GU
                                   </div>
@@ -359,7 +365,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                                 {guardianPhone && (
                                   <a
                                     href={`tel:${guardianPhone.replace(/[^\d+]/g, "")}`}
-                                    className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                    className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors mr-1"
                                   >
                                     <Phone className="w-3.5 h-3.5" />
                                   </a>
@@ -380,8 +386,9 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                             }
 
                             return (
-                              <div key={field.key} className="flex items-center gap-3 p-3 bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-                                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
+                               <div key={field.key} className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/row:bg-emerald-500" />
+                                <div className="p-2 rounded-lg bg-muted text-muted-foreground ml-1">
                                   <Sparkles className="w-3.5 h-3.5" />
                                 </div>
                                 <div className="flex-1 min-w-0 text-left">
@@ -414,34 +421,35 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                     ) : (
                       <div className="space-y-2.5">
                         {enrolledSessionDetails.map((session) => (
-                          <div
-                            key={session.id}
-                            className="p-3.5 rounded-2xl border border-border bg-card shadow-sm space-y-2 hover:border-primary/20 transition-all"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="bg-primary/5 text-primary border border-primary/10 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase">
-                                {session.type}
-                              </span>
-                              <span className="text-[10px] font-bold text-muted-foreground">
-                                Fee: {session.currency} {session.baseFee}
-                              </span>
-                            </div>
-                            <h5 className="text-xs font-bold text-foreground">{session.name}</h5>
-                            {session.classes && session.classes.length > 0 ? (
-                              <div className="text-[10px] text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg">
-                                <p className="font-semibold uppercase tracking-wider text-[8px] text-muted-foreground/80">Class Assignments</p>
-                                {session.classes.map((sessionClass: { id: string; name?: string; teacherName?: string; room?: string; schedule?: string }) => (
-                                  <div key={sessionClass.id} className="flex justify-between gap-1.5">
-                                    <span className="font-medium text-foreground">{sessionClass.name} (by {sessionClass.teacherName})</span>
-                                    <span>Room: {sessionClass.room || "—"}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-[10px] text-muted-foreground italic">No classes configured for this session</p>
-                            )}
-                          </div>
-                        ))}
+                           <div
+                             key={session.id}
+                             className="relative overflow-hidden group/session p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm space-y-2 hover:border-primary/20 hover:shadow-md transition-all duration-300"
+                           >
+                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/session:bg-emerald-500" />
+                             <div className="flex items-center justify-between ml-1">
+                               <span className="bg-primary/5 text-primary border border-primary/10 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase">
+                                 {session.type}
+                               </span>
+                               <span className="text-[10px] font-bold text-muted-foreground">
+                                 Fee: {session.currency} {session.baseFee}
+                               </span>
+                             </div>
+                             <h5 className="text-xs font-bold text-foreground ml-1">{session.name}</h5>
+                             {session.classes && session.classes.length > 0 ? (
+                               <div className="text-[10px] text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg ml-1">
+                                 <p className="font-semibold uppercase tracking-wider text-[8px] text-muted-foreground/80">Class Assignments</p>
+                                 {session.classes.map((sessionClass: { id: string; name?: string; teacherName?: string; room?: string; schedule?: string }) => (
+                                   <div key={sessionClass.id} className="flex justify-between gap-1.5">
+                                     <span className="font-medium text-foreground">{sessionClass.name} (by {sessionClass.teacherName})</span>
+                                     <span>Room: {sessionClass.room || "—"}</span>
+                                   </div>
+                                 ))}
+                               </div>
+                             ) : (
+                               <p className="text-[10px] text-muted-foreground italic ml-1">No classes configured for this session</p>
+                             )}
+                           </div>
+                         ))}
                       </div>
                     )}
                   </div>
@@ -450,12 +458,14 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   <div className="space-y-3">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Engagement & Analytics</h4>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3.5 rounded-2xl border border-border bg-card shadow-sm text-center">
+                      <div className="relative overflow-hidden group/metric p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm text-center hover:shadow-md transition-all duration-300">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/metric:bg-emerald-500" />
                         <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Attendance Rate</span>
                         <p className="text-lg font-black text-success">94.8%</p>
                         <span className="text-[9px] text-muted-foreground">Last 30 days</span>
                       </div>
-                      <div className="p-3.5 rounded-2xl border border-border bg-card shadow-sm text-center">
+                      <div className="relative overflow-hidden group/metric p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm text-center hover:shadow-md transition-all duration-300">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/metric:bg-emerald-500" />
                         <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Conduct Rating</span>
                         <p className="text-lg font-black text-primary">Excellent</p>
                         <span className="text-[9px] text-muted-foreground">Term Review</span>

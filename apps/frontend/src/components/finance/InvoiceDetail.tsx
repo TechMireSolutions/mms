@@ -48,7 +48,7 @@ export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.97 }}
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-md z-10 overflow-hidden"
+        className="relative bg-card/90 rounded-2xl border border-border shadow-2xl w-full max-w-md z-10 overflow-hidden backdrop-blur-xl"
       >
         {/* Header strip */}
         <header className="bg-gradient-to-r from-primary/10 to-transparent px-6 py-4 border-b border-border flex items-center justify-between">
@@ -81,9 +81,10 @@ export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps
           </div>
 
           {/* Fee breakdown */}
-          <article className="rounded-xl border border-border overflow-hidden">
-            <header className="px-4 py-2 bg-muted/30 border-b border-border">
-              <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide m-0">Fee Breakdown</h4>
+          <article className="relative overflow-hidden group/breakdown rounded-xl border border-border bg-card/45 backdrop-blur-xs shadow-sm">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/60" />
+            <header className="px-4 py-2 bg-muted/30 border-b border-border pl-5">
+              <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide m-0">Fee Breakdown</h4>
             </header>
             <div className="divide-y divide-border/50">
               {rows.map((row) => (
