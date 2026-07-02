@@ -225,15 +225,15 @@ export default function ContactCards({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
-              className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card/95 via-card/80 to-background/60 backdrop-blur-xl p-4 space-y-4 transition-all duration-300 shadow-sm hover:shadow-md ${isSelected
+              className={`relative overflow-hidden group rounded-2xl border bg-gradient-to-br from-card/95 via-card/80 to-background/60 backdrop-blur-xl p-4 pl-5.5 space-y-4 transition-all duration-300 shadow-sm hover:shadow-md ${isSelected
                   ? "border-primary/45 bg-primary/[0.02] shadow-sm shadow-primary/5"
                   : "border-border/30 hover:border-primary/20"
                 }`}
             >
-
+              <div className={`absolute left-0 top-0 bottom-0 w-1 ${contact.isSyed ? "bg-amber-500/45 group-hover:bg-amber-500" : isSelected ? "bg-primary/65 group-hover:bg-primary" : "bg-primary/35 group-hover:bg-primary/60"} transition-colors duration-300`} />
 
               {/* Core Profile Area */}
-              <div className="flex gap-3 pr-16 items-start">
+              <div className="flex gap-3 pr-16 items-start ml-1">
                 <div className="flex items-center justify-center flex-shrink-0 pt-0.5">
                   <Checkbox
                     checked={isSelected}
@@ -261,7 +261,7 @@ export default function ContactCards({
 
               {/* Contact Information Pills */}
               {(showPhonePill || showEmailPill) && (
-                <div className="space-y-2 py-0.5">
+                <div className="space-y-2 py-0.5 ml-1">
                   {phone && showPhonePill && (
                     <Button
                       type="button"
@@ -335,7 +335,7 @@ export default function ContactCards({
 
               {/* Dynamic Metadata Section */}
               {otherColumns.length > 0 && (
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/10">
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/10 ml-1">
                   {otherColumns.map((col) => {
                     const value = contact[col.id as keyof Contact];
                     // Skip empty custom values unless they are booleans/ratings

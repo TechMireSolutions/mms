@@ -4,13 +4,38 @@ import { cn } from "@/lib/utils"
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}
-    {...props} />
-))
+  React.HTMLAttributes<HTMLDivElement> & {
+    accentColor?: "primary" | "success" | "warning" | "destructive" | "info" | "emerald" | "indigo" | "rose" | "amber"
+  }
+>(({ className, accentColor, ...props }, ref) => {
+  const stripeColors = {
+    primary: "bg-primary/45 group-hover/card:bg-primary",
+    success: "bg-success/45 group-hover/card:bg-success",
+    warning: "bg-warning/45 group-hover/card:bg-warning",
+    destructive: "bg-destructive/45 group-hover/card:bg-destructive",
+    info: "bg-info/45 group-hover/card:bg-info",
+    emerald: "bg-emerald-500/45 group-hover/card:bg-emerald-500",
+    indigo: "bg-indigo-500/45 group-hover/card:bg-indigo-500",
+    rose: "bg-rose-500/45 group-hover/card:bg-rose-500",
+    amber: "bg-amber-500/45 group-hover/card:bg-amber-500",
+  }
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "relative overflow-hidden group/card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm text-card-foreground shadow-sm hover:shadow-md transition-all duration-300",
+        className
+      )}
+      {...props}
+    >
+      {accentColor && (
+        <div className={cn("absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300", stripeColors[accentColor])} />
+      )}
+      {props.children}
+    </div>
+  )
+})
 Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<
