@@ -94,10 +94,10 @@ export function PrintInvoiceModal({
         role="dialog" 
         aria-modal="true" 
         aria-labelledby="print-modal-title" 
-        className="relative z-10 bg-card rounded-2xl border border-border shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col"
+        className="relative z-10 bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col backdrop-blur-xl"
       >
         {/* Header */}
-        <header className="flex items-center justify-between px-5 py-3.5 border-b border-border flex-shrink-0">
+        <header className="flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-muted/5 flex-shrink-0">
           <div>
             <h2 id="print-modal-title" className="text-[15px] font-bold text-foreground m-0">Print Receipt</h2>
             <p className="text-xs text-muted-foreground m-0">Receipt No: <span className="font-mono font-bold text-primary">{collection.receipt_no}</span></p>

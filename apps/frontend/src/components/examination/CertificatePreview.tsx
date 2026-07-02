@@ -68,10 +68,10 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.94 }}
-        className="relative z-10 bg-card rounded-2xl border border-border shadow-2xl w-full max-w-2xl flex flex-col"
+        className="relative z-10 bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-2xl flex flex-col backdrop-blur-xl"
       >
         {/* Modal header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-muted/5">
           <h3 id="cert-modal-title" className="text-sm font-bold text-foreground">Certificate Preview</h3>
           <div className="flex items-center gap-2">
             <Button
