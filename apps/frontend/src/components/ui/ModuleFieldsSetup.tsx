@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Info, Layout, GripVertical, Plus, Trash2, Pencil } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
@@ -141,8 +142,8 @@ export function ModuleFieldsSetup({
           const isReq = editor.requiredTabs.has(tabId);
 
           return (
-            <section key={tabId} className="rounded-xl border border-border bg-card overflow-hidden text-left">
-              <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
+            <Card key={tabId} accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md text-left">
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/20 border-b border-border/40 pl-6.5">
                 <div className="flex items-center justify-center">
                   <Checkbox
                     checked={isOn}
@@ -246,7 +247,7 @@ export function ModuleFieldsSetup({
                   </div>
                 </div>
               )}
-            </section>
+            </Card>
           );
         })}
 

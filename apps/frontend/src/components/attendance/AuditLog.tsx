@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";
 import { DatePicker } from "../ui/DatePicker";
@@ -147,7 +148,7 @@ export function AuditLog({ filters }: AuditLogProps) {
           <p className="text-xs text-muted-foreground mt-1">Entries appear when attendance is marked or edited.</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
+        <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/60 border-b border-border">
               <tr>
@@ -173,7 +174,7 @@ export function AuditLog({ filters }: AuditLogProps) {
               })}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
     </section>
   );
