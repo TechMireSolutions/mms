@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164, mergeContacts } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive } from "./utils.js";
 import type { Contact } from "./contactTypes.js";
 
 describe("parsePhoneNumber", () => {
@@ -80,3 +80,71 @@ describe("mergeContacts", () => {
     expect(merged.phones).toHaveLength(1);
   });
 });
+
+describe("applyTitleCaseRecursive", () => {
+  it("converts simple string fields to Title Case", () => {
+    expect(applyTitleCaseRecursive("john doe")).toBe("John Doe");
+    expect(applyTitleCaseRecursive("alice smith-jones")).toBe("Alice Smith-jones");
+  });
+
+  it("recursively processes objects and arrays", () => {
+    const input = {
+      name: "john doe",
+      description: "some long description",
+      tags: ["first tag", "second tag"],
+      nested: {
+        note: "this is nested note",
+      },
+    };
+    const expected = {
+      name: "John Doe",
+      description: "Some Long Description",
+      tags: ["First Tag", "Second Tag"],
+      nested: {
+        note: "This Is Nested Note",
+      },
+    };
+    expect(applyTitleCaseRecursive(input)).toEqual(expected);
+  });
+
+  it("ignores technical and system keys", () => {
+    const input = {
+      id: "some_id",
+      userId: "user_123",
+      email: "user@domain.com",
+      status: "pending_verification",
+      role: "assistant_teacher",
+      _privateField: "dont touch me",
+      name: "should be changed",
+    };
+    const expected = {
+      id: "some_id",
+      userId: "user_123",
+      email: "user@domain.com",
+      status: "pending_verification",
+      role: "assistant_teacher",
+      _privateField: "dont touch me",
+      name: "Should Be Changed",
+    };
+    expect(applyTitleCaseRecursive(input)).toEqual(expected);
+  });
+
+  it("ignores non-eligible strings like URLs, phone numbers, and dates", () => {
+    const input = {
+      website: "https://example.com/some-page",
+      birthday: "2026-07-03",
+      phone: "+92 300 1234567",
+      phoneNumber: "03001234567",
+      address: "123 main street",
+    };
+    const expected = {
+      website: "https://example.com/some-page",
+      birthday: "2026-07-03",
+      phone: "+92 300 1234567",
+      phoneNumber: "03001234567",
+      address: "123 Main Street",
+    };
+    expect(applyTitleCaseRecursive(input)).toEqual(expected);
+  });
+});
+

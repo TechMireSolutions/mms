@@ -16,6 +16,7 @@ import {
   tenantObjectKey,
   parseTenantScopedStorageKey,
   isServerOnlyObjectKey,
+  applyTitleCaseRecursive,
 } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { runMigration001 } from './migrations/001_migrate_notification_settings.js';
@@ -175,7 +176,8 @@ export async function getCollection(name: string): Promise<unknown[] | null> {
 export async function saveCollection(name: string, data: unknown[]): Promise<void> {
   try {
     const storageName = resolveCollectionStorageName(name);
-    const serialized = JSON.stringify(data);
+    const processedData = applyTitleCaseRecursive(data) as unknown[];
+    const serialized = JSON.stringify(processedData);
     await activeDb().insert(schema.collections)
       .values({ name: storageName, data: serialized })
       .onConflictDoUpdate({
@@ -186,10 +188,10 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
     const parsed = parseTenantScopedStorageKey(storageName);
     if (parsed && parsed.logicalKey === 'users') {
       const { replaceTenantUsersForWorkspace } = await import('./repositories/tenantUserRepository.js');
-      await replaceTenantUsersForWorkspace(parsed.subdomain, data as TenantUserRow[]);
+      await replaceTenantUsersForWorkspace(parsed.subdomain, processedData as TenantUserRow[]);
     } else if (parsed && parsed.logicalKey === 'contacts') {
       const { replaceContactsForWorkspace } = await import('./repositories/contactRepository.js');
-      await replaceContactsForWorkspace(parsed.subdomain, data as import('@mms/shared').Contact[]);
+      await replaceContactsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Contact[]);
     }
   } catch (error) {
     console.error(`Error saving collection "${name}":`, error);
@@ -213,7 +215,8 @@ export async function getObject(key: string): Promise<unknown | null> {
 export async function saveObject(key: string, data: unknown): Promise<void> {
   try {
     const storageKey = resolveObjectStorageKey(key);
-    const serialized = JSON.stringify(data);
+    const processedData = applyTitleCaseRecursive(data);
+    const serialized = JSON.stringify(processedData);
     await activeDb().insert(schema.objects)
       .values({ key: storageKey, data: serialized })
       .onConflictDoUpdate({

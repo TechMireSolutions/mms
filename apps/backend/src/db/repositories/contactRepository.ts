@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import type { Contact } from '@mms/shared';
+import { type Contact, applyTitleCaseRecursive } from '@mms/shared';
 import { getDb } from '../dbClient.js';
 import { contacts } from '../schema.js';
 
@@ -46,9 +46,10 @@ export async function findContactsByIds(workspaceSubdomain: string, ids: string[
 }
 
 export async function saveContact(workspaceSubdomain: string, contact: Contact): Promise<void> {
+  const processedContact = applyTitleCaseRecursive(contact) as Contact;
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const id = String(contact.id);
-  const { id: _, ...extra } = contact;
+  const id = String(processedContact.id);
+  const { id: _, ...extra } = processedContact;
   const customDataJson = JSON.stringify(extra);
   const db = getDb();
 
@@ -77,10 +78,11 @@ export async function saveContact(workspaceSubdomain: string, contact: Contact):
 
 export async function bulkSaveContacts(workspaceSubdomain: string, list: Contact[]): Promise<void> {
   if (list.length === 0) return;
+  const processedList = applyTitleCaseRecursive(list) as Contact[];
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const db = getDb();
 
-  const values = list.map((contact) => {
+  const values = processedList.map((contact) => {
     const id = String(contact.id);
     const { id: _, ...extra } = contact;
     return {

@@ -1,6 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm';
-import type { StoredTenantUser } from '@mms/shared';
-import { resolveTenantLoginEmail } from '@mms/shared';
+import { type StoredTenantUser, resolveTenantLoginEmail, applyTitleCaseRecursive } from '@mms/shared';
 import { getDb } from '../dbClient.js';
 import { tenantUsers } from '../schema.js';
 
@@ -140,7 +139,8 @@ export async function replaceTenantUsersForWorkspace(
 }
 
 export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
-  const { columns } = splitProfileFields(user);
+  const processedUser = applyTitleCaseRecursive(user) as TenantUserRow;
+  const { columns } = splitProfileFields(processedUser);
   const db = getDb();
   const existing = await findTenantUserRowById(columns.id);
 

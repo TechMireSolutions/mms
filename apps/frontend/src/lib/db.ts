@@ -15,6 +15,7 @@ import {
   buildWorkspaceBackupEnvelope,
   buildStorageKeysFromSnapshot,
   type TenantDatabaseSnapshot,
+  applyTitleCaseRecursive,
 } from "@mms/shared";
 import { getAppDomain } from "./config/tenantConfig";
 import {
@@ -335,6 +336,7 @@ export function saveCollectionCacheOnly<T>(key: string, collectionItems: T[]): v
       dataToSave = validateSessions(collectionItems) as unknown as T[];
     }
     dataToSave = normalizeLinkedCollection(key, dataToSave);
+    dataToSave = applyTitleCaseRecursive(dataToSave) as T[];
     localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("local-database-update"));
@@ -412,6 +414,7 @@ export function saveCollection<T>(key: string, collectionItems: T[]): void {
       dataToSave = validateSessions(collectionItems) as unknown as T[];
     }
     dataToSave = normalizeLinkedCollection(key, dataToSave);
+    dataToSave = applyTitleCaseRecursive(dataToSave) as T[];
     localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("local-database-update"));
@@ -491,8 +494,8 @@ export function saveGlobalSettings(globalSettings: GlobalSettings): void {
 export async function saveGlobalSettingsAsync(globalSettings: GlobalSettings): Promise<ServerSyncResult> {
   const merged = mergeGlobalSettings(globalSettings);
   try {
-    writeObjectLocal("global_settings", merged);
-    return await syncToServer("/api/db/objects/global_settings", merged);
+    const processed = writeObjectLocal("global_settings", merged);
+    return await syncToServer("/api/db/objects/global_settings", processed);
   } catch (error) {
     console.error("Error writing global_settings to local database:", error);
     return { ok: false };
@@ -524,11 +527,13 @@ export function getEffectiveBrandingSettings(): BrandingSettings {
   });
 }
 
-function writeObjectLocal<T>(key: string, objectValue: T): void {
-  localStorage.setItem(scopedStorageKey(key), JSON.stringify(objectValue));
+function writeObjectLocal<T>(key: string, objectValue: T): T {
+  const processed = applyTitleCaseRecursive(objectValue) as T;
+  localStorage.setItem(scopedStorageKey(key), JSON.stringify(processed));
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("local-database-update"));
   }
+  return processed;
 }
 
 /**
@@ -537,8 +542,8 @@ function writeObjectLocal<T>(key: string, objectValue: T): void {
 export async function saveBrandingSettings(brandingSettings: BrandingSettings): Promise<ServerSyncResult> {
   const merged = mergeBrandingSettings(brandingSettings);
   try {
-    writeObjectLocal("branding", merged);
-    return await syncToServer("/api/db/objects/branding", merged);
+    const processed = writeObjectLocal("branding", merged);
+    return await syncToServer("/api/db/objects/branding", processed);
   } catch (error) {
     console.error('Error writing branding to local database:', error);
     return { ok: false };
@@ -576,8 +581,8 @@ export function cachePublicBranding(partial: PublicBranding): void {
  */
 export function saveObject<T>(key: string, objectValue: T): void {
   try {
-    writeObjectLocal(key, objectValue);
-    void syncToServer(`/api/db/objects/${key}`, objectValue);
+    const processed = writeObjectLocal(key, objectValue);
+    void syncToServer(`/api/db/objects/${key}`, processed);
   } catch (error) {
     console.error(`Error writing object "${key}" to database:`, error);
   }

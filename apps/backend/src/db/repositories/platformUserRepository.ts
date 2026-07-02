@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import type { StoredPlatformUser, PlatformRole } from '@mms/shared';
+import { type StoredPlatformUser, type PlatformRole, applyTitleCaseRecursive } from '@mms/shared';
 import { getDb } from '../dbClient.js';
 import { platformUsers } from '../schema.js';
 
@@ -42,14 +42,15 @@ export async function findPlatformUserRowById(id: string): Promise<StoredPlatfor
 }
 
 export async function insertPlatformUser(user: StoredPlatformUser): Promise<void> {
+  const processedUser = applyTitleCaseRecursive(user) as StoredPlatformUser;
   await getDb().insert(platformUsers).values({
-    id: user.id,
-    email: user.email.toLowerCase(),
-    name: user.name,
-    passwordHash: user.passwordHash,
-    role: user.role,
-    emailVerifiedAt: user.emailVerifiedAt ? new Date(user.emailVerifiedAt) : null,
-    createdAt: new Date(user.createdAt),
+    id: processedUser.id,
+    email: processedUser.email.toLowerCase(),
+    name: processedUser.name,
+    passwordHash: processedUser.passwordHash,
+    role: processedUser.role,
+    emailVerifiedAt: processedUser.emailVerifiedAt ? new Date(processedUser.emailVerifiedAt) : null,
+    createdAt: new Date(processedUser.createdAt),
   });
 }
 
@@ -60,9 +61,10 @@ export async function updatePlatformUserRow(
   const existing = await findPlatformUserRowById(userId);
   if (!existing) return null;
 
+  const processedPatch = applyTitleCaseRecursive(patch) as typeof patch;
   const next: StoredPlatformUser = {
     ...existing,
-    ...patch,
+    ...processedPatch,
   };
 
   await getDb()

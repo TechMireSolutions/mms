@@ -33,7 +33,125 @@ export function toTitleCase(value: unknown): unknown {
     .join(" ");
 }
 
+const SYSTEM_EXCLUDED_KEYS = new Set([
+  "id",
+  "key",
+  "uuid",
+  "code",
+  "token",
+  "password",
+  "hash",
+  "salt",
+  "email",
+  "phone",
+  "avatar",
+  "url",
+  "status",
+  "role",
+  "type",
+  "category",
+  "dob",
+  "date",
+  "createdat",
+  "updatedat",
+  "deletedat",
+  "rating",
+  "aisummary",
+  "attachment",
+  "attachments",
+  "file",
+  "path",
+  "subdomain",
+  "domain",
+  "host",
+  "hostname",
+  "ip",
+  "logo",
+  "logourl",
+  "color",
+  "theme",
+  "icon",
+  "uri",
+  "username",
+  "scope",
+  "permissions",
+  "gender",
+  "currency",
+  "enabledmodules",
+  "columnpreferences",
+  "preferences",
+  "profilejson",
+  "customdata",
+  "data",
+  "avatarcolors",
+  "cornerstyle",
+  "primarycolor",
+  "accentcolor",
+  "sidebartheme",
+  "clientsecret",
+  "refreshtoken",
+  "accesstoken",
+  "authchallenge",
+  "authartifacts",
+  "language",
+  "locale",
+  "timezone",
+  "ipaddress",
+  "useragent",
+  "sessionid",
+  "sessiontoken",
+  "signature",
+  "checksum",
+]);
+
+function isKeyIgnored(k?: string): boolean {
+  if (!k) return false;
+  const lk = k.toLowerCase();
+  return SYSTEM_EXCLUDED_KEYS.has(lk) || lk.endsWith("id") || lk.startsWith("_");
+}
+
 /**
+ * Recursively applies Title Case to eligible string fields in any object/array.
+ */
+export function applyTitleCaseRecursive(data: unknown, key?: string): unknown {
+  if (typeof data === "string") {
+    if (isKeyIgnored(key)) {
+      return data;
+    }
+    const trimmed = data.trim();
+    if (
+      trimmed === "" ||
+      trimmed.includes("@") ||
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("data:") ||
+      /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ||
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(trimmed) ||
+      (/^[a-fA-F0-9]+$/.test(trimmed) && trimmed.length > 20) ||
+      (/^[\d\s+\-()]+$/.test(trimmed) && trimmed.replace(/[\s+\-()]/g, "").length >= 7)
+    ) {
+      return data;
+    }
+    return toTitleCase(data) as string;
+  }
+
+  if (Array.isArray(data)) {
+    return data.map((item) => applyTitleCaseRecursive(item, key));
+  }
+
+  if (data !== null && typeof data === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+      result[k] = applyTitleCaseRecursive(v, k);
+    }
+    return result;
+  }
+
+  return data;
+}
+
+/**
+
  * Formats specified text fields in a contact object to Title Case.
  * @param contact - The contact object.
  * @returns A new contact object with title-cased fields.
