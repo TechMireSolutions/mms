@@ -132,8 +132,9 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Monthly Revenue vs Expenses */}
-        <div className="lg:col-span-2 rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0">Monthly Revenue vs Expenses</h3>
+        <div className="relative overflow-hidden group/revenue lg:col-span-2 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/revenue:bg-primary" />
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">Monthly Revenue vs Expenses</h3>
           {monthlyData.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">No posted data yet</div>
           ) : (
@@ -153,8 +154,9 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
         </div>
 
         {/* Expense Breakdown Pie */}
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0">Expense Breakdown</h3>
+        <div className="relative overflow-hidden group/expense rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/expense:bg-indigo-500" />
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">Expense Breakdown</h3>
           {expenseBreakdown.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">No expense data</div>
           ) : (
@@ -190,8 +192,9 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* Balance Sheet snapshot */}
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0">Balance Sheet Snapshot</h3>
+        <div className="relative overflow-hidden group/snapshot rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/snapshot:bg-emerald-500" />
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">Balance Sheet Snapshot</h3>
           <div className="space-y-3">
             {bsData.map((balanceSheetItem) => {
               const max = Math.max(...bsData.map((snapshotItem) => snapshotItem.value), 1);
@@ -219,8 +222,9 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
         </div>
 
         {/* Recent Entries */}
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0">Recent Journal Entries</h3>
+        <div className="relative overflow-hidden group/entries rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500/45 transition-colors group-hover/entries:bg-amber-500" />
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">Recent Journal Entries</h3>
           <div className="space-y-2">
             {recentEntries.map((journalEntry) => {
               const totalDebit = journalEntry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);

@@ -117,9 +117,9 @@ export function GeneralLedger({ accounts, entries, formatCurrency }: GeneralLedg
 
       {selectedAccount && activeAccount && (
         <>
-          {/* Account header card */}
-          <article className="flex flex-wrap items-start gap-4 px-5 py-4 rounded-xl border border-border bg-card">
-            <div className="flex-1 min-w-0">
+          <article className="relative overflow-hidden group/ledger flex flex-wrap items-start gap-4 px-6 py-4.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/ledger:bg-primary" />
+            <div className="flex-1 min-w-0 ml-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-mono text-xs font-bold text-muted-foreground">{activeAccount.code}</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${ACCOUNT_TYPE_META[activeAccount.type]?.color}`}>{activeAccount.type}</span>
