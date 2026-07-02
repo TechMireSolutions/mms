@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, HelpCircle, Tag } from 'lucide-react';
 import { FormModal } from '@/components/ui/FormModal';
 import { CategorySelector } from "./CategorySelector";
 import { QuestionSourcesTab } from "./QuestionSourcesTab";
@@ -142,7 +142,13 @@ export function QuestionForm({
 
   const renderCategoriesTab = () => (
     <div className="space-y-5 text-left">
-      <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
+      <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
+          <Tag className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Classification & Tags</h3>
+        </div>
+
         <Field label="Question Language">
           <FormSelect
             id="qb-question-language"
@@ -190,7 +196,13 @@ export function QuestionForm({
     const falseLabel = 'False';
     return (
       <div className="space-y-5 text-left">
-        <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
+        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
+            <BookOpen className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Question Content</h3>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Field label="Question Text" required error={errors.text}>
@@ -234,7 +246,7 @@ export function QuestionForm({
                 <span className={FORM_LABEL}>Choices * (Select the radio of the correct choice)</span>
                 <div className="space-y-2 mt-1.5" role="radiogroup">
                   {questionDraft.options.slice(0, 4).map((optionValue, optionIndex) => (
-                    <div key={optionIndex} className="flex items-center gap-2">
+                    <div key={optionIndex} className="relative flex items-center group/input w-full gap-2">
                       <input
                         type="radio"
                         name="answer"
@@ -243,17 +255,20 @@ export function QuestionForm({
                         onChange={() => updateDraft({ answer: optionValue })}
                         className="h-4 w-4 flex-shrink-0 accent-primary"
                       />
-                      <Input
-                        type="text"
-                        className={FORM_INPUT}
-                        value={optionValue}
-                        onChange={(e) => {
-                          const nextOptions = [...questionDraft.options];
-                          nextOptions[optionIndex] = e.target.value;
-                          updateDraft({ options: nextOptions });
-                        }}
-                        placeholder={`Option ${optionIndex + 1}`}
-                      />
+                      <div className="relative flex items-center w-full">
+                        <HelpCircle className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                        <Input
+                          type="text"
+                          className={`${FORM_INPUT} pl-10`}
+                          value={optionValue}
+                          onChange={(e) => {
+                            const nextOptions = [...questionDraft.options];
+                            nextOptions[optionIndex] = e.target.value;
+                            updateDraft({ options: nextOptions });
+                          }}
+                          placeholder={`Option ${optionIndex + 1}`}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -329,16 +344,23 @@ export function QuestionForm({
 
     return (
       <div className="space-y-5 text-left">
-        <QuestionSourcesTab
-          sourceBooks={sourceBooks}
-          citations={questionDraft.sourceCitations}
-          availableFieldIds={availableFieldIds}
-          orderedSourceFields={sourceFields as any}
-          onCitationsChange={(next) => updateDraft({ sourceCitations: next })}
-          onBooksUpdated={() => {}}
-          fieldLabel={(id, fallback) => fallback || String(id)}
-          translate={(key) => t(key as any) || String(key)}
-        />
+        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
+            <BookOpen className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Source Citations</h3>
+          </div>
+          <QuestionSourcesTab
+            sourceBooks={sourceBooks}
+            citations={questionDraft.sourceCitations}
+            availableFieldIds={availableFieldIds}
+            orderedSourceFields={sourceFields as any}
+            onCitationsChange={(next) => updateDraft({ sourceCitations: next })}
+            onBooksUpdated={() => {}}
+            fieldLabel={(id, fallback) => fallback || String(id)}
+            translate={(key) => t(key as any) || String(key)}
+          />
+        </section>
       </div>
     );
   };
@@ -357,15 +379,23 @@ export function QuestionForm({
   };
 
   const footerStart = questionDraft.text ? (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      <span className="font-semibold text-foreground truncate max-w-[200px]">{questionDraft.text}</span>
-      <div className="flex items-center gap-2 border-s border-border ps-3">
-        <span className="capitalize">{questionDraft.type}</span>
-        <span className="border-s border-border ps-2 capitalize">{questionDraft.difficulty}</span>
+    <div className="flex flex-wrap items-center gap-2.5 text-xs">
+      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60 truncate max-w-[200px]">
+        {questionDraft.text}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px] capitalize">
+          {questionDraft.type.replace('_', ' ')}
+        </span>
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20 text-[10px] capitalize">
+          {questionDraft.difficulty}
+        </span>
       </div>
     </div>
   ) : (
-    <span className="text-xs text-destructive">Question Text is required</span>
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
+      Question Text is required
+    </span>
   );
 
   return (
