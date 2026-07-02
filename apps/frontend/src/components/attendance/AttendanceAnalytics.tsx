@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -25,16 +26,17 @@ interface StatCardProps {
 
 function StatCard({ label, value, sub, icon: Icon, color }: StatCardProps) {
   return (
-    <article className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+    <Card className="p-4 flex items-center gap-3 relative overflow-hidden group/stat-card shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/stat-card:bg-primary" />
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color} ml-1`}>
         <Icon className="w-5 h-5 text-white" aria-hidden="true" />
       </div>
       <div>
-        <p className="text-xl font-bold text-foreground">{value}</p>
-        <p className="text-[11px] font-semibold text-muted-foreground">{label}</p>
-        {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
+        <p className="text-xl font-bold text-foreground leading-tight">{value}</p>
+        <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">{label}</p>
+        {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
       </div>
-    </article>
+    </Card>
   );
 }
 
@@ -156,7 +158,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Class attendance rate bar chart */}
-        <article className="rounded-xl border border-border bg-card p-4">
+        <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">Attendance % by Class</h2>
           <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
             <BarChart data={classStats} barSize={32}>
@@ -168,10 +170,10 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
                 label={{ position: "top", fontSize: 10, fill: "hsl(var(--muted-foreground))", formatter: (value) => value !== undefined && value !== null ? `${value}%` : "" }} />
             </BarChart>
           </ResponsiveContainer>
-        </article>
+        </Card>
 
         {/* Monthly trend */}
-        <article className="rounded-xl border border-border bg-card p-4">
+        <Card accentColor="info" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">Monthly Attendance Trend</h2>
           <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
             <AreaChart data={monthlyTrend}>
@@ -188,10 +190,10 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
               <Area type="monotone" dataKey="rate" name="Attendance%" stroke="hsl(var(--primary))" fill="url(#att-grad)" strokeWidth={2} dot={{ r: 3 }} />
             </AreaChart>
           </ResponsiveContainer>
-        </article>
+        </Card>
 
         {/* Student rates */}
-        <article className="rounded-xl border border-border bg-card p-4">
+        <Card accentColor="indigo" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">Student Attendance Rates</h2>
           <ResponsiveContainer width="100%" height={220} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
             <BarChart data={studentRates} layout="vertical" barSize={12}>
@@ -203,16 +205,16 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
                 background={{ fill: "hsl(var(--muted))", radius: 4 }} />
             </BarChart>
           </ResponsiveContainer>
-        </article>
+        </Card>
 
         {/* Pie */}
-        <article className="rounded-xl border border-border bg-card p-4">
+        <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">Status Distribution</h2>
           <div className="flex items-center gap-4">
             <ResponsiveContainer width="60%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
               <PieChart>
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value">
-                  {pieData.map((entry, index) => <Cell key={entry.name} fill={COLORS[index]} />)}
+                  {pieData.map((entry, index) => <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
                 <Tooltip />
               </PieChart>
@@ -227,7 +229,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
               ))}
             </div>
           </div>
-        </article>
+        </Card>
       </div>
 
       {/* Low attendance alerts */}
@@ -239,7 +241,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
           </div>
           <div className="flex flex-wrap gap-2">
             {lowAttendance.map((studentRate) => (
-              <div key={studentRate.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-warning/30">
+              <div key={studentRate.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/45 backdrop-blur-sm border border-warning/30">
                 <span className="text-xs font-semibold text-foreground">{studentRate.name}</span>
                 <span className="text-[11px] font-bold text-destructive">{studentRate.rate}%</span>
               </div>
@@ -249,7 +251,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
       )}
 
       {/* Top performers */}
-      <article className="rounded-xl border border-border bg-card p-4">
+      <Card accentColor="success" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
         <h2 className="text-sm font-bold text-foreground mb-3 m-0">Top Performers</h2>
         <div className="space-y-2">
           {topStudents.map((studentRate, index) => (
@@ -267,7 +269,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
             </div>
           ))}
         </div>
-      </article>
+      </Card>
     </section>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -238,7 +239,8 @@ function GeoTag({ geo, onRequest }: { geo: GeoData | "loading" | null; onRequest
 function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
   return (
     <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-      className="rounded-xl border border-border bg-card p-6 text-center space-y-4">
+      className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-6 text-center space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover:bg-primary" />
       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
         <Scan className="w-8 h-8 text-primary" aria-hidden="true" />
       </div>
@@ -608,7 +610,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
       </div>
 
       {/* Attendance Grid */}
-      <div className="rounded-xl border border-border overflow-hidden">
+      <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/60 border-b border-border">
@@ -749,7 +751,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* Actions */}
       <footer className="flex items-center justify-between gap-3 flex-wrap">

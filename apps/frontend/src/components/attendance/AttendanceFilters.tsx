@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DatePicker } from "../ui/DatePicker";
@@ -87,7 +88,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
   });
 
   return (
-    <section className="rounded-xl border border-border bg-card overflow-hidden">
+    <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
       <Button
         type="button"
         variant="ghost"
@@ -179,6 +180,6 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
           </motion.div>
         )}
       </AnimatePresence>
-    </section>
+    </Card>
   );
 }

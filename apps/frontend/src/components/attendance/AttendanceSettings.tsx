@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { Save, QrCode, Bell, Clock, Shield, Scan } from "lucide-react";
 import {
   type AttendanceModuleSettings as AttendanceSettingsData,
@@ -176,12 +177,12 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
       {showPrefs && (
         <>
           {/* Timing */}
-          <article className="rounded-xl border border-border bg-card overflow-hidden">
-            <header className="px-4 py-3 border-b border-border bg-muted/30 flex items-center gap-2">
+          <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 pl-6.5">
               <Clock className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-bold text-foreground m-0">Timing Rules</h2>
             </header>
-            <div className="px-4">
+            <div className="px-4 pl-6.5 pb-2">
               <SettingRow label="Late Threshold" sub="Students arriving after this many minutes are marked Late">
                 <div className="flex items-center gap-2">
                   <label htmlFor="setting-late-threshold" className="sr-only">Late Threshold Minutes</label>
@@ -216,28 +217,28 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
                 <Toggle checked={lockAfterSubmit} onChange={(value) => { setLockAfterSubmit(value); setSaved(false); }} />
               </SettingRow>
             </div>
-          </article>
+          </Card>
 
           {/* QR */}
-          <article className="rounded-xl border border-border bg-card overflow-hidden">
-            <header className="px-4 py-3 border-b border-border bg-muted/30 flex items-center gap-2">
+          <Card accentColor="indigo" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 pl-6.5">
               <QrCode className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-bold text-foreground m-0">QR Attendance</h2>
             </header>
-            <div className="px-4">
+            <div className="px-4 pl-6.5 pb-2">
               <SettingRow label="Enable QR Attendance" sub="Allow teachers to scan student QR codes to mark attendance">
                 <Toggle checked={qrEnabled} onChange={(value) => { setQrEnabled(value); setSaved(false); }} />
               </SettingRow>
             </div>
-          </article>
+          </Card>
 
           {/* Alerts */}
-          <article className="rounded-xl border border-border bg-card overflow-hidden">
-            <header className="px-4 py-3 border-b border-border bg-muted/30 flex items-center gap-2">
+          <Card accentColor="warning" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 pl-6.5">
               <Bell className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-bold text-foreground m-0">Alerts & Notifications</h2>
             </header>
-            <div className="px-4">
+            <div className="px-4 pl-6.5 pb-2">
               <SettingRow label="Low Attendance Threshold" sub="Trigger alert when student attendance drops below this %">
                 <div className="flex items-center gap-2">
                   <label htmlFor="setting-low-attendance" className="sr-only">Low Attendance Threshold Percentage</label>
@@ -260,15 +261,15 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
                 <Toggle checked={requireNoteForAbsent} onChange={(value) => { setRequireNoteForAbsent(value); setSaved(false); }} />
               </SettingRow>
             </div>
-          </article>
+          </Card>
 
           {/* Advanced Features */}
-          <article className="rounded-xl border border-border bg-card overflow-hidden">
-            <header className="px-4 py-3 border-b border-border bg-muted/30 flex items-center gap-2">
+          <Card accentColor="success" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 pl-6.5">
               <Scan className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-bold text-foreground m-0">Advanced Features</h2>
             </header>
-            <div className="px-4">
+            <div className="px-4 pl-6.5 pb-2">
               <SettingRow label="Offline Mode" sub="Allow teachers to mark attendance without internet; syncs when reconnected">
                 <Toggle checked={offlineEnabled} onChange={(value) => { setOfflineEnabled(value); setSaved(false); }} />
               </SettingRow>
@@ -309,7 +310,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>
               </SettingRow>
             </div>
-          </article>
+          </Card>
         </>
       )}
 
