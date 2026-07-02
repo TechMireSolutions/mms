@@ -110,3 +110,35 @@ export async function deleteContact(workspaceSubdomain: string, id: string): Pro
     .where(and(eq(contacts.workspaceSubdomain, subdomain), eq(contacts.id, id)));
 }
 
+export async function replaceContactsForWorkspace(
+  workspaceSubdomain: string,
+  list: Contact[],
+): Promise<void> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const db = getDb();
+
+  await db.delete(contacts).where(eq(contacts.workspaceSubdomain, subdomain));
+
+  if (list.length === 0) return;
+
+  const values = list.map((contact) => {
+    const id = String(contact.id);
+    const { id: _, ...extra } = contact;
+    return {
+      id,
+      workspaceSubdomain: subdomain,
+      customData: JSON.stringify(extra),
+      updatedAt: new Date(),
+    };
+  });
+
+  await db.insert(contacts).values(values);
+}
+
+export async function deleteContactsByWorkspace(workspaceSubdomain: string): Promise<void> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  await getDb()
+    .delete(contacts)
+    .where(eq(contacts.workspaceSubdomain, subdomain));
+}
+

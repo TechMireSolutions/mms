@@ -187,6 +187,9 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
     if (parsed && parsed.logicalKey === 'users') {
       const { replaceTenantUsersForWorkspace } = await import('./repositories/tenantUserRepository.js');
       await replaceTenantUsersForWorkspace(parsed.subdomain, data as TenantUserRow[]);
+    } else if (parsed && parsed.logicalKey === 'contacts') {
+      const { replaceContactsForWorkspace } = await import('./repositories/contactRepository.js');
+      await replaceContactsForWorkspace(parsed.subdomain, data as any[]);
     }
   } catch (error) {
     console.error(`Error saving collection "${name}":`, error);
@@ -284,6 +287,8 @@ export async function purgeTenantDataBySubdomain(subdomain: string): Promise<voi
   await db.delete(schema.collections).where(like(schema.collections.name, `${prefix}%`));
   await db.delete(schema.objects).where(like(schema.objects.key, `${prefix}%`));
   await deleteTenantUsersByWorkspace(tenant);
+  const { deleteContactsByWorkspace } = await import('./repositories/contactRepository.js');
+  await deleteContactsByWorkspace(tenant);
   await deleteAuthArtifactsForWorkspace(tenant);
 }
 

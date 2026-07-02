@@ -68,9 +68,6 @@ export default defineConfig({
           if (id.includes('lucide-react')) {
             return 'vendor-icons';
           }
-          if (id.includes('jspdf') || id.includes('xlsx') || id.includes('html2canvas')) {
-            return 'vendor-export';
-          }
           return undefined;
         },
       },
