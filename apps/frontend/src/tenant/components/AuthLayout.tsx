@@ -100,8 +100,9 @@ export default function AuthLayout({
           !reducedMotion && "animate-fade-in",
         )}
       >
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-xl shadow-black/[0.04] backdrop-blur-xl dark:shadow-black/20">
-          <div className="border-b border-border/50 bg-muted/15 px-6 py-6 text-center sm:px-8">
+        <div className="relative overflow-hidden group/auth rounded-2xl border border-border/60 bg-card/80 shadow-xl shadow-black/[0.04] backdrop-blur-xl dark:shadow-black/20">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/auth:bg-primary" />
+          <div className="border-b border-border/50 bg-muted/15 px-6 py-6 text-center sm:px-8 pl-7.5">
             <div className="mb-4 flex flex-col items-center gap-2">
               {logoUrl ? (
                 <img
@@ -145,7 +146,7 @@ export default function AuthLayout({
             ) : null}
           </div>
 
-          <div className="px-6 py-6 sm:px-8 sm:py-7">{children}</div>
+          <div className="px-6 py-6 sm:px-8 sm:py-7 pl-7 sm:pl-9">{children}</div>
         </div>
       </div>
     </main>

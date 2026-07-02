@@ -367,8 +367,9 @@ export default function AccountProfile(): React.JSX.Element {
               value="profile"
               className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300 focus-visible:outline-none"
             >
-              <Card className="shadow-md border-border bg-card overflow-hidden">
-                <CardHeader className="pb-4 border-b border-border/40 bg-muted/20">
+              <Card className="relative overflow-hidden group/profile-card shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/profile-card:bg-primary" />
+                <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 pl-6.5">
                   <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                     <User className="h-4 w-4 text-primary shrink-0" />
                     {t("account.contactSection")}
@@ -377,7 +378,7 @@ export default function AccountProfile(): React.JSX.Element {
                     {t("account.contactSectionDesc")}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="pt-6 space-y-4">
+                <CardContent className="pt-6 space-y-4 pl-6.5">
                   {!profile.contact ? (
                     <div className="flex items-start gap-3 p-4 rounded-xl bg-warning/10 border border-warning/20 text-warning-foreground animate-in fade-in-50 duration-200">
                       <ShieldCheck className="h-5 w-5 mt-0.5 shrink-0 text-warning" />
@@ -445,8 +446,9 @@ export default function AccountProfile(): React.JSX.Element {
               className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300 focus-visible:outline-none"
             >
               <div className="grid gap-6 md:grid-cols-2">
-                <Card className="shadow-md border-border bg-card overflow-hidden">
-                  <CardHeader className="pb-4 border-b border-border/40 bg-muted/20">
+                <Card className="relative overflow-hidden group/login-card shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/login-card:bg-indigo-500" />
+                  <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 pl-6.5">
                     <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                       <Mail className="h-4 w-4 text-primary shrink-0" />
                       {t("account.loginSection")}
@@ -455,7 +457,7 @@ export default function AccountProfile(): React.JSX.Element {
                       {t("account.loginSectionDesc")}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="pt-6 space-y-4">
+                  <CardContent className="pt-6 space-y-4 pl-6.5">
                     <div className="flex items-center gap-3 p-3 bg-muted/30 border border-border/30 rounded-xl text-sm">
                       <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
                       <div className="text-start">
@@ -612,8 +614,9 @@ export default function AccountProfile(): React.JSX.Element {
                   </CardContent>
                 </Card>
 
-                <Card className="shadow-md border-border bg-card overflow-hidden">
-                  <CardHeader className="pb-4 border-b border-border/40 bg-muted/20">
+                <Card className="relative overflow-hidden group/password-card shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/password-card:bg-emerald-500" />
+                  <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 pl-6.5">
                     <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                       <Lock className="h-4 w-4 text-primary shrink-0" />
                       {t("account.changePassword")}
@@ -622,7 +625,7 @@ export default function AccountProfile(): React.JSX.Element {
                       {t("account.changePassword")}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="pt-6 space-y-4">
+                  <CardContent className="pt-6 space-y-4 pl-6.5">
                     {!showPasswordForm ? (
                       <div className="pt-1">
                         <Button
