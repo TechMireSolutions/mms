@@ -4,10 +4,10 @@ import App from '@/App'
 import '@/index.css'
 import { isApexHost } from '@mms/shared/tenantUtils'
 import { getAppDomain } from '@/lib/config/tenantConfig'
-import { applyApexPlatformTheme } from '@/lib/brandingThemeCore'
-
 if (typeof window !== 'undefined' && isApexHost(window.location.hostname, getAppDomain())) {
-  applyApexPlatformTheme('en')
+  void import('@/lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => {
+    applyApexPlatformTheme('en');
+  });
 } else {
   void import('@/lib/brandingTheme').then(({ applyAppTheme }) => applyAppTheme())
 }

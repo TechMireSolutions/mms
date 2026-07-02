@@ -90,52 +90,56 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
           </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-80 p-0">
-          <div className="border-b border-border px-4 py-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Notifications</h3>
-              {unreadCount > 0 && (
-                <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                  {unreadCount} new
-                </Badge>
-              )}
-            </div>
-          </div>
-          <div className="max-h-80 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <div className="px-4 py-6 text-center text-xs text-muted-foreground">
-                All caught up! No notifications.
-              </div>
-            ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className="border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors bg-primary/[0.02]"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    <div>
-                      <p className="text-sm font-medium">{notification.title}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{notification.desc}</p>
-                      <p className="mt-1 text-[11px] text-muted-foreground/60">{notification.time}</p>
-                    </div>
-                  </div>
+          {popoverOpen && (
+            <>
+              <div className="border-b border-border px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                      {unreadCount} new
+                    </Badge>
+                  )}
                 </div>
-              ))
-            )}
-          </div>
-          <div className="border-t border-border px-4 py-2.5">
-            <Button
-              type="button"
-              variant="link"
-              onClick={() => {
-                setPopoverOpen(false);
-                navigate(ROUTES.home);
-              }}
-              className="text-xs font-medium text-primary hover:underline p-0 h-auto"
-            >
-              View all notifications
-            </Button>
-          </div>
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-6 text-center text-xs text-muted-foreground">
+                    All caught up! No notifications.
+                  </div>
+                ) : (
+                  notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className="border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors bg-primary/[0.02]"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                        <div>
+                          <p className="text-sm font-medium">{notification.title}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{notification.desc}</p>
+                          <p className="mt-1 text-[11px] text-muted-foreground/60">{notification.time}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="border-t border-border px-4 py-2.5">
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={() => {
+                    setPopoverOpen(false);
+                    navigate(ROUTES.home);
+                  }}
+                  className="text-xs font-medium text-primary hover:underline p-0 h-auto"
+                >
+                  View all notifications
+                </Button>
+              </div>
+            </>
+          )}
         </PopoverContent>
       </Popover>
 
