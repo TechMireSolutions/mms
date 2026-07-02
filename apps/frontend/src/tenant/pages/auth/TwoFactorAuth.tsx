@@ -173,6 +173,9 @@ export default function TwoFactorAuth(): React.JSX.Element {
             {code.map((digit, digitIndex) => (
               <input
                 key={digitIndex}
+                id={`otp-${digitIndex}`}
+                name={`otp-${digitIndex}`}
+                autoComplete="one-time-code"
                 ref={(element) => { inputs.current[digitIndex] = element; }}
                 type="text"
                 inputMode="numeric"

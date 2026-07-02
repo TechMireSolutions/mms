@@ -41,6 +41,9 @@ export default function PlatformOtpInput({
       {value.map((digit, index) => (
         <input
           key={index}
+          id={`platform-otp-${index}`}
+          name={`platform-otp-${index}`}
+          autoComplete="one-time-code"
           ref={(element) => { inputs.current[index] = element; }}
           type="text"
           inputMode="numeric"

@@ -211,6 +211,8 @@ export function DatePicker({
  
       {required && !value && (
         <input
+          id={`${resolvedId}-required-helper`}
+          name={`${resolvedName}-required-helper`}
           type="text"
           className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
           required
