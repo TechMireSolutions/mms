@@ -11,6 +11,10 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
+    "./tenantUtils": {
+      "import": "./dist/tenantUtils.js",
+      "types": "./dist/tenantUtils.d.ts"
+    },
     "./translations/en": {
       "import": "./dist/appTranslationsEn.js",
       "types": "./dist/appTranslationsEn.d.ts"

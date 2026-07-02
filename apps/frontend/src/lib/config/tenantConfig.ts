@@ -4,7 +4,7 @@ import {
   isApexHost,
   resolveAppDomainForRequest,
   type TenantUrlOptions,
-} from "@mms/shared";
+} from "@mms/shared/tenantUtils";
 import { env } from "@/lib/config/env";
 
 /** Apex domain for this deployment (localhost in dev, platform domain in prod). */

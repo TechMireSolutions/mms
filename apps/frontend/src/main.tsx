@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App'
 import '@/index.css'
-import { isApexHost } from '@mms/shared'
+import { isApexHost } from '@mms/shared/tenantUtils'
 import { getAppDomain } from '@/lib/config/tenantConfig'
 import { applyApexPlatformTheme } from '@/lib/brandingThemeCore'
 
