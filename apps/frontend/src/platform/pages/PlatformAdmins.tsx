@@ -138,8 +138,9 @@ export default function PlatformAdmins(): React.JSX.Element {
                 {admins.map((admin) => (
                   <li
                     key={admin.id}
-                    className="rounded-xl border border-border bg-card p-4 space-y-2 text-left transition-shadow hover:shadow-sm"
+                    className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 space-y-2 text-left transition-all hover:shadow-md hover:border-primary/30 duration-300"
                   >
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${admin.role === "super_user" ? "bg-primary/45 group-hover:bg-primary" : "bg-muted-foreground/35 group-hover:bg-muted-foreground"} transition-colors duration-300`} />
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-foreground truncate">{admin.name}</p>
                       <span
@@ -176,8 +177,9 @@ export default function PlatformAdmins(): React.JSX.Element {
           {/* Add Admin Form */}
           <form
             onSubmit={(e) => void handleAddAdmin(e)}
-            className="rounded-xl border border-border bg-card p-4 space-y-4 text-left shadow-sm"
+            className="relative overflow-hidden group/form rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 space-y-4 text-left shadow-sm hover:shadow-md transition-all duration-300"
           >
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/form:bg-primary" />
             <div className="flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-primary" aria-hidden />
               <h2 className="text-sm font-bold text-foreground">{t("platform.addAdmin")}</h2>

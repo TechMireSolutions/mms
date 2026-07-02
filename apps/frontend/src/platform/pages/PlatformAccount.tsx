@@ -151,8 +151,9 @@ export default function PlatformAccount(): React.JSX.Element {
           </div>
         ) : profile && !profileError ? (
           <>
-            <section className="rounded-xl border border-border bg-card p-4 space-y-3 text-left">
-              <div className="flex items-center gap-2 text-sm">
+            <section className="relative overflow-hidden group/profile rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 space-y-3 text-left transition-all duration-300">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/profile:bg-primary" />
+              <div className="flex items-center gap-2 text-sm ml-0.5">
                 <Mail className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
                 <span className="text-muted-foreground">{t("platform.profileEmail")}</span>
                 <span className="font-medium text-foreground ml-auto truncate">{profile.email}</span>
@@ -172,8 +173,9 @@ export default function PlatformAccount(): React.JSX.Element {
               ) : null}
             </section>
 
-            <form onSubmit={(e) => void handleSaveName(e)} className="rounded-xl border border-border bg-card p-4 space-y-4 text-left">
-              <h2 className="text-sm font-semibold text-foreground">{t("platform.profileName")}</h2>
+            <form onSubmit={(e) => void handleSaveName(e)} className="relative overflow-hidden group/name rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 space-y-4 text-left transition-all duration-300">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/name:bg-indigo-500" />
+              <h2 className="text-sm font-semibold text-foreground ml-0.5">{t("platform.profileName")}</h2>
               {nameError ? (
                 <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive" role="alert">
                   <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
@@ -203,8 +205,9 @@ export default function PlatformAccount(): React.JSX.Element {
               </Button>
             </form>
 
-            <form onSubmit={(e) => void handleChangePassword(e)} className="rounded-xl border border-border bg-card p-4 space-y-4 text-left">
-              <h2 className="text-sm font-semibold text-foreground">{t("platform.profileChangePassword")}</h2>
+            <form onSubmit={(e) => void handleChangePassword(e)} className="relative overflow-hidden group/password rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 space-y-4 text-left transition-all duration-300">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/password:bg-emerald-500" />
+              <h2 className="text-sm font-semibold text-foreground ml-0.5">{t("platform.profileChangePassword")}</h2>
               {passwordError ? (
                 <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive" role="alert">
                   <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />

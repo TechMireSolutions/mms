@@ -31,10 +31,20 @@ export default function ReportSummaryCard({
     violet:  "bg-primary/10 text-primary shadow-sm shadow-primary/5",
   };
   
+  const stripeColors: Record<string, string> = {
+    primary: "bg-primary/45 group-hover:bg-primary",
+    green:   "bg-success/45 group-hover:bg-success",
+    amber:   "bg-warning/45 group-hover:bg-warning",
+    red:     "bg-destructive/45 group-hover:bg-destructive",
+    blue:    "bg-info/45 group-hover:bg-info",
+    violet:  "bg-primary/45 group-hover:bg-primary",
+  };
+
   return (
-    <div className="bg-card/40 backdrop-blur-xl rounded-2xl border border-border/50 p-4 flex items-center gap-3.5 shadow-sm hover:shadow-md hover:border-primary/20 transition-all group">
+    <div className="relative overflow-hidden bg-card/40 backdrop-blur-xl rounded-2xl border border-border/50 p-4 pl-5.5 flex items-center gap-3.5 shadow-sm hover:shadow-md hover:border-primary/20 transition-all group">
+      <div className={`absolute left-0 top-0 bottom-0 w-1 ${stripeColors[color] || stripeColors.primary} transition-colors duration-300`} />
       {Icon && (
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ${colors[color] || colors.primary}`}>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ml-1.5 ${colors[color] || colors.primary}`}>
           <Icon className="w-5 h-5" />
         </div>
       )}
