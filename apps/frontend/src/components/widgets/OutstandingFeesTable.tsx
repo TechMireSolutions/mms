@@ -51,8 +51,9 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
   const totalUnpaid = unpaidInvoices.length;
 
   return (
-    <section aria-labelledby="outstanding-fees-heading" className="bg-card rounded-xl border border-border">
-      <header className="px-5 py-4 border-b border-border flex items-center justify-between">
+    <section aria-labelledby="outstanding-fees-heading" className="relative overflow-hidden group/unpaid bg-card/45 backdrop-blur-sm rounded-2xl border border-border shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-destructive/45 transition-colors group-hover/unpaid:bg-destructive" />
+      <header className="px-6 py-4 border-b border-border/40 flex items-center justify-between pl-6.5">
         <div className="flex items-center gap-2.5">
           <AlertCircle className="w-4 h-4 text-destructive" aria-hidden="true" />
           <h3 id="outstanding-fees-heading" className="text-sm font-semibold text-foreground m-0">

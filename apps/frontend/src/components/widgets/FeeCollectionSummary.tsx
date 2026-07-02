@@ -58,8 +58,9 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
   const byClass = Object.values(classMap);
 
   return (
-    <section aria-labelledby="fee-collection-heading" className="bg-card rounded-xl border border-border p-5">
-      <header className="flex items-start justify-between mb-5">
+    <section aria-labelledby="fee-collection-heading" className="relative overflow-hidden group/summary bg-card/45 backdrop-blur-sm rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/summary:bg-emerald-500" />
+      <header className="flex items-start justify-between mb-5 pl-1.5">
         <div>
           <h3 id="fee-collection-heading" className="text-sm font-semibold text-foreground m-0">
             {title || "Fee Collection Summary"}

@@ -66,8 +66,9 @@ export default function SessionsTable({ title }: { title?: string }) {
   });
 
   return (
-    <section aria-labelledby="sessions-table-heading" className="bg-card rounded-xl border border-border">
-      <header className="px-5 py-4 border-b border-border flex items-center justify-between">
+    <section aria-labelledby="sessions-table-heading" className="relative overflow-hidden group/sessions bg-card/45 backdrop-blur-sm rounded-2xl border border-border shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/sessions:bg-primary" />
+      <header className="px-6 py-4 border-b border-border/40 flex items-center justify-between pl-6.5">
         <div className="flex items-center gap-2.5">
           <h3 id="sessions-table-heading" className="text-sm font-semibold text-foreground m-0">
             {title || "Today's Sessions"}

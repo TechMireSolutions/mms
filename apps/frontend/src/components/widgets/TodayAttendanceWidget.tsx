@@ -108,9 +108,10 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
   const rateBarColor = rate >= 90 ? "bg-success" : rate >= 75 ? "bg-warning" : "bg-destructive";
 
   return (
-    <article className="rounded-xl border border-border bg-card overflow-hidden">
+    <article className="relative overflow-hidden group rounded-2xl border border-border bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover:bg-primary" />
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+      <header className="flex items-center justify-between px-5 py-3 border-b border-border/40 bg-muted/20 pl-6">
         <div className="flex items-center gap-2">
           <UserCheck className="w-4 h-4 text-primary" />
           <h2 className="text-sm font-bold text-foreground">
