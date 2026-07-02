@@ -123,7 +123,7 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
               maxLength={NAME_MAX}
               placeholder={t("branding.madrasaNamePlaceholder")}
               aria-describedby="onboarding-name-hint"
-              onChange={(e) => handleNameChange(e.target.value)}
+              onChange={(event) => handleNameChange(event.target.value)}
             />
             <FieldHint id="onboarding-name-hint">{t("branding.madrasaNameHint")}</FieldHint>
           </div>
@@ -141,7 +141,7 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
               maxLength={TAGLINE_MAX}
               placeholder={t("branding.taglinePlaceholder")}
               aria-describedby="onboarding-tagline-hint"
-              onChange={(e) => updateField("tagline", e.target.value)}
+              onChange={(event) => updateField("tagline", event.target.value)}
             />
             <FieldHint id="onboarding-tagline-hint">{t("branding.taglineHint")}</FieldHint>
           </div>
@@ -153,7 +153,7 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
               value={data.country}
               autoComplete="country-name"
               placeholder="United Kingdom"
-              onChange={(e) => updateField("country", e.target.value)}
+              onChange={(event) => updateField("country", event.target.value)}
             />
           </div>
 
@@ -170,7 +170,7 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
                 value={data.subdomain}
                 placeholder="al-noor"
                 className="border-0 rounded-none focus-visible:ring-0"
-                onChange={(e) => handleSubdomainChange(e.target.value)}
+                onChange={(event) => handleSubdomainChange(event.target.value)}
               />
               <div className="border-l border-border bg-muted px-3 py-2.5">
                 <span className="text-xs text-muted-foreground">.{appDomain}</span>
@@ -240,7 +240,7 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
             rows={2}
             placeholder={defaultFooterForMadrasa(data.name, language)}
             aria-describedby="onboarding-footer-hint"
-            onChange={(e) => updateField("footerText", e.target.value)}
+            onChange={(event) => updateField("footerText", event.target.value)}
           />
           <FieldHint id="onboarding-footer-hint">{t("theme.footerHint")}</FieldHint>
         </div>

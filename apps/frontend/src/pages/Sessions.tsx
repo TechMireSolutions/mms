@@ -169,16 +169,16 @@ export default function Sessions() {
   }, [sessions, search, filterStatus, filterType]);
 
   const handleSave = (sessionToSave: Session) => {
-    const existing = sessions.find((sessionItem) => sessionItem.id === sessionToSave.id);
-    const onDone = () => {
+    const existingSession = sessions.find((sessionItem) => sessionItem.id === sessionToSave.id);
+    const handleSessionSaveSuccess = () => {
       if (detailSession?.id === sessionToSave.id) setDetailSession(sessionToSave);
       setShowForm(false);
       setEditSession(null);
     };
-    if (existing) {
-      updateSession.mutate({ id: sessionToSave.id, session: sessionToSave }, { onSuccess: onDone });
+    if (existingSession) {
+      updateSession.mutate({ id: sessionToSave.id, session: sessionToSave }, { onSuccess: handleSessionSaveSuccess });
     } else {
-      createSession.mutate(sessionToSave, { onSuccess: onDone });
+      createSession.mutate(sessionToSave, { onSuccess: handleSessionSaveSuccess });
     }
   };
 
@@ -197,13 +197,13 @@ export default function Sessions() {
   const hasFilters = filterStatus.length > 0 || filterType.length > 0;
 
   const statusLabels = useMemo(() => {
-    const map: Record<string, string> = {};
+    const sessionStatusLabelsByValue: Record<string, string> = {};
     for (const statusOption of statusOptions) {
       const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
       const translated = t(translationKey);
-      map[statusOption] = translated === translationKey ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : translated;
+      sessionStatusLabelsByValue[statusOption] = translated === translationKey ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : translated;
     }
-    return map;
+    return sessionStatusLabelsByValue;
   }, [statusOptions, t]);
 
   return (

@@ -95,7 +95,7 @@ export default function StudentForm({
   const isFieldEnabled = useCallback(
     (tabId: string, fieldId: string) => {
       const tabFields = (settings.fields?.[tabId] || []) as FieldDefinition[];
-      const fieldDef = tabFields.find((f) => f.key === fieldId);
+      const fieldDef = tabFields.find((fieldDefinition) => fieldDefinition.key === fieldId);
       if (!fieldDef) return true;
       return fieldDef.enabled !== false;
     },
@@ -105,7 +105,7 @@ export default function StudentForm({
   const isFieldRequired = useCallback(
     (tabId: string, fieldId: string) => {
       const tabFields = (settings.fields?.[tabId] || []) as FieldDefinition[];
-      const fieldDef = tabFields.find((f) => f.key === fieldId);
+      const fieldDef = tabFields.find((fieldDefinition) => fieldDefinition.key === fieldId);
       if (!fieldDef) return false;
       return fieldDef.required === true;
     },
@@ -119,12 +119,12 @@ export default function StudentForm({
   }, [isTabEnabled]);
 
   const getFieldError = (fieldId: string) => {
-    const err = validationErrors.find((e) => e.fieldId === fieldId);
-    return err ? err.message : undefined;
+    const fieldError = validationErrors.find((validationError) => validationError.fieldId === fieldId);
+    return fieldError ? fieldError.message : undefined;
   };
 
   const getTabHasError = (tabId: string) => {
-    return validationErrors.some((e) => e.tabId === tabId);
+    return validationErrors.some((validationError) => validationError.tabId === tabId);
   };
 
   const { data: linkedContact } = useContactById(
@@ -366,7 +366,7 @@ export default function StudentForm({
                 <Input
                   required
                   value={studentDraft.grNumber || ""}
-                  onChange={(e) => updateDraft({ grNumber: e.target.value })}
+                  onChange={(event) => updateDraft({ grNumber: event.target.value })}
                   placeholder={t("students.form.grNumberPlaceholder") || "Enter GR Number"}
                   className={`${FORM_INPUT} pl-10`}
                 />
@@ -377,9 +377,9 @@ export default function StudentForm({
               <FormSelect
                 value={studentDraft.status || "active"}
                 onChange={(val) => updateDraft({ status: val as StudentStatus })}
-                options={(configStatuses.length > 0 ? configStatuses : STUDENT_STATUS_VALUES).map((s) => ({
-                  value: s,
-                  label: t(`students.form.status.${s}` as AppTranslationKey) || s,
+                options={(configStatuses.length > 0 ? configStatuses : STUDENT_STATUS_VALUES).map((status) => ({
+                  value: status,
+                  label: t(`students.form.status.${status}` as AppTranslationKey) || status,
                 }))}
               />
             </Field>
@@ -390,7 +390,7 @@ export default function StudentForm({
                   <Tag className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
                     value={studentDraft.registrationType || ""}
-                    onChange={(e) => updateDraft({ registrationType: e.target.value })}
+                    onChange={(event) => updateDraft({ registrationType: event.target.value })}
                     placeholder="e.g. Regular, Online"
                     className={`${FORM_INPUT} pl-10`}
                   />
@@ -501,7 +501,7 @@ export default function StudentForm({
                 <Tag className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   value={studentDraft.discountType || ""}
-                  onChange={(e) => updateDraft({ discountType: e.target.value })}
+                  onChange={(event) => updateDraft({ discountType: event.target.value })}
                   placeholder="e.g. Sibling, Need-based"
                   className={`${FORM_INPUT} pl-10`}
                 />
@@ -514,7 +514,7 @@ export default function StudentForm({
                 <Input
                   type="number"
                   value={studentDraft.discountPct ?? 0}
-                  onChange={(e) => updateDraft({ discountPct: Number(e.target.value) })}
+                  onChange={(event) => updateDraft({ discountPct: Number(event.target.value) })}
                   className={`${FORM_INPUT} pl-10`}
                 />
               </div>
@@ -532,7 +532,7 @@ export default function StudentForm({
           <Field label="">
             <textarea
               value={studentDraft.notes || ""}
-              onChange={(e) => updateDraft({ notes: e.target.value })}
+              onChange={(event) => updateDraft({ notes: event.target.value })}
               placeholder="Additional notes..."
               className="w-full min-h-[120px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
             />

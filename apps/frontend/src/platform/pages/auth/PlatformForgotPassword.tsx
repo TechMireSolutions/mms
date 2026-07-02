@@ -57,8 +57,8 @@ export default function PlatformForgotPassword(): React.JSX.Element {
     if (resetIdParam) setResetId(resetIdParam);
   }, [resetIdParam]);
 
-  const resetPath = (id: string): string =>
-    `${ROUTES.platformForgotPassword}?resetId=${encodeURIComponent(id)}`;
+  const resetPath = (passwordResetId: string): string =>
+    `${ROUTES.platformForgotPassword}?resetId=${encodeURIComponent(passwordResetId)}`;
 
   const handleRequest = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
@@ -164,7 +164,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
       <>
         {pageHead}
         <PlatformAuthLayout title={t("platform.forgotResetTitle")} subtitle={t("platform.forgotResetSubtitle")}>
-        <form onSubmit={(e) => void handleReset(e)} className="space-y-4">
+        <form onSubmit={(event) => void handleReset(event)} className="space-y-4">
           {error ? <Alert message={error} /> : null}
           {devHint ? <DevHint message={devHint} /> : null}
 
@@ -186,7 +186,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
                 required
                 minLength={PLATFORM_MIN_PASSWORD_LENGTH}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 className={FORM_INPUT_ICON}
               />
             </div>
@@ -203,7 +203,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
                 required
                 minLength={PLATFORM_MIN_PASSWORD_LENGTH}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(event) => setConfirmPassword(event.target.value)}
                 className={FORM_INPUT_ICON}
               />
             </div>
@@ -301,7 +301,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
     <>
       {pageHead}
       <PlatformAuthLayout title={t("platform.forgotTitle")} subtitle={t("platform.forgotSubtitle")}>
-      <form onSubmit={(e) => void handleRequest(e)} className="space-y-4">
+      <form onSubmit={(event) => void handleRequest(event)} className="space-y-4">
         {error ? <Alert message={error} /> : null}
 
         <div className="space-y-1.5">
@@ -314,7 +314,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
               autoComplete="username"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
               className={FORM_INPUT_ICON}
             />
           </div>

@@ -38,7 +38,7 @@ export function useSetWorkspaceEnabled() {
           body: JSON.stringify({ enabled }),
         },
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_workspaceMutationResponse, variables) => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: WORKSPACE_REGISTRY_QUERY_KEY });
       notify.success(
@@ -65,7 +65,7 @@ export function useDeleteWorkspace() {
           body: JSON.stringify({ password }),
         },
       ),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_deleteMutationResponse, variables) => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: WORKSPACE_REGISTRY_QUERY_KEY });
       notify.success(t('platform.workspaceDeletedToast'), { description: variables.subdomain });

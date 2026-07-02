@@ -70,7 +70,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
 
   useEffect(() => {
     if (resendCountdown <= 0) return;
-    const timer = setTimeout(() => setResendCountdown((c) => c - 1), 1000);
+    const timer = setTimeout(() => setResendCountdown((countdown) => countdown - 1), 1000);
     return () => clearTimeout(timer);
   }, [resendCountdown]);
 
@@ -82,36 +82,36 @@ export default function TwoFactorAuth(): React.JSX.Element {
     return <Navigate to={redirectTo} replace />;
   }
 
-  const handleChange = (i: number, val: string): void => {
-    if (!/^\d?$/.test(val)) return;
-    const next = [...code];
-    next[i] = val;
-    setCode(next);
+  const handleChange = (digitIndex: number, digitValue: string): void => {
+    if (!/^\d?$/.test(digitValue)) return;
+    const updatedCode = [...code];
+    updatedCode[digitIndex] = digitValue;
+    setCode(updatedCode);
     setError("");
-    if (val && i < CODE_LENGTH - 1) inputs.current[i + 1]?.focus();
+    if (digitValue && digitIndex < CODE_LENGTH - 1) inputs.current[digitIndex + 1]?.focus();
   };
 
-  const handleKeyDown = (i: number, e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === "Backspace" && !code[i] && i > 0) {
-      inputs.current[i - 1]?.focus();
+  const handleKeyDown = (digitIndex: number, event: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (event.key === "Backspace" && !code[digitIndex] && digitIndex > 0) {
+      inputs.current[digitIndex - 1]?.focus();
     }
-    if (e.key === "ArrowLeft" && i > 0) inputs.current[i - 1]?.focus();
-    if (e.key === "ArrowRight" && i < CODE_LENGTH - 1) inputs.current[i + 1]?.focus();
+    if (event.key === "ArrowLeft" && digitIndex > 0) inputs.current[digitIndex - 1]?.focus();
+    if (event.key === "ArrowRight" && digitIndex < CODE_LENGTH - 1) inputs.current[digitIndex + 1]?.focus();
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>): void => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, CODE_LENGTH);
-    const next = [...code];
-    pasted.split("").forEach((digit: string, digitIndex: number) => { next[digitIndex] = digit; });
-    setCode(next);
+  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>): void => {
+    event.preventDefault();
+    const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, CODE_LENGTH);
+    const updatedCode = [...code];
+    pasted.split("").forEach((digit: string, digitIndex: number) => { updatedCode[digitIndex] = digit; });
+    setCode(updatedCode);
     inputs.current[Math.min(pasted.length, CODE_LENGTH - 1)]?.focus();
   };
 
-  const isComplete = code.every((d) => d !== "");
+  const isComplete = code.every((digit) => digit !== "");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
     if (!isComplete || !challengeId) {
       setError("Please enter all 6 digits");
       return;
@@ -170,23 +170,23 @@ export default function TwoFactorAuth(): React.JSX.Element {
           </div>
 
           <div className="flex justify-center gap-2.5">
-            {code.map((digit, i) => (
+            {code.map((digit, digitIndex) => (
               <input
-                key={i}
-                ref={(el) => { inputs.current[i] = el; }}
+                key={digitIndex}
+                ref={(element) => { inputs.current[digitIndex] = element; }}
                 type="text"
                 inputMode="numeric"
                 maxLength={1}
                 value={digit}
-                onChange={(e) => handleChange(i, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i, e)}
+                onChange={(event) => handleChange(digitIndex, event.target.value)}
+                onKeyDown={(event) => handleKeyDown(digitIndex, event)}
                 onPaste={handlePaste}
                 className={cn(
                   FORM_OTP_DIGIT,
                   digit ? "border-primary/60 bg-primary/5" : "border-border",
                   error && "border-destructive/60 bg-destructive/5",
                 )}
-                autoFocus={i === 0}
+                autoFocus={digitIndex === 0}
               />
             ))}
           </div>

@@ -300,14 +300,14 @@ function ContactsInner() {
       }
     }
 
-    const onOAuthMessage = (event: MessageEvent): void => {
+    const handleOAuthMessage = (event: MessageEvent): void => {
       if (event.origin !== window.location.origin) return;
       if (event.data?.type !== GOOGLE_CONTACTS_OAUTH_MESSAGE || typeof event.data.code !== 'string') return;
       stashGoogleContactsOAuthCode(event.data.code);
       setActiveTab('setup');
     };
-    window.addEventListener('message', onOAuthMessage);
-    return () => window.removeEventListener('message', onOAuthMessage);
+    window.addEventListener('message', handleOAuthMessage);
+    return () => window.removeEventListener('message', handleOAuthMessage);
   }, [setActiveTab]);
 
   const workContacts = useServerWork ? (workPageData?.contacts ?? []) : filtered;
@@ -457,9 +457,9 @@ function ContactsInner() {
                   </div>
                   <div className="flex items-center gap-2">
                     {(() => {
-                      const targets = workContacts.filter((c) => selected.includes(c.id));
-                      const waTargets = targets.filter((c) => hasWhatsApp(c));
-                      const smsReady = targets.filter((c) => Boolean(getPrimaryPhone(c)));
+                      const targets = workContacts.filter((contact) => selected.includes(contact.id));
+                      const waTargets = targets.filter((contact) => hasWhatsApp(contact));
+                      const smsReady = targets.filter((contact) => Boolean(getPrimaryPhone(contact)));
                       const waClickable = waTargets.length > 0;
                       const smsClickable = smsReady.length > 0;
                       return (

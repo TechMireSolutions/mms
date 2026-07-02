@@ -144,7 +144,7 @@ export function TeacherForm({
         <ContactPicker
           label={t("teachers.field.contact") || "Contact"}
           value={teacherDraft.contactId ? String(teacherDraft.contactId) : null}
-          onChange={(id) => updateDraft({ contactId: id ? String(id) : "" })}
+          onChange={(contactId) => updateDraft({ contactId: contactId ? String(contactId) : "" })}
           excludeIds={linkedTeacherContactIds.map(String)}
           searchPlaceholder={t("teachers.form.searchContact")}
           emptyTitle={t("teachers.form.noContacts")}
@@ -166,10 +166,10 @@ export function TeacherForm({
           <select
             className={FORM_SELECT}
             value={teacherDraft.specialization || "General"}
-            onChange={(e) => updateDraft({ specialization: e.target.value })}
+            onChange={(event) => updateDraft({ specialization: event.target.value })}
           >
-            {TEACHER_SPECIALIZATION_VALUES.map((s) => (
-              <option key={s} value={s}>{s}</option>
+            {TEACHER_SPECIALIZATION_VALUES.map((specialization) => (
+              <option key={specialization} value={specialization}>{specialization}</option>
             ))}
           </select>
         </Field>
@@ -179,7 +179,7 @@ export function TeacherForm({
             <GraduationCap className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
             <Input
               value={teacherDraft.qualification || ""}
-              onChange={(e) => updateDraft({ qualification: e.target.value })}
+              onChange={(event) => updateDraft({ qualification: event.target.value })}
               placeholder="e.g. Master in Islamic Studies"
               className={`${FORM_INPUT} pl-10`}
             />
@@ -202,7 +202,7 @@ export function TeacherForm({
             <Hash className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
             <Input
               value={teacherDraft.employeeId || ""}
-              onChange={(e) => updateDraft({ employeeId: e.target.value })}
+              onChange={(event) => updateDraft({ employeeId: event.target.value })}
               placeholder="TCH-0001"
               className={`${FORM_INPUT} pl-10`}
             />
@@ -213,14 +213,14 @@ export function TeacherForm({
           <select
             className={FORM_SELECT}
             value={teacherDraft.status || "active"}
-            onChange={(e) => updateDraft({ status: e.target.value as any })}
+            onChange={(event) => updateDraft({ status: event.target.value as any })}
           >
-            {TEACHER_STATUS_VALUES.map((s) => {
-              const translationKey = `teachers.status.${s}` as AppTranslationKey;
+            {TEACHER_STATUS_VALUES.map((status) => {
+              const translationKey = `teachers.status.${status}` as AppTranslationKey;
               const translated = t(translationKey);
-              const label = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+              const label = translated === translationKey ? status.charAt(0).toUpperCase() + status.slice(1) : translated;
               return (
-                <option key={s} value={s}>{label}</option>
+                <option key={status} value={status}>{label}</option>
               );
             })}
           </select>
@@ -236,7 +236,7 @@ export function TeacherForm({
         <Field label={t("teachers.field.notes") || "Notes"}>
           <textarea
             value={teacherDraft.notes || ""}
-            onChange={(e) => updateDraft({ notes: e.target.value })}
+            onChange={(event) => updateDraft({ notes: event.target.value })}
             placeholder="Employment notes..."
             className="w-full min-h-[80px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
           />

@@ -515,8 +515,8 @@ export default function Dashboard() {
               statItems={visibleDashboardMetricCards}
               customCardIds={activeCustomCards.map((customCard) => customCard.id)}
               onDeleteCustomCard={handleDeleteWidget}
-              onEditCustomCard={(id) => {
-                const widget = customWidgets.find((dashboardWidget) => dashboardWidget.id === id);
+              onEditCustomCard={(customCardId) => {
+                const widget = customWidgets.find((dashboardWidget) => dashboardWidget.id === customCardId);
                 if (widget) openWidgetBuilder('card', widget);
               }}
               isEditMode={isEditMode}

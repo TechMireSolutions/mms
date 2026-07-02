@@ -42,7 +42,7 @@ export default function PlatformSignIn(): React.JSX.Element {
         subtitle={t("platform.signInSubtitle")}
       >
         <form
-          onSubmit={(e) => void handleSubmit(e)}
+          onSubmit={(event) => void handleSubmit(event)}
           className="space-y-4"
           noValidate
           aria-busy={isPlatformLoginSubmitting}
@@ -71,7 +71,7 @@ export default function PlatformSignIn(): React.JSX.Element {
                 spellCheck={false}
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 className={FORM_INPUT_ICON}
               />
             </div>
@@ -88,7 +88,7 @@ export default function PlatformSignIn(): React.JSX.Element {
                 autoComplete="current-password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 className={`${FORM_INPUT_ICON} pr-11`}
               />
               <button

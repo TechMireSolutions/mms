@@ -144,7 +144,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                     type="number"
                     className={`${FORM_INPUT} pl-10`}
                     value={paymentDraft.amount || ""}
-                    onChange={(e) => updateDraft({ amount: e.target.value === "" ? 0 : Number(e.target.value) })}
+                    onChange={(event) => updateDraft({ amount: event.target.value === "" ? 0 : Number(event.target.value) })}
                     max={balance}
                     min={1}
                     required
@@ -162,11 +162,11 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
               <select
                 className={`${FORM_SELECT} cursor-pointer`}
                 value={paymentDraft.method || "Cash"}
-                onChange={(e) => updateDraft({ method: e.target.value })}
+                onChange={(event) => updateDraft({ method: event.target.value })}
                 required
               >
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>{m}</option>
+                {PAYMENT_METHODS.map((method) => (
+                  <option key={method} value={method}>{method}</option>
                 ))}
               </select>
             </Field>
@@ -196,7 +196,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                   <Input
                     className={`${FORM_INPUT} pl-10`}
                     value={paymentDraft.note || ""}
-                    onChange={(e) => updateDraft({ note: e.target.value })}
+                    onChange={(event) => updateDraft({ note: event.target.value })}
                     placeholder="e.g. Cash received, receipt #123"
                   />
                 </div>

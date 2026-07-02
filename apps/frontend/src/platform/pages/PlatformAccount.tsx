@@ -173,7 +173,7 @@ export default function PlatformAccount(): React.JSX.Element {
               ) : null}
             </section>
 
-            <form onSubmit={(e) => void handleSaveName(e)} className="relative overflow-hidden group/name rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 space-y-4 text-left transition-all duration-300">
+            <form onSubmit={(event) => void handleSaveName(event)} className="relative overflow-hidden group/name rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 space-y-4 text-left transition-all duration-300">
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/name:bg-indigo-500" />
               <h2 className="text-sm font-semibold text-foreground ml-0.5">{t("platform.profileName")}</h2>
               {nameError ? (
@@ -189,7 +189,7 @@ export default function PlatformAccount(): React.JSX.Element {
                   autoComplete="name"
                   required
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(event) => setName(event.target.value)}
                   className={FORM_INPUT}
                 />
               </div>
@@ -205,7 +205,7 @@ export default function PlatformAccount(): React.JSX.Element {
               </Button>
             </form>
 
-            <form onSubmit={(e) => void handleChangePassword(e)} className="relative overflow-hidden group/password rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 space-y-4 text-left transition-all duration-300">
+            <form onSubmit={(event) => void handleChangePassword(event)} className="relative overflow-hidden group/password rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 space-y-4 text-left transition-all duration-300">
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/password:bg-emerald-500" />
               <h2 className="text-sm font-semibold text-foreground ml-0.5">{t("platform.profileChangePassword")}</h2>
               {passwordError ? (
@@ -224,7 +224,7 @@ export default function PlatformAccount(): React.JSX.Element {
                     autoComplete="current-password"
                     required
                     value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    onChange={(event) => setCurrentPassword(event.target.value)}
                     className={FORM_INPUT_ICON}
                   />
                 </div>
@@ -240,7 +240,7 @@ export default function PlatformAccount(): React.JSX.Element {
                     required
                     minLength={PLATFORM_MIN_PASSWORD_LENGTH}
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    onChange={(event) => setNewPassword(event.target.value)}
                     className={FORM_INPUT_ICON}
                   />
                 </div>
@@ -256,7 +256,7 @@ export default function PlatformAccount(): React.JSX.Element {
                     required
                     minLength={PLATFORM_MIN_PASSWORD_LENGTH}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
                     className={FORM_INPUT_ICON}
                   />
                 </div>

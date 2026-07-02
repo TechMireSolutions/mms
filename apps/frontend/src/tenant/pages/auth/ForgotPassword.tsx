@@ -18,12 +18,12 @@ export default function ForgotPassword(): React.JSX.Element {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
     if (!email) { setError(t("auth.emailRequired")); return; }
     if (!/\S+@\S+\.\S+/.test(email)) { setError(t("auth.emailInvalid")); return; }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 1500));
     setLoading(false);
     setSent(true);
   };
@@ -87,7 +87,7 @@ export default function ForgotPassword(): React.JSX.Element {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                onChange={(event) => { setEmail(event.target.value); setError(""); }}
                 placeholder="you@madrasa.app"
                 className={cn(
                   FORM_INPUT,

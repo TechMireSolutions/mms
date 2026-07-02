@@ -59,10 +59,10 @@ export default function Accounting() {
   const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
   const SUB_TABS = useMemo(
-    () => SUB_TAB_IDS.map((id) => ({
-      id,
-      label: t(SUB_TAB_KEYS[id]),
-      icon: SUB_TAB_ICONS[id],
+    () => SUB_TAB_IDS.map((subTabId) => ({
+      id: subTabId,
+      label: t(SUB_TAB_KEYS[subTabId]),
+      icon: SUB_TAB_ICONS[subTabId],
     })),
     [t]
   );

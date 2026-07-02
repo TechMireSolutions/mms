@@ -32,12 +32,12 @@ export function usePlatformSessionTimeout({
     };
 
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'] as const;
-    events.forEach((ev) => window.addEventListener(ev, reset, { passive: true }));
+    events.forEach((activityEventName) => window.addEventListener(activityEventName, reset, { passive: true }));
     reset();
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      events.forEach((ev) => window.removeEventListener(ev, reset));
+      events.forEach((activityEventName) => window.removeEventListener(activityEventName, reset));
     };
   }, [enabled, minutes, onTimeout]);
 }

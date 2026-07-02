@@ -112,8 +112,8 @@ export default function AccountProfile(): React.JSX.Element {
     return getPasswordStrength(newPassword);
   }, [newPassword]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
@@ -389,8 +389,8 @@ export default function AccountProfile(): React.JSX.Element {
                     </div>
                   ) : (
                     <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
+                      onSubmit={(event) => {
+                        event.preventDefault();
                         void handleSaveContact();
                       }}
                       className="space-y-4"
@@ -400,7 +400,7 @@ export default function AccountProfile(): React.JSX.Element {
                         <Input
                           id="profile-name"
                           value={name}
-                          onChange={(e) => setName(e.target.value)}
+                          onChange={(event) => setName(event.target.value)}
                           required
                           autoComplete="name"
                           className="min-h-[44px]"
@@ -411,7 +411,7 @@ export default function AccountProfile(): React.JSX.Element {
                         <Input
                           id="profile-phone"
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
+                          onChange={(event) => setPhone(event.target.value)}
                           required
                           autoComplete="tel"
                           className="min-h-[44px]"
@@ -423,7 +423,7 @@ export default function AccountProfile(): React.JSX.Element {
                           id="profile-contact-email"
                           type="email"
                           value={contactEmail}
-                          onChange={(e) => setContactEmail(e.target.value)}
+                          onChange={(event) => setContactEmail(event.target.value)}
                           required
                           autoComplete="email"
                           className="min-h-[44px]"
@@ -500,8 +500,8 @@ export default function AccountProfile(): React.JSX.Element {
                           <p className="text-xs font-semibold text-foreground mb-1">{t("account.changeLoginEmail")}</p>
                           {!challengeId ? (
                             <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
+                              onSubmit={(event) => {
+                                event.preventDefault();
                                 void handleRequestLoginEmail();
                               }}
                               className="space-y-4"
@@ -512,7 +512,7 @@ export default function AccountProfile(): React.JSX.Element {
                                   id="new-login-email"
                                   type="email"
                                   value={newLoginEmail}
-                                  onChange={(e) => setNewLoginEmail(e.target.value)}
+                                  onChange={(event) => setNewLoginEmail(event.target.value)}
                                   required
                                   autoComplete="email"
                                   className="min-h-[44px]"
@@ -524,7 +524,7 @@ export default function AccountProfile(): React.JSX.Element {
                                   id="login-email-password"
                                   type="password"
                                   value={loginPassword}
-                                  onChange={(e) => setLoginPassword(e.target.value)}
+                                  onChange={(event) => setLoginPassword(event.target.value)}
                                   required
                                   autoComplete="current-password"
                                   className="min-h-[44px]"
@@ -556,8 +556,8 @@ export default function AccountProfile(): React.JSX.Element {
                             </form>
                           ) : (
                             <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
+                              onSubmit={(event) => {
+                                event.preventDefault();
                                 void handleConfirmLoginEmail();
                               }}
                               className="space-y-4 pt-2"
@@ -572,7 +572,7 @@ export default function AccountProfile(): React.JSX.Element {
                                 <Input
                                   id="login-email-code"
                                   value={verifyCode}
-                                  onChange={(e) => setVerifyCode(e.target.value)}
+                                  onChange={(event) => setVerifyCode(event.target.value)}
                                   required
                                   autoComplete="one-time-code"
                                   className="min-h-[44px]"
@@ -639,8 +639,8 @@ export default function AccountProfile(): React.JSX.Element {
                       </div>
                     ) : (
                       <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
+                        onSubmit={(event) => {
+                          event.preventDefault();
                           void handleChangePassword();
                         }}
                         className="space-y-4"
@@ -651,7 +651,7 @@ export default function AccountProfile(): React.JSX.Element {
                             id="current-password"
                             type="password"
                             value={currentPassword}
-                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            onChange={(event) => setCurrentPassword(event.target.value)}
                             required
                             autoComplete="current-password"
                             className="min-h-[44px]"
@@ -663,7 +663,7 @@ export default function AccountProfile(): React.JSX.Element {
                             id="new-password"
                             type="password"
                             value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
+                            onChange={(event) => setNewPassword(event.target.value)}
                             required
                             autoComplete="new-password"
                             className="min-h-[44px]"
@@ -702,7 +702,7 @@ export default function AccountProfile(): React.JSX.Element {
                             id="confirm-password"
                             type="password"
                             value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            onChange={(event) => setConfirmPassword(event.target.value)}
                             required
                             autoComplete="new-password"
                             className="min-h-[44px]"

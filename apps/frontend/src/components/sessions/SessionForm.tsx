@@ -139,7 +139,7 @@ export function SessionForm({
             <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
             <Input
               value={sessionDraft.name || ""}
-              onChange={(e) => updateDraft({ name: e.target.value })}
+              onChange={(event) => updateDraft({ name: event.target.value })}
               placeholder="e.g. Hifz Morning Session 2026"
               className={`${FORM_INPUT} pl-10`}
             />
@@ -151,7 +151,7 @@ export function SessionForm({
             <select
               className={FORM_SELECT}
               value={sessionDraft.type || "Hifz"}
-              onChange={(e) => updateDraft({ type: e.target.value })}
+              onChange={(event) => updateDraft({ type: event.target.value })}
             >
               {SESSION_TYPES.map((tOpt) => (
                 <option key={tOpt} value={tOpt}>{tOpt}</option>
@@ -163,7 +163,7 @@ export function SessionForm({
             <select
               className={FORM_SELECT}
               value={sessionDraft.status || "active"}
-              onChange={(e) => updateDraft({ status: e.target.value })}
+              onChange={(event) => updateDraft({ status: event.target.value })}
             >
               {SESSION_STATUSES.map((statusOption) => {
                 const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
@@ -196,7 +196,7 @@ export function SessionForm({
         <Field label="Description">
           <textarea
             value={sessionDraft.description || ""}
-            onChange={(e) => updateDraft({ description: e.target.value })}
+            onChange={(event) => updateDraft({ description: event.target.value })}
             placeholder="Describe session details, schedule, requirements..."
             className="w-full min-h-[80px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
           />
@@ -220,7 +220,7 @@ export function SessionForm({
             <Input
               type="number"
               value={sessionDraft.baseFee ?? 0}
-              onChange={(e) => updateDraft({ baseFee: Number(e.target.value) })}
+              onChange={(event) => updateDraft({ baseFee: Number(event.target.value) })}
               className={`${FORM_INPUT} pl-10`}
             />
           </div>
@@ -230,10 +230,10 @@ export function SessionForm({
           <select
             className={FORM_SELECT}
             value={sessionDraft.currency || "PKR"}
-            onChange={(e) => updateDraft({ currency: e.target.value })}
+            onChange={(event) => updateDraft({ currency: event.target.value })}
           >
-            {CURRENCIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
+            {CURRENCIES.map((currency) => (
+              <option key={currency} value={currency}>{currency}</option>
             ))}
           </select>
         </Field>

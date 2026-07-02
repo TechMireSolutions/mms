@@ -6,7 +6,7 @@ const CODE_LENGTH = 6;
 
 interface PlatformOtpInputProps {
   value: string[];
-  onChange: (next: string[]) => void;
+  onChange: (updatedValue: string[]) => void;
   ariaLabel: string;
   disabled?: boolean;
 }
@@ -22,16 +22,16 @@ export default function PlatformOtpInput({
 
   const handleChange = (index: number, digit: string): void => {
     if (!/^\d?$/.test(digit)) return;
-    const next = [...value];
-    next[index] = digit;
-    onChange(next);
+    const updatedValue = [...value];
+    updatedValue[index] = digit;
+    onChange(updatedValue);
     if (digit && index < CODE_LENGTH - 1) {
       inputs.current[index + 1]?.focus();
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === "Backspace" && !value[index] && index > 0) {
+  const handleKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (event.key === "Backspace" && !value[index] && index > 0) {
       inputs.current[index - 1]?.focus();
     }
   };
@@ -41,14 +41,14 @@ export default function PlatformOtpInput({
       {value.map((digit, index) => (
         <input
           key={index}
-          ref={(el) => { inputs.current[index] = el; }}
+          ref={(element) => { inputs.current[index] = element; }}
           type="text"
           inputMode="numeric"
           maxLength={1}
           value={digit}
           disabled={disabled}
-          onChange={(e) => handleChange(index, e.target.value)}
-          onKeyDown={(e) => handleKeyDown(index, e)}
+          onChange={(event) => handleChange(index, event.target.value)}
+          onKeyDown={(event) => handleKeyDown(index, event)}
           className={cn(
             FORM_OTP_DIGIT,
             digit ? "border-primary/60 bg-primary/5" : "border-border",

@@ -129,7 +129,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                     id="exam-name"
                     className={`${FORM_INPUT} pl-10`}
                     value={examDraft.name || ""}
-                    onChange={(e) => updateDraft({ name: e.target.value })}
+                    onChange={(event) => updateDraft({ name: event.target.value })}
                     placeholder="e.g. Tajweed Mid-Term"
                     required
                   />
@@ -168,7 +168,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                   type="number"
                   className={`${FORM_INPUT} pl-10`}
                   value={examDraft.totalMarks ?? 100}
-                  onChange={(e) => updateDraft({ totalMarks: Number(e.target.value) })}
+                  onChange={(event) => updateDraft({ totalMarks: Number(event.target.value) })}
                   min={1}
                   required
                 />
@@ -183,7 +183,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                   type="number"
                   className={`${FORM_INPUT} pl-10`}
                   value={examDraft.passingMarks ?? 50}
-                  onChange={(e) => updateDraft({ passingMarks: Number(e.target.value) })}
+                  onChange={(event) => updateDraft({ passingMarks: Number(event.target.value) })}
                   min={1}
                   max={examDraft.totalMarks ?? 100}
                   required
@@ -200,7 +200,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                     type="number"
                     className={`${FORM_INPUT} pl-10`}
                     value={examDraft.duration ?? 60}
-                    onChange={(e) => updateDraft({ duration: Number(e.target.value) })}
+                    onChange={(event) => updateDraft({ duration: Number(event.target.value) })}
                     min={5}
                     required
                   />
@@ -230,8 +230,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                         type="button"
                         onClick={() => {
                           const classIds = examDraft.classIds ? [...examDraft.classIds] : [];
-                          const nextClassIds = classIds.includes(sessionClass.id) ? classIds.filter((id) => id !== sessionClass.id) : [...classIds, sessionClass.id];
-                          updateDraft({ classIds: nextClassIds });
+                          const updatedClassIds = classIds.includes(sessionClass.id) ? classIds.filter((classId) => classId !== sessionClass.id) : [...classIds, sessionClass.id];
+                          updateDraft({ classIds: updatedClassIds });
                         }}
                         className={`px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all ${
                           active
@@ -254,7 +254,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                   className={FORM_TEXTAREA}
                   rows={2}
                   value={examDraft.description || ""}
-                  onChange={(e) => updateDraft({ description: e.target.value })}
+                  onChange={(event) => updateDraft({ description: event.target.value })}
                   placeholder="Optional notes about this exam…"
                 />
               </Field>

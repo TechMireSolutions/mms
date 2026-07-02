@@ -38,12 +38,12 @@ const FieldRow = ({ label, required = false, children, hint }: FieldRowProps) =>
 const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
 const strengthColors = ["", "bg-destructive", "bg-warning", "bg-warning", "bg-primary"];
 
-function getStrength(pw: string): number {
+function getStrength(passwordValue: string): number {
   let score = 0;
-  if (pw.length >= 8) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (passwordValue.length >= 8) score++;
+  if (/[A-Z]/.test(passwordValue)) score++;
+  if (/[0-9]/.test(passwordValue)) score++;
+  if (/[^A-Za-z0-9]/.test(passwordValue)) score++;
   return score;
 }
 
@@ -60,8 +60,8 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const update = (field: keyof OnboardingData, val: unknown) => {
-    onChange((prev) => ({ ...prev, [field]: val } as OnboardingData));
+  const update = (field: keyof OnboardingData, fieldValue: unknown) => {
+    onChange((prev) => ({ ...prev, [field]: fieldValue } as OnboardingData));
   };
   const strength = getStrength(data.password || "");
 
@@ -73,7 +73,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           <input
             type="text"
             value={data.firstName || ""}
-            onChange={(e) => update("firstName", e.target.value)}
+            onChange={(event) => update("firstName", event.target.value)}
             placeholder="Abdullah"
             className={FORM_INPUT}
           />
@@ -82,7 +82,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           <input
             type="text"
             value={data.lastName || ""}
-            onChange={(e) => update("lastName", e.target.value)}
+            onChange={(event) => update("lastName", event.target.value)}
             placeholder="Khan"
             className={FORM_INPUT}
           />
@@ -93,7 +93,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
         <input
           type="email"
           value={data.email || ""}
-          onChange={(e) => update("email", e.target.value)}
+          onChange={(event) => update("email", event.target.value)}
           placeholder="admin@madrasa.app"
           className={FORM_INPUT}
         />
@@ -103,7 +103,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
         <input
           type="tel"
           value={data.phone || ""}
-          onChange={(e) => update("phone", e.target.value)}
+          onChange={(event) => update("phone", event.target.value)}
           placeholder="+44 7700 900000"
           className={FORM_INPUT}
         />
@@ -119,7 +119,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           <input
             type={showPw ? "text" : "password"}
             value={data.password || ""}
-            onChange={(e) => update("password", e.target.value)}
+            onChange={(event) => update("password", event.target.value)}
             placeholder="••••••••"
             className={cn(FORM_INPUT_ICON, "pr-11")}
           />
@@ -134,11 +134,11 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
         {data.password && (
           <div className="mt-2 space-y-1">
             <div className="flex gap-1">
-              {[1, 2, 3, 4].map((lvl) => (
+              {[1, 2, 3, 4].map((level) => (
                 <div
-                  key={lvl}
+                  key={level}
                   className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                    strength >= lvl ? strengthColors[strength] : "bg-muted"
+                    strength >= level ? strengthColors[strength] : "bg-muted"
                   }`}
                 />
               ))}
@@ -158,7 +158,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           <input
             type={showConfirm ? "text" : "password"}
             value={data.confirmPassword || ""}
-            onChange={(e) => update("confirmPassword", e.target.value)}
+            onChange={(event) => update("confirmPassword", event.target.value)}
             placeholder="••••••••"
             className={cn(
               FORM_INPUT_ICON,
@@ -187,7 +187,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           type="checkbox"
           id="terms"
           checked={data.agreedTerms || false}
-          onChange={(e) => update("agreedTerms", e.target.checked)}
+          onChange={(event) => update("agreedTerms", event.target.checked)}
           className="mt-0.5 w-4 h-4 rounded border-border accent-primary"
         />
         <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed">

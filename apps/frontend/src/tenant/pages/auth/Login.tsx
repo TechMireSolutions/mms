@@ -98,21 +98,21 @@ export default function Login(): React.ReactElement {
   }, []);
 
   const validate = (): LoginErrors => {
-    const next: LoginErrors = {};
+    const validationErrors: LoginErrors = {};
     const trimmed = email.trim();
     if (!trimmed) {
-      next.email = t("auth.emailRequired");
+      validationErrors.email = t("auth.emailRequired");
     } else if (!/\S+@\S+\.\S+/.test(trimmed)) {
-      next.email = t("auth.emailInvalid");
+      validationErrors.email = t("auth.emailInvalid");
     }
     if (!password) {
-      next.password = t("auth.passwordRequired");
+      validationErrors.password = t("auth.passwordRequired");
     }
-    return next;
+    return validationErrors;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
     setFormError("");
     const errs = validate();
     if (Object.keys(errs).length) {
@@ -186,8 +186,8 @@ export default function Login(): React.ReactElement {
                 inputMode="email"
                 autoFocus
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
+                onChange={(event) => {
+                  setEmail(event.target.value);
                   setFieldErrors((prev) => ({ ...prev, email: undefined }));
                   setFormError("");
                 }}
@@ -222,8 +222,8 @@ export default function Login(): React.ReactElement {
                 name="password"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
+                onChange={(event) => {
+                  setPassword(event.target.value);
                   setFieldErrors((prev) => ({ ...prev, password: undefined }));
                   setFormError("");
                 }}
@@ -269,10 +269,10 @@ export default function Login(): React.ReactElement {
               type="checkbox"
               id={rememberFieldId}
               checked={rememberMe}
-              onChange={(e) => {
-                const next = e.target.checked;
-                setRememberMe(next);
-                if (!next) {
+              onChange={(event) => {
+                const shouldRememberEmail = event.target.checked;
+                setRememberMe(shouldRememberEmail);
+                if (!shouldRememberEmail) {
                   persistRememberedEmail("", false);
                 }
               }}

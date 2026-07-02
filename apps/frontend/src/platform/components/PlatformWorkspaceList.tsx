@@ -69,16 +69,16 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         {t("platform.manageMadrasas")}
       </p>
       <ul className="space-y-3">
-        {items.map((ws) => (
+        {items.map((workspace) => (
           <WorkspaceRow
-            key={ws.subdomain}
-            workspace={ws}
+            key={workspace.subdomain}
+            workspace={workspace}
             appDomain={appDomain}
-            togglePending={setEnabled.isPending && setEnabled.variables?.subdomain === ws.subdomain}
-            deletePending={deleteWorkspace.isPending && deleteWorkspace.variables?.subdomain === ws.subdomain}
-            onToggle={(enabled) => setEnabled.mutate({ subdomain: ws.subdomain, enabled })}
+            togglePending={setEnabled.isPending && setEnabled.variables?.subdomain === workspace.subdomain}
+            deletePending={deleteWorkspace.isPending && deleteWorkspace.variables?.subdomain === workspace.subdomain}
+            onToggle={(enabled) => setEnabled.mutate({ subdomain: workspace.subdomain, enabled })}
             onDelete={(password) =>
-              deleteWorkspace.mutateAsync({ subdomain: ws.subdomain, password })
+              deleteWorkspace.mutateAsync({ subdomain: workspace.subdomain, password })
             }
           />
         ))}
@@ -88,7 +88,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
 }
 
 const WorkspaceRow = memo(function WorkspaceRow({
-  workspace: ws,
+  workspace,
   appDomain,
   togglePending,
   deletePending,
@@ -103,7 +103,7 @@ const WorkspaceRow = memo(function WorkspaceRow({
   onDelete: (password: string) => Promise<unknown>;
 }): React.JSX.Element {
   const { t } = useTranslation();
-  const tenantLink = tenantUrl(ws.subdomain, "/");
+  const tenantLink = tenantUrl(workspace.subdomain, "/");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -135,39 +135,39 @@ const WorkspaceRow = memo(function WorkspaceRow({
     <>
       <li
         className={`rounded-xl border-2 p-4 shadow-sm transition-colors ${
-          ws.enabled ? "border-border bg-card" : "border-destructive/30 bg-destructive/5"
+          workspace.enabled ? "border-border bg-card" : "border-destructive/30 bg-destructive/5"
         }`}
       >
         <div className="flex items-start gap-3">
-          <WorkspaceLogo logoUrl={ws.logoUrl} madrasaName={ws.madrasaName} />
+          <WorkspaceLogo logoUrl={workspace.logoUrl} madrasaName={workspace.madrasaName} />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">{ws.madrasaName}</p>
+            <p className="text-sm font-semibold text-foreground">{workspace.madrasaName}</p>
             <p className="text-xs text-muted-foreground font-mono break-all">
-              {ws.subdomain}.{appDomain}
+              {workspace.subdomain}.{appDomain}
             </p>
-            {!ws.enabled ? (
+            {!workspace.enabled ? (
               <p className="text-xs text-destructive mt-1">{t("platform.workspaceDisabledBadge")}</p>
             ) : null}
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
             <div className="flex items-center gap-2">
-              <Label htmlFor={`ws-enabled-${ws.subdomain}`} className="text-xs text-muted-foreground sr-only">
-                {t("platform.toggleWorkspace", { name: ws.madrasaName })}
+              <Label htmlFor={`ws-enabled-${workspace.subdomain}`} className="text-xs text-muted-foreground sr-only">
+                {t("platform.toggleWorkspace", { name: workspace.madrasaName })}
               </Label>
               <Switch
-                id={`ws-enabled-${ws.subdomain}`}
-                checked={ws.enabled}
+                id={`ws-enabled-${workspace.subdomain}`}
+                checked={workspace.enabled}
                 disabled={busy}
                 onCheckedChange={onToggle}
               />
             </div>
             <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              {ws.enabled ? t("platform.workspaceActive") : t("platform.workspaceInactive")}
+              {workspace.enabled ? t("platform.workspaceActive") : t("platform.workspaceInactive")}
             </span>
           </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          {ws.enabled ? (
+          {workspace.enabled ? (
             <a
               href={tenantLink}
               target="_blank"
@@ -198,21 +198,21 @@ const WorkspaceRow = memo(function WorkspaceRow({
             <AlertDialogTitle>{t("platform.deleteWorkspaceTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t("platform.deleteWorkspaceDesc", {
-                name: ws.madrasaName,
-                subdomain: ws.subdomain,
+                name: workspace.madrasaName,
+                subdomain: workspace.subdomain,
                 domain: appDomain,
               })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2">
-            <Label htmlFor={`delete-pw-${ws.subdomain}`}>{t("platform.profileCurrentPassword")}</Label>
+            <Label htmlFor={`delete-pw-${workspace.subdomain}`}>{t("platform.profileCurrentPassword")}</Label>
             <Input
-              id={`delete-pw-${ws.subdomain}`}
+              id={`delete-pw-${workspace.subdomain}`}
               type="password"
               autoComplete="current-password"
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
+              onChange={(event) => {
+                setPassword(event.target.value);
                 if (passwordError) setPasswordError(null);
               }}
               disabled={deletePending}

@@ -77,10 +77,10 @@ export default function WorkspaceRegistryList({
         {t(headingKey)}
       </p>
       <ul className="space-y-3">
-        {items.map((ws) => (
+        {items.map((workspace) => (
           <RegistryWorkspaceRow
-            key={ws.subdomain}
-            workspace={ws}
+            key={workspace.subdomain}
+            workspace={workspace}
             appDomain={appDomain}
             destinationPath={destinationPath}
             actionLabelKey={actionLabelKey}
@@ -96,7 +96,7 @@ export default function WorkspaceRegistryList({
 }
 
 const RegistryWorkspaceRow = memo(function RegistryWorkspaceRow({
-  workspace: ws,
+  workspace,
   appDomain,
   destinationPath,
   actionLabelKey,
@@ -107,7 +107,7 @@ const RegistryWorkspaceRow = memo(function RegistryWorkspaceRow({
   actionLabelKey: AppTranslationKey;
 }): React.JSX.Element {
   const { t } = useTranslation();
-  const targetUrl = tenantUrl(ws.subdomain, destinationPath);
+  const targetUrl = tenantUrl(workspace.subdomain, destinationPath);
 
   return (
     <li>
@@ -116,21 +116,21 @@ const RegistryWorkspaceRow = memo(function RegistryWorkspaceRow({
         className="block w-full rounded-xl border-2 border-border bg-card p-4 shadow-sm hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group text-left"
       >
         <div className="flex items-center gap-3">
-          <WorkspaceLogo logoUrl={ws.logoUrl} madrasaName={ws.madrasaName} />
+          <WorkspaceLogo logoUrl={workspace.logoUrl} madrasaName={workspace.madrasaName} />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-foreground group-hover:text-primary">
-              {ws.madrasaName}
+              {workspace.madrasaName}
             </p>
             <p className="text-xs text-muted-foreground font-mono break-all">
-              {ws.subdomain}.{appDomain}
+              {workspace.subdomain}.{appDomain}
             </p>
-            {ws.tagline ? (
-              <p className="text-xs text-muted-foreground mt-0.5">{ws.tagline}</p>
+            {workspace.tagline ? (
+              <p className="text-xs text-muted-foreground mt-0.5">{workspace.tagline}</p>
             ) : null}
           </div>
         </div>
         <div className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground group-hover:bg-primary/90">
-          {t(actionLabelKey, { name: ws.madrasaName })}
+          {t(actionLabelKey, { name: workspace.madrasaName })}
           <ArrowRight className="w-4 h-4" aria-hidden />
         </div>
       </a>

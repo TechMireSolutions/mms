@@ -63,15 +63,15 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
     Object.entries(fields).forEach(([tabId, tabFields]) => {
       if (tabId !== "basic" && !enabledTabIds.has(tabId)) return;
-      (tabFields as FieldDefinition[]).forEach((f) => {
-        if (f.enabled) {
+      (tabFields as FieldDefinition[]).forEach((fieldDefinition) => {
+        if (fieldDefinition.enabled) {
           list.push({
-            key: f.key,
-            label: f.label,
-            type: f.type,
+            key: fieldDefinition.key,
+            label: fieldDefinition.label,
+            type: fieldDefinition.type,
             tab: tabId,
-            enabled: f.enabled,
-            order: f.order,
+            enabled: fieldDefinition.enabled,
+            order: fieldDefinition.order,
           });
         }
       });
@@ -93,7 +93,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
   const guardianContact = contactList.find((contact) => String(contact.id) === String(student.guardianContactId));
 
   const age = calcAge(student.dob);
-  const enrolledSessionDetails = sessions.filter(s => student.enrolledSessions?.includes(s.id));
+  const enrolledSessionDetails = sessions.filter((session) => student.enrolledSessions?.includes(session.id));
 
   // Determine avatar initials and color
   const initials = student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "?";

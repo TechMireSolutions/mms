@@ -176,7 +176,7 @@ export default function PlatformAdmins(): React.JSX.Element {
 
           {/* Add Admin Form */}
           <form
-            onSubmit={(e) => void handleAddAdmin(e)}
+            onSubmit={(event) => void handleAddAdmin(event)}
             className="relative overflow-hidden group/form rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 space-y-4 text-left shadow-sm hover:shadow-md transition-all duration-300"
           >
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/form:bg-primary" />
@@ -206,7 +206,7 @@ export default function PlatformAdmins(): React.JSX.Element {
                   type="text"
                   required
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(event) => setName(event.target.value)}
                   className={FORM_INPUT_ICON}
                   disabled={addAdmin.isPending}
                 />
@@ -224,7 +224,7 @@ export default function PlatformAdmins(): React.JSX.Element {
                   type="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(event) => setEmail(event.target.value)}
                   className={FORM_INPUT_ICON}
                   disabled={addAdmin.isPending}
                 />
@@ -243,7 +243,7 @@ export default function PlatformAdmins(): React.JSX.Element {
                   required
                   minLength={PLATFORM_MIN_PASSWORD_LENGTH}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                   className={FORM_INPUT_ICON}
                   disabled={addAdmin.isPending}
                 />

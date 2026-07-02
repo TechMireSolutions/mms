@@ -77,9 +77,9 @@ export default function Obligations() {
   }, [collections.length]);
 
   const handleSaveCollection = (collectionPayload: ObligationCollection) => {
-    const exists = collections.find((collection) => collection.id === collectionPayload.id);
+    const existingCollection = collections.find((collection) => collection.id === collectionPayload.id);
     replaceCollections.mutate(
-      exists ? collections.map((collection) => (collection.id === collectionPayload.id ? collectionPayload : collection)) : [collectionPayload, ...collections],
+      existingCollection ? collections.map((collection) => (collection.id === collectionPayload.id ? collectionPayload : collection)) : [collectionPayload, ...collections],
     );
     setShowForm(false);
   };
@@ -165,15 +165,15 @@ export default function Obligations() {
           )}
 
           {effectiveTab === "setup" && effectiveConfigTab === "types" && (
-            <ObligationTypeManager types={obligationTypes} onChange={(t) => replaceTypes.mutate(t)} />
+            <ObligationTypeManager types={obligationTypes} onChange={(nextObligationTypes) => replaceTypes.mutate(nextObligationTypes)} />
           )}
 
           {effectiveTab === "setup" && effectiveConfigTab === "mujtahids" && (
             <MujtahidManager 
               mujtahids={mujtahids} 
               reps={reps} 
-              onChangeMujtahids={(m) => replaceMujtahids.mutate(m)}
-              onChangeReps={(r) => replaceReps.mutate(r)}
+              onChangeMujtahids={(nextMujtahids) => replaceMujtahids.mutate(nextMujtahids)}
+              onChangeReps={(nextReps) => replaceReps.mutate(nextReps)}
             />
           )}
 
@@ -184,8 +184,8 @@ export default function Obligations() {
               obligationTypes={obligationTypes}
               reps={reps}
               mujtahids={mujtahids}
-              onChangeWakala={(w) => replaceWakala.mutate(w)}
-              onChangeDistributions={(d) => replaceDistributions.mutate(d)}
+              onChangeWakala={(nextWakalaTypes) => replaceWakala.mutate(nextWakalaTypes)}
+              onChangeDistributions={(nextDistributions) => replaceDistributions.mutate(nextDistributions)}
             />
           )}
           </ErrorBoundary>

@@ -51,14 +51,14 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
   const [code, setCode] = useState(createEmptyOtp);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
+  const [setupNotice, setSetupNotice] = useState<string | null>(null);
   const [resendCycle, setResendCycle] = useState(0);
   const resendCountdown = useResendCountdown(step === "verify", 30, resendCycle);
 
   const handleRegister = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
     setError(null);
-    setInfo(null);
+    setSetupNotice(null);
 
     const emailKey = validatePlatformSetupEmail(email);
     if (emailKey) {
@@ -94,7 +94,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       setSetupSession(result);
       setStep("verify");
       setCode(createEmptyOtp());
-      setInfo(result.emailSent ? t("platform.setupEmailSent") : null);
+      setSetupNotice(result.emailSent ? t("platform.setupEmailSent") : null);
     } catch (error) {
       setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
     } finally {
@@ -132,7 +132,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
         body: JSON.stringify({ setupId: setupSession.setupId }),
       });
       setSetupSession(result);
-      setInfo(result.emailSent ? t("platform.setupEmailSent") : null);
+      setSetupNotice(result.emailSent ? t("platform.setupEmailSent") : null);
       setResendCycle((value) => value + 1);
     } catch (error) {
       setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
@@ -159,9 +159,9 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
         title={t("platform.setupVerifyTitle")}
         subtitle={t("platform.setupVerifySubtitle", { email: maskEmail(setupSession.email) })}
       >
-        <form onSubmit={(e) => void handleVerify(e)} className="space-y-4">
+        <form onSubmit={(event) => void handleVerify(event)} className="space-y-4">
           {error ? <PlatformAlert message={error} /> : null}
-          {info ? <PlatformInfo message={info} /> : null}
+          {setupNotice ? <PlatformInfo message={setupNotice} /> : null}
           {setupSession.devCode ? (
             <PlatformDevHint message={t("platform.setupDevCodeHint", { code: setupSession.devCode })} />
           ) : null}
@@ -209,7 +209,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
     <>
       {pageHead}
       <PlatformAuthLayout title={t("platform.setupTitle")} subtitle={t("platform.setupSubtitle")}>
-      <form onSubmit={(e) => void handleRegister(e)} className="space-y-4">
+      <form onSubmit={(event) => void handleRegister(event)} className="space-y-4">
         {!smtpConfigured && import.meta.env.PROD ? (
           <PlatformDevHint message={t("platform.setupSmtpRequired")} />
         ) : null}
@@ -224,7 +224,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
               autoComplete="name"
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
               className={FORM_INPUT_ICON}
             />
           </div>
@@ -240,7 +240,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
               autoComplete="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
               className={FORM_INPUT_ICON}
             />
           </div>
@@ -257,7 +257,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
               required
               minLength={PLATFORM_MIN_PASSWORD_LENGTH}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
               className={FORM_INPUT_ICON}
             />
           </div>

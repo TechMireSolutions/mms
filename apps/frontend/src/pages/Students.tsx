@@ -357,13 +357,13 @@ export default function Students() {
                         : undefined
                     }
                     onEdit={(studentToEdit: Student) => { setEditStudent(studentToEdit); setShowStudentForm(true); }}
-                    onDelete={(id: string) => deleteStudent.mutate(String(id))}
-                    onBulkDelete={(ids) => ids.forEach((id) => deleteStudent.mutate(String(id)))}
-                    onBulkStatusChange={(ids, status) => {
-                      for (const id of ids) {
-                        const student = workStudents.find((workStudent) => workStudent.id === id);
+                    onDelete={(studentId: string) => deleteStudent.mutate(String(studentId))}
+                    onBulkDelete={(studentIds) => studentIds.forEach((studentId) => deleteStudent.mutate(String(studentId)))}
+                    onBulkStatusChange={(studentIds, status) => {
+                      for (const studentId of studentIds) {
+                        const student = workStudents.find((workStudent) => workStudent.id === studentId);
                         if (student) {
-                          updateStudent.mutate({ id: String(id), student: { ...student, status } as unknown as StudentRecord });
+                          updateStudent.mutate({ id: String(studentId), student: { ...student, status } as unknown as StudentRecord });
                         }
                       }
                     }}
