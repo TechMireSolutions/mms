@@ -189,7 +189,7 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
       await replaceTenantUsersForWorkspace(parsed.subdomain, data as TenantUserRow[]);
     } else if (parsed && parsed.logicalKey === 'contacts') {
       const { replaceContactsForWorkspace } = await import('./repositories/contactRepository.js');
-      await replaceContactsForWorkspace(parsed.subdomain, data as any[]);
+      await replaceContactsForWorkspace(parsed.subdomain, data as import('@mms/shared').Contact[]);
     }
   } catch (error) {
     console.error(`Error saving collection "${name}":`, error);
