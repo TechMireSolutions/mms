@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ResponsiveContainer, type ResponsiveContainerProps } from "recharts";
 
 type SafeResponsiveContainerProps = Omit<ResponsiveContainerProps, "width" | "height"> & {
@@ -19,20 +19,20 @@ export default function SafeResponsiveContainer({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const node = containerRef.current;
     if (!node) return;
 
-    const update = () => {
-      const rect = node.getBoundingClientRect();
-      setSize({
-        width: Math.round(rect.width),
-        height: Math.round(rect.height),
-      });
-    };
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setSize({
+          width: Math.round(entry.contentRect.width),
+          height: Math.round(entry.contentRect.height),
+        });
+      }
+    });
 
-    update();
-    const observer = new ResizeObserver(update);
     observer.observe(node);
     return () => observer.disconnect();
   }, []);

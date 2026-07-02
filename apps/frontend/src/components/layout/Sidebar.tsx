@@ -89,6 +89,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
               src={branding.logoUrl}
               alt="Logo"
               className={`h-8 w-8 shrink-0 rounded-lg ${LOGO_IMAGE} border-sidebar-border`}
+              width={32}
+              height={32}
             />
           ) : (
             <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center flex-shrink-0">

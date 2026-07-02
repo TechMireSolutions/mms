@@ -103,6 +103,8 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                 src={branding.logoUrl}
                 alt="Logo"
                 className={`h-8 w-8 rounded-lg ${LOGO_IMAGE} border-sidebar-border`}
+                width={32}
+                height={32}
               />
             ) : (
               <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">

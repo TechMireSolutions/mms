@@ -13,14 +13,23 @@ import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveThresholdChartHex, resolveWidgetChartHex } from "@/lib/brandingChartPalette";
 import { Session, Class } from '@/lib/data/sessionsData';
 import { METADATA_FIELDS, COLLECTION_OPTIONS, computeCustomCard, CustomCard } from "./reportMetadata";
-import SessionsTable from "@/components/widgets/SessionsTable";
-import OutstandingFeesTable from "@/components/widgets/OutstandingFeesTable";
-import FeeCollectionSummary from "@/components/widgets/FeeCollectionSummary";
-import OverdueObligationsWidget from "@/components/widgets/OverdueObligationsWidget";
-import TodayAttendanceWidget from "@/components/widgets/TodayAttendanceWidget";
-import EnrollmentChart from "@/components/widgets/charts/EnrollmentChart";
-import RevenueChart from "@/components/widgets/charts/RevenueChart";
-import { AttendanceChart, HasanatChart } from "@/components/widgets/charts/AttendanceChart";
+const SessionsTable = React.lazy(() => import("@/components/widgets/SessionsTable"));
+const OutstandingFeesTable = React.lazy(() => import("@/components/widgets/OutstandingFeesTable"));
+const FeeCollectionSummary = React.lazy(() => import("@/components/widgets/FeeCollectionSummary"));
+const OverdueObligationsWidget = React.lazy(() => import("@/components/widgets/OverdueObligationsWidget"));
+const TodayAttendanceWidget = React.lazy(() => import("@/components/widgets/TodayAttendanceWidget"));
+const EnrollmentChart = React.lazy(() => import("@/components/widgets/charts/EnrollmentChart"));
+const RevenueChart = React.lazy(() => import("@/components/widgets/charts/RevenueChart"));
+const AttendanceChart = React.lazy(() =>
+  import("@/components/widgets/charts/AttendanceChart").then((m) => ({
+    default: m.AttendanceChart,
+  }))
+);
+const HasanatChart = React.lazy(() =>
+  import("@/components/widgets/charts/AttendanceChart").then((m) => ({
+    default: m.HasanatChart,
+  }))
+);
 import {
   CustomWidget,
   ALERT_COLOR_MAP,
@@ -651,31 +660,67 @@ function CustomWidgetRenderer({
 
   // Comfortable mode (standard card sized) layouts
   if (resolvedWidgetType === "sessions-list") {
-    return <SessionsTable title={widget.title} />;
+    return (
+      <React.Suspense fallback={<div className="min-h-[140px] bg-muted/20 animate-pulse rounded-3xl" />}>
+        <SessionsTable title={widget.title} />
+      </React.Suspense>
+    );
   }
   if (resolvedWidgetType === "attendance-summary") {
-    return <TodayAttendanceWidget title={widget.title} />;
+    return (
+      <React.Suspense fallback={<div className="min-h-[140px] bg-muted/20 animate-pulse rounded-3xl" />}>
+        <TodayAttendanceWidget title={widget.title} />
+      </React.Suspense>
+    );
   }
   if (resolvedWidgetType === "fee-summary") {
-    return <FeeCollectionSummary title={widget.title} />;
+    return (
+      <React.Suspense fallback={<div className="min-h-[140px] bg-muted/20 animate-pulse rounded-3xl" />}>
+        <FeeCollectionSummary title={widget.title} />
+      </React.Suspense>
+    );
   }
   if (resolvedWidgetType === "outstanding-list") {
-    return <OutstandingFeesTable title={widget.title} />;
+    return (
+      <React.Suspense fallback={<div className="min-h-[140px] bg-muted/20 animate-pulse rounded-3xl" />}>
+        <OutstandingFeesTable title={widget.title} />
+      </React.Suspense>
+    );
   }
   if (resolvedWidgetType === "overdue-obligations") {
-    return <OverdueObligationsWidget title={widget.title} />;
+    return (
+      <React.Suspense fallback={<div className="min-h-[140px] bg-muted/20 animate-pulse rounded-3xl" />}>
+        <OverdueObligationsWidget title={widget.title} />
+      </React.Suspense>
+    );
   }
   if (resolvedWidgetType === "enrollment-trends") {
-    return <EnrollmentChart isEditMode={isEditMode} />;
+    return (
+      <React.Suspense fallback={<div className="min-h-[300px] bg-muted/20 animate-pulse rounded-3xl" />}>
+        <EnrollmentChart isEditMode={isEditMode} />
+      </React.Suspense>
+    );
   }
   if (resolvedWidgetType === "revenue-expenses") {
-    return <RevenueChart isEditMode={isEditMode} />;
+    return (
+      <React.Suspense fallback={<div className="min-h-[300px] bg-muted/20 animate-pulse rounded-3xl" />}>
+        <RevenueChart isEditMode={isEditMode} />
+      </React.Suspense>
+    );
   }
   if (resolvedWidgetType === "attendance-rate") {
-    return <AttendanceChart isEditMode={isEditMode} />;
+    return (
+      <React.Suspense fallback={<div className="min-h-[300px] bg-muted/20 animate-pulse rounded-3xl" />}>
+        <AttendanceChart isEditMode={isEditMode} />
+      </React.Suspense>
+    );
   }
   if (resolvedWidgetType === "hasanat-distribution") {
-    return <HasanatChart isEditMode={isEditMode} />;
+    return (
+      <React.Suspense fallback={<div className="min-h-[300px] bg-muted/20 animate-pulse rounded-3xl" />}>
+        <HasanatChart isEditMode={isEditMode} />
+      </React.Suspense>
+    );
   }
 
   return (

@@ -59,6 +59,8 @@ export default function AppLayout(): React.JSX.Element {
               src={branding.logoUrl}
               alt="Logo"
               className={`h-7 w-7 shrink-0 rounded-md ${LOGO_IMAGE}`}
+              width={28}
+              height={28}
             />
           ) : (
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
