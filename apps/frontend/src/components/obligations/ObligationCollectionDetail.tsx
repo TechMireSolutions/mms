@@ -89,7 +89,8 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
     <ObligationModal title="Collection Details" onClose={onClose}>
       <div className="space-y-5">
         {/* Receipt header */}
-        <header className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20">
+        <header className="relative overflow-hidden group rounded-2xl border border-primary/25 bg-primary/5 backdrop-blur-sm p-4 px-5.5 flex items-center gap-3.5 shadow-sm transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/70" />
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
           <div>
             <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide m-0">Receipt No.</h3>
@@ -102,7 +103,8 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
         </header>
 
         {/* Main details */}
-        <section aria-label="Main Collection Details" className="rounded-xl border border-border divide-y divide-border px-4">
+        <section aria-label="Main Collection Details" className="relative overflow-hidden group/details rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300 divide-y divide-border px-5.5 pb-2.5">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/details:bg-indigo-500" />
           <Row label="Sender" value={sender?.name} />
           {reference && <Row label="Reference" value={reference?.name} />}
           <Row label="Obligation Type" value={obType?.name} />
@@ -119,28 +121,29 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
         {dists.length > 0 && (
           <section aria-label="Distribution Breakdown">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 m-0">Distribution Breakdown</h4>
-            <div className="rounded-xl border border-border overflow-hidden">
+            <div className="relative overflow-hidden group/dists rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/dists:bg-emerald-500" />
               <table className="w-full text-sm">
                 <caption className="sr-only">Distribution breakdown for collection {selectedCollection.receipt_no}</caption>
                 <thead className="bg-muted/60 border-b border-border">
                   <tr>
-                    <th scope="col" className="px-4 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">Name</th>
+                    <th scope="col" className="px-5 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">Name</th>
                     <th scope="col" className="px-4 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">Type</th>
                     <th scope="col" className="px-4 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase">%</th>
-                    <th scope="col" className="px-4 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase">Amount</th>
+                    <th scope="col" className="px-5 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase">Amount</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {dists.map((distribution) => (
                     <tr key={distribution.id} className="hover:bg-muted/20">
-                      <td className="px-4 py-2.5 font-medium text-foreground">{distribution.name}</td>
+                      <td className="px-5 py-2.5 font-medium text-foreground">{distribution.name}</td>
                       <td className="px-4 py-2.5">
                         <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${distribution.type === "Income" ? "bg-success/15 text-success" : "bg-info/15 text-info"}`}>
                           {distribution.type}
                         </span>
                       </td>
                       <td className="px-4 py-2.5 text-end font-mono text-xs font-semibold">{distribution.percentage}%</td>
-                      <td className="px-4 py-2.5 text-end font-mono text-xs font-semibold text-foreground">
+                      <td className="px-5 py-2.5 text-end font-mono text-xs font-semibold text-foreground">
                         {currency?.code} {((selectedCollection.amount * distribution.percentage) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>

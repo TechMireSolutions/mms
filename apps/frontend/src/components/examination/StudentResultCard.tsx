@@ -56,7 +56,7 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
         initial={{ opacity: 0, scale: 0.94, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94 }}
-        className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-sm z-10 overflow-hidden"
+        className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-sm z-10 overflow-hidden backdrop-blur-xl"
       >
         {/* Header gradient */}
         <div className="px-6 pt-8 pb-6 text-center bg-card" style={{ background: `linear-gradient(135deg, ${grade.bg}, white)` }}>
@@ -112,16 +112,17 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
         </div>
 
         {/* Exam info */}
-        <section className="px-5 py-4 space-y-2 border-t border-border text-[12px] text-muted-foreground" aria-label="Exam details">
-          <div className="flex justify-between">
+        <section className="relative overflow-hidden group/examinfo px-5.5 py-4 space-y-2 border-t border-border/60 text-[12px] text-muted-foreground" aria-label="Exam details">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/examinfo:bg-primary" />
+          <div className="flex justify-between ml-1">
             <span>Exam</span>
             <span className="font-semibold text-foreground">{exam.name}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between ml-1">
             <span>Subject</span>
             <span className="font-semibold text-foreground">{exam.subject}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between ml-1">
             <span>Date</span>
             <span className="font-semibold text-foreground">{formatDate(exam.date, true)}</span>
           </div>

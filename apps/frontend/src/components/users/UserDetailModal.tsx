@@ -39,12 +39,13 @@ function Section({
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
-        <Icon className="h-3.5 w-3.5 text-primary" aria-hidden />
-        <p className="text-xs font-bold uppercase tracking-wide text-foreground">{title}</p>
+    <div className="relative overflow-hidden group/card bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover/card:bg-primary" />
+      <div className="flex items-center gap-2 border-b border-border/40 bg-muted/20 px-4 py-2.5 pl-5.5">
+        <Icon className="h-3.5 w-3.5 text-primary/70 group-hover/card:text-primary transition-colors" aria-hidden />
+        <p className="text-[11px] font-black uppercase tracking-wider text-foreground m-0">{title}</p>
       </div>
-      <div className="px-4">{children}</div>
+      <div className="px-5 pb-1">{children}</div>
     </div>
   );
 }
