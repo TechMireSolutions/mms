@@ -63,13 +63,20 @@ function SessionCard({ session, onClick, statusLabel }: SessionCardProps) {
 
   const formatSessionDate = (date: string | undefined) => formatDate(date, true);
 
+  const stripeColor = session.status === "active"
+    ? "bg-success/45 group-hover:bg-success"
+    : session.status === "upcoming"
+    ? "bg-info/45 group-hover:bg-info"
+    : "bg-muted-foreground/35 group-hover:bg-muted-foreground";
+
   return (
     <motion.button
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className="text-left w-full rounded-xl border border-border bg-card p-5 hover:shadow-md hover:border-primary/20 transition-all group"
+      className="relative overflow-hidden text-left w-full rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 hover:shadow-md hover:border-primary/40 transition-all duration-300 group"
     >
+      <div className={`absolute left-0 top-0 bottom-0 w-1 ${stripeColor} transition-colors duration-300`} />
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0 pr-3">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
