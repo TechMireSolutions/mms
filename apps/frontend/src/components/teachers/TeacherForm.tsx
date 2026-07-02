@@ -1,33 +1,22 @@
-import React, { useMemo, useState, useTransition, useCallback, useEffect } from "react";
-import { z } from "zod";
-import { School } from "lucide-react";
-import { MmsDynamicForm } from "@/components/ui/MmsDynamicForm";
-import { useMmsForm } from "@/hooks/useMmsForm";
-import { useTeacherConfig } from "@/hooks/useTeacherConfig";
-import { TeachersSettings } from "./TeachersSettings";
+import React, { useState, useMemo, useEffect } from "react";
+import { School, User, Briefcase } from "lucide-react";
+import { FormModal } from "@/components/ui/FormModal";
+import { Input } from "@/components/ui/input";
+import { DatePicker } from "../ui/DatePicker";
+import ContactPicker from "@/components/contactLink/ContactPicker";
+import { Field } from "@/components/ui/FormPrimitives";
+import { FORM_INPUT, FORM_SELECT } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useQueryClient } from "@tanstack/react-query";
-import { usePermissions } from "@/hooks/usePermissions";
 import { useContactById } from "@/hooks/useContacts";
 import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/hooks/useTeachers";
-import ContactPicker from "@/components/contactLink/ContactPicker";
-import { Input } from "@/components/ui/input";
-import { FORM_INPUT, FORM_SELECT } from "@/components/ui/formStyles";
-import { Field, CustomFieldInput } from "@/components/ui/FormPrimitives";
+import { notify } from "@/lib/notify";
 import {
-  type Teacher,
-  type AppTranslationKey,
-  type FieldDefinition,
-  type TabDefinition,
-  buildCustomFieldSchema,
-  getDefaultFieldValue,
-  TEACHERS_TAB_REGISTRY,
-  INITIAL_TEACHERS_FIELD_SEED,
-  TEACHERS_MODULE_CONTRACT,
+  Teacher,
+  Contact,
   TEACHER_STATUS_VALUES,
   TEACHER_SPECIALIZATION_VALUES,
-  isRtlLanguage,
+  AppTranslationKey,
 } from "@mms/shared";
 
 export interface TeacherFormProps {
@@ -36,16 +25,12 @@ export interface TeacherFormProps {
   onSave: (teacher: Teacher) => void;
 }
 
-interface TeacherFormData {
-  contactId: string | number | null;
-  employeeId?: string;
-  specialization: string;
-  status: string;
-  joinDate: string | null;
-  qualification?: string;
-  notes?: string;
-  [key: string]: unknown;
-}
+const TEACHER_TABS = [
+  { key: "basic", label: "Basic Info", icon: User },
+  { key: "employment", label: "Employment", icon: Briefcase },
+] as const;
+
+type TabKey = (typeof TEACHER_TABS)[number]["key"];
 
 export function TeacherForm({
   teacher,
@@ -54,383 +39,79 @@ export function TeacherForm({
 }: TeacherFormProps): React.JSX.Element {
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
-  const { can } = usePermissions();
-  const canEditSetup = can(TEACHERS_MODULE_CONTRACT.permissions.setupWrite);
-  const queryClient = useQueryClient();
-  const [isBuilderMode, setIsBuilderMode] = useState(false);
-  const [, startTransition] = useTransition();
 
-  const { settings, statuses, specializations } = useTeacherConfig();
-  const statusOptions = statuses.length > 0 ? statuses : [...TEACHER_STATUS_VALUES];
-  const specializationOptions = specializations.length > 0 ? specializations : [...TEACHER_SPECIALIZATION_VALUES];
+  const [tab, setTab] = useState<TabKey>("basic");
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const autoGenerateId = settings.autoGenerateId && !teacher;
+  const [teacherDraft, setTeacherDraft] = useState<Partial<Teacher>>(() => ({
+    contactId: teacher?.contactId ?? "",
+    employeeId: teacher?.employeeId ?? "",
+    specialization: teacher?.specialization ?? "General",
+    status: teacher?.status ?? "active",
+    joinDate: teacher?.joinDate ?? new Date().toISOString().split("T")[0],
+    qualification: teacher?.qualification ?? "",
+    notes: teacher?.notes ?? "",
+  }));
+
+  const updateDraft = (patch: Partial<Teacher>) => {
+    setTeacherDraft((prev) => ({ ...prev, ...patch }));
+  };
+
+  const { data: linkedContact } = useContactById(
+    teacherDraft.contactId ? String(teacherDraft.contactId) : undefined,
+    !!teacherDraft.contactId,
+  );
+
   const { data: linkedTeacherContactIds = [] } = useTeacherLinkedContactIds(
     teacher?.id ? String(teacher.id) : undefined,
   );
+
   const { data: nextEmployeeId } = useTeacherNextEmployeeId({
-    prefix: settings.idPrefix,
-    enabled: autoGenerateId,
+    prefix: "TCH-",
+    enabled: !teacher?.id,
   });
-
-  const usedContactIds = linkedTeacherContactIds;
-
-  // Construct fields mapped by tabs
-  const fieldsByTab = useMemo<Record<string, FieldDefinition[]>>(() => {
-    const rawFields = settings.fields || {};
-    const hasTabbedFields = Object.values(rawFields).some((fieldGroup) => Array.isArray(fieldGroup));
-    
-    const base = hasTabbedFields
-      ? (rawFields as Record<string, FieldDefinition[]>)
-      : INITIAL_TEACHERS_FIELD_SEED;
-
-    const mapped: Record<string, FieldDefinition[]> = {};
-
-    Object.entries(base).forEach(([tabId, list]) => {
-      mapped[tabId] = list.map((field) => {
-        if (field.key === "specialization") {
-          return { ...field, options: specializationOptions };
-        }
-        return field;
-      });
-    });
-
-    const customFields = settings.customFields || [];
-    // If it was the flat setup, append custom fields to basic tab
-    if (!hasTabbedFields && customFields.length > 0) {
-      const basicFields = [...(mapped.basic || [])];
-      const fieldOrder = settings.fieldOrder || [];
-      customFields.forEach((customField) => {
-        if (!basicFields.some((field) => field.key === customField.id)) {
-          const fieldOrderIndex = fieldOrder.indexOf(customField.id);
-          basicFields.push({
-            key: customField.id,
-            label: customField.label,
-            type: (customField.type || "text") as any,
-            required: !!customField.required,
-            enabled: true,
-            order: fieldOrderIndex >= 0 ? fieldOrderIndex : 99,
-            placeholder: undefined,
-            options: customField.options,
-          });
-        }
-      });
-      mapped.basic = basicFields.sort(
-        (leftField, rightField) => (leftField.order ?? 99) - (rightField.order ?? 99),
-      );
-    }
-
-    return mapped;
-  }, [settings.fields, settings.fieldOrder, settings.customFields, specializationOptions]);
-
-  // Construct initial values conforming to Rule 15.1
-  const initialValues = useMemo<TeacherFormData>(() => {
-    const initial: TeacherFormData = {
-      contactId: null,
-      employeeId: "",
-      specialization: settings.defaultSpecialization || specializationOptions[0] || "General",
-      status: statusOptions[0] || "active",
-      joinDate: null,
-      qualification: "",
-      notes: "",
-    };
-
-    const draft = queryClient.getQueryData<TeacherFormData>(['builder_draft', 'teacher', teacher?.id || 'new']);
-    const target = draft || teacher || {};
-    
-    return {
-      ...initial,
-      ...target,
-    } as TeacherFormData;
-  }, [teacher, queryClient, settings.defaultSpecialization, specializationOptions, statusOptions]);
-
-  // Setup Zod Validation Schema
-  const schema = useMemo(() => {
-    const shape: Record<string, z.ZodTypeAny> = {
-      id: z.string().optional(),
-      contactId: z.union([z.string(), z.number()]).refine((contactId) => contactId !== undefined && contactId !== null && contactId !== "", {
-        message: t('teachers.errorContactRequired'),
-      }),
-      employeeId: z.string().optional(),
-      status: z.string().min(1, t('teachers.errorStatusRequired')),
-      notes: z.string().optional().nullable(),
-    };
-
-    const enabledTabIds = settings.enabledTabs && settings.enabledTabs.length > 0 
-      ? new Set(settings.enabledTabs) 
-      : new Set(["basic", "employment"]);
-
-    Object.keys(fieldsByTab).forEach((tabId) => {
-      if (tabId !== "basic" && !enabledTabIds.has(tabId)) {
-        return;
-      }
-
-      const tabFields = fieldsByTab[tabId] || [];
-      tabFields.forEach((field) => {
-        if (!field.enabled) return;
-        shape[field.key] = buildCustomFieldSchema(field);
-      });
-    });
-
-    return z.object(shape).passthrough();
-  }, [fieldsByTab, settings.enabledTabs, t]);
-
-  const {
-    form,
-    tab,
-    setTab,
-    saving,
-    errors,
-    handleSave,
-  } = useMmsForm<TeacherFormData>({
-    schema,
-    fields: fieldsByTab,
-    initialData: initialValues,
-    t,
-  });
-
-  const teacherDraft = form.watch();
-  const setValue = form.setValue;
 
   useEffect(() => {
-    if (!autoGenerateId || !nextEmployeeId) return;
-    if (!form.getValues('employeeId')) {
-      setValue('employeeId', nextEmployeeId);
+    if (teacher?.id || !nextEmployeeId) return;
+    if (!teacherDraft.employeeId) {
+      updateDraft({ employeeId: nextEmployeeId });
     }
-  }, [autoGenerateId, nextEmployeeId, form, setValue]);
+  }, [nextEmployeeId, teacher?.id, teacherDraft.employeeId]);
 
-  const handleToggleBuilderMode = useCallback((active: boolean) => {
-    if (active) {
-      queryClient.setQueryData(['builder_draft', 'teacher', teacher?.id || 'new'], form.getValues());
+  const handleSave = () => {
+    setErrors({});
+    const newErrors: Record<string, string> = {};
+
+    if (!teacherDraft.contactId) {
+      newErrors.contactId = t("teachers.errorContactRequired") || "Contact is required";
     }
-    startTransition(() => {
-      setIsBuilderMode(active);
-    });
-  }, [queryClient, teacher?.id, form]);
-
-  const { data: linkedContact } = useContactById(
-    teacherDraft.contactId != null ? String(teacherDraft.contactId) : undefined,
-    teacherDraft.contactId != null,
-  );
-
-  const completeness = useMemo(() => {
-    let totalRequired = 0;
-    let filledRequired = 0;
-    let totalOptional = 0;
-    let filledOptional = 0;
-
-    // Contact link is a core required field
-    totalRequired++;
-    if (teacherDraft.contactId) filledRequired++;
-
-    // Employee ID is a core required field if not auto-generated
-    if (!autoGenerateId) {
-      totalRequired++;
-      if (teacherDraft.employeeId) filledRequired++;
+    if (!teacherDraft.employeeId?.trim()) {
+      newErrors.employeeId = "Employee ID is required";
     }
 
-    const enabledTabIds = settings.enabledTabs && settings.enabledTabs.length > 0 
-      ? new Set(settings.enabledTabs) 
-      : new Set(["basic", "employment"]);
-
-    Object.keys(fieldsByTab).forEach((tabId) => {
-      if (tabId !== "basic" && !enabledTabIds.has(tabId)) {
-        return;
-      }
-
-      const tabFields = fieldsByTab[tabId] || [];
-      tabFields.forEach((field) => {
-        if (!field.enabled) return;
-        
-        // Skip booleans and ai_summary fields from completeness score
-        if (field.type === "boolean" || field.type === "ai_summary") {
-          return;
-        }
-
-        const isRequired = !!field.required;
-        const fieldValue = teacherDraft[field.key];
-        const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "";
-
-        if (isRequired) {
-          totalRequired++;
-          if (isFilled) filledRequired++;
-        } else {
-          totalOptional++;
-          if (isFilled) filledOptional++;
-        }
-      });
-    });
-
-    const reqRatio = totalRequired === 0 ? 0 : filledRequired / totalRequired;
-    const optRatio = totalOptional === 0 ? 0 : filledOptional / totalOptional;
-    const progress = (reqRatio * 0.7) + (optRatio * 0.3);
-
-    return Math.round(progress * 100);
-  }, [teacherDraft, fieldsByTab, settings.enabledTabs, autoGenerateId]);
-
-  const visibleTabs = useMemo(() => {
-    const tabsFromConfig = (settings.formTabs && settings.formTabs.length > 0 
-      ? settings.formTabs 
-      : TEACHERS_TAB_REGISTRY) as TabDefinition[];
-    const enabledTabIds = settings.enabledTabs && settings.enabledTabs.length > 0 
-      ? new Set(settings.enabledTabs) 
-      : new Set(["basic", "employment"]);
-
-    return [...tabsFromConfig]
-      .sort((a, b) => a.order - b.order)
-      .filter((tabDef) => {
-        if (tabDef.key === "basic") return true;
-        if (!enabledTabIds.has(tabDef.key)) return false;
-        
-        // Ghost Tab Prevention
-        const tabFields = fieldsByTab[tabDef.key] || [];
-        const hasVisibleFields = tabFields.some((field) => field.enabled);
-        if (!hasVisibleFields) return false;
-
-        return true;
-      });
-  }, [settings.formTabs, settings.enabledTabs, fieldsByTab]);
-
-  const formTabs = useMemo(() => {
-    return visibleTabs.map((visibleTab) => ({
-      key: visibleTab.key,
-      label: visibleTab.label,
-    }));
-  }, [visibleTabs]);
-
-  const onSubmit = useCallback((formData: TeacherFormData) => {
-    const id = teacher?.id ?? `tch${Date.now()}`;
-    onSave({
-      id,
-      contactId: formData.contactId!,
-      employeeId: formData.employeeId || (autoGenerateId ? nextEmployeeId : undefined),
-      specialization: formData.specialization,
-      status: formData.status,
-      joinDate: formData.joinDate ?? undefined,
-      qualification: formData.qualification || undefined,
-      notes: formData.notes || undefined,
-    } as unknown as Teacher);
-    onClose();
-  }, [teacher, autoGenerateId, nextEmployeeId, onSave, onClose]);
-
-  const renderFieldByKey = (field: FieldDefinition): React.ReactNode => {
-    if (!field.enabled) return null;
-
-    const value = teacherDraft[field.key] ?? getDefaultFieldValue(field);
-    const fieldError = errors.find((error) => error.fieldId === field.key);
-    return (
-      <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
-        <Field label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
-          <CustomFieldInput
-            field={field}
-            value={value}
-            onChange={(nextValue) => setValue(field.key as any, nextValue, { shouldValidate: true, shouldDirty: true })}
-            error={!!fieldError}
-          />
-        </Field>
-      </div>
-    );
-  };
-
-  const renderBasicContent = () => {
-    if (tab === "basic") {
-      const basicFields = (fieldsByTab.basic || []).filter((field) => field.enabled);
-      return (
-        <div className="space-y-5 text-left">
-          {/* Contact Picker Section */}
-          <section className="rounded-xl border border-border bg-card/50 p-4 space-y-3">
-            <div>
-              <h3 className="text-xs font-bold text-foreground">{t('teachers.field.contact')}</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{t('teachers.form.contactHint')}</p>
-            </div>
-            <ContactPicker
-              label={t('teachers.field.contact')}
-              value={teacherDraft.contactId}
-              onChange={(id) => setValue("contactId", id)}
-              excludeIds={usedContactIds}
-              searchPlaceholder={t('teachers.form.searchContact')}
-              emptyTitle={t('teachers.form.noContacts')}
-              emptyHint={t('teachers.form.noContactsHint')}
-              error={!!errors.find((error) => error.fieldId === "contactId")}
-            />
-            {errors.find((error) => error.fieldId === "contactId") && (
-              <p className="text-[10px] text-destructive mt-1 font-medium">
-                {errors.find((error) => error.fieldId === "contactId")?.message}
-              </p>
-            )}
-          </section>
-
-          {/* Specialization & Qualification section */}
-          {basicFields.length > 0 && (
-            <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {basicFields.map((field) => renderFieldByKey(field))}
-              </div>
-            </section>
-          )}
-        </div>
-      );
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      if (newErrors.contactId) setTab("basic");
+      else setTab("employment");
+      notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
+      return;
     }
 
-    if (tab === "employment") {
-      const employmentFields = (fieldsByTab.employment || []).filter((field) => field.enabled);
-      return (
-        <div className="space-y-5 text-left">
-          <section className="rounded-xl border border-border bg-card/50 p-4 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Employee ID */}
-              <div>
-                <Field label={t('teachers.field.employeeId')} required hint="Employee Identifier">
-                  <Input
-                    className={FORM_INPUT}
-                    value={teacherDraft.employeeId || ""}
-                    onChange={(event) => setValue("employeeId", event.target.value)}
-                    readOnly={autoGenerateId}
-                  />
-                </Field>
-              </div>
-
-              {/* Status */}
-              <div>
-                <Field label={t('teachers.field.status')}>
-                  <select
-                    className={FORM_SELECT}
-                    value={teacherDraft.status}
-                    onChange={(event) => setValue("status", event.target.value)}
-                  >
-                    {statusOptions.map((status) => {
-                      const translationKey = `teachers.status.${status}` as AppTranslationKey;
-                      const translated = t(translationKey);
-                      const label = translated === translationKey ? status.charAt(0).toUpperCase() + status.slice(1) : translated;
-                      return (
-                        <option key={status} value={status}>{label}</option>
-                      );
-                    })}
-                  </select>
-                </Field>
-              </div>
-
-              {/* Join Date (from registry if enabled, or render statically if not in list) */}
-              {employmentFields.map((field) => renderFieldByKey(field))}
-
-              {/* Qualification & Notes can go here if needed, or Notes at the bottom */}
-              <div className="sm:col-span-2">
-                <Field label={t('teachers.field.notes')}>
-                  <textarea
-                    rows={3}
-                    className={FORM_INPUT + " min-h-[80px] py-2 resize-none"}
-                    value={teacherDraft.notes || ""}
-                    onChange={(event) => setValue("notes", event.target.value)}
-                  />
-                </Field>
-              </div>
-            </div>
-          </section>
-        </div>
-      );
+    setSaving(true);
+    try {
+      onSave({
+        ...teacherDraft,
+        id: teacher?.id ?? `tch${Date.now()}`,
+        contactId: String(teacherDraft.contactId),
+      } as Teacher);
+      notify.success(teacher ? "Teacher updated successfully" : "Teacher created successfully");
+      onClose();
+    } catch (err: any) {
+      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: err.message });
+    } finally {
+      setSaving(false);
     }
-
-    return null;
   };
 
   const footerStart = linkedContact?.name ? (
@@ -447,41 +128,122 @@ export function TeacherForm({
     <span className="text-xs text-destructive">Contact is required</span>
   );
 
+  const renderBasic = () => (
+    <div className="space-y-4 text-left">
+      <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+        <div>
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.field.contact") || "Contact"}</h3>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{t("teachers.form.contactHint")}</p>
+        </div>
+        <ContactPicker
+          label={t("teachers.field.contact") || "Contact"}
+          value={teacherDraft.contactId ? String(teacherDraft.contactId) : null}
+          onChange={(id) => updateDraft({ contactId: id ? String(id) : "" })}
+          excludeIds={linkedTeacherContactIds.map(String)}
+          searchPlaceholder={t("teachers.form.searchContact")}
+          emptyTitle={t("teachers.form.noContacts")}
+          emptyHint={t("teachers.form.noContactsHint")}
+          error={!!errors.contactId}
+        />
+        {errors.contactId && (
+          <p className="text-[10px] text-destructive mt-1 font-medium">{errors.contactId}</p>
+        )}
+      </section>
+
+      <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+        <Field label={t("teachers.field.specialization") || "Specialization"}>
+          <select
+            className={FORM_SELECT}
+            value={teacherDraft.specialization || "General"}
+            onChange={(e) => updateDraft({ specialization: e.target.value })}
+          >
+            {TEACHER_SPECIALIZATION_VALUES.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Qualification">
+          <Input
+            value={teacherDraft.qualification || ""}
+            onChange={(e) => updateDraft({ qualification: e.target.value })}
+            placeholder="e.g. Master in Islamic Studies"
+            className={FORM_INPUT}
+          />
+        </Field>
+      </section>
+    </div>
+  );
+
+  const renderEmployment = () => (
+    <div className="space-y-4 text-left">
+      <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+        <Field label={t("teachers.field.employeeId") || "Employee ID"} required error={errors.employeeId}>
+          <Input
+            value={teacherDraft.employeeId || ""}
+            onChange={(e) => updateDraft({ employeeId: e.target.value })}
+            placeholder="TCH-0001"
+            className={FORM_INPUT}
+          />
+        </Field>
+
+        <Field label={t("teachers.field.status") || "Status"}>
+          <select
+            className={FORM_SELECT}
+            value={teacherDraft.status || "active"}
+            onChange={(e) => updateDraft({ status: e.target.value as any })}
+          >
+            {TEACHER_STATUS_VALUES.map((s) => {
+              const translationKey = `teachers.status.${s}` as AppTranslationKey;
+              const translated = t(translationKey);
+              const label = translated === translationKey ? s.charAt(0).toUpperCase() + s.slice(1) : translated;
+              return (
+                <option key={s} value={s}>{label}</option>
+              );
+            })}
+          </select>
+        </Field>
+
+        <Field label="Join Date">
+          <DatePicker
+            value={teacherDraft.joinDate || undefined}
+            onChange={(dateStr) => updateDraft({ joinDate: dateStr })}
+          />
+        </Field>
+
+        <Field label={t("teachers.field.notes") || "Notes"}>
+          <textarea
+            value={teacherDraft.notes || ""}
+            onChange={(e) => updateDraft({ notes: e.target.value })}
+            placeholder="Employment notes..."
+            className="w-full min-h-[80px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
+          />
+        </Field>
+      </section>
+    </div>
+  );
+
   return (
-    <MmsDynamicForm
+    <FormModal
       open
       onClose={onClose}
-      title={teacher ? t('teachers.form.editTitle') : t('teachers.form.addTitle')}
-      subtitle={t('teachers.form.contactHint')}
+      title={teacher ? (t("teachers.form.editTitle") || "Edit Teacher") : (t("teachers.form.addTitle") || "Add Teacher")}
+      subtitle={t("teachers.form.contactHint")}
       icon={School}
       tall
-      progress={completeness}
-      progressLabel={t('common.formProgress')}
-      showBuilderToggle={canEditSetup}
-      isBuilderMode={isBuilderMode}
-      onBuilderModeChange={handleToggleBuilderMode}
-      tabs={formTabs}
+      tabs={TEACHER_TABS}
       activeTab={tab}
       onTabChange={setTab}
       tabPanelIdPrefix="teacher-form-tab"
-      dir={isRtlLanguage(language) ? "rtl" : "ltr"}
       lang={language}
-      error={errors.map((error) => error.message)}
-      cancelLabel={t('common.cancel')}
-      saveLabel={t('common.save')}
-      onSave={() => void handleSave(onSubmit)()}
+      cancelLabel={t("common.cancel") || "Cancel"}
+      saveLabel={t("common.save") || "Save"}
+      onSave={handleSave}
       saving={saving}
       saveDisabled={!teacherDraft.contactId}
       footerStart={footerStart}
-      fields={fieldsByTab[tab] || []}
-      data={teacherDraft}
-      setValue={(key, value, options) => setValue(key as any, value, options)}
-      errors={errors}
-      renderField={renderFieldByKey}
-      renderBasicContent={renderBasicContent}
-      builderPanel={
-        <TeachersSettings mode="fields" />
-      }
-    />
+    >
+      {tab === "basic" ? renderBasic() : renderEmployment()}
+    </FormModal>
   );
 }

@@ -1,89 +1,32 @@
-import React, { useMemo, useState, useEffect, useTransition, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useMmsForm } from "@/hooks/useMmsForm";
+import React, { useMemo, useState, useEffect } from "react";
 import { GraduationCap } from "lucide-react";
-import {
-  normalizeStoredStudent,
-  type AppTranslationKey,
-  type FieldDefinition,
-  type StudentDuplicateReason,
-  DEFAULT_STUDENT_ENABLED_TABS,
-  DEFAULT_STUDENT_REQUIRED_TABS,
-  STUDENTS_MODULE_CONTRACT,
-  getDefaultFieldValue,
-  buildDynamicStudentSchema,
-  isRtlLanguage,
-  hasFieldValue,
-  toTitleCase,
-} from "@mms/shared";
-import type { Student, Contact } from "@mms/shared";
+import { FormModal } from "@/components/ui/FormModal";
+import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { DatePicker } from "../ui/DatePicker";
+import ContactPicker from "../contactLink/ContactPicker";
+import { ConfirmAlertDialog } from "../ui/ConfirmAlertDialog";
+import { FORM_INPUT } from "../ui/formStyles";
+import { Field } from "@/components/ui/FormPrimitives";
+import { notify } from "@/lib/notify";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useGlobalSettings } from "@/hooks/useGlobalSettings";
 import { useContactMutations, useContactById } from "@/hooks/useContacts";
 import {
   checkStudentRegistrationDuplicate,
   useStudentLinkedContactIds,
   useStudentNextGrNumber,
 } from "@/hooks/useStudents";
-import { useTranslation } from "@/hooks/useTranslation";
-import { useGlobalSettings } from "@/hooks/useGlobalSettings";
-import { useDebounce } from "@/hooks/useDebounce";
-import { DatePicker } from "../ui/DatePicker";
-import { MmsDynamicForm } from "../ui/MmsDynamicForm";
-import ContactPicker from "../contactLink/ContactPicker";
-import { ConfirmAlertDialog } from "../ui/ConfirmAlertDialog";
-import { FORM_INPUT } from "../ui/formStyles";
-import { useStudentConfig } from "@/hooks/useStudentConfig";
-import { Input } from "../ui/input";
-import { FormSelect } from "../ui/FormSelect";
-import { Field, CustomFieldInput } from "../ui/FormPrimitives";
-import { cn } from "@/lib/utils";
-import { usePermissions } from "@/hooks/usePermissions";
-import StudentsSettings from "./StudentsSettings";
-
-interface StudentFormData {
-  contactId: string | number | null;
-  fatherContactId: string | number | null;
-  motherContactId: string | number | null;
-  guardianContactId: string | number | null;
-  fatherName: string;
-  motherName: string;
-  guardianName: string;
-  status: string;
-  grNumber: string;
-  registeredDate: string | null;
-  [key: string]: unknown;
-}
-
-function buildInitialData(student: Partial<Student> | null | undefined, defaultStatus: string): StudentFormData {
-  const base: StudentFormData = {
-    contactId: student?.contactId ?? null,
-    fatherContactId: student?.fatherContactId ?? null,
-    motherContactId: student?.motherContactId ?? null,
-    guardianContactId: student?.guardianContactId ?? null,
-    fatherName: student?.fatherName ?? "",
-    motherName: student?.motherName ?? "",
-    guardianName: student?.guardianName ?? "",
-    status: student?.status ?? defaultStatus,
-    grNumber: student?.grNumber ?? "",
-    registeredDate: student?.registeredDate ?? null,
-  };
-
-  if (student) {
-    for (const [key, value] of Object.entries(student)) {
-      if (!(key in base)) {
-        base[key] = value;
-      }
-    }
-  }
-
-  return base;
-}
-
-function contactEmail(contact: Contact | undefined): string {
-  if (!contact) return "";
-  return ((contact.email as string | undefined) || contact.emails?.[0]?.address || "").trim().toLowerCase();
-}
-
-
+import {
+  Student,
+  Contact,
+  StudentStatus,
+  STUDENT_STATUS_VALUES,
+  normalizeStoredStudent,
+  toTitleCase,
+  type StudentDuplicateReason,
+  type AppTranslationKey,
+} from "@mms/shared";
 
 export interface StudentFormProps {
   student?: Partial<Student> | null;
@@ -103,71 +46,37 @@ export default function StudentForm({
   onSave,
 }: StudentFormProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { role, can } = usePermissions();
-  const viewerRole = role ?? "";
-  const canEditSetup = can(STUDENTS_MODULE_CONTRACT.permissions.setupWrite);
-
-  const queryClient = useQueryClient();
-  const [isBuilderMode, setIsBuilderMode] = useState(false);
-  const [, startTransition] = useTransition();
+  const { language } = useGlobalSettings();
   const { updateContact } = useContactMutations();
-  const { settings, statuses, guardianContactDefaults } = useStudentConfig();
-  const settingsFields = (settings.fields as Record<string, FieldDefinition[]>) || {};
-  const defaultStatus = statuses[0] || "";
 
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [manualError, setManualError] = useState("");
 
-  const enabledTabsSet = useMemo(() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS), [settings.enabledTabs]);
-  const requiredTabsSet = useMemo(() => new Set(settings.requiredTabs || DEFAULT_STUDENT_REQUIRED_TABS), [settings.requiredTabs]);
+  const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => ({
+    contactId: student?.contactId ?? "",
+    fatherContactId: student?.fatherContactId ?? null,
+    motherContactId: student?.motherContactId ?? null,
+    guardianContactId: student?.guardianContactId ?? null,
+    fatherName: student?.fatherName ?? "",
+    motherName: student?.motherName ?? "",
+    guardianName: student?.guardianName ?? "",
+    status: student?.status ?? "active",
+    grNumber: student?.grNumber ?? "",
+    registeredDate: student?.registeredDate ?? new Date().toISOString().split("T")[0],
+    discountType: student?.discountType ?? "",
+    discountPct: student?.discountPct ?? 0,
+    registrationType: student?.registrationType ?? "",
+    notes: student?.notes ?? "",
+  }));
 
-  const { language } = useGlobalSettings();
-
-  const initialValues = useMemo<StudentFormData>(() => {
-    const draft = queryClient.getQueryData<StudentFormData>(['builder_draft', 'student', student?.id || 'new']);
-    return draft || buildInitialData(student, defaultStatus);
-  }, [queryClient, student, defaultStatus]);
-
-  const schema = useMemo(() => {
-    return buildDynamicStudentSchema(
-      settings,
-      enabledTabsSet,
-      requiredTabsSet,
-      settingsFields,
-      language,
-      viewerRole
-    );
-  }, [settings, enabledTabsSet, requiredTabsSet, settingsFields, language, viewerRole]);
-
-  const {
-    form,
-    tab,
-    setTab,
-    saving,
-    errors,
-    errorSummary,
-    handleSave,
-  } = useMmsForm<StudentFormData>({
-    schema,
-    fields: settingsFields,
-    initialData: initialValues,
-    t,
-  });
-
-  const studentDraft = form.watch();
-  const setValue = form.setValue;
-
-  const handleToggleBuilderMode = useCallback((active: boolean) => {
-    if (active) {
-      queryClient.setQueryData(['builder_draft', 'student', student?.id || 'new'], form.getValues());
-    }
-    startTransition(() => {
-      setIsBuilderMode(active);
-    });
-  }, [queryClient, student?.id, form]);
+  const updateDraft = (patch: Partial<Student>) => {
+    setStudentDraft((prev) => ({ ...prev, ...patch }));
+  };
 
   const { data: linkedContact } = useContactById(
-    studentDraft.contactId != null ? String(studentDraft.contactId) : undefined,
-    studentDraft.contactId != null,
+    studentDraft.contactId ? String(studentDraft.contactId) : undefined,
+    !!studentDraft.contactId,
   );
 
   const linkedGender = linkedContact?.gender?.trim() || "";
@@ -175,206 +84,111 @@ export default function StudentForm({
 
   const [typedDuplicateReason, setTypedDuplicateReason] = useState<StudentDuplicateReason | null>(null);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
-  const [pendingSaveData, setPendingSaveData] = useState<StudentFormData | null>(null);
+  const [pendingSaveData, setPendingSaveData] = useState<Partial<Student> | null>(null);
 
-  const identityString = useMemo(() => {
-    return `${studentDraft.contactId || ""}|${linkedContact?.name || ""}|${contactEmail(linkedContact)}|${linkedDob || ""}`;
-  }, [studentDraft.contactId, linkedContact, linkedDob]);
+  const { data: linkedStudentContactIds = [] } = useStudentLinkedContactIds(
+    student?.id ? String(student.id) : undefined,
+  );
 
-  const debouncedIdentityString = useDebounce(identityString, 500);
-
-  const [debouncedContactId, debouncedName, debouncedEmail, debouncedDob] = useMemo(() => {
-    const parts = debouncedIdentityString.split("|");
-    return [parts[0] || "", parts[1] || "", parts[2] || "", parts[3] || ""];
-  }, [debouncedIdentityString]);
-
-  useEffect(() => {
-    if (!debouncedContactId) {
-      setTypedDuplicateReason(null);
-      return;
-    }
-
-    let isMounted = true;
-    const checkDuplicates = async () => {
-      try {
-        const reason = await checkStudentRegistrationDuplicate({
-          excludeId: student?.id ? String(student.id) : undefined,
-          contactId: debouncedContactId,
-          email: debouncedEmail,
-          name: debouncedName,
-          dob: debouncedDob || undefined,
-        });
-
-        if (isMounted) {
-          setTypedDuplicateReason(reason);
-        }
-      } catch (error) {
-        console.error("Background duplicate check failed", error);
-      }
-    };
-
-    void checkDuplicates();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [debouncedContactId, debouncedName, debouncedEmail, debouncedDob, student?.id]);
-
-  const error = useMemo(() => {
-    if (errorSummary) return errorSummary;
-    if (manualError) return manualError;
-    if (typedDuplicateReason) return t(DUPLICATE_ERROR_KEYS[typedDuplicateReason]);
-    return "";
-  }, [errorSummary, manualError, typedDuplicateReason, t]);
+  const { data: nextGrNumber } = useStudentNextGrNumber({
+    registeredDate: studentDraft.registeredDate || new Date().toISOString().split("T")[0],
+    template: "GR-{YEAR}-{SEQ}",
+    digits: 4,
+    restartAnnually: true,
+    enabled: !student?.id,
+  });
 
   useEffect(() => {
-    if (!studentDraft.status && defaultStatus) {
-      setValue("status", defaultStatus);
+    if (student?.id || !nextGrNumber) return;
+    if (!studentDraft.grNumber) {
+      updateDraft({ grNumber: nextGrNumber });
     }
-  }, [defaultStatus, studentDraft.status, setValue]);
+  }, [nextGrNumber, student?.id, studentDraft.grNumber]);
 
-  const commitSave = useCallback((formData: StudentFormData) => {
+  const commitSave = (data: Partial<Student>) => {
     const saved = {
-      ...formData,
-      registeredDate: formData.registeredDate ?? undefined,
+      ...data,
+      registeredDate: data.registeredDate || undefined,
+      fatherName: data.fatherName ? toTitleCase(data.fatherName) : "",
+      motherName: data.motherName ? toTitleCase(data.motherName) : "",
+      guardianName: data.guardianName ? toTitleCase(data.guardianName) : "",
     };
-    (["fatherName", "motherName", "guardianName"] as const).forEach((key) => {
-      if (typeof saved[key] === "string") {
-        saved[key] = toTitleCase(saved[key]) as string;
-      }
-    });
 
     onSave(
       normalizeStoredStudent({
         ...saved,
         id: student?.id || `st${Date.now()}`,
         enrolledSessions: student?.enrolledSessions || [],
-        _blueprintId: String(settings.version),
+        _blueprintId: "1",
       }) as unknown as Student,
     );
-  }, [onSave, student, settings.version]);
+  };
 
-  const onSubmit = useCallback(async (formData: StudentFormData) => {
+  const handleSave = async () => {
+    setErrors({});
     setManualError("");
 
-    // Gender & DOB requirements checks since they are part of contact
-    const basicFields = settingsFields.basic || [];
-    const genderField = basicFields.find((field: FieldDefinition) => field.key === "gender");
-    const dobField = basicFields.find((field: FieldDefinition) => field.key === "dob");
-
-    if (genderField?.required && !linkedGender) {
-      setManualError(t("students.form.genderRequiredOnContact"));
-      return;
+    const newErrors: Record<string, string> = {};
+    if (!studentDraft.contactId) {
+      newErrors.contactId = t("students.form.contactRequired") || "Contact is required";
     }
-    if (dobField?.required && !linkedDob) {
-      setManualError(t("students.form.dobRequiredOnContact"));
-      return;
+    if (!studentDraft.grNumber?.trim()) {
+      newErrors.grNumber = t("students.form.grNumber") || "GR Number is required";
+    }
+    if (!studentDraft.status) {
+      newErrors.status = "Status is required";
     }
 
-    const duplicateReason = await checkStudentRegistrationDuplicate({
-      excludeId: student?.id ? String(student.id) : undefined,
-      contactId: formData.contactId ?? undefined,
-      email: contactEmail(linkedContact),
-      name: linkedContact?.name,
-      dob: linkedDob || undefined,
-    });
-
-    if (duplicateReason) {
-      setPendingSaveData(formData);
-      setTypedDuplicateReason(duplicateReason);
-      setDuplicateConfirmOpen(true);
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
       return;
     }
 
-    commitSave(formData);
-  }, [settingsFields, linkedGender, linkedDob, student?.id, linkedContact, commitSave, t]);
+    setSaving(true);
+    try {
+      const email = linkedContact?.emails?.[0]?.address || linkedContact?.email || "";
+      const duplicateReason = await checkStudentRegistrationDuplicate({
+        excludeId: student?.id ? String(student.id) : undefined,
+        contactId: String(studentDraft.contactId),
+        email,
+        name: linkedContact?.name,
+        dob: linkedDob || undefined,
+      });
 
-  const confirmDuplicateSave = useCallback(() => {
+      if (duplicateReason) {
+        setPendingSaveData(studentDraft);
+        setTypedDuplicateReason(duplicateReason);
+        setDuplicateConfirmOpen(true);
+        setSaving(false);
+        return;
+      }
+
+      commitSave(studentDraft);
+      onClose();
+    } catch (err: any) {
+      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const confirmDuplicateSave = () => {
     if (pendingSaveData) {
       commitSave(pendingSaveData);
       setPendingSaveData(null);
     }
     setDuplicateConfirmOpen(false);
-  }, [commitSave, pendingSaveData]);
-
-  const registeredDate = studentDraft.registeredDate || new Date().toISOString().split("T")[0];
-  const { data: nextGrNumber } = useStudentNextGrNumber({
-    registeredDate,
-    template: settings.grNumberTemplate,
-    digits: settings.grNumberDigits,
-    restartAnnually: settings.grNumberRestartAnnually,
-    enabled: !student?.id,
-  });
-  const { data: linkedStudentContactIds = [] } = useStudentLinkedContactIds(
-    student?.id ? String(student.id) : undefined,
-  );
-
-  useEffect(() => {
-    if (student?.id || !nextGrNumber) return;
-    if (!studentDraft.grNumber) {
-      setValue("grNumber", nextGrNumber);
-    }
-  }, [nextGrNumber, student?.id, studentDraft.grNumber, setValue]);
-
-  const completeness = useMemo(() => {
-    let totalRequired = 0;
-    let filledRequired = 0;
-    let totalOptional = 0;
-    let filledOptional = 0;
-
-    // Core fields: contactId, grNumber, status
-    totalRequired += 3;
-    if (studentDraft.contactId) filledRequired += 1;
-    if (studentDraft.grNumber) filledRequired += 1;
-    if (studentDraft.status) filledRequired += 1;
-
-    Object.entries(settingsFields).forEach(([tabId, tabFields]) => {
-      if (tabId !== "basic" && !enabledTabsSet.has(tabId)) return;
-      tabFields.forEach((field) => {
-        if (!field.enabled) return;
-        if (field.key === "gender" || field.key === "dob") return;
-        if (field.type === "boolean" || field.type === "ai_summary") return;
-
-        let valueKey = field.key;
-        if (field.key === "fatherLink") valueKey = "fatherContactId";
-        else if (field.key === "motherLink") valueKey = "motherContactId";
-        else if (field.key === "guardianLink") valueKey = "guardianContactId";
-
-        const isFilled = hasFieldValue(studentDraft[valueKey]);
-        if (field.required) {
-          totalRequired += 1;
-          if (isFilled) filledRequired += 1;
-        } else {
-          totalOptional += 1;
-          if (isFilled) filledOptional += 1;
-        }
-      });
-    });
-
-    const reqRatio = totalRequired === 0 ? 0 : filledRequired / totalRequired;
-    const optRatio = totalOptional === 0 ? 0 : filledOptional / totalOptional;
-    const progress = (reqRatio * 0.7) + (optRatio * 0.3);
-
-    return Math.round(progress * 100);
-  }, [studentDraft, settingsFields, enabledTabsSet]);
-
-
-
-  const alreadyRegisteredContactIds = linkedStudentContactIds;
-
-  const studentExcludeIds = useMemo(() => {
-    const linkedIds = [studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId].filter(Boolean);
-    return [...linkedIds, ...alreadyRegisteredContactIds];
-  }, [studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId, alreadyRegisteredContactIds]);
+    onClose();
+  };
 
   const handleContactSelect = (id: string | number | null): void => {
     if (!id) {
-      setValue("contactId", null);
-      setValue("grNumber", "");
+      updateDraft({ contactId: "", grNumber: "" });
     } else {
-      setValue("contactId", id);
+      updateDraft({ contactId: String(id) });
       if (!student && !studentDraft.grNumber && nextGrNumber) {
-        setValue("grNumber", nextGrNumber);
+        updateDraft({ grNumber: nextGrNumber });
       }
     }
   };
@@ -387,328 +201,37 @@ export default function StudentForm({
     });
   };
 
-  const handleRegisteredDateChange = (newDate: string): void => {
-    setValue("registeredDate", newDate);
-    if (!student) {
-      setValue("grNumber", "");
-    }
+  const handleFatherSelect = (id: string | number | null, contactObj?: Contact | null): void => {
+    updateDraft({ fatherContactId: id ? String(id) : null, fatherName: contactObj?.name ?? "" });
   };
 
-  const handleFatherSelect = (id: string | number | null, contact?: Contact | null): void => {
-    setValue("fatherContactId", id);
-    setValue("fatherName", contact?.name ?? "");
+  const handleMotherSelect = (id: string | number | null, contactObj?: Contact | null): void => {
+    updateDraft({ motherContactId: id ? String(id) : null, motherName: contactObj?.name ?? "" });
   };
 
-  const handleMotherSelect = (id: string | number | null, contact?: Contact | null): void => {
-    setValue("motherContactId", id);
-    setValue("motherName", contact?.name ?? "");
+  const handleGuardianSelect = (id: string | number | null, contactObj?: Contact | null): void => {
+    updateDraft({ guardianContactId: id ? String(id) : null, guardianName: contactObj?.name ?? "" });
   };
 
-  const handleGuardianSelect = (id: string | number | null, contact?: Contact | null): void => {
-    setValue("guardianContactId", id);
-    setValue("guardianName", contact?.name ?? "");
-  };
+  const excludeIds = useMemo(() => {
+    const list = [studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId]
+      .filter(Boolean)
+      .map(String);
+    return [...list, ...linkedStudentContactIds.map(String)];
+  }, [studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId, linkedStudentContactIds]);
 
-
-
-  const renderFieldByKey = (field: FieldDefinition): React.ReactNode => {
-    if (!field.enabled) return null;
-
-    if (field.key === "gender") {
-      return (
-        <div key="gender">
-          <Field label="Gender (contact)" required={field.required} hint="Hydrated from linked contact">
-            <Input
-              disabled
-              value={linkedGender || "—"}
-              className={FORM_INPUT}
-            />
-          </Field>
-        </div>
-      );
-    }
-
-    if (field.key === "dob") {
-      return (
-        <div key="dob">
-          <Field label="Date of Birth (contact)" required={field.required} hint="Hydrated from linked contact">
-            <Input
-              disabled
-              value={linkedDob || "—"}
-              className={FORM_INPUT}
-            />
-          </Field>
-        </div>
-      );
-    }
-
-    if (field.key === "fatherLink") {
-      const fieldError = errors.find((error) => error.fieldId === "fatherLink");
-      return (
-        <div key="fatherLink" className="sm:col-span-2" id="fatherLink" data-field-key="fatherLink">
-          <ContactPicker
-            label={`${t("students.form.fatherLink")}${field.required ? " *" : ""}`}
-            value={studentDraft.fatherContactId}
-            onChange={handleFatherSelect}
-            filterGender={guardianContactDefaults.fatherLink?.filterGender}
-            excludeIds={[studentDraft.contactId, studentDraft.motherContactId, studentDraft.guardianContactId].filter(Boolean)}
-            createDefaults={
-              guardianContactDefaults.fatherLink?.createGender
-                ? {
-                  gender: guardianContactDefaults.fatherLink.createGender,
-                  lockGender: guardianContactDefaults.fatherLink.lockGender ?? true,
-                }
-                : undefined
-            }
-            searchPlaceholder={t("teachers.form.searchContact")}
-            emptyTitle={t("teachers.form.noContacts")}
-            emptyHint={t("teachers.form.noContactsHint")}
-            error={!!fieldError}
-          />
-          {fieldError && (
-            <p className="text-[10px] text-destructive mt-1 font-medium">{fieldError.message}</p>
-          )}
-        </div>
-      );
-    }
-
-    if (field.key === "motherLink") {
-      const fieldError = errors.find((error) => error.fieldId === "motherLink");
-      return (
-        <div key="motherLink" className="sm:col-span-2" id="motherLink" data-field-key="motherLink">
-          <ContactPicker
-            label={`${t("students.form.motherLink")}${field.required ? " *" : ""}`}
-            value={studentDraft.motherContactId}
-            onChange={handleMotherSelect}
-            filterGender={guardianContactDefaults.motherLink?.filterGender}
-            excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.guardianContactId].filter(Boolean)}
-            createDefaults={
-              guardianContactDefaults.motherLink?.createGender
-                ? {
-                  gender: guardianContactDefaults.motherLink.createGender,
-                  lockGender: guardianContactDefaults.motherLink.lockGender ?? true,
-                }
-                : undefined
-            }
-            searchPlaceholder={t("teachers.form.searchContact")}
-            emptyTitle={t("teachers.form.noContacts")}
-            emptyHint={t("teachers.form.noContactsHint")}
-            error={!!fieldError}
-          />
-          {fieldError && (
-            <p className="text-[10px] text-destructive mt-1 font-medium">{fieldError.message}</p>
-          )}
-        </div>
-      );
-    }
-
-    if (field.key === "guardianLink") {
-      const fieldError = errors.find((error) => error.fieldId === "guardianLink");
-      return (
-        <div key="guardianLink" className="sm:col-span-2" id="guardianLink" data-field-key="guardianLink">
-          <ContactPicker
-            label={`${t("students.form.guardianLink")}${field.required ? " *" : ""}`}
-            value={studentDraft.guardianContactId}
-            onChange={handleGuardianSelect}
-            excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.motherContactId].filter(Boolean)}
-            searchPlaceholder={t("teachers.form.searchContact")}
-            emptyTitle={t("teachers.form.noContacts")}
-            emptyHint={t("teachers.form.noContactsHint")}
-            error={!!fieldError}
-          />
-          {fieldError && (
-            <p className="text-[10px] text-destructive mt-1 font-medium">{fieldError.message}</p>
-          )}
-        </div>
-      );
-    }
-
-    if (field.key === "registeredDate") {
-      const fieldError = errors.find((error) => error.fieldId === "registeredDate");
-      return (
-        <div key="registeredDate" id="registeredDate" data-field-key="registeredDate">
-          <Field label={t("students.form.registeredDate")} required={field.required} error={fieldError?.message}>
-            <DatePicker
-              required={field.required}
-              value={studentDraft.registeredDate ?? undefined}
-              onChange={handleRegisteredDateChange}
-              className={fieldError ? "border-destructive focus-within:border-destructive focus-within:ring-destructive" : ""}
-            />
-          </Field>
-        </div>
-      );
-    }
-
-    const value = studentDraft[field.key] ?? getDefaultFieldValue(field);
-    const fieldError = errors.find((error) => error.fieldId === field.key);
-    return (
-      <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
-        <Field label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>
-          <CustomFieldInput
-            field={field}
-            value={value}
-            onChange={(nextValue) => setValue(field.key as any, nextValue, { shouldValidate: true, shouldDirty: true })}
-            error={!!fieldError}
-          />
-        </Field>
-      </div>
-    );
-  };
-
-  const renderBasicContent = () => {
-    if (tab !== "basic") {
-      return null;
-    }
-
-    const guardianFields = settingsFields.guardian || [];
-    const hasGuardianFields = guardianFields.some((f) => f.enabled);
-
-    // Extract all dynamic custom or system fields from settingsFields
-    const additionalFields = (() => {
-      const list: FieldDefinition[] = [];
-      Object.entries(settingsFields).forEach(([tabId, tabFields]) => {
-        if (tabId === "guardian") return;
-        (tabFields || []).forEach((field) => {
-          if (!field.enabled) return;
-          if (
-            field.key === "gender" ||
-            field.key === "dob" ||
-            field.key === "registeredDate" ||
-            field.key === "fatherLink" ||
-            field.key === "motherLink" ||
-            field.key === "guardianLink"
-          ) {
-            return;
-          }
-          list.push(field);
-        });
-      });
-      return list;
-    })();
-
-    return (
-      <div className="space-y-6 text-left pb-4">
-        {/* Section 1: Contact Registry Link */}
-        <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
-          <div>
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.contactLabel")}</h3>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{t("students.form.contactHint")}</p>
-          </div>
-
-          <ContactPicker
-            label={t("students.form.contactLabel")}
-            value={studentDraft.contactId}
-            onChange={handleContactSelect}
-            excludeIds={studentExcludeIds}
-            onAvatarChange={handleStudentAvatarChange}
-            searchPlaceholder={t("teachers.form.searchContact")}
-            emptyTitle={t("teachers.form.noContacts")}
-            emptyHint={t("teachers.form.noContactsHint")}
-            error={!!errors.find((error) => error.fieldId === "contactId")}
-          />
-          {errors.find((error) => error.fieldId === "contactId") && (
-            <p className="text-[10px] text-destructive mt-1 font-medium">
-              {errors.find((error) => error.fieldId === "contactId")?.message}
-            </p>
-          )}
-
-          {/* Inline Profile fields revealed when Contact is selected */}
-          {studentDraft.contactId && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
-              {settingsFields.basic?.some((field) => field.key === "gender" && field.enabled) && (
-                renderFieldByKey(settingsFields.basic.find((field) => field.key === "gender")!)
-              )}
-              {settingsFields.basic?.some((field) => field.key === "dob" && field.enabled) && (
-                renderFieldByKey(settingsFields.basic.find((field) => field.key === "dob")!)
-              )}
-            </div>
-          )}
-        </section>
-
-        {/* Section 2: Registration Details */}
-        <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
-          <div>
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.registrationSection")}</h3>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              {t("students.form.registrationSectionDesc")}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Field label={t("students.form.grNumber")} required hint={t("students.form.grNumberHint")} error={errors.find((error) => error.fieldId === "grNumber")?.message}>
-                <Input
-                  required
-                  className={cn(FORM_INPUT, errors.find((error) => error.fieldId === "grNumber") && "border-destructive focus-visible:ring-destructive")}
-                  value={studentDraft.grNumber || ""}
-                  onChange={(event) => setValue("grNumber", event.target.value, { shouldValidate: true, shouldDirty: true })}
-                  placeholder={t("students.form.grNumberPlaceholder")}
-                />
-              </Field>
-            </div>
-
-            <div>
-              <Field label={t("students.form.status")} error={errors.find((error) => error.fieldId === "status")?.message}>
-                <FormSelect
-                  value={studentDraft.status}
-                  onChange={(statusValue) => setValue("status", statusValue, { shouldValidate: true, shouldDirty: true })}
-                  options={statuses.map((status) => ({
-                    value: status,
-                    label: t(`students.form.status.${status}` as AppTranslationKey),
-                  }))}
-                  className={errors.find((error) => error.fieldId === "status") ? "border-destructive focus:border-destructive" : ""}
-                />
-              </Field>
-            </div>
-
-            {/* Registration Date if enabled */}
-            {Object.values(settingsFields).flat().some((f) => f.key === "registeredDate" && f.enabled) && (
-              renderFieldByKey(Object.values(settingsFields).flat().find((f) => f.key === "registeredDate")!)
-            )}
-          </div>
-        </section>
-
-        {/* Section 3: Family & Guardians */}
-        {hasGuardianFields && (
-          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
-            <div>
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Family & Guardians</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                Link parents or guardians for emergency and system notifications.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {guardianFields.map((field) => renderFieldByKey(field))}
-            </div>
-          </section>
-        )}
-
-        {/* Section 4: Additional Information */}
-        {additionalFields.length > 0 && (
-          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
-            <div>
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Additional Information</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                Extra information configured in fields registry settings.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {additionalFields.map((field) => renderFieldByKey(field))}
-            </div>
-          </section>
-        )}
-      </div>
-    );
-  };
+  const errorSummary = useMemo(() => {
+    if (manualError) return manualError;
+    if (typedDuplicateReason) return t(DUPLICATE_ERROR_KEYS[typedDuplicateReason]);
+    return "";
+  }, [manualError, typedDuplicateReason, t]);
 
   const footerStart = linkedContact?.name ? (
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
       <span className="font-semibold text-foreground">{linkedContact.name}</span>
-      <div className="flex items-center gap-2 border-l border-border pl-3">
+      <div className="flex items-center gap-2 border-s border-border ps-3">
         <span>GR: {studentDraft.grNumber}</span>
-        <span className="border-l border-border pl-2 capitalize">
+        <span className="border-s border-border ps-2 capitalize">
           Status: {studentDraft.status}
         </span>
       </div>
@@ -719,45 +242,186 @@ export default function StudentForm({
 
   return (
     <>
-      <MmsDynamicForm
+      <FormModal
         open
         onClose={onClose}
         title={student ? t("students.form.editTitle") : t("students.form.addTitle")}
         subtitle={t("students.form.subtitle")}
         icon={GraduationCap}
         tall
-        progress={completeness}
-        progressLabel={t("common.formProgress")}
-        showBuilderToggle={canEditSetup}
-        isBuilderMode={isBuilderMode}
-        onBuilderModeChange={handleToggleBuilderMode}
-        tabs={undefined}
-        activeTab={undefined}
-        onTabChange={undefined}
-        tabPanelIdPrefix="student-form-tab"
-        dir={isRtlLanguage(language) ? "rtl" : "ltr"}
         lang={language}
-        cancelLabel={t("common.cancel")}
-        saveLabel={
-          saving
-            ? t("students.form.saving")
-            : student
-              ? t("students.form.saveUpdate")
-              : t("students.form.saveRegister")
-        }
-        onSave={() => void handleSave(onSubmit)()}
+        cancelLabel={t("common.cancel") || "Cancel"}
+        saveLabel={saving ? (t("students.form.saving") || "Saving...") : (student ? (t("students.form.saveUpdate") || "Update") : (t("students.form.saveRegister") || "Register"))}
+        onSave={handleSave}
         saving={saving}
         saveDisabled={!studentDraft.contactId}
-        error={error || undefined}
+        error={errorSummary || undefined}
         footerStart={footerStart}
-        fields={settingsFields[tab] || []}
-        data={studentDraft}
-        setValue={setValue}
-        errors={errors}
-        renderField={renderFieldByKey}
-        renderBasicContent={renderBasicContent}
-        builderPanel={<StudentsSettings mode="fields" />}
-      />
+      >
+        <div className="space-y-6 text-left pb-4">
+          {/* Section 1: Contact Link */}
+          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+            <div>
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.contactLabel") || "Linked Contact"}</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{t("students.form.contactHint")}</p>
+            </div>
+
+            <ContactPicker
+              label={t("students.form.contactLabel") || "Linked Contact"}
+              value={studentDraft.contactId ? String(studentDraft.contactId) : null}
+              onChange={handleContactSelect}
+              excludeIds={excludeIds}
+              onAvatarChange={handleStudentAvatarChange}
+              searchPlaceholder={t("teachers.form.searchContact")}
+              emptyTitle={t("teachers.form.noContacts")}
+              emptyHint={t("teachers.form.noContactsHint")}
+              error={!!errors.contactId}
+            />
+            {errors.contactId && (
+              <p className="text-[10px] text-destructive mt-1 font-medium">{errors.contactId}</p>
+            )}
+
+            {studentDraft.contactId && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
+                <Field label="Gender (contact)" hint="From contact profile">
+                  <Input disabled value={linkedGender || "—"} className={FORM_INPUT} />
+                </Field>
+                <Field label="Date of Birth (contact)" hint="From contact profile">
+                  <Input disabled value={linkedDob || "—"} className={FORM_INPUT} />
+                </Field>
+              </div>
+            )}
+          </section>
+
+          {/* Section 2: Registration details */}
+          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+            <div>
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.registrationSection") || "Registration"}</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label={t("students.form.grNumber")} required error={errors.grNumber}>
+                <Input
+                  required
+                  value={studentDraft.grNumber || ""}
+                  onChange={(e) => updateDraft({ grNumber: e.target.value })}
+                  placeholder={t("students.form.grNumberPlaceholder") || "Enter GR Number"}
+                  className={FORM_INPUT}
+                />
+              </Field>
+
+              <Field label={t("students.form.status")}>
+                <FormSelect
+                  value={studentDraft.status || "active"}
+                  onChange={(val) => updateDraft({ status: val as StudentStatus })}
+                  options={STUDENT_STATUS_VALUES.map((s) => ({
+                    value: s,
+                    label: t(`students.form.status.${s}` as AppTranslationKey) || s,
+                  }))}
+                />
+              </Field>
+
+              <Field label={t("students.form.registeredDate") || "Registration Date"}>
+                <DatePicker
+                  value={studentDraft.registeredDate || undefined}
+                  onChange={(dateStr) => updateDraft({ registeredDate: dateStr })}
+                />
+              </Field>
+            </div>
+          </section>
+
+          {/* Section 3: Family & Guardians */}
+          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+            <div>
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Family & Guardians</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Link parent/guardian contacts</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <ContactPicker
+                label={t("students.form.fatherLink") || "Father"}
+                value={studentDraft.fatherContactId ? String(studentDraft.fatherContactId) : null}
+                onChange={handleFatherSelect}
+                filterGender="Male"
+                excludeIds={[studentDraft.contactId, studentDraft.motherContactId, studentDraft.guardianContactId].filter(Boolean).map(String)}
+                searchPlaceholder={t("teachers.form.searchContact")}
+                emptyTitle={t("teachers.form.noContacts")}
+              />
+
+              <ContactPicker
+                label={t("students.form.motherLink") || "Mother"}
+                value={studentDraft.motherContactId ? String(studentDraft.motherContactId) : null}
+                onChange={handleMotherSelect}
+                filterGender="Female"
+                excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.guardianContactId].filter(Boolean).map(String)}
+                searchPlaceholder={t("teachers.form.searchContact")}
+                emptyTitle={t("teachers.form.noContacts")}
+              />
+
+              <div className="sm:col-span-2">
+                <ContactPicker
+                  label={t("students.form.guardianLink") || "Guardian (Other)"}
+                  value={studentDraft.guardianContactId ? String(studentDraft.guardianContactId) : null}
+                  onChange={handleGuardianSelect}
+                  excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.motherContactId].filter(Boolean).map(String)}
+                  searchPlaceholder={t("teachers.form.searchContact")}
+                  emptyTitle={t("teachers.form.noContacts")}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Section 4: Finance details */}
+          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+            <div>
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Finance & Discount</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Discount Type">
+                <Input
+                  value={studentDraft.discountType || ""}
+                  onChange={(e) => updateDraft({ discountType: e.target.value })}
+                  placeholder="e.g. Sibling, Need-based"
+                  className={FORM_INPUT}
+                />
+              </Field>
+
+              <Field label="Discount %">
+                <Input
+                  type="number"
+                  value={studentDraft.discountPct ?? 0}
+                  onChange={(e) => updateDraft({ discountPct: Number(e.target.value) })}
+                  className={FORM_INPUT}
+                />
+              </Field>
+
+              <div className="sm:col-span-2">
+                <Field label="Registration Type">
+                  <Input
+                    value={studentDraft.registrationType || ""}
+                    onChange={(e) => updateDraft({ registrationType: e.target.value })}
+                    placeholder="e.g. Regular, Online"
+                    className={FORM_INPUT}
+                  />
+                </Field>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 5: Notes */}
+          <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+            <Field label={t("teachers.field.notes") || "Notes"}>
+              <textarea
+                value={studentDraft.notes || ""}
+                onChange={(e) => updateDraft({ notes: e.target.value })}
+                placeholder="Additional notes..."
+                className="w-full min-h-[80px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
+              />
+            </Field>
+          </section>
+        </div>
+      </FormModal>
       <ConfirmAlertDialog
         open={duplicateConfirmOpen}
         onOpenChange={setDuplicateConfirmOpen}

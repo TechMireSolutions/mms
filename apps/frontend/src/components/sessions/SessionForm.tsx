@@ -1,26 +1,15 @@
-import React, { useState, useMemo, useCallback, useTransition } from "react";
-import { z } from "zod";
+import React, { useState, useMemo } from "react";
 import { Calendar, DollarSign, BookOpen } from "lucide-react";
-import { MmsDynamicForm } from "@/components/ui/MmsDynamicForm";
-import { useMmsForm } from "@/hooks/useMmsForm";
-import { useSessionConfig } from "@/hooks/useSessionConfig";
-import { SessionsSettings } from "./SessionsSettings";
-import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
+import { FormModal } from "@/components/ui/FormModal";
+import { Input } from "@/components/ui/input";
+import { DatePicker } from "../ui/DatePicker";
+import { Field } from "@/components/ui/FormPrimitives";
+import { FORM_INPUT, FORM_SELECT } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useQueryClient } from "@tanstack/react-query";
-import { usePermissions } from "@/hooks/usePermissions";
 import { useGlobalSettings } from "@/hooks/useGlobalSettings";
-import {
-  toTitleCase,
-  type AppTranslationKey,
-  type FieldDefinition,
-  type TabDefinition,
-  buildCustomFieldSchema,
-  SESSIONS_TAB_REGISTRY,
-  INITIAL_SESSIONS_FIELD_SEED,
-  SESSIONS_MODULE_CONTRACT,
-  isRtlLanguage,
-} from "@mms/shared";
+import { notify } from "@/lib/notify";
+import { Session } from '@/lib/data/sessionsData';
+import { toTitleCase, AppTranslationKey } from "@mms/shared";
 
 interface SessionFormProps {
   open?: boolean;
@@ -29,343 +18,224 @@ interface SessionFormProps {
   onSave: (session: Session) => void;
 }
 
-const ICON_MAP: Record<string, typeof Calendar> = {
-  basic: Calendar,
-  financial: DollarSign,
-};
+const SESSION_TABS = [
+  { key: "basic", label: "Basic Info", icon: Calendar },
+  { key: "financial", label: "Financials", icon: DollarSign },
+] as const;
 
-export function SessionForm({ open = true, session, onClose, onSave }: SessionFormProps): React.JSX.Element {
+type TabKey = (typeof SESSION_TABS)[number]["key"];
+
+const SESSION_TYPES = ["Hifz", "Qaidah", "Tajweed", "Islamic Studies", "Arabic", "Other"];
+const SESSION_STATUSES = ["active", "upcoming", "completed", "cancelled"];
+const CURRENCIES = ["PKR", "USD", "GBP", "AED", "SAR"];
+
+export function SessionForm({
+  open = true,
+  session,
+  onClose,
+  onSave,
+}: SessionFormProps): React.JSX.Element {
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
-  const { can } = usePermissions();
-  const canEditSetup = can(SESSIONS_MODULE_CONTRACT.permissions.setupWrite);
-  const queryClient = useQueryClient();
-  const [isBuilderMode, setIsBuilderMode] = useState(false);
-  const [, startTransition] = useTransition();
 
-  const { settings, statuses, types, customFields } = useSessionConfig();
-  const statusOptions = statuses.length > 0 ? statuses : ["active", "upcoming", "completed", "cancelled"];
-  const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
+  const [tab, setTab] = useState<TabKey>("basic");
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Construct fields mapped by tabs
-  const fieldsByTab = useMemo<Record<string, FieldDefinition[]>>(() => {
-    const rawFields = settings.fields || {};
-    const hasTabbedFields = Object.values(rawFields).some((fieldGroup) => Array.isArray(fieldGroup));
-    
-    const base = hasTabbedFields
-      ? (rawFields as Record<string, FieldDefinition[]>)
-      : INITIAL_SESSIONS_FIELD_SEED;
+  const [sessionDraft, setSessionDraft] = useState<Partial<Session>>(() => ({
+    name: session?.name ?? "",
+    type: session?.type ?? "Hifz",
+    status: session?.status ?? "active",
+    startDate: session?.startDate ?? new Date().toISOString().split("T")[0],
+    endDate: session?.endDate ?? "",
+    baseFee: session?.baseFee ?? 0,
+    currency: session?.currency ?? "PKR",
+    description: session?.description ?? "",
+    classes: session?.classes ?? [],
+    timetable: session?.timetable ?? [],
+    discounts: session?.discounts ?? [],
+    budget: session?.budget ?? { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
+    events: session?.events ?? [],
+    tabarruk: session?.tabarruk ?? [],
+  }));
 
-    const mapped: Record<string, FieldDefinition[]> = {};
+  const updateDraft = (patch: Partial<Session>) => {
+    setSessionDraft((prev) => ({ ...prev, ...patch }));
+  };
 
-    Object.entries(base).forEach(([tabId, tabFields]) => {
-      mapped[tabId] = tabFields.map((field) => {
-        if (field.key === "type") {
-          return { ...field, options: typeOptions };
-        }
-        if (field.key === "status") {
-          return { ...field, options: statusOptions };
-        }
-        if (field.key === "currency") {
-          return { ...field, options: ["PKR", "USD", "GBP", "AED", "SAR"] };
-        }
-        return field;
-      });
-    });
+  const handleSave = () => {
+    setErrors({});
+    const newErrors: Record<string, string> = {};
 
-    // If it was the flat setup, append custom fields to basic tab
-    if (!hasTabbedFields && customFields && customFields.length > 0) {
-      const basicFields = [...(mapped.basic || [])];
-      const fieldOrder = settings.fieldOrder || [];
-      customFields.forEach((customField) => {
-        if (!basicFields.some((field) => field.key === customField.id)) {
-          const orderIdx = fieldOrder.indexOf(customField.id);
-          basicFields.push({
-            key: customField.id,
-            label: customField.label,
-            type: customField.type as any,
-            required: !!customField.required,
-            enabled: true,
-            order: orderIdx >= 0 ? orderIdx : 99,
-            placeholder: customField.placeholder,
-            options: customField.options,
-          });
-        }
-      });
-      mapped.basic = basicFields.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+    if (!sessionDraft.name?.trim()) {
+      newErrors.name = "Session name is required";
+    }
+    if (!sessionDraft.startDate) {
+      newErrors.startDate = "Start Date is required";
+    }
+    if (!sessionDraft.endDate) {
+      newErrors.endDate = "End Date is required";
     }
 
-    return mapped;
-  }, [settings.fields, settings.fieldOrder, customFields, typeOptions, statusOptions]);
-
-  // Construct initial values conforming to Rule 15.1
-  const initialValues = useMemo<Partial<Session>>(() => {
-    const initial: Record<string, any> = {
-      name: "",
-      type: typeOptions[0] || "Hifz",
-      status: statusOptions[0] || "active",
-      startDate: null,
-      endDate: null,
-      baseFee: null,
-      currency: "PKR",
-      description: "",
-      classes: [],
-      timetable: [],
-      discounts: [],
-      budget: { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
-      events: [],
-      tabarruk: [],
-    };
-
-    const draft = queryClient.getQueryData<Partial<Session>>(['builder_draft', 'session', session?.id || 'new']);
-    const target = draft || session || {};
-    
-    return {
-      ...initial,
-      ...target,
-    } as Partial<Session>;
-  }, [session, queryClient, typeOptions, statusOptions]);
-
-  // Setup Zod Validation Schema
-  const schema = useMemo(() => {
-    const shape: Record<string, z.ZodTypeAny> = {
-      id: z.string().optional(),
-      classes: z.array(z.any()).default([]),
-      timetable: z.array(z.any()).default([]),
-      discounts: z.array(z.any()).default([]),
-      budget: z.any().optional(),
-      events: z.array(z.any()).default([]),
-      tabarruk: z.array(z.any()).default([]),
-      _blueprintId: z.string().optional(),
-    };
-
-    const enabledTabIds = settings.enabledTabs && settings.enabledTabs.length > 0 
-      ? new Set(settings.enabledTabs) 
-      : new Set(["basic", "financial"]);
-
-    Object.keys(fieldsByTab).forEach((tabId) => {
-      if (tabId !== "basic" && !enabledTabIds.has(tabId)) {
-        return;
-      }
-
-      const tabFields = fieldsByTab[tabId] || [];
-      tabFields.forEach((field) => {
-        if (!field.enabled) return;
-        shape[field.key] = buildCustomFieldSchema(field);
-      });
-    });
-
-    return z.object(shape).passthrough();
-  }, [fieldsByTab, settings.enabledTabs]);
-
-  const {
-    form,
-    tab,
-    setTab,
-    saving,
-    errors,
-    handleSave,
-  } = useMmsForm<Session>({
-    schema,
-    fields: fieldsByTab,
-    initialData: initialValues,
-    t,
-  });
-
-  const sessionDraft = form.watch();
-  const setValue = form.setValue;
-
-  const handleToggleBuilderMode = useCallback((active: boolean) => {
-    if (active) {
-      queryClient.setQueryData(['builder_draft', 'session', session?.id || 'new'], form.getValues());
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setTab("basic");
+      notify.error("Please fix form validation errors");
+      return;
     }
-    startTransition(() => {
-      setIsBuilderMode(active);
-    });
-  }, [queryClient, session?.id, form]);
 
-  const completeness = useMemo(() => {
-    let totalRequired = 0;
-    let filledRequired = 0;
-    let totalOptional = 0;
-    let filledOptional = 0;
+    setSaving(true);
+    try {
+      const name = toTitleCase(sessionDraft.name?.trim() || "") as string;
+      const saved: Session = {
+        ...sessionDraft,
+        id: session?.id || `s${Date.now()}`,
+        name,
+        baseFee: Number(sessionDraft.baseFee) || 0,
+        _blueprintId: "1.0",
+      } as Session;
 
-    const enabledTabIds = settings.enabledTabs && settings.enabledTabs.length > 0 
-      ? new Set(settings.enabledTabs) 
-      : new Set(["basic", "financial"]);
-
-    Object.keys(fieldsByTab).forEach((tabId) => {
-      if (tabId !== "basic" && !enabledTabIds.has(tabId)) {
-        return;
-      }
-
-      const tabFields = fieldsByTab[tabId] || [];
-      tabFields.forEach((field) => {
-        if (!field.enabled) return;
-        
-        // Skip booleans and ai_summary fields from completeness score
-        if (field.type === "boolean" || field.type === "ai_summary") {
-          return;
-        }
-
-        const isRequired = !!field.required;
-        const fieldValue = (sessionDraft as Record<string, any>)[field.key];
-        const isFilled = fieldValue !== undefined && fieldValue !== null && fieldValue !== "";
-
-        if (isRequired) {
-          totalRequired++;
-          if (isFilled) filledRequired++;
-        } else {
-          totalOptional++;
-          if (isFilled) filledOptional++;
-        }
-      });
-    });
-
-    const reqRatio = totalRequired === 0 ? 0 : filledRequired / totalRequired;
-    const optRatio = totalOptional === 0 ? 0 : filledOptional / totalOptional;
-    const progress = (reqRatio * 0.7) + (optRatio * 0.3);
-
-    return Math.round(progress * 100);
-  }, [sessionDraft, fieldsByTab, settings.enabledTabs]);
-
-  const visibleTabs = useMemo(() => {
-    const tabsFromConfig = (settings.formTabs && settings.formTabs.length > 0 
-      ? settings.formTabs 
-      : SESSIONS_TAB_REGISTRY) as TabDefinition[];
-    const enabledTabIds = settings.enabledTabs && settings.enabledTabs.length > 0 
-      ? new Set(settings.enabledTabs) 
-      : new Set(["basic", "financial"]);
-
-    return [...tabsFromConfig]
-      .sort((a, b) => a.order - b.order)
-      .filter((tabDef) => {
-        if (tabDef.key === "basic") return true;
-        if (!enabledTabIds.has(tabDef.key)) return false;
-        
-        // Ghost Tab Prevention
-        const tabFields = fieldsByTab[tabDef.key] || [];
-        const hasVisibleFields = tabFields.some((field) => field.enabled);
-        if (!hasVisibleFields) return false;
-
-        return true;
-      });
-  }, [settings.formTabs, settings.enabledTabs, fieldsByTab]);
-
-  const formTabs = useMemo(() => {
-    return visibleTabs.map((visibleTab) => ({
-      key: visibleTab.key,
-      label: visibleTab.label,
-      icon: ICON_MAP[visibleTab.key] || BookOpen,
-    }));
-  }, [visibleTabs]);
-
-  const prepareSessionData = useCallback((formData: Session): Session => {
-    const name = toTitleCase(formData.name?.trim() || "") as string;
-    
-    return {
-      ...formData,
-      id: session?.id || formData.id || `s${Date.now()}`,
-      name: name || "Untitled Session",
-      type: formData.type || typeOptions[0] || "Hifz",
-      status: formData.status || statusOptions[0] || "active",
-      startDate: formData.startDate || "",
-      endDate: formData.endDate || "",
-      baseFee: Number(formData.baseFee) || 0,
-      currency: formData.currency || "PKR",
-      classes: session?.classes || [],
-      timetable: session?.timetable || [],
-      discounts: session?.discounts || [],
-      budget: session?.budget || { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
-      events: session?.events || [],
-      tabarruk: session?.tabarruk || [],
-      _blueprintId: "1.0",
-    } as Session;
-  }, [session, typeOptions, statusOptions]);
-
-  const onSubmit = useCallback(async (formData: Session) => {
-    const sessionToSave = prepareSessionData(formData);
-    onSave(sessionToSave);
-  }, [prepareSessionData, onSave]);
-
-  const renderField = useCallback((field: FieldDefinition) => {
-    if (field.key === "status") {
-      const fieldError = errors.find((error) => error.fieldId === field.key);
-      return (
-        <div key="status">
-          <label className="text-xs font-semibold text-muted-foreground mb-1 block">
-            {field.label} {field.required ? "*" : ""}
-          </label>
-          <select
-            id="sessionStatus"
-            className={`w-full px-3 py-2 bg-card border rounded-lg text-sm transition-all focus:outline-none focus:ring-1 focus:ring-primary ${
-              fieldError ? "border-destructive focus:ring-destructive" : "border-border focus:border-primary"
-            }`}
-            value={sessionDraft.status || "active"}
-            onChange={(event) => setValue("status", event.target.value, { shouldValidate: true, shouldDirty: true })}
-            required={field.required}
-          >
-            {statusOptions.map((statusOption) => {
-              const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
-              const translated = t(translationKey);
-              const label = translated === translationKey ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : translated;
-              return (
-                <option key={statusOption} value={statusOption}>{label}</option>
-              );
-            })}
-          </select>
-          {fieldError && <p className="text-[10px] font-medium text-destructive mt-1">{fieldError.message}</p>}
-        </div>
-      );
+      onSave(saved);
+      notify.success(session ? "Session updated successfully" : "Session created successfully");
+      onClose();
+    } catch (err: any) {
+      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: err.message });
+    } finally {
+      setSaving(false);
     }
-    return null;
-  }, [sessionDraft.status, statusOptions, t, errors, setValue]);
+  };
 
   const footerStart = sessionDraft.name ? (
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
       <span className="font-semibold text-foreground">{sessionDraft.name}</span>
       <div className="flex items-center gap-2 border-s border-border ps-3">
         <span>{sessionDraft.type}</span>
-        <span className="border-s border-border ps-2">{sessionDraft.status}</span>
+        <span className="border-s border-border ps-2 capitalize">{sessionDraft.status}</span>
       </div>
     </div>
   ) : (
     <span className="text-xs text-destructive">Session Name is required</span>
   );
 
+  const renderBasic = () => (
+    <div className="space-y-4 text-left">
+      <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+        <Field label="Session Name" required error={errors.name}>
+          <Input
+            value={sessionDraft.name || ""}
+            onChange={(e) => updateDraft({ name: e.target.value })}
+            placeholder="e.g. Hifz Morning Session 2026"
+            className={FORM_INPUT}
+          />
+        </Field>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Session Type">
+            <select
+              className={FORM_SELECT}
+              value={sessionDraft.type || "Hifz"}
+              onChange={(e) => updateDraft({ type: e.target.value })}
+            >
+              {SESSION_TYPES.map((tOpt) => (
+                <option key={tOpt} value={tOpt}>{tOpt}</option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Status">
+            <select
+              className={FORM_SELECT}
+              value={sessionDraft.status || "active"}
+              onChange={(e) => updateDraft({ status: e.target.value })}
+            >
+              {SESSION_STATUSES.map((statusOption) => {
+                const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
+                const translated = t(translationKey);
+                const label = translated === translationKey ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : translated;
+                return (
+                  <option key={statusOption} value={statusOption}>{label}</option>
+                );
+              })}
+            </select>
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Start Date" required error={errors.startDate}>
+            <DatePicker
+              value={sessionDraft.startDate || undefined}
+              onChange={(dateStr) => updateDraft({ startDate: dateStr })}
+            />
+          </Field>
+
+          <Field label="End Date" required error={errors.endDate}>
+            <DatePicker
+              value={sessionDraft.endDate || undefined}
+              onChange={(dateStr) => updateDraft({ endDate: dateStr })}
+            />
+          </Field>
+        </div>
+
+        <Field label="Description">
+          <textarea
+            value={sessionDraft.description || ""}
+            onChange={(e) => updateDraft({ description: e.target.value })}
+            placeholder="Describe session details, schedule, requirements..."
+            className="w-full min-h-[80px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
+          />
+        </Field>
+      </section>
+    </div>
+  );
+
+  const renderFinancial = () => (
+    <div className="space-y-4 text-left">
+      <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+        <Field label="Base Fee">
+          <Input
+            type="number"
+            value={sessionDraft.baseFee ?? 0}
+            onChange={(e) => updateDraft({ baseFee: Number(e.target.value) })}
+            className={FORM_INPUT}
+          />
+        </Field>
+
+        <Field label="Currency">
+          <select
+            className={FORM_SELECT}
+            value={sessionDraft.currency || "PKR"}
+            onChange={(e) => updateDraft({ currency: e.target.value })}
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </Field>
+      </section>
+    </div>
+  );
+
   return (
-    <MmsDynamicForm
+    <FormModal
       open={open}
       onClose={onClose}
       title={session ? "Edit Session" : "New Session"}
       subtitle="Fill in the session details below"
       icon={Calendar}
-      progress={completeness}
-      progressLabel="Progress"
-      showBuilderToggle={canEditSetup}
-      isBuilderMode={isBuilderMode}
-      onBuilderModeChange={handleToggleBuilderMode}
-      tabs={formTabs}
+      tall
+      tabs={SESSION_TABS}
       activeTab={tab}
       onTabChange={setTab}
       tabPanelIdPrefix="session-form-tab"
-      dir={isRtlLanguage(language) ? "rtl" : "ltr"}
       lang={language}
-      error={errors.map((error) => error.message)}
       cancelLabel="Cancel"
       saveLabel={session ? "Update" : "Create Session"}
-      onSave={() => void handleSave(onSubmit)()}
+      onSave={handleSave}
       saving={saving}
       saveDisabled={!sessionDraft.name?.trim() || !sessionDraft.startDate || !sessionDraft.endDate}
       footerStart={footerStart}
-      fields={fieldsByTab[tab] || []}
-      data={sessionDraft}
-      setValue={(key, fieldValue, options) => setValue(key as any, fieldValue, options)}
-      errors={errors}
-      renderField={renderField}
-      builderPanel={
-        <SessionsSettings mode="fields" />
-      }
-    />
+    >
+      {tab === "basic" ? renderBasic() : renderFinancial()}
+    </FormModal>
   );
 }
