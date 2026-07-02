@@ -13,8 +13,8 @@ import {
   teacherListSchema,
   type TeacherRecord,
 } from '../validation/teacherSchemas.js';
+import { loadContacts } from './contactService.js';
 import { defineCollectionCrudService } from './collectionCrudService.js';
-import { fetchCollection } from './dbSyncService.js';
 
 const teachers = defineCollectionCrudService(
   'teachers',
@@ -24,7 +24,7 @@ const teachers = defineCollectionCrudService(
 
 export async function loadTeachers(): Promise<TeacherRecord[]> {
   const rawRows = await teachers.load();
-  const contactsData = await fetchCollection('contacts');
+  const contactsData = await loadContacts();
   if (!contactsData || !Array.isArray(contactsData)) {
     return rawRows;
   }

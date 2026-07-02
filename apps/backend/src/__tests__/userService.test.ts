@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadContacts } from '../services/contactService.js';
 
 const mockListTenantUsers = vi.fn();
 const mockFindTenantUserById = vi.fn();
@@ -44,6 +45,7 @@ describe('userService', () => {
     vi.clearAllMocks();
     mockVerifyPassword.mockResolvedValue(true);
     mockGetRequestTenant.mockReturnValue('dar-ul-quran');
+    vi.mocked(loadContacts).mockResolvedValue([]);
   });
 
   it('matches login by loginEmail not contact CRM email', async () => {
@@ -59,18 +61,13 @@ describe('userService', () => {
         createdAt: '2026-01-01T00:00:00.000Z',
       },
     ]);
-    mockGetCollection.mockImplementation(async (name: string) => {
-      if (name === 'contacts') {
-        return [
-          {
-            id: 42,
-            name: 'Syed Ahmed Ali Naqvi',
-            emails: [{ address: 'different@contact.local' }],
-          },
-        ];
-      }
-      return null;
-    });
+    vi.mocked(loadContacts).mockResolvedValue([
+      {
+        id: '42',
+        name: 'Syed Ahmed Ali Naqvi',
+        emails: [{ address: 'different@contact.local' }],
+      } as any,
+    ]);
 
     const result = await validateCredentials(
       'admin@workspace.local',
@@ -101,18 +98,13 @@ describe('userService', () => {
       },
     ]);
     mockFindTenantUserById.mockResolvedValue(null);
-    mockGetCollection.mockImplementation(async (name: string) => {
-      if (name === 'contacts') {
-        return [
-          {
-            id: 42,
-            name: 'Admin',
-            emails: [{ address: 'different@contact.local' }],
-          },
-        ];
-      }
-      return null;
-    });
+    vi.mocked(loadContacts).mockResolvedValue([
+      {
+        id: '42',
+        name: 'Admin',
+        emails: [{ address: 'different@contact.local' }],
+      } as any,
+    ]);
 
     const result = await validateCredentials(
       'different@contact.local',

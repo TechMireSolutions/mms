@@ -31,6 +31,8 @@ import {
   listContactsByWorkspace,
   findContactById,
   saveContact,
+  findContactsByIds,
+  bulkSaveContacts,
 } from '../db/repositories/contactRepository.js';
 
 export interface ContactRuntimeDefaults {
@@ -254,9 +256,13 @@ export async function bulkRestoreContacts(
   let succeeded = 0;
   let failed = 0;
   const now = new Date().toISOString();
+  const toSave: Contact[] = [];
+
+  const existingContacts = await findContactsByIds(tenant, ids);
+  const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
 
   for (const id of ids) {
-    const existing = await findContactById(tenant, id);
+    const existing = existingMap.get(id);
     if (existing && existing.deletedAt) {
       const restored: Contact = {
         ...existing,
@@ -265,14 +271,15 @@ export async function bulkRestoreContacts(
         deletionReason: undefined,
         updatedAt: now,
       };
-      await saveContact(tenant, restored);
+      toSave.push(restored);
       succeeded += 1;
     } else {
       failed += 1;
     }
   }
 
-  if (succeeded > 0) {
+  if (toSave.length > 0) {
+    await bulkSaveContacts(tenant, toSave);
     await invalidateDuplicateScanCache();
   }
   return { succeeded, failed };
@@ -312,9 +319,13 @@ export async function bulkSoftDeleteContacts(
   let failed = 0;
   const now = new Date().toISOString();
   const trimmedReason = deletionReason?.trim();
+  const toSave: Contact[] = [];
+
+  const existingContacts = await findContactsByIds(tenant, ids);
+  const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
 
   for (const id of ids) {
-    const existing = await findContactById(tenant, id);
+    const existing = existingMap.get(id);
     if (existing && !existing.deletedAt) {
       const updated: Contact = {
         ...existing,
@@ -322,14 +333,15 @@ export async function bulkSoftDeleteContacts(
         deletedBy,
         deletionReason: trimmedReason || undefined,
       };
-      await saveContact(tenant, updated);
+      toSave.push(updated);
       succeeded += 1;
     } else {
       failed += 1;
     }
   }
 
-  if (succeeded > 0) {
+  if (toSave.length > 0) {
+    await bulkSaveContacts(tenant, toSave);
     await invalidateDuplicateScanCache();
   }
   return { succeeded, failed };

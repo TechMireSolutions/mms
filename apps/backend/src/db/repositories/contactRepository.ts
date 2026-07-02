@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { Contact } from '@mms/shared';
 import { getDb } from '../dbClient.js';
 import { contacts } from '../schema.js';
@@ -35,6 +35,16 @@ export async function findContactById(workspaceSubdomain: string, id: string): P
   return row ? rowToContact(row) : null;
 }
 
+export async function findContactsByIds(workspaceSubdomain: string, ids: string[]): Promise<Contact[]> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  if (ids.length === 0) return [];
+  const rows = await getDb()
+    .select()
+    .from(contacts)
+    .where(and(eq(contacts.workspaceSubdomain, subdomain), inArray(contacts.id, ids)));
+  return rows.map(rowToContact);
+}
+
 export async function saveContact(workspaceSubdomain: string, contact: Contact): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const id = String(contact.id);
@@ -67,9 +77,30 @@ export async function saveContact(workspaceSubdomain: string, contact: Contact):
 
 export async function bulkSaveContacts(workspaceSubdomain: string, list: Contact[]): Promise<void> {
   if (list.length === 0) return;
-  for (const contact of list) {
-    await saveContact(workspaceSubdomain, contact);
-  }
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const db = getDb();
+
+  const values = list.map((contact) => {
+    const id = String(contact.id);
+    const { id: _, ...extra } = contact;
+    return {
+      id,
+      workspaceSubdomain: subdomain,
+      customData: JSON.stringify(extra),
+      updatedAt: new Date(),
+    };
+  });
+
+  await db
+    .insert(contacts)
+    .values(values)
+    .onConflictDoUpdate({
+      target: contacts.id,
+      set: {
+        customData: sql`(COALESCE(NULLIF(${contacts.customData}, ''), '{}')::jsonb || excluded.custom_data::jsonb)::text`,
+        updatedAt: sql`excluded.updated_at`,
+      },
+    });
 }
 
 export async function deleteContact(workspaceSubdomain: string, id: string): Promise<void> {
@@ -78,3 +109,4 @@ export async function deleteContact(workspaceSubdomain: string, id: string): Pro
     .delete(contacts)
     .where(and(eq(contacts.workspaceSubdomain, subdomain), eq(contacts.id, id)));
 }
+

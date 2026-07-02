@@ -6,9 +6,9 @@ import {
   type ContactDuplicatePair,
   type ContactsDuplicatePairsPageResult,
 } from '@mms/shared';
-import { contactListSchema } from '../validation/contactSchemas.js';
-import { deletePersistedObject, fetchCollection, fetchObject, persistObject } from './dbSyncService.js';
+import { deletePersistedObject, fetchObject, persistObject } from './dbSyncService.js';
 import { loadContactPreferences } from './contactPreferencesService.js';
+import { loadContacts } from './contactService.js';
 
 const CACHE_KEY = 'contacts_duplicate_scan_cache';
 
@@ -20,9 +20,7 @@ export interface ContactDuplicateScanCache {
 }
 
 async function loadActiveContacts(): Promise<Contact[]> {
-  const contactCollection = await fetchCollection('contacts');
-  const parsedContacts = contactListSchema.safeParse(contactCollection ?? []);
-  const allContacts = parsedContacts.success ? (parsedContacts.data as Contact[]) : [];
+  const allContacts = await loadContacts();
   return filterActiveContacts(allContacts);
 }
 

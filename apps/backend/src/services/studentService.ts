@@ -15,8 +15,8 @@ import {
   studentListSchema,
   type StudentRecord,
 } from '../validation/studentSchemas.js';
+import { loadContacts } from './contactService.js';
 import { defineCollectionCrudService } from './collectionCrudService.js';
-import { fetchCollection } from './dbSyncService.js';
 
 const students = defineCollectionCrudService(
   'students',
@@ -26,7 +26,7 @@ const students = defineCollectionCrudService(
 
 export async function loadStudents(): Promise<StudentRecord[]> {
   const rawRows = await students.load();
-  const contactsData = await fetchCollection('contacts');
+  const contactsData = await loadContacts();
   if (!contactsData || !Array.isArray(contactsData)) {
     return rawRows;
   }

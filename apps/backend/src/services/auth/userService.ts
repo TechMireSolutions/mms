@@ -34,13 +34,12 @@ interface StoredUser {
   emailVerifiedAt?: string;
 }
 
-/** Public user shape — no password hash. */
 export type PublicUser = User;
 
+/** Public user shape — no password hash. */
 type PersistedUser = StoredTenantUser & Record<string, unknown>;
 
 const COLLECTION = 'users';
-const CONTACTS_COLLECTION = 'contacts';
 
 function requireTenantSubdomain(): string {
   const tenant = getRequestTenant();
@@ -51,7 +50,7 @@ function requireTenantSubdomain(): string {
 }
 
 async function getContacts(): Promise<ContactLike[]> {
-  const raw = await getCollection(CONTACTS_COLLECTION);
+  const raw = await loadContacts();
   if (!Array.isArray(raw)) return [];
   return raw as ContactLike[];
 }
