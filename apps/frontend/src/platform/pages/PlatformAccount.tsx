@@ -40,14 +40,6 @@ export default function PlatformAccount(): React.JSX.Element {
   const { data: profile, isLoading: loadingProfile, isError: profileError } = usePlatformProfile();
   const updateName = useUpdatePlatformProfileName();
 
-  if (!platformAuthChecked || isCheckingPlatformAuth) {
-    return <PlatformLoadingScreen />;
-  }
-
-  if (!isPlatformAuthenticated) {
-    return <Navigate to={ROUTES.home} replace />;
-  }
-
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
 
@@ -62,6 +54,14 @@ export default function PlatformAccount(): React.JSX.Element {
       setName(profile.name);
     }
   }, [profile?.name]);
+
+  if (!platformAuthChecked || isCheckingPlatformAuth) {
+    return <PlatformLoadingScreen />;
+  }
+
+  if (!isPlatformAuthenticated) {
+    return <Navigate to={ROUTES.home} replace />;
+  }
 
   const handleSaveName = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();

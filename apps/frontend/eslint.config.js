@@ -11,6 +11,9 @@ const appFiles = [
   "src/hooks/**/*.{ts,tsx}",
   "src/lib/**/*.{ts,tsx}",
   "src/providers/**/*.{ts,tsx}",
+  "src/tenant/**/*.{ts,tsx}",
+  "src/platform/**/*.{ts,tsx}",
+  "src/common/**/*.{ts,tsx}",
 ];
 
 export default tseslint.config(

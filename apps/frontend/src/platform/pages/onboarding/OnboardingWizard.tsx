@@ -95,14 +95,6 @@ export default function OnboardingWizard(): React.JSX.Element {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<OnboardingData>(initialData);
   const [loading, setLoading] = useState(false);
-
-  if (!platformAuthChecked || isCheckingPlatformAuth) {
-    return <PlatformLoadingScreen />;
-  }
-
-  if (!isPlatformAuthenticated) {
-    return <Navigate to={ROUTES.home} replace />;
-  }
   const [done, setDone] = useState(false);
   const [handoffCode, setHandoffCode] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -112,18 +104,26 @@ export default function OnboardingWizard(): React.JSX.Element {
     [t],
   );
 
+  useEffect(() => {
+    return () => {
+      applyBrandingTheme();
+    };
+  }, []);
+
+  if (!platformAuthChecked || isCheckingPlatformAuth) {
+    return <PlatformLoadingScreen />;
+  }
+
+  if (!isPlatformAuthenticated) {
+    return <Navigate to={ROUTES.home} replace />;
+  }
+
   const currentStep = STEP_DEFS[step - 1];
   if (!currentStep) {
     throw new Error(`Invalid step state: step ${step} does not exist.`);
   }
   const StepComponent = currentStep.component;
   const isLastStep = step === STEP_DEFS.length;
-
-  useEffect(() => {
-    return () => {
-      applyBrandingTheme();
-    };
-  }, []);
 
   const validateCurrentStep = (): string | null => {
     if (step === 1) {
