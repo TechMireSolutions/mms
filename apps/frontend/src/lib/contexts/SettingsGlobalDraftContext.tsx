@@ -2,7 +2,7 @@ import React, { createContext, useContext } from 'react';
 import {
   useGlobalSettingsDraft,
   type UseGlobalSettingsDraftResult,
-} from '@/hooks/useGlobalSettingsDraft';
+} from '@/tenant/features/settings/hooks/useGlobalSettingsDraft';
 
 const SettingsGlobalDraftContext = createContext<UseGlobalSettingsDraftResult | null>(null);
 

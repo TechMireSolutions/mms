@@ -1,4 +1,4 @@
-import { apiJson } from './apiClient';
+import { apiJson } from '@/lib/apiClient';
 
 const CHALLENGE_KEY = 'mms_2fa_challenge';
 const VERIFIED_KEY = 'mms_2fa_verified';

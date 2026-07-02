@@ -8,7 +8,7 @@ import { applyTenantEntryTheme } from "@/lib/brandingThemeCore";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { useTenantBranding } from "@/hooks/useTenantBranding";
+import { useTenantBranding } from "@/tenant/hooks/useTenantBranding";
 import AuthLoadingShell from "@/components/entry/AuthLoadingShell";
 import { cn } from "@/lib/utils";
 

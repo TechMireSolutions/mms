@@ -18,7 +18,7 @@ import React, {
   useRef,
   ReactNode,
 } from "react";
-import { loadFieldConfig, saveFieldConfig } from "../contactFieldsStore";
+import { loadFieldConfig, saveFieldConfig } from "@/lib/contactFieldsStore";
 import {
   FieldConfig,
   ContactPreferences,
@@ -33,17 +33,17 @@ import {
   formatZodIssues,
   type ValidationError,
 } from "@mms/shared";
-import { getCollection, getWorkspaceLocalStoragePrefix, saveCollection, getObject, saveObject } from "../db";
-import { useGlobalSettings } from "@/hooks/useGlobalSettings";
+import { getCollection, getWorkspaceLocalStoragePrefix, saveCollection, getObject, saveObject } from "@/lib/db";
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { usePermissions } from "@/hooks/usePermissions";
+import { usePermissions } from "@/tenant/hooks/usePermissions";
 import {
   applyUserColumnOverlay,
   loadUserColumnPreferences,
   saveUserColumnPreferences,
   saveUserColumnPreferenceList,
 } from "@/lib/contacts/columnPreferencesStorage";
-import { useContactColumnPrefs, useContactColumnPrefsMutation } from "@/hooks/useContacts";
+import { useContactColumnPrefs, useContactColumnPrefsMutation } from "@/tenant/features/contacts/hooks/useContacts";
 import {
   CONFIG_KEY,
   DEFAULT_PREFERENCES,
@@ -51,16 +51,16 @@ import {
   PREFERENCES_KEY,
   savePreferences,
   syncOptionsInConfig,
-} from "../contactConfig/preferencesStorage";
+} from "@/lib/contactConfig/preferencesStorage";
 import {
   CONTACT_CONFIG_COLLECTION_KEYS,
   CONTACT_CONFIG_OBJECT_KEYS,
   contactWhatsappTemplatesKey,
   getContactConfigCollectionDefaults,
   getDefaultSocialPlaceholders,
-} from "../contactConfig/contactConfigSeeds";
+} from "@/lib/contactConfig/contactConfigSeeds";
 
-export { calculateProfileCompleteness } from "../contactConfig/profileMetrics";
+export { calculateProfileCompleteness } from "@/lib/contactConfig/profileMetrics";
 export {
   buildCustomFieldSchema,
   buildDynamicContactSchema,

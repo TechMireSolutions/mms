@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense } from "react";
 import { isApexHost } from "@mms/shared/tenantUtils";
-import { SETTINGS_PREVIEW_EVENT } from "./lib/settingsPreview";
+import { SETTINGS_PREVIEW_EVENT } from "@/lib/settingsPreview";
 import { getAppDomain } from "@/lib/config/tenantConfig";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useIsTenantHost } from '@/lib/host/useIsTenantHost';
@@ -42,8 +42,8 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     const applyTheme = isApexBoot
-      ? () => import('./lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => applyApexPlatformTheme('en'))
-      : () => import('./lib/brandingTheme').then(({ applyAppTheme }) => applyAppTheme());
+      ? () => import('@/lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => applyApexPlatformTheme('en'))
+      : () => import('@/lib/brandingTheme').then(({ applyAppTheme }) => applyAppTheme());
 
     void applyTheme();
 

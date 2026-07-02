@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { BrandingChartPaletteHex } from '@mms/shared';
-import { SETTINGS_PREVIEW_EVENT } from '../settingsPreview';
-import { getBrandingChartPalette } from '../brandingChartPalette';
+import { SETTINGS_PREVIEW_EVENT } from '@/lib/settingsPreview';
+import { getBrandingChartPalette } from '@/lib/brandingChartPalette';
 
 const BrandingPaletteContext = createContext<BrandingChartPaletteHex | null>(null);
 

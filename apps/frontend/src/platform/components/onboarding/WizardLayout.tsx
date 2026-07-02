@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
-import { useBranding } from "@/hooks/useBranding";
+import { useBranding } from "@/tenant/hooks/useBranding";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface WizardStepConfig {

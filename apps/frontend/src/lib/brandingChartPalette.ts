@@ -6,7 +6,7 @@ import {
 import {
   getScopedBrandingSettings,
   getScopedGlobalSettings,
-} from './settingsPreviewStore';
+} from '@/lib/settingsPreviewStore';
 
 export type { BrandingChartPaletteHex };
 

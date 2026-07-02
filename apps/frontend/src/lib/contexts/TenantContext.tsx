@@ -6,13 +6,13 @@ import {
   buildApexUrl,
 } from "@mms/shared/tenantUtils";
 import type { PublicBranding } from "@mms/shared";
-import { getTenantUrlOptions } from "../config/tenantConfig";
-import { useDeploymentAppDomain } from "@/hooks/useDeploymentAppDomain";
-import { usePublicBranding } from "@/hooks/usePublicBranding";
+import { getTenantUrlOptions } from "@/lib/config/tenantConfig";
+import { useDeploymentAppDomain } from "@/tenant/hooks/useDeploymentAppDomain";
+import { usePublicBranding } from "@/tenant/hooks/usePublicBranding";
 import {
   useWorkspaceBySubdomain,
   type PublicWorkspace,
-} from "@/hooks/useWorkspaceBySubdomain";
+} from "@/tenant/hooks/useWorkspaceBySubdomain";
 
 export type { PublicWorkspace };
 

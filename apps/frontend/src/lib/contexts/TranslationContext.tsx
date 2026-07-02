@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { useGlobalSettings } from '@/hooks/useGlobalSettings';
+import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useLocation } from 'react-router-dom';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { isEntryPath } from '@/lib/config/routes';

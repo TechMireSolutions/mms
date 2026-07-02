@@ -11,10 +11,10 @@ import {
   isValidSubdomain,
   validatePasswordPolicy,
 } from "@mms/shared";
-import { defaultFooterForMadrasa } from "@/components/branding/BrandingShared";
+import { defaultFooterForMadrasa } from "@/tenant/features/settings/components/branding/BrandingShared";
 import { applyBrandingTheme } from "@/lib/brandingTheme";
-import CreateMadrasa from "./steps/CreateMadrasa";
-import AdminSetup from "./steps/AdminSetup";
+import CreateMadrasa from "@/platform/pages/onboarding/steps/CreateMadrasa";
+import AdminSetup from "@/platform/pages/onboarding/steps/AdminSetup";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { isApiError } from "@/lib/apiClient";

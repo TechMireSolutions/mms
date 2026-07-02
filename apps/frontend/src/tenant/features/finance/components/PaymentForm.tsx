@@ -1,0 +1,210 @@
+import React, { useState } from "react";
+import { ReceiptText, Coins, DollarSign, FileText } from "lucide-react";
+import { FormModal } from "@/components/ui/FormModal";
+import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { Field } from "@/components/ui/FormPrimitives";
+import { UserActorSelect } from "@/components/ui/UserActorSelect";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { notify } from "@/lib/notify";
+import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
+import { FORM_INPUT, FORM_SELECT } from "@/components/ui/formStyles";
+
+const formatMoney = (amount: number) => `PKR ${Number(amount).toLocaleString()}`;
+
+interface PaymentFormProps {
+  open: boolean;
+  invoice: Invoice | null;
+  onClose: () => void;
+  onSave: (payment: Payment) => void;
+}
+
+export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const { user: authUser } = useAuth();
+  const balance = invoice ? invoice.finalAmt - (invoice.paidAmt || 0) : 0;
+
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [paymentDraft, setPaymentDraft] = useState(() => ({
+    amount: balance,
+    method: "Cash",
+    date: new Date().toISOString().split("T")[0],
+    receivedByUserId: authUser?.id || "",
+    note: "",
+  }));
+
+  const updateDraft = (patch: Partial<typeof paymentDraft>) => {
+    setPaymentDraft((prev) => ({ ...prev, ...patch }));
+  };
+
+  const handleSave = async () => {
+    setErrors({});
+    const newErrors: Record<string, string> = {};
+
+    if (!paymentDraft.amount || Number(paymentDraft.amount) <= 0) {
+      newErrors.amount = "Amount must be greater than zero.";
+    }
+    if (!paymentDraft.method) {
+      newErrors.method = "Method is required.";
+    }
+    if (!paymentDraft.date) {
+      newErrors.date = "Date is required.";
+    }
+    if (!paymentDraft.receivedByUserId) {
+      newErrors.receivedByUserId = "Received By is required.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      notify.error("Please fix validation errors");
+      return;
+    }
+
+    if (!invoice) return;
+
+    setSaving(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      onSave({
+        ...paymentDraft,
+        amount: Number(paymentDraft.amount),
+        invoiceId: invoice.id,
+        studentId: invoice.studentId,
+        receivedByUserId: paymentDraft.receivedByUserId || authUser?.id || '',
+        id: `pay${Date.now()}`,
+      } as unknown as Payment);
+      notify.success("Payment recorded successfully");
+      onClose();
+    } catch (err: any) {
+      notify.error("Failed to save payment", { description: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const footerStart = invoice ? (
+    <div className="flex flex-wrap items-center gap-2.5 text-xs">
+      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
+        {invoice.studentName}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20 text-[10px]">
+          Balance: {formatMoney(balance - Number(paymentDraft.amount || 0))}
+        </span>
+      </div>
+    </div>
+  ) : null;
+
+  return (
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title="Record Payment"
+      icon={ReceiptText}
+      cancelLabel="Cancel"
+      saveLabel="Record Payment"
+      onSave={handleSave}
+      saving={saving}
+      saveDisabled={!paymentDraft.amount || Number(paymentDraft.amount) <= 0}
+      footerStart={footerStart || undefined}
+    >
+      <div className="space-y-5 text-left">
+        {invoice && (
+          <article className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 px-6 space-y-2 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h4 className="text-[14px] font-bold text-foreground m-0">{invoice.studentName}</h4>
+                <p className="text-[11px] text-muted-foreground m-0 mt-0.5">{invoice.id} · {invoice.class}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase font-bold text-muted-foreground">Balance Due</p>
+                <p className="text-[14px] font-bold text-primary m-0 mt-0.5">{formatMoney(balance)}</p>
+              </div>
+            </div>
+          </article>
+        )}
+
+        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
+            <Coins className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Payment Details</h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <Field label="Amount (PKR) *" error={errors.amount}>
+                <div className="relative flex items-center group/input">
+                  <DollarSign className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-emerald-500 transition-colors pointer-events-none" />
+                  <input
+                    type="number"
+                    className={`${FORM_INPUT} pl-10`}
+                    value={paymentDraft.amount || ""}
+                    onChange={(event) => updateDraft({ amount: event.target.value === "" ? 0 : Number(event.target.value) })}
+                    max={balance}
+                    min={1}
+                    required
+                  />
+                </div>
+                {Number(paymentDraft.amount) < balance && Number(paymentDraft.amount) > 0 && (
+                  <p className="m-0 mt-1 text-[10px] text-warning">
+                    Partial payment — balance remaining: {formatMoney(balance - Number(paymentDraft.amount))}
+                  </p>
+                )}
+              </Field>
+            </div>
+
+            <Field label="Method *" error={errors.method}>
+              <select
+                className={`${FORM_SELECT} cursor-pointer`}
+                value={paymentDraft.method || "Cash"}
+                onChange={(event) => updateDraft({ method: event.target.value })}
+                required
+              >
+                {PAYMENT_METHODS.map((method) => (
+                  <option key={method} value={method}>{method}</option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Date *" error={errors.date}>
+              <DatePicker
+                value={paymentDraft.date || ""}
+                onChange={(val) => updateDraft({ date: val })}
+                required
+              />
+            </Field>
+
+            <div className="sm:col-span-2">
+              <UserActorSelect
+                id="payment-receivedBy"
+                label="Received By"
+                required
+                value={paymentDraft.receivedByUserId || ""}
+                onChange={(val) => updateDraft({ receivedByUserId: val })}
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <Field label="Note" error={errors.note}>
+                <div className="relative flex items-center group/input">
+                  <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-emerald-500 transition-colors pointer-events-none" />
+                  <Input
+                    className={`${FORM_INPUT} pl-10`}
+                    value={paymentDraft.note || ""}
+                    onChange={(event) => updateDraft({ note: event.target.value })}
+                    placeholder="e.g. Cash received, receipt #123"
+                  />
+                </div>
+              </Field>
+            </div>
+          </div>
+        </section>
+      </div>
+    </FormModal>
+  );
+}

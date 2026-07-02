@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Modal } from "@/components/ui/Modal";
-import { CoreFieldEditorList } from "./CoreFieldEditorList";
-import { CustomFieldsBuilder, type CustomFieldConfig } from "./CustomFieldsBuilder";
+import { CoreFieldEditorList } from "@/components/ui/CoreFieldEditorList";
+import { CustomFieldsBuilder, type CustomFieldConfig } from "@/components/ui/CustomFieldsBuilder";
 import { type FieldDefinition, type TabDefinition } from "@mms/shared";
 
 interface UseFieldsEditorResult {

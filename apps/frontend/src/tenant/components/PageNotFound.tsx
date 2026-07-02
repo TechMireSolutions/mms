@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import React from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { usePermissions } from "@/hooks/usePermissions";
+import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { ROUTES } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
 

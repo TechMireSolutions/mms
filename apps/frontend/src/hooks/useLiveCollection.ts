@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { getCollection, hasCollectionInCache, saveCollectionCacheOnly } from "../lib/db";
-import { apiFetch } from "../lib/apiClient";
+import { getCollection, hasCollectionInCache, saveCollectionCacheOnly } from "@/lib/db";
+import { apiFetch } from "@/lib/apiClient";
 
 /**
  * A custom React hook that reads a local database collection and subscribes to

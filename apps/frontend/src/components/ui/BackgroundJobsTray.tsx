@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Download, Loader2, CheckCircle2, AlertCircle, RefreshCw, X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useBackgroundJobs } from "@/hooks/useBackgroundJobs";
+import { useBackgroundJobs } from "@/tenant/hooks/useBackgroundJobs";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { FormModal } from "@/components/ui/FormModal";
 import { Badge } from "@/components/ui/badge";

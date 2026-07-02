@@ -9,7 +9,7 @@ import {
   useBrandingDraft,
   type UseBrandingDraftOptions,
   type UseBrandingDraftResult,
-} from '@/hooks/useBrandingDraft';
+} from '@/tenant/features/settings/hooks/useBrandingDraft';
 
 export interface SettingsBrandingDraftContextValue extends UseBrandingDraftResult {
   isIdentityDirty: boolean;

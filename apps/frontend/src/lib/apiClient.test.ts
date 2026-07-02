@@ -8,7 +8,7 @@ describe('apiClient', () => {
       seenInit = init;
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     };
-    const { apiFetch } = await import('../lib/apiClient');
+    const { apiFetch } = await import('@/lib/apiClient');
     await apiFetch('/api/health');
     expect(seenInit?.credentials).toBe('include');
     globalThis.fetch = original;
@@ -18,7 +18,7 @@ describe('apiClient', () => {
     const original = globalThis.fetch;
     globalThis.fetch = async () =>
       new Response(JSON.stringify({ type: 'forbidden', message: 'Denied' }), { status: 403 });
-    const { apiJson, ApiError, isApiError } = await import('../lib/apiClient');
+    const { apiJson, ApiError, isApiError } = await import('@/lib/apiClient');
     try {
       await apiJson('/api/students');
       expect.unreachable('should throw');
@@ -41,7 +41,7 @@ describe('apiClient', () => {
       seenBody = init?.body as string;
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     };
-    const { apiFetch } = await import('../lib/apiClient');
+    const { apiFetch } = await import('@/lib/apiClient');
     await apiFetch('/api/contacts/column-preferences', {
       method: 'PUT',
       body: JSON.stringify({

@@ -1,17 +1,17 @@
 import React, { useState, useRef } from "react";
 import { AlertCircle, X, LucideIcon, Upload, MapPin, BrainCircuit, FileText, Camera, Star, ChevronDown, Check, Trash2 } from "lucide-react";
-import { DatePicker } from "./DatePicker";
-import { Popover, PopoverTrigger, PopoverContent } from "./popover";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { FieldDefinition } from "@mms/shared";
 import { uploadUserImage } from "@/lib/imageUpload";
 import { cn } from "@/lib/utils";
-import { AvatarCropper } from "./AvatarCropper";
-import { FormSelect } from "./FormSelect";
+import { AvatarCropper } from "@/components/ui/AvatarCropper";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "./formStyles";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
 export const INPUT = FORM_INPUT;
 export const SELECT = FORM_SELECT;
 export const LABEL = FORM_LABEL;
@@ -51,7 +51,7 @@ export function CardRemoveButton({ onClick, label }: CardRemoveButtonProps): Rea
   );
 }
 
-export { FormSelect, type FormSelectOption } from "./FormSelect";
+export { FormSelect, type FormSelectOption } from "@/components/ui/FormSelect";
 
 interface EditableSelectProps {
   options: string[];

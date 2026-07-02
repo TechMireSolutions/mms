@@ -2,7 +2,7 @@ import React, { memo, useState } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { GripVertical, SlidersHorizontal } from "lucide-react";
 import { FieldDefinition } from "@mms/shared";
-import { FieldEditor } from "./CustomFieldsBuilder";
+import { FieldEditor } from "@/components/ui/CustomFieldsBuilder";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

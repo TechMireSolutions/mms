@@ -1,1 +1,1 @@
-export * from '../columnPreferences/moduleColumnPreferencesStorage';
+export * from '@/lib/columnPreferences/moduleColumnPreferencesStorage';

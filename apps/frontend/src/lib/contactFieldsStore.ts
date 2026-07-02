@@ -28,7 +28,7 @@ import {
   refreshModuleTierTabLabels,
   refreshModuleTierTabKeys,
 } from "@mms/shared";
-import { getObject, saveObject } from "./db";
+import { getObject, saveObject } from "@/lib/db";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

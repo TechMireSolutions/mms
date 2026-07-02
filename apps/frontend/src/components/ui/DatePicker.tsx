@@ -3,7 +3,7 @@ import { Calendar as CalendarIcon, X } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { getObject } from "../../lib/db"
+import { getObject } from "@/lib/db"
 import {
   type GlobalSettings,
   DEFAULT_GLOBAL_SETTINGS,

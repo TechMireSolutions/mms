@@ -1,11 +1,11 @@
 import React, { lazy, type LazyExoticComponent } from 'react';
 import type { SettingsSection } from '@/lib/config/routes';
 
-const GlobalSettings = lazy(() => import('@/components/settings/GlobalSettings'));
-const SystemModulesSettings = lazy(() => import('@/components/settings/SystemModulesSettings'));
-const BrandingSettings = lazy(() => import('@/components/settings/BrandingSettings'));
-const ThemeSettings = lazy(() => import('@/components/settings/ThemeSettings'));
-const BackupRestore = lazy(() => import('@/components/settings/BackupRestore'));
+const GlobalSettings = lazy(() => import('@/tenant/features/settings/components/GlobalSettings'));
+const SystemModulesSettings = lazy(() => import('@/tenant/features/settings/components/SystemModulesSettings'));
+const BrandingSettings = lazy(() => import('@/tenant/features/settings/components/BrandingSettings'));
+const ThemeSettings = lazy(() => import('@/tenant/features/settings/components/ThemeSettings'));
+const BackupRestore = lazy(() => import('@/tenant/features/settings/components/BackupRestore'));
 
 export const SETTINGS_SECTION_COMPONENTS: Record<
   SettingsSection,

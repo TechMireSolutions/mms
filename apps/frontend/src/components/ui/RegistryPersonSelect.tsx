@@ -3,8 +3,8 @@ import {
   STUDENTS_MODULE_CONTRACT,
   TEACHERS_MODULE_CONTRACT,
 } from '@mms/shared';
-import { useStudentsPaginated } from '@/hooks/useStudents';
-import { useTeachersPaginated } from '@/hooks/useTeachers';
+import { useStudentsPaginated } from '@/tenant/features/students/hooks/useStudents';
+import { useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 

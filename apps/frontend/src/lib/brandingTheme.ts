@@ -12,18 +12,18 @@ import {
 import {
   getScopedBrandingSettings,
   getScopedGlobalSettings,
-} from './settingsPreviewStore';
-import { getAppDomain } from './config/tenantConfig';
-import { isEntryPath } from './config/routes';
+} from '@/lib/settingsPreviewStore';
+import { getAppDomain } from '@/lib/config/tenantConfig';
+import { isEntryPath } from '@/lib/config/routes';
 import { isTenantHost, MMS_PLATFORM_BRANDING, MMS_PLATFORM_GLOBAL_SETTINGS } from '@/platform/lib/themeScope';
 import {
   applyApexPlatformTheme,
   applyBrandingFromSettings,
   applyDocumentLanguageWithFonts,
   resolveThemeMode,
-} from './brandingThemeCore';
+} from '@/lib/brandingThemeCore';
 
-export { applyApexPlatformTheme, applyTenantEntryTheme } from './brandingThemeCore';
+export { applyApexPlatformTheme, applyTenantEntryTheme } from '@/lib/brandingThemeCore';
 
 function resolveDocumentLanguage(storedLanguage: string, pathname: string): string {
   const isApex =

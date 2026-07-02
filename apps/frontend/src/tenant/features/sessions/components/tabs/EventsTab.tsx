@@ -1,0 +1,192 @@
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { Plus, Trash2, Calendar, Clock, MapPin, Edit2 } from "lucide-react";
+import { EVENT_TYPES, Session, SessionEvent } from '@/lib/data/sessionsData';
+import { DatePicker } from "@/components/ui/DatePicker";
+import { FormModal } from "@/components/ui/FormModal";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { FormSelect } from "@/components/ui/FormSelect";
+
+const TYPE_COLORS: Record<string, string> = {
+  ceremony:   "bg-warning/10 text-warning border-warning/20",
+  assessment: "bg-destructive/10 text-destructive border-destructive/20",
+  meeting:    "bg-info/10 text-info border-info/20",
+  trip:       "bg-success/10 text-success border-success/20",
+  other:      "bg-muted text-muted-foreground border-border",
+};
+
+const EMPTY: Partial<SessionEvent> = { title: "", date: "", time: "", location: "", description: "", type: "meeting" };
+
+interface EventModalProps {
+  open: boolean;
+  event: SessionEvent | null;
+  onClose: () => void;
+  onSave: (event: SessionEvent) => void;
+}
+
+function EventModal({ open, event, onClose, onSave }: EventModalProps) {
+  const [eventDraft, setEventDraft] = useState<Partial<SessionEvent>>(event ? { ...event } : { ...EMPTY });
+  const updateEventDraft = <K extends keyof SessionEvent>(field: K, value: SessionEvent[K]) => setEventDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
+
+  React.useEffect(() => {
+    if (open) {
+      setEventDraft(event ? { ...event } : { ...EMPTY });
+    }
+  }, [open, event]);
+
+  return (
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={event ? "Edit Event" : "Add Event"}
+      icon={Calendar}
+      cancelLabel="Cancel"
+      saveLabel="Save"
+      onSave={() => onSave({ ...eventDraft, id: event?.id || `ev${Date.now()}` } as SessionEvent)}
+      saveDisabled={!eventDraft.title || !eventDraft.date}
+    >
+      <div className="space-y-4">
+        <div>
+          <label className={FORM_LABEL} htmlFor="event-title">Title *</label>
+          <Input id="event-title" value={eventDraft.title || ""} onChange={(inputEvent) => updateEventDraft("title", inputEvent.target.value)} placeholder="Event title" required />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={FORM_LABEL} htmlFor="event-date">Date *</label>
+            <DatePicker
+              id="event-date"
+              value={eventDraft.date || ""}
+              onChange={(value) => updateEventDraft("date", value)}
+              required
+            />
+          </div>
+          <div>
+            <label className={FORM_LABEL} htmlFor="event-time">Time</label>
+            <Input id="event-time" type="time" value={eventDraft.time || ""} onChange={(inputEvent) => updateEventDraft("time", inputEvent.target.value)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={FORM_LABEL} htmlFor="event-type">Type</label>
+            <FormSelect
+              id="event-type"
+              value={eventDraft.type || "meeting"}
+              onChange={(value) => updateEventDraft("type", value as SessionEvent["type"])}
+              options={EVENT_TYPES.map((eventType) => ({ value: eventType, label: eventType.charAt(0).toUpperCase() + eventType.slice(1) }))}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className={FORM_LABEL} htmlFor="event-location">Location</label>
+            <Input id="event-location" value={eventDraft.location || ""} onChange={(inputEvent) => updateEventDraft("location", inputEvent.target.value)} placeholder="e.g. Main Hall" />
+          </div>
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="event-description">Description</label>
+          <Textarea id="event-description" className="min-h-[64px] resize-none" value={eventDraft.description || ""} onChange={(inputEvent) => updateEventDraft("description", inputEvent.target.value)} placeholder="Brief description…" />
+        </div>
+      </div>
+    </FormModal>
+  );
+}
+
+interface EventsTabProps {
+  session: Session;
+  onUpdate: (session: Session) => void;
+}
+
+/**
+ * EventsTab Component
+ *
+ * Renders the events tab for a session, allowing managing individual events.
+ *
+ * @param {EventsTabProps} props - The component props.
+ * @returns {React.ReactElement}
+ */
+export function EventsTab({ session, onUpdate }: EventsTabProps) {
+  const [showModal, setShowModal] = useState(false);
+  const [editEvent, setEditEvent] = useState<SessionEvent | null>(null);
+  const events = (session.events || []).sort((a, b) => a.date.localeCompare(b.date));
+
+  const handleSave = (eventToSave: SessionEvent) => {
+    const existing = session.events?.find((sessionEvent) => sessionEvent.id === eventToSave.id);
+    onUpdate({ ...session, events: existing ? session.events.map((sessionEvent) => sessionEvent.id === eventToSave.id ? eventToSave : sessionEvent) : [...(session.events || []), eventToSave] });
+    setShowModal(false); setEditEvent(null);
+  };
+
+  const handleDelete = (id: string) => onUpdate({ ...session, events: session.events.filter((sessionEvent) => sessionEvent.id !== id) });
+
+  return (
+    <section aria-label="Session Events" className="space-y-4">
+      <header className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-foreground m-0">{events.length} event{events.length !== 1 ? "s" : ""}</p>
+        <Button
+          onClick={() => { setEditEvent(null); setShowModal(true); }}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
+        >
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Event
+        </Button>
+      </header>
+
+      {events.length === 0 ? (
+        <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
+          <Calendar className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
+          <p className="text-sm font-medium text-foreground m-0">No events yet</p>
+        </div>
+      ) : (
+        <div className="relative">
+          {/* Timeline line */}
+          <div className="absolute left-[18px] top-0 bottom-0 w-0.5 bg-border" aria-hidden="true" />
+          <div className="space-y-4 pl-10">
+            {events.map((sessionEvent, index) => (
+              <motion.article
+                key={sessionEvent.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.06 }}
+                className="relative"
+              >
+                {/* Timeline dot */}
+                <div className="absolute -left-10 top-4 w-4 h-4 rounded-full bg-card border-2 border-primary" aria-hidden="true" />
+                <div className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-all group">
+                  <header className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-[13px] font-bold text-foreground m-0">{sessionEvent.title}</h4>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${TYPE_COLORS[sessionEvent.type] || TYPE_COLORS.other}`}>
+                        {sessionEvent.type}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button aria-label={`Edit ${sessionEvent.title}`} onClick={() => { setEditEvent(sessionEvent); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground w-8 h-8" variant="ghost" size="icon">
+                        <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      </Button>
+                      <Button aria-label={`Delete ${sessionEvent.title}`} onClick={() => handleDelete(sessionEvent.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive w-8 h-8" variant="ghost" size="icon">
+                        <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </header>
+                  <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground mb-2">
+                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.date}</span>
+                    {sessionEvent.time && <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.time}</span>}
+                    {sessionEvent.location && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.location}</span>}
+                  </div>
+                  {sessionEvent.description && <p className="text-[12px] text-muted-foreground leading-relaxed m-0">{sessionEvent.description}</p>}
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <EventModal
+        open={showModal}
+        event={editEvent}
+        onClose={() => { setShowModal(false); setEditEvent(null); }}
+        onSave={handleSave}
+      />
+    </section>
+  );
+}

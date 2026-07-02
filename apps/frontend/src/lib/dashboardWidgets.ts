@@ -1,5 +1,5 @@
 import type { AppTranslationKey } from '@mms/shared';
-import type { CustomWidget } from '@/components/reports/pinnedWidgets/types';
+import type { CustomWidget } from '@/tenant/features/reports/components/pinnedWidgets/types';
 
 /** i18n keys for seeded default widgets (user-created widgets keep custom `title`). */
 export const DEFAULT_WIDGET_TITLE_KEYS: Partial<Record<string, AppTranslationKey>> = {

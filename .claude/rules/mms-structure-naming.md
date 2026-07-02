@@ -26,10 +26,14 @@ MMS uses a strict `pnpm` workspace monorepo layout:
 - `e2e/`: Playwright end-to-end integration tests.
 
 ### Casing & Folder Names
-- Folders under `apps/frontend/src/components/` must use single lowercase words or `camelCase` (e.g. `contacts/`, `questionBank/`).
-- Feature routes are mapped in `apps/frontend/src/pages/` (PascalCase: `Students.tsx`).
-- Components for a single feature must be colocated inside that feature's directory (`components/{module}/`), not spread across global folders.
-- Backend routes are mapped in `apps/backend/src/routes/` (camelCase: `contacts.ts`, `platformAuth.ts`).
+- Common UI primitives and generic hooks are colocated under `apps/frontend/src/common/` (`components/ui/`, `components/routing/`, generic hooks).
+- Platform console elements are located under `apps/frontend/src/platform/`.
+- Tenant workspace features are modularized under `apps/frontend/src/tenant/features/{module}/` (e.g. `contacts/`, `students/`).
+  Each feature folder contains its entry page (`{Module}Page.tsx`), `components/` subdirectory, and `hooks/` subdirectory.
+- Backend routes are scoped by namespace under `apps/backend/src/routes/`:
+  - `platform/` (e.g. `workspace.ts`)
+  - `tenant/` (e.g. `contacts.ts`, `students.ts`)
+  - `common/` (e.g. `public.ts`, `backgroundJobs.ts`)
 
 ---
 

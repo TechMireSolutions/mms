@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { ErrorState } from "./ErrorState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { reportClientError } from "@/lib/clientErrorReporting";
 
 interface ErrorBoundaryProps {

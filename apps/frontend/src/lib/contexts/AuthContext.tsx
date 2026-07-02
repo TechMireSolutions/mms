@@ -1,11 +1,11 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { clear2FAState, mark2FAVerified, setPendingChallengeId } from '../twoFactor';
+import { clear2FAState, mark2FAVerified, setPendingChallengeId } from '@/lib/twoFactor';
 import { type User, type Workspace } from '@mms/shared';
-import { appNavigate } from '../routing/appNavigate';
-import { ROUTES } from '../config/routes';
-import { apiFetch, apiJson } from '../apiClient';
-import { isCurrentHostApex } from '../config/tenantConfig';
-import { getWorkspaceLocalStoragePrefix } from '../db';
+import { appNavigate } from '@/lib/routing/appNavigate';
+import { ROUTES } from '@/lib/config/routes';
+import { apiFetch, apiJson } from '@/lib/apiClient';
+import { isCurrentHostApex } from '@/lib/config/tenantConfig';
+import { getWorkspaceLocalStoragePrefix } from '@/lib/db';
 
 export interface AuthError {
   type: 'invalid_credentials' | 'auth_required' | 'connection_error' | 'user_not_registered';
@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthChecked(true);
     localStorage.setItem('mms_user', JSON.stringify(authUser));
     // Background sync — must not block the UI from becoming interactive
-    void import('../db').then(({ syncDatabase }) => syncDatabase());
+    void import('@/lib/db').then(({ syncDatabase }) => syncDatabase());
   }, []);
 
   const checkUserAuth = useCallback(async (options?: { force?: boolean }): Promise<void> => {

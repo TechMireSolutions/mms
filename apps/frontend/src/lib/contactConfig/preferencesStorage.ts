@@ -4,7 +4,7 @@ import {
   type ContactPreferences,
   type FieldConfig,
 } from "@mms/shared";
-import { readObjectLocal, saveObject } from "../db";
+import { readObjectLocal, saveObject } from "@/lib/db";
 
 function syncOptionsInConfig(config: FieldConfig, tabId: string, fieldKey: string, options: string[]): FieldConfig {
   const nextConfig = { ...config };

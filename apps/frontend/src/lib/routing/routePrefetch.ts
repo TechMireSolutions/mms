@@ -2,21 +2,21 @@ import { ROUTES } from '@/lib/config/routes';
 import { isCurrentHostApex } from '@/lib/config/tenantConfig';
 
 const TENANT_ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
-  [ROUTES.home]: () => import('@/pages/Dashboard'),
-  [ROUTES.contacts]: () => import('@/pages/Contacts'),
-  [ROUTES.students]: () => import('@/pages/Students'),
-  [ROUTES.teachers]: () => import('@/pages/Teachers'),
-  [ROUTES.enrollments]: () => import('@/pages/Enrollments'),
-  [ROUTES.sessions]: () => import('@/pages/Sessions'),
-  [ROUTES.attendance]: () => import('@/pages/Attendance'),
-  [ROUTES.finance]: () => import('@/pages/Finance'),
-  [ROUTES.hasanatCards]: () => import('@/pages/HasanatCards'),
-  [ROUTES.examinations]: () => import('@/pages/Examinations'),
-  [ROUTES.questionBank]: () => import('@/pages/QuestionBank'),
-  [ROUTES.accounting]: () => import('@/pages/Accounting'),
-  [ROUTES.obligations]: () => import('@/pages/Obligations'),
-  [ROUTES.users]: () => import('@/pages/Users'),
-  [ROUTES.settings]: () => import('@/pages/Settings'),
+  [ROUTES.home]: () => import('@/tenant/features/dashboard/DashboardPage'),
+  [ROUTES.contacts]: () => import('@/tenant/features/contacts/ContactsPage'),
+  [ROUTES.students]: () => import('@/tenant/features/students/StudentsPage'),
+  [ROUTES.teachers]: () => import('@/tenant/features/teachers/TeachersPage'),
+  [ROUTES.enrollments]: () => import('@/tenant/features/enrollments/EnrollmentsPage'),
+  [ROUTES.sessions]: () => import('@/tenant/features/sessions/SessionsPage'),
+  [ROUTES.attendance]: () => import('@/tenant/features/attendance/AttendancePage'),
+  [ROUTES.finance]: () => import('@/tenant/features/finance/FinancePage'),
+  [ROUTES.hasanatCards]: () => import('@/tenant/features/hasanat/HasanatCardsPage'),
+  [ROUTES.examinations]: () => import('@/tenant/features/examinations/ExaminationsPage'),
+  [ROUTES.questionBank]: () => import('@/tenant/features/questionBank/QuestionBankPage'),
+  [ROUTES.accounting]: () => import('@/tenant/features/accounting/AccountingPage'),
+  [ROUTES.obligations]: () => import('@/tenant/features/obligations/ObligationsPage'),
+  [ROUTES.users]: () => import('@/tenant/features/users/UsersPage'),
+  [ROUTES.settings]: () => import('@/tenant/features/settings/SettingsPage'),
 };
 
 const APEX_ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {

@@ -18,7 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { type AppTranslationKey } from "@mms/shared";
-import { ROUTES } from "./routes";
+import { ROUTES } from "@/lib/config/routes";
 
 export interface NavSubItem {
   labelKey: AppTranslationKey;

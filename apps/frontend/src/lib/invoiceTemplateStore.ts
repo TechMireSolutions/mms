@@ -1,6 +1,6 @@
 import { DEFAULT_BRANDING_SETTINGS, formatBrandingAddress, mergeBrandingSettings, type BrandingSettings } from "@mms/shared";
-import { getObject, saveObject } from "./db";
-import { PRINT_NEUTRAL } from "./printBrandingTokens";
+import { getObject, saveObject } from "@/lib/db";
+import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 
 const STORAGE_KEY = "mms_invoice_template";
 

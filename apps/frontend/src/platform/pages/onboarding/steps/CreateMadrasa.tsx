@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from "react";
 import { Globe, Check, Building2, Palette, Type, Wand2 } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import { OnboardingData } from "../OnboardingWizard";
+import { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
 import {
   DEFAULT_BRANDING_SETTINGS,
   mergeBrandingSettings,
@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import BrandColorPanel from "@/components/branding/BrandColorPanel";
-import BrandingIdentityPreview from "@/components/branding/BrandingIdentityPreview";
+import BrandColorPanel from "@/tenant/features/settings/components/branding/BrandColorPanel";
+import BrandingIdentityPreview from "@/tenant/features/settings/components/branding/BrandingIdentityPreview";
 import {
   FieldHint,
   FOOTER_MAX,
@@ -24,7 +24,7 @@ import {
   NAME_MAX,
   TAGLINE_MAX,
   defaultFooterForMadrasa,
-} from "@/components/branding/BrandingShared";
+} from "@/tenant/features/settings/components/branding/BrandingShared";
 
 interface CreateMadrasaProps {
   data: OnboardingData;

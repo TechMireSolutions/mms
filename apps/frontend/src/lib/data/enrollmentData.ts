@@ -1,5 +1,5 @@
-import { Student } from "./studentsData";
-import { Session, Class, Discount } from "./sessionsData";
+import { Student } from "@/lib/data/studentsData";
+import { Session, Class, Discount } from "@/lib/data/sessionsData";
 
 import type { Enrollment, EnrollmentTimelineItem } from '@mms/shared';
 export type { Enrollment, EnrollmentTimelineItem };

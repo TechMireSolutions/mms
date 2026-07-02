@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { generateFaviconFromLogoUrl } from './faviconGenerator';
+import { generateFaviconFromLogoUrl } from '@/lib/faviconGenerator';
 import * as imageUpload from '@/lib/imageUpload';
 
 vi.mock('@/lib/imageUpload', () => ({

@@ -1,5 +1,5 @@
-import { apiFetch } from "./apiClient";
-import { validateSessions } from "./data/sessionsData";
+import { apiFetch } from "@/lib/apiClient";
+import { validateSessions } from "@/lib/data/sessionsData";
 import {
   type BrandingSettings,
   type GlobalSettings,
@@ -17,11 +17,11 @@ import {
   type TenantDatabaseSnapshot,
   applyTitleCaseRecursive,
 } from "@mms/shared";
-import { getAppDomain } from "./config/tenantConfig";
+import { getAppDomain } from "@/lib/config/tenantConfig";
 import {
   hydrateCollectionRows,
   normalizeCollectionRows,
-} from "./contactLink/collectionSync";
+} from "@/lib/contactLink/collectionSync";
 import type { ContactLike } from "@mms/shared";
 
 const LINK_MANAGED_COLLECTIONS = new Set([

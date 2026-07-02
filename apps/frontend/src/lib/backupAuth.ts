@@ -1,4 +1,4 @@
-import { apiFetch } from './apiClient';
+import { apiFetch } from '@/lib/apiClient';
 
 /** Confirms admin password before encrypting a backup (accepts 2FA-pending as valid). */
 export async function verifyAdminBackupPassword(

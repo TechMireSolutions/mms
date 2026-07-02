@@ -1,5 +1,5 @@
-import type { ReportCollection } from '@/components/reports/reportMetadata';
-import type { CustomWidget } from '@/components/reports/pinnedWidgets/types';
+import type { ReportCollection } from '@/tenant/features/reports/components/reportMetadata';
+import type { CustomWidget } from '@/tenant/features/reports/components/pinnedWidgets/types';
 import { widgetMatchesDashboardRole, type DashboardRole } from '@/lib/dashboardRole';
 
 const REVENUE_WIDGET_TYPES = new Set(['revenue-expenses']);

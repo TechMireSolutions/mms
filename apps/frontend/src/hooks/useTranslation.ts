@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { translateAppParams, type AppTranslationKey } from "@mms/shared";
-import { useGlobalSettings } from "./useGlobalSettings";
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { isEntryPath } from "@/lib/config/routes";
 

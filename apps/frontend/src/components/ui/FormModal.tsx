@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, CheckCircle2, Loader2, Save, Settings, Eye } from 'lucide-react';
-import { Modal } from './Modal';
+import { Modal } from '@/components/ui/Modal';
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { FormProgressBar } from './FormProgressBar';
-import { SubTabBar, type SubTab } from './SubTabBar';
-import { Button } from './button';
+import { FormProgressBar } from '@/components/ui/FormProgressBar';
+import { SubTabBar, type SubTab } from '@/components/ui/SubTabBar';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 

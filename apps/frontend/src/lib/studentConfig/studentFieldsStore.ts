@@ -16,7 +16,7 @@ import {
   type FieldDefinition,
   type StudentCustomField,
 } from "@mms/shared";
-import { getObject, saveObject } from "../db";
+import { getObject, saveObject } from "@/lib/db";
 
 function isLegacyFlatFields(fields: unknown): boolean {
   if (!fields || typeof fields !== "object") return false;
