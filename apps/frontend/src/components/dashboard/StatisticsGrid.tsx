@@ -69,14 +69,23 @@ export default function StatsGrid({
         const hasPositiveTrend = statItem.trend >= 0;
         const isCustomCard = customCardIds.includes(statItem.id);
 
+        const ACCENT_BAR_MAP: Record<string, string> = {
+          emerald: "bg-success/60",
+          blue: "bg-info/60",
+          violet: "bg-primary/60",
+          amber: "bg-warning/60",
+          red: "bg-destructive/60",
+        };
+
         return (
           <motion.article
             key={statItem.id}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: statIndex * 0.05, duration: 0.35, ease: "easeOut" }}
-            className="bg-card rounded-xl border border-border p-4 md:p-5 hover:shadow-md hover:shadow-black/[0.04] transition-all duration-300 group relative text-left flex flex-col justify-between"
+            className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 md:p-5 px-5.5 hover:shadow-md transition-all duration-300 text-left flex flex-col justify-between"
           >
+            <div className={`absolute left-0 top-0 bottom-0 w-1 ${ACCENT_BAR_MAP[statItem.color] || "bg-success/60"} transition-colors`} />
             <header className="flex items-start justify-between mb-3 select-none">
               <div
                 className={`w-9 h-9 rounded-lg ${colorTheme.bg} ring-4 ${colorTheme.ring} flex items-center justify-center aspect-square flex-shrink-0`}

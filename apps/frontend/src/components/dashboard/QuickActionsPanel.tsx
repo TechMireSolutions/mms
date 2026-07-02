@@ -5,7 +5,7 @@ import { QUICK_ACTION_ROUTE_KEYS } from "@/lib/config/navConfig";
 import { ROUTES } from "@/lib/config/routes";
 import {
   UserPlus, CalendarPlus, DollarSign,
-  Star, FileText, Printer, BarChart3, UserCheck,
+  Star, FileText, Printer, BarChart3, UserCheck, Sparkles,
 } from "lucide-react";
 import { type AppTranslationKey } from "@mms/shared";
 import type { DashboardRole } from '@/lib/dashboardRole';
@@ -70,10 +70,14 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
   if (actions.length === 0) return null;
 
   return (
-    <section aria-labelledby="quick-actions-panel-heading" className="bg-card rounded-xl border border-border p-5">
-      <h3 id="quick-actions-panel-heading" className="text-sm font-semibold text-foreground mb-4 m-0">
-        {t("action.quickActions")}
-      </h3>
+    <section aria-labelledby="quick-actions-panel-heading" className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 px-6 pb-6 shadow-sm hover:shadow-md transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+      <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4.5">
+        <Sparkles className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+        <h3 id="quick-actions-panel-heading" className="text-xs font-bold text-foreground uppercase tracking-wider m-0">
+          {t("action.quickActions")}
+        </h3>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {actions.map((quickAction, actionIndex) => {
           const Icon = quickAction.icon;
@@ -89,14 +93,14 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
               <Link
                 to={href}
                 aria-label={label}
-                className="group flex flex-col items-start gap-2.5 p-3.5 rounded-xl border border-border hover:border-primary/20 hover:shadow-md hover:shadow-primary/[0.04] transition-all duration-200 text-left"
+                className="group/item flex flex-col items-start gap-2.5 p-3.5 rounded-xl border border-border bg-card/25 backdrop-blur-xs hover:border-primary/25 hover:shadow-sm transition-all duration-250 text-left h-full w-full"
               >
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${ACTION_COLOR_CLASSES[quickAction.color]}`} aria-hidden="true">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-transform group-hover/item:scale-110 duration-200 ${ACTION_COLOR_CLASSES[quickAction.color]}`} aria-hidden="true">
                   <Icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-foreground m-0">{label}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{t(quickAction.descKey)}</p>
+                  <p className="text-[13px] font-bold text-foreground group-hover/item:text-primary transition-colors m-0 leading-tight">{label}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1.5 m-0 leading-normal">{t(quickAction.descKey)}</p>
                 </div>
               </Link>
             </motion.div>

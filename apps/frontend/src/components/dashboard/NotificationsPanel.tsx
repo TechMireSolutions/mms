@@ -23,16 +23,17 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
   const urgent = visible.filter((n) => n.urgent).length;
 
   return (
-    <section aria-labelledby="notifications-heading" className="bg-card rounded-xl border border-border">
-      <header className="px-5 py-4 border-b border-border flex items-center justify-between gap-2">
+    <section aria-labelledby="notifications-heading" className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-warning/60 transition-colors group-hover:bg-warning" />
+      <header className="px-5 py-4 border-b border-border/40 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <Bell className="w-4 h-4 text-foreground shrink-0" aria-hidden="true" />
-          <h3 id="notifications-heading" className="text-sm font-semibold text-foreground m-0 truncate">
+          <Bell className="w-4 h-4 text-warning/70 group-hover:text-warning transition-colors shrink-0" aria-hidden="true" />
+          <h3 id="notifications-heading" className="text-xs font-bold text-foreground uppercase tracking-wider m-0 truncate">
             {t('notifications.title')}
           </h3>
           {urgent > 0 && (
             <span
-              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive shrink-0"
+              className="inline-flex items-center px-2 py-0.5 rounded-md bg-destructive/10 text-destructive font-semibold border border-destructive/20 text-[10px] shrink-0"
               aria-label={t('notifications.urgentCount', { count: urgent })}
             >
               {urgent} {t('notifications.urgent')}
@@ -43,7 +44,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
           <Button
             variant="link"
             onClick={() => setDismissed([])}
-            className="text-[11px] font-medium shrink-0 h-auto p-0 text-primary hover:underline"
+            className="text-[11px] font-semibold shrink-0 h-auto p-0 text-primary hover:text-primary/80 transition-colors"
           >
             {t('notifications.restoreAll')}
           </Button>
