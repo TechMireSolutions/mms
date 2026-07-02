@@ -21,6 +21,7 @@ This specification governs all code, form structure, layout, UX/UI patterns, and
   - Numbers, Dates, and Times **MUST initialize to `null` or appropriate defaults**.
   - Multi-select choices and lists **MUST initialize to `[]`**.
 - Keep form state simple, clean, and flat to simplify payload validation mapping.
+- **Form Fields Accessibility**: Every input field, select box, textarea, and picker control must declare explicit `name` and `id` properties. Primitives must fallback automatically to `React.useId()` if not passed down.
 
 ### Rule 3: Decimal Precision & Currency Math
 - Currency and fee values must be treated as strings on input and validated without floating-point arithmetic to prevent IEEE 754 precision inaccuracies.

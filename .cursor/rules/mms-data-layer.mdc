@@ -47,6 +47,7 @@ Authoritative standards for backend databases, migrations, caching architectures
   window.dispatchEvent(new Event('local-database-update'));
   ```
 - **Sync Endpoints**: Sync operations route through `/api/db/sync` (bulk snapshot GET/POST), `/api/db/collections/:name`, and `/api/db/reset` (admin-only tenant reset).
+- **Title Case Formatting**: All save operations to local storage (`saveCollection` / `saveObject` / `dbSyncService` / backend repository writes) must recursively apply Title Case formatting using `applyTitleCaseRecursive` from `@mms/shared` before committing the write, ensuring consistent text casing across local and synchronized states.
 
 ### Settings Singletons
 Settings singletons (`branding`, `global_settings`) must survive authentication syncs:

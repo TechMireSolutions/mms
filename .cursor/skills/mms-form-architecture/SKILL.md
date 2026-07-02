@@ -108,6 +108,7 @@ This skill guides the implementation, extension, and auditing of dynamic form bl
   - **CRITICAL SAFEGUARD:** Always initialize string-based inputs (`text`, `email`, `url`, `single_select`, `currency`) to `""` (empty string) to prevent React 19 uncontrolled-to-controlled component crashes.
   - Initialize `number`, `boolean`, `date`, and `datetime` to `null`. Initialize `multi_select` to `[]`.
   - `react-hook-form` manages a single, massive, flat state object, completely agnostic to UI tab layouts.
+  - **CRITICAL SAFEGUARD (Form Fields Accessibility):** Every form control (Input, FormSelect, DatePicker, etc.) must be passed explicit `id` and `name` attributes for proper accessibility linking and autofill compatibility. Ensure fallbacks are setup using `React.useId()` inside component definitions.
 
 ### Pillar VI: Backend API, Security & Operations
 * **Rule 16: Fastify v5 Security & The Versioning Race:**

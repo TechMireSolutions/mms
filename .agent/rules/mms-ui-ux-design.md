@@ -66,7 +66,18 @@ Use `useModuleTierTabs()` to render exactly three tabs: `work` (operational list
 - **Focus & Trap**: Interactive components (modals, popovers, select dropdowns) must use Radix UI primitives integrated in central components.
 - **Labels**: Button icons must declare `aria-label`. Associate labels with input IDs (`htmlFor` / `id`).
 - **Color Contrast**: Primary texts on glass surfaces must meet WCAG AA contrast. Never convey status by color alone; always pair colors with text labels (`StatusBadge` + `t()`).
+- **Name and ID attributes**: All input, select, textarea, date picker, and tag input elements must declare explicit `name` and `id` properties. If not supplied, components must fallback automatically to `React.useId()` and link label/assistive elements accordingly.
 
 ### RTL Support (`ar`, `ur`, `fa`)
 - Retrieve current language direction from `useTranslation()`.
 - Use CSS logical properties for layout (`text-start`, `ms-*`, `ps-*`, `border-s-*`) instead of hardcoded `left` or `right` values.
+
+---
+
+## 6. Performance & Bundle Optimization
+- **Bundle Splitting**: Split massive external packages (such as Recharts charts library) into deferred chunks via Vite config to optimize initial page loading.
+- **Lazy Loading**: Utilize React `lazy` and `<Suspense>` to load dashboard widgets, optional report panels, and non-immediate UI components dynamically.
+- **De-prioritize Rendering**: Defer rendering of heavy non-critical layouts (e.g., job tray notifications, sidebar drawer menus) until the main window layout settles.
+- **Layout Shift Safeguards**: Declare explicit width/height dimensions on images, placeholders, and charts to prevent container reflows and Cumulative Layout Shifts (CLS).
+- **Observer De-registration**: Clean up ResizeObservers, event listeners, and timers in component unmount lifecycles to avoid performance leaks.
+- **SEO Routing Safeguards**: Enforce search-engine crawler indexing bans (`noindex` headers/meta) on the application layout path root.

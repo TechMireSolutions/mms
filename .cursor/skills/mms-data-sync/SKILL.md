@@ -94,6 +94,10 @@ Full-array read-modify-write — merge concurrent edits to same collection.
 
 `db.ts` hydrates students from linked contacts on read — preserve when editing links. Contact REST persists via `dbSyncService` on backend.
 
+## Value formatting intercepts
+- **Title Case Formatting**: All save updates, synchronizations, and database repository write actions must systematically format incoming text fields using `applyTitleCaseRecursive` (imported from `@mms/shared`).
+- **Target Boundaries**: Both frontend database sync updates (`db.ts`) and backend REST repository operations (e.g. `platformUserRepository`, `contactRepository`, `tenantUserRepository`) must enforce this intercept to maintain clean, unified text representation.
+
 ## Branding / global settings
 
 | Do | Don't |

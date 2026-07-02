@@ -15,7 +15,7 @@ packages/shared/src/
   brandingTheme.ts      # CSS token derivation, light/dark surfaces, WCAG AA contrast
   logoBrandColors.ts    # Accessible primary/secondary from logo palette
   logoPaletteSampling.ts
-  utils.ts              # formatDate, parsePhoneNumber, toTitleCase, …
+  utils.ts              # formatDate, parsePhoneNumber, toTitleCase, applyTitleCaseRecursive, …
 ```
 
 Unit tests: `brandingTheme.test.ts`, `logoBrandColors.test.ts` — add tests for new pure helpers.

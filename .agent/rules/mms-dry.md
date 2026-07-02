@@ -38,7 +38,7 @@ apps/*/services Hooks, UI components, API route controllers, and database schema
   - `contactTypes.ts` / `userTypes.ts` / `settingsTypes.ts`: Domain models and default configs (e.g. `DEFAULT_*`).
   - `appTranslations.ts`: Global i18n dictionaries and translation helpers.
   - `brandingTheme.ts` / `logoBrandColors.ts`: CSS color math and accessibility contrast logic.
-  - `utils.ts`: Pure helpers (`formatDate`, `getDisplayName`, `parsePhoneNumber`, `getInitials`, `toTitleCase`).
+  - `utils.ts`: Pure helpers (`formatDate`, `getDisplayName`, `parsePhoneNumber`, `getInitials`, `toTitleCase`, `applyTitleCaseRecursive`).
 - **Import Rule**: Always use named exports from `@mms/shared` (e.g., `import { Contact } from '@mms/shared'`). Subpath imports are forbidden.
 - **Do NOT Put in Shared**: React components, direct Fastify/DB query code, or browser APIs (like `localStorage` or DOM properties).
 
