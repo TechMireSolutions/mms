@@ -73,7 +73,7 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder={t('users.activitySearch')}
             className="pl-9.5"
           />

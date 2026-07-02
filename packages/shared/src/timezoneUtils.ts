@@ -148,15 +148,15 @@ export function getTimezoneOptions(locale = 'en'): readonly TimezoneOption[] {
   if (cached) return cached;
 
   const now = new Date();
-  const ids = getIanaTimeZoneIds();
-  const options: TimezoneOption[] = ids.map((id) => {
-    const region = getTimezoneRegion(id);
+  const timezoneIds = getIanaTimeZoneIds();
+  const options: TimezoneOption[] = timezoneIds.map((timezoneId) => {
+    const region = getTimezoneRegion(timezoneId);
     return {
-      value: id,
-      label: formatTimezoneLabel(id, locale, now),
+      value: timezoneId,
+      label: formatTimezoneLabel(timezoneId, locale, now),
       region,
-      offsetMinutes: getTimezoneOffsetMinutes(id, now),
-      keywords: buildSearchKeywords(id, region),
+      offsetMinutes: getTimezoneOffsetMinutes(timezoneId, now),
+      keywords: buildSearchKeywords(timezoneId, region),
     };
   });
 
@@ -165,11 +165,11 @@ export function getTimezoneOptions(locale = 'en'): readonly TimezoneOption[] {
     return regionIndex === -1 ? REGION_ORDER.length : regionIndex;
   };
 
-  options.sort((a, b) => {
-    const regionDelta = regionRank(a.region) - regionRank(b.region);
+  options.sort((leftOption, rightOption) => {
+    const regionDelta = regionRank(leftOption.region) - regionRank(rightOption.region);
     if (regionDelta !== 0) return regionDelta;
-    if (a.offsetMinutes !== b.offsetMinutes) return a.offsetMinutes - b.offsetMinutes;
-    return a.label.localeCompare(b.label, locale);
+    if (leftOption.offsetMinutes !== rightOption.offsetMinutes) return leftOption.offsetMinutes - rightOption.offsetMinutes;
+    return leftOption.label.localeCompare(rightOption.label, locale);
   });
 
   optionCache.set(locale, options);
@@ -205,20 +205,20 @@ export function normalizeTimezone(value: string | undefined, fallback = 'UTC'): 
 export function groupTimezoneOptions(
   options: readonly TimezoneOption[],
 ): { region: string; options: TimezoneOption[] }[] {
-  const map = new Map<string, TimezoneOption[]>();
+  const optionsByRegion = new Map<string, TimezoneOption[]>();
   for (const option of options) {
-    const list = map.get(option.region) ?? [];
-    list.push(option);
-    map.set(option.region, list);
+    const regionOptions = optionsByRegion.get(option.region) ?? [];
+    regionOptions.push(option);
+    optionsByRegion.set(option.region, regionOptions);
   }
 
-  const regions = [...map.keys()].sort((a, b) => {
+  const regions = [...optionsByRegion.keys()].sort((leftRegion, rightRegion) => {
     const rank = (region: string) => {
       const regionIndex = REGION_ORDER.indexOf(region as (typeof REGION_ORDER)[number]);
       return regionIndex === -1 ? REGION_ORDER.length : regionIndex;
     };
-    return rank(a) - rank(b);
+    return rank(leftRegion) - rank(rightRegion);
   });
 
-  return regions.map((region) => ({ region, options: map.get(region)! }));
+  return regions.map((region) => ({ region, options: optionsByRegion.get(region)! }));
 }

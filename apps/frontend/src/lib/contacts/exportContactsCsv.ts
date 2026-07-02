@@ -48,7 +48,7 @@ export async function downloadContactsCsvChunked(
   },
 ): Promise<void> {
   const chunkSize = options?.chunkSize ?? 100;
-  const header = columns.map((c) => c.label);
+  const header = columns.map((column) => column.label);
   const rows: unknown[][] = [header];
 
   for (let i = 0; i < contacts.length; i += chunkSize) {

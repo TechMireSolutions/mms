@@ -37,7 +37,7 @@ function resolveContactId(
   const demo = DEMO_TEACHER_CONTACT_BY_ID[String(teacher.id)];
   if (demo != null) return demo;
   if (teacher.name) {
-    const match = contacts.find((c) => c.name === teacher.name);
+    const match = contacts.find((contact) => contact.name === teacher.name);
     if (match) return match.id;
   }
   return null;

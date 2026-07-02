@@ -339,8 +339,8 @@ export function partitionQuestionBankFieldOrder(
     question: [],
     sources: [],
   };
-  for (const id of fieldOrder) {
-    buckets[getQuestionBankFieldFormTab(id)].push(id);
+  for (const fieldId of fieldOrder) {
+    buckets[getQuestionBankFieldFormTab(fieldId)].push(fieldId);
   }
   return buckets;
 }
@@ -441,14 +441,14 @@ export function createQuestionSourceBook(
 export function getBookDefinitionFieldIds(
   book: Pick<QuestionSourceBook, 'fieldIds'>,
 ): QuestionSourceFieldId[] {
-  return book.fieldIds.filter((id) => isQuestionSourceBookFieldId(id));
+  return book.fieldIds.filter((fieldId) => isQuestionSourceBookFieldId(fieldId));
 }
 
 /** Citation fields to show on a question for a selected book. */
 export function getBookCitationFieldIds(
   book: Pick<QuestionSourceBook, 'fieldIds'>,
 ): QuestionSourceFieldId[] {
-  return book.fieldIds.filter((id) => isQuestionSourceCitationFieldId(id));
+  return book.fieldIds.filter((fieldId) => isQuestionSourceCitationFieldId(fieldId));
 }
 
 /** Merges book metadata with per-question citation into one reference. */
@@ -492,7 +492,7 @@ export type QuestionSourceRef = {
 
 /** Resolves category ids from `categoryIds` or legacy `categoryId`. */
 export function getQuestionCategoryIds(question: QuestionCategoryRef): string[] {
-  const fromArray = (question.categoryIds ?? []).map((id) => id?.trim()).filter(Boolean) as string[];
+  const fromArray = (question.categoryIds ?? []).map((categoryId) => categoryId?.trim()).filter(Boolean) as string[];
   if (fromArray.length > 0) return [...new Set(fromArray)];
   const legacy = question.categoryId?.trim();
   return legacy ? [legacy] : [];
@@ -594,14 +594,14 @@ export function compactQuestionSource(
   source?: QuestionSourceReference | null,
 ): QuestionSourceReference | undefined {
   if (!source) return undefined;
-  const next: QuestionSourceReference = {};
+  const compactSource: QuestionSourceReference = {};
   for (const [key, value] of Object.entries(source)) {
     const trimmed = typeof value === 'string' ? value.trim() : '';
     if (trimmed) {
-      (next as Record<string, string>)[key] = trimmed;
+      (compactSource as Record<string, string>)[key] = trimmed;
     }
   }
-  return Object.keys(next).length > 0 ? next : undefined;
+  return Object.keys(compactSource).length > 0 ? compactSource : undefined;
 }
 
 export type QuestionSourceCitationTranslator = (
@@ -798,7 +798,7 @@ export function createQuestionCategory(
   const slug = slugifyCategoryName(trimmed);
   let id = `cat-${slug}`;
   let suffix = 1;
-  while (existing.some((c) => c.id === id)) {
+  while (existing.some((category) => category.id === id)) {
     id = `cat-${slug}-${suffix}`;
     suffix += 1;
   }
@@ -818,30 +818,30 @@ export function mergeQuestionCategories(
   configured: readonly QuestionCategory[],
   questions?: readonly QuestionCategoryRef[],
 ): QuestionCategory[] {
-  const byId = new Map<string, QuestionCategory>();
-  for (const cat of configured) {
-    if (cat.id) byId.set(cat.id, cat);
+  const categoryById = new Map<string, QuestionCategory>();
+  for (const category of configured) {
+    if (category.id) categoryById.set(category.id, category);
   }
   for (const question of questions ?? []) {
-    for (const id of getQuestionCategoryIds(question)) {
-      if (!id || byId.has(id)) continue;
-      const inferredName = id.startsWith('cat-')
-        ? id
+    for (const questionCategoryId of getQuestionCategoryIds(question)) {
+      if (!questionCategoryId || categoryById.has(questionCategoryId)) continue;
+      const inferredName = questionCategoryId.startsWith('cat-')
+        ? questionCategoryId
             .slice(4)
             .split('-')
             .filter(Boolean)
             .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
             .join(' ')
-        : id;
-      byId.set(id, {
-        id,
+        : questionCategoryId;
+      categoryById.set(questionCategoryId, {
+        id: questionCategoryId,
         name: inferredName,
         icon: '📋',
-        color: QUESTION_CATEGORY_COLORS[byId.size % QUESTION_CATEGORY_COLORS.length],
+        color: QUESTION_CATEGORY_COLORS[categoryById.size % QUESTION_CATEGORY_COLORS.length],
       });
     }
   }
-  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+  return [...categoryById.values()].sort((leftCategory, rightCategory) => leftCategory.name.localeCompare(rightCategory.name));
 }
 
 /**

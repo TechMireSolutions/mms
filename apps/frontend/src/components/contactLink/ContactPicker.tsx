@@ -76,21 +76,21 @@ export default function ContactPicker({
 
   const directory = serverMode ? (searchPage?.contacts ?? []) : contacts;
 
-  const matches = directory.filter((c) => {
-    const cPhone = (c.phone as string | undefined) || c.phones?.[0]?.number || '';
-    if (normalizedExcludeIds.includes(String(c.id))) return false;
+  const matches = directory.filter((contact) => {
+    const contactPhone = (contact.phone as string | undefined) || contact.phones?.[0]?.number || '';
+    if (normalizedExcludeIds.includes(String(contact.id))) return false;
     if (serverMode) return true;
     return (
-      c.name.toLowerCase().includes(query.toLowerCase()) || cPhone.includes(query)
+      contact.name.toLowerCase().includes(query.toLowerCase()) || contactPhone.includes(query)
     );
   }).slice(0, 8);
 
   const selected =
-    (serverMode ? selectedFromServer : contacts.find((c) => String(c.id) === String(value))) ??
-    directory.find((c) => String(c.id) === String(value));
+    (serverMode ? selectedFromServer : contacts.find((contact) => String(contact.id) === String(value))) ??
+    directory.find((contact) => String(contact.id) === String(value));
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
     try {
       const url = await uploadUserImage(file, 'avatar');
@@ -98,7 +98,7 @@ export default function ContactPicker({
     } catch {
       // ignore
     }
-    e.target.value = '';
+    event.target.value = '';
   };
 
   const openCreateFlow = (searchText: string): void => {
@@ -190,7 +190,7 @@ export default function ContactPicker({
           className={cn("pl-9.5 pr-8.5", error && "border-destructive focus-visible:ring-destructive")}
           placeholder={searchPlaceholder ?? `Search ${label.toLowerCase()}…`}
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onChange={(event) => { setQuery(event.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 200)}
         />
@@ -220,30 +220,30 @@ export default function ContactPicker({
                   <p className="text-[10px] text-muted-foreground">{emptyHint}</p>
                 </div>
               )}
-              {matches.map((c) => {
-                const cInitials = c.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
-                const cGradient = genderAvatarGradient(c.gender ?? '');
-                const cPhone = (c.phone as string | undefined) || c.phones?.[0]?.number;
-                const cCity = c.city as string | undefined;
-                const cTag = c.tag as string | undefined;
+              {matches.map((contact) => {
+                const contactInitials = contact.name.split(' ').map((namePart) => namePart[0]).join('').slice(0, 2).toUpperCase();
+                const contactGradient = genderAvatarGradient(contact.gender ?? '');
+                const contactPhone = (contact.phone as string | undefined) || contact.phones?.[0]?.number;
+                const contactCity = contact.city as string | undefined;
+                const contactTag = contact.tag as string | undefined;
 
                 return (
                   <Button
-                    key={c.id}
+                    key={contact.id}
                     type="button"
                     variant="ghost"
-                    onMouseDown={() => { onChange(c.id, c); setQuery(''); setOpen(false); }}
+                    onMouseDown={() => { onChange(contact.id, contact); setQuery(''); setOpen(false); }}
                     className="w-full flex items-center h-auto font-normal justify-start gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-left focus:outline-none rounded-none shadow-none text-foreground"
                   >
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${cGradient} flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white shadow-sm`}>
-                      {cInitials}
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${contactGradient} flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white shadow-sm`}>
+                      {contactInitials}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-foreground truncate">{c.name}</p>
+                      <p className="text-[13px] font-semibold text-foreground truncate">{contact.name}</p>
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 truncate mt-0.5">
-                        {cPhone || '—'}
-                        {cCity && <span>· {cCity}</span>}
-                        {cTag && <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.2 rounded border border-primary/10 capitalize font-medium">{cTag}</span>}
+                        {contactPhone || '—'}
+                        {contactCity && <span>· {contactCity}</span>}
+                        {contactTag && <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.2 rounded border border-primary/10 capitalize font-medium">{contactTag}</span>}
                       </p>
                     </div>
                   </Button>

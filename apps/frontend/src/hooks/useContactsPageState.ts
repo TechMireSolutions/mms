@@ -90,20 +90,20 @@ export function useContactsPageState({
     const source = showDeletedArchives
       ? rawContacts.filter(isContactDeleted)
       : filterActiveContacts(rawContacts);
-    return source.map((c) => {
+    return source.map((contact) => {
       const base = {
         relationships: [],
         activities: [],
-        ...c,
+        ...contact,
       } as Contact;
       if (base.phones && Array.isArray(base.phones)) {
         return {
           ...base,
-          phones: base.phones.map((p: PhoneNumber) => {
-            if (p.countryCode) return p;
-            const parsed = parsePhoneNumber(p.number, defaultCode);
+          phones: base.phones.map((phone: PhoneNumber) => {
+            if (phone.countryCode) return phone;
+            const parsed = parsePhoneNumber(phone.number, defaultCode);
             return {
-              ...p,
+              ...phone,
               countryCode: parsed.countryCode,
               number: parsed.number,
             };
@@ -167,8 +167,8 @@ export function useContactsPageState({
       const filename = t("contacts.exportFilename");
       const finish = () => {
         notify.success(t("contacts.exportSuccess"));
-        void logExportAudit.mutateAsync({ count: rows.length, scope }).catch((err) => {
-          reportClientError(err, { scope: "contacts.export_audit" });
+        void logExportAudit.mutateAsync({ count: rows.length, scope }).catch((auditError) => {
+          reportClientError(auditError, { scope: "contacts.export_audit" });
         });
       };
       const fail = () => notify.error(t("contacts.exportFailed"));
@@ -220,9 +220,9 @@ export function useContactsPageState({
   );
 
   const filtered = useMemo(() => {
-    const list = contacts.filter((c) => {
-      if (!contactMatchesSearch(c, search)) return false;
-      if (filterGender && c.gender !== filterGender) return false;
+    const list = contacts.filter((contact) => {
+      if (!contactMatchesSearch(contact, search)) return false;
+      if (filterGender && contact.gender !== filterGender) return false;
       return true;
     });
     return [...list].sort((a, b) => {
@@ -262,9 +262,9 @@ export function useContactsPageState({
   );
 
   const handleEdit = useCallback(
-    (c: Contact) => {
+    (contact: Contact) => {
       if (!canWrite) return;
-      setEditContact(c);
+      setEditContact(contact);
       setShowForm(true);
     },
     [canWrite],
@@ -349,8 +349,8 @@ export function useContactsPageState({
       notify.success(t("contacts.exportSuccess"));
       void logExportAudit
         .mutateAsync({ count: job.progress?.total ?? 0, scope: "filtered" })
-        .catch((err) => {
-          reportClientError(err, { scope: "contacts.export_audit" });
+        .catch((auditError) => {
+          reportClientError(auditError, { scope: "contacts.export_audit" });
         });
     } catch {
       notify.error(t("contacts.exportFailed"));
@@ -371,7 +371,7 @@ export function useContactsPageState({
 
   const handleBulkExport = useCallback(() => {
     if (!canExport) return;
-    const rows = rowSource.filter((c) => selected.includes(c.id));
+    const rows = rowSource.filter((contact) => selected.includes(contact.id));
     if (rows.length === 0) return;
     runExport(rows, "selection");
   }, [rowSource, selected, runExport, canExport]);

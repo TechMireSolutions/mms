@@ -21,10 +21,12 @@ export function persistQuestionSourceBook(book: QuestionSourceBook): QuestionSou
   const current = normalizeQuestionBankSettings(
     getObject<QuestionBankSettings>(SETTINGS_KEY, DEFAULT_QUESTION_BANK_SETTINGS),
   );
-  const exists = current.sourceBooks?.findIndex((entry) => entry.id === book.id) ?? -1;
+  const existingSourceBookIndex = current.sourceBooks?.findIndex((entry) => entry.id === book.id) ?? -1;
   const books = current.sourceBooks ?? [];
   const updatedSourceBooks =
-    exists >= 0 ? books.map((entry, i) => (i === exists ? book : entry)) : [...books, book];
+    existingSourceBookIndex >= 0
+      ? books.map((entry, index) => (index === existingSourceBookIndex ? book : entry))
+      : [...books, book];
   saveObject(SETTINGS_KEY, { ...current, sourceBooks: updatedSourceBooks });
   return updatedSourceBooks;
 }

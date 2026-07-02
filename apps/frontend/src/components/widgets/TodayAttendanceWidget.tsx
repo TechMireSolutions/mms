@@ -156,12 +156,12 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
               className="grid gap-2"
               style={{ gridTemplateColumns: `repeat(${statuses.length || 4}, minmax(0, 1fr))` }}
             >
-              {statuses.map((s: AttendanceStatus) => {
-                const count = stats[s.id] || 0;
+              {statuses.map((status: AttendanceStatus) => {
+                const count = stats[status.id] || 0;
                 return (
-                  <div key={s.id} className={`rounded-xl ${s.bg} ${s.text} border ${s.border} px-2 py-2 text-center`}>
+                  <div key={status.id} className={`rounded-xl ${status.bg} ${status.text} border ${status.border} px-2 py-2 text-center`}>
                     <p className="text-base font-bold">{count}</p>
-                    <p className="text-[10px] font-semibold">{s.label}</p>
+                    <p className="text-[10px] font-semibold">{status.label}</p>
                   </div>
                 );
               })}

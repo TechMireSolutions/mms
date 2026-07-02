@@ -194,15 +194,15 @@ export interface RbacPermissionMatrixGroup {
 export function groupRbacModulesForPermissionsNav(
   visibleModules: readonly RbacModuleDef[],
 ): RbacPermissionMatrixGroup[] {
-  const byId = new Map(visibleModules.map((m) => [m.id, m]));
+  const moduleById = new Map(visibleModules.map((moduleDefinition) => [moduleDefinition.id, moduleDefinition]));
   const placed = new Set<string>();
   const groups: RbacPermissionMatrixGroup[] = [];
 
   const pushStandalone = (rbacId: string): void => {
-    const mod = byId.get(rbacId);
-    if (!mod || placed.has(rbacId)) return;
+    const moduleDefinition = moduleById.get(rbacId);
+    if (!moduleDefinition || placed.has(rbacId)) return;
     placed.add(rbacId);
-    groups.push({ modules: [mod] });
+    groups.push({ modules: [moduleDefinition] });
   };
 
   for (const entry of RBAC_PERMISSION_NAV) {
@@ -211,11 +211,11 @@ export function groupRbacModulesForPermissionsNav(
       continue;
     }
     const mods: RbacModuleDef[] = [];
-    for (const id of entry.rbacIds) {
-      const mod = byId.get(id);
-      if (mod && !placed.has(id)) {
-        mods.push(mod);
-        placed.add(id);
+    for (const rbacId of entry.rbacIds) {
+      const moduleDefinition = moduleById.get(rbacId);
+      if (moduleDefinition && !placed.has(rbacId)) {
+        mods.push(moduleDefinition);
+        placed.add(rbacId);
       }
     }
     if (mods.length > 0) {
@@ -369,9 +369,9 @@ export function normalizeWorkspaceUser(
 
 /** Clones default system roles for editable local state. */
 export function cloneDefaultWorkspaceRoles(): WorkspaceRole[] {
-  return DEFAULT_WORKSPACE_ROLES.map((r) => ({
-    ...r,
-    permissions: structuredClone(r.permissions),
+  return DEFAULT_WORKSPACE_ROLES.map((workspaceRole) => ({
+    ...workspaceRole,
+    permissions: structuredClone(workspaceRole.permissions),
   }));
 }
 
@@ -379,7 +379,7 @@ export function resolveWorkspaceRole(
   roleId: string,
   roles: readonly WorkspaceRole[],
 ): WorkspaceRole | undefined {
-  return roles.find((r) => r.id === roleId);
+  return roles.find((workspaceRole) => workspaceRole.id === roleId);
 }
 
 export function findWorkspaceRole(roleId: string): WorkspaceRole | undefined {

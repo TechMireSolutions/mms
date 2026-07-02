@@ -14,8 +14,8 @@ const COLUMN_PREFERENCES_KEY = CONTACTS_MODULE_CONTRACT.columnPreferencesObjectK
 const LEGACY_COLUMN_PREFERENCES_KEY = 'contact_user_column_prefs';
 
 export async function getUserColumnPreferences(userId: string): Promise<ContactColumnPreference[]> {
-  const map = await loadColumnPreferencesMap();
-  const preferences = map[userId];
+  const preferencesByUser = await loadColumnPreferencesMap();
+  const preferences = preferencesByUser[userId];
   if (!Array.isArray(preferences)) return [];
   return preferences.filter(
     (preference): preference is ContactColumnPreference =>
@@ -38,9 +38,9 @@ export async function loadContactPreferences(): Promise<ContactPreferences | nul
 }
 
 export async function setUserColumnPreferences(userId: string, preferences: ContactColumnPreference[]): Promise<void> {
-  const map = await loadColumnPreferencesMap();
-  map[userId] = preferences;
-  await persistObject(COLUMN_PREFERENCES_KEY, map);
+  const preferencesByUser = await loadColumnPreferencesMap();
+  preferencesByUser[userId] = preferences;
+  await persistObject(COLUMN_PREFERENCES_KEY, preferencesByUser);
 }
 
 async function fetchMigratedObject(key: string, legacyKey: string): Promise<unknown | null> {
@@ -96,18 +96,18 @@ export async function createContactsSavedReport(
 
 export async function deleteContactsSavedReport(id: string, viewer?: ContactsSavedReportViewer): Promise<boolean> {
   const reports = await loadSavedReportsList();
-  const target = reports.find((r) => r.id === id);
+  const target = reports.find((report) => report.id === id);
   if (!target) return false;
   if (viewer && !canDeleteContactsSavedReport(target, viewer)) return false;
-  const next = reports.filter((r) => r.id !== id);
-  if (next.length === reports.length) return false;
-  await saveSavedReportsList(next);
+  const remainingReports = reports.filter((report) => report.id !== id);
+  if (remainingReports.length === reports.length) return false;
+  await saveSavedReportsList(remainingReports);
   return true;
 }
 
 export async function getContactsSavedReportById(id: string): Promise<ContactsSavedReport | null> {
   const reports = await loadSavedReportsList();
-  return reports.find((r) => r.id === id) ?? null;
+  return reports.find((report) => report.id === id) ?? null;
 }
 
 export async function touchContactsSavedReportRun(

@@ -29,13 +29,13 @@ describe('moduleTierTabs', () => {
       { key: 'analytics', label: 'Analytics', enabled: true, order: 1, isSystem: true },
       { key: 'configuration', label: 'Configuration', enabled: true, order: 2, isSystem: true },
     ];
-    const next = refreshModuleTierTabLabels(refreshModuleTierTabKeys(tabs));
-    expect(next.map((t) => t.key)).toEqual(['work', 'reports', 'setup']);
-    expect(next.map((t) => t.label)).toEqual(['Work', 'Reports', 'Setup']);
+    const refreshedTabs = refreshModuleTierTabLabels(refreshModuleTierTabKeys(tabs));
+    expect(refreshedTabs.map((tab) => tab.key)).toEqual(['work', 'reports', 'setup']);
+    expect(refreshedTabs.map((tab) => tab.label)).toEqual(['Work', 'Reports', 'Setup']);
   });
 
   it('matches DEFAULT_PAGE_TABS ids and labels', () => {
-    expect(DEFAULT_PAGE_TABS.map((t) => t.key)).toEqual(['work', 'reports', 'setup']);
-    expect(DEFAULT_PAGE_TABS.map((t) => t.label)).toEqual(['Work', 'Reports', 'Setup']);
+    expect(DEFAULT_PAGE_TABS.map((tab) => tab.key)).toEqual(['work', 'reports', 'setup']);
+    expect(DEFAULT_PAGE_TABS.map((tab) => tab.label)).toEqual(['Work', 'Reports', 'Setup']);
   });
 });

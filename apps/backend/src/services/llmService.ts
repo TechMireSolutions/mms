@@ -56,14 +56,14 @@ export async function generateCompletion(
 
   let config = options?.customConfig;
   if (!config) {
-    config = configs.find((c) => c.id === options?.configId);
+    config = configs.find((llmConfig) => llmConfig.id === options?.configId);
   }
   if (!config && options?.configId) {
     throw new Error(`LLM configuration with ID "${options.configId}" was not found.`);
   }
 
   if (!config) {
-    config = configs.find((c) => c.isDefaultText);
+    config = configs.find((llmConfig) => llmConfig.isDefaultText);
   }
 
   const provider = config ? config.provider : (settings.llmProvider ?? 'none');
@@ -82,9 +82,9 @@ export async function generateCompletion(
       : `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
 
     const contents = options?.messages && options.messages.length > 0
-      ? options.messages.map((m) => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }]
+      ? options.messages.map((message) => ({
+          role: message.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: message.content }]
         }))
       : [
           {

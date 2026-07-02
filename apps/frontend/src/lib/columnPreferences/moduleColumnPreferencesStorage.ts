@@ -5,15 +5,15 @@ const storageKey = (moduleId: string, userId: string) => `mms_${moduleId}_column
 export function sanitizeModuleColumnPrefs(prefs: any[]): ModuleColumnPref[] {
   if (!Array.isArray(prefs)) return [];
   return prefs
-    .filter((p) => p && typeof p === "object" && typeof p.key === "string" && p.key.trim().length > 0)
-    .map((p, index) => {
-      const enabled = typeof p.enabled === "boolean"
-        ? p.enabled
-        : p.enabled === "true" || p.enabled === 1 || p.enabled === "1";
-      const rawOrder = typeof p.order === "number" ? p.order : parseFloat(String(p.order));
+    .filter((columnPreference) => columnPreference && typeof columnPreference === "object" && typeof columnPreference.key === "string" && columnPreference.key.trim().length > 0)
+    .map((columnPreference, index) => {
+      const enabled = typeof columnPreference.enabled === "boolean"
+        ? columnPreference.enabled
+        : columnPreference.enabled === "true" || columnPreference.enabled === 1 || columnPreference.enabled === "1";
+      const rawOrder = typeof columnPreference.order === "number" ? columnPreference.order : parseFloat(String(columnPreference.order));
       const order = Number.isFinite(rawOrder) && rawOrder >= 0 ? Math.floor(rawOrder) : index;
       return {
-        key: p.key.trim(),
+        key: columnPreference.key.trim(),
         enabled,
         order,
       };
@@ -58,4 +58,3 @@ export function saveModuleColumnRegistry(
 
 export const loadModuleColumnPreferences = loadModuleColumnPrefs;
 export const saveModuleColumnPreferenceList = saveModuleColumnPrefList;
-

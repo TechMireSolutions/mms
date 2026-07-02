@@ -31,25 +31,25 @@ export function sanitizeContactForViewer(
   viewerRole: string,
   config: ContactFieldConfigSnapshot,
 ): Contact {
-  const next: Contact = { ...contact };
+  const sanitizedContact: Contact = { ...contact };
   const { fields, tabs } = config;
 
   for (const [tabId, keys] of Object.entries(TAB_COLLECTION_KEYS)) {
-    const tab = tabs.find((t) => t.key === tabId);
+    const tab = tabs.find((candidateTab) => candidateTab.key === tabId);
     const tabDef = tab ?? { key: tabId, label: tabId, enabled: false, order: 0 };
     if (!tabEnabled(tabs, tabId) || !canViewContactTab(viewerRole, tabDef)) {
       for (const key of keys) {
-        delete next[key];
+        delete sanitizedContact[key];
       }
       continue;
     }
-    if (tabId === 'phones' && !fieldVisible(viewerRole, fields.phones?.find((f) => f.key === 'number'))) {
-      delete next.phones;
-      delete next.phone;
+    if (tabId === 'phones' && !fieldVisible(viewerRole, fields.phones?.find((field) => field.key === 'number'))) {
+      delete sanitizedContact.phones;
+      delete sanitizedContact.phone;
     }
-    if (tabId === 'emails' && !fieldVisible(viewerRole, fields.emails?.find((f) => f.key === 'address'))) {
-      delete next.emails;
-      delete next.email;
+    if (tabId === 'emails' && !fieldVisible(viewerRole, fields.emails?.find((field) => field.key === 'address'))) {
+      delete sanitizedContact.emails;
+      delete sanitizedContact.email;
     }
   }
 
@@ -57,27 +57,27 @@ export function sanitizeContactForViewer(
     if (TAB_COLLECTION_KEYS[tabId]) continue;
     if (!tabEnabled(tabs, tabId)) {
       for (const field of tabFields) {
-        delete next[field.key];
+        delete sanitizedContact[field.key];
       }
       continue;
     }
     for (const field of tabFields) {
       if (!fieldVisible(viewerRole, field)) {
-        delete next[field.key];
+        delete sanitizedContact[field.key];
       }
     }
   }
 
-  if (!fieldVisible(viewerRole, fields.basic?.find((f) => f.key === 'firstName'))) {
-    const mutable = next as Record<string, unknown>;
-    delete mutable.firstName;
-    delete mutable.name;
+  if (!fieldVisible(viewerRole, fields.basic?.find((field) => field.key === 'firstName'))) {
+    const mutableContact = sanitizedContact as Record<string, unknown>;
+    delete mutableContact.firstName;
+    delete mutableContact.name;
   }
-  if (!fieldVisible(viewerRole, fields.basic?.find((f) => f.key === 'lastName'))) {
-    delete (next as Record<string, unknown>).lastName;
+  if (!fieldVisible(viewerRole, fields.basic?.find((field) => field.key === 'lastName'))) {
+    delete (sanitizedContact as Record<string, unknown>).lastName;
   }
 
-  return next;
+  return sanitizedContact;
 }
 
 export function sanitizeContactsForViewer(
@@ -85,7 +85,7 @@ export function sanitizeContactsForViewer(
   viewerRole: string,
   config: ContactFieldConfigSnapshot,
 ): Contact[] {
-  return contacts.map((c) => sanitizeContactForViewer(c, viewerRole, config));
+  return contacts.map((contact) => sanitizeContactForViewer(contact, viewerRole, config));
 }
 
 /** Summarises changed top-level keys for audit (globle1 §1.3). */

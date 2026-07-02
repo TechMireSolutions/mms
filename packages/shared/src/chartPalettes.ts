@@ -99,13 +99,13 @@ export const WIDGET_CHART_PALETTES: Record<string, readonly string[]> = {
 
 /** Static decorative/accessible palettes as a flat id → colors map (excludes dynamic `brand`). */
 export function getStaticChartPaletteMap(): Record<string, readonly string[]> {
-  const map: Record<string, readonly string[]> = {};
-  for (const def of CHART_PALETTE_DEFS) {
-    if (def.id !== 'brand' && def.colors.length > 0) {
-      map[def.id] = def.colors;
+  const paletteColorsById: Record<string, readonly string[]> = {};
+  for (const paletteDefinition of CHART_PALETTE_DEFS) {
+    if (paletteDefinition.id !== 'brand' && paletteDefinition.colors.length > 0) {
+      paletteColorsById[paletteDefinition.id] = paletteDefinition.colors;
     }
   }
-  return map;
+  return paletteColorsById;
 }
 
 /** Resolves palette colours; `brandColors` supplies the institution chart ramp when id is `brand`. */

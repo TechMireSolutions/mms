@@ -676,7 +676,7 @@ export default function DynamicChartVisualizer({
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(event) => setTitle(event.target.value)}
                 placeholder={t("reports.visualizer.titlePlaceholder")}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
               />
@@ -688,7 +688,7 @@ export default function DynamicChartVisualizer({
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.dataCollection")}</label>
                 <select
                   value={collectionKey}
-                  onChange={(e) => setCollectionKey(e.target.value as keyof typeof METADATA_CONFIGS)}
+                  onChange={(event) => setCollectionKey(event.target.value as keyof typeof METADATA_CONFIGS)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
                 >
                   {Object.entries(METADATA_CONFIGS).map(([metadataKey, metadataConfig]) => {
@@ -1027,7 +1027,7 @@ export default function DynamicChartVisualizer({
                       <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfPageSize")}</label>
                       <select 
                         value={pdfFormat}
-                        onChange={(e) => setPdfFormat(e.target.value)}
+                        onChange={(event) => setPdfFormat(event.target.value)}
                         className="w-full text-xs rounded-xl border border-border bg-background px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
                       >
                         <option value="a4">{t("reports.builder.formatA4")}</option>

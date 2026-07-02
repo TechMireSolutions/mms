@@ -615,11 +615,11 @@ export default function StudentForm({
           {/* Inline Profile fields revealed when Contact is selected */}
           {studentDraft.contactId && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
-              {settingsFields.basic?.some((f) => f.key === "gender" && f.enabled) && (
-                renderFieldByKey(settingsFields.basic.find((f) => f.key === "gender")!)
+              {settingsFields.basic?.some((field) => field.key === "gender" && field.enabled) && (
+                renderFieldByKey(settingsFields.basic.find((field) => field.key === "gender")!)
               )}
-              {settingsFields.basic?.some((f) => f.key === "dob" && f.enabled) && (
-                renderFieldByKey(settingsFields.basic.find((f) => f.key === "dob")!)
+              {settingsFields.basic?.some((field) => field.key === "dob" && field.enabled) && (
+                renderFieldByKey(settingsFields.basic.find((field) => field.key === "dob")!)
               )}
             </div>
           )}

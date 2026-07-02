@@ -103,7 +103,7 @@ function SubtextDisplay({ text }: { text: string }): React.JSX.Element {
       {expanded ? text : `${text.slice(0, 30)}...`}
       <button
         type="button"
-        onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+        onClick={(event) => { event.stopPropagation(); setExpanded((previousExpanded) => !previousExpanded); }}
         className="ml-1 text-primary hover:underline font-extrabold inline-block cursor-pointer bg-transparent border-0 p-0 text-[9px]"
       >
         {expanded ? t("common.showLess") : t("common.readMore")}

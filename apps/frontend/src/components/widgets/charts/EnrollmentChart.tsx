@@ -92,10 +92,10 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
             <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
               <select
                 value={chartType}
-                onChange={(e) => {
-                  const type = e.target.value as "area" | "bar" | "line";
-                  setChartType(type);
-                  localStorage.setItem("db_chart_type_enrollment", type);
+                onChange={(event) => {
+                  const selectedChartType = event.target.value as "area" | "bar" | "line";
+                  setChartType(selectedChartType);
+                  localStorage.setItem("db_chart_type_enrollment", selectedChartType);
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -105,10 +105,10 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               </select>
               <select
                 value={colorTheme}
-                onChange={(e) => {
-                  const col = e.target.value as "emerald" | "blue" | "violet" | "amber" | "red";
-                  setColorTheme(col);
-                  localStorage.setItem("db_chart_color_enrollment", col);
+                onChange={(event) => {
+                  const selectedColorTheme = event.target.value as "emerald" | "blue" | "violet" | "amber" | "red";
+                  setColorTheme(selectedColorTheme);
+                  localStorage.setItem("db_chart_color_enrollment", selectedColorTheme);
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -120,8 +120,8 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               </select>
               <select
                 value={monthsCount}
-                onChange={(e) => {
-                  const count = Number(e.target.value);
+                onChange={(event) => {
+                  const count = Number(event.target.value);
                   setMonthsCount(count);
                   localStorage.setItem("db_chart_period_enrollment", String(count));
                 }}

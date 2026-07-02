@@ -10,8 +10,8 @@ export function getContactSearchHaystack(contact: Contact): string {
     getPrimaryPhone(contact),
     getPrimaryEmail(contact),
     (contact.city as string) || '',
-    ...((contact.emails || []).map((e) => e.address)),
-    ...((contact.addresses || []).map((a) => [a.city, a.state, a.country, a.line1].filter(Boolean).join(' '))),
+    ...((contact.emails || []).map((email) => email.address)),
+    ...((contact.addresses || []).map((address) => [address.city, address.state, address.country, address.line1].filter(Boolean).join(' '))),
   ];
   return parts.filter((part): part is string => Boolean(part)).join(' ').toLowerCase();
 }

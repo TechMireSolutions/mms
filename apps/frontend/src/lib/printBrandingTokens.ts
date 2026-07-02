@@ -34,11 +34,11 @@ export interface PrintBrandingTokens {
 }
 
 function hexWithAlpha(hex: string, alpha: number): string {
-  let h = hex.replace('#', '').trim();
-  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
-  const red = parseInt(h.slice(0, 2), 16);
-  const green = parseInt(h.slice(2, 4), 16);
-  const blue = parseInt(h.slice(4, 6), 16);
+  let hexValue = hex.replace('#', '').trim();
+  if (hexValue.length === 3) hexValue = hexValue.split('').map((hexDigit) => hexDigit + hexDigit).join('');
+  const red = parseInt(hexValue.slice(0, 2), 16);
+  const green = parseInt(hexValue.slice(2, 4), 16);
+  const blue = parseInt(hexValue.slice(4, 6), 16);
   return `rgba(${red},${green},${blue},${alpha})`;
 }
 

@@ -198,10 +198,10 @@ export function useBackupRestore({
         );
         setExportModalOpen(false);
         notify.success(t('backup.createSuccess'), { description: t('backup.createSuccessDesc') });
-      } catch (error) {
-        const err = error as Error;
+      } catch (createError) {
+        const backupError = createError as Error;
         notify.error(t('backup.createFailed'), {
-          description: isBackupErrorKey(err.message) ? t(err.message) : err.message,
+          description: isBackupErrorKey(backupError.message) ? t(backupError.message) : backupError.message,
         });
       } finally {
         setIsCreating(false);
@@ -268,8 +268,8 @@ export function useBackupRestore({
       }
 
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result;
+      reader.onload = (loadEvent) => {
+        const text = loadEvent.target?.result;
         if (typeof text !== 'string') {
           notify.error(t('backup.restoreFailed'), { description: t('backup.invalidFormat') });
           return;

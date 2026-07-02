@@ -17,16 +17,16 @@ export interface ContactsCommandMetricsSnapshot {
 
 /** Active directory rows — excludes soft-deleted contacts. */
 export function countActiveContacts(contacts: Contact[]): number {
-  return contacts.filter((c) => !isContactDeleted(c)).length;
+  return contacts.filter((contact) => !isContactDeleted(contact)).length;
 }
 
 /** Contacts created on or after the rolling window start. */
 export function countContactsCreatedSince(contacts: Contact[], days: number): number {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
-  return contacts.filter((c) => {
-    if (!c.createdAt || isContactDeleted(c)) return false;
-    return new Date(c.createdAt) >= cutoff;
+  return contacts.filter((contact) => {
+    if (!contact.createdAt || isContactDeleted(contact)) return false;
+    return new Date(contact.createdAt) >= cutoff;
   }).length;
 }
 
@@ -49,13 +49,13 @@ export function computeContactsCommandMetrics(
     periodDays?: number;
   },
 ): ContactsCommandMetricsSnapshot {
-  const active = contacts.filter((c) => !isContactDeleted(c));
+  const activeContacts = contacts.filter((contact) => !isContactDeleted(contact));
   const periodDays = options.periodDays ?? CONTACT_METRICS_DEFAULT_PERIOD_DAYS;
   return {
-    total: active.length,
-    newThisPeriod: countContactsCreatedSince(active, periodDays),
-    whatsappCount: active.filter((c) => hasWhatsApp(c)).length,
-    incompleteCount: active.filter((c) => calculateProfileCompleteness(c, options.fieldConfig) < 100).length,
-    duplicatePairCount: findContactDuplicatePairs(active, options.duplicateDetectionPreferences ?? {}).length,
+    total: activeContacts.length,
+    newThisPeriod: countContactsCreatedSince(activeContacts, periodDays),
+    whatsappCount: activeContacts.filter((contact) => hasWhatsApp(contact)).length,
+    incompleteCount: activeContacts.filter((contact) => calculateProfileCompleteness(contact, options.fieldConfig) < 100).length,
+    duplicatePairCount: findContactDuplicatePairs(activeContacts, options.duplicateDetectionPreferences ?? {}).length,
   };
 }

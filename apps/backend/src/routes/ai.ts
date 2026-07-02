@@ -82,7 +82,7 @@ export default async function aiRoutes(
     let resolvedBaseUrl = baseUrl;
     if (!resolvedApiKey?.trim() && configId) {
       const settings = await loadGlobalSettings();
-      const savedConfig = (settings.llmConfigs ?? []).find(c => c.id === configId);
+      const savedConfig = (settings.llmConfigs ?? []).find((llmConfig) => llmConfig.id === configId);
       if (savedConfig) {
         resolvedApiKey = savedConfig.apiKey;
         resolvedBaseUrl = savedConfig.baseUrl;
@@ -104,7 +104,7 @@ export default async function aiRoutes(
         const res = await fetchWithTimeout(url);
         if (res.ok) {
           const json = (await res.json()) as GeminiModelsResponse;
-          models = (json.models || []).map((m) => m.name.replace('models/', ''));
+          models = (json.models || []).map((model) => model.name.replace('models/', ''));
         }
       } else if (provider === 'anthropic') {
         const url = safeBaseUrl || 'https://api.anthropic.com/v1/models';
@@ -116,7 +116,7 @@ export default async function aiRoutes(
         });
         if (res.ok) {
           const json = (await res.json()) as AnthropicModelsResponse;
-          models = (json.data || []).map((m) => m.id);
+          models = (json.data || []).map((model) => model.id);
         } else {
           models = ['claude-3-5-haiku-20241022', 'claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'];
         }
@@ -143,16 +143,16 @@ export default async function aiRoutes(
           const res = await fetchWithTimeout(url, { headers });
           if (res.ok) {
             const json = (await res.json()) as OpenAiModelsResponse;
-            models = (json.data || []).map((m) => m.id);
+            models = (json.data || []).map((model) => model.id);
           }
         }
       }
 
       const uniqueModels = Array.from(new Set(models)).sort();
       return reply.send({ success: true, models: uniqueModels });
-    } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Unknown error';
-      return reply.send({ success: false, message: errMsg, models: [] });
+    } catch (caughtError: unknown) {
+      const errorMessage = caughtError instanceof Error ? caughtError.message : 'Unknown error';
+      return reply.send({ success: false, message: errorMessage, models: [] });
     }
   });
 
@@ -190,11 +190,11 @@ export default async function aiRoutes(
           wordCount,
         },
       });
-    } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Failed to generate content';
+    } catch (caughtError: unknown) {
+      const errorMessage = caughtError instanceof Error ? caughtError.message : 'Failed to generate content';
       return reply.status(400).send({
         success: false,
-        message: errMsg,
+        message: errorMessage,
       });
     }
   });

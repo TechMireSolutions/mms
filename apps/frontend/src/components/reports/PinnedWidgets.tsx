@@ -166,7 +166,7 @@ function WidgetDrilldownModal({
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder={t("reports.widgets.searchRecords")}
             className="flex-1 text-xs bg-transparent border-none outline-none text-foreground placeholder-muted-foreground font-semibold"
           />
@@ -1052,8 +1052,8 @@ export function DashboardWidgets({
               }`}>
                 {isEditMode && onEditWidget && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={(event) => {
+                      event.stopPropagation();
                       onEditWidget(widget);
                     }}
                     className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all cursor-pointer"
@@ -1065,8 +1065,8 @@ export function DashboardWidgets({
                 )}
                 {isEditMode && onDeleteWidget && !widget.id.startsWith("def-") && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={(event) => {
+                      event.stopPropagation();
                       onDeleteWidget(widget.id);
                     }}
                     className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground transition-all cursor-pointer"
@@ -1452,9 +1452,9 @@ export default function PinnedWidgets({ category }: { category: string }): React
               setEditingWidgetId(null);
             }}
             onSaveWidget={(savedWidget) => {
-              const exists = widgets.some((widget) => widget.id === savedWidget.id);
+              const widgetAlreadyExists = widgets.some((widget) => widget.id === savedWidget.id);
               let nextWidgets: CustomWidget[];
-              if (exists) {
+              if (widgetAlreadyExists) {
                 nextWidgets = widgets.map((widget) => widget.id === savedWidget.id ? savedWidget : widget);
               } else {
                 nextWidgets = [...widgets, savedWidget];
@@ -1840,7 +1840,7 @@ export function WidgetBuilder({
               <input
                 type="text"
                 value={builderTitle}
-                onChange={(e) => setBuilderTitle(e.target.value)}
+                onChange={(event) => setBuilderTitle(event.target.value)}
                 placeholder={t("reports.widgets.builder.placeholderTitle")}
                 className={FORM_INPUT_BUILDER}
               />
@@ -1851,7 +1851,7 @@ export function WidgetBuilder({
                 <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.dashboardRole")}</label>
                 <select
                   value={builderRole}
-                  onChange={(e) => setBuilderRole(e.target.value)}
+                  onChange={(event) => setBuilderRole(event.target.value)}
                   className={`${FORM_INPUT_BUILDER} font-sans`}
                 >
                   <option value="admin" className="bg-background text-foreground">{t("reports.widgets.builder.roleAdmin")}</option>
@@ -1868,7 +1868,7 @@ export function WidgetBuilder({
                   <label className={FORM_LABEL}>{t("reports.widgets.builder.dataCollection")}</label>
                   <select
                     value={builderCollection}
-                    onChange={(e) => setBuilderCollection(e.target.value as CustomWidget["collection"])}
+                    onChange={(event) => setBuilderCollection(event.target.value as CustomWidget["collection"])}
                     className={FORM_INPUT_BUILDER}
                   >
                     {COLLECTION_OPTIONS.map((collectionOption) => (
@@ -1884,7 +1884,7 @@ export function WidgetBuilder({
                   <label className={FORM_LABEL}>{t("reports.widgets.builder.calcFormula")}</label>
                   <select
                     value={builderOperation}
-                    onChange={(e) => setBuilderOperation(e.target.value as CustomWidget["operation"])}
+                    onChange={(event) => setBuilderOperation(event.target.value as CustomWidget["operation"])}
                     className={FORM_INPUT_BUILDER}
                   >
                     <option value="count" className="bg-background text-foreground">{t("reports.widgets.builder.formulaCount")}</option>
@@ -1902,7 +1902,7 @@ export function WidgetBuilder({
                   <select
                     disabled={["count", "percentage"].includes(builderOperation)}
                     value={builderTargetField}
-                    onChange={(e) => setBuilderTargetField(e.target.value)}
+                    onChange={(event) => setBuilderTargetField(event.target.value)}
                     className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
                   >
                     {METADATA_FIELDS[builderCollection].numericFields.length === 0 ? (
@@ -1922,7 +1922,7 @@ export function WidgetBuilder({
                   <label className={FORM_LABEL}>{t("reports.widgets.builder.filterField")}</label>
                   <select
                     value={builderFilterField}
-                    onChange={(e) => setBuilderFilterField(e.target.value)}
+                    onChange={(event) => setBuilderFilterField(event.target.value)}
                     className={FORM_INPUT_BUILDER}
                   >
                     <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noFilter")}</option>
@@ -1941,7 +1941,7 @@ export function WidgetBuilder({
                     <select
                       disabled={!builderFilterField}
                       value={builderFilterOperator}
-                      onChange={(e) => setBuilderFilterOperator(e.target.value as CustomWidget["filterOperator"])}
+                      onChange={(event) => setBuilderFilterOperator(event.target.value as CustomWidget["filterOperator"])}
                       className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
                     >
                       <option value="equals" className="bg-background text-foreground">{t("reports.widgets.builder.opEquals")}</option>
@@ -1956,7 +1956,7 @@ export function WidgetBuilder({
                       type="text"
                       disabled={!builderFilterField}
                       value={builderFilterValue}
-                      onChange={(e) => setBuilderFilterValue(e.target.value)}
+                      onChange={(event) => setBuilderFilterValue(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderValue")}
                       className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
                     />
@@ -1969,7 +1969,7 @@ export function WidgetBuilder({
                       <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.subtextStyle")}</label>
                       <select
                         value={subTextType}
-                        onChange={(e) => setSubTextType(e.target.value as "fixed" | "dynamic")}
+                        onChange={(event) => setSubTextType(event.target.value as "fixed" | "dynamic")}
                         className={`${FORM_INPUT_BUILDER} font-sans`}
                       >
                         <option value="dynamic" className="bg-background text-foreground">{t("reports.widgets.builder.subtextDynamic")}</option>
@@ -1983,7 +1983,7 @@ export function WidgetBuilder({
                         <input
                           type="text"
                           value={fixedSubText}
-                          onChange={(e) => setFixedSubText(e.target.value)}
+                          onChange={(event) => setFixedSubText(event.target.value)}
                           placeholder={t("reports.widgets.builder.placeholderSubtitle")}
                           className={FORM_INPUT_BUILDER}
                         />
@@ -2041,7 +2041,7 @@ export function WidgetBuilder({
                               min="-100"
                               max="100"
                               value={trend}
-                              onChange={(e) => setTrend(Number(e.target.value))}
+                              onChange={(event) => setTrend(Number(event.target.value))}
                               className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
                             />
                             <button
@@ -2066,7 +2066,7 @@ export function WidgetBuilder({
                   <label className={FORM_LABEL}>{t("reports.widgets.builder.switchTarget")}</label>
                   <select
                     value={switchActionType}
-                    onChange={(e) => setSwitchActionType(e.target.value as "app_setting" | "db_record")}
+                    onChange={(event) => setSwitchActionType(event.target.value as "app_setting" | "db_record")}
                     className={FORM_INPUT_BUILDER}
                   >
                     <option value="app_setting" className="bg-background text-foreground">{t("reports.widgets.builder.switchTargetApp")}</option>
@@ -2079,7 +2079,7 @@ export function WidgetBuilder({
                     <label className={FORM_LABEL}>{t("reports.widgets.builder.selectParameter")}</label>
                     <select
                       value={switchStateKey}
-                      onChange={(e) => setSwitchStateKey(e.target.value)}
+                      onChange={(event) => setSwitchStateKey(event.target.value)}
                       className={FORM_INPUT_BUILDER}
                     >
                       <option value="section_enrollmentChart" className="bg-background text-foreground">{t("reports.widgets.builder.paramEnrollmentChart")}</option>
@@ -2097,8 +2097,8 @@ export function WidgetBuilder({
                       <label className={FORM_LABEL}>{t("reports.widgets.builder.recordCollection")}</label>
                       <select
                         value={switchCollection}
-                        onChange={(e) => {
-                          setSwitchCollection(e.target.value as CustomWidget["collection"]);
+                        onChange={(event) => {
+                          setSwitchCollection(event.target.value as CustomWidget["collection"]);
                           setSwitchRecordId("");
                         }}
                         className={FORM_INPUT_BUILDER}
@@ -2113,7 +2113,7 @@ export function WidgetBuilder({
                       <label className={FORM_LABEL}>{t("reports.widgets.builder.selectRecord")}</label>
                       <select
                         value={switchRecordId}
-                        onChange={(e) => setSwitchRecordId(e.target.value)}
+                        onChange={(event) => setSwitchRecordId(event.target.value)}
                         className={FORM_INPUT_BUILDER}
                       >
                         {dbRecordsList.length === 0 ? (
@@ -2134,7 +2134,7 @@ export function WidgetBuilder({
                     <input
                       type="text"
                       value={switchLabelOn}
-                      onChange={(e) => setSwitchLabelOn(e.target.value)}
+                      onChange={(event) => setSwitchLabelOn(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderActive")}
                       className={FORM_INPUT_BUILDER}
                     />
@@ -2144,7 +2144,7 @@ export function WidgetBuilder({
                     <input
                       type="text"
                       value={switchLabelOff}
-                      onChange={(e) => setSwitchLabelOff(e.target.value)}
+                      onChange={(event) => setSwitchLabelOff(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderInactive")}
                       className={FORM_INPUT_BUILDER}
                     />
@@ -2161,7 +2161,7 @@ export function WidgetBuilder({
                 <input
                   type="checkbox"
                   checked={thresholdEnabled}
-                  onChange={(e) => setThresholdEnabled(e.target.checked)}
+                  onChange={(event) => setThresholdEnabled(event.target.checked)}
                   className="rounded text-primary focus:ring-primary/20 cursor-pointer"
                 />
                 <span className="text-xs font-bold text-foreground">{t("reports.widgets.builder.enableThreshold")}</span>
@@ -2173,7 +2173,7 @@ export function WidgetBuilder({
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.triggerCondition")}</label>
                     <select
                       value={thresholdCondition}
-                      onChange={(e) => setThresholdCondition(e.target.value as "lt" | "gt" | "equals")}
+                      onChange={(event) => setThresholdCondition(event.target.value as "lt" | "gt" | "equals")}
                       className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
                     >
                       <option value="lt" className="bg-background text-foreground">&lt; {t("reports.widgets.builder.conditionLt")}</option>
@@ -2186,7 +2186,7 @@ export function WidgetBuilder({
                     <input
                       type="number"
                       value={thresholdValue}
-                      onChange={(e) => setThresholdValue(e.target.value)}
+                      onChange={(event) => setThresholdValue(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderThreshold")}
                       className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
                     />
@@ -2195,7 +2195,7 @@ export function WidgetBuilder({
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.alertColor")}</label>
                     <select
                       value={thresholdColor}
-                      onChange={(e) => setThresholdColor(e.target.value as "red" | "amber" | "yellow")}
+                      onChange={(event) => setThresholdColor(event.target.value as "red" | "amber" | "yellow")}
                       className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
                     >
                       <option value="red" className="text-destructive bg-background">{t("reports.widgets.builder.colorRed")}</option>
@@ -2247,7 +2247,7 @@ export function WidgetBuilder({
                     type="text"
                     placeholder={t("reports.widgets.builder.searchIcons")}
                     value={iconSearch}
-                    onChange={(e) => setIconSearch(e.target.value)}
+                    onChange={(event) => setIconSearch(event.target.value)}
                     className="w-full pl-8 pr-3 py-1.5 text-[11px] rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in"
                   />
                 </div>
@@ -2328,7 +2328,7 @@ export function WidgetBuilder({
                 min={100}
                 max={250}
                 value={scalerSize}
-                onChange={(e) => setScalerSize(Number(e.target.value))}
+                onChange={(event) => setScalerSize(Number(event.target.value))}
                 className="w-full accent-primary cursor-pointer"
               />
             </div>

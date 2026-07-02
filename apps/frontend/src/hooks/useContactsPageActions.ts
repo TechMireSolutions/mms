@@ -59,8 +59,8 @@ export function useContactsPageActions() {
             deleteId,
             mergedName: merged.name || merged.firstName,
           })
-          .catch((err) => {
-            reportClientError(err, { scope: 'contacts.merge_audit' });
+          .catch((auditError) => {
+            reportClientError(auditError, { scope: 'contacts.merge_audit' });
           });
         notify.success(t('contacts.mergeSuccessTitle'), {
           description: t('contacts.mergeSuccessDesc'),

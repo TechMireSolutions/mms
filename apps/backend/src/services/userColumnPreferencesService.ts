@@ -1,7 +1,7 @@
 import type { ModuleColumnPreference, UserModuleColumnPreferencesMap } from '@mms/shared';
 import { fetchObject, persistObject } from './dbSyncService.js';
 
-async function loadMap(objectKey: string): Promise<UserModuleColumnPreferencesMap> {
+async function loadUserColumnPreferencesMap(objectKey: string): Promise<UserModuleColumnPreferencesMap> {
   const raw = await fetchObject(objectKey);
   if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
     return raw as UserModuleColumnPreferencesMap;
@@ -9,24 +9,27 @@ async function loadMap(objectKey: string): Promise<UserModuleColumnPreferencesMa
   return {};
 }
 
-async function saveMap(objectKey: string, map: UserModuleColumnPreferencesMap): Promise<void> {
-  await persistObject(objectKey, map);
+async function saveUserColumnPreferencesMap(
+  objectKey: string,
+  preferencesByUser: UserModuleColumnPreferencesMap,
+): Promise<void> {
+  await persistObject(objectKey, preferencesByUser);
 }
 
 export async function getUserColumnPreferencesForModule(
   objectKey: string,
   userId: string,
 ): Promise<ModuleColumnPreference[]> {
-  const map = await loadMap(objectKey);
-  const preferences = map[userId];
+  const preferencesByUser = await loadUserColumnPreferencesMap(objectKey);
+  const preferences = preferencesByUser[userId];
   if (!Array.isArray(preferences)) return [];
   return preferences.filter(
-    (p): p is ModuleColumnPreference =>
-      p != null &&
-      typeof p === 'object' &&
-      typeof p.key === 'string' &&
-      typeof p.enabled === 'boolean' &&
-      typeof p.order === 'number',
+    (preference): preference is ModuleColumnPreference =>
+      preference != null &&
+      typeof preference === 'object' &&
+      typeof preference.key === 'string' &&
+      typeof preference.enabled === 'boolean' &&
+      typeof preference.order === 'number',
   );
 }
 
@@ -35,7 +38,7 @@ export async function setUserColumnPreferencesForModule(
   userId: string,
   preferences: ModuleColumnPreference[],
 ): Promise<void> {
-  const map = await loadMap(objectKey);
-  map[userId] = preferences;
-  await saveMap(objectKey, map);
+  const preferencesByUser = await loadUserColumnPreferencesMap(objectKey);
+  preferencesByUser[userId] = preferences;
+  await saveUserColumnPreferencesMap(objectKey, preferencesByUser);
 }

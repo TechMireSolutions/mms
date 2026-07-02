@@ -184,8 +184,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const prefix = getWorkspaceLocalStoragePrefix();
         localStorage.removeItem(`${prefix}messages`);
         localStorage.removeItem(`${prefix}whatsappTemplates_u:${user.id}`);
-      } catch (e) {
-        console.error('Failed to clear user-scoped caches on logout:', e);
+      } catch (cacheClearError) {
+        console.error('Failed to clear user-scoped caches on logout:', cacheClearError);
       }
     }
 

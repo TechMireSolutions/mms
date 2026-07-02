@@ -35,17 +35,17 @@ export async function synchronizeData(payload: SyncPayload): Promise<void> {
   
   await runInTransaction(async () => {
     if (collections) {
-      for (const [name, data] of Object.entries(collections)) {
-        if (Array.isArray(data)) {
-          await dbSaveCollection(name, data);
+      for (const [name, collectionItems] of Object.entries(collections)) {
+        if (Array.isArray(collectionItems)) {
+          await dbSaveCollection(name, collectionItems);
         }
       }
     }
 
     if (objects) {
-      for (const [key, data] of Object.entries(objects)) {
+      for (const [key, objectValue] of Object.entries(objects)) {
         if (isServerOnlyObjectKey(key)) continue;
-        await dbSaveObject(key, data);
+        await dbSaveObject(key, objectValue);
       }
     }
   });

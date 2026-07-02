@@ -251,30 +251,30 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     /**
      * Safely parse a storage event's newValue, logging on failure.
      *
-     * @param {StorageEvent} e - The storage event.
+     * @param {StorageEvent} storageEvent - The storage event.
      * @param {string} label - Human-readable label for error messages.
      * @returns {unknown|null}
      */
-    const safeParseEvent = (e: StorageEvent, label: string): unknown | null => {
-      if (e.newValue === null) return null;
+    const safeParseEvent = (storageEvent: StorageEvent, label: string): unknown | null => {
+      if (storageEvent.newValue === null) return null;
       try {
-        return JSON.parse(e.newValue);
+        return JSON.parse(storageEvent.newValue);
       } catch (error) {
         console.warn(`[ContactConfigContext] Failed to parse storage event for "${label}":`, error);
         return null;
       }
     };
 
-    const handler = (e: StorageEvent) => {
-      if (e.key === CONFIG_KEY) {
-        const parsed = safeParseEvent(e, "fieldConfig");
+    const handler = (storageEvent: StorageEvent) => {
+      if (storageEvent.key === CONFIG_KEY) {
+        const parsed = safeParseEvent(storageEvent, "fieldConfig");
         if (parsed) setFieldConfigState(parsed as FieldConfig);
-      } else if (e.key === PREFERENCES_KEY) {
-        const parsed = safeParseEvent(e, "preferences");
+      } else if (storageEvent.key === PREFERENCES_KEY) {
+        const parsed = safeParseEvent(storageEvent, "preferences");
         if (parsed) setPrefsState((currentPreferences) => ({ ...DEFAULT_PREFERENCES, ...currentPreferences, ...(parsed as Partial<ContactPreferences>) }));
-      } else if (e.key && e.key.startsWith(getWorkspaceLocalStoragePrefix())) {
-        const subKey = e.key.slice(getWorkspaceLocalStoragePrefix().length);
-        const parsed = safeParseEvent(e, subKey);
+      } else if (storageEvent.key && storageEvent.key.startsWith(getWorkspaceLocalStoragePrefix())) {
+        const subKey = storageEvent.key.slice(getWorkspaceLocalStoragePrefix().length);
+        const parsed = safeParseEvent(storageEvent, subKey);
         if (parsed) {
           const currentTemplatesKey = contactWhatsappTemplatesKey(user?.id);
           const COLLECTION_SETTERS: Record<string, (storedConfigValue: unknown) => void> = {
@@ -398,8 +398,8 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     if (fieldConfig.formTabs) {
       return new Set(
         fieldConfig.formTabs
-          .filter((t) => canViewContactTab(viewerRole, t))
-          .map((t) => t.key),
+          .filter((tab) => canViewContactTab(viewerRole, tab))
+          .map((tab) => tab.key),
       );
     }
     return new Set(fieldConfig.enabledTabs || ["phones", "emails", "addresses", "socials", "emergency"]);
@@ -414,11 +414,11 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   }, [fieldConfig]);
 
   const countryCodesMap = useMemo(() => {
-    const map: Record<string, string> = {};
+    const countryCodeByCountry: Record<string, string> = {};
     countryCodes.forEach(({ country, code }) => {
-      map[country] = code;
+      countryCodeByCountry[country] = code;
     });
-    return map;
+    return countryCodeByCountry;
   }, [countryCodes]);
 
   const defaultPhoneCountryCode = useMemo(() => {
@@ -435,7 +435,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
    */
   const isTabFieldEnabled = useCallback(
     (tabId: string, fieldId: string) => {
-      const field = (fields[tabId] || []).find((f) => f.key === fieldId);
+      const field = (fields[tabId] || []).find((fieldDefinition) => fieldDefinition.key === fieldId);
       return field?.enabled ?? false;
     },
     [fields]
@@ -450,7 +450,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
    */
   const isTabFieldRequired = useCallback(
     (tabId: string, fieldId: string) => {
-      const field = (fields[tabId] || []).find((f) => f.key === fieldId);
+      const field = (fields[tabId] || []).find((fieldDefinition) => fieldDefinition.key === fieldId);
       return field?.required ?? false;
     },
     [fields]
@@ -464,81 +464,81 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     Object.entries(fields).forEach(([tabId, tabFields]) => {
       const tabEnabled = tabId === "basic" || enabledTabIds.has(tabId);
       if (tabEnabled) {
-        (tabFields || []).forEach((f) => {
-          if (f.enabled) {
-            activeFields.push({ tabId, field: f });
+        (tabFields || []).forEach((fieldDefinition) => {
+          if (fieldDefinition.enabled) {
+            activeFields.push({ tabId, field: fieldDefinition });
           }
         });
       }
     });
 
     // 1. Filter out columns from registry that don't match active tabs/fields
-    const filteredRegistry = registry.filter((c) => {
-      if (c.key === "name") {
+    const filteredRegistry = registry.filter((column) => {
+      if (column.key === "name") {
         return isTabFieldEnabled("basic", "firstName");
       }
-      if (c.key === "phone") {
+      if (column.key === "phone") {
         return enabledTabIds.has("phones") && isTabFieldEnabled("phones", "number");
       }
-      if (c.key === "whatsapp") {
+      if (column.key === "whatsapp") {
         return enabledTabIds.has("phones") && isTabFieldEnabled("phones", "whatsapp");
       }
-      if (c.key === "email") {
+      if (column.key === "email") {
         return enabledTabIds.has("emails") && isTabFieldEnabled("emails", "address");
       }
-      if (c.key === "city") {
+      if (column.key === "city") {
         return enabledTabIds.has("addresses") && isTabFieldEnabled("addresses", "city");
       }
-      if (c.key === "state") {
+      if (column.key === "state") {
         return enabledTabIds.has("addresses") && isTabFieldEnabled("addresses", "state");
       }
-      if (c.key === "country") {
+      if (column.key === "country") {
         return enabledTabIds.has("addresses") && isTabFieldEnabled("addresses", "country");
       }
-      if (c.key === "line1") {
+      if (column.key === "line1") {
         return enabledTabIds.has("addresses") && isTabFieldEnabled("addresses", "line1");
       }
-      if (c.key === "gender") {
+      if (column.key === "gender") {
         return isTabFieldEnabled("basic", "gender");
       }
-      if (c.key === "dob") {
+      if (column.key === "dob") {
         return isTabFieldEnabled("basic", "dob");
       }
 
-      if (c.key === "isSyed") {
+      if (column.key === "isSyed") {
         return isTabFieldEnabled("basic", "isSyed");
       }
-      if (c.key === "socials_platform") {
+      if (column.key === "socials_platform") {
         return enabledTabIds.has("socials") && isTabFieldEnabled("socials", "platform");
       }
-      if (c.key === "socials_url") {
+      if (column.key === "socials_url") {
         return enabledTabIds.has("socials") && isTabFieldEnabled("socials", "url");
       }
-      if (c.key === "emergency_contact") {
+      if (column.key === "emergency_contact") {
         return enabledTabIds.has("emergency") && isTabFieldEnabled("emergency", "contactId");
       }
-      if (c.key === "emergency_relationship") {
+      if (column.key === "emergency_relationship") {
         return enabledTabIds.has("emergency") && isTabFieldEnabled("emergency", "relationship");
       }
 
       // Check if the field is defined and enabled in active fields
-      return activeFields.some((af) => af.field.key === c.key);
+      return activeFields.some((activeField) => activeField.field.key === column.key);
     });
 
     // 2. Add columns for any active fields that aren't in the registry yet
-    const existingKeys = new Set(filteredRegistry.map((c) => c.key));
+    const existingKeys = new Set(filteredRegistry.map((column) => column.key));
     const specialKeys = new Set([
       "firstName", "lastName", "avatar", "number", "address", "line1", "city",
       "state", "country", "label", "platform", "url", "contactId", "relationship"
     ]);
 
-    activeFields.forEach((af) => {
-      const fieldKey = af.field.key;
+    activeFields.forEach((activeField) => {
+      const fieldKey = activeField.field.key;
       if (!specialKeys.has(fieldKey) && !existingKeys.has(fieldKey)) {
-        const maxOrder = filteredRegistry.reduce((max, c) => Math.max(max, c.order), -1);
+        const maxOrder = filteredRegistry.reduce((max, column) => Math.max(max, column.order), -1);
         filteredRegistry.push({
           key: fieldKey,
-          label: af.field.label,
+          label: activeField.field.label,
           enabled: false,
           order: maxOrder + 1,
           sortable: true
@@ -548,7 +548,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
 
     const viewerRole = user?.role ?? '';
     const columnCtx = { fields, enabledTabIds, isTabFieldEnabled };
-    return filteredRegistry.filter((c) => canViewContactColumn(viewerRole, c.key, columnCtx));
+    return filteredRegistry.filter((column) => canViewContactColumn(viewerRole, column.key, columnCtx));
   }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled, user?.role]);
 
   const columnRegistry = useMemo(
@@ -557,14 +557,14 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   );
 
   const availableColumns = useMemo(() => {
-    return columnRegistry.map(c => ({ id: c.key, label: c.label, sortField: c.sortField }));
+    return columnRegistry.map((column) => ({ id: column.key, label: column.label, sortField: column.sortField }));
   }, [columnRegistry]);
 
   const visibleColumns = useMemo(() => {
     return columnRegistry
-      .filter(c => c.enabled)
+      .filter((column) => column.enabled)
       .sort((a, b) => a.order - b.order)
-      .map(c => ({ id: c.key, label: c.label, sortField: c.sortField }));
+      .map((column) => ({ id: column.key, label: column.label, sortField: column.sortField }));
   }, [columnRegistry]);
 
   const systemSortOptions = useMemo<Array<{ field: string; label: string }>>(() => [

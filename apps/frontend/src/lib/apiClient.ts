@@ -82,8 +82,8 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
         }
         init.body = JSON.stringify(parsed);
       }
-    } catch (e) {
-      console.warn('Failed to sanitize column preferences request body:', e);
+    } catch (parseError) {
+      console.warn('Failed to sanitize column preferences request body:', parseError);
     }
   }
 
@@ -97,8 +97,8 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await apiFetch(path, init);
   if (!res.ok) {
-    const err = await res.json().catch(() => ({})) as ApiErrorBody;
-    throw new ApiError(res.status, err.message ?? `Request failed (${res.status})`, err.type);
+    const errorBody = await res.json().catch(() => ({})) as ApiErrorBody;
+    throw new ApiError(res.status, errorBody.message ?? `Request failed (${res.status})`, errorBody.type);
   }
   return res.json() as Promise<T>;
 }

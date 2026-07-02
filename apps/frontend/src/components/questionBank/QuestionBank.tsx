@@ -190,7 +190,7 @@ export function QuestionBank({
           <Input
             type="search"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder={t('questionBank.searchPlaceholder')}
             aria-label={t('questionBank.searchPlaceholder')}
             className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"

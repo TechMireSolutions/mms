@@ -145,11 +145,11 @@ export async function initDb(): Promise<void> {
 export async function seedDatabase(): Promise<void> {
   try {
     await runInTransaction(async () => {
-      for (const [name, data] of Object.entries(await getMinimalCollectionsForSeed())) {
-        await saveCollection(name, data as unknown[]);
+      for (const [name, collectionItems] of Object.entries(await getMinimalCollectionsForSeed())) {
+        await saveCollection(name, collectionItems as unknown[]);
       }
-      for (const [key, data] of Object.entries(getMinimalObjects())) {
-        await saveObject(key, data);
+      for (const [key, objectValue] of Object.entries(getMinimalObjects())) {
+        await saveObject(key, objectValue);
       }
     });
     console.log('Database seeding completed successfully.');
@@ -299,12 +299,12 @@ export async function resetTenantData(): Promise<void> {
   await purgeTenantDataBySubdomain(tenant);
 
   const collections = await getMinimalCollectionsForSeed();
-  for (const [name, data] of Object.entries(collections)) {
+  for (const [name, collectionItems] of Object.entries(collections)) {
     if (name === WORKSPACES_COLLECTION) continue;
-    await saveCollection(name, data as unknown[]);
+    await saveCollection(name, collectionItems as unknown[]);
   }
-  for (const [key, data] of Object.entries(getMinimalObjects())) {
-    await saveObject(key, data);
+  for (const [key, objectValue] of Object.entries(getMinimalObjects())) {
+    await saveObject(key, objectValue);
   }
 }
 

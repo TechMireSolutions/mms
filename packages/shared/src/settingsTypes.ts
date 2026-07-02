@@ -96,7 +96,7 @@ export function getSortedFields(
   fieldsConfig: Record<string, ModuleFieldConfig> | undefined,
   customFields: ModuleCustomField[] | undefined
 ): ModuleFieldDef[] {
-  const defaults = defaultDefs.map((fieldDefinition) => {
+  const defaultFieldDefinitions = defaultDefs.map((fieldDefinition) => {
     const fieldConfig = fieldsConfig?.[fieldDefinition.id] || { enabled: true, required: !!fieldDefinition.required };
     return {
       ...fieldDefinition,
@@ -105,27 +105,27 @@ export function getSortedFields(
     };
   });
 
-  const customs = (customFields || []).map((f) => ({
-    id: f.id,
-    label: f.label,
-    type: f.type,
-    required: !!f.required,
-    options: f.options,
-    placeholder: f.placeholder,
-    description: f.description,
-    defaultValue: f.defaultValue,
-    unique: f.unique,
+  const customFieldDefinitions = (customFields || []).map((customField) => ({
+    id: customField.id,
+    label: customField.label,
+    type: customField.type,
+    required: !!customField.required,
+    options: customField.options,
+    placeholder: customField.placeholder,
+    description: customField.description,
+    defaultValue: customField.defaultValue,
+    unique: customField.unique,
     enabled: true,
   }));
 
-  const all = [...defaults, ...customs];
-  const order = fieldOrder || defaultDefs.map((f) => f.id);
-  const orderMap = Object.fromEntries(order.map((id, index) => [id, index]));
+  const fieldDefinitions = [...defaultFieldDefinitions, ...customFieldDefinitions];
+  const order = fieldOrder || defaultDefs.map((fieldDefinition) => fieldDefinition.id);
+  const orderIndexByFieldId = Object.fromEntries(order.map((fieldId, index) => [fieldId, index]));
 
-  return all.sort((a, b) => {
-    const ai = orderMap[a.id] ?? 9999;
-    const bi = orderMap[b.id] ?? 9999;
-    return ai - bi;
+  return fieldDefinitions.sort((leftField, rightField) => {
+    const leftOrderIndex = orderIndexByFieldId[leftField.id] ?? 9999;
+    const rightOrderIndex = orderIndexByFieldId[rightField.id] ?? 9999;
+    return leftOrderIndex - rightOrderIndex;
   });
 }
 
@@ -750,26 +750,26 @@ export function normalizeQuestionBankSettings(
       : DEFAULT_QUESTION_SOURCE_BOOKS;
 
   const typeById = new Map(
-    (stored?.questionTypes ?? []).map((e) => [e.id, e]),
+    (stored?.questionTypes ?? []).map((questionType) => [questionType.id, questionType]),
   );
-  merged.questionTypes = QUESTION_TYPE_IDS.map((id) => ({
-    id,
-    enabled: typeById.get(id)?.enabled ?? true,
+  merged.questionTypes = QUESTION_TYPE_IDS.map((questionTypeId) => ({
+    id: questionTypeId,
+    enabled: typeById.get(questionTypeId)?.enabled ?? true,
   }));
 
   const diffById = new Map(
-    (stored?.difficultyLevels ?? []).map((e) => [e.id, e]),
+    (stored?.difficultyLevels ?? []).map((difficultyLevel) => [difficultyLevel.id, difficultyLevel]),
   );
-  merged.difficultyLevels = QUESTION_DIFFICULTY_IDS.map((id) => ({
-    id,
-    enabled: diffById.get(id)?.enabled ?? true,
+  merged.difficultyLevels = QUESTION_DIFFICULTY_IDS.map((difficultyLevelId) => ({
+    id: difficultyLevelId,
+    enabled: diffById.get(difficultyLevelId)?.enabled ?? true,
   }));
 
   merged.fields = normalizeQuestionBankFieldsForEditor(stored?.fields);
   const defaultOrder = DEFAULT_QUESTION_BANK_SETTINGS.fieldOrder ?? [];
   const storedOrder =
     stored?.fieldOrder && stored.fieldOrder.length > 0 ? stored.fieldOrder : defaultOrder;
-  const missingSource = QUESTION_SOURCE_FIELD_IDS.filter((id) => !storedOrder.includes(id));
+  const missingSource = QUESTION_SOURCE_FIELD_IDS.filter((sourceFieldId) => !storedOrder.includes(sourceFieldId));
   merged.fieldOrder = [...storedOrder, ...missingSource];
 
   return merged;
@@ -1040,7 +1040,7 @@ export function getSortedStudentFields(
   fieldsConfig: Record<string, StudentFieldConfig> | undefined,
   customFields: StudentCustomField[] | undefined
 ): StudentFieldDef[] {
-  const defaults = DEFAULT_STUDENT_FIELD_DEFS.map((fieldDefinition) => {
+  const defaultFieldDefinitions = DEFAULT_STUDENT_FIELD_DEFS.map((fieldDefinition) => {
     const studentFieldConfig = fieldsConfig?.[fieldDefinition.id] || { enabled: true, required: false };
     return {
       ...fieldDefinition,
@@ -1050,24 +1050,24 @@ export function getSortedStudentFields(
     };
   });
 
-  const customs = (customFields || []).map((f) => ({
-    id: f.id,
-    label: f.label,
-    type: f.type,
-    required: f.required,
-    options: f.options,
+  const customFieldDefinitions = (customFields || []).map((customField) => ({
+    id: customField.id,
+    label: customField.label,
+    type: customField.type,
+    required: customField.required,
+    options: customField.options,
     enabled: true,
     isCustom: true,
   }));
 
-  const all = [...defaults, ...customs];
+  const fieldDefinitions = [...defaultFieldDefinitions, ...customFieldDefinitions];
   const order = fieldOrder || ["gender", "dob", "fatherLink", "motherLink", "guardianLink", "registeredDate"];
 
-  const orderMap = Object.fromEntries(order.map((id, index) => [id, index]));
-  return all.sort((a, b) => {
-    const ai = orderMap[a.id] ?? 9999;
-    const bi = orderMap[b.id] ?? 9999;
-    return ai - bi;
+  const orderIndexByFieldId = Object.fromEntries(order.map((fieldId, index) => [fieldId, index]));
+  return fieldDefinitions.sort((leftField, rightField) => {
+    const leftOrderIndex = orderIndexByFieldId[leftField.id] ?? 9999;
+    const rightOrderIndex = orderIndexByFieldId[rightField.id] ?? 9999;
+    return leftOrderIndex - rightOrderIndex;
   });
 }
 
@@ -1146,7 +1146,7 @@ export function getSortedTeacherFields(
   fieldsConfig: Record<string, TeacherFieldConfig> | undefined,
   customFields: TeacherCustomField[] | undefined,
 ): TeacherFieldDef[] {
-  const defaults = DEFAULT_TEACHER_FIELD_DEFS.map((fieldDefinition) => {
+  const defaultFieldDefinitions = DEFAULT_TEACHER_FIELD_DEFS.map((fieldDefinition) => {
     const teacherFieldConfig = fieldsConfig?.[fieldDefinition.id] || { enabled: true, required: false };
     return {
       ...fieldDefinition,
@@ -1155,24 +1155,24 @@ export function getSortedTeacherFields(
     };
   });
 
-  const customs: TeacherFieldDef[] = (customFields || []).map((f) => ({
-    id: f.id,
-    label: f.label,
-    type: f.type,
-    required: f.required,
-    options: f.options,
+  const customFieldDefinitions: TeacherFieldDef[] = (customFields || []).map((customField) => ({
+    id: customField.id,
+    label: customField.label,
+    type: customField.type,
+    required: customField.required,
+    options: customField.options,
     enabled: true,
     isCustom: true,
   }));
 
-  const all = [...defaults, ...customs];
+  const fieldDefinitions = [...defaultFieldDefinitions, ...customFieldDefinitions];
   const order = fieldOrder || DEFAULT_TEACHERS_SETTINGS.fieldOrder || [];
 
-  const orderMap = Object.fromEntries(order.map((id, index) => [id, index]));
-  return all.sort((a, b) => {
-    const ai = orderMap[a.id] ?? 9999;
-    const bi = orderMap[b.id] ?? 9999;
-    return ai - bi;
+  const orderIndexByFieldId = Object.fromEntries(order.map((fieldId, index) => [fieldId, index]));
+  return fieldDefinitions.sort((leftField, rightField) => {
+    const leftOrderIndex = orderIndexByFieldId[leftField.id] ?? 9999;
+    const rightOrderIndex = orderIndexByFieldId[rightField.id] ?? 9999;
+    return leftOrderIndex - rightOrderIndex;
   });
 }
 
@@ -1519,7 +1519,7 @@ export function optimizeImage(
 
   return new Promise((resolve) => {
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = (loadEvent) => {
       const img = new Image();
       img.onload = async () => {
         let width = img.width;
@@ -1557,7 +1557,7 @@ export function optimizeImage(
         resolve(optimizedFile);
       };
       img.onerror = () => resolve(file);
-      img.src = event.target?.result as string;
+      img.src = loadEvent.target?.result as string;
     };
     reader.onerror = () => resolve(file);
     reader.readAsDataURL(file);

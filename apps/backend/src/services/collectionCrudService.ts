@@ -34,9 +34,9 @@ export function defineCollectionCrudService<T extends IdentifiedRecord>(
 
   async function deleteById(id: string): Promise<boolean> {
     const rows = await load();
-    const next = rows.filter((row) => String(row.id) !== id);
-    if (next.length === rows.length) return false;
-    await persistCollection(collectionName, next);
+    const remainingRows = rows.filter((row) => String(row.id) !== id);
+    if (remainingRows.length === rows.length) return false;
+    await persistCollection(collectionName, remainingRows);
     return true;
   }
 

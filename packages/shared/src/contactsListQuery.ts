@@ -23,21 +23,21 @@ export interface ContactsListPageResult {
 export function filterContactsForQuery(contacts: Contact[], query: ContactsListQuery): Contact[] {
   let rows = query.includeDeleted ? contacts : filterActiveContacts(contacts);
   if (query.gender) {
-    rows = rows.filter((c) => c.gender === query.gender);
+    rows = rows.filter((contact) => contact.gender === query.gender);
   }
   if (query.search?.trim()) {
-    rows = rows.filter((c) => contactMatchesSearch(c, query.search!));
+    rows = rows.filter((contact) => contactMatchesSearch(contact, query.search!));
   }
   return rows;
 }
 
-function compareContacts(a: Contact, b: Contact, field: string, dir: 'asc' | 'desc'): number {
-  const av = a[field as keyof Contact];
-  const bv = b[field as keyof Contact];
-  const aStr = av == null ? '' : String(av);
-  const bStr = bv == null ? '' : String(bv);
-  const cmp = aStr.localeCompare(bStr, undefined, { numeric: true, sensitivity: 'base' });
-  return dir === 'desc' ? -cmp : cmp;
+function compareContacts(leftContact: Contact, rightContact: Contact, field: string, dir: 'asc' | 'desc'): number {
+  const leftValue = leftContact[field as keyof Contact];
+  const rightValue = rightContact[field as keyof Contact];
+  const leftText = leftValue == null ? '' : String(leftValue);
+  const rightText = rightValue == null ? '' : String(rightValue);
+  const comparison = leftText.localeCompare(rightText, undefined, { numeric: true, sensitivity: 'base' });
+  return dir === 'desc' ? -comparison : comparison;
 }
 
 /** Paginates an in-memory contact list (server-side data source). */
@@ -49,7 +49,7 @@ export function paginateContacts(contacts: Contact[], query: ContactsListQuery):
   const sortField = query.sortField?.trim();
   if (sortField) {
     const dir = query.sortDir === 'desc' ? 'desc' : 'asc';
-    rows = [...rows].sort((a, b) => compareContacts(a, b, sortField, dir));
+    rows = [...rows].sort((leftContact, rightContact) => compareContacts(leftContact, rightContact, sortField, dir));
   }
 
   const total = rows.length;
@@ -65,7 +65,7 @@ export function paginateContacts(contacts: Contact[], query: ContactsListQuery):
 }
 
 export function countActiveContactsInList(contacts: Contact[]): number {
-  return contacts.filter((c) => !isContactDeleted(c)).length;
+  return contacts.filter((contact) => !isContactDeleted(contact)).length;
 }
 
 /** Returns all contacts matching a list query (no pagination). */
@@ -74,7 +74,7 @@ export function listAllContactsForQuery(contacts: Contact[], query: ContactsList
   const sortField = query.sortField?.trim();
   if (sortField) {
     const dir = query.sortDir === 'desc' ? 'desc' : 'asc';
-    rows = [...rows].sort((a, b) => compareContacts(a, b, sortField, dir));
+    rows = [...rows].sort((leftContact, rightContact) => compareContacts(leftContact, rightContact, sortField, dir));
   }
   return rows;
 }

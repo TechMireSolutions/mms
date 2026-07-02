@@ -52,7 +52,7 @@ export function enqueueContactsOutbox(entry: ContactsOutboxInput): void {
 function removeOutboxEntry(id: string): void {
   writeJson(
     OUTBOX_KEY,
-    getContactsOutbox().filter((e) => e.id !== id),
+    getContactsOutbox().filter((outboxEntry) => outboxEntry.id !== id),
   );
   window.dispatchEvent(new CustomEvent('contacts-sync-outbox-changed'));
 }
@@ -117,7 +117,7 @@ export function clearContactsSyncConflicts(): void {
 
 export function requeueContactsSyncConflict(id: string): void {
   const conflicts = getContactsSyncConflicts();
-  const entry = conflicts.find((c) => c.id === id);
+  const entry = conflicts.find((conflict) => conflict.id === id);
   if (!entry) return;
   const { failedAt: _failedAt, ...outboxEntry } = entry;
   const queue = getContactsOutbox();
@@ -137,7 +137,7 @@ export function requeueAllContactsSyncConflicts(): number {
 export function dismissContactsSyncConflict(id: string): void {
   writeJson(
     CONFLICTS_KEY,
-    getContactsSyncConflicts().filter((c) => c.id !== id),
+    getContactsSyncConflicts().filter((conflict) => conflict.id !== id),
   );
   window.dispatchEvent(new CustomEvent('contacts-sync-outbox-changed'));
 }

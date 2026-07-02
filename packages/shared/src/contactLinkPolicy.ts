@@ -31,11 +31,11 @@ export function stripRecordFields<T extends Record<string, unknown>>(
   record: T,
   fields: readonly string[],
 ): T {
-  const next = { ...record };
+  const strippedRecord = { ...record };
   for (const field of fields) {
-    delete next[field];
+    delete strippedRecord[field];
   }
-  return next;
+  return strippedRecord;
 }
 
 /** Removes contact-owned profile fields when a contact link is present. */
@@ -50,17 +50,17 @@ export function normalizeContactLinkedRecord<T extends Record<string, unknown>>(
 
 /** Removes parent name copies when parent contact links exist. */
 export function normalizeParentContactLinks<T extends Record<string, unknown>>(record: T): T {
-  let next = { ...record };
-  if (next.fatherContactId != null && next.fatherContactId !== '') {
-    next = stripRecordFields(next, ['fatherName']);
+  let normalizedRecord = { ...record };
+  if (normalizedRecord.fatherContactId != null && normalizedRecord.fatherContactId !== '') {
+    normalizedRecord = stripRecordFields(normalizedRecord, ['fatherName']);
   }
-  if (next.motherContactId != null && next.motherContactId !== '') {
-    next = stripRecordFields(next, ['motherName']);
+  if (normalizedRecord.motherContactId != null && normalizedRecord.motherContactId !== '') {
+    normalizedRecord = stripRecordFields(normalizedRecord, ['motherName']);
   }
-  if (next.guardianContactId != null && next.guardianContactId !== '') {
-    next = stripRecordFields(next, ['guardianName']);
+  if (normalizedRecord.guardianContactId != null && normalizedRecord.guardianContactId !== '') {
+    normalizedRecord = stripRecordFields(normalizedRecord, ['guardianName']);
   }
-  return next;
+  return normalizedRecord;
 }
 
 /** Removes a denormalized display name when the canonical id field is set. */
@@ -81,7 +81,7 @@ export function hydrateContactProfile<T extends Record<string, unknown>>(
 ): T {
   const contactId = record[contactIdField];
   if (contactId == null || contactId === '') return record;
-  const contact = contacts.find((c) => String(c.id) === String(contactId));
+  const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(contactId));
   if (!contact) return record;
   return {
     ...record,
@@ -98,20 +98,20 @@ export function hydrateParentContactNames<T extends Record<string, unknown>>(
   record: T,
   contacts: ContactLike[],
 ): T {
-  let next = { ...record };
+  let hydratedRecord = { ...record };
   if (record.fatherContactId != null && record.fatherContactId !== '') {
-    const contact = contacts.find((c) => String(c.id) === String(record.fatherContactId));
-    if (contact?.name) next = { ...next, fatherName: contact.name };
+    const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(record.fatherContactId));
+    if (contact?.name) hydratedRecord = { ...hydratedRecord, fatherName: contact.name };
   }
   if (record.motherContactId != null && record.motherContactId !== '') {
-    const contact = contacts.find((c) => String(c.id) === String(record.motherContactId));
-    if (contact?.name) next = { ...next, motherName: contact.name };
+    const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(record.motherContactId));
+    if (contact?.name) hydratedRecord = { ...hydratedRecord, motherName: contact.name };
   }
   if (record.guardianContactId != null && record.guardianContactId !== '') {
-    const contact = contacts.find((c) => String(c.id) === String(record.guardianContactId));
-    if (contact?.name) next = { ...next, guardianName: contact.name };
+    const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(record.guardianContactId));
+    if (contact?.name) hydratedRecord = { ...hydratedRecord, guardianName: contact.name };
   }
-  return next;
+  return hydratedRecord;
 }
 
 export interface NamedEntity {

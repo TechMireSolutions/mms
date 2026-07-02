@@ -29,17 +29,17 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     let promise: Promise<void>;
 
     if (language === 'ar') {
-      promise = import('@mms/shared/translations/ar').then(m => {
-        registerLanguagePack('ar', m.APP_TRANSLATIONS_AR);
+      promise = import('@mms/shared/translations/ar').then((translationModule) => {
+        registerLanguagePack('ar', translationModule.APP_TRANSLATIONS_AR);
       });
     } else if (language === 'ur') {
-      promise = import('@mms/shared/translations/ur').then(m => {
-        registerLanguagePack('ur', m.APP_TRANSLATIONS_UR);
+      promise = import('@mms/shared/translations/ur').then((translationModule) => {
+        registerLanguagePack('ur', translationModule.APP_TRANSLATIONS_UR);
       });
     } else if (language === 'fa') {
       promise = Promise.all([
-        import('@mms/shared/translations/ar').then(m => m.APP_TRANSLATIONS_AR),
-        import('@mms/shared/translations/fa').then(m => m.APP_TRANSLATIONS_FA)
+        import('@mms/shared/translations/ar').then((translationModule) => translationModule.APP_TRANSLATIONS_AR),
+        import('@mms/shared/translations/fa').then((translationModule) => translationModule.APP_TRANSLATIONS_FA)
       ]).then(([arDict, faDict]) => {
         registerLanguagePack('fa', { ...arDict, ...faDict });
       });
@@ -53,8 +53,8 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
         setLoadedLanguages((currentLoadedLanguages) => ({ ...currentLoadedLanguages, [language]: true }));
         setIsLoading(false);
       })
-      .catch(err => {
-        console.error(`Failed to load translation for ${language}:`, err);
+      .catch((translationError) => {
+        console.error(`Failed to load translation for ${language}:`, translationError);
         setIsLoading(false);
       });
   }, [language, loadedLanguages]);

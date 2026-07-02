@@ -66,13 +66,13 @@ export async function validateContactDynamic(
     for (const item of contact) {
       const parsed = schema.safeParse(item);
       if (!parsed.success) {
-        throw new Error(parsed.error.issues.map((e) => e.message).join('; '));
+        throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
       }
     }
   } else {
     const parsed = schema.safeParse(contact);
     if (!parsed.success) {
-      throw new Error(parsed.error.issues.map((e) => e.message).join('; '));
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
     }
   }
 }

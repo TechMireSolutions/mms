@@ -55,10 +55,10 @@ export function TeacherList({
   const customFields = settings.customFields ?? [];
   const sortedCustomFields = useMemo(() => {
     const order = settings.fieldOrder ?? DEFAULT_TEACHERS_SETTINGS.fieldOrder ?? [];
-    const orderMap = Object.fromEntries(order.map((id, index) => [id, index]));
+    const orderByFieldId = Object.fromEntries(order.map((fieldId, index) => [fieldId, index]));
     return [...customFields].sort((firstField, secondField) => {
-      const firstFieldOrder = orderMap[firstField.id] ?? 9999;
-      const secondFieldOrder = orderMap[secondField.id] ?? 9999;
+      const firstFieldOrder = orderByFieldId[firstField.id] ?? 9999;
+      const secondFieldOrder = orderByFieldId[secondField.id] ?? 9999;
       return firstFieldOrder - secondFieldOrder;
     });
   }, [customFields, settings.fieldOrder]);
@@ -72,7 +72,7 @@ export function TeacherList({
   );
 
   const statusConfig = useMemo(() => {
-    const map: Record<string, { label: string; cls: string }> = {};
+    const configByStatus: Record<string, { label: string; cls: string }> = {};
     const statusValues = statuses.length > 0 ? statuses : ['active', 'inactive', 'on_leave'];
     for (const statusValue of statusValues) {
       const translationKey = `teachers.status.${statusValue}` as AppTranslationKey;
@@ -84,9 +84,9 @@ export function TeacherList({
       else if (statusValue === 'on_leave') cls = SEMANTIC_BADGE.warning;
       else if (statusValue === 'inactive') cls = SEMANTIC_BADGE.muted;
 
-      map[statusValue] = { label, cls };
+      configByStatus[statusValue] = { label, cls };
     }
-    return map;
+    return configByStatus;
   }, [statuses, t]);
   const [sortField, setSortField] = useState<
     'name' | 'specialization' | 'qualification' | 'status' | 'joinDate'

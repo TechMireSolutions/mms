@@ -1,153 +1,258 @@
-# MMS — Madrasa Management System
+# 🕌 Madrasa Management System (MMS) — Monorepo
 
-pnpm workspace monorepo: React frontend, Fastify backend, shared types package, PostgreSQL database.
+Welcome to the **Madrasa Management System (MMS)**, a highly robust, multi-tenant monorepo built using a modern, dependency-fresh TypeScript stack. It provides administrative, academic, financial, scheduling, and communication tools designed specifically for madrasas with high-efficiency data flows and strict tenant isolation.
 
-## Layout
+---
+
+## 🗺️ Monorepo Layout
+
+MMS is structured as a `pnpm` workspace orchestrated by a unified Turbo build system:
 
 ```text
 .
 ├── apps/
-│   ├── frontend/          # React 19 + Vite (port 5173)
-│   └── backend/           # Fastify 5 + Drizzle + PostgreSQL (port 3000)
+│   ├── frontend/          # React 19 SPA (Vite 8, Tailwind CSS v4, Radix/shadcn, TanStack Query v5)
+│   └── backend/           # Fastify 5 REST API (Drizzle ORM, Node-Postgres, PM2)
 ├── packages/
-│   └── shared/            # @mms/shared — types, settings defaults, utilities
-├── package.json           # Root scripts (turbo)
-├── pnpm-workspace.yaml
-├── turbo.json
-└── restart_servers.sh     # Kill stale ports, start backend + frontend
+│   └── shared/            # @mms/shared — types, validation schemas, translations, theme/branding formulas
+├── scripts/               # Production deployments, shell utilities, and diagnostics
+│   ├── apache/            # Apache vhost installer & host-isolation configurations
+│   └── production/        # VPS bootstrapping, PM2 startup, backups, and database restores
+├── docs/                  # Architectural documents & technical specifications
+├── .agent/                # Antigravity agent configuration, custom rules, and workflow guides
+├── .cursor/               # Cursor editor rules and workspace capabilities
+├── .claude/               # Claude Code rules and settings templates
+├── package.json           # Root workspace script definitions
+├── pnpm-workspace.yaml    # Monorepo packages and release age constraints
+├── restart_servers.sh     # Single entry point script to run and inspect dev servers
+└── turbo.json             # Turborepo task pipeline definitions
 ```
 
-## Prerequisites
+---
 
-- **Node.js** 26+ (`engines` in root `package.json`)
-- **pnpm** 11.8+ (`corepack enable` uses `packageManager` from root `package.json`)
-- **PostgreSQL** 15+ (local install or Docker)
+## 🛠️ Technology Stack
 
-## Tech stack (current)
+MMS targets stable, modern runtime and framework versions. Run `pnpm outdated -r` from the root to review upgrades.
 
-| Layer | Version |
-|-------|---------|
-| Node.js | 26 |
-| pnpm | 11.8 |
-| Turbo | 2.9 |
-| TypeScript | 6 |
-| React | 19 |
-| Vite | 8 |
-| Tailwind CSS | 4 |
-| TanStack Query | 5 |
-| Fastify | 5 |
-| Drizzle ORM | 0.45 |
-| PostgreSQL | 17 (CI) |
-| Vitest | 4 |
-| Playwright | 1.61 |
-| Zod | 4 |
+| Component | Technology | Version | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Runtime** | Node.js | `>=24.14.0` (LTS) | Server JavaScript execution environment |
+| **Package Manager**| pnpm | `11.9.0` | High-performance monorepo package workspace manager |
+| **Build Pipeline** | Turbo | `^2.10.0` | Monorepo build orchestrator with remote caching |
+| **Language** | TypeScript | `^6.0.3` | Strict type safety, validation, and compile target |
+| **Frontend SPA** | React | `^19.2.7` | UI component engine with React 19 inputs |
+| **Frontend Tooling** | Vite | `^8.1.0` | Bundler and development server tool |
+| **Styling** | Tailwind CSS | `^4.3.1` | Utility-first CSS engine with native CSS variables |
+| **Animations** | Framer Motion | `^12.42.0` | Smooth interactive animations and transitions |
+| **Query Cache** | TanStack Query | `^5.101.2` | Client data synchronizer, optimistic updates, and cache |
+| **Backend API** | Fastify | `^5.9.0` | High-throughput, low-overhead HTTP API framework |
+| **Database ORM** | Drizzle ORM | `^0.45.2` | Type-safe SQL query generation and schema migrations |
+| **Database** | PostgreSQL | `>=15.0` (17 in CI) | Relational multi-tenant persistent storage |
+| **Test Runner** | Vitest | `^4.1.9` | ESM-first unit & integration test framework |
+| **Validation** | Zod | `^4.4.3` | Schema validation for forms, APIs, and workspace state |
 
-Run `pnpm outdated -r` from the repo root to check for newer releases.
+---
 
-## Environment
+## ⚙️ Environment Configuration
 
-| Variable | App | Notes |
-|----------|-----|-------|
-| `PORT` | backend | **Production (Hetzner):** `5002` (Apache upstream). **Local dev:** `3000` or `MMS_BACKEND_PORT` |
-| `VITE_API_URL` | frontend | Dev default: Vite proxies `/api` → `http://localhost:3000` |
-| `JWT_SECRET` | backend | **Required** — server refuses to start without it |
-| `DATABASE_URL` | backend | Default: `postgresql://postgres:postgres@localhost:5432/mms` |
-| `ALLOWED_ORIGIN` | backend | Production CORS origin |
-| `NODE_ENV` | backend | `production` tightens CORS |
+Ensure environment settings are configured in `apps/backend/.env` and `apps/frontend/.env` (or override locally with `.env.local`).
 
-Example backend `.env` (`apps/backend/.env`):
+### Backend Environment Variables (`apps/backend/.env`)
 
-```env
-JWT_SECRET=change-me-in-production
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mms
+| Variable | Type | Default / Example | Description |
+| :--- | :--- | :--- | :--- |
+| `DATABASE_URL` | String | `postgres://postgres:postgres@localhost:5432/mms` | PostgreSQL connection string |
+| `JWT_SECRET` | String | *(None)* | **Required**. Must be $\ge 32$ characters in production |
+| `PORT` | Number | `3000` (Dev) / `5002` (Prod) | Fastify listener port |
+| `NODE_ENV` | String | `development` | Runtime environment (`development` / `production`) |
+| `MMS_APP_DOMAIN` | Hostname | `yourdomain.com` | **Required**. Apex domain to resolve tenant subdomains |
+| `ALLOWED_ORIGIN` | URL | `http://localhost:5173` | CORS allowed origin header value |
+| `MMS_UPLOADS_DIR` | Path | `apps/backend/uploads` | Asset upload location (e.g. workspace logos) |
+| `PG_POOL_MAX` | Number | `20` | Maximum PostgreSQL pool connection limits |
+| `LOG_LEVEL` | String | `info` | Logger verbosity (`debug`, `info`, `warn`, `error`) |
+
+### Platform Email Integration
+
+Emails (for login, onboarding, or reports) support two configurations. Define **one** set:
+
+* **Resend API (Preferred)**:
+  * `PLATFORM_RESEND_API_KEY`: API credential key from Resend.
+  * `PLATFORM_EMAIL_FROM`: Verified sender address (e.g., `noreply@yourdomain.com`).
+  * `PLATFORM_EMAIL_FROM_NAME`: Custom sender name (defaults to `"MMS Platform"`).
+* **SMTP Transport (Fallback)**:
+  * `PLATFORM_SMTP_HOST`: Mail server hostname (e.g., `smtp.gmail.com`).
+  * `PLATFORM_SMTP_PORT`: SMTP port (usually `587` or `465`).
+  * `PLATFORM_SMTP_SECURE`: Use SSL/TLS (`true`/`false`).
+  * `PLATFORM_SMTP_USER`: SMTP username credentials.
+  * `PLATFORM_SMTP_PASS`: SMTP password credentials.
+
+---
+
+## 🚀 Local Development
+
+### 1. Database Setup
+Start a local PostgreSQL container if you do not have PostgreSQL running natively:
+```bash
+docker run --name mms-postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres:17
 ```
 
-## Commands (repo root)
+### 2. Configure Environment
+Initialize backend configuration variables:
+```bash
+cp apps/backend/.env.example apps/backend/.env
+```
+Open `apps/backend/.env` and ensure `JWT_SECRET` is populated and `DATABASE_URL` matches your local database target.
+
+### 3. Verification & Bootstrapping
+Before running, you can verify your local environment configuration:
+```bash
+bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
+```
+
+### 4. Running the Dev Stack
+Install dependencies and run servers using the unified control script:
+```bash
+pnpm install
+./restart_servers.sh          # Launches servers inside a background GNU screen session
+```
+
+#### Handy Development Commands
+* **Inspect Status**: `./restart_servers.sh status` lists active ports, health checks, and running logs.
+* **Stop Servers**: `./restart_servers.sh stop` terminates the screen session and releases ports.
+* **Foreground Mode**: `./restart_servers.sh --foreground` runs the services directly in your active terminal.
+* **Attach Screen**: `screen -r mms-dev` connects directly to the dev console. Detach with `Ctrl+A` then `D`.
+* **Tail Logs**: `tail -f .logs/frontend.log .logs/backend.log .logs/worker.log` reviews realtime outputs.
+
+*Note: Drizzle schema migrations and demo datasets seed automatically on backend start if an empty database is detected.*
+
+---
+
+## ⚙️ Background Jobs Architecture
+
+CPU-bound or heavy operations (such as duplicate contact scans, CSV exports, or sync operations) run **out-of-process** from Fastify to keep the main event loop responsive.
+
+```
+                  ┌────────────────────────┐
+                  │  Fastify API Process   │
+                  └───────────┬────────────┘
+                              │ Enqueues Job
+                              ▼
+                  ┌────────────────────────┐
+                  │  PostgreSQL Database   │
+                  │   `background_jobs`    │
+                  └───────────▲────────────┘
+                              │ Mutex Locks (FOR UPDATE SKIP LOCKED)
+                              │ Updates Progress & Artifacts
+                              ▼
+                  ┌────────────────────────┐
+                  │ Background Worker Loop │ (tsx watch src/worker.ts)
+                  └───────────┬────────────┘
+                              │ Forks Task Process
+                              ▼
+                    ┌──────────────────────┐
+                    │  Job Runner Process  │ (src/jobRunnerProcess.ts)
+                    └──────────────────────┘
+```
+
+1. **Enqueueing**: Fastify endpoints write job parameters to the `background_jobs` table.
+2. **Locking**: The worker loop (`worker.ts`) polls and reserves pending jobs using PostgreSQL transactions with `FOR UPDATE SKIP LOCKED`.
+3. **Execution**: The worker spawns a child process (`jobRunnerProcess.ts`) dedicated to running the job, guaranteeing memory and CPU isolation.
+4. **Feedback**: The child process updates the database with its execution progress, errors, and output artifacts (such as download links).
+
+---
+
+## 🌐 Production (Hetzner / Ubuntu VPS)
+
+In production, Fastify runs on **`PORT=5002`** serving the compiled SPA static assets and the REST endpoints. Apache acts as the reverse proxy terminating wildcard SSL/TLS traffic and routing requests downstream.
+
+### Deployment Port Separation Policy
+* **Development**: Ports `3000` (API) and `5173` (SPA)
+* **Production**: Port `5002` (Fastify API + SPA host)
+* **Forbidden Ports in Prod**: Ports `3000` and `3001` (to prevent dev overlaps)
+
+### Fresh VPS Bootstrap Flow
+On a fresh Ubuntu 22.04 or 24.04 VPS:
+
+1. **Bootstrap Infrastructure**:
+   ```bash
+   sudo bash scripts/production/bootstrap-ubuntu-vps.sh
+   ```
+   *Installs Node.js, PM2, Apache, sets up firewall configurations, and logs folder paths.*
+
+2. **Clone and Build**:
+   Clone the repository to `/var/www/mmsv2`, create `apps/backend/.env`, and install packages:
+   ```bash
+   pnpm install
+   pnpm build
+   ```
+
+3. **Configure Process Manager (PM2)**:
+   Daemonize backend and worker processes:
+   ```bash
+   bash scripts/production/setup-pm2-startup.sh
+   ```
+
+4. **Lock Virtual Hosts**:
+   Configure Apache virtual hosts for subdomain-based tenant routing:
+   ```bash
+   bash scripts/apply-production-host-isolation.sh apps/backend/.env
+   ```
+
+5. **Diagnostic Checks**:
+   Check configuration mismatches or upstream issues:
+   ```bash
+   bash scripts/server-diagnose.sh apps/backend/.env
+   bash scripts/fix-apache-upstream.sh apps/backend/.env
+   curl -fsS http://127.0.0.1:5002/ready       # Should return 200 OK
+   ```
+
+### Daily Backups and Database Restores
+* **Cron Daily Backups**:
+  Add this to your crontab (`crontab -e`) to backup the PostgreSQL database nightly at 3:00 AM:
+  ```text
+  0 3 * * * /var/www/mmsv2/scripts/production/backup-postgres.sh
+  ```
+  Backups are saved to `.backups/postgres` with a automatic 14-day rotation window.
+* **Database Restore Utility**:
+  Restore the database to a specific snapshot:
+  ```bash
+  bash scripts/production/restore-postgres.sh /var/www/mmsv2/.backups/postgres/mms-snapshot.sql.gz
+  ```
+  *This command stops PM2, drops the public schema, applies the backup dump, and restarts the server process.*
+
+---
+
+## 🧪 Testing and Verification
+
+MMS implements automated quality checks across the codebase workspace:
 
 ```bash
-pnpm install      # install all workspaces
-pnpm dev          # frontend + backend via turbo
-pnpm build        # build @mms/shared, then apps
-pnpm typecheck    # TypeScript check all packages
+pnpm test          # Run Vitest test suites across the monorepo
+pnpm lint          # Validate ESLint code rules
+pnpm typecheck     # Strict TypeScript type compiler check
 ```
 
-Per-app:
+### Test Scope Breakdown
+* **Backend Tests** (`apps/backend/src/__tests__`): Route tests utilizing Fastify's `inject()` helper. This validates REST handlers, authentication artifacts, and tenant isolation middleware without opening network sockets.
+* **Frontend Tests** (`apps/frontend/vitest.config.ts`): React components unit tests executed within `happy-dom` mock environments, utilizing mocked networks.
+* **Shared Logic** (`packages/shared/src/__tests__`): Validates date/timezone utils, validation schemas, translation maps, and custom formulas.
+* **End-to-End E2E Tests** (`e2e/`): Web client integration test flows run via Playwright. Run locally with `pnpm exec playwright test`.
 
+---
+
+## 🤖 AI Customization and Rules Sync
+
+This monorepo supports developer configuration files for multiple AI coding tools. Custom instructions, project guidelines, and module capabilities are shared under a unified codebase standard:
+
+```text
+.agent/             # Antigravity capabilities (Skills, rules, and workflows)
+.cursor/            # Cursor configurations (.mdc files)
+.claude/            # Claude Code workspace guidelines
+```
+
+### Code Standards Synchronization
+To avoid rule drift, edits to development standards, frameworks, or security rules must be synchronized across all coding tools. If you edit files within `.agent/rules`, `.cursor/rules`, or `.claude/rules`, run the sync script to propagate changes:
 ```bash
-cd apps/frontend && pnpm lint
-cd apps/backend && pnpm dev
+bash .agent/scripts/sync-all.sh
 ```
-
-Quick restart (PostgreSQL Docker, GNU screen, health checks):
-
-```bash
-./restart_servers.sh              # start (recommended)
-./restart_servers.sh status       # screen + ports
-./restart_servers.sh stop         # stop everything
-./restart_servers.sh --foreground # run in this terminal
-```
-
-## Local development
-
-1. Start PostgreSQL and create database `mms` (or match `DATABASE_URL`).
-2. Set `JWT_SECRET` in `apps/backend/.env`.
-3. From repo root: `pnpm install && ./restart_servers.sh`.
-4. Open `http://localhost:5173` — API at `http://localhost:3000` (`GET /health`).
-
-Migrations and seeds run on backend startup when the database is empty.
-
-## Production build
-
-```bash
-pnpm build
-```
-
-- Shared package: `packages/shared/dist`
-- Backend: `apps/backend/dist` → `node dist/index.js`
-- Frontend: `apps/frontend/dist` (static assets for any static host)
-
-## Docker (backend)
-
-Build from the **repository root** (not `apps/backend`):
-
-```bash
-docker build -f apps/backend/Dockerfile -t mms-backend .
-docker run -p 3000:3000 \
-  -e JWT_SECRET=change-me \
-  -e DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/mms \
-  mms-backend
-```
-
-PostgreSQL must be reachable at `DATABASE_URL`. The image exposes port **3000** by default; set `-e PORT=5002` and `-p 5002:5002` to match Hetzner.
-
-## Production (Ubuntu VPS / Hetzner)
-
-Fastify serves **API + SPA** on **`PORT=5002`**. Apache terminates TLS and proxies to `http://127.0.0.1:5002/`.
-
-### First-time server setup
-
-```bash
-# On a fresh Ubuntu 22.04/24.04 VPS (as sudo-capable user):
-sudo bash scripts/production/bootstrap-ubuntu-vps.sh
-
-# After cloning repo to /var/www/mmsv2 and creating apps/backend/.env:
-cd /var/www/mmsv2
-pnpm install && pnpm build
-bash scripts/production/setup-pm2-startup.sh   # PM2 + boot persistence
-bash scripts/apply-production-host-isolation.sh apps/backend/.env
-
-# Daily SQLite backups (cron example):
-# 0 3 * * * /var/www/mmsv2/scripts/production/backup-sqlite.sh
-```
-
-Required `apps/backend/.env` on server: `JWT_SECRET`, `DATABASE_URL`, `PORT=5002`, `NODE_ENV=production`, `MMS_APP_DOMAIN`.
-
-GitHub Actions (`deploy.yml`) deploys after CI on `main`. Set secrets: `SERVER_IP`, `SERVER_USER`, `SSH_PRIVATE_KEY`, `MMS_APP_DOMAIN` (full apex hostname, e.g. `mmsv2.aabtaab.com`). Do **not** use a separate `MMS_API_URL` — Apache and deploy health checks use `MMS_APP_DOMAIN` only.
-
-### Troubleshooting
-
-```bash
-bash scripts/server-diagnose.sh apps/backend/.env
-bash scripts/fix-apache-upstream.sh apps/backend/.env
-curl -fsS http://127.0.0.1:5002/ready   # must be 200 + database connected
-```
+This utility keeps the rules, markdown patterns, and metadata attributes identical across the workspace folders.

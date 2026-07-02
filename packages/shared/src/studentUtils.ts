@@ -9,9 +9,9 @@ import type { Student } from './studentTypes.js';
 
 /** Strips contact-owned fields before persisting a student row. */
 export function normalizeStoredStudent<T extends Record<string, unknown>>(record: T): T {
-  let next = normalizeContactLinkedRecord(record);
-  next = normalizeParentContactLinks(next);
-  return next;
+  let normalizedStudent = normalizeContactLinkedRecord(record);
+  normalizedStudent = normalizeParentContactLinks(normalizedStudent);
+  return normalizedStudent;
 }
 
 /** Hydrates student + parent display fields from contacts. */

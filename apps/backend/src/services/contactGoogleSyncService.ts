@@ -63,33 +63,33 @@ async function loadContactGoogleSyncConfigMap(): Promise<UserGoogleSyncMap> {
   return {};
 }
 
-async function saveContactGoogleSyncConfigMap(map: UserGoogleSyncMap): Promise<void> {
-  await persistObject(CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY, map);
+async function saveContactGoogleSyncConfigMap(configByUser: UserGoogleSyncMap): Promise<void> {
+  await persistObject(CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY, configByUser);
 }
 
 export async function getContactGoogleSyncConfig(userId: string): Promise<ContactGoogleSyncConfig> {
-  const map = await loadContactGoogleSyncConfigMap();
-  return map[userId] ?? {};
+  const configByUser = await loadContactGoogleSyncConfigMap();
+  return configByUser[userId] ?? {};
 }
 
 export async function setContactGoogleSyncConfig(
   userId: string,
   config: ContactGoogleSyncConfig,
 ): Promise<ContactGoogleSyncConfig> {
-  const map = await loadContactGoogleSyncConfigMap();
-  const next: ContactGoogleSyncConfig = {
+  const configByUser = await loadContactGoogleSyncConfigMap();
+  const updatedConfig: ContactGoogleSyncConfig = {
     ...config,
     updatedAt: new Date().toISOString(),
   };
-  map[userId] = next;
-  await saveContactGoogleSyncConfigMap(map);
-  return next;
+  configByUser[userId] = updatedConfig;
+  await saveContactGoogleSyncConfigMap(configByUser);
+  return updatedConfig;
 }
 
 export async function clearContactGoogleSyncConfig(userId: string): Promise<void> {
-  const map = await loadContactGoogleSyncConfigMap();
-  delete map[userId];
-  await saveContactGoogleSyncConfigMap(map);
+  const configByUser = await loadContactGoogleSyncConfigMap();
+  delete configByUser[userId];
+  await saveContactGoogleSyncConfigMap(configByUser);
 }
 
 export async function clearGoogleSyncTokens(userId: string): Promise<ContactGoogleSyncConfigClient> {

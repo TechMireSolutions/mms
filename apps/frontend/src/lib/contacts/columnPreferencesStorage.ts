@@ -60,9 +60,9 @@ export function applyUserColumnOverlay(
   preferences: ContactColumnPreference[] | null,
 ): ColumnRegistryEntry[] {
   if (!preferences?.length) return registry;
-  const map = new Map(preferences.map((columnPreference) => [columnPreference.key, columnPreference]));
+  const preferenceByColumnKey = new Map(preferences.map((columnPreference) => [columnPreference.key, columnPreference]));
   return registry.map((column) => {
-    const columnPreference = map.get(column.key);
+    const columnPreference = preferenceByColumnKey.get(column.key);
     if (!columnPreference) return column;
     return {
       ...column,

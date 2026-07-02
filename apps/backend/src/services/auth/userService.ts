@@ -179,11 +179,11 @@ export async function getTenantUserProfile(userId: string): Promise<TenantUserPr
   if (hydrated.contactId != null && hydrated.contactId !== '') {
     const contacts = await loadContacts();
     contact =
-      contacts.find((c) => String(c.id) === String(hydrated.contactId)) ?? null;
+      contacts.find((candidateContact) => String(candidateContact.id) === String(hydrated.contactId)) ?? null;
   }
 
   const raw = await getRawUsers();
-  const row = raw.find((r) => r.id === userId);
+  const row = raw.find((rawUser) => rawUser.id === userId);
   const pendingLoginEmail =
     typeof row?.pendingLoginEmail === 'string' ? row.pendingLoginEmail : undefined;
 

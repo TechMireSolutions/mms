@@ -33,9 +33,9 @@ export const PAYMENT_MODES = ["Cash", "Online"] as const;
 export const OBLIGATION_COLLECTIONS: ObligationCollection[] = [];
 
 export function generateReceiptNo(existingCollections: ObligationCollection[]): string {
-  const nums = existingCollections
-    .map((c) => parseInt(c.receipt_no.replace("OBL-", ""), 10))
-    .filter((n) => !isNaN(n));
-  const nextReceiptNumber = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  const receiptNumbers = existingCollections
+    .map((collection) => parseInt(collection.receipt_no.replace("OBL-", ""), 10))
+    .filter((receiptNumber) => !isNaN(receiptNumber));
+  const nextReceiptNumber = receiptNumbers.length > 0 ? Math.max(...receiptNumbers) + 1 : 1;
   return "OBL-" + String(nextReceiptNumber).padStart(5, "0");
 }

@@ -39,29 +39,29 @@ export function computeContactsReportAnalytics(
   const periodDays = options.periodDays ?? CONTACT_METRICS_DEFAULT_PERIOD_DAYS;
   const referenceDate = options.referenceDate ?? new Date();
 
-  const active = contacts.filter((c) => !isContactDeleted(c));
-  const total = active.length;
-  const whatsappCount = active.filter((c) => hasWhatsApp(c)).length;
+  const activeContacts = contacts.filter((contact) => !isContactDeleted(contact));
+  const total = activeContacts.length;
+  const whatsappCount = activeContacts.filter((contact) => hasWhatsApp(contact)).length;
   const whatsappRate = total > 0 ? Math.round((whatsappCount / total) * 100) : 0;
-  const activeCount = active.filter((c) => c.isActive !== false).length;
+  const activeCount = activeContacts.filter((contact) => contact.isActive !== false).length;
 
   const thirtyDaysAgo = new Date(referenceDate);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const sixtyDaysAgo = new Date(referenceDate);
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-  const newLast30Days = active.filter((c) => c.createdAt && new Date(c.createdAt) >= thirtyDaysAgo).length;
-  const newPrior30Days = active.filter((c) => {
-    if (!c.createdAt) return false;
-    const created = new Date(c.createdAt);
+  const newLast30Days = activeContacts.filter((contact) => contact.createdAt && new Date(contact.createdAt) >= thirtyDaysAgo).length;
+  const newPrior30Days = activeContacts.filter((contact) => {
+    if (!contact.createdAt) return false;
+    const created = new Date(contact.createdAt);
     return created >= sixtyDaysAgo && created < thirtyDaysAgo;
   }).length;
-  const newThisPeriod = countContactsCreatedSince(active, periodDays);
+  const newThisPeriod = countContactsCreatedSince(activeContacts, periodDays);
 
-  const signupDates = active
-    .map((c) => (c.createdAt ? new Date(c.createdAt).getTime() : 0))
-    .filter((t) => t > 0)
-    .sort((a, b) => a - b);
+  const signupDates = activeContacts
+    .map((contact) => (contact.createdAt ? new Date(contact.createdAt).getTime() : 0))
+    .filter((timestamp) => timestamp > 0)
+    .sort((leftTimestamp, rightTimestamp) => leftTimestamp - rightTimestamp);
 
   const hasSignupDates = signupDates.length > 0;
   let growthRecentSignups30d = 0;
@@ -69,20 +69,20 @@ export function computeContactsReportAnalytics(
 
   if (hasSignupDates) {
     const maxDate = new Date(signupDates[signupDates.length - 1]!);
-    const t0 = maxDate.getTime();
-    const t30 = t0 - 30 * 24 * 60 * 60 * 1000;
-    const t60 = t0 - 60 * 24 * 60 * 60 * 1000;
+    const latestSignupTime = maxDate.getTime();
+    const thirtyDaysBeforeLatest = latestSignupTime - 30 * 24 * 60 * 60 * 1000;
+    const sixtyDaysBeforeLatest = latestSignupTime - 60 * 24 * 60 * 60 * 1000;
 
-    growthRecentSignups30d = active.filter((c) => {
-      if (!c.createdAt) return false;
-      const t = new Date(c.createdAt).getTime();
-      return t >= t30 && t <= t0;
+    growthRecentSignups30d = activeContacts.filter((contact) => {
+      if (!contact.createdAt) return false;
+      const createdTime = new Date(contact.createdAt).getTime();
+      return createdTime >= thirtyDaysBeforeLatest && createdTime <= latestSignupTime;
     }).length;
 
-    growthPriorSignups30d = active.filter((c) => {
-      if (!c.createdAt) return false;
-      const t = new Date(c.createdAt).getTime();
-      return t >= t60 && t < t30;
+    growthPriorSignups30d = activeContacts.filter((contact) => {
+      if (!contact.createdAt) return false;
+      const createdTime = new Date(contact.createdAt).getTime();
+      return createdTime >= sixtyDaysBeforeLatest && createdTime < thirtyDaysBeforeLatest;
     }).length;
   }
 
@@ -106,14 +106,14 @@ export function computeContactsMonthlyCreatedCounts(
   year: number,
   monthCount = 6,
 ): { month: string; count: number }[] {
-  const active = contacts.filter((c) => !isContactDeleted(c));
+  const activeContacts = contacts.filter((contact) => !isContactDeleted(contact));
   const yearStr = String(year);
 
-  return Array.from({ length: monthCount }, (_, i) => {
-    const monthStr = String(i + 1).padStart(2, '0');
-    const count = active.filter(
-      (c) => c.createdAt?.includes(`-${monthStr}-`) && c.createdAt.startsWith(yearStr),
+  return Array.from({ length: monthCount }, (_, monthIndex) => {
+    const monthStr = String(monthIndex + 1).padStart(2, '0');
+    const count = activeContacts.filter(
+      (contact) => contact.createdAt?.includes(`-${monthStr}-`) && contact.createdAt.startsWith(yearStr),
     ).length;
-    return { month: MONTH_LABELS[i] ?? monthStr, count };
+    return { month: MONTH_LABELS[monthIndex] ?? monthStr, count };
   });
 }
