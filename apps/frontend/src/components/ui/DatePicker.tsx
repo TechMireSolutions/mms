@@ -40,6 +40,9 @@ export function DatePicker({
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState("")
+  const fallbackId = React.useId()
+  const resolvedId = id || fallbackId
+  const resolvedName = name || fallbackId
 
   const settings = React.useMemo(() => {
     try {
@@ -160,7 +163,8 @@ export function DatePicker({
     <div className={cn("relative flex w-full items-center rounded-lg border border-border bg-background/50 backdrop-blur-md px-3 py-1 shadow-sm transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:border-primary/50 focus-within:bg-background/80", className)}>
       <input
         type="text"
-        id={id}
+        id={resolvedId}
+        name={resolvedName}
         value={inputValue}
         onChange={handleInputChange}
         onBlur={handleBlur}
@@ -184,7 +188,7 @@ export function DatePicker({
       )}
       
       <div className="h-4 w-px bg-border mx-1.5" />
-
+ 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           type="button"
@@ -204,7 +208,7 @@ export function DatePicker({
           />
         </PopoverContent>
       </Popover>
-
+ 
       {required && !value && (
         <input
           type="text"
@@ -217,7 +221,7 @@ export function DatePicker({
       )}
       <input
         type="hidden"
-        name={name}
+        name={`${resolvedName}_hidden`}
         value={value || ""}
       />
     </div>

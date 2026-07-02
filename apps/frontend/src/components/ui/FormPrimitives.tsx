@@ -240,13 +240,49 @@ interface FieldProps {
  * @returns React element.
  */
 export function Field({ label, required = false, hint = undefined, error = undefined, id, children }: FieldProps): React.JSX.Element {
+  const fallbackId = React.useId();
+  const slugified = label
+    ? label.toLowerCase().replace(/[^\w\s-]/g, "").trim().replace(/[-\s]+/g, "-")
+    : "";
+  const resolvedId = id || slugified || fallbackId;
+
+  const injectIdAndName = (node: React.ReactNode): React.ReactNode => {
+    if (!React.isValidElement(node)) return node;
+
+    const props = node.props as { id?: string; name?: string; children?: React.ReactNode };
+    const isInputLike =
+      (typeof node.type === "string" && ["input", "textarea", "select"].includes(node.type)) ||
+      ("onChange" in props || "onCheckedChange" in props);
+
+    const element = node as React.ReactElement<{ id?: string; name?: string; children?: React.ReactNode }>;
+
+    if (isInputLike) {
+      return React.cloneElement(element, {
+        id: props.id || resolvedId,
+        name: props.name || resolvedId,
+      });
+    }
+
+    if (props.children) {
+      return React.cloneElement(
+        element,
+        {},
+        React.Children.map(props.children, injectIdAndName)
+      );
+    }
+
+    return node;
+  };
+
+  const enhancedChildren = React.Children.map(children, injectIdAndName);
+
   return (
     <div id={id} data-field-key={id}>
-      <span className={LABEL}>
+      <label htmlFor={resolvedId} className={LABEL}>
         {label}
         {required && <span className="text-destructive ms-0.5">*</span>}
-      </span>
-      {children}
+      </label>
+      {enhancedChildren}
       {error ? (
         <p className="text-[10px] text-destructive mt-1 font-medium">{error}</p>
       ) : (

@@ -97,6 +97,8 @@ export function UsersList({
         <div className="relative min-w-[180px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            id="user-search"
+            name="user-search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('users.searchPlaceholder')}
@@ -104,6 +106,8 @@ export function UsersList({
           />
         </div>
         <select
+          id="role-filter"
+          name="role-filter"
           value={roleFilter}
           onChange={(event) => setRoleFilter(event.target.value)}
           className="rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -117,6 +121,8 @@ export function UsersList({
           ))}
         </select>
         <select
+          id="status-filter"
+          name="status-filter"
           value={statusFilter}
           onChange={(event) => setStatus(event.target.value)}
           className="rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"

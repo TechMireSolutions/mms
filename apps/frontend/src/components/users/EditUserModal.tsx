@@ -160,8 +160,10 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
             name="twoFactorEnabled"
             render={({ field }) => (
               <FormItem>
-                <label className="flex cursor-pointer items-center gap-2">
+                <label htmlFor={field.name} className="flex cursor-pointer items-center gap-2">
                   <input
+                    id={field.name}
+                    name={field.name}
                     type="checkbox"
                     checked={field.value}
                     onChange={(event) => field.onChange(event.target.checked)}

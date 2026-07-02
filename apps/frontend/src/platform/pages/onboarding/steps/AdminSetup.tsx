@@ -71,6 +71,8 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
       <div className="grid grid-cols-2 gap-3">
         <FieldRow label="First Name" required>
           <input
+            id="firstName"
+            name="firstName"
             type="text"
             value={data.firstName || ""}
             onChange={(event) => update("firstName", event.target.value)}
@@ -80,6 +82,8 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
         </FieldRow>
         <FieldRow label="Last Name" required>
           <input
+            id="lastName"
+            name="lastName"
             type="text"
             value={data.lastName || ""}
             onChange={(event) => update("lastName", event.target.value)}
@@ -91,6 +95,8 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
 
       <FieldRow label="Email Address" required>
         <input
+          id="email"
+          name="email"
           type="email"
           value={data.email || ""}
           onChange={(event) => update("email", event.target.value)}
@@ -101,6 +107,8 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
 
       <FieldRow label="Phone Number">
         <input
+          id="phone"
+          name="phone"
           type="tel"
           value={data.phone || ""}
           onChange={(event) => update("phone", event.target.value)}
@@ -117,6 +125,8 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
       >
         <div className="relative">
           <input
+            id="password"
+            name="password"
             type={showPw ? "text" : "password"}
             value={data.password || ""}
             onChange={(event) => update("password", event.target.value)}
@@ -156,6 +166,8 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
       <FieldRow label="Confirm Password" required>
         <div className="relative">
           <input
+            id="confirmPassword"
+            name="confirmPassword"
             type={showConfirm ? "text" : "password"}
             value={data.confirmPassword || ""}
             onChange={(event) => update("confirmPassword", event.target.value)}

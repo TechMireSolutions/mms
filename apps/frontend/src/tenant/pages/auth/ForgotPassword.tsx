@@ -81,10 +81,12 @@ export default function ForgotPassword(): React.JSX.Element {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
-              <label className={FORM_LABEL}>
+              <label htmlFor="email" className={FORM_LABEL}>
                 {t("auth.emailAddress")}
               </label>
               <input
+                id="email"
+                name="email"
                 type="email"
                 value={email}
                 onChange={(event) => { setEmail(event.target.value); setError(""); }}

@@ -36,11 +36,14 @@ export function FormSelect({
   name,
   "aria-label": ariaLabel,
 }: FormSelectProps): React.JSX.Element {
+  const fallbackId = React.useId();
+  const resolvedId = id || fallbackId;
+  const resolvedName = name || fallbackId;
   return (
     <div className={cn("relative", className)}>
       <select
-        id={id}
-        name={name}
+        id={resolvedId}
+        name={resolvedName}
         aria-label={ariaLabel}
         disabled={disabled}
         value={value}
