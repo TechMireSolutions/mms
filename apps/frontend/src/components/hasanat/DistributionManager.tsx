@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Plus, Search, X, Star, User, Users2, Filter, ChevronDown, Eye } from "lucide-react";
 import {
@@ -479,7 +480,7 @@ export function DistributionManager({
         </Button>
       </header>
 
-      <div className="rounded-xl border border-border overflow-hidden bg-card">
+      <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">Distributions</caption>
@@ -610,7 +611,7 @@ export function DistributionManager({
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       <DistributeModal
         open={showModal}

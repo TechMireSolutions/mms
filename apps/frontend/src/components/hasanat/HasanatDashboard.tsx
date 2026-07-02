@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Star, Package, Gift, RotateCcw, TrendingUp, Layers } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
@@ -47,12 +48,12 @@ export function HasanatDashboard({
   );
 
   const stats = [
-    { label: "Total Stock", value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10" },
-    { label: "Available", value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20" },
-    { label: "Distributed", value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
-    { label: "Redeemed", value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20" },
-    { label: "Active (In-Hand)", value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20" },
-    { label: "Returned", value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
+    { label: "Total Stock", value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10", accent: "primary" as const },
+    { label: "Available", value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20", accent: "success" as const },
+    { label: "Distributed", value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20", accent: "warning" as const },
+    { label: "Redeemed", value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20", accent: "indigo" as const },
+    { label: "Active (In-Hand)", value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20", accent: "info" as const },
+    { label: "Returned", value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border", accent: "rose" as const },
   ];
 
   // Per-denomination stock
@@ -74,19 +75,30 @@ export function HasanatDashboard({
       <section aria-label="Hasanat Dashboard Statistics" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
+          const stripeColors = {
+            primary: "bg-primary/45 group-hover:bg-primary",
+            success: "bg-success/45 group-hover:bg-success",
+            warning: "bg-warning/45 group-hover:bg-warning",
+            indigo: "bg-indigo-500/45 group-hover:bg-indigo-500",
+            info: "bg-info/45 group-hover:bg-info",
+            rose: "bg-rose-500/45 group-hover:bg-rose-500",
+          }
           return (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.06 }}
-              className={`rounded-xl border ${stat.border} bg-card p-3.5`}
+              className="relative overflow-hidden group rounded-2xl border border-border/85 bg-card/45 backdrop-blur-sm p-4 pl-5.5 space-y-2 transition-all duration-300 shadow-sm hover:shadow-md"
             >
-              <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center mb-2`} aria-hidden="true">
+              <div className={`absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300 ${stripeColors[stat.accent]}`} />
+              <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`} aria-hidden="true">
                 <Icon className={`w-4 h-4 ${stat.color}`} />
               </div>
-              <p className={`text-[20px] font-bold ${stat.color} m-0`}>{stat.value}</p>
-              <h3 className="text-[10px] text-muted-foreground font-medium mt-0.5 m-0">{stat.label}</h3>
+              <div>
+                <p className={`text-[20px] font-bold ${stat.color} leading-tight m-0`}>{stat.value}</p>
+                <h3 className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-1 m-0">{stat.label}</h3>
+              </div>
             </motion.div>
           );
         })}
@@ -95,7 +107,7 @@ export function HasanatDashboard({
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Distribution donut */}
-        <section aria-label="Card Distribution Chart" className="rounded-xl border border-border bg-card p-5">
+        <Card accentColor="primary" className="p-5 shadow-sm hover:shadow-md border-border/80">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0">Card Distribution</h3>
           <div className="flex items-center gap-6">
             <PieChart width={130} height={130}>
@@ -114,10 +126,10 @@ export function HasanatDashboard({
               ))}
             </div>
           </div>
-        </section>
+        </Card>
 
         {/* Per-denomination stock */}
-        <section aria-label="Stock by Denomination" className="rounded-xl border border-border bg-card p-5">
+        <Card accentColor="indigo" className="p-5 shadow-sm hover:shadow-md border-border/80">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0">Stock by Denomination</h3>
           <div className="space-y-3">
             {denominationStock.map((denomination: DenStockEntry) => {
@@ -142,11 +154,11 @@ export function HasanatDashboard({
               );
             })}
           </div>
-        </section>
+        </Card>
       </div>
 
       {/* Usage meter */}
-      <section aria-label="Overall Stock Usage" className="rounded-xl border border-border bg-card p-5">
+      <Card accentColor="success" className="p-5 shadow-sm hover:shadow-md border-border/80">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold text-foreground m-0">Overall Stock Usage</h3>
           <span className="text-[13px] font-bold text-foreground">{usedPct}% used</span>
@@ -163,7 +175,7 @@ export function HasanatDashboard({
           <span className="text-[10px] text-muted-foreground">{totalStock - totalRemaining} used</span>
           <span className="text-[10px] text-muted-foreground">{totalRemaining} remaining</span>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

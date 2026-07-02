@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { Save, Star } from "lucide-react";
 import {
   type HasanatSettings as HasanatSettingsData,
@@ -106,8 +107,8 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
   const showFields = mode === "fields";
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5 space-y-4" aria-labelledby="hasanat-settings-title">
-      <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
+    <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80">
+      <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 pl-1">
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <Star className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
@@ -156,6 +157,6 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
           <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? "Saved!" : "Save Settings"}
         </Button>
       </footer>
-    </section>
+    </Card>
   );
 }

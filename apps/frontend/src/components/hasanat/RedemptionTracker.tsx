@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Gift, Plus, Star } from "lucide-react";
 import { Redemption, Distribution } from '@/lib/data/hasanatData';
@@ -205,7 +206,7 @@ export function RedemptionTracker({
           <p className="text-sm font-medium text-foreground m-0">{t("hasanat.empty.redemptions")}</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden bg-card">
+        <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("hasanat.tabs.redemptions")}</caption>
@@ -266,7 +267,7 @@ export function RedemptionTracker({
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
       <RedeemModal open={showModal} distributions={distributions} onClose={() => setShowModal(false)} onSave={handleSave} />

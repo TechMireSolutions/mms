@@ -10,6 +10,7 @@ export interface SectionCardProps {
   padding?: boolean;
   className?: string;
   children: React.ReactNode;
+  accentColor?: "primary" | "success" | "warning" | "destructive" | "info" | "emerald" | "indigo" | "rose" | "amber";
 }
 
 /** Section card — semantic tokens + `cn()` for class merging. */
@@ -21,13 +22,32 @@ export function SectionCard({
   padding = true,
   className,
   children,
+  accentColor,
 }: SectionCardProps): React.ReactElement {
   const hasHeader = title || Icon || actions;
 
+  const stripeColors = {
+    primary: "bg-primary/45 group-hover/card:bg-primary",
+    success: "bg-success/45 group-hover/card:bg-success",
+    warning: "bg-warning/45 group-hover/card:bg-warning",
+    destructive: "bg-destructive/45 group-hover/card:bg-destructive",
+    info: "bg-info/45 group-hover/card:bg-info",
+    emerald: "bg-emerald-500/45 group-hover/card:bg-emerald-500",
+    indigo: "bg-indigo-500/45 group-hover/card:bg-indigo-500",
+    rose: "bg-rose-500/45 group-hover/card:bg-rose-500",
+    amber: "bg-amber-500/45 group-hover/card:bg-amber-500",
+  }
+
   return (
-    <div className={cn(SURFACE.card, "overflow-hidden", className)}>
+    <div className={cn(
+      "relative overflow-hidden group/card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm text-card-foreground shadow-sm hover:shadow-md transition-all duration-300",
+      className
+    )}>
+      {accentColor && (
+        <div className={cn("absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300", stripeColors[accentColor])} />
+      )}
       {hasHeader && (
-        <div className={cn("flex items-center justify-between px-5 py-3.5", SURFACE.mutedHeader)}>
+        <div className={cn("flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-muted/20", accentColor && "pl-6.5")}>
           <div className="flex items-center gap-2.5">
             {Icon && (
               <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
@@ -42,7 +62,7 @@ export function SectionCard({
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
       )}
-      <div className={padding ? "px-5 py-4" : undefined}>{children}</div>
+      <div className={cn(padding ? "px-5 py-4" : undefined, accentColor && "pl-6.5")}>{children}</div>
     </div>
   );
 }
