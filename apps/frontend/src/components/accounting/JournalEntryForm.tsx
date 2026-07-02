@@ -164,43 +164,59 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
     >
         <form className="space-y-5" onSubmit={(event) => event.preventDefault()}>
           {/* Header fields */}
-          <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
-            <div>
-              <label htmlFor="je-date" className={FORM_LABEL}>Date *</label>
-              <DatePicker
-                id="je-date"
-                value={form.date}
-                onChange={(dateValue) => setForm({ ...form, date: dateValue })}
-                required
-              />
-              {errors.date && <p className="text-xs text-destructive mt-1" role="alert">{errors.date}</p>}
+          <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+            <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
+              <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Entry Details</h3>
             </div>
-            <div>
-              <label htmlFor="journal-entry-financial-year" className={FORM_LABEL}>Financial Year</label>
-              <FormSelect
-                id="journal-entry-financial-year"
-                value={form.fiscal_year || ""}
-                onChange={(fiscalYearValue) => setForm({ ...form, fiscal_year: fiscalYearValue })}
-                placeholder="— None —"
-                options={(fiscalYears || []).map((fiscalYear) => fiscalYear.label)}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label htmlFor="journal-entry-description" className={FORM_LABEL}>Narration / Description *</label>
-              <Input
-                id="journal-entry-description"
-                value={form.description}
-                onChange={(event) => setForm({ ...form, description: event.target.value })}
-                placeholder="e.g. Student fee collection for Spring 2026…"
-                aria-invalid={!!errors.description}
-              />
-              {errors.description && <p className="text-xs text-destructive mt-1" role="alert">{errors.description}</p>}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="je-date" className={FORM_LABEL}>Date *</label>
+                <DatePicker
+                  id="je-date"
+                  value={form.date}
+                  onChange={(dateValue) => setForm({ ...form, date: dateValue })}
+                  required
+                />
+                {errors.date && <p className="text-xs text-destructive mt-1" role="alert">{errors.date}</p>}
+              </div>
+              <div>
+                <label htmlFor="journal-entry-financial-year" className={FORM_LABEL}>Financial Year</label>
+                <FormSelect
+                  id="journal-entry-financial-year"
+                  value={form.fiscal_year || ""}
+                  onChange={(fiscalYearValue) => setForm({ ...form, fiscal_year: fiscalYearValue })}
+                  placeholder="— None —"
+                  options={(fiscalYears || []).map((fiscalYear) => fiscalYear.label)}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="journal-entry-description" className={FORM_LABEL}>Narration / Description *</label>
+                <div className="relative flex items-center group/input">
+                  <BookOpen className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                  <Input
+                    id="journal-entry-description"
+                    className="pl-10"
+                    value={form.description}
+                    onChange={(event) => setForm({ ...form, description: event.target.value })}
+                    placeholder="e.g. Student fee collection for Spring 2026…"
+                    aria-invalid={!!errors.description}
+                  />
+                </div>
+                {errors.description && <p className="text-xs text-destructive mt-1" role="alert">{errors.description}</p>}
+              </div>
             </div>
           </fieldset>
 
           {/* Tags */}
-          <fieldset className="border-0 p-0 m-0">
-            <legend className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1"><Tag className="w-3 h-3" aria-hidden="true" /> Tags</legend>
+          <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
+            <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-3">
+              <Tag className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Journal Tags</h3>
+            </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {JOURNAL_TAGS.map((tag) => (
                 <Button
@@ -218,9 +234,13 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
           </fieldset>
 
           {/* Lines */}
-          <fieldset className="border-0 p-0 m-0">
-            <div className="flex items-center justify-between mb-2">
-              <legend className={FORM_LABEL}>Journal Lines *</legend>
+          <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
+            <div className="flex items-center justify-between pb-1.5 border-b border-border/40 mb-2">
+              <div className="flex items-center gap-2.5">
+                <BookOpen className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Journal Lines *</h3>
+              </div>
               <Button
                 type="button"
                 variant="link"
@@ -325,7 +345,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
               </table>
             </div>
 
-            <div className={`mt-2 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold ${isBalanced ? "bg-success/10 text-success border border-success/30" : "bg-destructive/10 text-destructive border border-destructive/30"}`} role="status">
+            <div className={`mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 ${isBalanced ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 shadow-sm" : "bg-destructive/10 text-destructive border-destructive/20 shadow-sm"}`} role="status">
               {isBalanced ? <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> : <AlertCircle className="w-4 h-4" aria-hidden="true" />}
               {isBalanced ? "Entry is balanced — Debits equal Credits" : `Out of balance — Difference: ${Math.abs(totalDebit - totalCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
             </div>
