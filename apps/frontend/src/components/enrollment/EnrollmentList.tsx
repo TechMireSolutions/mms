@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { Search, Eye, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { ENROLLMENT_STATUSES, STATUS_MAP, Enrollment, EnrollmentStatus } from '@/lib/data/enrollmentData';
@@ -164,7 +165,7 @@ export function EnrollmentList({
           <p className="text-xs text-muted-foreground mt-1">{t("enrollments.empty.description")}</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-border/50 overflow-hidden bg-card/40 backdrop-blur-xl shadow-sm">
+        <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/20 border-b border-border/50">
@@ -288,7 +289,7 @@ export function EnrollmentList({
               </tbody>
             </table>
           </div>
-        </div>
+          </Card>
       )}
 
       <div className="flex items-center justify-between text-xs text-muted-foreground" role="navigation" aria-label={t("enrollments.pagination.label")}>

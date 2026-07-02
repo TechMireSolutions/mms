@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Save, CheckCircle2, Users } from "lucide-react";
 import { Exam, ExamResult } from '@/lib/data/examinationData';
@@ -134,12 +135,12 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
           </div>
 
           {/* Marks entry table */}
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+          <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
+            <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2 pl-6.5 bg-muted/20">
               <Users className="w-4 h-4 text-primary" aria-hidden="true" />
               <h3 className="text-[13px] font-bold text-foreground">Enter Marks</h3>
             </div>
-            <div className="divide-y divide-border/50" role="list">
+            <div className="divide-y divide-border/50 pl-6.5" role="list">
               {students.map((student, index) => {
                 const markValue = marks[String(student.id)] ?? "";
                 const percentage = exam.totalMarks > 0 && markValue !== "" ? Math.round((Number(markValue) / exam.totalMarks) * 100) : null;
@@ -184,7 +185,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                 );
               })}
             </div>
-          </div>
+          </Card>
 
           <div className="flex justify-end">
             {saved ? (

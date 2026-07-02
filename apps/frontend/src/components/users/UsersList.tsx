@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, UserPlus, Eye, Pencil, KeyRound,
@@ -177,7 +178,7 @@ export function UsersList({
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
+        <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-muted/60">
@@ -307,7 +308,7 @@ export function UsersList({
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
       <p className="text-xs text-muted-foreground">

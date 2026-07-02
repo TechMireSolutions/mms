@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
 import SafeResponsiveContainer from "../reports/SafeResponsiveContainer";
@@ -20,16 +21,17 @@ interface KPIProps {
  */
 function KPI({ icon: Icon, label, value, sub, color = "bg-primary/10 text-primary" }: KPIProps): React.ReactElement {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 flex items-start gap-3">
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+    <Card className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 pl-5.5 flex items-start gap-3 shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover:bg-primary" />
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color} ml-1`}>
         <Icon className="w-4 h-4" aria-hidden="true" />
       </div>
       <div>
-        <p className="text-xl font-bold text-foreground">{value}</p>
-        <p className="text-xs font-semibold text-foreground">{label}</p>
+        <p className="text-xl font-bold text-foreground leading-tight">{value}</p>
+        <p className="text-xs font-semibold text-foreground mt-0.5">{label}</p>
         {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -98,7 +100,7 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Status chart */}
-        <section className="rounded-xl border border-border bg-card p-4" aria-label="Enrollment by Status Chart">
+        <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
           <h3 className="text-sm font-bold text-foreground mb-3">Enrollment by Status</h3>
           <div className="h-[200px]" aria-hidden="true">
             <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
@@ -111,10 +113,10 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
               </PieChart>
             </SafeResponsiveContainer>
           </div>
-        </section>
+        </Card>
 
         {/* Per-session bar */}
-        <section className="rounded-xl border border-border bg-card p-4" aria-label="Enrollments by Session Chart">
+        <Card accentColor="indigo" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
           <h3 className="text-sm font-bold text-foreground mb-3">Enrollments by Session</h3>
           {sessionData.length === 0 ? (
             <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm" role="status">No data</div>
@@ -130,15 +132,15 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
               </SafeResponsiveContainer>
             </div>
           )}
-        </section>
+        </Card>
       </div>
 
       {/* Session Revenue Table */}
-      <section className="rounded-xl border border-border overflow-hidden" aria-label="Revenue by Session Details">
-        <div className="px-4 py-2.5 bg-muted/40 border-b border-border">
+      <Card accentColor="success" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+        <div className="px-4 py-2.5 bg-muted/20 border-b border-border/40 pl-6.5">
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Revenue by Session</h3>
         </div>
-        <div className="divide-y divide-border" role="list">
+        <div className="divide-y divide-border/50 pl-6.5" role="list">
           {sessionData.length === 0 ? (
             <p className="text-center py-8 text-sm text-muted-foreground" role="status">No data</p>
           ) : (
@@ -153,7 +155,7 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
             ))
           )}
         </div>
-      </section>
+      </Card>
     </section>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Award } from "lucide-react";
 import { Exam, ExamResult } from '@/lib/data/examinationData';
@@ -174,23 +175,23 @@ export function ResultsView({
                 { label: t("examinations.stats.passed"), value: stats.passed },
                 { label: t("examinations.stats.failed"), value: stats.failed },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-xl border border-border bg-card p-3.5 text-center">
-                  <p className={`text-[20px] font-bold text-foreground`}>{stat.value}</p>
-                  <p className="text-[10px] text-muted-foreground">{stat.label}</p>
-                </div>
+                <Card accentColor="primary" key={stat.label} className="p-3.5 text-center shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+                  <p className="text-[20px] font-bold text-foreground leading-none">{stat.value}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1.5 mb-0">{stat.label}</p>
+                </Card>
               ))}
             </div>
           )}
 
-          <section className="rounded-xl border border-border bg-card overflow-hidden" aria-label={t("examinations.rankings")}>
-            <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+          <Card accentColor="warning" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm" aria-label={t("examinations.rankings")}>
+            <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2 pl-6.5 bg-muted/20">
               <Trophy className="w-4 h-4 text-warning" aria-hidden="true" />
               <h3 className="text-[13px] font-bold text-foreground m-0">{t("examinations.rankingsTitle", { name: exam.name })}</h3>
             </div>
             {rankedResults.length === 0 ? (
               <div className="py-10 text-center text-sm text-muted-foreground" role="status">{t("examinations.empty.results")}</div>
             ) : (
-              <div className="divide-y divide-border/50" role="list">
+              <div className="divide-y divide-border/50 pl-6.5" role="list">
                 {rankedResults.map((rankedResult) => (
                   <motion.div
                     key={rankedResult.id}
@@ -279,7 +280,7 @@ export function ResultsView({
                 ))}
               </div>
             )}
-          </section>
+          </Card>
         </>
       )}
 

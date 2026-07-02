@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -195,7 +196,7 @@ export function PerformanceAnalytics({
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border border-border bg-card p-5" aria-label={t("questionBank.analytics.classTrend")}>
+        <Card accentColor="primary" className="p-5 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm" aria-label={t("questionBank.analytics.classTrend")}>
           <h3 className="mb-4 text-[13px] font-bold text-foreground">{t("questionBank.analytics.classTrend")}</h3>
           <div className="h-[180px]" aria-hidden>
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
@@ -211,9 +212,9 @@ export function PerformanceAnalytics({
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </section>
+        </Card>
 
-        <section className="rounded-xl border border-border bg-card p-5" aria-label={t("questionBank.analytics.categoryAccuracy")}>
+        <Card accentColor="indigo" className="p-5 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm" aria-label={t("questionBank.analytics.categoryAccuracy")}>
           <h3 className="mb-4 text-[13px] font-bold text-foreground">{t("questionBank.analytics.categoryAccuracy")}</h3>
           {radarData.length >= 3 ? (
             <div className="h-[180px]" aria-hidden>
@@ -234,11 +235,11 @@ export function PerformanceAnalytics({
               {t("questionBank.analytics.radarInsufficient")}
             </div>
           )}
-        </section>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border border-border bg-card p-5" aria-label={t("questionBank.analytics.studentPerformance")}>
+        <Card accentColor="success" className="p-5 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm" aria-label={t("questionBank.analytics.studentPerformance")}>
           <h3 className="mb-4 text-[13px] font-bold text-foreground">{t("questionBank.analytics.studentPerformance")}</h3>
           <div className="h-[180px]" aria-hidden>
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
@@ -254,9 +255,9 @@ export function PerformanceAnalytics({
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </section>
+        </Card>
 
-        <section className="rounded-xl border border-border bg-card p-5" aria-label={t("questionBank.analytics.difficultyBreakdown")}>
+        <Card accentColor="warning" className="p-5 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm" aria-label={t("questionBank.analytics.difficultyBreakdown")}>
           <h3 className="mb-4 text-[13px] font-bold text-foreground">{t("questionBank.analytics.difficultyBreakdown")}</h3>
           <div className="h-[180px]" aria-hidden>
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
@@ -272,14 +273,14 @@ export function PerformanceAnalytics({
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </section>
+        </Card>
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-border bg-card" aria-label={t("questionBank.analytics.categoryBreakdown")}>
-        <div className="border-b border-border px-4 py-3">
+      <Card accentColor="info" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm" aria-label={t("questionBank.analytics.categoryBreakdown")}>
+        <div className="border-b border-border/40 px-4 py-3 bg-muted/20 pl-6.5">
           <h3 className="text-[13px] font-bold text-foreground">{t("questionBank.analytics.categoryBreakdown")}</h3>
         </div>
-        <div className="divide-y divide-border/50" role="list">
+        <div className="divide-y divide-border/50 pl-6.5" role="list">
           {catPerformance.sort((a, b) => a.accuracy - b.accuracy).map((categoryResult) => (
             <div key={categoryResult.name} className="flex items-center gap-4 px-4 py-3" role="listitem">
               <span className="flex-shrink-0 text-xl" aria-hidden>{categoryResult.icon}</span>
@@ -313,10 +314,10 @@ export function PerformanceAnalytics({
             </div>
           ))}
         </div>
-      </section>
+      </Card>
 
       {studentStats.length > 0 && (
-        <section className="rounded-xl border border-border bg-card p-5" aria-label={t("questionBank.analytics.studentLeaderboard")}>
+        <Card accentColor="emerald" className="p-5 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm" aria-label={t("questionBank.analytics.studentLeaderboard")}>
           <div className="mb-4 flex items-center gap-2">
             <Trophy className="h-4 w-4 text-warning" aria-hidden />
             <h3 className="text-[13px] font-bold text-foreground">{t("questionBank.analytics.studentLeaderboard")}</h3>
@@ -340,7 +341,7 @@ export function PerformanceAnalytics({
               </div>
             ))}
           </div>
-        </section>
+        </Card>
       )}
     </div>
   );

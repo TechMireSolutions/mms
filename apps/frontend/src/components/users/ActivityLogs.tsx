@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Card } from "@/components/ui/card";
 import { Search, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import {
   ACTIVITY_ACTION_VALUES,
@@ -102,7 +103,7 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
           <p className="text-sm font-semibold text-foreground">{t('users.activityEmpty')}</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
+        <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted/60">
               <tr>
@@ -137,7 +138,7 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { Save, FileText } from "lucide-react";
 import {
   type ExaminationsSettings as ExaminationsSettingsData,
@@ -135,8 +136,8 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
   const showFields = mode === "fields";
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5 space-y-4" aria-labelledby="exams-settings-title">
-      <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
+    <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80" aria-labelledby="exams-settings-title">
+      <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 pl-1">
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <FileText className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
@@ -221,6 +222,6 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
           <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? "Saved!" : "Save Settings"}
         </Button>
       </footer>
-    </section>
+    </Card>
   );
 }
