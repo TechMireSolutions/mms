@@ -189,7 +189,13 @@ export default function ContactForm({
     const defaultCode = countryCodesMap[defaultCountryProp] || defaultPhoneCountryCode;
     const phones = ((merged.phones as PhoneNumber[] | undefined) || []).map((phone) => {
       if (phone.countryCode) return phone;
-      const parsedPhoneNumber = parsePhoneNumber(phone.number || "", defaultCode);
+      const trimmedNumber = (phone.number || "").trim();
+      let parsedPhoneNumber;
+      if (trimmedNumber.startsWith("+") || trimmedNumber.startsWith("00")) {
+        parsedPhoneNumber = parsePhoneNumber(trimmedNumber, defaultCode, Object.values(countryCodesMap));
+      } else {
+        parsedPhoneNumber = parsePhoneNumber(phone.number || "", defaultCode, Object.values(countryCodesMap));
+      }
       return {
         ...phone,
         countryCode: parsedPhoneNumber.countryCode,
@@ -265,8 +271,14 @@ export default function ContactForm({
 
     const defaultCode = countryCodesMap[defaultCountryProp] || defaultPhoneCountryCode;
     const normalizedPhones = (formData.phones || []).map((phone) => {
-      const e164PhoneNumber = normalizeToE164(phone.countryCode || defaultCode, phone.number);
-      const parsedPhoneNumber = parsePhoneNumber(e164PhoneNumber, phone.countryCode || defaultCode);
+      const trimmedNumber = (phone.number || "").trim();
+      let parsedPhoneNumber;
+      if (trimmedNumber.startsWith("+") || trimmedNumber.startsWith("00")) {
+        parsedPhoneNumber = parsePhoneNumber(trimmedNumber, phone.countryCode || defaultCode, Object.values(countryCodesMap));
+      } else {
+        const e164PhoneNumber = normalizeToE164(phone.countryCode || defaultCode, phone.number);
+        parsedPhoneNumber = parsePhoneNumber(e164PhoneNumber, phone.countryCode || defaultCode, Object.values(countryCodesMap));
+      }
       return {
         ...phone,
         countryCode: parsedPhoneNumber.countryCode,

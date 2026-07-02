@@ -59,8 +59,15 @@ export default function PhoneTab({
   const handlePhoneBlur = (phoneIndex: number): void => {
     const phone = contactPhones[phoneIndex];
     if (!phone.number) return;
-    const e164PhoneNumber = normalizeToE164(phone.countryCode || defaultCode, phone.number);
-    const parsedPhoneNumber = parsePhoneNumber(e164PhoneNumber, phone.countryCode || defaultCode);
+    
+    let parsedPhoneNumber;
+    const trimmedNumber = phone.number.trim();
+    if (trimmedNumber.startsWith("+") || trimmedNumber.startsWith("00")) {
+      parsedPhoneNumber = parsePhoneNumber(trimmedNumber, phone.countryCode || defaultCode, Object.values(countryCodesMap));
+    } else {
+      const e164PhoneNumber = normalizeToE164(phone.countryCode || defaultCode, phone.number);
+      parsedPhoneNumber = parsePhoneNumber(e164PhoneNumber, phone.countryCode || defaultCode, Object.values(countryCodesMap));
+    }
     updatePhone(phoneIndex, { countryCode: parsedPhoneNumber.countryCode, number: parsedPhoneNumber.number });
   };
 
@@ -126,7 +133,18 @@ export default function PhoneTab({
               <Input
                 id={`phones-${phoneIndex}-number`}
                 value={phone.number}
-                onChange={(event) => updatePhone(phoneIndex, { number: event.target.value })}
+                onChange={(event) => {
+                  const val = event.target.value;
+                  const trimmed = val.trim();
+                  if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
+                    if (trimmed.length > 6) {
+                      const parsed = parsePhoneNumber(val, phone.countryCode || defaultCode, Object.values(countryCodesMap));
+                      updatePhone(phoneIndex, { countryCode: parsed.countryCode, number: parsed.number });
+                      return;
+                    }
+                  }
+                  updatePhone(phoneIndex, { number: val });
+                }}
                 onBlur={() => handlePhoneBlur(phoneIndex)}
                 placeholder={t("contacts.form.phoneNumberPlaceholder")}
                 aria-label={`${t("contacts.form.phoneNumber")} ${phoneIndex + 1}`}

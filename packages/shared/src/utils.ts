@@ -201,15 +201,41 @@ export function getInitials(name: string | null | undefined, length = 2): string
  * @param defaultCode - Fallback country code if none detected
  * @returns Object with countryCode and local number parts.
  */
-export function parsePhoneNumber(rawNumber: unknown, defaultCode = "+92"): { countryCode: string; number: string } {
+export function parsePhoneNumber(
+  rawNumber: unknown,
+  defaultCode = "+92",
+  knownCodes: string[] = []
+): { countryCode: string; number: string } {
   if (!rawNumber) return { countryCode: defaultCode, number: "" };
-  const clean = String(rawNumber).trim();
+  let clean = String(rawNumber).trim();
+  if (clean.startsWith("00")) {
+    clean = "+" + clean.slice(2);
+  }
+
+  // Normalize known codes and default codes to form a unique sorted list (longest first)
+  const codes = [defaultCode, ...knownCodes, "+92", "+1", "+44"]
+    .map((c) => c.trim())
+    .filter((c) => c.startsWith("+"));
+  const uniqueCodes = Array.from(new Set(codes)).sort((a, b) => b.length - a.length);
+
+  for (const code of uniqueCodes) {
+    const escaped = code.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const regex = new RegExp(`^(${escaped})(?:\\s+(.*)|(.*))$`);
+    const match = clean.match(regex);
+    if (match) {
+      const rest = (match[2] || match[3] || "").trim();
+      return { countryCode: code, number: rest };
+    }
+  }
+
+  // Fallback to standard 1-4 digit parsing
   const match = clean.match(/^(\+\d{1,4})(?:\s+(.*)|(.*))$/);
   if (match) {
     const code = match[1];
     const rest = (match[2] || match[3] || "").trim();
     return { countryCode: code, number: rest };
   }
+
   return { countryCode: defaultCode, number: clean };
 }
 

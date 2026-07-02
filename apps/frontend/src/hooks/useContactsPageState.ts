@@ -101,7 +101,7 @@ export function useContactsPageState({
           ...base,
           phones: base.phones.map((phone: PhoneNumber) => {
             if (phone.countryCode) return phone;
-            const parsed = parsePhoneNumber(phone.number, defaultCode);
+            const parsed = parsePhoneNumber(phone.number, defaultCode, Object.values(countryCodesMap));
             return {
               ...phone,
               countryCode: parsed.countryCode,

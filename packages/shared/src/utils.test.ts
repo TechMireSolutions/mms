@@ -20,6 +20,31 @@ describe("parsePhoneNumber", () => {
   it("handles empty input", () => {
     expect(parsePhoneNumber("", "+1")).toEqual({ countryCode: "+1", number: "" });
   });
+
+  it("handles 00 prefix", () => {
+    expect(parsePhoneNumber("00923001234567", "+92")).toEqual({
+      countryCode: "+92",
+      number: "3001234567",
+    });
+  });
+
+  it("parses non-spaced number correctly with knownCodes", () => {
+    expect(parsePhoneNumber("+923001234567", "+92", ["+92"])).toEqual({
+      countryCode: "+92",
+      number: "3001234567",
+    });
+  });
+
+  it("falls back to greedy parsing when knownCodes is empty", () => {
+    expect(parsePhoneNumber("+923001234567", "+92", [])).toEqual({
+      countryCode: "+92", // Matches "+92" because it's listed in internal common codes (+92)
+      number: "3001234567",
+    });
+    expect(parsePhoneNumber("+9993001234567", "+92", [])).toEqual({
+      countryCode: "+9993", // Greedily matches 4 digits because +9993 is not in common list
+      number: "001234567",
+    });
+  });
 });
 
 describe("normalizeToE164", () => {

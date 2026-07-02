@@ -156,12 +156,23 @@ export async function normalizeContactPhones(contact: Contact): Promise<Contact>
     return contact;
   }
   const { defaultPhoneCountryCode } = await loadContactRuntimeDefaults();
+  const countryCodes = (await fetchCollection('countryCodes')) || [];
+  const knownCodes = countryCodes
+    .map((row) => (row && typeof row === 'object' && typeof (row as { code?: unknown }).code === 'string' ? (row as { code: string }).code : ''))
+    .filter(Boolean);
+
   return {
     ...contact,
     phones: contact.phones.map((phone) => {
       const fallbackCode = phone.countryCode || defaultPhoneCountryCode;
-      const e164 = normalizeToE164(fallbackCode, phone.number);
-      const parsed = parsePhoneNumber(e164, fallbackCode);
+      const trimmedNumber = (phone.number || "").trim();
+      let parsed;
+      if (trimmedNumber.startsWith("+") || trimmedNumber.startsWith("00")) {
+        parsed = parsePhoneNumber(trimmedNumber, fallbackCode, knownCodes);
+      } else {
+        const e164 = normalizeToE164(fallbackCode, phone.number);
+        parsed = parsePhoneNumber(e164, fallbackCode, knownCodes);
+      }
       return {
         ...phone,
         countryCode: parsed.countryCode,
