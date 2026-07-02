@@ -14,17 +14,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 export type DesignatedFor = "Syed" | "Non-Syed" | "Both" | "None";
 
 interface TypeBadgeProps {
-  val: DesignatedFor;
+  designatedFor: DesignatedFor;
 }
 
 /**
  * TypeBadge component.
  * @param {TypeBadgeProps} props
  */
-function TypeBadge({ val }: TypeBadgeProps) {
+function TypeBadge({ designatedFor }: TypeBadgeProps) {
   return (
-    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", OBLIGATION_TYPE_BADGE[val] || OBLIGATION_TYPE_BADGE.None)}>
-      {val}
+    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", OBLIGATION_TYPE_BADGE[designatedFor] || OBLIGATION_TYPE_BADGE.None)}>
+      {designatedFor}
     </span>
   );
 }
@@ -54,13 +54,13 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
     if (modal?.mode === "add") {
       onChange([...types, { ...form, id: `ot${Date.now()}`, created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as ObligationType]);
     } else if (modal?.mode === "edit") {
-      onChange(types.map((t) => t.id === form.id ? { ...t, ...form, updated_at: new Date().toISOString() } : t));
+      onChange(types.map((obligationType) => obligationType.id === form.id ? { ...obligationType, ...form, updated_at: new Date().toISOString() } : obligationType));
     }
     setModal(null);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Delete this obligation type?")) onChange(types.filter((t) => t.id !== id));
+  const handleDelete = (obligationTypeId: string) => {
+    if (confirm("Delete this obligation type?")) onChange(types.filter((obligationType) => obligationType.id !== obligationTypeId));
   };
 
   return (
@@ -88,23 +88,23 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
             {types.length === 0 && (
               <tr><td colSpan={4} className="px-4 py-10 text-center text-sm text-muted-foreground">No obligation types yet.</td></tr>
             )}
-            {types.map((t) => (
-              <tr key={t.id} className="hover:bg-muted/20 transition-colors">
-                <td className="px-4 py-3 font-semibold text-foreground">{t.name}</td>
+            {types.map((obligationType) => (
+              <tr key={obligationType.id} className="hover:bg-muted/20 transition-colors">
+                <td className="px-4 py-3 font-semibold text-foreground">{obligationType.name}</td>
                 <td className="px-4 py-3">
-                  <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", t.quantity_based ? SEMANTIC_BADGE.successStrong : SEMANTIC_BADGE.muted)}>
-                    {t.quantity_based ? "Yes" : "No"}
+                  <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", obligationType.quantity_based ? SEMANTIC_BADGE.successStrong : SEMANTIC_BADGE.muted)}>
+                    {obligationType.quantity_based ? "Yes" : "No"}
                   </span>
                 </td>
-                <td className="px-4 py-3"><TypeBadge val={t.designated_for} /></td>
+                <td className="px-4 py-3"><TypeBadge designatedFor={obligationType.designated_for} /></td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <Button type="button" aria-label={`Edit ${t.name}`} onClick={() => setModal({ mode: "edit", data: { ...t } })}
+                    <Button type="button" aria-label={`Edit ${obligationType.name}`} onClick={() => setModal({ mode: "edit", data: { ...obligationType } })}
                       variant="ghost"
                       className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                       <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                     </Button>
-                    <Button type="button" aria-label={`Delete ${t.name}`} onClick={() => handleDelete(t.id)}
+                    <Button type="button" aria-label={`Delete ${obligationType.name}`} onClick={() => handleDelete(obligationType.id)}
                       variant="ghost"
                       className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                       <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -142,15 +142,15 @@ function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obligation
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = (): Record<string, string> => {
-    const e: Record<string, string> = {};
-    if (!form.name?.trim()) e.name = "Name is required";
-    return e;
+    const nextErrors: Record<string, string> = {};
+    if (!form.name?.trim()) nextErrors.name = "Name is required";
+    return nextErrors;
   };
 
   const handleSave = (): void => {
-    const e2 = validate();
-    if (Object.keys(e2).length) {
-      setErrors(e2);
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length) {
+      setErrors(validationErrors);
       return;
     }
     onSave(form);
@@ -172,7 +172,7 @@ function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obligation
           <Input
             id="type-name"
             value={form.name || ""}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            onChange={(event) => setForm({ ...form, name: event.target.value })}
             className={FORM_INPUT}
             aria-invalid={!!errors.name}
           />

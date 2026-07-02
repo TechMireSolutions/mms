@@ -73,7 +73,7 @@ export function ConfirmAlertDialog({
               value={reason}
               maxLength={optionalReason.maxLength ?? 500}
               placeholder={optionalReason.placeholder}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(event) => setReason(event.target.value)}
             />
           </div>
         )}

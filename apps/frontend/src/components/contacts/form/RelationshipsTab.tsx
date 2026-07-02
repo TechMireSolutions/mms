@@ -33,7 +33,7 @@ export default function RelationshipsTab({
     const linkedContactIds = contactRelationships
       .filter((_, index) => index !== rowIndex)
       .map((relationship) => relationship.contactId)
-      .filter((id) => id != null && String(id).length > 0);
+      .filter((contactId) => contactId != null && String(contactId).length > 0);
     if (contactDraft.id != null) linkedContactIds.unshift(contactDraft.id);
     return linkedContactIds;
   };

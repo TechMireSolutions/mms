@@ -864,7 +864,7 @@ export function QuestionForm({
       tabPanelIdPrefix="question-form-tab"
       lang={formLanguage}
       dir={getLanguageDirection(formLanguage)}
-      error={errors.map(e => e.message)}
+      error={errors.map((error) => error.message)}
       cancelLabel={tForm('questionBank.cancel' as any)}
       saveLabel={tForm('questionBank.saveQuestion' as any)}
       onSave={() => void form.handleSubmit(onSubmit, onInvalid)()}

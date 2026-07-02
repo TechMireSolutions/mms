@@ -49,7 +49,7 @@ export default function EmergencyTab({
     const linkedContactIds = emergencyContacts
       .filter((_, index) => index !== rowIndex)
       .map((emergencyContact) => emergencyContact.contactId)
-      .filter((id) => id != null && String(id).length > 0) as (string | number)[];
+      .filter((contactId) => contactId != null && String(contactId).length > 0) as (string | number)[];
     if (contactDraft.id != null) linkedContactIds.unshift(contactDraft.id);
     return linkedContactIds;
   };

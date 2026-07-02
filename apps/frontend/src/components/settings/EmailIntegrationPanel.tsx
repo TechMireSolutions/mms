@@ -153,7 +153,7 @@ export default function EmailIntegrationPanel({
           <Input
             id="email-from-name"
             value={form.fromName}
-            onChange={(e) => setField('fromName', e.target.value)}
+            onChange={(event) => setField('fromName', event.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -162,7 +162,7 @@ export default function EmailIntegrationPanel({
             id="email-from-address"
             type="email"
             value={form.fromAddress}
-            onChange={(e) => setField('fromAddress', e.target.value)}
+            onChange={(event) => setField('fromAddress', event.target.value)}
             placeholder={`admin@${selectedPreset.exampleDomain}`}
           />
         </div>
@@ -172,7 +172,7 @@ export default function EmailIntegrationPanel({
           <Input
             id="email-smtp-username"
             value={form.smtpUsername}
-            onChange={(e) => setField('smtpUsername', e.target.value)}
+            onChange={(event) => setField('smtpUsername', event.target.value)}
             placeholder={`you@${selectedPreset.exampleDomain}`}
             autoComplete="username"
           />
@@ -184,7 +184,7 @@ export default function EmailIntegrationPanel({
             id="email-smtp-password"
             type="password"
             value={smtpPassword}
-            onChange={(e) => setSmtpPassword(e.target.value)}
+            onChange={(event) => setSmtpPassword(event.target.value)}
             placeholder={
               form.hasCredentials ? t('email.smtpPasswordPlaceholderSaved') : t('email.smtpPasswordPlaceholder')
             }
@@ -199,7 +199,7 @@ export default function EmailIntegrationPanel({
               <Input
                 id="email-smtp-host"
                 value={form.smtpHost ?? ''}
-                onChange={(e) => setField('smtpHost', e.target.value)}
+                onChange={(event) => setField('smtpHost', event.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -208,7 +208,7 @@ export default function EmailIntegrationPanel({
                 id="email-smtp-port"
                 type="number"
                 value={form.smtpPort ?? 587}
-                onChange={(e) => setField('smtpPort', Number(e.target.value))}
+                onChange={(event) => setField('smtpPort', Number(event.target.value))}
               />
             </div>
           </>

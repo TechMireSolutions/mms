@@ -43,14 +43,14 @@ function filterGrouped(
 function detectionErrorKey(
   code: 'geolocation_unsupported' | 'permission_denied' | 'position_unavailable' | 'timeout' | 'timezone_lookup_failed',
 ): AppTranslationKey {
-  const map: Record<typeof code, AppTranslationKey> = {
+  const detectionErrorKeys: Record<typeof code, AppTranslationKey> = {
     geolocation_unsupported: 'global.timezoneDetectUnsupported',
     permission_denied: 'global.timezoneDetectDenied',
     position_unavailable: 'global.timezoneDetectUnavailable',
     timeout: 'global.timezoneDetectTimeout',
     timezone_lookup_failed: 'global.timezoneDetectFailed',
   };
-  return map[code];
+  return detectionErrorKeys[code];
 }
 
 /**
@@ -123,9 +123,9 @@ export default function TimezoneSelect({
     }
   };
 
-  const handleOpenChange = (next: boolean): void => {
-    setOpen(next);
-    if (!next) setQuery('');
+  const handleOpenChange = (isOpen: boolean): void => {
+    setOpen(isOpen);
+    if (!isOpen) setQuery('');
   };
 
   return (

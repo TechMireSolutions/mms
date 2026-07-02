@@ -33,12 +33,12 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
  */
 function parseVCard(text: string, mobileLabel: string, personalLabel: string, defaultPhoneCountryCode: string): Contact[] {
   const contacts: Contact[] = [];
-  const cards = text.split(/BEGIN:VCARD/i).filter((c) => c.trim());
+  const cards = text.split(/BEGIN:VCARD/i).filter((cardText) => cardText.trim());
   for (const card of cards) {
     const get = (key: string): string => {
       const re = new RegExp(`^${key}[^:]*:(.*)$`, "im");
-      const m = card.match(re);
-      return m ? m[1].trim() : "";
+      const match = card.match(re);
+      return match ? match[1].trim() : "";
     };
     const name = get("FN");
     if (!name) continue;
@@ -92,8 +92,8 @@ function toVCard(contact: Contact): string {
     `FN:${contact.name || ""}`,
     `N:${contact.lastName || ""};${contact.firstName || ""};;;`,
   ];
-  (contact.phones || []).forEach((p) => lines.push(`TEL;TYPE=${p.label?.toUpperCase() || "CELL"}:${p.number}`));
-  (contact.emails || []).forEach((e) => lines.push(`EMAIL;TYPE=${e.label?.toUpperCase() || "INTERNET"}:${e.address}`));
+  (contact.phones || []).forEach((phoneEntry) => lines.push(`TEL;TYPE=${phoneEntry.label?.toUpperCase() || "CELL"}:${phoneEntry.number}`));
+  (contact.emails || []).forEach((emailEntry) => lines.push(`EMAIL;TYPE=${emailEntry.label?.toUpperCase() || "INTERNET"}:${emailEntry.address}`));
   if (contact.employer) lines.push(`ORG:${contact.employer}`);
   if (contact.designation) lines.push(`TITLE:${contact.designation}`);
   if (contact.notes) lines.push(`NOTE:${contact.notes}`);
@@ -213,16 +213,16 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
       setError("");
       try {
         const redirectUri = `${window.location.origin}/contacts`;
-        const { config: next } = await exchangeOAuth.mutateAsync({ code: code.trim(), redirectUri });
+        const { config: exchangedConfig } = await exchangeOAuth.mutateAsync({ code: code.trim(), redirectUri });
         setConfig((prev) => ({
           ...prev,
-          clientId: next.clientId ?? prev.clientId,
+          clientId: exchangedConfig.clientId ?? prev.clientId,
         }));
         setShowAuthCode(false);
         setAuthCode("");
         setError("");
-      } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
         setError(t('contacts.sync.tokenExchangeFailed', { message }));
       } finally {
         setExchanging(false);
@@ -264,13 +264,13 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
       const result = await runGoogleSync.mutateAsync();
       onImport(result.contacts);
       setSyncResult({ total: result.total, imported: result.imported, skipped: result.skipped });
-    } catch (e) {
-      if (isApiError(e) && e.type === 'session_expired') {
+    } catch (error) {
+      if (isApiError(error) && error.type === 'session_expired') {
         await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
         setError(t('contacts.sync.sessionExpired'));
         return;
       }
-      const message = e instanceof Error ? e.message : String(e);
+      const message = error instanceof Error ? error.message : String(error);
       setError(message);
     } finally {
       setSyncing(false);
@@ -513,14 +513,14 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const file = e.target.files?.[0];
+  const handleFile = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = event.target.files?.[0];
     if (!file) return;
-    e.target.value = "";
+    event.target.value = "";
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      if (ev.target && typeof ev.target.result === "string") {
-        setPreviewList(parseVCard(ev.target.result, mobileLabel, personalLabel, defaultPhoneCountryCode));
+    reader.onload = (readerEvent) => {
+      if (readerEvent.target && typeof readerEvent.target.result === "string") {
+        setPreviewList(parseVCard(readerEvent.target.result, mobileLabel, personalLabel, defaultPhoneCountryCode));
         setResult(null);
       }
     };
@@ -529,8 +529,8 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
 
   const handleImport = (): void => {
     setImporting(true);
-    const existingNames = new Set(contacts.map((c) => c.name?.toLowerCase().trim()));
-    const fresh = previewList.filter((c) => !existingNames.has(c.name?.toLowerCase().trim()));
+    const existingNames = new Set(contacts.map((contact) => contact.name?.toLowerCase().trim()));
+    const fresh = previewList.filter((contact) => !existingNames.has(contact.name?.toLowerCase().trim()));
     onImport(fresh);
     setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
     setPreviewList([]);
@@ -539,10 +539,10 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
 
   const handleExport = (): void => {
     const vcf = contacts.map(toVCard).join("\r\n");
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([vcf], { type: "text/vcard" }));
-    a.download = "madrasa-contacts.vcf";
-    a.click();
+    const downloadLink = document.createElement("a");
+    downloadLink.href = URL.createObjectURL(new Blob([vcf], { type: "text/vcard" }));
+    downloadLink.download = "madrasa-contacts.vcf";
+    downloadLink.click();
   };
 
   return (

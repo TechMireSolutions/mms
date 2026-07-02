@@ -136,7 +136,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           <Input
             id={`label-${draft.key}`}
             value={draft.label}
-            onChange={(e) => upd("label", e.target.value)}
+            onChange={(event) => upd("label", event.target.value)}
             placeholder="e.g. Father's Name"
             autoFocus
           />
@@ -167,7 +167,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           <Input
             id={`desc-${draft.key}`}
             value={draft.description || ""}
-            onChange={(e) => upd("description", e.target.value)}
+            onChange={(event) => upd("description", event.target.value)}
             placeholder="What is this field for?"
           />
         </div>
@@ -176,7 +176,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           <Input
             id={`placeholder-${draft.key}`}
             value={draft.placeholder || ""}
-            onChange={(e) => upd("placeholder", e.target.value)}
+            onChange={(event) => upd("placeholder", event.target.value)}
             placeholder="Hint shown inside the input"
           />
         </div>
@@ -191,7 +191,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           <Input
             id={`defVal-${draft.key}`}
             value={(draft.defaultValue as string | number | undefined) || ""}
-            onChange={(e) => upd("defaultValue", e.target.value)}
+            onChange={(event) => upd("defaultValue", event.target.value)}
             placeholder="Leave blank for no default"
           />
         </div>
@@ -207,7 +207,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           <Input
             id={`opts-${draft.key}`}
             value={draft._optionsString}
-            onChange={(e) => upd("_optionsString", e.target.value)}
+            onChange={(event) => upd("_optionsString", event.target.value)}
             placeholder={draft.type === "tags" ? "e.g. Student, Alumni, Donor" : "Option A, Option B, Option C"}
           />
           {draft.type === "tags" && (
@@ -225,7 +225,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
               type="number"
               min={0}
               value={draft.minLength ?? ""}
-              onChange={(e) => upd("minLength", e.target.value ? Number(e.target.value) : undefined)}
+              onChange={(event) => upd("minLength", event.target.value ? Number(event.target.value) : undefined)}
               placeholder="e.g. 2"
             />
           </div>
@@ -236,7 +236,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
               type="number"
               min={1}
               value={draft.maxLength ?? ""}
-              onChange={(e) => upd("maxLength", e.target.value ? Number(e.target.value) : undefined)}
+              onChange={(event) => upd("maxLength", event.target.value ? Number(event.target.value) : undefined)}
               placeholder="e.g. 100"
             />
           </div>
@@ -251,7 +251,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
               id={`min-${draft.key}`}
               type="number"
               value={draft.min ?? ""}
-              onChange={(e) => upd("min", e.target.value ? Number(e.target.value) : undefined)}
+              onChange={(event) => upd("min", event.target.value ? Number(event.target.value) : undefined)}
               placeholder="e.g. 0"
             />
           </div>
@@ -261,7 +261,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
               id={`max-${draft.key}`}
               type="number"
               value={draft.max ?? ""}
-              onChange={(e) => upd("max", e.target.value ? Number(e.target.value) : undefined)}
+              onChange={(event) => upd("max", event.target.value ? Number(event.target.value) : undefined)}
               placeholder="e.g. 999"
             />
           </div>
@@ -272,7 +272,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
             <Input
               id={`mask-${draft.key}`}
               value={draft.mask || ""}
-              onChange={(e) => upd("mask", e.target.value)}
+              onChange={(event) => upd("mask", event.target.value)}
               placeholder="e.g. 99999-9999999-9"
             />
           </div>
@@ -483,10 +483,10 @@ export function CustomFieldsBuilder({
 
   const handleDragEnd = (result: DropResult): void => {
     if (!result.destination || result.destination.index === result.source.index) return;
-    const next = Array.from(fields);
-    const [moved] = next.splice(result.source.index, 1);
-    next.splice(result.destination.index, 0, moved);
-    onChange(next);
+    const reorderedFields = Array.from(fields);
+    const [moved] = reorderedFields.splice(result.source.index, 1);
+    reorderedFields.splice(result.destination.index, 0, moved);
+    onChange(reorderedFields);
   };
 
   return (

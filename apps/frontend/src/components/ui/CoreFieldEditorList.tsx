@@ -272,7 +272,7 @@ export function CoreFieldEditorList({
                               <Input
                                 className="text-xs py-1.5 h-8 bg-background"
                                 value={(defaultValues[field.key] as string) || ""}
-                                onChange={(e) => onChangeDefaults?.(field.key, e.target.value)}
+                                onChange={(event) => onChangeDefaults?.(field.key, event.target.value)}
                                 placeholder="Set default value"
                               />
                             </div>
@@ -284,7 +284,7 @@ export function CoreFieldEditorList({
                                 <Input
                                   className="text-xs py-1.5 h-8 bg-background"
                                   value={(permissions[field.key] || []).join(", ")}
-                                  onChange={(e) => onChangePermissions?.(field.key, e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
+                                  onChange={(event) => onChangePermissions?.(field.key, event.target.value.split(",").map((role) => role.trim()).filter(Boolean))}
                                   placeholder="e.g. admin, manager"
                                 />
                               </div>

@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 const SNAP = 4; // px grid snap
 
-function snap(v: number) { return Math.round(v / SNAP) * SNAP; }
+function snap(value: number) { return Math.round(value / SNAP) * SNAP; }
 
 let idCounter = Date.now();
 function newId() { return `el_${++idCounter}`; }
@@ -61,7 +61,7 @@ function StyleInput({ label, value, onChange, type = "text", min, max, step, cla
   return (
     <div className={`flex flex-col gap-0.5 ${className}`}>
       <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide">{label}</span>
-      <Input type={type} value={value} onChange={(e) => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
+      <Input type={type} value={value} onChange={(event) => onChange(type === "number" ? Number(event.target.value) : event.target.value)}
         min={min} max={max} step={step}
         className="w-full px-1.5 py-0.5 h-auto text-xs border border-border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
     </div>
@@ -90,63 +90,63 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   const resizeState = useRef<{ id: string, startX: number, startY: number, origW: number, origH: number } | null>(null);
 
   const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
-  const selectedEl = template.elements.find((e) => e.id === selectedId);
+  const selectedElement = template.elements.find((templateElement) => templateElement.id === selectedId);
 
   // ── History management ────────────────────────────────────────────────────
   const pushHistory = useCallback((tmpl: InvoiceTemplate) => {
-    setHistory((h) => [...h.slice(-30), tmpl]);
+    setHistory((historyStack) => [...historyStack.slice(-30), tmpl]);
     setFuture([]);
   }, []);
 
   const undo = () => {
     if (!history.length) return;
     const prev = history[history.length - 1];
-    setFuture((f) => [template, ...f]);
-    setHistory((h) => h.slice(0, -1));
+    setFuture((futureStack) => [template, ...futureStack]);
+    setHistory((historyStack) => historyStack.slice(0, -1));
     setTemplate(prev);
   };
 
   const redo = () => {
     if (!future.length) return;
-    const next = future[0];
-    setHistory((h) => [...h, template]);
-    setFuture((f) => f.slice(1));
-    setTemplate(next);
+    const nextTemplate = future[0];
+    setHistory((historyStack) => [...historyStack, template]);
+    setFuture((futureStack) => futureStack.slice(1));
+    setTemplate(nextTemplate);
   };
 
   // ── Element mutations ─────────────────────────────────────────────────────
-  const updateElements = useCallback((fn: (els: TemplateElement[]) => TemplateElement[]) => {
-    setTemplate((t) => {
-      const next = { ...t, elements: fn(t.elements) };
-      return next;
+  const updateElements = useCallback((updateFn: (templateElements: TemplateElement[]) => TemplateElement[]) => {
+    setTemplate((currentTemplate) => {
+      const nextTemplate = { ...currentTemplate, elements: updateFn(currentTemplate.elements) };
+      return nextTemplate;
     });
   }, []);
 
-  const commitUpdate = useCallback((fn: (els: TemplateElement[]) => TemplateElement[]) => {
-    setTemplate((t) => {
-      const prev = t;
-      const next = { ...t, elements: fn(t.elements) };
-      setHistory((h) => [...h.slice(-30), prev]);
+  const commitUpdate = useCallback((updateFn: (templateElements: TemplateElement[]) => TemplateElement[]) => {
+    setTemplate((currentTemplate) => {
+      const prevTemplate = currentTemplate;
+      const nextTemplate = { ...currentTemplate, elements: updateFn(currentTemplate.elements) };
+      setHistory((historyStack) => [...historyStack.slice(-30), prevTemplate]);
       setFuture([]);
-      return next;
+      return nextTemplate;
     });
   }, []);
 
-  const patchEl = (id: string, patch: Partial<TemplateElement>) => {
-    commitUpdate((els) => els.map((e) => e.id === id ? { ...e, ...patch } as TemplateElement : e));
+  const patchEl = (elementId: string, patch: Partial<TemplateElement>) => {
+    commitUpdate((templateElements) => templateElements.map((templateElement) => templateElement.id === elementId ? { ...templateElement, ...patch } as TemplateElement : templateElement));
   };
 
-  const patchStyle = (id: string, stylePatch: Partial<ElementStyle>) => {
-    commitUpdate((els) => els.map((e) => e.id === id ? { ...e, style: { ...e.style, ...stylePatch } } as TemplateElement : e));
+  const patchStyle = (elementId: string, stylePatch: Partial<ElementStyle>) => {
+    commitUpdate((templateElements) => templateElements.map((templateElement) => templateElement.id === elementId ? { ...templateElement, style: { ...templateElement.style, ...stylePatch } } as TemplateElement : templateElement));
   };
 
-  const deleteEl = (id: string) => {
-    commitUpdate((templateElements) => templateElements.filter((templateElement) => templateElement.id !== id));
+  const deleteEl = (elementId: string) => {
+    commitUpdate((templateElements) => templateElements.filter((templateElement) => templateElement.id !== elementId));
     setSelectedId(null);
   };
 
-  const duplicateEl = (id: string) => {
-    const templateElement = template.elements.find((element) => element.id === id);
+  const duplicateEl = (elementId: string) => {
+    const templateElement = template.elements.find((element) => element.id === elementId);
     if (!templateElement) return;
     const duplicatedElement: TemplateElement = { ...templateElement, id: newId(), x: templateElement.x + 12, y: templateElement.y + 12, style: { ...templateElement.style } };
     commitUpdate((elements) => [...elements, duplicatedElement]);
@@ -176,19 +176,19 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   };
 
   // ── Drag ─────────────────────────────────────────────────────────────────
-  const onMouseDownEl = (e: React.MouseEvent, id: string) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    setSelectedId(id);
-    const templateElement = template.elements.find((element) => element.id === id);
+  const onMouseDownEl = (event: React.MouseEvent, elementId: string) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectedId(elementId);
+    const templateElement = template.elements.find((element) => element.id === elementId);
     if (!templateElement) return;
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
     dragState.current = {
-      id,
-      startX: e.clientX,
-      startY: e.clientY,
+      id: elementId,
+      startX: event.clientX,
+      startY: event.clientY,
       origX: templateElement.x,
       origY: templateElement.y,
       canvasLeft: rect.left,
@@ -196,10 +196,10 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     };
   };
 
-  const onMouseMove = useCallback((e: MouseEvent) => {
+  const onMouseMove = useCallback((event: MouseEvent) => {
     if (dragState.current) {
-      const deltaX = e.clientX - dragState.current.startX;
-      const deltaY = e.clientY - dragState.current.startY;
+      const deltaX = event.clientX - dragState.current.startX;
+      const deltaY = event.clientY - dragState.current.startY;
       updateElements((templateElements) =>
         templateElements.map((templateElement) => templateElement.id === dragState.current!.id
           ? { ...templateElement, x: snap(Math.max(0, dragState.current!.origX + deltaX)), y: snap(Math.max(0, dragState.current!.origY + deltaY)) }
@@ -208,8 +208,8 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
       );
     }
     if (resizeState.current) {
-      const deltaX = e.clientX - resizeState.current.startX;
-      const deltaY = e.clientY - resizeState.current.startY;
+      const deltaX = event.clientX - resizeState.current.startX;
+      const deltaY = event.clientY - resizeState.current.startY;
       updateElements((templateElements) =>
         templateElements.map((templateElement) => templateElement.id === resizeState.current!.id
           ? { ...templateElement, w: snap(Math.max(20, resizeState.current!.origW + deltaX)), h: snap(Math.max(8, resizeState.current!.origH + deltaY)) }
@@ -222,10 +222,10 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   const onMouseUp = useCallback(() => {
     if (dragState.current || resizeState.current) {
       // commit to history
-      setTemplate((t) => {
-        setHistory((h) => [...h.slice(-30), t]);
+      setTemplate((currentTemplate) => {
+        setHistory((historyStack) => [...historyStack.slice(-30), currentTemplate]);
         setFuture([]);
-        return t;
+        return currentTemplate;
       });
     }
     dragState.current = null;
@@ -241,12 +241,12 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     };
   }, [onMouseMove, onMouseUp]);
 
-  const onMouseDownResize = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const templateElement = template.elements.find((element) => element.id === id);
+  const onMouseDownResize = (event: React.MouseEvent, elementId: string) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const templateElement = template.elements.find((element) => element.id === elementId);
     if (!templateElement) return;
-    resizeState.current = { id, startX: e.clientX, startY: e.clientY, origW: templateElement.w, origH: templateElement.h };
+    resizeState.current = { id: elementId, startX: event.clientX, startY: event.clientY, origW: templateElement.w, origH: templateElement.h };
   };
 
   // ── Save ──────────────────────────────────────────────────────────────────
@@ -256,23 +256,23 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handlePageSize = (ps: string) => {
+  const handlePageSize = (pageSizeKey: string) => {
     pushHistory(template);
-    setTemplate((t) => ({ ...t, pageSize: ps }));
+    setTemplate((currentTemplate) => ({ ...currentTemplate, pageSize: pageSizeKey }));
   };
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "z") { e.preventDefault(); undo(); }
-      if ((e.metaKey || e.ctrlKey) && e.key === "y") { e.preventDefault(); redo(); }
-      if ((e.metaKey || e.ctrlKey) && e.key === "d") { e.preventDefault(); if (selectedId) duplicateEl(selectedId); }
-      if (e.key === "Delete" || e.key === "Backspace") {
+    const handler = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "z") { event.preventDefault(); undo(); }
+      if ((event.metaKey || event.ctrlKey) && event.key === "y") { event.preventDefault(); redo(); }
+      if ((event.metaKey || event.ctrlKey) && event.key === "d") { event.preventDefault(); if (selectedId) duplicateEl(selectedId); }
+      if (event.key === "Delete" || event.key === "Backspace") {
         const tag = document.activeElement?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA") return;
         if (selectedId) deleteEl(selectedId);
       }
-      if (e.key === "Escape") setSelectedId(null);
+      if (event.key === "Escape") setSelectedId(null);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -335,13 +335,13 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
       <div
         key={templateElement.id}
         style={baseStyle}
-        onMouseDown={(e) => onMouseDownEl(e, templateElement.id)}
+        onMouseDown={(event) => onMouseDownEl(event, templateElement.id)}
       >
         {content()}
         {/* Resize handle */}
         {isSelected && (
           <div
-            onMouseDown={(e) => onMouseDownResize(e, templateElement.id)}
+            onMouseDown={(event) => onMouseDownResize(event, templateElement.id)}
             style={{
               position: "absolute", bottom: -4, right: -4,
               width: 10, height: 10,
@@ -353,9 +353,9 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         {/* Action strip */}
         {isSelected && (
           <div style={{ position: "absolute", top: -22, left: 0, display: "flex", gap: 2, zIndex: 20 }}>
-            <Button type="button" onClick={(e) => { e.stopPropagation(); duplicateEl(templateElement.id); }}
+            <Button type="button" onClick={(event) => { event.stopPropagation(); duplicateEl(templateElement.id); }}
               style={{ padding: "1px 4px", background: printTokens.primary, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>⧉</Button>
-            <Button type="button" onClick={(e) => { e.stopPropagation(); deleteEl(templateElement.id); }}
+            <Button type="button" onClick={(event) => { event.stopPropagation(); deleteEl(templateElement.id); }}
               style={{ padding: "1px 4px", background: printTokens.destructive, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>✕</Button>
           </div>
         )}
@@ -380,11 +380,11 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         {/* Page size */}
         <div className="flex items-center gap-1.5 ml-2">
           <span className="text-xs text-muted-foreground font-semibold">Page:</span>
-          {Object.entries(PAGE_SIZES).map(([k, v]) => (
-            <Button type="button" key={k} onClick={() => handlePageSize(k)}
-              variant={template.pageSize === k ? "default" : "outline"}
-              className={`h-auto px-2.5 py-1 text-xs font-semibold rounded border transition-colors shadow-none ${template.pageSize === k ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>
-              {k}
+          {Object.entries(PAGE_SIZES).map(([pageSizeKey]) => (
+            <Button type="button" key={pageSizeKey} onClick={() => handlePageSize(pageSizeKey)}
+              variant={template.pageSize === pageSizeKey ? "default" : "outline"}
+              className={`h-auto px-2.5 py-1 text-xs font-semibold rounded border transition-colors shadow-none ${template.pageSize === pageSizeKey ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>
+              {pageSizeKey}
             </Button>
           ))}
         </div>
@@ -474,7 +474,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
 
         {/* Right panel — properties */}
         <aside className="w-60 flex-shrink-0 border-l border-border bg-card overflow-y-auto p-3 space-y-4">
-          {!selectedEl ? (
+          {!selectedElement ? (
             <div className="text-xs text-muted-foreground text-center pt-10 space-y-1">
               <Move className="w-6 h-6 mx-auto opacity-30" aria-hidden="true" />
               <p className="m-0">Click an element to edit its properties</p>
@@ -484,17 +484,17 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
             <>
               <div>
                 <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">
-                  {selectedEl.type === "field" ? "Data Field" : selectedEl.type === "logo" ? "Logo" : selectedEl.type === "divider" ? "Divider" : "Text"} Properties
+                  {selectedElement.type === "field" ? "Data Field" : selectedElement.type === "logo" ? "Logo" : selectedElement.type === "divider" ? "Divider" : "Text"} Properties
                 </p>
 
                 {/* Label / content */}
-                {(selectedEl.type === "static") && (
-                  <StyleInput label="Content" value={selectedEl.label || ""}
-                    onChange={(v) => patchEl(selectedEl.id, { label: String(v) })} />
+                {(selectedElement.type === "static") && (
+                  <StyleInput label="Content" value={selectedElement.label || ""}
+                    onChange={(nextValue) => patchEl(selectedElement.id, { label: String(nextValue) })} />
                 )}
-                {(selectedEl.type === "field") && (
-                  <StyleInput label="Display Label" value={selectedEl.label || ""}
-                    onChange={(v) => patchEl(selectedEl.id, { label: String(v) })} />
+                {(selectedElement.type === "field") && (
+                  <StyleInput label="Display Label" value={selectedElement.label || ""}
+                    onChange={(nextValue) => patchEl(selectedElement.id, { label: String(nextValue) })} />
                 )}
               </div>
 
@@ -502,29 +502,29 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
               <div>
                 <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">Position & Size</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <StyleInput label="X" type="number" value={selectedEl.x} onChange={(v) => patchEl(selectedEl.id, { x: snap(Number(v)) })} step={SNAP} />
-                  <StyleInput label="Y" type="number" value={selectedEl.y} onChange={(v) => patchEl(selectedEl.id, { y: snap(Number(v)) })} step={SNAP} />
-                  <StyleInput label="W" type="number" value={selectedEl.w || 0} onChange={(v) => patchEl(selectedEl.id, { w: snap(Number(v)) })} min={20} step={SNAP} />
-                  <StyleInput label="H" type="number" value={selectedEl.h || 0} onChange={(v) => patchEl(selectedEl.id, { h: snap(Number(v)) })} min={4} step={SNAP} />
+                  <StyleInput label="X" type="number" value={selectedElement.x} onChange={(nextValue) => patchEl(selectedElement.id, { x: snap(Number(nextValue)) })} step={SNAP} />
+                  <StyleInput label="Y" type="number" value={selectedElement.y} onChange={(nextValue) => patchEl(selectedElement.id, { y: snap(Number(nextValue)) })} step={SNAP} />
+                  <StyleInput label="W" type="number" value={selectedElement.w || 0} onChange={(nextValue) => patchEl(selectedElement.id, { w: snap(Number(nextValue)) })} min={20} step={SNAP} />
+                  <StyleInput label="H" type="number" value={selectedElement.h || 0} onChange={(nextValue) => patchEl(selectedElement.id, { h: snap(Number(nextValue)) })} min={4} step={SNAP} />
                 </div>
               </div>
 
               {/* Typography */}
-              {selectedEl.type !== "logo" && selectedEl.type !== "divider" && (
+              {selectedElement.type !== "logo" && selectedElement.type !== "divider" && (
                 <div>
                   <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">Typography</p>
                   <div className="space-y-2">
-                    <StyleInput label="Font Size (px)" type="number" value={selectedEl.style?.fontSize || 10}
-                      onChange={(v) => patchStyle(selectedEl.id, { fontSize: Number(v) })} min={7} max={72} />
-                    <StyleInput label="Color" type="color" value={selectedEl.style?.color || PRINT_NEUTRAL.text}
-                      onChange={(v) => patchStyle(selectedEl.id, { color: String(v) })} />
+                    <StyleInput label="Font Size (px)" type="number" value={selectedElement.style?.fontSize || 10}
+                      onChange={(nextValue) => patchStyle(selectedElement.id, { fontSize: Number(nextValue) })} min={7} max={72} />
+                    <StyleInput label="Color" type="color" value={selectedElement.style?.color || PRINT_NEUTRAL.text}
+                      onChange={(nextValue) => patchStyle(selectedElement.id, { color: String(nextValue) })} />
                     <div className="flex gap-1">
-                      <StyleBtn title="Bold" active={selectedEl.style?.fontWeight === "bold"}
-                        onClick={() => patchStyle(selectedEl.id, { fontWeight: selectedEl.style?.fontWeight === "bold" ? "normal" : "bold" })}>
+                      <StyleBtn title="Bold" active={selectedElement.style?.fontWeight === "bold"}
+                        onClick={() => patchStyle(selectedElement.id, { fontWeight: selectedElement.style?.fontWeight === "bold" ? "normal" : "bold" })}>
                         <Bold className="w-3 h-3" aria-hidden="true" />
                       </StyleBtn>
-                      <StyleBtn title="Italic" active={selectedEl.style?.fontStyle === "italic"}
-                        onClick={() => patchStyle(selectedEl.id, { fontStyle: selectedEl.style?.fontStyle === "italic" ? "normal" : "italic" })}>
+                      <StyleBtn title="Italic" active={selectedElement.style?.fontStyle === "italic"}
+                        onClick={() => patchStyle(selectedElement.id, { fontStyle: selectedElement.style?.fontStyle === "italic" ? "normal" : "italic" })}>
                         <Italic className="w-3 h-3" aria-hidden="true" />
                       </StyleBtn>
                     </div>
@@ -532,10 +532,10 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
                     <div>
                       <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide block mb-1">Alignment</span>
                       <div className="flex gap-1">
-                        {["left","center","right"].map((a) => (
-                          <StyleBtn key={a} title={a} active={selectedEl.style?.textAlign === a}
-                            onClick={() => patchStyle(selectedEl.id, { textAlign: a as ElementStyle['textAlign'] })}>
-                            {a === "left" ? <AlignLeft className="w-3 h-3" aria-hidden="true" /> : a === "center" ? <AlignCenter className="w-3 h-3" aria-hidden="true" /> : <AlignRight className="w-3 h-3" aria-hidden="true" />}
+                        {["left","center","right"].map((textAlignOption) => (
+                          <StyleBtn key={textAlignOption} title={textAlignOption} active={selectedElement.style?.textAlign === textAlignOption}
+                            onClick={() => patchStyle(selectedElement.id, { textAlign: textAlignOption as ElementStyle['textAlign'] })}>
+                            {textAlignOption === "left" ? <AlignLeft className="w-3 h-3" aria-hidden="true" /> : textAlignOption === "center" ? <AlignCenter className="w-3 h-3" aria-hidden="true" /> : <AlignRight className="w-3 h-3" aria-hidden="true" />}
                           </StyleBtn>
                         ))}
                       </div>
@@ -543,8 +543,8 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
                     {/* Font family */}
                     <div>
                       <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide block mb-1">Font</span>
-                      <FormSelect value={selectedEl.style?.fontFamily || "inherit"}
-                        onChange={(fontFamily) => patchStyle(selectedEl.id, { fontFamily })}
+                      <FormSelect value={selectedElement.style?.fontFamily || "inherit"}
+                        onChange={(fontFamily) => patchStyle(selectedElement.id, { fontFamily })}
                         className="w-full"
                         options={[
                           { value: "inherit", label: "Default (Inter)" },
@@ -558,8 +558,8 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
                     </div>
                     {/* RTL */}
                     <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
-                      <Checkbox checked={selectedEl.style?.direction === "rtl"}
-                        onCheckedChange={(checked) => patchStyle(selectedEl.id, { direction: checked ? "rtl" : "ltr" })} />
+                      <Checkbox checked={selectedElement.style?.direction === "rtl"}
+                        onCheckedChange={(checked) => patchStyle(selectedElement.id, { direction: checked ? "rtl" : "ltr" })} />
                       RTL Direction
                     </label>
                   </div>
@@ -567,22 +567,22 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
               )}
 
               {/* Divider color */}
-              {selectedEl.type === "divider" && (
+              {selectedElement.type === "divider" && (
                 <div>
                   <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">Divider</p>
-                  <StyleInput label="Color" type="color" value={selectedEl.style?.color || PRINT_NEUTRAL.border}
-                    onChange={(v) => patchStyle(selectedEl.id, { color: String(v) })} />
+                  <StyleInput label="Color" type="color" value={selectedElement.style?.color || PRINT_NEUTRAL.border}
+                    onChange={(nextValue) => patchStyle(selectedElement.id, { color: String(nextValue) })} />
                 </div>
               )}
 
               {/* Actions */}
               <div className="pt-2 border-t border-border flex gap-2">
-                <Button type="button" onClick={() => duplicateEl(selectedEl.id)}
+                <Button type="button" onClick={() => duplicateEl(selectedElement.id)}
                   variant="outline"
                   className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 h-auto text-[10px] font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
                   <Copy className="w-3 h-3" aria-hidden="true" /> Duplicate
                 </Button>
-                <Button type="button" onClick={() => deleteEl(selectedEl.id)}
+                <Button type="button" onClick={() => deleteEl(selectedElement.id)}
                   variant="outline"
                   className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 h-auto text-[10px] font-semibold rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors shadow-none">
                   <Trash2 className="w-3 h-3" aria-hidden="true" /> Delete
@@ -598,9 +598,9 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         {[
           ["Ctrl+Z", "Undo"], ["Ctrl+Y", "Redo"], ["Ctrl+D", "Duplicate"],
           ["Del", "Delete"], ["Esc", "Deselect"],
-        ].map(([k, v]) => (
-          <span key={k} className="text-[9px] text-muted-foreground">
-            <kbd className="px-1 py-0.5 rounded border border-border bg-muted text-foreground font-mono text-[9px]">{k}</kbd> {v}
+        ].map(([shortcutKey, shortcutLabel]) => (
+          <span key={shortcutKey} className="text-[9px] text-muted-foreground">
+            <kbd className="px-1 py-0.5 rounded border border-border bg-muted text-foreground font-mono text-[9px]">{shortcutKey}</kbd> {shortcutLabel}
           </span>
         ))}
       </footer>

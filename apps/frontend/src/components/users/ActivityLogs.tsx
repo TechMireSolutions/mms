@@ -32,17 +32,17 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
   const [page, setPage] = useState(1);
 
   const userNameFor = (log: ActivityLog): string =>
-    log.userName ?? users.find((u) => u.id === log.userId)?.name ?? log.userId;
+    log.userName ?? users.find((user) => user.id === log.userId)?.name ?? log.userId;
 
   const filtered = useMemo(() => {
-    return logs.filter((l) => {
-      if (userFilter !== 'all' && l.userId !== userFilter) return false;
-      if (actionFilter !== 'all' && l.action !== actionFilter) return false;
-      if (dateFrom && l.ts < dateFrom) return false;
-      if (dateTo && l.ts > `${dateTo}T23:59:59`) return false;
+    return logs.filter((log) => {
+      if (userFilter !== 'all' && log.userId !== userFilter) return false;
+      if (actionFilter !== 'all' && log.action !== actionFilter) return false;
+      if (dateFrom && log.ts < dateFrom) return false;
+      if (dateTo && log.ts > `${dateTo}T23:59:59`) return false;
       if (search) {
         const searchQuery = search.toLowerCase();
-        if (!userNameFor(l).toLowerCase().includes(searchQuery) && !l.detail.toLowerCase().includes(searchQuery)) return false;
+        if (!userNameFor(log).toLowerCase().includes(searchQuery) && !log.detail.toLowerCase().includes(searchQuery)) return false;
       }
       return true;
     });
@@ -55,14 +55,14 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
 
   const userOptions = useMemo(() => [
     { value: 'all', label: t('users.activityAllUsers') },
-    ...users.map((u) => ({ value: u.id, label: u.name })),
+    ...users.map((user) => ({ value: user.id, label: user.name })),
   ], [users, t]);
 
   const actionOptions = useMemo(() => [
     { value: 'all', label: t('users.activityAllActions') },
-    ...ACTIVITY_ACTION_VALUES.map((a) => ({
-      value: a,
-      label: t(`users.action.${a === 'login_failed' ? 'loginFailed' : a === 'role_change' ? 'roleChange' : a}`),
+    ...ACTIVITY_ACTION_VALUES.map((activityAction) => ({
+      value: activityAction,
+      label: t(`users.action.${activityAction === 'login_failed' ? 'loginFailed' : activityAction === 'role_change' ? 'roleChange' : activityAction}`),
     })),
   ], [t]);
 

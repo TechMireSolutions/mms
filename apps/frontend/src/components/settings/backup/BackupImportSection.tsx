@@ -31,19 +31,19 @@ export default function BackupImportSection({
       <div className="absolute top-0 right-0 h-24 w-24 bg-primary/5 rounded-bl-full pointer-events-none group-hover:bg-primary/10 transition-colors duration-300" />
 
       <label
-        onDragEnter={(e) => {
-          e.preventDefault();
+        onDragEnter={(event) => {
+          event.preventDefault();
           onDragActiveChange(true);
         }}
-        onDragLeave={(e) => {
-          e.preventDefault();
+        onDragLeave={(event) => {
+          event.preventDefault();
           onDragActiveChange(false);
         }}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={(event) => {
+          event.preventDefault();
           onDragActiveChange(false);
-          onFileSelected(e.dataTransfer?.files?.[0]);
+          onFileSelected(event.dataTransfer?.files?.[0]);
         }}
         className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-8 transition-all duration-300 ${
           dragActive
@@ -79,9 +79,9 @@ export default function BackupImportSection({
           type="file"
           accept=".json,.mmsbak,application/json"
           className="hidden"
-          onChange={(e) => {
-            onFileSelected(e.target.files?.[0]);
-            e.target.value = '';
+          onChange={(event) => {
+            onFileSelected(event.target.files?.[0]);
+            event.target.value = '';
           }}
         />
       </label>

@@ -41,12 +41,12 @@ export function FormSelect({
         aria-label={ariaLabel}
         disabled={disabled}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         className={SELECT_CLASS}
       >
         {placeholder !== undefined ? <option value="">{placeholder}</option> : null}
-        {options.map((opt) => {
-          const option = typeof opt === "string" ? { value: opt, label: opt } : opt;
+        {options.map((selectOption) => {
+          const option = typeof selectOption === "string" ? { value: selectOption, label: selectOption } : selectOption;
           return (
             <option key={option.value} value={option.value}>
               {option.label}

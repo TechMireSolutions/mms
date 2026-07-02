@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 
 const PrintInvoiceModal = lazy(() => import("./invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
-function fmtDate(d?: string | null): string {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
+function fmtDate(date?: string | null): string {
+  if (!date) return "—";
+  return new Date(date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
 }
 
 interface RowProps {

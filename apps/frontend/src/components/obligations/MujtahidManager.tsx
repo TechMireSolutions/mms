@@ -43,15 +43,15 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
     if (modal?.mode === "add") {
       onChangeMujtahids([...mujtahids, { ...form, id: `m${Date.now()}` } as Mujtahid]);
     } else if (modal?.mode === "edit") {
-      onChangeMujtahids(mujtahids.map((m) => m.id === form.id ? (form as Mujtahid) : m));
+      onChangeMujtahids(mujtahids.map((mujtahid) => mujtahid.id === form.id ? (form as Mujtahid) : mujtahid));
     }
     setModal(null);
   };
 
-  const handleDeleteMujtahid = (id: string) => {
+  const handleDeleteMujtahid = (mujtahidId: string) => {
     if (confirm("Delete this Mujtahid? Associated representatives will also be removed.")) {
-      onChangeMujtahids(mujtahids.filter((m) => m.id !== id));
-      onChangeReps(reps.filter((r) => r.mujtahid_id !== id));
+      onChangeMujtahids(mujtahids.filter((mujtahid) => mujtahid.id !== mujtahidId));
+      onChangeReps(reps.filter((representative) => representative.mujtahid_id !== mujtahidId));
     }
   };
 
@@ -59,13 +59,13 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
     if (modal?.mode === "add-rep") {
       onChangeReps([...reps, { ...form, id: `mr${Date.now()}` } as MujtahidRep]);
     } else if (modal?.mode === "edit-rep") {
-      onChangeReps(reps.map((r) => r.id === form.id ? (form as MujtahidRep) : r));
+      onChangeReps(reps.map((representative) => representative.id === form.id ? (form as MujtahidRep) : representative));
     }
     setModal(null);
   };
 
-  const handleDeleteRep = (id: string) => {
-    if (confirm("Delete this representative?")) onChangeReps(reps.filter((r) => r.id !== id));
+  const handleDeleteRep = (representativeId: string) => {
+    if (confirm("Delete this representative?")) onChangeReps(reps.filter((representative) => representative.id !== representativeId));
   };
 
   return (
@@ -82,32 +82,32 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
         {mujtahids.length === 0 && (
           <div className="py-10 text-center text-sm text-muted-foreground rounded-xl border border-border">No Mujtahids configured.</div>
         )}
-        {mujtahids.map((m) => {
-          const myReps = reps.filter((r) => r.mujtahid_id === m.id);
-          const isOpen = expanded[m.id];
+        {mujtahids.map((mujtahid) => {
+          const mujtahidReps = reps.filter((representative) => representative.mujtahid_id === mujtahid.id);
+          const isOpen = expanded[mujtahid.id];
           return (
-            <article key={m.id} className="rounded-xl border border-border bg-card overflow-hidden">
+            <article key={mujtahid.id} className="rounded-xl border border-border bg-card overflow-hidden">
               <header className="flex items-center justify-between px-4 py-3">
-                <Button type="button" onClick={() => setExpanded((e) => ({ ...e, [m.id]: !e[m.id] }))}
+                <Button type="button" onClick={() => setExpanded((expandedById) => ({ ...expandedById, [mujtahid.id]: !expandedById[mujtahid.id] }))}
                   aria-expanded={isOpen}
                   variant="ghost"
                   className="flex items-center gap-2 h-auto p-0 text-sm font-semibold text-foreground hover:text-primary hover:bg-transparent shadow-none transition-colors">
                   {isOpen ? <ChevronDown className="w-4 h-4" aria-hidden="true" /> : <ChevronRight className="w-4 h-4" aria-hidden="true" />}
-                  {m.name}
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 bg-muted text-muted-foreground rounded-full">{myReps.length} rep{myReps.length !== 1 ? "s" : ""}</span>
+                  {mujtahid.name}
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 bg-muted text-muted-foreground rounded-full">{mujtahidReps.length} rep{mujtahidReps.length !== 1 ? "s" : ""}</span>
                 </Button>
                 <div className="flex items-center gap-1">
-                  <Button type="button" aria-label={`Add representative for ${m.name}`} onClick={() => setModal({ mode: "add-rep", data: { name: "", mujtahid_id: m.id } })}
+                  <Button type="button" aria-label={`Add representative for ${mujtahid.name}`} onClick={() => setModal({ mode: "add-rep", data: { name: "", mujtahid_id: mujtahid.id } })}
                     variant="ghost"
                     className="flex items-center gap-1 h-auto px-2 py-1.5 rounded-lg text-xs font-semibold text-primary hover:bg-primary/10 shadow-none transition-colors">
                     <Plus className="w-3 h-3" aria-hidden="true" /> Rep
                   </Button>
-                  <Button type="button" aria-label={`Edit ${m.name}`} onClick={() => setModal({ mode: "edit", data: { ...m } })}
+                  <Button type="button" aria-label={`Edit ${mujtahid.name}`} onClick={() => setModal({ mode: "edit", data: { ...mujtahid } })}
                     variant="ghost"
                     className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                     <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
-                  <Button type="button" aria-label={`Delete ${m.name}`} onClick={() => handleDeleteMujtahid(m.id)}
+                  <Button type="button" aria-label={`Delete ${mujtahid.name}`} onClick={() => handleDeleteMujtahid(mujtahid.id)}
                     variant="ghost"
                     className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -116,19 +116,19 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
               </header>
               {isOpen && (
                 <div className="border-t border-border bg-muted/30">
-                  {myReps.length === 0 ? (
+                  {mujtahidReps.length === 0 ? (
                     <p className="px-6 py-3 text-xs text-muted-foreground m-0">No representatives yet.</p>
                   ) : (
-                    myReps.map((r) => (
-                      <div key={r.id} className="flex items-center justify-between px-6 py-2.5 border-b border-border last:border-0">
-                        <span className="text-sm text-foreground">{r.name}</span>
+                    mujtahidReps.map((representative) => (
+                      <div key={representative.id} className="flex items-center justify-between px-6 py-2.5 border-b border-border last:border-0">
+                        <span className="text-sm text-foreground">{representative.name}</span>
                         <div className="flex items-center gap-1">
-                          <Button type="button" aria-label={`Edit representative ${r.name}`} onClick={() => setModal({ mode: "edit-rep", data: { ...r } })}
+                          <Button type="button" aria-label={`Edit representative ${representative.name}`} onClick={() => setModal({ mode: "edit-rep", data: { ...representative } })}
                             variant="ghost"
                             className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                             <Pencil className="w-3 h-3" aria-hidden="true" />
                           </Button>
-                          <Button type="button" aria-label={`Delete representative ${r.name}`} onClick={() => handleDeleteRep(r.id)}
+                          <Button type="button" aria-label={`Delete representative ${representative.name}`} onClick={() => handleDeleteRep(representative.id)}
                             variant="ghost"
                             className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                             <Trash2 className="w-3 h-3" aria-hidden="true" />
@@ -202,7 +202,7 @@ function NameFormModal({ initial, onSave, onClose, label, title }: NameFormModal
         <Input
           id="name-form-input"
           value={form.name || ""}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          onChange={(event) => setForm({ ...form, name: event.target.value })}
           className={FORM_INPUT}
           aria-invalid={!!error}
         />

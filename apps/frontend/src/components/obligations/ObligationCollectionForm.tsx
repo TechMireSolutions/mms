@@ -82,40 +82,40 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
 
   // Filter reps based on selected obligation type (via wakala types)
   const eligibleRepIds = wakalaTypes
-    .filter((w) => w.obligation_type_id === form.obligation_type_id)
-    .map((w) => w.mujtahid_representative_id);
+    .filter((wakalaType) => wakalaType.obligation_type_id === form.obligation_type_id)
+    .map((wakalaType) => wakalaType.mujtahid_representative_id);
 
   const eligibleReps = form.obligation_type_id
-    ? reps.filter((r) => eligibleRepIds.includes(r.id))
+    ? reps.filter((rep) => eligibleRepIds.includes(rep.id))
     : reps;
 
   // Reset rep when obligation type changes
   useEffect(() => {
     if (form.obligation_type_id) {
-      setForm((f) => ({ ...f, mujtahid_representative_id: "" }));
+      setForm((currentForm) => ({ ...currentForm, mujtahid_representative_id: "" }));
     }
   }, [form.obligation_type_id]);
 
   const getMujtahid = (repId: string) => {
-    const rep = reps.find((r) => r.id === repId);
-    return rep ? mujtahids.find((m) => m.id === rep.mujtahid_id) : null;
+    const rep = reps.find((candidateRep) => candidateRep.id === repId);
+    return rep ? mujtahids.find((mujtahid) => mujtahid.id === rep.mujtahid_id) : null;
   };
 
   const validate = (): Record<string, string> => {
-    const e: Record<string, string> = {};
-    if (!form.sender_id) e.sender_id = "Sender is required";
-    if (!form.amount || parseFloat(form.amount) <= 0) e.amount = "Amount must be greater than 0";
-    if (!form.received_date) e.received_date = "Date is required";
-    if (!form.obligation_type_id) e.obligation_type_id = "Obligation type is required";
-    if (!form.mujtahid_representative_id) e.mujtahid_representative_id = "Representative is required";
-    if (!form.received_by) e.received_by = "Received by is required";
-    if (!form.currency_id) e.currency_id = "Currency is required";
-    return e;
+    const nextErrors: Record<string, string> = {};
+    if (!form.sender_id) nextErrors.sender_id = "Sender is required";
+    if (!form.amount || parseFloat(form.amount) <= 0) nextErrors.amount = "Amount must be greater than 0";
+    if (!form.received_date) nextErrors.received_date = "Date is required";
+    if (!form.obligation_type_id) nextErrors.obligation_type_id = "Obligation type is required";
+    if (!form.mujtahid_representative_id) nextErrors.mujtahid_representative_id = "Representative is required";
+    if (!form.received_by) nextErrors.received_by = "Received by is required";
+    if (!form.currency_id) nextErrors.currency_id = "Currency is required";
+    return nextErrors;
   };
 
   const handleSave = (): void => {
-    const e2 = validate();
-    if (Object.keys(e2).length) { setErrors(e2); return; }
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
     onSave({
       ...form,
       id: `oc${Date.now()}`,
@@ -126,7 +126,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
     } as ObligationCollection);
   };
 
-  const field = (key: keyof FormState, label: string, required: boolean, children: React.ReactNode) => (
+  const formField = (key: keyof FormState, label: string, required: boolean, children: React.ReactNode) => (
     <div>
       <label htmlFor={`form-${key}`} className={FORM_LABEL}>
         {label}{required ? " *" : ""}
@@ -137,7 +137,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
   );
 
   
-  const selectedRep = reps.find((r) => r.id === form.mujtahid_representative_id);
+  const selectedRep = reps.find((rep) => rep.id === form.mujtahid_representative_id);
   const selectedMujtahid = selectedRep ? getMujtahid(selectedRep.id) : null;
 
   return (
@@ -164,34 +164,34 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
         </header>
 
         <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
-          {field("received_date", "Received Date", true,
+          {formField("received_date", "Received Date", true,
             <DatePicker
               value={form.received_date}
               onChange={(val) => setForm({ ...form, received_date: val })}
               required
             />
           )}
-          {field("payment_mode", "Payment Mode", true,
-            <select value={form.payment_mode} onChange={(e) => setForm({ ...form, payment_mode: e.target.value })} className={FORM_SELECT}>
-              {PAYMENT_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
+          {formField("payment_mode", "Payment Mode", true,
+            <select value={form.payment_mode} onChange={(event) => setForm({ ...form, payment_mode: event.target.value })} className={FORM_SELECT}>
+              {PAYMENT_MODES.map((paymentMode) => <option key={paymentMode} value={paymentMode}>{paymentMode}</option>)}
             </select>
           )}
         </fieldset>
 
         <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
-          {field("sender_id", "Sender (Contact)", true,
+          {formField("sender_id", "Sender (Contact)", true,
             <ContactPicker
               label="Sender (Contact)"
               value={form.sender_id || null}
-              onChange={(id) => setForm({ ...form, sender_id: id != null ? String(id) : "" })}
+              onChange={(contactId) => setForm({ ...form, sender_id: contactId != null ? String(contactId) : "" })}
               searchPlaceholder="Search contacts…"
             />
           )}
-          {field("reference_id", "Reference Contact", false,
+          {formField("reference_id", "Reference Contact", false,
             <ContactPicker
               label="Reference Contact"
               value={form.reference_id || null}
-              onChange={(id) => setForm({ ...form, reference_id: id != null ? String(id) : "" })}
+              onChange={(contactId) => setForm({ ...form, reference_id: contactId != null ? String(contactId) : "" })}
               allowCreate={false}
               searchPlaceholder="Search contacts…"
             />
@@ -199,35 +199,35 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
         </fieldset>
 
         <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-0 p-0 m-0">
-          {field("amount", "Amount", true,
+          {formField("amount", "Amount", true,
             <input type="number" min="0.01" step="0.01" value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" className={FORM_INPUT} />
+              onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="0.00" className={FORM_INPUT} />
           )}
-          {field("currency_id", "Currency", true,
-            <select value={form.currency_id} onChange={(e) => setForm({ ...form, currency_id: e.target.value })} className={FORM_SELECT}>
-              {currencies.map((c) => <option key={c.id} value={c.id}>{c.code} – {c.name}</option>)}
+          {formField("currency_id", "Currency", true,
+            <select value={form.currency_id} onChange={(event) => setForm({ ...form, currency_id: event.target.value })} className={FORM_SELECT}>
+              {currencies.map((currency) => <option key={currency.id} value={currency.id}>{currency.code} – {currency.name}</option>)}
             </select>
           )}
         </fieldset>
 
         <fieldset className="border-0 p-0 m-0 space-y-4">
-          {field("obligation_type_id", "Obligation Type", true,
-            <select value={form.obligation_type_id} onChange={(e) => setForm({ ...form, obligation_type_id: e.target.value })} className={FORM_SELECT}>
+          {formField("obligation_type_id", "Obligation Type", true,
+            <select value={form.obligation_type_id} onChange={(event) => setForm({ ...form, obligation_type_id: event.target.value })} className={FORM_SELECT}>
               <option value="">Select obligation type…</option>
-              {obligationTypes.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.designated_for})</option>)}
+              {obligationTypes.map((obligationType) => <option key={obligationType.id} value={obligationType.id}>{obligationType.name} ({obligationType.designated_for})</option>)}
             </select>
           )}
 
-          {field("mujtahid_representative_id", "Mujtahid Representative", true,
+          {formField("mujtahid_representative_id", "Mujtahid Representative", true,
             <div>
               <select value={form.mujtahid_representative_id}
-                onChange={(e) => setForm({ ...form, mujtahid_representative_id: e.target.value })}
+                onChange={(event) => setForm({ ...form, mujtahid_representative_id: event.target.value })}
                 disabled={!form.obligation_type_id}
                 className={`${FORM_SELECT} ${!form.obligation_type_id ? "opacity-50 cursor-not-allowed" : ""}`}>
                 <option value="">{form.obligation_type_id ? "Select representative…" : "Select obligation type first"}</option>
-                {eligibleReps.map((r) => {
-                  const m = getMujtahid(r.id);
-                  return <option key={r.id} value={r.id}>{r.name}{m ? ` (${m.name})` : ""}</option>;
+                {eligibleReps.map((rep) => {
+                  const mujtahid = getMujtahid(rep.id);
+                  return <option key={rep.id} value={rep.id}>{rep.name}{mujtahid ? ` (${mujtahid.name})` : ""}</option>;
                 })}
               </select>
               {selectedMujtahid && (
@@ -236,10 +236,10 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
             </div>
           )}
 
-          {field("received_by", "Received By (User)", true,
-            <select value={form.received_by} onChange={(e) => setForm({ ...form, received_by: e.target.value })} className={FORM_SELECT}>
+          {formField("received_by", "Received By (User)", true,
+            <select value={form.received_by} onChange={(event) => setForm({ ...form, received_by: event.target.value })} className={FORM_SELECT}>
               <option value="">Select user…</option>
-              {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+              {users.map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}
             </select>
           )}
         </fieldset>

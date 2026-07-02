@@ -84,36 +84,36 @@ export default function ModuleSettingsNavGrid({
     translateSystemModuleLabel(mod.id, language, mod.label);
   const moduleDesc = (mod: ModuleDefinition): string =>
     translateSystemModuleDescription(mod.id, language, mod.description);
-  const isEnabled = (id: string): boolean => enabledModules[id] !== false;
+  const isEnabled = (moduleId: string): boolean => enabledModules[moduleId] !== false;
   const requiredLabel = t('module.system.required');
 
   const blocks = useMemo(() => {
     const nodes: React.ReactNode[] = [];
     let standaloneBatch: string[] = [];
 
-    const renderCard = (id: string): React.ReactNode | null => {
-      const mod = SYSTEM_MODULES_BY_ID[id];
+    const renderCard = (moduleId: string): React.ReactNode | null => {
+      const mod = SYSTEM_MODULES_BY_ID[moduleId];
       if (!mod) return null;
       return (
         <ModuleToggleCard
-          key={id}
+          key={moduleId}
           module={mod}
           label={moduleLabel(mod)}
           description={moduleDesc(mod)}
           requiredLabel={requiredLabel}
-          enabled={isEnabled(id)}
-          onToggle={(value) => onToggleModule(id, value)}
+          enabled={isEnabled(moduleId)}
+          onToggle={(value) => onToggleModule(moduleId, value)}
         />
       );
     };
 
     const flushStandalone = (): void => {
       if (standaloneBatch.length === 0) return;
-      const ids = [...standaloneBatch];
+      const moduleIds = [...standaloneBatch];
       standaloneBatch = [];
       nodes.push(
-        <div key={`standalone-${ids.join('-')}`} className="grid gap-3 sm:grid-cols-2">
-          {ids.map(renderCard)}
+        <div key={`standalone-${moduleIds.join('-')}`} className="grid gap-3 sm:grid-cols-2">
+          {moduleIds.map(renderCard)}
         </div>,
       );
     };
@@ -149,7 +149,7 @@ export default function ModuleSettingsNavGrid({
 
   const moduleStats = useMemo(() => {
     const total = SYSTEM_MODULES.length;
-    const enabled = SYSTEM_MODULES.filter((m) => enabledModules[m.id] !== false).length;
+    const enabled = SYSTEM_MODULES.filter((moduleDefinition) => enabledModules[moduleDefinition.id] !== false).length;
     return { total, enabled };
   }, [enabledModules]);
 

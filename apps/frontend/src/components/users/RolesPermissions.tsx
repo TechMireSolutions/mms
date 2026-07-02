@@ -264,12 +264,12 @@ function PermissionMatrix({
               <th className="min-w-[140px] px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
                 {t('users.permissions.colModule')}
               </th>
-              {PERMISSION_ACTIONS.map((a) => (
+              {PERMISSION_ACTIONS.map((permissionAction) => (
                 <th
-                  key={a}
+                  key={permissionAction}
                   className="w-16 px-2 py-2.5 text-center text-[11px] font-semibold uppercase text-muted-foreground"
                 >
-                  {t(`users.permission.${a}`)}
+                  {t(`users.permission.${permissionAction}`)}
                 </th>
               ))}
               {!readOnly ? (

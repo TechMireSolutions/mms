@@ -59,7 +59,7 @@ export function MmsDynamicForm<K extends string = string>({
                 if (node !== null && node !== undefined) return node;
               }
               
-              const fieldError = errors.find((e) => e.fieldId === field.key);
+              const fieldError = errors.find((error) => error.fieldId === field.key);
               return (
                 <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
                   <Field label={field.label} required={field.required} hint={field.description} error={fieldError?.message}>

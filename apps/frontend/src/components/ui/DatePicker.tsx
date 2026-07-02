@@ -110,8 +110,8 @@ export function DatePicker({
     setOpen(false)
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nextInputValue = e.target.value
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextInputValue = event.target.value
     setInputValue(nextInputValue)
 
     const parsed = parseDisplayToValue(nextInputValue, dateFormat)
@@ -150,8 +150,8 @@ export function DatePicker({
     }
   }
 
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleClear = (event: React.MouseEvent) => {
+    event.stopPropagation()
     onChange?.("")
     setInputValue("")
   }

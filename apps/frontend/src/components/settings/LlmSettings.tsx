@@ -267,12 +267,12 @@ export default function LlmSettings(): React.JSX.Element {
   const [sandboxSystemInstruction, setSandboxSystemInstruction] = useState('');
   const [sandboxTesting, setSandboxTesting] = useState(false);
 
-  const handleSendSandboxMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleSendSandboxMessage = async (event?: React.FormEvent) => {
+    if (event) event.preventDefault();
     const promptText = sandboxInput.trim();
     if (!promptText || sandboxTesting) return;
 
-    const targetConfigId = sandboxConfigId || configs.find(c => c.isDefaultText)?.id || configs[0]?.id;
+    const targetConfigId = sandboxConfigId || configs.find((config) => config.isDefaultText)?.id || configs[0]?.id;
     if (!targetConfigId) return;
 
     const userMsg: SandboxMessage = {
@@ -285,9 +285,9 @@ export default function LlmSettings(): React.JSX.Element {
     setSandboxInput('');
     setSandboxTesting(true);
 
-    const historyForApi = [...sandboxMessages, userMsg].map((m) => ({
-      role: m.role,
-      content: m.content,
+    const historyForApi = [...sandboxMessages, userMsg].map((message) => ({
+      role: message.role,
+      content: message.content,
     }));
 
     try {
@@ -409,17 +409,17 @@ export default function LlmSettings(): React.JSX.Element {
     let updatedConfigs = [...configs];
 
     if (formIsDefaultText) {
-      updatedConfigs = updatedConfigs.map((c) => ({ ...c, isDefaultText: false }));
+      updatedConfigs = updatedConfigs.map((config) => ({ ...config, isDefaultText: false }));
     }
 
     if (editingConfig) {
-      updatedConfigs = updatedConfigs.map((c) => (c.id === editingConfig.id ? nextConfig : c));
+      updatedConfigs = updatedConfigs.map((config) => (config.id === editingConfig.id ? nextConfig : config));
     } else {
       updatedConfigs.push(nextConfig);
     }
 
     // Ensure at least one default if configurations exist
-    if (updatedConfigs.length > 0 && !updatedConfigs.some((c) => c.isDefaultText)) {
+    if (updatedConfigs.length > 0 && !updatedConfigs.some((config) => config.isDefaultText)) {
       updatedConfigs[0].isDefaultText = true;
     }
 
@@ -427,16 +427,16 @@ export default function LlmSettings(): React.JSX.Element {
     setModalOpen(false);
   };
 
-  const handleDeleteConfig = (id: string) => {
-    const updatedConfigs = configs.filter((c) => c.id !== id);
+  const handleDeleteConfig = (configId: string) => {
+    const updatedConfigs = configs.filter((config) => config.id !== configId);
 
     // If deleted config was default, reassign default to the first remaining
-    if (configs.find((c) => c.id === id)?.isDefaultText && updatedConfigs.length > 0) {
+    if (configs.find((config) => config.id === configId)?.isDefaultText && updatedConfigs.length > 0) {
       updatedConfigs[0].isDefaultText = true;
     }
 
     upd('llmConfigs', updatedConfigs);
-    if (testResult?.configId === id) {
+    if (testResult?.configId === configId) {
       setTestResult(null);
     }
   };
@@ -533,7 +533,7 @@ export default function LlmSettings(): React.JSX.Element {
                   type="text"
                   placeholder={t('settings.llmSearchPlaceholder')}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(event) => setSearchQuery(event.target.value)}
                   className="pl-9 h-9 text-xs"
                 />
               </div>
@@ -548,13 +548,13 @@ export default function LlmSettings(): React.JSX.Element {
                 </p>
               </div>
             ) : (() => {
-              const filtered = configs.filter((c) => {
+              const filtered = configs.filter((config) => {
                 const query = searchQuery.toLowerCase().trim();
                 if (!query) return true;
                 return (
-                  c.name.toLowerCase().includes(query) ||
-                  c.provider.toLowerCase().includes(query) ||
-                  c.model.toLowerCase().includes(query)
+                  config.name.toLowerCase().includes(query) ||
+                  config.provider.toLowerCase().includes(query) ||
+                  config.model.toLowerCase().includes(query)
                 );
               });
 
@@ -734,11 +734,11 @@ export default function LlmSettings(): React.JSX.Element {
                   <Label htmlFor="sandboxConfig">{t('settings.llmActiveConfig')}</Label>
                   <FormSelect
                     id="sandboxConfig"
-                    value={sandboxConfigId || configs.find(c => c.isDefaultText)?.id || configs[0]?.id || ''}
-                    onChange={(v) => setSandboxConfigId(v)}
-                    options={configs.map((c) => ({
-                      value: c.id,
-                      label: `${c.name} (${c.provider} - ${c.model})` + (c.isDefaultText ? ' (Default)' : ''),
+                    value={sandboxConfigId || configs.find((config) => config.isDefaultText)?.id || configs[0]?.id || ''}
+                    onChange={(configId) => setSandboxConfigId(configId)}
+                    options={configs.map((config) => ({
+                      value: config.id,
+                      label: `${config.name} (${config.provider} - ${config.model})` + (config.isDefaultText ? ' (Default)' : ''),
                     }))}
                   />
                 </div>
@@ -748,7 +748,7 @@ export default function LlmSettings(): React.JSX.Element {
                   <Input
                     id="sandboxSystem"
                     value={sandboxSystemInstruction}
-                    onChange={(e) => setSandboxSystemInstruction(e.target.value)}
+                    onChange={(event) => setSandboxSystemInstruction(event.target.value)}
                     placeholder="e.g. Respond only in short bullet points"
                   />
                 </div>
@@ -827,8 +827,8 @@ export default function LlmSettings(): React.JSX.Element {
 
                 {/* Chat Input Footer */}
                 <form
-                  onSubmit={(e) => {
-                    void handleSendSandboxMessage(e);
+                  onSubmit={(event) => {
+                    void handleSendSandboxMessage(event);
                   }}
                   className="flex items-center gap-2 border-t border-border p-3 bg-card shrink-0"
                 >
@@ -836,7 +836,7 @@ export default function LlmSettings(): React.JSX.Element {
                     type="text"
                     placeholder={t('settings.llmSandboxInputPlaceholder')}
                     value={sandboxInput}
-                    onChange={(e) => setSandboxInput(e.target.value)}
+                    onChange={(event) => setSandboxInput(event.target.value)}
                     disabled={sandboxTesting}
                     className="flex-1 h-9 text-xs"
                   />
@@ -873,7 +873,7 @@ export default function LlmSettings(): React.JSX.Element {
           >
             {/* Grab Handle Header */}
             <div
-              onPointerDown={(e) => dragControls.start(e)}
+              onPointerDown={(event) => dragControls.start(event)}
               className="cursor-grab active:cursor-grabbing flex items-center justify-between px-5 py-4 border-b border-border bg-muted/30 select-none shrink-0"
             >
               <div className="flex items-center gap-2.5">
@@ -901,8 +901,8 @@ export default function LlmSettings(): React.JSX.Element {
             </div>
 
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
+              onSubmit={(event) => {
+                event.preventDefault();
                 handleSaveModalConfig();
               }}
               className="flex flex-col p-5 min-h-0 overflow-hidden"
@@ -914,7 +914,7 @@ export default function LlmSettings(): React.JSX.Element {
                   <Input
                     id="configName"
                     value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
+                    onChange={(event) => setFormName(event.target.value)}
                     placeholder={t('settings.llmModalNamePlaceholder')}
                   />
                 </div>
@@ -925,14 +925,14 @@ export default function LlmSettings(): React.JSX.Element {
                     <FormSelect
                       id="provider"
                       value={formProvider}
-                      onChange={(v) => {
-                        setFormProvider(v as LlmProviderType);
-                        const meta = LLM_PROVIDERS_META[v as LlmProviderType];
+                      onChange={(providerValue) => {
+                        setFormProvider(providerValue as LlmProviderType);
+                        const meta = LLM_PROVIDERS_META[providerValue as LlmProviderType];
                         if (meta) {
                           setFormModel(meta.defaultModel);
                         }
                       }}
-                      options={Object.values(LLM_PROVIDERS_META).map(p => ({ value: p.value, label: p.label }))}
+                      options={Object.values(LLM_PROVIDERS_META).map((provider) => ({ value: provider.value, label: provider.label }))}
                     />
                   </div>
 
@@ -958,13 +958,13 @@ export default function LlmSettings(): React.JSX.Element {
                         id="model"
                         value={formModel}
                         onChange={setFormModel}
-                        options={fetchedModels.map((m) => ({ value: m, label: m }))}
+                        options={fetchedModels.map((model) => ({ value: model, label: model }))}
                       />
                     ) : (
                       <Input
                         id="model"
                         value={formModel}
-                        onChange={(e) => setFormModel(e.target.value)}
+                        onChange={(event) => setFormModel(event.target.value)}
                         placeholder={selectedProviderMeta?.defaultModel}
                       />
                     )}
@@ -981,7 +981,7 @@ export default function LlmSettings(): React.JSX.Element {
                   <Input
                     id="baseUrl"
                     value={formBaseUrl}
-                    onChange={(e) => setFormBaseUrl(e.target.value)}
+                    onChange={(event) => setFormBaseUrl(event.target.value)}
                     placeholder={t('settings.llmModalBaseUrlPlaceholder')}
                   />
                 </div>
@@ -992,7 +992,7 @@ export default function LlmSettings(): React.JSX.Element {
                     id="apiKey"
                     type="password"
                     value={formApiKey}
-                    onChange={(e) => setFormApiKey(e.target.value)}
+                    onChange={(event) => setFormApiKey(event.target.value)}
                     placeholder={
                       editingConfig && editingConfig.apiKey
                         ? t('settings.llmModalApiKeyPlaceholderSaved')
@@ -1036,7 +1036,7 @@ export default function LlmSettings(): React.JSX.Element {
                           min={1}
                           max={16384}
                           value={formMaxTokens}
-                          onChange={(e) => setFormMaxTokens(parseInt(e.target.value, 10) || 2048)}
+                          onChange={(event) => setFormMaxTokens(parseInt(event.target.value, 10) || 2048)}
                         />
                         <p className="text-[10px] text-muted-foreground">
                           {t('settings.llmModalMaxTokensDesc')}

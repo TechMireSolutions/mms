@@ -60,12 +60,12 @@ export function UsersList({
 
   const filtered = useMemo(
     () =>
-      users.filter((u) => {
-        if (roleFilter !== 'all' && u.role !== roleFilter) return false;
-        if (statusFilter !== 'all' && u.status !== statusFilter) return false;
+      users.filter((user) => {
+        if (roleFilter !== 'all' && user.role !== roleFilter) return false;
+        if (statusFilter !== 'all' && user.status !== statusFilter) return false;
         if (search) {
           const searchQuery = search.toLowerCase();
-          if (!u.name.toLowerCase().includes(searchQuery) && !u.email.toLowerCase().includes(searchQuery)) return false;
+          if (!user.name.toLowerCase().includes(searchQuery) && !user.email.toLowerCase().includes(searchQuery)) return false;
         }
         return true;
       }),
@@ -78,9 +78,9 @@ export function UsersList({
     setSelected(selected.length === filtered.length ? [] : filtered.map((user) => user.id));
 
   const bulkAction = (action: 'activate' | 'deactivate'): void => {
-    selected.forEach((id) => {
-      const selectedUser = users.find((user) => user.id === id);
-      if (selectedUser) onToggleStatus(id, action === 'activate' ? 'active' : 'inactive');
+    selected.forEach((userId) => {
+      const selectedUser = users.find((user) => user.id === userId);
+      if (selectedUser) onToggleStatus(userId, action === 'activate' ? 'active' : 'inactive');
     });
     setSelected([]);
   };
@@ -217,43 +217,43 @@ export function UsersList({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filtered.map((u) => (
-                  <motion.tr key={u.id} layout className="transition-colors hover:bg-muted/20">
+                {filtered.map((user) => (
+                  <motion.tr key={user.id} layout className="transition-colors hover:bg-muted/20">
                     {isAdmin && (
                       <td className="px-3 py-2.5">
                         <input
                           type="checkbox"
-                          checked={selected.includes(u.id)}
-                          onChange={() => toggleSelect(u.id)}
+                          checked={selected.includes(user.id)}
+                          onChange={() => toggleSelect(user.id)}
                           className="rounded"
-                          aria-label={t('users.selectRow', { name: u.name })}
+                          aria-label={t('users.selectRow', { name: user.name })}
                         />
                       </td>
                     )}
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2.5">
-                        <Avatar user={u} />
+                        <Avatar user={user} />
                         <div>
-                          <p className="whitespace-nowrap text-sm font-semibold text-foreground">{u.name}</p>
-                          <p className="text-[11px] text-muted-foreground">{u.email}</p>
+                          <p className="whitespace-nowrap text-sm font-semibold text-foreground">{user.name}</p>
+                          <p className="text-[11px] text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
-                      <UserRoleBadge roleId={u.role} />
+                      <UserRoleBadge roleId={user.role} />
                     </td>
                     <td className="px-3 py-2.5">
-                      <UserStatusBadge status={u.status} />
+                      <UserStatusBadge status={user.status} />
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">
-                      {fmtDate(u.lastLogin)}
+                      {fmtDate(user.lastLogin)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-muted-foreground">
-                      {u.createdDate}
+                      {user.createdDate}
                     </td>
                     <td className="px-3 py-2.5">
-                      <SettingsMetaBadge variant={u.twoFactorEnabled ? 'success' : 'muted'}>
-                        {u.twoFactorEnabled ? t('users.twoFactorOn') : t('users.twoFactorOff')}
+                      <SettingsMetaBadge variant={user.twoFactorEnabled ? 'success' : 'muted'}>
+                        {user.twoFactorEnabled ? t('users.twoFactorOn') : t('users.twoFactorOff')}
                       </SettingsMetaBadge>
                     </td>
                     <td className="px-3 py-2.5 text-right">
@@ -262,8 +262,8 @@ export function UsersList({
                           type="button"
                           size="icon"
                           variant="ghost"
-                          onClick={() => onView(u)}
-                          aria-label={t('users.actionView', { name: u.name })}
+                          onClick={() => onView(user)}
+                          aria-label={t('users.actionView', { name: user.name })}
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
@@ -273,8 +273,8 @@ export function UsersList({
                               type="button"
                               size="icon"
                               variant="ghost"
-                              onClick={() => onEdit(u)}
-                              aria-label={t('users.actionEdit', { name: u.name })}
+                              onClick={() => onEdit(user)}
+                              aria-label={t('users.actionEdit', { name: user.name })}
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
@@ -282,8 +282,8 @@ export function UsersList({
                               type="button"
                               size="icon"
                               variant="ghost"
-                              onClick={() => onResetPassword(u)}
-                              aria-label={t('users.actionResetPassword', { name: u.name })}
+                              onClick={() => onResetPassword(user)}
+                              aria-label={t('users.actionResetPassword', { name: user.name })}
                             >
                               <KeyRound className="h-3.5 w-3.5" />
                             </Button>
@@ -292,9 +292,9 @@ export function UsersList({
                               size="icon"
                               variant="ghost"
                               onClick={() =>
-                                onToggleStatus(u.id, u.status === 'active' ? 'inactive' : 'active')
+                                onToggleStatus(user.id, user.status === 'active' ? 'inactive' : 'active')
                               }
-                              aria-label={t('users.actionToggleStatus', { name: u.name })}
+                              aria-label={t('users.actionToggleStatus', { name: user.name })}
                             >
                               <Power className="h-3.5 w-3.5" />
                             </Button>

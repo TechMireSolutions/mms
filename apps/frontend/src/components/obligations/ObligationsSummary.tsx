@@ -113,24 +113,24 @@ export function ObligationsSummary({
   const debouncedSearch = useDebounce(search, 300);
 
   // ── Filtered collections ────────────────────────────────────────
-  const filtered = useMemo(() => collections.filter((c) => {
-    if (typeFilter !== "all" && c.obligation_type_id !== typeFilter) return false;
-    if (repFilter  !== "all" && c.mujtahid_representative_id !== repFilter) return false;
-    if (userFilter !== "all" && c.received_by !== userFilter) return false;
-    if (dateFrom && (c.received_date || "") < dateFrom) return false;
-    if (dateTo   && (c.received_date || "") > dateTo)   return false;
+  const filtered = useMemo(() => collections.filter((collection) => {
+    if (typeFilter !== "all" && collection.obligation_type_id !== typeFilter) return false;
+    if (repFilter  !== "all" && collection.mujtahid_representative_id !== repFilter) return false;
+    if (userFilter !== "all" && collection.received_by !== userFilter) return false;
+    if (dateFrom && (collection.received_date || "") < dateFrom) return false;
+    if (dateTo   && (collection.received_date || "") > dateTo)   return false;
     if (debouncedSearch) {
       const searchQuery = debouncedSearch.toLowerCase();
-      const repName = reps.find((r) => r.id === c.mujtahid_representative_id)?.name?.toLowerCase() || "";
-      const typeName = obligationTypes.find((t) => t.id === c.obligation_type_id)?.name?.toLowerCase() || "";
-      if (!c.receipt_no.toLowerCase().includes(searchQuery) && !repName.includes(searchQuery) && !typeName.includes(searchQuery)) return false;
+      const repName = reps.find((rep) => rep.id === collection.mujtahid_representative_id)?.name?.toLowerCase() || "";
+      const typeName = obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name?.toLowerCase() || "";
+      if (!collection.receipt_no.toLowerCase().includes(searchQuery) && !repName.includes(searchQuery) && !typeName.includes(searchQuery)) return false;
     }
     return true;
   }), [collections, typeFilter, repFilter, userFilter, dateFrom, dateTo, debouncedSearch, reps, obligationTypes]);
 
   const totalAmount = filtered.reduce((sum, collection) => sum + collection.amount, 0);
   const totalRecords = filtered.length;
-  const uniqueReps = new Set(filtered.map((c) => c.mujtahid_representative_id)).size;
+  const uniqueReps = new Set(filtered.map((collection) => collection.mujtahid_representative_id)).size;
 
   // ── Wakala-wise summary ─────────────────────────────────────────
   /** Shape of each wakala summary entry built from filtered collections. */
@@ -140,32 +140,32 @@ export function ObligationsSummary({
     hasWakala: boolean; distributions: ObligationDistribution[];
   }
   const wakalaSummary = useMemo(() => {
-    const map: Record<string, WakalaSummaryEntry> = {};
-    filtered.forEach((c) => {
-      const rep = reps.find((r) => r.id === c.mujtahid_representative_id);
-      const mujtahid = rep ? mujtahids.find((m) => m.id === rep.mujtahid_id) : null;
-      const wt = wakalaTypes.find((w) =>
-        w.mujtahid_representative_id === c.mujtahid_representative_id &&
-        w.obligation_type_id === c.obligation_type_id
+    const wakalaSummaryByKey: Record<string, WakalaSummaryEntry> = {};
+    filtered.forEach((collection) => {
+      const rep = reps.find((candidateRep) => candidateRep.id === collection.mujtahid_representative_id);
+      const mujtahid = rep ? mujtahids.find((candidateMujtahid) => candidateMujtahid.id === rep.mujtahid_id) : null;
+      const wakalaType = wakalaTypes.find((candidateWakalaType) =>
+        candidateWakalaType.mujtahid_representative_id === collection.mujtahid_representative_id &&
+        candidateWakalaType.obligation_type_id === collection.obligation_type_id
       );
-      const key = wt?.id || `no-wakala-${c.mujtahid_representative_id}`;
-      const label = wt
-        ? `${rep?.name ?? "?"} – ${obligationTypes.find((t) => t.id === c.obligation_type_id)?.name ?? "?"}`
+      const key = wakalaType?.id || `no-wakala-${collection.mujtahid_representative_id}`;
+      const label = wakalaType
+        ? `${rep?.name ?? "?"} – ${obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name ?? "?"}`
         : `${rep?.name ?? "No Rep"} (No Wakala)`;
-      if (!map[key]) {
-        map[key] = {
+      if (!wakalaSummaryByKey[key]) {
+        wakalaSummaryByKey[key] = {
           key, label,
           repName: rep?.name ?? "—",
           mujtahidName: mujtahid?.name ?? "—",
-          obligationType: obligationTypes.find((t) => t.id === c.obligation_type_id)?.name ?? "—",
-          count: 0, total: 0, hasWakala: !!wt,
-          distributions: wt ? distributions.filter((d) => d.wakala_type_id === wt.id) : [],
+          obligationType: obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name ?? "—",
+          count: 0, total: 0, hasWakala: !!wakalaType,
+          distributions: wakalaType ? distributions.filter((distribution) => distribution.wakala_type_id === wakalaType.id) : [],
         };
       }
-      map[key].count++;
-      map[key].total += c.amount;
+      wakalaSummaryByKey[key].count++;
+      wakalaSummaryByKey[key].total += collection.amount;
     });
-    return Object.values(map).sort((a, b) => b.total - a.total);
+    return Object.values(wakalaSummaryByKey).sort((a, b) => b.total - a.total);
   }, [filtered, reps, mujtahids, wakalaTypes, distributions, obligationTypes]);
 
   // ── Rep-wise dues summary ───────────────────────────────────────
@@ -176,68 +176,68 @@ export function ObligationsSummary({
     byType: Record<string, number>;
   }
   const repSummary = useMemo(() => {
-    const map: Record<string, RepSummaryEntry> = {};
-    filtered.forEach((c) => {
-      const rep = reps.find((r) => r.id === c.mujtahid_representative_id);
-      const mujtahid = rep ? mujtahids.find((m) => m.id === rep.mujtahid_id) : null;
-      const key = c.mujtahid_representative_id || "none";
-      if (!map[key]) {
-        map[key] = {
+    const repSummaryByKey: Record<string, RepSummaryEntry> = {};
+    filtered.forEach((collection) => {
+      const rep = reps.find((candidateRep) => candidateRep.id === collection.mujtahid_representative_id);
+      const mujtahid = rep ? mujtahids.find((candidateMujtahid) => candidateMujtahid.id === rep.mujtahid_id) : null;
+      const key = collection.mujtahid_representative_id || "none";
+      if (!repSummaryByKey[key]) {
+        repSummaryByKey[key] = {
           key, repName: rep?.name ?? "No Rep",
           mujtahidName: mujtahid?.name ?? "—",
           count: 0, total: 0, due: 0,
           byType: {},
         };
       }
-      const amount = c.amount;
-      map[key].count++;
-      map[key].total += amount;
+      const amount = collection.amount;
+      repSummaryByKey[key].count++;
+      repSummaryByKey[key].total += amount;
       // Calculate dues based on distribution percentages
-      const wt = wakalaTypes.find((w) =>
-        w.mujtahid_representative_id === c.mujtahid_representative_id &&
-        w.obligation_type_id === c.obligation_type_id
+      const wakalaType = wakalaTypes.find((candidateWakalaType) =>
+        candidateWakalaType.mujtahid_representative_id === collection.mujtahid_representative_id &&
+        candidateWakalaType.obligation_type_id === collection.obligation_type_id
       );
-      if (wt) {
-        const liabilityDist = distributions.filter((d) => d.wakala_type_id === wt.id && d.type === "Liability");
-        const totalLiabilityPct = liabilityDist.reduce((sum, distribution) => sum + distribution.percentage, 0);
-        map[key].due += amount * (totalLiabilityPct / 100);
+      if (wakalaType) {
+        const liabilityDistributions = distributions.filter((distribution) => distribution.wakala_type_id === wakalaType.id && distribution.type === "Liability");
+        const totalLiabilityPct = liabilityDistributions.reduce((sum, distribution) => sum + distribution.percentage, 0);
+        repSummaryByKey[key].due += amount * (totalLiabilityPct / 100);
       } else {
-        map[key].due += amount; // No wakala config = full amount is due
+        repSummaryByKey[key].due += amount; // No wakala config = full amount is due
       }
-      const typeName = obligationTypes.find((t) => t.id === c.obligation_type_id)?.name ?? "Other";
-      map[key].byType[typeName] = (map[key].byType[typeName] ?? 0) + amount;
+      const typeName = obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name ?? "Other";
+      repSummaryByKey[key].byType[typeName] = (repSummaryByKey[key].byType[typeName] ?? 0) + amount;
     });
-    return Object.values(map).sort((a, b) => b.total - a.total);
+    return Object.values(repSummaryByKey).sort((a, b) => b.total - a.total);
   }, [filtered, reps, mujtahids, wakalaTypes, distributions, obligationTypes]);
 
   // ── Obligation-type breakdown for chart ────────────────────────
   /** Shape of each type breakdown entry. */
   interface TypeBreakdownEntry { name: string; total: number; count: number; }
   const typeBreakdown = useMemo(() => {
-    const map: Record<string, TypeBreakdownEntry> = {};
-    filtered.forEach((c) => {
-      const name = obligationTypes.find((t) => t.id === c.obligation_type_id)?.name ?? "Other";
-      if (!map[name]) map[name] = { name, total: 0, count: 0 };
-      map[name].total += c.amount;
-      map[name].count++;
+    const typeBreakdownByName: Record<string, TypeBreakdownEntry> = {};
+    filtered.forEach((collection) => {
+      const name = obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name ?? "Other";
+      if (!typeBreakdownByName[name]) typeBreakdownByName[name] = { name, total: 0, count: 0 };
+      typeBreakdownByName[name].total += collection.amount;
+      typeBreakdownByName[name].count++;
     });
-    return Object.values(map).sort((a, b) => b.total - a.total);
+    return Object.values(typeBreakdownByName).sort((a, b) => b.total - a.total);
   }, [filtered, obligationTypes]);
 
   // ── Monthly trend ──────────────────────────────────────────────
   /** Shape of each monthly trend entry. */
   interface MonthlyEntry { month: string; total: number; count: number; }
   const monthlyTrend = useMemo(() => {
-    const map: Record<string, MonthlyEntry> = {};
-    filtered.forEach((c) => {
-      const month = c.received_date?.slice(0, 7) ?? "Unknown";
-      if (!map[month]) map[month] = { month, total: 0, count: 0 };
-      map[month].total += c.amount;
-      map[month].count++;
+    const monthlyTrendByMonth: Record<string, MonthlyEntry> = {};
+    filtered.forEach((collection) => {
+      const month = collection.received_date?.slice(0, 7) ?? "Unknown";
+      if (!monthlyTrendByMonth[month]) monthlyTrendByMonth[month] = { month, total: 0, count: 0 };
+      monthlyTrendByMonth[month].total += collection.amount;
+      monthlyTrendByMonth[month].count++;
     });
-    return Object.values(map).sort((a, b) => a.month.localeCompare(b.month)).map((m) => ({
-      ...m,
-      label: new Date(m.month + "-01").toLocaleDateString("en-PK", { month: "short", year: "2-digit" }),
+    return Object.values(monthlyTrendByMonth).sort((a, b) => a.month.localeCompare(b.month)).map((monthlyEntry) => ({
+      ...monthlyEntry,
+      label: new Date(monthlyEntry.month + "-01").toLocaleDateString("en-PK", { month: "short", year: "2-digit" }),
     }));
   }, [filtered]);
 
@@ -245,17 +245,17 @@ export function ObligationsSummary({
 
   const repOptions = useMemo(() => [
     { value: "all", label: "All Reps" },
-    ...reps.map((r) => ({ value: r.id, label: r.name }))
+    ...reps.map((rep) => ({ value: rep.id, label: rep.name }))
   ], [reps]);
 
   const typeOptions = useMemo(() => [
     { value: "all", label: "All Obligation Types" },
-    ...obligationTypes.map((t) => ({ value: t.id, label: t.name }))
+    ...obligationTypes.map((obligationType) => ({ value: obligationType.id, label: obligationType.name }))
   ], [obligationTypes]);
 
   const userOptions = useMemo(() => [
     { value: "all", label: "All Collectors" },
-    ...users.map((u) => ({ value: u.id, label: u.name || "" }))
+    ...users.map((user) => ({ value: user.id, label: user.name || "" }))
   ], [users]);
 
   return (
@@ -279,7 +279,7 @@ export function ObligationsSummary({
               type="search"
               aria-label="Search by receipt, rep, or type"
               value={search} 
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(event) => setSearch(event.target.value)}
               placeholder="Receipt, rep, type…"
               className="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
             />

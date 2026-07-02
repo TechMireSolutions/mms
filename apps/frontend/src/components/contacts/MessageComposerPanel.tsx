@@ -37,9 +37,9 @@ export default function MessageComposerPanel({
   const [message, setMessage] = useState<string>(() => whatsappTemplates[0]?.body || '');
   const [opening, setOpening] = useState<boolean>(false);
 
-  const handleTemplateChange = (id: string): void => {
-    setTemplate(id);
-    const selectedTemplate = whatsappTemplates.find((templateOption) => templateOption.id === id);
+  const handleTemplateChange = (templateId: string): void => {
+    setTemplate(templateId);
+    const selectedTemplate = whatsappTemplates.find((templateOption) => templateOption.id === templateId);
     if (selectedTemplate && selectedTemplate.id !== 'custom') setMessage(selectedTemplate.body);
   };
 
@@ -87,7 +87,7 @@ export default function MessageComposerPanel({
     if (eligibleContacts.length === 0 || !message.trim()) return;
 
     if (channel === 'sms') {
-      eligibleContacts.forEach((c) => openForContact(c, message));
+      eligibleContacts.forEach((eligibleContact) => openForContact(eligibleContact, message));
     } else {
       if (eligibleContacts.length === 1) {
         openForContact(eligibleContacts[0], message);

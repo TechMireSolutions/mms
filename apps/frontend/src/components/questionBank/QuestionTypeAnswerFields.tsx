@@ -24,9 +24,9 @@ interface QuestionTypeAnswerFieldsProps {
 }
 
 function ensureSize(items: string[], size: number): string[] {
-  const next = [...items];
-  while (next.length < size) next.push('');
-  return next.slice(0, Math.max(size, 0));
+  const sizedItems = [...items];
+  while (sizedItems.length < size) sizedItems.push('');
+  return sizedItems.slice(0, Math.max(size, 0));
 }
 
 export function QuestionTypeAnswerFields({
@@ -56,10 +56,10 @@ export function QuestionTypeAnswerFields({
                 id={`qb-blank-${index}`}
                 className={FORM_INPUT}
                 value={blank}
-                onChange={(e) => {
-                  const next = [...blanks];
-                  next[index] = e.target.value;
-                  onAnswerChange(joinQuestionCompoundAnswer(next));
+                onChange={(event) => {
+                  const updatedBlanks = [...blanks];
+                  updatedBlanks[index] = event.target.value;
+                  onAnswerChange(joinQuestionCompoundAnswer(updatedBlanks));
                 }}
               />
             </div>
@@ -89,9 +89,11 @@ export function QuestionTypeAnswerFields({
               <Input
                 className={FORM_INPUT}
                 value={pair.left}
-                onChange={(e) => {
-                  const next = pairs.map((p, i) => (i === index ? { ...p, left: e.target.value } : p));
-                  syncPairs(next);
+                onChange={(event) => {
+                  const updatedPairs = pairs.map((pairCandidate, pairIndex) =>
+                    pairIndex === index ? { ...pairCandidate, left: event.target.value } : pairCandidate,
+                  );
+                  syncPairs(updatedPairs);
                 }}
               />
             </div>
@@ -100,9 +102,11 @@ export function QuestionTypeAnswerFields({
               <Input
                 className={FORM_INPUT}
                 value={pair.right}
-                onChange={(e) => {
-                  const next = pairs.map((p, i) => (i === index ? { ...p, right: e.target.value } : p));
-                  syncPairs(next);
+                onChange={(event) => {
+                  const updatedPairs = pairs.map((pairCandidate, pairIndex) =>
+                    pairIndex === index ? { ...pairCandidate, right: event.target.value } : pairCandidate,
+                  );
+                  syncPairs(updatedPairs);
                 }}
               />
             </div>
@@ -143,9 +147,9 @@ export function QuestionTypeAnswerFields({
     const moveItem = (index: number, direction: -1 | 1): void => {
       const target = index + direction;
       if (target < 0 || target >= items.length) return;
-      const next = [...items];
-      [next[index], next[target]] = [next[target], next[index]];
-      syncItems(next);
+      const reorderedItems = [...items];
+      [reorderedItems[index], reorderedItems[target]] = [reorderedItems[target], reorderedItems[index]];
+      syncItems(reorderedItems);
     };
 
     return (
@@ -158,10 +162,10 @@ export function QuestionTypeAnswerFields({
               className={FORM_INPUT}
               value={item}
               placeholder={t('questionBank.orderingItemN', { n: index + 1 })}
-              onChange={(e) => {
-                const next = [...items];
-                next[index] = e.target.value;
-                syncItems(next);
+              onChange={(event) => {
+                const updatedItems = [...items];
+                updatedItems[index] = event.target.value;
+                syncItems(updatedItems);
               }}
             />
             <div className="flex flex-shrink-0 flex-col gap-0.5">

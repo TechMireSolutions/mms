@@ -55,22 +55,22 @@ export function CategorySelector({
     onChange(nextIds[0] ?? '');
   };
 
-  const toggleCategory = (id: string): void => {
+  const toggleCategory = (categoryId: string): void => {
     if (!multiple) {
-      applySelection([id]);
+      applySelection([categoryId]);
       return;
     }
-    const next = selectedIds.includes(id)
-      ? selectedIds.filter((selectedId) => selectedId !== id)
-      : [...selectedIds, id];
-    applySelection(next);
+    const selectedCategoryIds = selectedIds.includes(categoryId)
+      ? selectedIds.filter((selectedId) => selectedId !== categoryId)
+      : [...selectedIds, categoryId];
+    applySelection(selectedCategoryIds);
   };
 
   const handleCreate = (): void => {
     const trimmed = newName.trim();
     if (!trimmed) return;
     const existingByName = categories.find(
-      (c) => c.name.trim().toLowerCase() === trimmed.toLowerCase(),
+      (category) => category.name.trim().toLowerCase() === trimmed.toLowerCase(),
     );
     if (existingByName) {
       toggleCategory(existingByName.id);
@@ -79,8 +79,8 @@ export function CategorySelector({
       return;
     }
     const created = createQuestionCategory(trimmed, categories);
-    const next = persistQuestionCategory(created);
-    onCategoriesUpdated?.(next);
+    const updatedCategories = persistQuestionCategory(created);
+    onCategoriesUpdated?.(updatedCategories);
     if (multiple) {
       applySelection([...selectedIds, created.id]);
     } else {

@@ -174,12 +174,12 @@ export default function ContactDetailDrawer({
   const combinedActivities = useMemo(() => {
     const noteActs = c.activities || [];
     const messageActs: ContactActivity[] = userMessages
-      .filter((m) => String(m.contactId) === String(c.id))
-      .map((m) => ({
-        id: m.id,
-        type: m.channel,
-        content: m.body,
-        date: m.sentAt,
+      .filter((userMessage) => String(userMessage.contactId) === String(c.id))
+      .map((userMessage) => ({
+        id: userMessage.id,
+        type: userMessage.channel,
+        content: userMessage.body,
+        date: userMessage.sentAt,
         by: user?.name || t('contacts.detail.systemUser'),
       }));
     const all = [...noteActs, ...messageActs];
@@ -219,8 +219,8 @@ export default function ContactDetailDrawer({
   const primaryPhone = enabledTabIds.has("phones") ? getPrimaryPhone(c) : null;
   const primaryEmail = enabledTabIds.has("emails") ? getPrimaryEmail(c) : null;
 
-  const handleAddNote = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddNote = (event: React.FormEvent) => {
+    event.preventDefault();
     if (!noteText.trim()) return;
 
     const newActivity: ContactActivity = {

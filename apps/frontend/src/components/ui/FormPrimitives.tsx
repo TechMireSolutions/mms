@@ -92,7 +92,7 @@ export function EditableSelect({
   const handleRemove = (option: string, event: React.MouseEvent) => {
     if (!onUpdateOptions) return;
     event.stopPropagation();
-    const nextOptions = options.filter((opt) => opt !== option);
+    const nextOptions = options.filter((availableOption) => availableOption !== option);
     onUpdateOptions(nextOptions);
     if (value === option) {
       onChange(nextOptions[0] || "");
@@ -322,11 +322,11 @@ function TagsInput({ selected = [], predefined = [], onChange }: TagsInputProps)
     setInputVal("");
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if ((e.key === "Enter" || e.key === ",") && inputVal.trim()) {
-      e.preventDefault();
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>): void => {
+    if ((event.key === "Enter" || event.key === ",") && inputVal.trim()) {
+      event.preventDefault();
       addCustom(inputVal);
-    } else if (e.key === "Backspace" && !inputVal && selected.length > 0) {
+    } else if (event.key === "Backspace" && !inputVal && selected.length > 0) {
       onChange(selected.slice(0, -1));
     }
   };

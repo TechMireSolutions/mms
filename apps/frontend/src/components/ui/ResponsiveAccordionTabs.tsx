@@ -119,12 +119,12 @@ export function ResponsiveAccordionTabs({
   const prefix = panelIdPrefix;
 
   const handleTabChange = useCallback(
-    (id: string) => {
-      if (collapsible && activeTab === id) {
+    (tabId: string) => {
+      if (collapsible && activeTab === tabId) {
         onTabChange("");
         return;
       }
-      onTabChange(id);
+      onTabChange(tabId);
     },
     [activeTab, collapsible, onTabChange],
   );

@@ -17,13 +17,13 @@ import { FormSelect } from "@/components/ui/FormSelect";
 const PrintInvoiceModal = lazy(() => import("./invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
 function fmtAmount(amount: string | number, currencyId: string, currencies: any[]): string {
-  const currency = currencies.find((c) => c.id === currencyId);
+  const currency = currencies.find((candidateCurrency) => candidateCurrency.id === currencyId);
   return `${currency?.code || ""} ${parseFloat(amount as string).toLocaleString()}`;
 }
 
-function fmtDate(d?: string | null): string {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
+function fmtDate(date?: string | null): string {
+  if (!date) return "—";
+  return new Date(date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
 }
 
 interface ColumnCustomizerProps {
@@ -45,7 +45,7 @@ export interface ObligationCollectionListProps {
   reps: MujtahidRep[];
   mujtahids: Mujtahid[];
   onAddNew: () => void;
-  onView: (c: ObligationCollection) => void;
+  onView: (collection: ObligationCollection) => void;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ColumnCustomizerProps;
@@ -69,23 +69,23 @@ export function ObligationCollectionList({
   const [printCollection, setPrintCollection] = useState<ObligationCollection | null>(null);
 
   const debouncedSearch = useDebounce(search, 300);
-  const senderIds = useMemo(() => collections.map((c) => c.sender_id), [collections]);
+  const senderIds = useMemo(() => collections.map((collection) => collection.sender_id), [collections]);
   const contacts = useMergedObligationContacts(senderIds);
 
-  const getContact = (id?: string | number | null) => contacts.find((c) => String(c.id) === String(id));
-  const getRep = (id: string) => reps.find((r) => r.id === id);
+  const getContact = (contactId?: string | number | null) => contacts.find((contact) => String(contact.id) === String(contactId));
+  const getRep = (repId: string) => reps.find((rep) => rep.id === repId);
   const getMujtahid = (repId: string) => {
     const rep = getRep(repId);
-    return rep ? mujtahids.find((m) => m.id === rep.mujtahid_id) : null;
+    return rep ? mujtahids.find((mujtahid) => mujtahid.id === rep.mujtahid_id) : null;
   };
-  const getObType = (id: string) => obligationTypes.find((item) => item.id === id);
+  const getObType = (obligationTypeId: string) => obligationTypes.find((obligationType) => obligationType.id === obligationTypeId);
 
-  const filtered = useMemo(() => collections.filter((c) => {
-    if (typeFilter !== "all" && c.obligation_type_id !== typeFilter) return false;
+  const filtered = useMemo(() => collections.filter((collection) => {
+    if (typeFilter !== "all" && collection.obligation_type_id !== typeFilter) return false;
     if (debouncedSearch) {
       const searchQuery = debouncedSearch.toLowerCase();
-      const sender = getContact(c.sender_id)?.name?.toLowerCase() || "";
-      const receipt = c.receipt_no.toLowerCase();
+      const sender = getContact(collection.sender_id)?.name?.toLowerCase() || "";
+      const receipt = collection.receipt_no.toLowerCase();
       if (!sender.includes(searchQuery) && !receipt.includes(searchQuery)) return false;
     }
     return true;
@@ -117,7 +117,7 @@ export function ObligationCollectionList({
             type="search"
             aria-label={t("obligations.searchPlaceholder")}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder={t("obligations.searchPlaceholder")}
             className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
@@ -209,27 +209,27 @@ export function ObligationCollectionList({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filtered.map((c) => {
-                    const sender = getContact(c.sender_id);
-                    const obType = getObType(c.obligation_type_id);
-                    const rep = getRep(c.mujtahid_representative_id);
-                    const mujtahid = getMujtahid(c.mujtahid_representative_id);
+                  {filtered.map((collection) => {
+                    const sender = getContact(collection.sender_id);
+                    const obligationType = getObType(collection.obligation_type_id);
+                    const rep = getRep(collection.mujtahid_representative_id);
+                    const mujtahid = getMujtahid(collection.mujtahid_representative_id);
                     return (
-                      <tr key={c.id} className="hover:bg-muted/20 transition-colors">
+                      <tr key={collection.id} className="hover:bg-muted/20 transition-colors">
                         {showReceiptNo && (
                           <td className="px-3 py-2.5">
-                            <span className="font-mono text-xs font-bold text-primary">{c.receipt_no}</span>
+                            <span className="font-mono text-xs font-bold text-primary">{collection.receipt_no}</span>
                           </td>
                         )}
                         {showReceivedDate && (
-                          <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(c.received_date)}</td>
+                          <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(collection.received_date)}</td>
                         )}
                         {showSender && (
                           <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{sender?.name || "—"}</td>
                         )}
                         {showObligationType && (
                           <td className="px-3 py-2.5">
-                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">{obType?.name || "—"}</span>
+                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">{obligationType?.name || "—"}</span>
                           </td>
                         )}
                         {showRepMujtahid && (
@@ -239,28 +239,28 @@ export function ObligationCollectionList({
                           </td>
                         )}
                         {showAmount && (
-                          <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{fmtAmount(c.amount, c.currency_id, currencies)}</td>
+                          <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{fmtAmount(collection.amount, collection.currency_id, currencies)}</td>
                         )}
                         {showPaymentMode && (
                           <td className="px-3 py-2.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${c.payment_mode === "Cash" ? "bg-warning/15 text-warning border-warning/30" : "bg-info/15 text-info border-info/30"}`}>
-                              {c.payment_mode}
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${collection.payment_mode === "Cash" ? "bg-warning/15 text-warning border-warning/30" : "bg-info/15 text-info border-info/30"}`}>
+                              {collection.payment_mode}
                             </span>
                           </td>
                         )}
                         <td className="px-3 py-2.5 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Button type="button" onClick={() => onView(c)}
+                            <Button type="button" onClick={() => onView(collection)}
                               variant="ghost"
                               className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
-                              aria-label={t("obligations.actions.view", { receipt: c.receipt_no })}
+                              aria-label={t("obligations.actions.view", { receipt: collection.receipt_no })}
                               title={t("obligations.actions.viewShort")}>
                               <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>
-                            <Button type="button" onClick={() => setPrintCollection(c)}
+                            <Button type="button" onClick={() => setPrintCollection(collection)}
                               variant="ghost"
                               className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
-                              aria-label={t("obligations.actions.print", { receipt: c.receipt_no })}
+                              aria-label={t("obligations.actions.print", { receipt: collection.receipt_no })}
                               title={t("obligations.actions.printShort")}>
                               <Printer className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>

@@ -102,23 +102,23 @@ export function PerformanceAnalytics({
 
   const catPerformance = useMemo<CategoryPerformance[]>(() => {
     return categories
-      .map((cat) => {
-        const catQIds = questions
-          .filter((question) => getQuestionCategoryIds(question).includes(cat.id))
+      .map((category) => {
+        const categoryQuestionIds = questions
+          .filter((question) => getQuestionCategoryIds(question).includes(category.id))
           .map((question) => question.id);
         let correct = 0;
         let total = 0;
-        results.forEach((r) => {
-          catQIds.forEach((qid) => {
-            if (r.answers?.[qid] !== undefined) {
-              const question = questions.find((candidateQuestion) => candidateQuestion.id === qid);
+        results.forEach((result) => {
+          categoryQuestionIds.forEach((questionId) => {
+            if (result.answers?.[questionId] !== undefined) {
+              const question = questions.find((candidateQuestion) => candidateQuestion.id === questionId);
               total++;
-              if (r.answers[qid] === question?.answer) correct++;
+              if (result.answers[questionId] === question?.answer) correct++;
             }
           });
         });
         const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-        return { name: cat.name, icon: cat.icon, color: cat.color, accuracy, correct, total };
+        return { name: category.name, icon: category.icon, color: category.color, accuracy, correct, total };
       })
       .filter((categoryResult) => categoryResult.total > 0);
   }, [categories, questions, results]);
@@ -140,8 +140,8 @@ export function PerformanceAnalytics({
     };
   });
 
-  const diffData = qbConfig.enabledDifficulties.map((key) => {
-    const questionIds = questions.filter((question) => question.difficulty === key).map((question) => question.id);
+  const diffData = qbConfig.enabledDifficulties.map((difficulty) => {
+    const questionIds = questions.filter((question) => question.difficulty === difficulty).map((question) => question.id);
     let correct = 0;
     let total = 0;
     results.forEach((result) => {
@@ -154,7 +154,7 @@ export function PerformanceAnalytics({
       });
     });
     return {
-      name: qbConfig.difficultyLabel(key),
+      name: qbConfig.difficultyLabel(difficulty),
       accuracy: total > 0 ? Math.round((correct / total) * 100) : 0,
     };
   });

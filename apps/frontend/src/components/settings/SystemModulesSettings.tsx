@@ -27,10 +27,10 @@ export default function SystemModulesSettings(): React.JSX.Element {
     [data.enabledModules],
   );
 
-  const updModule = (id: string, enabled: boolean): void => {
-    const mod = SYSTEM_MODULES_BY_ID[id];
+  const updModule = (moduleId: string, enabled: boolean): void => {
+    const mod = SYSTEM_MODULES_BY_ID[moduleId];
     if (mod?.required) return;
-    upd('enabledModules', normalizeEnabledModules({ ...enabledModules, [id]: enabled }));
+    upd('enabledModules', normalizeEnabledModules({ ...enabledModules, [moduleId]: enabled }));
     clearSaved();
   };
 

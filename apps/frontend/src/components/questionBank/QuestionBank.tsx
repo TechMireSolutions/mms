@@ -125,7 +125,7 @@ export function QuestionBank({
         const matchesSearch = !search || question.text.toLowerCase().includes(search.toLowerCase());
         const matchesCategory =
           filterCats.length === 0 ||
-          getQuestionCategoryIds(question).some((id) => filterCats.includes(id));
+          getQuestionCategoryIds(question).some((categoryId) => filterCats.includes(categoryId));
         const matchesDifficulty = filterDiff.length === 0 || filterDiff.includes(question.difficulty);
         return matchesSearch && matchesCategory && matchesDifficulty;
       }),

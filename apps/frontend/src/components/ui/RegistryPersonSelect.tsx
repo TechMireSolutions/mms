@@ -76,7 +76,7 @@ export function RegistryPersonSelect({
       <input
         type="search"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(event) => setSearch(event.target.value)}
         placeholder={t('registryPerson.searchPlaceholder')}
         className={`${FORM_INPUT} text-xs`}
         aria-label={t('registryPerson.searchPlaceholder')}
@@ -85,7 +85,7 @@ export function RegistryPersonSelect({
         id={id}
         className={`${FORM_INPUT} cursor-pointer`}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         required={required}
       >
         <option value="">{placeholder}</option>

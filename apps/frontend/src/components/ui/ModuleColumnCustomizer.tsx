@@ -28,57 +28,57 @@ export function ModuleColumnCustomizer({
   const [dragOver, setDragOver] = useState<string | null>(null);
 
   const visibleColumns = useMemo(
-    () => [...columnRegistry].filter((c) => c.enabled).sort((a, b) => a.order - b.order),
+    () => [...columnRegistry].filter((column) => column.enabled).sort((firstColumn, secondColumn) => firstColumn.order - secondColumn.order),
     [columnRegistry],
   );
 
   const hiddenColumns = useMemo(
-    () => [...columnRegistry].filter((c) => !c.enabled),
+    () => [...columnRegistry].filter((column) => !column.enabled),
     [columnRegistry],
   );
 
-  const toggle = (id: string): void => {
-    const updated = columnRegistry.map((c) => {
-      if (c.key === id) {
-        if (c.fixed) return c;
-        return { ...c, enabled: !c.enabled };
+  const toggle = (columnKey: string): void => {
+    const updated = columnRegistry.map((column) => {
+      if (column.key === columnKey) {
+        if (column.fixed) return column;
+        return { ...column, enabled: !column.enabled };
       }
-      return c;
+      return column;
     });
     updateUserColumnLayout(updated);
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string): void => {
-    setDragging(id);
-    e.dataTransfer.effectAllowed = 'move';
+  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, columnKey: string): void => {
+    setDragging(columnKey);
+    event.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, id: string): void => {
-    e.preventDefault();
-    if (id !== dragging) setDragOver(id);
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>, columnKey: string): void => {
+    event.preventDefault();
+    if (columnKey !== dragging) setDragOver(columnKey);
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetId: string): void => {
-    e.preventDefault();
-    if (!dragging || dragging === targetId) {
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>, targetColumnKey: string): void => {
+    event.preventDefault();
+    if (!dragging || dragging === targetColumnKey) {
       setDragging(null);
       setDragOver(null);
       return;
     }
-    const visibleIds = visibleColumns.map((c) => c.key);
+    const visibleIds = visibleColumns.map((column) => column.key);
     const fromIdx = visibleIds.indexOf(dragging);
-    const toIdx = visibleIds.indexOf(targetId);
+    const toIdx = visibleIds.indexOf(targetColumnKey);
 
     if (fromIdx !== -1 && toIdx !== -1) {
       const newVisibleIds = [...visibleIds];
       const [moved] = newVisibleIds.splice(fromIdx, 1);
       newVisibleIds.splice(toIdx, 0, moved);
-      const updated = columnRegistry.map((c) => {
-        const orderIdx = newVisibleIds.indexOf(c.key);
+      const updated = columnRegistry.map((column) => {
+        const orderIdx = newVisibleIds.indexOf(column.key);
         if (orderIdx !== -1) {
-          return { ...c, order: orderIdx };
+          return { ...column, order: orderIdx };
         }
-        return c;
+        return column;
       });
       updateUserColumnLayout(updated);
     }
@@ -108,9 +108,9 @@ export function ModuleColumnCustomizer({
             <div
               key={col.key}
               draggable={!col.fixed}
-              onDragStart={(e) => !col.fixed && handleDragStart(e, col.key)}
-              onDragOver={(e) => handleDragOver(e, col.key)}
-              onDrop={(e) => handleDrop(e, col.key)}
+              onDragStart={(event) => !col.fixed && handleDragStart(event, col.key)}
+              onDragOver={(event) => handleDragOver(event, col.key)}
+              onDrop={(event) => handleDrop(event, col.key)}
               onDragEnd={() => {
                 setDragging(null);
                 setDragOver(null);

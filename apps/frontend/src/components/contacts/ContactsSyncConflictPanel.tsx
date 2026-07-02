@@ -183,31 +183,31 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
                   </tr>
                 </thead>
                 <tbody>
-                  {diffs.map((d) => (
-                    <tr key={d.field} className="border-t border-border/50">
-                      <td className="py-1 pr-2 font-medium">{fieldLabel(d.field, t)}</td>
+                  {diffs.map((diff) => (
+                    <tr key={diff.field} className="border-t border-border/50">
+                      <td className="py-1 pr-2 font-medium">{fieldLabel(diff.field, t)}</td>
                       <td className="py-1 pr-2">
                         <Button
                           type="button"
                           variant="ghost"
-                          onClick={() => togglePick(d.field, 'local')}
+                          onClick={() => togglePick(diff.field, 'local')}
                           className={`text-left break-all w-full rounded px-1 h-auto justify-start font-normal ${
-                            fieldPicks[d.field] === 'local' ? 'bg-primary/15 ring-1 ring-primary/40' : 'hover:bg-muted/50'
+                            fieldPicks[diff.field] === 'local' ? 'bg-primary/15 ring-1 ring-primary/40' : 'hover:bg-muted/50'
                           }`}
                         >
-                          {d.local}
+                          {diff.local}
                         </Button>
                       </td>
                       <td className="py-1">
                         <Button
                           type="button"
                           variant="ghost"
-                          onClick={() => togglePick(d.field, 'server')}
+                          onClick={() => togglePick(diff.field, 'server')}
                           className={`text-left break-all w-full rounded px-1 h-auto justify-start font-normal ${
-                            fieldPicks[d.field] === 'server' ? 'bg-primary/15 ring-1 ring-primary/40' : 'hover:bg-muted/50'
+                            fieldPicks[diff.field] === 'server' ? 'bg-primary/15 ring-1 ring-primary/40' : 'hover:bg-muted/50'
                           }`}
                         >
-                          {d.server}
+                          {diff.server}
                         </Button>
                       </td>
                     </tr>

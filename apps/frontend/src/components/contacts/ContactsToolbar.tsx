@@ -50,16 +50,16 @@ export default function ContactsToolbar({
  
   const sortOptions = React.useMemo(() => {
     const dynamicSorts = availableColumns
-      .filter((col) => col.sortField)
-      .map((col) => ({
-        field: col.sortField!,
-        label: col.label,
+      .filter((column) => column.sortField)
+      .map((column) => ({
+        field: column.sortField!,
+        label: column.label,
       }));
 
     const combined = [...dynamicSorts];
-    systemSortOptions.forEach((ss) => {
-      if (!combined.some((c) => c.field === ss.field)) {
-        combined.push(ss);
+    systemSortOptions.forEach((systemSortOption) => {
+      if (!combined.some((existingSortOption) => existingSortOption.field === systemSortOption.field)) {
+        combined.push(systemSortOption);
       }
     });
 
@@ -73,7 +73,7 @@ export default function ContactsToolbar({
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
         <Input
           value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(event) => onSearchChange(event.target.value)}
           placeholder={t("contacts.searchPlaceholder")}
           className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 transition-all h-auto"
         />
@@ -114,27 +114,27 @@ export default function ContactsToolbar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-card border border-border">
             <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.genderFilter")}</DropdownMenuLabel>
-            {["", ...genders].map((g) => (
+            {["", ...genders].map((genderOption) => (
               <DropdownMenuCheckboxItem
-                key={g}
-                checked={filterGender === g}
-                onCheckedChange={() => onGenderChange(g)}
+                key={genderOption}
+                checked={filterGender === genderOption}
+                onCheckedChange={() => onGenderChange(genderOption)}
                 className="text-sm"
               >
-                {g ? g.charAt(0).toUpperCase() + g.slice(1) : t("contacts.allGenders")}
+                {genderOption ? genderOption.charAt(0).toUpperCase() + genderOption.slice(1) : t("contacts.allGenders")}
               </DropdownMenuCheckboxItem>
             ))}
 
             <DropdownMenuSeparator className="bg-border" />
             <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.sortBy")}</DropdownMenuLabel>
-            {sortOptions.map((s) => (
+            {sortOptions.map((sortOption) => (
               <DropdownMenuCheckboxItem
-                key={s.field}
-                checked={sortField === s.field}
-                onCheckedChange={() => onSort(s.field)}
+                key={sortOption.field}
+                checked={sortField === sortOption.field}
+                onCheckedChange={() => onSort(sortOption.field)}
                 className="text-sm"
               >
-                {s.label}
+                {sortOption.label}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>

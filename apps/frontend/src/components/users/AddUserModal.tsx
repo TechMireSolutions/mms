@@ -169,7 +169,7 @@ function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Element {
             <Button
               type="button"
               variant="link"
-              onClick={(e) => { e.stopPropagation(); setShowPerms((v) => !v); }}
+              onClick={(event) => { event.stopPropagation(); setShowPerms((visible) => !visible); }}
               className="text-[10px] text-primary font-semibold flex items-center gap-0.5 hover:underline p-0 h-auto shadow-none"
             >
               <Info className="w-3 h-3" /> {showPerms ? t("users.addHidePermissions") : t("users.addShowPermissions")}
@@ -185,11 +185,11 @@ function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Element {
             className="overflow-hidden border-t border-border">
             <div className="p-3 grid grid-cols-2 gap-1">
               {Object.entries(role.permissions || {})
-                .filter(([mod]) => isRbacModuleEnabled(mod, globalSettings.enabledModules))
-                .map(([mod, perms]) => (
-                <div key={mod} className="text-[10px] text-muted-foreground">
-                  <span className="font-semibold text-foreground">{rbacModuleLabel(mod, t)}:</span>{" "}
-                  {perms.map((p) => t(`users.permission.${p}`)).join(", ")}
+                .filter(([moduleId]) => isRbacModuleEnabled(moduleId, globalSettings.enabledModules))
+                .map(([moduleId, permissions]) => (
+                <div key={moduleId} className="text-[10px] text-muted-foreground">
+                  <span className="font-semibold text-foreground">{rbacModuleLabel(moduleId, t)}:</span>{" "}
+                  {permissions.map((permissionAction) => t(`users.permission.${permissionAction}`)).join(", ")}
                 </div>
               ))}
             </div>
@@ -235,15 +235,15 @@ interface Step1Props {
 function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
   const { t } = useTranslation();
 
-  const handleContactChange = (id: string | number | null, contact?: Contact | null): void => {
-    if (!id || !contact) {
-      setForm((f) => ({ ...f, contactId: null, name: "", email: "", phone: "" }));
+  const handleContactChange = (contactId: string | number | null, contact?: Contact | null): void => {
+    if (!contactId || !contact) {
+      setForm((previousForm) => ({ ...previousForm, contactId: null, name: "", email: "", phone: "" }));
       return;
     }
     const primaryEmail = contact.emails?.[0]?.address || (contact.email as string | undefined) || "";
     const primaryPhone = contact.phones?.[0]?.number || (contact.phone as string | undefined) || "";
-    setForm((f) => ({
-      ...f,
+    setForm((previousForm) => ({
+      ...previousForm,
       contactId: contact.id,
       name: contact.name,
       email: primaryEmail,
@@ -251,9 +251,9 @@ function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
     }));
   };
 
-  const statusOptions = React.useMemo(() => USER_STATUS_VALUES.map((s) => ({
-    value: s,
-    label: t(`users.status.${s}`),
+  const statusOptions = React.useMemo(() => USER_STATUS_VALUES.map((status) => ({
+    value: status,
+    label: t(`users.status.${status}`),
   })), [t]);
 
   return (
@@ -444,19 +444,19 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
           {[
             { id: "invite", labelKey: "users.addMethodInvite" as const, descKey: "users.addMethodInviteDesc" as const, icon: Mail },
             { id: "password", labelKey: "users.addMethodPassword" as const, descKey: "users.addMethodPasswordDesc" as const, icon: Lock },
-          ].map((opt) => {
-            const Icon = opt.icon;
-            const active = form.setupMethod === opt.id;
+          ].map((setupOption) => {
+            const Icon = setupOption.icon;
+            const active = form.setupMethod === setupOption.id;
             return (
-              <Button type="button" variant="ghost" key={opt.id} onClick={() => setForm((f) => ({ ...f, setupMethod: opt.id as "invite" | "password" }))}
+              <Button type="button" variant="ghost" key={setupOption.id} onClick={() => setForm((previousForm) => ({ ...previousForm, setupMethod: setupOption.id as "invite" | "password" }))}
                 className={`p-3 rounded-xl border-2 text-left transition-all h-auto flex flex-col items-start shadow-none ${
                   active ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground" : "border-border bg-card hover:border-primary/40 text-muted-foreground hover:text-foreground"
                 }`}>
                 <div className="flex items-center gap-1.5 mb-1">
                   <Icon className={`w-3.5 h-3.5 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                  <span className={`text-[11px] font-bold ${active ? "text-primary" : "text-foreground"}`}>{t(opt.labelKey)}</span>
+                  <span className={`text-[11px] font-bold ${active ? "text-primary" : "text-foreground"}`}>{t(setupOption.labelKey)}</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-snug">{t(opt.descKey)}</p>
+                <p className="text-[10px] text-muted-foreground leading-snug">{t(setupOption.descKey)}</p>
               </Button>
             );
           })}
@@ -645,10 +645,10 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
               {step === 1 ? t("users.cancel") : t("users.addBack")}
             </Button>
             <div className="flex items-center gap-1.5">
-              {STEP_DEFS.map((s) => (
+              {STEP_DEFS.map((stepDefinition) => (
                 <div
-                  key={s.id}
-                  className={`h-1.5 rounded-full transition-all ${step === s.id ? "w-3 bg-primary" : step > s.id ? "w-1.5 bg-primary/40" : "w-1.5 bg-border"}`}
+                  key={stepDefinition.id}
+                  className={`h-1.5 rounded-full transition-all ${step === stepDefinition.id ? "w-3 bg-primary" : step > stepDefinition.id ? "w-1.5 bg-primary/40" : "w-1.5 bg-border"}`}
                 />
               ))}
             </div>

@@ -66,7 +66,7 @@ export default function ContactsSavedReports({
 
   const shareScopeOptions = useMemo(() => {
     const scopes = [...SHARE_SCOPES];
-    if (role !== "admin") return scopes.filter((s) => s !== "global");
+    if (role !== "admin") return scopes.filter((scope) => scope !== "global");
     return scopes;
   }, [role]);
 

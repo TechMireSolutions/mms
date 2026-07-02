@@ -40,7 +40,7 @@ export function UserActorSelect({
         id={id}
         className={`${FORM_INPUT} cursor-pointer`}
         value={value || authUser?.id || ''}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         required={required}
       >
         {allowEmpty ? <option value="">{t('registryPerson.selectUser')}</option> : null}

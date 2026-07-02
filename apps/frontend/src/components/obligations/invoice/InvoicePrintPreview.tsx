@@ -17,8 +17,8 @@ interface Branding {
 }
 
 function getBranding(): Branding {
-  const b = getObject<Branding | null>("branding", null);
-  if (b) return b;
+  const branding = getObject<Branding | null>("branding", null);
+  if (branding) return branding;
   try {
     const raw = localStorage.getItem("madrasa_branding");
     if (raw) {
@@ -90,7 +90,7 @@ export function InvoicePrintPreview({
     };
 
     const handleClick = onSelect
-      ? (e: React.MouseEvent) => { e.stopPropagation(); onSelect(templateElement.id); }
+      ? (event: React.MouseEvent) => { event.stopPropagation(); onSelect(templateElement.id); }
       : undefined;
 
     if (templateElement.type === "logo") {

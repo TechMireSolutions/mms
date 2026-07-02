@@ -235,16 +235,16 @@ export default function DuplicateDetection({
 
   React.useEffect(() => {
     if (!serverPairs?.pairs) return;
-    const mapped = serverPairs.pairs.map((pair) => ({
+    const mappedPairs = serverPairs.pairs.map((pair) => ({
       id: pair.id,
       confidence: pair.confidence,
       reason: t(DUPLICATE_REASON_I18N[pair.reasonKey]) || pair.reasonKey,
       contacts: pair.contacts,
     }));
     setLoadedPairs((prev) => {
-      if (dupPage <= 1) return mapped;
-      const byId = new Map(prev.map((p) => [p.id, p]));
-      for (const p of mapped) byId.set(p.id, p);
+      if (dupPage <= 1) return mappedPairs;
+      const byId = new Map(prev.map((previousPair) => [previousPair.id, previousPair]));
+      for (const mappedPair of mappedPairs) byId.set(mappedPair.id, mappedPair);
       return [...byId.values()];
     });
   }, [serverPairs, dupPage, t]);
@@ -278,18 +278,18 @@ export default function DuplicateDetection({
     const mergedResult = applyTitleCaseToContact(mergedRaw as Record<string, unknown>) as Contact;
     onMerge(keep.id, other.id, mergedResult);
     setMergedPairIds((prev) => {
-      const next = new Set(prev);
-      next.add(pair.id);
-      return next;
+      const updatedMergedPairIds = new Set(prev);
+      updatedMergedPairIds.add(pair.id);
+      return updatedMergedPairIds;
     });
     setMerging(null);
   };
 
   const handleDismiss = (pairId: string): void => {
     setDismissedPairIds((prev) => {
-      const next = new Set(prev);
-      next.add(pairId);
-      return next;
+      const updatedDismissedPairIds = new Set(prev);
+      updatedDismissedPairIds.add(pairId);
+      return updatedDismissedPairIds;
     });
   };
 

@@ -43,7 +43,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
     [updateSettings, t],
   );
 
-  const { data, dirty, saving, upd, handleSave } = useSettingsDraft({
+  const { data: questionBankSettings, dirty, saving, upd, handleSave } = useSettingsDraft({
     load,
     onPreview: () => {},
     onSave,
@@ -62,14 +62,14 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
 
   useEffect(() => {
     if (!settings) return;
-    const coreKeys = new Set(QUESTION_BANK_TAB_REGISTRY.map(t => t.key));
-    const customTabs = (settings.formTabs || []).filter(t => !coreKeys.has(t.key));
+    const coreKeys = new Set(QUESTION_BANK_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
+    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreKeys.has(tabDefinition.key));
     const updatedTabs = [
       ...QUESTION_BANK_TAB_REGISTRY,
       ...customTabs
-    ].map(t => ({
-      ...t,
-      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
+    ].map((tabDefinition) => ({
+      ...tabDefinition,
+      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
     }));
 
     fieldsEditor.resetAllState(
@@ -81,24 +81,24 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
   }, [settings]);
 
   const executeSave = () => {
-    const updatedFormTabs = fieldsEditor.formTabs.map(t => ({
-      ...t,
-      enabled: fieldsEditor.enabledTabs.has(t.key)
+    const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({
+      ...tabDefinition,
+      enabled: fieldsEditor.enabledTabs.has(tabDefinition.key)
     }));
 
-    const nextData = {
-      ...data,
+    const nextQuestionBankSettings = {
+      ...questionBankSettings,
       enabledTabs: Array.from(fieldsEditor.enabledTabs),
       requiredTabs: Array.from(fieldsEditor.requiredTabs),
       formTabs: updatedFormTabs,
       fields: fieldsEditor.buildFieldsMap(),
     };
     
-    onSave(nextData);
+    onSave(nextQuestionBankSettings);
   };
 
   const toggleQuestionType = (questionTypeId: string): void => {
-    const types = data.questionTypes ?? [];
+    const types = questionBankSettings.questionTypes ?? [];
     const updated = types.map((entry) =>
       entry.id === questionTypeId ? { ...entry, enabled: !entry.enabled } : entry,
     );
@@ -106,7 +106,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
   };
 
   const toggleDifficulty = (difficultyId: string): void => {
-    const diffs = data.difficultyLevels ?? [];
+    const diffs = questionBankSettings.difficultyLevels ?? [];
     const updated = diffs.map((entry) =>
       entry.id === difficultyId ? { ...entry, enabled: !entry.enabled } : entry,
     );
@@ -142,7 +142,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
               <p className="text-xs text-muted-foreground">{t('questionBank.aiGradingDesc')}</p>
             </div>
             <Switch
-              checked={data.aiGrading}
+              checked={questionBankSettings.aiGrading}
               onCheckedChange={(v) => upd('aiGrading', v)}
               aria-label={t('questionBank.aiGrading')}
             />
@@ -157,13 +157,13 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
               type="number"
               min={5}
               className={FORM_INPUT}
-              value={data.defaultTestDuration}
+              value={questionBankSettings.defaultTestDuration}
               onChange={(event) => upd('defaultTestDuration', Number(event.target.value) || 30)}
             />
           </div>
 
           <CategoryManager
-            categories={data.categories}
+            categories={questionBankSettings.categories}
             onChange={(categories) => upd('categories', categories)}
           />
 
@@ -172,7 +172,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
               {t('questionBank.typesTitle')}
             </h4>
             <div className="flex flex-wrap gap-2">
-              {(data.questionTypes ?? []).map((entry: QuestionTypeRegistryEntry) => (
+              {(questionBankSettings.questionTypes ?? []).map((entry: QuestionTypeRegistryEntry) => (
                 <Button
                   key={entry.id}
                   type="button"
@@ -191,7 +191,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
               {t('questionBank.difficultiesTitle')}
             </h4>
             <div className="flex flex-wrap gap-2">
-              {(data.difficultyLevels ?? []).map((entry: QuestionDifficultyRegistryEntry) => (
+              {(questionBankSettings.difficultyLevels ?? []).map((entry: QuestionDifficultyRegistryEntry) => (
                 <Button
                   key={entry.id}
                   type="button"
