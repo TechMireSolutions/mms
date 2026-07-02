@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { Filter, ChevronDown, Eye, ReceiptText, X } from "lucide-react";
 import { SearchBar } from "../ui/SearchBar";
@@ -142,7 +143,7 @@ export function InvoiceList({
         )}
       </AnimatePresence>
 
-      <div className="rounded-xl border border-border overflow-hidden bg-card">
+      <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">{t("finance.invoices")}</caption>
@@ -275,7 +276,7 @@ export function InvoiceList({
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </section>
   );
 }

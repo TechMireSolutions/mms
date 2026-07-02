@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import {
   BarChart2, TrendingUp, Users, Layers,
   Search, Filter, ArrowUpRight, Receipt, AlertCircle, LucideIcon
@@ -9,7 +10,6 @@ import { ExportToolbar } from "./ExportToolbar";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import { useDebounce } from "../../hooks/useDebounce";
 import { DatePicker } from "../ui/DatePicker";
-import { KPI_TONE } from "@/lib/semanticTone";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,19 +29,20 @@ interface StatCardProps {
 }
 
 function StatCard({ label, value, sub, icon: Icon, color = "primary", trend }: StatCardProps) {
-  const colorMap: Record<string, { bg: string; text: string; iconBg: string }> = {
-    primary: { bg: "bg-primary/8", text: KPI_TONE.primary.text, iconBg: KPI_TONE.primary.bg },
-    emerald: { bg: KPI_TONE.success.bg, text: KPI_TONE.success.text, iconBg: "bg-success/15" },
-    blue: { bg: KPI_TONE.info.bg, text: KPI_TONE.info.text, iconBg: "bg-info/15" },
-    amber: { bg: KPI_TONE.warning.bg, text: KPI_TONE.warning.text, iconBg: "bg-warning/15" },
-    purple: { bg: KPI_TONE.primary.bg, text: KPI_TONE.primary.text, iconBg: "bg-primary/15" },
+  const accentMap: Record<string, string> = {
+    primary: "primary",
+    emerald: "success",
+    blue: "info",
+    amber: "warning",
+    purple: "indigo",
   };
-  const tone = colorMap[color];
+  const cardColor = accentMap[color] || "primary";
+
   return (
-    <article className={`rounded-xl border border-border ${tone.bg} p-4 space-y-2`}>
+    <Card accentColor={cardColor as any} className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 pl-5.5 space-y-2 shadow-sm hover:shadow-md transition-all duration-300">
       <header className="flex items-center justify-between">
-        <div className={`w-9 h-9 rounded-xl ${tone.iconBg} flex items-center justify-center`} aria-hidden="true">
-          <Icon className={`w-4.5 h-4.5 ${tone.text}`} style={{ width: 18, height: 18 }} />
+        <div className={`w-9 h-9 rounded-xl bg-${cardColor === "success" ? "success" : cardColor === "info" ? "info" : cardColor === "warning" ? "warning" : cardColor === "indigo" ? "accent" : "primary"}/10 flex items-center justify-center`} aria-hidden="true">
+          <Icon className={`w-4.5 h-4.5 text-${cardColor === "success" ? "success" : cardColor === "info" ? "info" : cardColor === "warning" ? "warning" : cardColor === "indigo" ? "accent" : "primary"}`} style={{ width: 18, height: 18 }} />
         </div>
         {trend !== undefined && (
           <span className={`text-[11px] font-bold flex items-center gap-0.5 ${trend >= 0 ? "text-success" : "text-destructive"}`} aria-label={trend >= 0 ? "Positive trend" : "Negative trend"}>
@@ -51,11 +52,11 @@ function StatCard({ label, value, sub, icon: Icon, color = "primary", trend }: S
         )}
       </header>
       <div>
-        <p className={`text-xl font-bold ${tone.text} m-0`}>{value}</p>
-        <h3 className="text-xs font-semibold text-muted-foreground m-0">{label}</h3>
+        <p className="text-xl font-bold text-foreground leading-tight m-0">{value}</p>
+        <h3 className="text-xs font-semibold text-muted-foreground mt-1 mb-0">{label}</h3>
         {sub && <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{sub}</p>}
       </div>
-    </article>
+    </Card>
   );
 }
 
@@ -261,8 +262,8 @@ export function ObligationsSummary({
   return (
     <div className="space-y-6">
       {/* ── Filter Bar ── */}
-      <section aria-label="Filters" className="rounded-xl border border-border bg-card p-4 space-y-3">
-        <header className="flex items-center gap-2 mb-1">
+      <Card accentColor="primary" className="p-4 space-y-3 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
+        <header className="flex items-center gap-2 mb-1 pl-1">
           <Filter className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
           <h2 className="text-sm font-bold text-foreground m-0">Filters</h2>
           {hasFilters && (
@@ -327,7 +328,7 @@ export function ObligationsSummary({
             className="text-xs rounded-lg border border-border bg-background"
           />
         </div>
-      </section>
+      </Card>
 
       {/* ── KPI Cards ── */}
       <section aria-label="Key Performance Indicators" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -341,7 +342,7 @@ export function ObligationsSummary({
       {filtered.length > 0 && (
         <section aria-label="Charts" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Obligation Type Breakdown */}
-          <article className="rounded-xl border border-border bg-card p-4">
+          <Card accentColor="primary" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
             <SectionTitle icon={BarChart2} title="Collection by Obligation Type" subtitle="Total amount per type" />
             <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
               <BarChart data={typeBreakdown} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -353,11 +354,11 @@ export function ObligationsSummary({
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </article>
+          </Card>
 
           {/* Monthly trend */}
           {monthlyTrend.length > 1 ? (
-            <article className="rounded-xl border border-border bg-card p-4">
+            <Card accentColor="indigo" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
               <SectionTitle icon={TrendingUp} title="Monthly Collection Trend" subtitle="Amounts received per month" />
               <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
                 <BarChart data={monthlyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -367,10 +368,10 @@ export function ObligationsSummary({
                   <Bar dataKey="total" fill={primary} radius={[6,6,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </article>
+            </Card>
           ) : (
             /* Pie fallback if single month */
-            <article className="rounded-xl border border-border bg-card p-4">
+            <Card accentColor="success" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
               <SectionTitle icon={Layers} title="Distribution by Type" subtitle="Share of total" />
               <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
                 <PieChart>
@@ -380,7 +381,7 @@ export function ObligationsSummary({
                   <Tooltip formatter={(v) => v !== undefined ? fmt(Number(v)) : ""} />
                 </PieChart>
               </ResponsiveContainer>
-            </article>
+            </Card>
           )}
         </section>
       )}
@@ -574,7 +575,7 @@ export function ObligationsSummary({
         </header>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {typeBreakdown.map((t, i) => (
-            <article key={t.name} className="rounded-xl border border-border bg-card p-4 space-y-1.5">
+            <Card key={t.name} accentColor="primary" className="p-4 space-y-1.5 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md transition-all">
               <header className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-foreground m-0">{t.name}</h3>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold text-white" style={{ background: COLORS[i % COLORS.length] }}>
@@ -588,7 +589,7 @@ export function ObligationsSummary({
                   style={{ width: `${totalAmount ? (t.total / totalAmount) * 100 : 0}%`, background: COLORS[i % COLORS.length] }} />
               </div>
               <p className="text-[10px] text-muted-foreground text-right m-0">{totalAmount ? ((t.total / totalAmount) * 100).toFixed(1) : 0}%</p>
-            </article>
+            </Card>
           ))}
         </div>
       </section>
