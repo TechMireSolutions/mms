@@ -10,10 +10,15 @@ export interface InputProps
  * Standard input — aligned with {@link FORM_INPUT} for consistent form theme.
  */
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, id, name, ...props }, ref) => {
+    const fallbackId = React.useId();
+    const resolvedId = id || fallbackId;
+    const resolvedName = name || fallbackId;
     return (
       <input
         type={type}
+        id={resolvedId}
+        name={resolvedName}
         className={cn(FORM_INPUT, className)}
         ref={ref}
         {...props}

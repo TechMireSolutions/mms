@@ -77,6 +77,7 @@ export function EditableSelect({
   const [open, setOpen] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const customInputId = React.useId();
 
   const handleAdd = () => {
     if (!onUpdateOptions) return;
@@ -169,7 +170,7 @@ export function EditableSelect({
                       : "text-foreground"
                 }`}
               >
-                <span className="flex items-center gap-2 truncate">
+                <span className="truncate flex items-center gap-2">
                   <Check className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? "opacity-100" : "opacity-0"}`} />
                   <span className="truncate">{option}</span>
                 </span>
@@ -194,6 +195,8 @@ export function EditableSelect({
         {canEditOptions ? (
         <div className="p-2 flex gap-1.5 bg-muted/20 flex-shrink-0">
           <Input
+            id={customInputId}
+            name={customInputId}
             type="text"
             value={customValue}
             onChange={(event) => setCustomValue(event.target.value)}
@@ -294,6 +297,8 @@ interface TagsInputProps {
   selected?: string[];
   predefined?: string[];
   onChange: (tags: string[]) => void;
+  id?: string;
+  name?: string;
 }
 
 /**
@@ -302,10 +307,13 @@ interface TagsInputProps {
  * @param props Component properties.
  * @returns React element.
  */
-function TagsInput({ selected = [], predefined = [], onChange }: TagsInputProps): React.JSX.Element {
+function TagsInput({ selected = [], predefined = [], onChange, id, name }: TagsInputProps): React.JSX.Element {
   const { t } = useTranslation();
   const [inputVal, setInputVal] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const fallbackId = React.useId();
+  const resolvedId = id || fallbackId;
+  const resolvedName = name || fallbackId;
 
   const toggle = (tag: string): void => {
     if (selected.includes(tag)) {
@@ -331,32 +339,33 @@ function TagsInput({ selected = [], predefined = [], onChange }: TagsInputProps)
     }
   };
 
+  const remove = (tag: string): void => {
+    onChange(selected.filter((selectedTag) => selectedTag !== tag));
+  };
+
   return (
-    <div className="space-y-2.5">
-      
+    <div className="space-y-2">
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {selected.map((tag) => (
-            <span
+            <div
               key={tag}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20"
             >
-              {tag}
-              <Button
+              <span>{tag}</span>
+              <button
                 type="button"
-                variant="ghost"
-                onClick={() => toggle(tag)}
-                className="hover:text-primary/60 transition-colors min-h-[44px] min-w-[44px] p-0 flex items-center justify-center -me-2"
+                onClick={() => remove(tag)}
+                className="hover:text-destructive focus:outline-none transition-colors"
                 aria-label={t("contacts.form.removeTag", { tag })}
               >
                 <X className="w-3 h-3" />
-              </Button>
-            </span>
+              </button>
+            </div>
           ))}
         </div>
       )}
 
-      
       {predefined.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {predefined.filter((predefinedTag) => !selected.includes(predefinedTag)).map((tag) => (
@@ -376,6 +385,8 @@ function TagsInput({ selected = [], predefined = [], onChange }: TagsInputProps)
       
       <div className="flex gap-2">
         <Input
+          id={resolvedId}
+          name={resolvedName}
           ref={inputRef}
           className="flex-1"
           value={inputVal}
@@ -432,12 +443,14 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
   if (field.type === "tags" || field.type === "multiselect" || field.type === "multi_select") {
     const selected = Array.isArray(value) ? (value as string[]) : [];
     const predefined = getOptionsArray(field.options);
-    return <TagsInput selected={selected} predefined={predefined} onChange={onChange} />;
+    return <TagsInput id={field.key} name={field.key} selected={selected} predefined={predefined} onChange={onChange} />;
   }
 
   if (field.type === "textarea") {
     return (
       <textarea
+        id={field.key}
+        name={field.key}
         className={cn(INPUT, "resize-none h-20", error && "border-destructive focus-visible:ring-destructive")}
         value={String(displayValue)}
         onChange={(event) => onChange(event.target.value)}
@@ -450,6 +463,8 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
   if (field.type === "select" || field.type === "single_select") {
     return (
       <FormSelect
+        id={field.key}
+        name={field.key}
         value={String(displayValue)}
         onChange={(val) => onChange(val)}
         options={getOptionsArray(field.options)}
@@ -524,6 +539,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
       };
       reader.readAsDataURL(file);
       event.target.value = "";
+      return;
     };
 
     if (isAvatar) {
@@ -550,7 +566,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
             </div>
             <label className="absolute -bottom-1 -end-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/90 transition-colors z-10">
               <Camera className="w-3 h-3" />
-              <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+              <input id={`${field.key}-avatar-upload`} name={`${field.key}-avatar-upload`} type="file" accept="image/*" className="hidden" onChange={handleFile} />
             </label>
           </div>
           <div className="text-xs text-muted-foreground">
@@ -588,7 +604,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
           <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-border rounded-xl hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
             <Upload className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs font-bold text-muted-foreground">{t("contacts.form.clickToUploadDocument")}</span>
-            <input type="file" className="hidden" onChange={handleFile} />
+            <input id={`${field.key}-document-upload`} name={`${field.key}-document-upload`} type="file" className="hidden" onChange={handleFile} />
           </label>
         )}
       </div>
@@ -601,6 +617,8 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
       <div className="space-y-2">
         <div className="grid grid-cols-2 gap-2">
           <Input
+            id={`${field.key}-lat`}
+            name={`${field.key}-lat`}
             type="number"
             step="any"
             placeholder={t("contacts.form.latitude")}
@@ -608,6 +626,8 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
             onChange={(event) => onChange({ ...loc, lat: parseFloat(event.target.value) })}
           />
           <Input
+            id={`${field.key}-lng`}
+            name={`${field.key}-lng`}
             type="number"
             step="any"
             placeholder={t("contacts.form.longitude")}
@@ -679,6 +699,8 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
     }
     return (
       <Input
+        id={field.key}
+        name={field.key}
         type="datetime-local"
         value={formattedVal}
         onChange={(event) => onChange(event.target.value ? new Date(event.target.value).toISOString() : null)}
@@ -693,6 +715,8 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
     return (
       <div className="relative">
         <Input
+          id={field.key}
+          name={field.key}
           type="text"
           value={String(displayValue)}
           onChange={(event) => {
@@ -716,6 +740,8 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
   if (field.type === "date") {
     return (
       <DatePicker
+        id={field.key}
+        name={field.key}
         value={String(displayValue)}
         onChange={(dateVal) => onChange(dateVal)}
         disabled={disabled}
@@ -726,6 +752,8 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
   const inputType = field.type === "number" ? "number" : "text";
   return (
     <Input
+      id={field.key}
+      name={field.key}
       type={inputType}
       value={String(displayValue)}
       onChange={(event) => onChange(event.target.value)}

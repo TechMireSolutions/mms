@@ -15,6 +15,7 @@ export interface FormSelectProps {
   disabled?: boolean;
   className?: string;
   id?: string;
+  name?: string;
   "aria-label"?: string;
 }
 
@@ -32,12 +33,14 @@ export function FormSelect({
   disabled = false,
   className,
   id,
+  name,
   "aria-label": ariaLabel,
 }: FormSelectProps): React.JSX.Element {
   return (
     <div className={cn("relative", className)}>
       <select
         id={id}
+        name={name}
         aria-label={ariaLabel}
         disabled={disabled}
         value={value}
