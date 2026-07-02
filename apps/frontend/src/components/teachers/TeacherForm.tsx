@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { School, User, Briefcase } from "lucide-react";
+import { School, User, Briefcase, Hash, GraduationCap } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "../ui/DatePicker";
@@ -114,25 +114,32 @@ export function TeacherForm({
   };
 
   const footerStart = linkedContact?.name ? (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      <span className="font-semibold text-foreground">{linkedContact.name}</span>
-      <div className="flex items-center gap-2 border-s border-border ps-3">
-        <span>ID: {teacherDraft.employeeId || "—"}</span>
-        <span className="border-s border-border ps-2 capitalize">
-          Status: {teacherDraft.status}
+    <div className="flex flex-wrap items-center gap-2.5 text-xs">
+      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
+        {linkedContact.name}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
+          ID: {teacherDraft.employeeId || "—"}
+        </span>
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20 text-[10px] capitalize">
+          {teacherDraft.status}
         </span>
       </div>
     </div>
   ) : (
-    <span className="text-xs text-destructive">Contact is required</span>
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
+      Contact is required
+    </span>
   );
 
   const renderBasic = () => (
     <div className="space-y-4 text-left">
-      <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
-        <div>
+      <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
+          <User className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.field.contact") || "Contact"}</h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{t("teachers.form.contactHint")}</p>
         </div>
         <ContactPicker
           label={t("teachers.field.contact") || "Contact"}
@@ -149,7 +156,12 @@ export function TeacherForm({
         )}
       </section>
 
-      <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+      <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
+          <School className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Details</h3>
+        </div>
         <Field label={t("teachers.field.specialization") || "Specialization"}>
           <select
             className={FORM_SELECT}
@@ -163,12 +175,15 @@ export function TeacherForm({
         </Field>
 
         <Field label="Qualification">
-          <Input
-            value={teacherDraft.qualification || ""}
-            onChange={(e) => updateDraft({ qualification: e.target.value })}
-            placeholder="e.g. Master in Islamic Studies"
-            className={FORM_INPUT}
-          />
+          <div className="relative flex items-center group/input">
+            <GraduationCap className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+            <Input
+              value={teacherDraft.qualification || ""}
+              onChange={(e) => updateDraft({ qualification: e.target.value })}
+              placeholder="e.g. Master in Islamic Studies"
+              className={`${FORM_INPUT} pl-10`}
+            />
+          </div>
         </Field>
       </section>
     </div>
@@ -176,14 +191,22 @@ export function TeacherForm({
 
   const renderEmployment = () => (
     <div className="space-y-4 text-left">
-      <section className="rounded-xl border border-border bg-card/40 p-5 space-y-4 shadow-sm">
+      <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
+        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
+          <Briefcase className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Employment Details</h3>
+        </div>
         <Field label={t("teachers.field.employeeId") || "Employee ID"} required error={errors.employeeId}>
-          <Input
-            value={teacherDraft.employeeId || ""}
-            onChange={(e) => updateDraft({ employeeId: e.target.value })}
-            placeholder="TCH-0001"
-            className={FORM_INPUT}
-          />
+          <div className="relative flex items-center group/input">
+            <Hash className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+            <Input
+              value={teacherDraft.employeeId || ""}
+              onChange={(e) => updateDraft({ employeeId: e.target.value })}
+              placeholder="TCH-0001"
+              className={`${FORM_INPUT} pl-10`}
+            />
+          </div>
         </Field>
 
         <Field label={t("teachers.field.status") || "Status"}>
