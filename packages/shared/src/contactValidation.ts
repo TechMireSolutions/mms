@@ -96,7 +96,11 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
       if (fieldDefinition.options && fieldDefinition.options.length > 0) {
         baseSchema = z.string().refine((value) => {
           if (!value) return true;
-          return fieldDefinition.options!.some(opt => opt.toLowerCase() === value.toLowerCase());
+          const valLower = value.trim().toLowerCase();
+          return fieldDefinition.options!.some(opt => {
+            if (typeof opt !== "string") return false;
+            return opt.trim().toLowerCase() === valLower;
+          });
         }, {
           message: `${fieldDefinition.label} must be one of the allowed options.`,
         });
@@ -109,9 +113,13 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
     case "multi_select": {
       if (fieldDefinition.options && fieldDefinition.options.length > 0) {
         baseSchema = z.array(z.string()).refine((values) => {
-          return values.every(valueOption =>
-            fieldDefinition.options!.some(opt => opt.toLowerCase() === valueOption.toLowerCase())
-          );
+          return values.every(valueOption => {
+            const valOptLower = valueOption.trim().toLowerCase();
+            return fieldDefinition.options!.some(opt => {
+              if (typeof opt !== "string") return false;
+              return opt.trim().toLowerCase() === valOptLower;
+            });
+          });
         }, {
           message: `${fieldDefinition.label} contains invalid options.`,
         });
