@@ -859,7 +859,7 @@ export default function ContactForm({
     const emergencyContacts = contactDraft.emergencyContacts || [];
     const addEmergency = () =>
       updateDraft({
-        emergencyContacts: [...emergencyContacts, { name: "", relationship: "Father", phone: "", contactId: "" }],
+        emergencyContacts: [...emergencyContacts, { relationship: "Father", contactId: "" }],
       });
     const removeEmergency = (idx: number) =>
       updateDraft({ emergencyContacts: emergencyContacts.filter((_, i) => i !== idx) });
@@ -890,8 +890,6 @@ export default function ContactForm({
           <AnimatePresence initial={false}>
             {emergencyContacts.map((em, idx) => {
               const pickerError = getListItemError("emergency", "contactId", idx);
-              const nameError = getListItemError("emergency", "name", idx);
-              const phoneError = getListItemError("emergency", "phone", idx);
               
               return (
                 <motion.div
@@ -918,11 +916,7 @@ export default function ContactForm({
                       label={t("contacts.form.linkContact")}
                       value={em.contactId ?? null}
                       onChange={(id) => {
-                        const nextId = id != null ? String(id) : "";
-                        updateEmergency(idx, { 
-                          contactId: nextId, 
-                          ...(nextId ? { name: "", phone: "" } : {}) 
-                        });
+                        updateEmergency(idx, { contactId: id != null ? String(id) : "" });
                       }}
                       excludeIds={excludeIds(idx)}
                       hasPhone={true}
@@ -942,33 +936,6 @@ export default function ContactForm({
                         className="w-full"
                       />
                     </Field>
-
-                    {!em.contactId && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                        <Field label={t("contacts.reportFields.fullName")} error={nameError}>
-                          <div className="relative flex items-center group/input">
-                            <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                            <Input
-                              value={em.name || ""}
-                              onChange={(e) => updateEmergency(idx, { name: e.target.value })}
-                              placeholder="Emergency Contact Name"
-                              className="min-h-[44px] pl-10"
-                            />
-                          </div>
-                        </Field>
-                        <Field label={t("contacts.form.phoneNumber")} error={phoneError}>
-                          <div className="relative flex items-center group/input">
-                            <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                            <Input
-                              value={em.phone || ""}
-                              onChange={(e) => updateEmergency(idx, { phone: e.target.value })}
-                              placeholder="Emergency Contact Phone"
-                              className="min-h-[44px] pl-10"
-                            />
-                          </div>
-                        </Field>
-                      </div>
-                    )}
                   </div>
                 </motion.div>
               );
