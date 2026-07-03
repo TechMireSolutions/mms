@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2, Trash2, RotateCcw } from "lucide-react";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { getPrimaryPhone, hasWhatsApp, Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab } from "@mms/shared";
+import { getPrimaryPhone, hasWhatsApp, Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab, getDisplayName } from "@mms/shared";
 import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
@@ -41,7 +41,7 @@ import {
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
-const MessageComposerPanel = lazy(() => import("@/tenant/features/contacts/components/MessageComposerPanel"));
+const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
 const ContactsSetupPanel = lazy(() => import("@/tenant/features/contacts/components/ContactsSetupPanel"));
 const ContactSyncPanel = lazy(() => import("@/tenant/features/contacts/components/ContactSyncPanel"));
 
@@ -661,9 +661,13 @@ function ContactsInner() {
             />
           )}
           {messagingTarget && (
-            <MessageComposerPanel
+            <MessageComposer
               channel={messagingTarget.channel}
-              contacts={messagingTarget.contacts}
+              recipients={messagingTarget.contacts.map((c) => ({
+                id: c.id,
+                name: getDisplayName(c),
+                phone: getPrimaryPhone(c) || "",
+              }))}
               onClose={() => setMessagingTarget(null)}
             />
           )}
