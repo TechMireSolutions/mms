@@ -305,11 +305,14 @@ export default function ContactsTable({
                   className="cursor-pointer"
                 />
               </th>
-              {columns.map((col) => (
-                COL_SORT_FIELD[col.id]
-                  ? <TH key={col.id} field={COL_SORT_FIELD[col.id]}>{col.label}</TH>
-                  : <th key={col.id} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{col.label}</th>
-              ))}
+              {columns.map((col) => {
+                const sortFieldKey = COL_SORT_FIELD[col.id] || col.sortField;
+                return sortFieldKey ? (
+                  <TH key={col.id} field={sortFieldKey}>{col.label}</TH>
+                ) : (
+                  <th key={col.id} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{col.label}</th>
+                );
+              })}
               <th className="px-4 py-3 w-16" />
             </tr>
           </thead>

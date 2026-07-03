@@ -557,14 +557,22 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   );
 
   const availableColumns = useMemo(() => {
-    return columnRegistry.map((column) => ({ id: column.key, label: column.label, sortField: column.sortField }));
+    return columnRegistry.map((column) => ({
+      id: column.key,
+      label: column.label,
+      sortField: column.sortable !== false ? (column.sortField || column.key) : undefined
+    }));
   }, [columnRegistry]);
 
   const visibleColumns = useMemo(() => {
     return columnRegistry
       .filter((column) => column.enabled)
       .sort((a, b) => a.order - b.order)
-      .map((column) => ({ id: column.key, label: column.label, sortField: column.sortField }));
+      .map((column) => ({
+        id: column.key,
+        label: column.label,
+        sortField: column.sortable !== false ? (column.sortField || column.key) : undefined
+      }));
   }, [columnRegistry]);
 
   const systemSortOptions = useMemo<Array<{ field: string; label: string }>>(() => [
