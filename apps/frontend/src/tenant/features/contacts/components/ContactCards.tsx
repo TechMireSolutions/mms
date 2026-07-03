@@ -239,10 +239,10 @@ export default function ContactCards({
                   isSelected
                     ? "bg-primary/70 group-hover:bg-primary"
                     : contact.gender?.toLowerCase() === "male"
-                    ? "bg-blue-500/50 group-hover:bg-blue-500 dark:bg-blue-500/40 dark:group-hover:bg-blue-400"
+                    ? "bg-info/50 group-hover:bg-info"
                     : contact.gender?.toLowerCase() === "female"
-                    ? "bg-rose-500/50 group-hover:bg-rose-500 dark:bg-rose-500/40 dark:group-hover:bg-rose-400"
-                    : "bg-muted-foreground/35 group-hover:bg-muted-foreground/60 dark:bg-muted-foreground/25 dark:group-hover:bg-muted-foreground/45"
+                    ? "bg-destructive/50 group-hover:bg-destructive"
+                    : "bg-muted-foreground/35 group-hover:bg-muted-foreground/60"
                 } transition-colors duration-300`} 
               />
  
