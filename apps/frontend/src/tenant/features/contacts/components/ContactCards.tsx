@@ -47,6 +47,7 @@ interface ContactCardsProps {
   showArchived?: boolean;
   onWhatsApp: (contacts: Contact[]) => void;
   onSms: (contacts: Contact[]) => void;
+  onEmail: (contacts: Contact[]) => void;
   allContacts?: Contact[];
   canWrite?: boolean;
   canDelete?: boolean;
@@ -66,6 +67,7 @@ export default function ContactCards({
   showArchived = false,
   onWhatsApp,
   onSms,
+  onEmail,
   allContacts = [],
   canWrite = false,
   canDelete = false,
@@ -544,6 +546,7 @@ export default function ContactCards({
             onEdit={onEdit}
             onWhatsApp={onWhatsApp}
             onSms={onSms}
+            onEmail={onEmail}
             allContacts={allContacts}
           />
         </Suspense>

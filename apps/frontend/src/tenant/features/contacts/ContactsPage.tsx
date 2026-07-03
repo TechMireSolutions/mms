@@ -572,6 +572,7 @@ function ContactsInner() {
                           showArchived={viewingDeleted}
                           onWhatsApp={(targets) => setMessagingTarget({ channel: "whatsapp", contacts: targets })}
                           onSms={(targets) => setMessagingTarget({ channel: "sms", contacts: targets })}
+                          onEmail={(targets) => setMessagingTarget({ channel: "email", contacts: targets })}
                           allContacts={allContactsForLinks}
                           canWrite={canWrite}
                           canDelete={canDelete}
@@ -589,6 +590,7 @@ function ContactsInner() {
                           showArchived={viewingDeleted}
                           onWhatsApp={(targets) => setMessagingTarget({ channel: "whatsapp", contacts: targets })}
                           onSms={(targets) => setMessagingTarget({ channel: "sms", contacts: targets })}
+                          onEmail={(targets) => setMessagingTarget({ channel: "email", contacts: targets })}
                           onSort={handleSort}
                           sortField={sortField} sortDir={sortDir}
                           columns={tableColumns}
@@ -667,6 +669,7 @@ function ContactsInner() {
                 id: c.id,
                 name: getDisplayName(c),
                 phone: getPrimaryPhone(c) || "",
+                email: c.email || "",
               }))}
               onClose={() => setMessagingTarget(null)}
             />

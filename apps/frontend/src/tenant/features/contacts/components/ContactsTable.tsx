@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal, MessageCircle, MessageSquare,
   Edit2, Trash2, ChevronUp, ChevronDown,
-  Copy, Eye, MapPin, User, RotateCcw,
+  Copy, Eye, MapPin, User, RotateCcw, Mail,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -84,6 +84,7 @@ interface ContactsTableProps {
   showArchived?: boolean;
   onWhatsApp: (contacts: Contact[]) => void;
   onSms: (contacts: Contact[]) => void;
+  onEmail: (contacts: Contact[]) => void;
   sortField: string;
   sortDir: "asc" | "desc";
   onSort: (field: string) => void;
@@ -124,6 +125,7 @@ export default function ContactsTable({
   showArchived = false,
   onWhatsApp,
   onSms,
+  onEmail,
   sortField,
   sortDir,
   onSort,
@@ -400,6 +402,9 @@ export default function ContactsTable({
                               <DropdownMenuItem disabled={!hasWhatsApp(contact)} onClick={() => onWhatsApp([contact])}>
                                 <MessageCircle className={`w-3.5 h-3.5 mr-2 ${hasWhatsApp(contact) ? "text-success" : "text-muted-foreground"}`} /> {t('contacts.whatsapp')}
                               </DropdownMenuItem>
+                              <DropdownMenuItem disabled={!contact.email?.trim()} onClick={() => onEmail([contact])}>
+                                <Mail className={`w-3.5 h-3.5 mr-2 ${contact.email?.trim() ? "text-warning" : "text-muted-foreground"}`} /> {t("contacts.detail.emailAction")}
+                              </DropdownMenuItem>
                               <DropdownMenuItem disabled={!getPrimaryPhone(contact)} onClick={() => onSms([contact])}>
                                 <MessageSquare className="w-3.5 h-3.5 mr-2 text-primary" /> {t("contacts.sms")}
                               </DropdownMenuItem>
@@ -439,6 +444,7 @@ export default function ContactsTable({
               onEdit={(contact) => { setViewContact(null); if (canWrite) onEdit(contact); }}
               onWhatsApp={onWhatsApp}
               onSms={onSms}
+              onEmail={onEmail}
               allContacts={allContacts}
               onUpdateContact={canWrite ? onUpdateContact : undefined}
             />

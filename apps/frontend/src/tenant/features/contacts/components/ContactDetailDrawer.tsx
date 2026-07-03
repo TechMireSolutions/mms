@@ -73,6 +73,7 @@ interface ContactDetailDrawerProps {
   onEdit: (contact: Contact) => void;
   onWhatsApp: (contacts: Contact[]) => void;
   onSms: (contacts: Contact[]) => void;
+  onEmail: (contacts: Contact[]) => void;
   allContacts?: Contact[];
   onUpdateContact?: (contact: Contact) => void;
 }
@@ -88,6 +89,7 @@ export default function ContactDetailDrawer({
   onEdit,
   onWhatsApp,
   onSms,
+  onEmail,
   allContacts = [],
   onUpdateContact,
 }: ContactDetailDrawerProps): React.JSX.Element {
@@ -390,15 +392,17 @@ export default function ContactDetailDrawer({
                         <span className="text-[10px] font-bold">{t('contacts.detail.call')}</span>
                       </a>
                     )}
-                    {primaryEmail && (
-                      <a
-                        href={`mailto:${primaryEmail}`}
-                        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${DETAIL_STYLES.emailAction}`}
-                      >
-                        <Mail className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">{t('contacts.detail.emailAction')}</span>
-                      </a>
-                    )}
+                     {primaryEmail && (
+                       <Button
+                         variant="ghost"
+                         onClick={() => onEmail([c])}
+                         className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border h-auto font-normal transition-all shadow-none ${DETAIL_STYLES.emailAction}`}
+                         type="button"
+                       >
+                         <Mail className="w-5 h-5" />
+                         <span className="text-[10px] font-bold">{t('contacts.detail.emailAction')}</span>
+                       </Button>
+                     )}
                   </div>
 
                   
