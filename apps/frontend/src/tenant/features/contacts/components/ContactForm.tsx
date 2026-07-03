@@ -95,7 +95,7 @@ export default function ContactForm({
       firstName: "",
       lastName: "",
       name: "",
-      gender: "Unspecified",
+      gender: "unspecified",
       dob: "",
       cnic: "",
       isSyed: false,
@@ -338,7 +338,7 @@ export default function ContactForm({
               {contactDraft.name || t("contacts.form.createNewContact") || "New Contact"}
             </h3>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
-              {contactDraft.gender && contactDraft.gender !== "Unspecified" && (
+              {contactDraft.gender && contactDraft.gender !== "unspecified" && (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground border border-border/80">
                   {contactDraft.gender}
                 </span>
@@ -398,8 +398,8 @@ export default function ContactForm({
             id="gender"
           >
             <EditableSelect
-              options={genders.length > 0 ? genders : ["Male", "Female", "Other", "Unspecified"]}
-              value={contactDraft.gender || "Unspecified"}
+              options={genders.length > 0 ? genders : ["male", "female", "other", "unspecified"]}
+              value={contactDraft.gender || "unspecified"}
               onChange={(val) => updateDraft({ gender: val })}
               placeholder={t("contacts.form.selectOption")}
               className="w-full"

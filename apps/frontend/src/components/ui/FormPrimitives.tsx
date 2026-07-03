@@ -63,6 +63,14 @@ interface EditableSelectProps {
   className?: string;
 }
 
+const formatOptionLabel = (option: string): string => {
+  if (option === "male") return "Male";
+  if (option === "female") return "Female";
+  if (option === "other") return "Other";
+  if (option === "unspecified") return "Unspecified";
+  return option;
+};
+
 export function EditableSelect({
   options,
   value,
@@ -129,7 +137,7 @@ export function EditableSelect({
           className
         )}
       >
-        <span className="truncate">{value || resolvedPlaceholder}</span>
+        <span className="truncate">{formatOptionLabel(value) || resolvedPlaceholder}</span>
         <ChevronDown className={`w-4 h-4 flex-shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </PopoverTrigger>
 
@@ -172,7 +180,7 @@ export function EditableSelect({
               >
                 <span className="truncate flex items-center gap-2">
                   <Check className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? "opacity-100" : "opacity-0"}`} />
-                  <span className="truncate">{option}</span>
+                  <span className="truncate">{formatOptionLabel(option)}</span>
                 </span>
                 {canEditOptions ? (
                   <Button

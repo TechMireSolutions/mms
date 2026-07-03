@@ -291,7 +291,7 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
     { key: "isSyed",         label: "Is Syed",                type: "boolean", description: "Syed (Hashemite) lineage indicator. Cultural/genealogical indicator.", defaultValue: false, permissions: [], enabled: true, order: 1, required: false },
     { key: "firstName",      label: "First Name",             type: "text",    description: "First name input — required for all contacts.", defaultValue: "", permissions: [], enabled: true, order: 2, required: true },
     { key: "lastName",       label: "Last Name",              type: "text",    description: "Last name input. Combined with first name for full identification.", defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
-    { key: "gender",         label: "Gender (Male / Female)", type: "select",  description: "Gender selector. Enables personalization & inclusive communication.", options: ["Male", "Female"], defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
+    { key: "gender",         label: "Gender (Male / Female)", type: "select",  description: "Gender selector. Enables personalization & inclusive communication.", options: ["male", "female"], defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
     { key: "dob",            label: "Date of Birth",          type: "date",    description: "Date of birth for age tracking & milestone events.", defaultValue: "", permissions: [], enabled: true, order: 5, required: false },
   ],
   phones: [
