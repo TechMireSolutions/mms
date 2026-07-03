@@ -94,7 +94,10 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
     case "select":
     case "single_select": {
       if (fieldDefinition.options && fieldDefinition.options.length > 0) {
-        baseSchema = z.string().refine((value) => fieldDefinition.options!.includes(value), {
+        baseSchema = z.string().refine((value) => {
+          if (!value) return true;
+          return fieldDefinition.options!.some(opt => opt.toLowerCase() === value.toLowerCase());
+        }, {
           message: `${fieldDefinition.label} must be one of the allowed options.`,
         });
       } else {
@@ -105,7 +108,11 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
     case "multiselect":
     case "multi_select": {
       if (fieldDefinition.options && fieldDefinition.options.length > 0) {
-        baseSchema = z.array(z.string()).refine((values) => values.every(valueOption => fieldDefinition.options!.includes(valueOption)), {
+        baseSchema = z.array(z.string()).refine((values) => {
+          return values.every(valueOption =>
+            fieldDefinition.options!.some(opt => opt.toLowerCase() === valueOption.toLowerCase())
+          );
+        }, {
           message: `${fieldDefinition.label} contains invalid options.`,
         });
       } else {

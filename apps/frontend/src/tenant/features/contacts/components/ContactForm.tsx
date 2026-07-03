@@ -400,7 +400,7 @@ export default function ContactForm({
             <EditableSelect
               options={genders.length > 0 ? genders : ["male", "female", "other", "unspecified"]}
               value={contactDraft.gender || ""}
-              onChange={(val) => updateDraft({ gender: val })}
+              onChange={(val) => updateDraft({ gender: val.toLowerCase() })}
               placeholder={t("contacts.form.selectOption")}
               className="w-full"
             />
