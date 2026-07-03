@@ -250,7 +250,7 @@ export default function ContactCards({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-auto p-0 hover:bg-transparent flex flex-1 items-start gap-2.5 min-w-0 text-left cursor-pointer group hover:text-foreground shadow-none justify-start"
+                  className="h-auto p-0 hover:bg-transparent flex flex-1 items-start gap-2.5 min-w-0 text-left cursor-pointer hover:text-foreground shadow-none justify-start"
                   onClick={() => setViewContact(contact)}
                   aria-label={t("contacts.table.viewProfile") || "View Profile"}
                 >
@@ -278,7 +278,7 @@ export default function ContactCards({
                       type="button"
                       variant="ghost"
                       onClick={() => handleCopyContactValue(phone, `phone:${contact.id}`)}
-                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
+                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-2 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
                       aria-label={`${t("contacts.detail.call")}: ${phone}. ${t("contacts.table.copy")}`}
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
@@ -313,7 +313,7 @@ export default function ContactCards({
                       type="button"
                       variant="ghost"
                       onClick={() => handleCopyContactValue(email, `email:${contact.id}`)}
-                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
+                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-2 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
                       aria-label={`${t("contacts.reportFields.email")}: ${email}. ${t("contacts.table.copy")}`}
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
@@ -408,7 +408,7 @@ export default function ContactCards({
                     whileTap={hasWhatsApp(contact) ? { scale: 0.95 } : undefined}
                     onClick={() => onWhatsApp([contact])}
                     className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${hasWhatsApp(contact)
-                        ? "border-success/30 dark:border-success/20 bg-success/5 text-success hover:bg-success/10 cursor-pointer"
+                        ? "border-success/30 dark:border-success/20 bg-success/5 text-success hover:text-success hover:bg-success/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
                       }`}
                     title={t("contacts.whatsapp")}
@@ -425,7 +425,7 @@ export default function ContactCards({
                     whileTap={phone ? { scale: 0.95 } : undefined}
                     onClick={() => onSms([contact])}
                     className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${phone
-                        ? "border-primary/30 dark:border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer"
+                        ? "border-primary/30 dark:border-primary/20 bg-primary/5 text-primary hover:text-primary hover:bg-primary/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
                       }`}
                     title={t("contacts.sms")}
@@ -455,7 +455,7 @@ export default function ContactCards({
                         variant="outline"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="p-2.5 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted text-muted-foreground transition-colors cursor-pointer h-auto shadow-none"
+                        className="p-2.5 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted hover:text-foreground text-muted-foreground transition-colors cursor-pointer h-auto shadow-none"
                         aria-label={t("contacts.table.actions")}
                       >
                         <MoreHorizontal aria-hidden="true" className="w-4 h-4" />
