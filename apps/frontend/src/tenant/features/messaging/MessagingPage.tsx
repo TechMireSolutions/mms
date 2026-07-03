@@ -185,15 +185,15 @@ export default function MessagingPage(): React.JSX.Element {
       {/* Page Header */}
       <PageHeader
         icon={MessageSquare}
-        title="Messaging Center"
-        subtitle="Unified SMS and WhatsApp communication channel with personalization"
+        title={t('messaging.title')}
+        subtitle={t('messaging.subtitle')}
       />
 
       {/* Metrics Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Total Sent Messages</span>
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.total')}</span>
             <h3 className="text-2xl font-black text-foreground">{stats.total}</h3>
           </div>
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
@@ -203,7 +203,7 @@ export default function MessagingPage(): React.JSX.Element {
 
         <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">SMS Dispatched</span>
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.sms')}</span>
             <h3 className="text-2xl font-black text-foreground">{stats.sms}</h3>
           </div>
           <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center text-info">
@@ -213,7 +213,7 @@ export default function MessagingPage(): React.JSX.Element {
 
         <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">WhatsApp Opened</span>
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.whatsapp')}</span>
             <h3 className="text-2xl font-black text-foreground">{stats.wa}</h3>
           </div>
           <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
@@ -227,9 +227,9 @@ export default function MessagingPage(): React.JSX.Element {
         value={activeTab}
         onChange={(tab: 'logs' | 'compose' | 'templates') => setActiveTab(tab)}
         tabs={[
-          { key: 'logs', label: 'Message History Log' },
-          { key: 'compose', label: 'Create Campaign' },
-          { key: 'templates', label: 'Templates Setup' }
+          { key: 'logs', label: t('messaging.tabs.logs') },
+          { key: 'compose', label: t('messaging.tabs.compose') },
+          { key: 'templates', label: t('messaging.tabs.templates') }
         ]}
       />
 
@@ -240,7 +240,7 @@ export default function MessagingPage(): React.JSX.Element {
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by recipient or content..."
+                  placeholder={t('messaging.search.placeholder')}
                   value={searchLog}
                   onChange={(e) => setSearchLog(e.target.value)}
                   className="pl-9 h-9"
@@ -273,7 +273,7 @@ export default function MessagingPage(): React.JSX.Element {
                 className="text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="w-4 h-4 mr-1.5" />
-                Clear Log History
+                {t('messaging.clearLogs')}
               </Button>
             )}
           </div>
@@ -336,13 +336,13 @@ export default function MessagingPage(): React.JSX.Element {
           <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
             <div className="flex justify-between items-start flex-wrap gap-4">
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-foreground">1. Select Recipients</h4>
-                <p className="text-xs text-muted-foreground">Select one or more targets from contacts list (requires registered phone number).</p>
+                <h4 className="text-sm font-bold text-foreground">1. {t('messaging.selectRecipients')}</h4>
+                <p className="text-xs text-muted-foreground">{t('messaging.selectRecipientsDesc')}</p>
               </div>
 
               {/* Gender Filter Segmented Controls */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground flex items-center gap-1"><Filter className="w-3 h-3" /> Gender:</span>
+                <span className="text-xs text-muted-foreground flex items-center gap-1"><Filter className="w-3 h-3" /> {t('contacts.reportFields.gender')}:</span>
                 <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-[11px]">
                   {(['all', 'male', 'female', 'unspecified'] as const).map((gender) => (
                     <button
@@ -419,8 +419,8 @@ export default function MessagingPage(): React.JSX.Element {
           <div className="border border-border rounded-xl bg-card p-4 space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-foreground">2. Confirm Recipients</h4>
-                <p className="text-xs text-muted-foreground">Verify targets and dispatch message channel campaign.</p>
+                <h4 className="text-sm font-bold text-foreground">2. {t('messaging.confirmRecipients')}</h4>
+                <p className="text-xs text-muted-foreground">{t('messaging.confirmRecipientsDesc')}</p>
               </div>
 
               <div className="p-3 bg-muted/40 rounded-xl space-y-2 border border-border/40">
@@ -469,9 +469,9 @@ export default function MessagingPage(): React.JSX.Element {
           <div className="border border-border rounded-xl bg-card p-4 space-y-4">
             <div className="space-y-1">
               <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                <Plus className="w-4 h-4 text-primary" /> Create Preset Template
+                <Plus className="w-4 h-4 text-primary" /> {t('messaging.createPreset')}
               </h4>
-              <p className="text-xs text-muted-foreground">Define reusable text copy. Use <code>{'{name}'}</code> to personalize.</p>
+              <p className="text-xs text-muted-foreground">{t('messaging.createPresetDesc')}</p>
             </div>
 
             <form onSubmit={handleCreateTemplate} className="space-y-3">
@@ -488,7 +488,7 @@ export default function MessagingPage(): React.JSX.Element {
               </div>
 
               <div>
-                <label className={FORM_LABEL} htmlFor="tplBody">Message Body</label>
+                <label className={FORM_LABEL} htmlFor="tplBody">{t('contacts.messageBody')}</label>
                 <textarea
                   id="tplBody"
                   value={templateBody}
@@ -502,7 +502,7 @@ export default function MessagingPage(): React.JSX.Element {
 
               <Button type="submit" className="w-full font-bold">
                 <Check className="w-4 h-4 mr-1.5" />
-                Save New Template
+                {t('messaging.saveTemplate')}
               </Button>
             </form>
           </div>
@@ -511,9 +511,9 @@ export default function MessagingPage(): React.JSX.Element {
           <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
             <div className="space-y-1">
               <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                <Tag className="w-4 h-4 text-muted-foreground" /> Configured Presets
+                <Tag className="w-4 h-4 text-muted-foreground" /> {t('messaging.configuredPresets')}
               </h4>
-              <p className="text-xs text-muted-foreground">List of active template presets for campaigns.</p>
+              <p className="text-xs text-muted-foreground">{t('messaging.configuredPresetsDesc')}</p>
             </div>
 
             <div className="overflow-x-auto border border-border/50 rounded-lg">
