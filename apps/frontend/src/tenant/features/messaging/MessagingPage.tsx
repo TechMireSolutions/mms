@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  MessageSquare, MessageCircle, Send, Search, CheckCircle, 
-  Trash2, User, Clock, Filter, AlertCircle, FileText
+  MessageSquare, MessageCircle, Send, Search, 
+  Trash2, User, Clock
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useContactsCollection } from '@/tenant/features/contacts/hooks/useContacts';
-import { getDisplayName, getPrimaryPhone, formatDate, type Contact, type Message } from '@mms/shared';
+import { getDisplayName, getPrimaryPhone, formatDate, type Message } from '@mms/shared';
 import MessageComposer, { type MessagingRecipient } from '@/components/ui/MessageComposer';
 import { notify } from '@/lib/notify';
 

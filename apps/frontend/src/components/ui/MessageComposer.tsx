@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { MessageCircle, MessageSquare, User, Info, Sparkles } from 'lucide-react';
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { openDeviceSmsComposer } from '@/lib/deviceSms';
-import { notify } from '@/lib/notify';
 import { FormModal } from '@/components/ui/FormModal';
 import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormPrimitives';
