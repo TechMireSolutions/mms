@@ -22,6 +22,7 @@ export interface ContactPickerProps {
   contacts?: Contact[];
   excludeIds?: (string | number | null)[];
   filterGender?: string;
+  hasPhone?: boolean;
   /** Show "Create contact" in the search dropdown. Default true. */
   allowCreate?: boolean;
   /** Prefill / lock fields when opening the shared contact form (e.g. father = male). */
@@ -42,6 +43,7 @@ export default function ContactPicker({
   contacts,
   excludeIds = [],
   filterGender,
+  hasPhone,
   allowCreate = true,
   createDefaults,
   onAvatarChange,
@@ -65,6 +67,7 @@ export default function ContactPicker({
     limit: 8,
     search: debouncedQuery,
     gender: filterGender,
+    hasPhone,
     enabled: serverMode && open,
   });
   const { data: selectedFromServer } = useContactById(
@@ -79,6 +82,7 @@ export default function ContactPicker({
   const matches = directory.filter((contact) => {
     const contactPhone = (contact.phone as string | undefined) || contact.phones?.[0]?.number || '';
     if (normalizedExcludeIds.includes(String(contact.id))) return false;
+    if (hasPhone && (!contactPhone || String(contactPhone).trim().length === 0)) return false;
     if (serverMode) return true;
     return (
       contact.name.toLowerCase().includes(query.toLowerCase()) || contactPhone.includes(query)

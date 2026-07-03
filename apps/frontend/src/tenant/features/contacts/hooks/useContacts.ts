@@ -42,6 +42,7 @@ export interface ContactsPaginatedParams {
   includeDeleted?: boolean;
   sortField?: string;
   sortDir?: 'asc' | 'desc';
+  hasPhone?: boolean;
   enabled?: boolean;
 }
 
@@ -52,6 +53,7 @@ function buildContactsPageUrl(params: ContactsPaginatedParams): string {
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
   if (params.gender) queryParams.set('gender', params.gender);
   if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
+  if (params.hasPhone) queryParams.set('hasPhone', 'true');
   if (params.sortField) queryParams.set('sortField', params.sortField);
   if (params.sortDir) queryParams.set('sortDir', params.sortDir);
   return `${CONTACTS_API}?${queryParams.toString()}`;

@@ -165,6 +165,7 @@ export async function contactRoutes(
           includeDeleted,
           sortField: contactsListQuery.sortField,
           sortDir: contactsListQuery.sortDir,
+          hasPhone: contactsListQuery.hasPhone === 'true',
         });
         return reply.send({
           ...page,

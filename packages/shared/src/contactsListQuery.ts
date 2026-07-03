@@ -10,6 +10,7 @@ export interface ContactsListQuery {
   includeDeleted?: boolean;
   sortField?: string;
   sortDir?: 'asc' | 'desc';
+  hasPhone?: boolean;
 }
 
 export interface ContactsListPageResult {
@@ -24,6 +25,12 @@ export function filterContactsForQuery(contacts: Contact[], query: ContactsListQ
   let rows = query.includeDeleted ? contacts : filterActiveContacts(contacts);
   if (query.gender) {
     rows = rows.filter((contact) => contact.gender === query.gender);
+  }
+  if (query.hasPhone) {
+    rows = rows.filter((contact) => {
+      const contactPhone = contact.phone || contact.phones?.[0]?.number;
+      return contactPhone != null && String(contactPhone).trim().length > 0;
+    });
   }
   if (query.search?.trim()) {
     rows = rows.filter((contact) => contactMatchesSearch(contact, query.search!));

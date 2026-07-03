@@ -174,6 +174,7 @@ export const contactsListQuerySchema = z.object({
   includeDeleted: z.enum(['true', 'false']).optional(),
   sortField: z.string().optional(),
   sortDir: z.enum(['asc', 'desc']).optional(),
+  hasPhone: z.enum(['true', 'false']).optional(),
 });
 
 export const contactSetupAuditSchema = z.object({
