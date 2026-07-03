@@ -4,6 +4,7 @@ import { isCurrentHostApex } from '@/lib/config/tenantConfig';
 const TENANT_ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   [ROUTES.home]: () => import('@/tenant/features/dashboard/DashboardPage'),
   [ROUTES.contacts]: () => import('@/tenant/features/contacts/ContactsPage'),
+  [ROUTES.messaging]: () => import('@/tenant/features/messaging/MessagingPage'),
   [ROUTES.students]: () => import('@/tenant/features/students/StudentsPage'),
   [ROUTES.teachers]: () => import('@/tenant/features/teachers/TeachersPage'),
   [ROUTES.enrollments]: () => import('@/tenant/features/enrollments/EnrollmentsPage'),

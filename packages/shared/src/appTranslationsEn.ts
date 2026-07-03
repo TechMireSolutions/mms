@@ -2,6 +2,7 @@
 export const APP_TRANSLATIONS_EN = {
   "nav.dashboard": "Dashboard",
   "nav.contacts": "Contacts",
+  "nav.messaging": "Messaging",
   "nav.academics": "Academics",
   "nav.students": "Students",
   "nav.teachers": "Teachers",

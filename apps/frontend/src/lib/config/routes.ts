@@ -19,6 +19,7 @@ export const ROUTES = {
   users: "/users",
   profile: "/profile",
   settings: "/settings",
+  messaging: "/messaging",
   login: "/login",
   forgotPassword: "/forgot-password",
   platformForgotPassword: "/platform/forgot-password",

@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Users,
+  MessageSquare,
   GraduationCap,
   ClipboardList,
   Calendar,
@@ -39,6 +40,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { labelKey: "nav.dashboard", icon: LayoutDashboard, path: ROUTES.home, moduleId: "dashboard" },
   { labelKey: "nav.contacts", icon: Users, path: ROUTES.contacts, moduleId: "contacts" },
+  { labelKey: "nav.messaging", icon: MessageSquare, path: ROUTES.messaging, moduleId: "messaging" },
   {
     labelKey: "nav.academics",
     icon: BookOpen,

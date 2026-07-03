@@ -1,0 +1,375 @@
+import React, { useState, useMemo } from 'react';
+import { 
+  MessageSquare, MessageCircle, Send, Search, CheckCircle, 
+  Trash2, User, Clock, Filter, AlertCircle, FileText
+} from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { SubTabBar } from '@/components/ui/SubTabBar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { getCollection, saveCollection } from '@/lib/db';
+import { useContactsCollection } from '@/tenant/features/contacts/hooks/useContacts';
+import { getDisplayName, getPrimaryPhone, formatDate, type Contact, type Message } from '@mms/shared';
+import MessageComposer, { type MessagingRecipient } from '@/components/ui/MessageComposer';
+import { notify } from '@/lib/notify';
+
+export default function MessagingPage(): React.JSX.Element {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  
+  // Load all system contacts using the contacts hook
+  const allContacts = useContactsCollection() || [];
+
+  // Local state
+  const [activeTab, setActiveTab] = useState<'logs' | 'compose'>('logs');
+  const [searchContact, setSearchContact] = useState('');
+  const [searchLog, setSearchLog] = useState('');
+  const [selectedRecipients, setSelectedRecipients] = useState<Record<string | number, boolean>>({});
+  const [composerTarget, setComposerTarget] = useState<{ channel: 'sms' | 'whatsapp'; recipients: MessagingRecipient[] } | null>(null);
+
+  // Load sent messages history from DB
+  const messageLogs = useMemo(() => {
+    if (!user) return [];
+    const dbKey = `messages_u:${user.id}`;
+    return getCollection<Message>(dbKey) || [];
+  }, [user, composerTarget]);
+
+  // Handle clearing log history
+  const handleClearLogs = (): void => {
+    if (!user) return;
+    if (window.confirm('Are you sure you want to clear all message logs?')) {
+      saveCollection(`messages_u:${user.id}`, []);
+      notify.success('Message logs cleared successfully');
+    }
+  };
+
+  // Filter contacts to find eligible recipients (those with phone numbers)
+  const filteredContacts = useMemo(() => {
+    return allContacts.filter((c) => {
+      const nameMatch = getDisplayName(c).toLowerCase().includes(searchContact.toLowerCase());
+      const hasPhone = Boolean(getPrimaryPhone(c));
+      return nameMatch && hasPhone;
+    });
+  }, [allContacts, searchContact]);
+
+  // Filter message history logs
+  const filteredLogs = useMemo(() => {
+    return messageLogs.filter((log) => {
+      const bodyMatch = log.body.toLowerCase().includes(searchLog.toLowerCase());
+      const recipientName = allContacts.find((c) => c.id === log.contactId);
+      const nameMatch = recipientName 
+        ? getDisplayName(recipientName).toLowerCase().includes(searchLog.toLowerCase())
+        : false;
+      return bodyMatch || nameMatch;
+    });
+  }, [messageLogs, allContacts, searchLog]);
+
+  // Toggle single recipient select state
+  const handleToggleRecipient = (id: string | number): void => {
+    setSelectedRecipients((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  // Select/Deselect all filtered contacts
+  const handleToggleAllVisible = (checked: boolean): void => {
+    const nextState = { ...selectedRecipients };
+    filteredContacts.forEach((c) => {
+      if (checked) {
+        nextState[c.id] = true;
+      } else {
+        delete nextState[c.id];
+      }
+    });
+    setSelectedRecipients(nextState);
+  };
+
+  // Map selected IDs back to recipient details
+  const currentSelectedList = useMemo(() => {
+    return allContacts
+      .filter((c) => selectedRecipients[c.id])
+      .map((c) => ({
+        id: c.id,
+        name: getDisplayName(c),
+        phone: getPrimaryPhone(c) || '',
+      }));
+  }, [allContacts, selectedRecipients]);
+
+  const allVisibleSelected = filteredContacts.length > 0 && filteredContacts.every((c) => selectedRecipients[c.id]);
+
+  // Open Composer Dialog
+  const triggerCompose = (channel: 'sms' | 'whatsapp'): void => {
+    if (currentSelectedList.length === 0) {
+      notify.error('Please select at least one recipient first.');
+      return;
+    }
+    setComposerTarget({
+      channel,
+      recipients: currentSelectedList,
+    });
+  };
+
+  // Metrics
+  const stats = useMemo(() => {
+    const total = messageLogs.length;
+    const sms = messageLogs.filter((l) => l.channel === 'sms').length;
+    const wa = messageLogs.filter((l) => l.channel === 'whatsapp').length;
+    return { total, sms, wa };
+  }, [messageLogs]);
+
+  return (
+    <div className="space-y-4">
+      {/* Page Header */}
+      <PageHeader
+        icon={MessageSquare}
+        title="Messaging Center"
+        subtitle="Unified SMS and WhatsApp communication channel with personalization"
+      />
+
+      {/* Metrics Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Total Sent Messages</span>
+            <h3 className="text-2xl font-black text-foreground">{stats.total}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <Send className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">SMS Dispatched</span>
+            <h3 className="text-2xl font-black text-foreground">{stats.sms}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center text-info">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">WhatsApp Opened</span>
+            <h3 className="text-2xl font-black text-foreground">{stats.wa}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
+            <MessageCircle className="w-5 h-5" />
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Menu */}
+      <SubTabBar
+        value={activeTab}
+        onChange={(tab: 'logs' | 'compose') => setActiveTab(tab)}
+        tabs={[
+          { key: 'logs', label: 'Message History Log' },
+          { key: 'compose', label: 'Create Campaign' }
+        ]}
+      />
+
+      {activeTab === 'logs' ? (
+        <div className="border border-border rounded-xl bg-card p-4 space-y-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="relative max-w-sm w-full">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by recipient or content..."
+                value={searchLog}
+                onChange={(e) => setSearchLog(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+            {messageLogs.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearLogs}
+                className="text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4 mr-1.5" />
+                Clear Log History
+              </Button>
+            )}
+          </div>
+
+          {filteredLogs.length > 0 ? (
+            <div className="overflow-x-auto border border-border/50 rounded-lg">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
+                  <tr>
+                    <th className="px-4 py-3">Recipient</th>
+                    <th className="px-4 py-3">Channel</th>
+                    <th className="px-4 py-3">Message Body</th>
+                    <th className="px-4 py-3">Date Sent</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {filteredLogs.map((log) => {
+                    const recipient = allContacts.find((c) => c.id === log.contactId);
+                    const name = recipient ? getDisplayName(recipient) : `Contact #${log.contactId}`;
+                    return (
+                      <tr key={log.id} className="hover:bg-muted/10 transition-colors">
+                        <td className="px-4 py-3 font-semibold text-foreground flex items-center gap-2">
+                          <User className="w-3.5 h-3.5 text-muted-foreground" />
+                          {name}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                            log.channel === 'sms' 
+                              ? 'bg-info/10 text-info border border-info/20' 
+                              : 'bg-success/10 text-success border border-success/20'
+                          }`}>
+                            {log.channel === 'sms' ? <MessageSquare className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
+                            {log.channel}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground max-w-md truncate" title={log.body}>
+                          {log.body}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                          {formatDate(log.sentAt)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <Clock className="w-8 h-8 opacity-40 mb-2" />
+              <p className="text-sm font-medium">No sent message records found</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Recipient Selector list */}
+          <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold text-foreground">1. Select Recipients</h4>
+              <p className="text-xs text-muted-foreground">Select one or more targets from contacts list (requires registered phone number).</p>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search recipients by name..."
+                value={searchContact}
+                onChange={(e) => setSearchContact(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+
+            <div className="border border-border/60 rounded-lg overflow-hidden max-h-[360px] overflow-y-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-muted/40 text-muted-foreground uppercase tracking-wider font-semibold">
+                  <tr className="border-b border-border/60">
+                    <th className="px-4 py-2 w-10">
+                      <Checkbox
+                        checked={allVisibleSelected}
+                        onCheckedChange={handleToggleAllVisible}
+                        aria-label="Select all visible"
+                      />
+                    </th>
+                    <th className="px-4 py-2">Name</th>
+                    <th className="px-4 py-2">Phone Number</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {filteredContacts.map((c) => {
+                    const phone = getPrimaryPhone(c);
+                    return (
+                      <tr key={c.id} className="hover:bg-muted/10">
+                        <td className="px-4 py-2">
+                          <Checkbox
+                            checked={!!selectedRecipients[c.id]}
+                            onCheckedChange={() => handleToggleRecipient(c.id)}
+                            aria-label={`Select ${getDisplayName(c)}`}
+                          />
+                        </td>
+                        <td className="px-4 py-2 font-medium text-foreground">{getDisplayName(c)}</td>
+                        <td className="px-4 py-2 font-mono text-muted-foreground">{phone}</td>
+                      </tr>
+                    );
+                  })}
+                  {filteredContacts.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="text-center py-6 text-muted-foreground">
+                        No active contacts with valid phone numbers match your search.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Action Campaign Panel */}
+          <div className="border border-border rounded-xl bg-card p-4 space-y-4 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-foreground">2. Confirm Recipients</h4>
+                <p className="text-xs text-muted-foreground">Verify targets and dispatch message channel campaign.</p>
+              </div>
+
+              <div className="p-3 bg-muted/40 rounded-xl space-y-2 border border-border/40">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground">Contacts Checked:</span>
+                  <span className="font-bold text-foreground">{currentSelectedList.length}</span>
+                </div>
+                {currentSelectedList.length > 0 && (
+                  <div className="max-h-24 overflow-y-auto border border-border/30 rounded p-1.5 bg-background space-y-1">
+                    {currentSelectedList.map((rec) => (
+                      <div key={rec.id} className="flex justify-between text-[10px] text-muted-foreground">
+                        <span className="truncate max-w-[120px]">{rec.name}</span>
+                        <span className="font-mono">{rec.phone}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Button
+                onClick={() => triggerCompose('whatsapp')}
+                disabled={currentSelectedList.length === 0}
+                className="w-full bg-success hover:bg-success/90 text-success-foreground font-semibold"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Send WhatsApp Campaign
+              </Button>
+              <Button
+                onClick={() => triggerCompose('sms')}
+                disabled={currentSelectedList.length === 0}
+                className="w-full bg-info hover:bg-info/90 text-info-foreground font-semibold"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Send SMS Campaign
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shared composer modal */}
+      {composerTarget && (
+        <MessageComposer
+          channel={composerTarget.channel}
+          recipients={composerTarget.recipients}
+          onClose={() => {
+            setComposerTarget(null);
+            setSelectedRecipients({});
+          }}
+        />
+      )}
+    </div>
+  );
+}

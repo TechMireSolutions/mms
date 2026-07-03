@@ -40,6 +40,7 @@ export function translateAppParams(
 const MODULE_NAV_KEYS: Partial<Record<string, AppTranslationKey>> = {
   dashboard: "nav.dashboard",
   contacts: "nav.contacts",
+  messaging: "nav.messaging",
   students: "nav.students",
   teachers: "nav.teachers",
   sessions: "nav.sessions",

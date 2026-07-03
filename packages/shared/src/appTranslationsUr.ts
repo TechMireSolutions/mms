@@ -2,6 +2,7 @@
 export const APP_TRANSLATIONS_UR = {
   "nav.dashboard": "ڈیش بورڈ",
   "nav.contacts": "رابطے",
+  "nav.messaging": "پیغام رسانی",
   "nav.academics": "تعلیمات",
   "nav.students": "طلبہ",
   "nav.teachers": "اساتذہ",

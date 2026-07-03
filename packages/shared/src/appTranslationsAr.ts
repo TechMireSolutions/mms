@@ -4,6 +4,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
 export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "nav.dashboard": "لوحة التحكم",
   "nav.contacts": "جهات الاتصال",
+  "nav.messaging": "الرسائل",
   "nav.academics": "الأكاديميات",
   "nav.students": "الطلاب",
   "nav.teachers": "المعلمون",
