@@ -917,7 +917,13 @@ export default function ContactForm({
                     <ContactPicker
                       label={t("contacts.form.linkContact")}
                       value={em.contactId ?? null}
-                      onChange={(id) => updateEmergency(idx, { contactId: id != null ? String(id) : "" })}
+                      onChange={(id) => {
+                        const nextId = id != null ? String(id) : "";
+                        updateEmergency(idx, { 
+                          contactId: nextId, 
+                          ...(nextId ? { name: "", phone: "" } : {}) 
+                        });
+                      }}
                       excludeIds={excludeIds(idx)}
                       allowCreate={false}
                       searchPlaceholder={t("contacts.form.searchByName")}
@@ -936,30 +942,32 @@ export default function ContactForm({
                       />
                     </Field>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      <Field label={t("contacts.reportFields.fullName")} error={nameError}>
-                        <div className="relative flex items-center group/input">
-                          <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                          <Input
-                            value={em.name || ""}
-                            onChange={(e) => updateEmergency(idx, { name: e.target.value })}
-                            placeholder="Emergency Contact Name"
-                            className="min-h-[44px] pl-10"
-                          />
-                        </div>
-                      </Field>
-                      <Field label={t("contacts.form.phoneNumber")} error={phoneError}>
-                        <div className="relative flex items-center group/input">
-                          <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                          <Input
-                            value={em.phone || ""}
-                            onChange={(e) => updateEmergency(idx, { phone: e.target.value })}
-                            placeholder="Emergency Contact Phone"
-                            className="min-h-[44px] pl-10"
-                          />
-                        </div>
-                      </Field>
-                    </div>
+                    {!em.contactId && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <Field label={t("contacts.reportFields.fullName")} error={nameError}>
+                          <div className="relative flex items-center group/input">
+                            <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                            <Input
+                              value={em.name || ""}
+                              onChange={(e) => updateEmergency(idx, { name: e.target.value })}
+                              placeholder="Emergency Contact Name"
+                              className="min-h-[44px] pl-10"
+                            />
+                          </div>
+                        </Field>
+                        <Field label={t("contacts.form.phoneNumber")} error={phoneError}>
+                          <div className="relative flex items-center group/input">
+                            <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                            <Input
+                              value={em.phone || ""}
+                              onChange={(e) => updateEmergency(idx, { phone: e.target.value })}
+                              placeholder="Emergency Contact Phone"
+                              className="min-h-[44px] pl-10"
+                            />
+                          </div>
+                        </Field>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               );
