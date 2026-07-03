@@ -235,7 +235,15 @@ export default function ContactCards({
             >
               <div 
                 aria-hidden="true"
-                className={`absolute left-0 top-0 bottom-0 w-1.5 ${contact.isSyed ? "bg-amber-500/50 group-hover:bg-amber-500" : isSelected ? "bg-primary/70 group-hover:bg-primary" : "bg-primary/40 group-hover:bg-primary/60"} transition-colors duration-300`} 
+                className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                  isSelected
+                    ? "bg-primary/70 group-hover:bg-primary"
+                    : contact.gender?.toLowerCase() === "male"
+                    ? "bg-blue-500/50 group-hover:bg-blue-500 dark:bg-blue-500/40 dark:group-hover:bg-blue-400"
+                    : contact.gender?.toLowerCase() === "female"
+                    ? "bg-rose-500/50 group-hover:bg-rose-500 dark:bg-rose-500/40 dark:group-hover:bg-rose-400"
+                    : "bg-muted-foreground/35 group-hover:bg-muted-foreground/60 dark:bg-muted-foreground/25 dark:group-hover:bg-muted-foreground/45"
+                } transition-colors duration-300`} 
               />
  
               {/* Core Profile Area */}
