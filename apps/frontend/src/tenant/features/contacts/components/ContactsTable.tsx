@@ -20,7 +20,8 @@ import {
   formatDate,
   calculateDetailedSolarAge,
   getLunarDateString,
-  calculateDetailedLunarAge
+  calculateDetailedLunarAge,
+  calcAge
 } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { useTranslation } from "@/hooks/useTranslation";
@@ -178,24 +179,13 @@ export default function ContactsTable({
                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal">
                   <GenderIcon gender={contact.gender} />
                   {contact.dob && (
-                    <>
-                      <span>{t('contacts.table.dobLabel')} {formatDate(contact.dob)}</span>
-                      {prefs.showDetailedSolarAge && (
-                        <span className="before:content-['•'] before:mr-1.5">
-                          {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(contact.dob)}
-                        </span>
-                      )}
-                      {prefs.showLunarDob && (
-                        <span className="before:content-['•'] before:mr-1.5">
-                          {t("contacts.table.lunarDobLabel")} {getLunarDateString(contact.dob)}
-                        </span>
-                      )}
-                      {prefs.showDetailedLunarAge && (
-                        <span className="before:content-['•'] before:mr-1.5">
-                          {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(contact.dob)}
-                        </span>
-                      )}
-                    </>
+                    <span>
+                      {t('contacts.table.dobLabel')} {formatDate(contact.dob)}
+                      {(() => {
+                        const age = calcAge(contact.dob);
+                        return age !== null ? ` (${age} y/o)` : "";
+                      })()}
+                    </span>
                   )}
                 </p>
                 {showArchived && contact.deletionReason && (

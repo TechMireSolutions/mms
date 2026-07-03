@@ -13,7 +13,8 @@ import {
   hasWhatsApp,
   calculateDetailedSolarAge,
   getLunarDateString,
-  calculateDetailedLunarAge
+  calculateDetailedLunarAge,
+  calcAge
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -298,26 +299,13 @@ export default function ContactCards({
                       {displayName}
                     </h4>
                     {contact.dob && (
-                      <div className="text-[11px] text-muted-foreground mt-0.5 space-y-0.5 leading-normal">
-                        <p className="truncate">
-                          {t("contacts.table.dobLabel")} {formatDate(contact.dob)}
-                        </p>
-                        {prefs.showDetailedSolarAge && (
-                          <p className="truncate text-muted-foreground/80">
-                            {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(contact.dob)}
-                          </p>
-                        )}
-                        {prefs.showLunarDob && (
-                          <p className="truncate text-muted-foreground/80">
-                            {t("contacts.table.lunarDobLabel")} {getLunarDateString(contact.dob)}
-                          </p>
-                        )}
-                        {prefs.showDetailedLunarAge && (
-                          <p className="truncate text-muted-foreground/80">
-                            {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(contact.dob)}
-                          </p>
-                        )}
-                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                        {t("contacts.table.dobLabel")} {formatDate(contact.dob)}
+                        {(() => {
+                          const age = calcAge(contact.dob);
+                          return age !== null ? ` (${age} y/o)` : "";
+                        })()}
+                      </p>
                     )}
                   </div>
                 </Button>
