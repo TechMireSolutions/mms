@@ -50,7 +50,16 @@ export default function MessageComposer({
 }: MessageComposerProps): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { whatsappTemplates } = useContactConfig();
+
+  // Safely resolve whatsappTemplates from context if mounted
+  const contextTemplates = (() => {
+    try {
+      const config = useContactConfig();
+      return config?.whatsappTemplates || [];
+    } catch {
+      return [];
+    }
+  })();
 
   // Deduplicate and filter recipients with valid phone numbers
   const eligibleRecipients = useMemo(() => {
@@ -59,12 +68,12 @@ export default function MessageComposer({
 
   const activeTemplates = useMemo(() => {
     if (templates) return templates;
-    return whatsappTemplates.map((t) => ({
+    return contextTemplates.map((t) => ({
       id: t.id,
       label: t.label,
       body: t.body,
     }));
-  }, [templates, whatsappTemplates]);
+  }, [templates, contextTemplates]);
 
   const [template, setTemplate] = useState<string>(() => activeTemplates[0]?.id || 'custom');
   const [message, setMessage] = useState<string>(() => activeTemplates[0]?.body || '');
