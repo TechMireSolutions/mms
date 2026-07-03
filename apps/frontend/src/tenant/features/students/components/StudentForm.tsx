@@ -30,7 +30,6 @@ import {
   buildDynamicStudentSchema,
   formatStudentZodIssues,
   type ValidationError,
-  STUDENT_TAB_REGISTRY,
   type FieldDefinition,
 } from "@mms/shared";
 
@@ -54,11 +53,10 @@ export default function StudentForm({
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
   const { updateContact } = useContactMutations();
-  const { settings, statuses: configStatuses, discountTypes } = useStudentConfig();
+  const { settings, statuses: configStatuses } = useStudentConfig();
 
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
-  const [tab, setTab] = useState<string>("basic");
   const [manualError, setManualError] = useState("");
 
   const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => ({
@@ -112,19 +110,9 @@ export default function StudentForm({
     [settings.fields]
   );
 
-  const visibleTabs = useMemo(() => {
-    return STUDENT_TAB_REGISTRY.filter((tabItem) => {
-      return isTabEnabled(tabItem.key);
-    });
-  }, [isTabEnabled]);
-
   const getFieldError = (fieldId: string) => {
     const fieldError = validationErrors.find((validationError) => validationError.fieldId === fieldId);
     return fieldError ? fieldError.message : undefined;
-  };
-
-  const getTabHasError = (tabId: string) => {
-    return validationErrors.some((validationError) => validationError.tabId === tabId);
   };
 
   const { data: linkedContact } = useContactById(
@@ -194,13 +182,6 @@ export default function StudentForm({
     if (!parseResult.success) {
       const zodErrors = formatStudentZodIssues(parseResult.error, studentDraft, settings.fields || {});
       setValidationErrors(zodErrors);
-
-      if (zodErrors.length > 0) {
-        const firstErrTab = zodErrors[0].tabId;
-        if (firstErrTab && firstErrTab !== tab) {
-          setTab(firstErrTab);
-        }
-      }
 
       notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
       return;
@@ -542,31 +523,6 @@ export default function StudentForm({
     );
   };
 
-  const renderActiveTabContent = () => {
-    switch (tab) {
-      case "basic":
-        return renderBasic();
-      case "guardian":
-        return renderGuardian();
-      case "academic":
-        return renderAcademic();
-      default:
-        return null;
-    }
-  };
-
-  const TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-    basic: User,
-    guardian: Users,
-    academic: GraduationCap,
-  };
-
-  const modalTabs = visibleTabs.map((t) => ({
-    ...t,
-    icon: TAB_ICONS[t.key],
-    label: getTabHasError(t.key) ? `${t.label} 🔴` : t.label,
-  }));
-
   return (
     <>
       <FormModal
@@ -576,9 +532,6 @@ export default function StudentForm({
         subtitle={t("students.form.subtitle")}
         icon={GraduationCap}
         tall
-        tabs={modalTabs}
-        activeTab={tab}
-        onTabChange={setTab}
         lang={language}
         cancelLabel={t("common.cancel") || "Cancel"}
         saveLabel={saving ? (t("students.form.saving") || "Saving...") : (student ? (t("students.form.saveUpdate") || "Update") : (t("students.form.saveRegister") || "Register"))}
@@ -588,7 +541,11 @@ export default function StudentForm({
         error={errorSummary || undefined}
         footerStart={footerStart}
       >
-        {renderActiveTabContent()}
+        <div className="space-y-6">
+          {renderBasic()}
+          {isTabEnabled("guardian") && renderGuardian()}
+          {isTabEnabled("academic") && renderAcademic()}
+        </div>
       </FormModal>
       <ConfirmAlertDialog
         open={duplicateConfirmOpen}
