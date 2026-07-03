@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { Button } from '@/components/ui/button';
@@ -221,7 +222,66 @@ export default function MessagingPage(): React.JSX.Element {
         icon={MessageSquare}
         title={t('messaging.title')}
         subtitle={t('messaging.subtitle')}
+        actions={
+          <ActionButton
+            variant="primary"
+            icon={Send}
+            onClick={() => {
+              setActiveTab("work");
+              if (currentSelectedList.length > 0) {
+                triggerCompose('whatsapp');
+              } else {
+                notify.info('Please select recipients from the checklist below to compose a campaign.');
+              }
+            }}
+          >
+            New Campaign
+          </ActionButton>
+        }
       />
+
+      {/* Global Dashboard Metrics Banner */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.total')}</span>
+            <h3 className="text-2xl font-black text-foreground">{stats.total}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <Send className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.sms')}</span>
+            <h3 className="text-2xl font-black text-foreground">{stats.sms}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center text-info">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.whatsapp')}</span>
+            <h3 className="text-2xl font-black text-foreground">{stats.wa}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
+            <MessageCircle className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Emails Dispatched</span>
+            <h3 className="text-2xl font-black text-foreground">{stats.email}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
+            <Mail className="w-5 h-5" />
+          </div>
+        </div>
+      </div>
 
       {/* Accordion Tabs Wrapper */}
       <ResponsiveAccordionTabs
@@ -374,187 +434,142 @@ export default function MessagingPage(): React.JSX.Element {
         )}
 
         {activeTab === 'reports' && (
-          <div className="space-y-4">
-            {/* Metrics Strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.total')}</span>
-                  <h3 className="text-2xl font-black text-foreground">{stats.total}</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Message history log table */}
+            <div className="lg:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 flex-grow">
+                  <div className="relative flex-grow max-w-sm">
+                    <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder={t('messaging.search.placeholder')}
+                      value={searchLog}
+                      onChange={(e) => setSearchLog(e.target.value)}
+                      className="pl-9 h-9"
+                    />
+                  </div>
+
+                  {/* Channel Filter Selector */}
+                  <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
+                    {(['all', 'sms', 'whatsapp', 'email'] as const).map((ch) => (
+                      <button
+                        key={ch}
+                        onClick={() => setChannelFilter(ch)}
+                        className={`px-2.5 py-1 rounded-md font-bold uppercase transition-all ${
+                          channelFilter === ch 
+                            ? 'bg-background shadow-sm text-foreground' 
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {ch}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  <Send className="w-5 h-5" />
-                </div>
+
+                {messageLogs.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearLogs}
+                    className="text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1.5" />
+                    {t('messaging.clearLogs')}
+                  </Button>
+                )}
               </div>
 
-              <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.sms')}</span>
-                  <h3 className="text-2xl font-black text-foreground">{stats.sms}</h3>
+              {filteredLogs.length > 0 ? (
+                <div className="overflow-x-auto border border-border/50 rounded-lg">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
+                      <tr>
+                        <th className="px-4 py-3">Recipient</th>
+                        <th className="px-4 py-3">Channel</th>
+                        <th className="px-4 py-3">Message Body</th>
+                        <th className="px-4 py-3">Date Sent</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/60">
+                      {filteredLogs.map((log) => {
+                        const recipient = allContacts.find((c) => c.id === log.contactId);
+                        const name = recipient ? getDisplayName(recipient) : `Contact #${log.contactId}`;
+                        return (
+                          <tr key={log.id} className="hover:bg-muted/10 transition-colors">
+                            <td className="px-4 py-3 font-semibold text-foreground flex items-center gap-2">
+                              <User className="w-3.5 h-3.5 text-muted-foreground" />
+                              {name}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                                log.channel === 'email'
+                                  ? 'bg-warning/10 text-warning border border-warning/20'
+                                  : log.channel === 'sms' 
+                                  ? 'bg-info/10 text-info border border-info/20' 
+                                  : 'bg-success/10 text-success border border-success/20'
+                              }`}>
+                                {log.channel === 'email' ? <Mail className="w-3 h-3" /> : log.channel === 'sms' ? <MessageSquare className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
+                                {log.channel}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground max-w-md truncate" title={log.body}>
+                              {log.body}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                              {formatDate(log.sentAt)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center text-info">
-                  <MessageSquare className="w-5 h-5" />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <Clock className="w-8 h-8 opacity-40 mb-2" />
+                  <p className="text-sm font-medium">No sent message records found</p>
                 </div>
-              </div>
-
-              <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.whatsapp')}</span>
-                  <h3 className="text-2xl font-black text-foreground">{stats.wa}</h3>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
-                  <MessageCircle className="w-5 h-5" />
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Emails Dispatched</span>
-                  <h3 className="text-2xl font-black text-foreground">{stats.email}</h3>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
-                  <Mail className="w-5 h-5" />
-                </div>
-              </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Message history log table */}
-              <div className="lg:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3 flex-grow">
-                    <div className="relative flex-grow max-w-sm">
-                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder={t('messaging.search.placeholder')}
-                        value={searchLog}
-                        onChange={(e) => setSearchLog(e.target.value)}
-                        className="pl-9 h-9"
-                      />
-                    </div>
-
-                    {/* Channel Filter Selector */}
-                    <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
-                      {(['all', 'sms', 'whatsapp', 'email'] as const).map((ch) => (
-                        <button
-                          key={ch}
-                          onClick={() => setChannelFilter(ch)}
-                          className={`px-2.5 py-1 rounded-md font-bold uppercase transition-all ${
-                            channelFilter === ch 
-                              ? 'bg-background shadow-sm text-foreground' 
-                              : 'text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          {ch}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {messageLogs.length > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleClearLogs}
-                      className="text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1.5" />
-                      {t('messaging.clearLogs')}
-                    </Button>
-                  )}
-                </div>
-
-                {filteredLogs.length > 0 ? (
-                  <div className="overflow-x-auto border border-border/50 rounded-lg">
-                    <table className="w-full text-sm text-left">
-                      <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
-                        <tr>
-                          <th className="px-4 py-3">Recipient</th>
-                          <th className="px-4 py-3">Channel</th>
-                          <th className="px-4 py-3">Message Body</th>
-                          <th className="px-4 py-3">Date Sent</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/60">
-                        {filteredLogs.map((log) => {
-                          const recipient = allContacts.find((c) => c.id === log.contactId);
-                          const name = recipient ? getDisplayName(recipient) : `Contact #${log.contactId}`;
-                          return (
-                            <tr key={log.id} className="hover:bg-muted/10 transition-colors">
-                              <td className="px-4 py-3 font-semibold text-foreground flex items-center gap-2">
-                                <User className="w-3.5 h-3.5 text-muted-foreground" />
-                                {name}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                                  log.channel === 'email'
-                                    ? 'bg-warning/10 text-warning border border-warning/20'
-                                    : log.channel === 'sms' 
-                                    ? 'bg-info/10 text-info border border-info/20' 
-                                    : 'bg-success/10 text-success border border-success/20'
-                                }`}>
-                                  {log.channel === 'email' ? <Mail className="w-3 h-3" /> : log.channel === 'sms' ? <MessageSquare className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
-                                  {log.channel}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-muted-foreground max-w-md truncate" title={log.body}>
-                                {log.body}
-                              </td>
-                              <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
-                                {formatDate(log.sentAt)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Clock className="w-8 h-8 opacity-40 mb-2" />
-                    <p className="text-sm font-medium">No sent message records found</p>
-                  </div>
-                )}
+            {/* Volume Breakdown Recharts PieChart */}
+            <div className="border border-border rounded-xl bg-card p-4 flex flex-col justify-between">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                  <BarChart2 className="w-4 h-4 text-primary" /> Volume Breakdown
+                </h4>
+                <p className="text-xs text-muted-foreground">Campaign distribution by communications channel.</p>
               </div>
 
-              {/* Volume Breakdown Recharts PieChart */}
-              <div className="border border-border rounded-xl bg-card p-4 flex flex-col justify-between">
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                    <BarChart2 className="w-4 h-4 text-primary" /> Volume Breakdown
-                  </h4>
-                  <p className="text-xs text-muted-foreground">Campaign distribution by communications channel.</p>
+              {chartData.length > 0 ? (
+                <div className="h-[240px] w-full flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-
-                {chartData.length > 0 ? (
-                  <div className="h-[240px] w-full flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={chartData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-[240px] text-muted-foreground">
-                    <BarChart2 className="w-8 h-8 opacity-45 mb-2" />
-                    <p className="text-xs font-semibold">No dispatches to chart</p>
-                  </div>
-                )}
-              </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-[240px] text-muted-foreground">
+                  <BarChart2 className="w-8 h-8 opacity-45 mb-2" />
+                  <p className="text-xs font-semibold">No dispatches to chart</p>
+                </div>
+              )}
             </div>
           </div>
         )}
