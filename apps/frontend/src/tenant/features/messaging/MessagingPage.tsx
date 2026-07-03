@@ -1,11 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { 
   MessageSquare, MessageCircle, Send, Search, 
-  Trash2, User, Clock, Plus, Tag, Filter, Check, Mail
+  Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2
 } from 'lucide-react';
+import { 
+  PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip 
+} from 'recharts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
+import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,15 +29,19 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
   { id: 't3', label: 'Holiday Announcement', body: 'Dear {name}, please note that the madrasa will remain closed on...' },
 ];
 
+const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b']; // Info (SMS), Success (WA), Warning (Email)
+
 export default function MessagingPage(): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
-  
+  const { can } = usePermissions();
+  const PAGE_TABS = useModuleTierTabs();
+
   // Load all system contacts using the contacts hook
   const allContacts = useContactsCollection() || [];
 
   // Local state
-  const [activeTab, setActiveTab] = useState<'logs' | 'compose' | 'templates'>('logs');
+  const [activeTab, setActiveTab] = useState<'work' | 'reports' | 'setup'>('work');
   const [searchContact, setSearchContact] = useState('');
   const [searchLog, setSearchLog] = useState('');
   
@@ -45,6 +55,16 @@ export default function MessagingPage(): React.JSX.Element {
 
   const [selectedRecipients, setSelectedRecipients] = useState<Record<string | number, boolean>>({});
   const [composerTarget, setComposerTarget] = useState<{ channel: 'sms' | 'whatsapp' | 'email'; recipients: MessagingRecipient[] } | null>(null);
+
+  // Hide the setup tab if the user has no configuration permissions
+  const visibleTabs = useMemo(() => {
+    return PAGE_TABS.filter((tab) => {
+      if (tab.id === 'setup') {
+        return can('configuration.view');
+      }
+      return true;
+    });
+  }, [PAGE_TABS, can]);
 
   // Load templates from DB (merged with defaults)
   const templates = useMemo(() => {
@@ -182,8 +202,20 @@ export default function MessagingPage(): React.JSX.Element {
     return { total, sms, wa, email };
   }, [messageLogs]);
 
+  // Chart Data
+  const chartData = useMemo(() => {
+    return [
+      { name: 'SMS', value: stats.sms },
+      { name: 'WhatsApp', value: stats.wa },
+      { name: 'Email', value: stats.email },
+    ].filter(item => item.value > 0);
+  }, [stats]);
+
   return (
     <div className="space-y-4">
+      <title>MMS - Messaging Center</title>
+      <meta name="description" content="Send personalized SMS, WhatsApp, and Email campaigns to contacts and students." />
+      
       {/* Page Header */}
       <PageHeader
         icon={MessageSquare}
@@ -191,393 +223,434 @@ export default function MessagingPage(): React.JSX.Element {
         subtitle={t('messaging.subtitle')}
       />
 
-      {/* Metrics Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.total')}</span>
-            <h3 className="text-2xl font-black text-foreground">{stats.total}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-            <Send className="w-5 h-5" />
-          </div>
-        </div>
+      {/* Accordion Tabs Wrapper */}
+      <ResponsiveAccordionTabs
+        tabs={visibleTabs}
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab as 'work' | 'reports' | 'setup')}
+        panelIdPrefix="messaging-tab"
+      >
+        {activeTab === 'work' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Recipient Selector list */}
+            <div className="lg:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
+              <div className="flex justify-between items-start flex-wrap gap-4">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-foreground">1. {t('messaging.selectRecipients')}</h4>
+                  <p className="text-xs text-muted-foreground">{t('messaging.selectRecipientsDesc')}</p>
+                </div>
 
-        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.sms')}</span>
-            <h3 className="text-2xl font-black text-foreground">{stats.sms}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center text-info">
-            <MessageSquare className="w-5 h-5" />
-          </div>
-        </div>
+                {/* Gender Filter Segmented Controls */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1"><Filter className="w-3 h-3" /> {t('contacts.reportFields.gender')}:</span>
+                  <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-[11px]">
+                    {(['all', 'male', 'female', 'unspecified'] as const).map((gender) => (
+                      <button
+                        key={gender}
+                        onClick={() => setGenderFilter(gender)}
+                        className={`px-2 py-0.5 rounded-md font-bold uppercase transition-all ${
+                          genderFilter === gender 
+                            ? 'bg-background shadow-sm text-foreground' 
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {gender}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.whatsapp')}</span>
-            <h3 className="text-2xl font-black text-foreground">{stats.wa}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
-            <MessageCircle className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Emails Dispatched</span>
-            <h3 className="text-2xl font-black text-foreground">{stats.email}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
-            <Mail className="w-5 h-5" />
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs Menu */}
-      <SubTabBar
-        value={activeTab}
-        onChange={(tab: 'logs' | 'compose' | 'templates') => setActiveTab(tab)}
-        tabs={[
-          { key: 'logs', label: t('messaging.tabs.logs') },
-          { key: 'compose', label: t('messaging.tabs.compose') },
-          { key: 'templates', label: t('messaging.tabs.templates') }
-        ]}
-      />
-
-      {activeTab === 'logs' && (
-        <div className="border border-border rounded-xl bg-card p-4 space-y-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3 flex-grow max-w-2xl">
-              <div className="relative flex-grow">
+              <div className="relative">
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder={t('messaging.search.placeholder')}
-                  value={searchLog}
-                  onChange={(e) => setSearchLog(e.target.value)}
+                  placeholder="Search recipients by name..."
+                  value={searchContact}
+                  onChange={(e) => setSearchContact(e.target.value)}
                   className="pl-9 h-9"
                 />
               </div>
 
-              {/* Channel Filter Selector */}
-              <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
-                {(['all', 'sms', 'whatsapp', 'email'] as const).map((ch) => (
-                  <button
-                    key={ch}
-                    onClick={() => setChannelFilter(ch)}
-                    className={`px-2.5 py-1 rounded-md font-bold uppercase transition-all ${
-                      channelFilter === ch 
-                        ? 'bg-background shadow-sm text-foreground' 
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {ch}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {messageLogs.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearLogs}
-                className="text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="w-4 h-4 mr-1.5" />
-                {t('messaging.clearLogs')}
-              </Button>
-            )}
-          </div>
-
-          {filteredLogs.length > 0 ? (
-            <div className="overflow-x-auto border border-border/50 rounded-lg">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
-                  <tr>
-                    <th className="px-4 py-3">Recipient</th>
-                    <th className="px-4 py-3">Channel</th>
-                    <th className="px-4 py-3">Message Body</th>
-                    <th className="px-4 py-3">Date Sent</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {filteredLogs.map((log) => {
-                    const recipient = allContacts.find((c) => c.id === log.contactId);
-                    const name = recipient ? getDisplayName(recipient) : `Contact #${log.contactId}`;
-                    return (
-                      <tr key={log.id} className="hover:bg-muted/10 transition-colors">
-                        <td className="px-4 py-3 font-semibold text-foreground flex items-center gap-2">
-                          <User className="w-3.5 h-3.5 text-muted-foreground" />
-                          {name}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                            log.channel === 'email'
-                              ? 'bg-warning/10 text-warning border border-warning/20'
-                              : log.channel === 'sms' 
-                              ? 'bg-info/10 text-info border border-info/20' 
-                              : 'bg-success/10 text-success border border-success/20'
-                          }`}>
-                            {log.channel === 'email' ? <Mail className="w-3 h-3" /> : log.channel === 'sms' ? <MessageSquare className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
-                            {log.channel}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground max-w-md truncate" title={log.body}>
-                          {log.body}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
-                          {formatDate(log.sentAt)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Clock className="w-8 h-8 opacity-40 mb-2" />
-              <p className="text-sm font-medium">No sent message records found</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'compose' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Recipient Selector list */}
-          <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
-            <div className="flex justify-between items-start flex-wrap gap-4">
-              <div className="space-y-1">
-                <h4 className="text-sm font-bold text-foreground">1. {t('messaging.selectRecipients')}</h4>
-                <p className="text-xs text-muted-foreground">{t('messaging.selectRecipientsDesc')}</p>
-              </div>
-
-              {/* Gender Filter Segmented Controls */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground flex items-center gap-1"><Filter className="w-3 h-3" /> {t('contacts.reportFields.gender')}:</span>
-                <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-[11px]">
-                  {(['all', 'male', 'female', 'unspecified'] as const).map((gender) => (
-                    <button
-                      key={gender}
-                      onClick={() => setGenderFilter(gender)}
-                      className={`px-2 py-0.5 rounded-md font-bold uppercase transition-all ${
-                        genderFilter === gender 
-                          ? 'bg-background shadow-sm text-foreground' 
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {gender}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search recipients by name..."
-                value={searchContact}
-                onChange={(e) => setSearchContact(e.target.value)}
-                className="pl-9 h-9"
-              />
-            </div>
-
-            <div className="border border-border/60 rounded-lg overflow-hidden max-h-[360px] overflow-y-auto">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-muted/40 text-muted-foreground uppercase tracking-wider font-semibold">
-                  <tr className="border-b border-border/60">
-                    <th className="px-4 py-2 w-10">
-                      <Checkbox
-                        checked={allVisibleSelected}
-                        onCheckedChange={handleToggleAllVisible}
-                        aria-label="Select all visible"
-                      />
-                    </th>
-                    <th className="px-4 py-2">Name</th>
-                    <th className="px-4 py-2">Phone Number</th>
-                    <th className="px-4 py-2">Email Address</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {filteredContacts.map((c) => {
-                    const phone = getPrimaryPhone(c);
-                    return (
-                      <tr key={c.id} className="hover:bg-muted/10">
-                        <td className="px-4 py-2">
-                          <Checkbox
-                            checked={!!selectedRecipients[c.id]}
-                            onCheckedChange={() => handleToggleRecipient(c.id)}
-                            aria-label={`Select ${getDisplayName(c)}`}
-                          />
-                        </td>
-                        <td className="px-4 py-2 font-medium text-foreground">{getDisplayName(c)}</td>
-                        <td className="px-4 py-2 font-mono text-muted-foreground">{phone || '-'}</td>
-                        <td className="px-4 py-2 text-muted-foreground">{c.email || '-'}</td>
-                      </tr>
-                    );
-                  })}
-                  {filteredContacts.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="text-center py-6 text-muted-foreground">
-                        No active contacts with valid phone numbers or emails match your filters.
-                      </td>
+              <div className="border border-border/60 rounded-lg overflow-hidden max-h-[380px] overflow-y-auto">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-muted/40 text-muted-foreground uppercase tracking-wider font-semibold">
+                    <tr className="border-b border-border/60">
+                      <th className="px-4 py-2 w-10">
+                        <Checkbox
+                          checked={allVisibleSelected}
+                          onCheckedChange={handleToggleAllVisible}
+                          aria-label="Select all visible"
+                        />
+                      </th>
+                      <th className="px-4 py-2">Name</th>
+                      <th className="px-4 py-2">Phone Number</th>
+                      <th className="px-4 py-2">Email Address</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {filteredContacts.map((c) => {
+                      const phone = getPrimaryPhone(c);
+                      return (
+                        <tr key={c.id} className="hover:bg-muted/10">
+                          <td className="px-4 py-2">
+                            <Checkbox
+                              checked={!!selectedRecipients[c.id]}
+                              onCheckedChange={() => handleToggleRecipient(c.id)}
+                              aria-label={`Select ${getDisplayName(c)}`}
+                            />
+                          </td>
+                          <td className="px-4 py-2 font-medium text-foreground">{getDisplayName(c)}</td>
+                          <td className="px-4 py-2 font-mono text-muted-foreground">{phone || '-'}</td>
+                          <td className="px-4 py-2 text-muted-foreground">{c.email || '-'}</td>
+                        </tr>
+                      );
+                    })}
+                    {filteredContacts.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="text-center py-6 text-muted-foreground">
+                          No active contacts with valid phone numbers or emails match your filters.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
 
-          {/* Action Campaign Panel */}
-          <div className="border border-border rounded-xl bg-card p-4 space-y-4 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <h4 className="text-sm font-bold text-foreground">2. {t('messaging.confirmRecipients')}</h4>
-                <p className="text-xs text-muted-foreground">{t('messaging.confirmRecipientsDesc')}</p>
+            {/* Action Campaign Panel */}
+            <div className="border border-border rounded-xl bg-card p-4 space-y-4 flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-foreground">2. {t('messaging.confirmRecipients')}</h4>
+                  <p className="text-xs text-muted-foreground">{t('messaging.confirmRecipientsDesc')}</p>
+                </div>
+
+                <div className="p-3 bg-muted/40 rounded-xl space-y-2 border border-border/40">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Contacts Checked:</span>
+                    <span className="font-bold text-foreground">{currentSelectedList.length}</span>
+                  </div>
+                  {currentSelectedList.length > 0 && (
+                    <div className="max-h-24 overflow-y-auto border border-border/30 rounded p-1.5 bg-background space-y-1">
+                      {currentSelectedList.map((rec) => (
+                        <div key={rec.id} className="flex justify-between text-[10px] text-muted-foreground">
+                          <span className="truncate max-w-[120px]">{rec.name}</span>
+                          <span className="font-mono">{rec.phone || rec.email}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="p-3 bg-muted/40 rounded-xl space-y-2 border border-border/40">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-muted-foreground">Contacts Checked:</span>
-                  <span className="font-bold text-foreground">{currentSelectedList.length}</span>
+              <div className="space-y-2">
+                <Button
+                  onClick={() => triggerCompose('whatsapp')}
+                  disabled={currentSelectedList.length === 0}
+                  className="w-full bg-success hover:bg-success/90 text-success-foreground font-semibold"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Send WhatsApp Campaign
+                </Button>
+                <Button
+                  onClick={() => triggerCompose('sms')}
+                  disabled={currentSelectedList.length === 0}
+                  className="w-full bg-info hover:bg-info/90 text-info-foreground font-semibold"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Send SMS Campaign
+                </Button>
+                <Button
+                  onClick={() => triggerCompose('email')}
+                  disabled={currentSelectedList.length === 0}
+                  className="w-full bg-warning hover:bg-warning/90 text-warning-foreground font-semibold"
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Send Email Campaign
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reports' && (
+          <div className="space-y-4">
+            {/* Metrics Strip */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.total')}</span>
+                  <h3 className="text-2xl font-black text-foreground">{stats.total}</h3>
                 </div>
-                {currentSelectedList.length > 0 && (
-                  <div className="max-h-24 overflow-y-auto border border-border/30 rounded p-1.5 bg-background space-y-1">
-                    {currentSelectedList.map((rec) => (
-                      <div key={rec.id} className="flex justify-between text-[10px] text-muted-foreground">
-                        <span className="truncate max-w-[120px]">{rec.name}</span>
-                        <span className="font-mono">{rec.phone || rec.email}</span>
-                      </div>
-                    ))}
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <Send className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.sms')}</span>
+                  <h3 className="text-2xl font-black text-foreground">{stats.sms}</h3>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center text-info">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.whatsapp')}</span>
+                  <h3 className="text-2xl font-black text-foreground">{stats.wa}</h3>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Emails Dispatched</span>
+                  <h3 className="text-2xl font-black text-foreground">{stats.email}</h3>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
+                  <Mail className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Message history log table */}
+              <div className="lg:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-3 flex-grow">
+                    <div className="relative flex-grow max-w-sm">
+                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder={t('messaging.search.placeholder')}
+                        value={searchLog}
+                        onChange={(e) => setSearchLog(e.target.value)}
+                        className="pl-9 h-9"
+                      />
+                    </div>
+
+                    {/* Channel Filter Selector */}
+                    <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
+                      {(['all', 'sms', 'whatsapp', 'email'] as const).map((ch) => (
+                        <button
+                          key={ch}
+                          onClick={() => setChannelFilter(ch)}
+                          className={`px-2.5 py-1 rounded-md font-bold uppercase transition-all ${
+                            channelFilter === ch 
+                              ? 'bg-background shadow-sm text-foreground' 
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          {ch}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {messageLogs.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleClearLogs}
+                      className="text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1.5" />
+                      {t('messaging.clearLogs')}
+                    </Button>
+                  )}
+                </div>
+
+                {filteredLogs.length > 0 ? (
+                  <div className="overflow-x-auto border border-border/50 rounded-lg">
+                    <table className="w-full text-sm text-left">
+                      <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
+                        <tr>
+                          <th className="px-4 py-3">Recipient</th>
+                          <th className="px-4 py-3">Channel</th>
+                          <th className="px-4 py-3">Message Body</th>
+                          <th className="px-4 py-3">Date Sent</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/60">
+                        {filteredLogs.map((log) => {
+                          const recipient = allContacts.find((c) => c.id === log.contactId);
+                          const name = recipient ? getDisplayName(recipient) : `Contact #${log.contactId}`;
+                          return (
+                            <tr key={log.id} className="hover:bg-muted/10 transition-colors">
+                              <td className="px-4 py-3 font-semibold text-foreground flex items-center gap-2">
+                                <User className="w-3.5 h-3.5 text-muted-foreground" />
+                                {name}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                                  log.channel === 'email'
+                                    ? 'bg-warning/10 text-warning border border-warning/20'
+                                    : log.channel === 'sms' 
+                                    ? 'bg-info/10 text-info border border-info/20' 
+                                    : 'bg-success/10 text-success border border-success/20'
+                                }`}>
+                                  {log.channel === 'email' ? <Mail className="w-3 h-3" /> : log.channel === 'sms' ? <MessageSquare className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
+                                  {log.channel}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-muted-foreground max-w-md truncate" title={log.body}>
+                                {log.body}
+                              </td>
+                              <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                                {formatDate(log.sentAt)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                    <Clock className="w-8 h-8 opacity-40 mb-2" />
+                    <p className="text-sm font-medium">No sent message records found</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Volume Breakdown Recharts PieChart */}
+              <div className="border border-border rounded-xl bg-card p-4 flex flex-col justify-between">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    <BarChart2 className="w-4 h-4 text-primary" /> Volume Breakdown
+                  </h4>
+                  <p className="text-xs text-muted-foreground">Campaign distribution by communications channel.</p>
+                </div>
+
+                {chartData.length > 0 ? (
+                  <div className="h-[240px] w-full flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-[240px] text-muted-foreground">
+                    <BarChart2 className="w-8 h-8 opacity-45 mb-2" />
+                    <p className="text-xs font-semibold">No dispatches to chart</p>
                   </div>
                 )}
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Button
-                onClick={() => triggerCompose('whatsapp')}
-                disabled={currentSelectedList.length === 0}
-                className="w-full bg-success hover:bg-success/90 text-success-foreground font-semibold"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Send WhatsApp Campaign
-              </Button>
-              <Button
-                onClick={() => triggerCompose('sms')}
-                disabled={currentSelectedList.length === 0}
-                className="w-full bg-info hover:bg-info/90 text-info-foreground font-semibold"
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Send SMS Campaign
-              </Button>
-              <Button
-                onClick={() => triggerCompose('email')}
-                disabled={currentSelectedList.length === 0}
-                className="w-full bg-warning hover:bg-warning/90 text-warning-foreground font-semibold"
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Send Email Campaign
-              </Button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {activeTab === 'templates' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Create Template Form */}
-          <div className="border border-border rounded-xl bg-card p-4 space-y-4">
-            <div className="space-y-1">
-              <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                <Plus className="w-4 h-4 text-primary" /> {t('messaging.createPreset')}
-              </h4>
-              <p className="text-xs text-muted-foreground">{t('messaging.createPresetDesc')}</p>
-            </div>
-
-            <form onSubmit={handleCreateTemplate} className="space-y-3">
-              <div>
-                <label className={FORM_LABEL} htmlFor="tplLabel">Template Label / Title</label>
-                <Input
-                  id="tplLabel"
-                  value={templateLabel}
-                  onChange={(e) => setTemplateLabel(e.target.value)}
-                  placeholder="e.g., Absent Notification"
-                  className={FORM_INPUT}
-                  required
-                />
+        {activeTab === 'setup' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Create Template Form */}
+            <div className="border border-border rounded-xl bg-card p-4 space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                  <Plus className="w-4 h-4 text-primary" /> {t('messaging.createPreset')}
+                </h4>
+                <p className="text-xs text-muted-foreground">{t('messaging.createPresetDesc')}</p>
               </div>
 
-              <div>
-                <label className={FORM_LABEL} htmlFor="tplBody">{t('contacts.messageBody')}</label>
-                <textarea
-                  id="tplBody"
-                  value={templateBody}
-                  onChange={(e) => setTemplateBody(e.target.value)}
-                  placeholder="Hello {name}, we missed you today at the session..."
-                  className={FORM_TEXTAREA}
-                  rows={4}
-                  required
-                />
-              </div>
+              <form onSubmit={handleCreateTemplate} className="space-y-3">
+                <div>
+                  <label className={FORM_LABEL} htmlFor="tplLabel">Template Label / Title</label>
+                  <Input
+                    id="tplLabel"
+                    value={templateLabel}
+                    onChange={(e) => setTemplateLabel(e.target.value)}
+                    placeholder="e.g., Absent Notification"
+                    className={FORM_INPUT}
+                    required
+                  />
+                </div>
 
-              <Button type="submit" className="w-full font-bold">
-                <Check className="w-4 h-4 mr-1.5" />
-                {t('messaging.saveTemplate')}
-              </Button>
-            </form>
-          </div>
+                <div>
+                  <label className={FORM_LABEL} htmlFor="tplBody">{t('contacts.messageBody')}</label>
+                  <textarea
+                    id="tplBody"
+                    value={templateBody}
+                    onChange={(e) => setTemplateBody(e.target.value)}
+                    placeholder="Hello {name}, we missed you today at the session..."
+                    className={FORM_TEXTAREA}
+                    rows={4}
+                    required
+                  />
+                </div>
 
-          {/* Existing Templates Listing */}
-          <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
-            <div className="space-y-1">
-              <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                <Tag className="w-4 h-4 text-muted-foreground" /> {t('messaging.configuredPresets')}
-              </h4>
-              <p className="text-xs text-muted-foreground">{t('messaging.configuredPresetsDesc')}</p>
+                <Button type="submit" className="w-full font-bold">
+                  <Check className="w-4 h-4 mr-1.5" />
+                  {t('messaging.saveTemplate')}
+                </Button>
+              </form>
             </div>
 
-            <div className="overflow-x-auto border border-border/50 rounded-lg">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-muted/40 text-muted-foreground uppercase tracking-wider font-semibold">
-                  <tr className="border-b border-border/60">
-                    <th className="px-4 py-2.5">Template Label</th>
-                    <th className="px-4 py-2.5">Message Copy</th>
-                    <th className="px-4 py-2.5 w-16 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {templates.map((tpl) => (
-                    <tr key={tpl.id} className="hover:bg-muted/5 transition-colors">
-                      <td className="px-4 py-3 font-semibold text-foreground">{tpl.label}</td>
-                      <td className="px-4 py-3 text-muted-foreground max-w-sm truncate" title={tpl.body}>
-                        {tpl.body}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {tpl.id.startsWith('custom_') ? (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteTemplate(tpl.id)}
-                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        ) : (
-                          <span className="text-[10px] text-muted-foreground/60 italic font-mono uppercase bg-muted/65 px-1.5 py-0.5 rounded border border-border/30">system</span>
-                        )}
-                      </td>
+            {/* Existing Templates Listing */}
+            <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                  <Tag className="w-4 h-4 text-muted-foreground" /> {t('messaging.configuredPresets')}
+                </h4>
+                <p className="text-xs text-muted-foreground">{t('messaging.configuredPresetsDesc')}</p>
+              </div>
+
+              <div className="overflow-x-auto border border-border/50 rounded-lg">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-muted/40 text-muted-foreground uppercase tracking-wider font-semibold">
+                    <tr className="border-b border-border/60">
+                      <th className="px-4 py-2.5">Template Label</th>
+                      <th className="px-4 py-2.5">Message Copy</th>
+                      <th className="px-4 py-2.5 w-16 text-center">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {templates.map((tpl) => (
+                      <tr key={tpl.id} className="hover:bg-muted/5 transition-colors">
+                        <td className="px-4 py-3 font-semibold text-foreground">{tpl.label}</td>
+                        <td className="px-4 py-3 text-muted-foreground max-w-sm truncate" title={tpl.body}>
+                          {tpl.body}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {tpl.id.startsWith('custom_') ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteTemplate(tpl.id)}
+                              className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground/60 italic font-mono uppercase bg-muted/65 px-1.5 py-0.5 rounded border border-border/30">system</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </ResponsiveAccordionTabs>
 
       {/* Shared composer modal */}
       {composerTarget && (
