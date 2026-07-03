@@ -208,6 +208,27 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
                   />
                 </div>
               </div>
+
+              <div className="border-t border-border/60 pt-3 mt-3 space-y-2">
+                <Toggle
+                  label={t('contacts.setup.showDetailedSolarAge')}
+                  description={t('contacts.setup.showDetailedSolarAgeDesc')}
+                  value={!!prefs.showDetailedSolarAge}
+                  onChange={(val) => updatePreference("showDetailedSolarAge", val)}
+                />
+                <Toggle
+                  label={t('contacts.setup.showLunarDob')}
+                  description={t('contacts.setup.showLunarDobDesc')}
+                  value={!!prefs.showLunarDob}
+                  onChange={(val) => updatePreference("showLunarDob", val)}
+                />
+                <Toggle
+                  label={t('contacts.setup.showDetailedLunarAge')}
+                  description={t('contacts.setup.showDetailedLunarAgeDesc')}
+                  value={!!prefs.showDetailedLunarAge}
+                  onChange={(val) => updatePreference("showDetailedLunarAge", val)}
+                />
+              </div>
             </div>
           </section>
         </>

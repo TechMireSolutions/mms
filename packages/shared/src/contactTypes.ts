@@ -195,6 +195,9 @@ export interface ContactPreferences {
   duplicateDetectionColorSuccess?: string;
   duplicateDetectionColorSuccessText?: string;
   duplicateDetectionColorHighlight?: string;
+  showDetailedSolarAge?: boolean;
+  showLunarDob?: boolean;
+  showDetailedLunarAge?: boolean;
 }
 
 export interface WhatsAppTemplate {

@@ -635,3 +635,99 @@ export function calcAge(dob: string | null | undefined): number | null {
   const diff = Date.now() - new Date(dob).getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
 }
+
+/**
+ * Calculate detailed solar age (Years, Months, Days) based on a date of birth.
+ * @param dob - Date of birth string
+ * @returns Detailed solar age string, e.g. \"24y 5m 12d\"
+ */
+export function calculateDetailedSolarAge(dob: string): string {
+  try {
+    const birth = new Date(dob);
+    if (isNaN(birth.getTime())) return "";
+    const now = new Date();
+    
+    let years = now.getFullYear() - birth.getFullYear();
+    let months = now.getMonth() - birth.getMonth();
+    let days = now.getDate() - birth.getDate();
+    
+    if (days < 0) {
+      months--;
+      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    return `${years}y ${months}m ${days}d`;
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Convert Gregorian date of birth to a Hijri (lunar) date string.
+ * @param dob - Gregorian date of birth string
+ * @param locale - Active language locale
+ * @returns Localized Hijri date string
+ */
+export function getLunarDateString(dob: string, locale = "en"): string {
+  try {
+    const date = new Date(dob);
+    if (isNaN(date.getTime())) return "";
+    const formatter = new Intl.DateTimeFormat(`${locale}-u-ca-islamic-umalqura`, {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+    return formatter.format(date);
+  } catch {
+    return "";
+  }
+}
+
+function getHijriParts(date: Date): { year: number; month: number; day: number } {
+  const formatter = new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric"
+  });
+  const parts = formatter.formatToParts(date);
+  const day = parseInt(parts.find(p => p.type === "day")?.value || "1", 10);
+  const month = parseInt(parts.find(p => p.type === "month")?.value || "1", 10);
+  const year = parseInt(parts.find(p => p.type === "year")?.value || "1", 10);
+  return { year, month, day };
+}
+
+/**
+ * Calculate detailed Hijri (lunar) age (Years, Months, Days) based on a date of birth.
+ * @param dob - Date of birth string
+ * @returns Detailed lunar age string, e.g. \"25y 2m 8d\"
+ */
+export function calculateDetailedLunarAge(dob: string): string {
+  try {
+    const birthDate = new Date(dob);
+    if (isNaN(birthDate.getTime())) return "";
+    const now = new Date();
+    
+    const birthParts = getHijriParts(birthDate);
+    const nowParts = getHijriParts(now);
+    
+    let years = nowParts.year - birthParts.year;
+    let months = nowParts.month - birthParts.month;
+    let days = nowParts.day - birthParts.day;
+    
+    if (days < 0) {
+      months--;
+      days += 30; // standard lunar month approximation
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    return `${years}y ${months}m ${days}d`;
+  } catch {
+    return "";
+  }
+}

@@ -4,8 +4,18 @@ import {
   MoreHorizontal, MessageCircle, MessageSquare, Edit2, Trash2, Eye, Phone, Mail, RotateCcw, Copy, Check,
   MapPin, User, Calendar, CheckCircle2
 } from "lucide-react";
-import { type Contact, formatDate } from "@mms/shared";
-import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp } from "@mms/shared";
+import { 
+  type Contact, 
+  formatDate,
+  getDisplayName, 
+  getPrimaryPhone, 
+  getPrimaryEmail, 
+  hasWhatsApp,
+  calculateDetailedSolarAge,
+  getLunarDateString,
+  calculateDetailedLunarAge
+} from "@mms/shared";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -63,6 +73,7 @@ export default function ContactCards({
   allSelected = false,
 }: ContactCardsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { prefs } = useContactConfig();
   const [viewContact, setViewContact] = useState<Contact | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -129,10 +140,27 @@ export default function ContactCards({
       }
       case "dob":
         return item.dob ? (
-          <span className="flex items-center gap-1 font-mono">
-            <Calendar className="w-3.5 h-3.5 text-primary/70 shrink-0" />
-            {formatDate(item.dob)}
-          </span>
+          <div className="flex flex-col gap-0.5 text-[11px] font-mono leading-normal">
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-primary/70 shrink-0" />
+              {formatDate(item.dob)}
+            </span>
+            {prefs.showDetailedSolarAge && (
+              <span className="text-muted-foreground/80 pl-4.5 block">
+                {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(item.dob)}
+              </span>
+            )}
+            {prefs.showLunarDob && (
+              <span className="text-muted-foreground/80 pl-4.5 block">
+                {t("contacts.table.lunarDobLabel")} {getLunarDateString(item.dob)}
+              </span>
+            )}
+            {prefs.showDetailedLunarAge && (
+              <span className="text-muted-foreground/80 pl-4.5 block">
+                {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(item.dob)}
+              </span>
+            )}
+          </div>
         ) : (
           <span className="text-muted-foreground/40">—</span>
         );
@@ -270,9 +298,26 @@ export default function ContactCards({
                       {displayName}
                     </h4>
                     {contact.dob && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                        {t("contacts.table.dobLabel")} {formatDate(contact.dob)}
-                      </p>
+                      <div className="text-[11px] text-muted-foreground mt-0.5 space-y-0.5 leading-normal">
+                        <p className="truncate">
+                          {t("contacts.table.dobLabel")} {formatDate(contact.dob)}
+                        </p>
+                        {prefs.showDetailedSolarAge && (
+                          <p className="truncate text-muted-foreground/80">
+                            {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(contact.dob)}
+                          </p>
+                        )}
+                        {prefs.showLunarDob && (
+                          <p className="truncate text-muted-foreground/80">
+                            {t("contacts.table.lunarDobLabel")} {getLunarDateString(contact.dob)}
+                          </p>
+                        )}
+                        {prefs.showDetailedLunarAge && (
+                          <p className="truncate text-muted-foreground/80">
+                            {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(contact.dob)}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </Button>

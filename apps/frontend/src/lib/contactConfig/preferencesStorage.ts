@@ -89,6 +89,9 @@ const DEFAULT_PREFERENCES: ContactPreferences = {
   duplicateDetectionColorSuccess: COLOR_PALETTES.success.bg,
   duplicateDetectionColorSuccessText: COLOR_PALETTES.success.text,
   duplicateDetectionColorHighlight: COLOR_PALETTES.info.bg,
+  showDetailedSolarAge: false,
+  showLunarDob: false,
+  showDetailedLunarAge: false,
 };
 
 export {

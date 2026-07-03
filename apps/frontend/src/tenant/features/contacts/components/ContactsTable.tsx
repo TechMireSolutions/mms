@@ -11,7 +11,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, Contact, formatDate } from "@mms/shared";
+import { 
+  getDisplayName, 
+  getPrimaryPhone, 
+  getPrimaryEmail, 
+  hasWhatsApp, 
+  Contact, 
+  formatDate,
+  calculateDetailedSolarAge,
+  getLunarDateString,
+  calculateDetailedLunarAge
+} from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactCellValue } from '@/lib/contacts/contactI18n';
@@ -122,7 +132,7 @@ export default function ContactsTable({
   canWrite = false,
   canDelete = false,
 }: ContactsTableProps): React.JSX.Element {
-  const { visibleColumns } = useContactConfig();
+  const { visibleColumns, prefs } = useContactConfig();
   const { t } = useTranslation();
   const visibleColumnIds = React.useMemo(
     () => new Set(visibleColumns.map((col) => col.id)),
@@ -165,9 +175,28 @@ export default function ContactsTable({
                 >
                   {getDisplayName(contact)}
                 </Button>
-                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                 <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal">
                   <GenderIcon gender={contact.gender} />
-                  {contact.dob && <span>{t('contacts.table.dobLabel')} {formatDate(contact.dob)}</span>}
+                  {contact.dob && (
+                    <>
+                      <span>{t('contacts.table.dobLabel')} {formatDate(contact.dob)}</span>
+                      {prefs.showDetailedSolarAge && (
+                        <span className="before:content-['•'] before:mr-1.5">
+                          {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(contact.dob)}
+                        </span>
+                      )}
+                      {prefs.showLunarDob && (
+                        <span className="before:content-['•'] before:mr-1.5">
+                          {t("contacts.table.lunarDobLabel")} {getLunarDateString(contact.dob)}
+                        </span>
+                      )}
+                      {prefs.showDetailedLunarAge && (
+                        <span className="before:content-['•'] before:mr-1.5">
+                          {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(contact.dob)}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </p>
                 {showArchived && contact.deletionReason && (
                   <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
@@ -243,7 +272,32 @@ export default function ContactsTable({
           </td>
         );
       case "dob":
-        return <td key="dob" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{contact.dob ? formatDate(contact.dob) : t('contacts.table.emptyDash')}</span></td>;
+        return (
+          <td key="dob" className="px-4 py-3">
+            {contact.dob ? (
+              <div className="flex flex-col gap-0.5 text-[12px] text-muted-foreground leading-normal font-mono">
+                <span>{formatDate(contact.dob)}</span>
+                {prefs.showDetailedSolarAge && (
+                  <span className="text-[10px] text-muted-foreground/80">
+                    {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(contact.dob)}
+                  </span>
+                )}
+                {prefs.showLunarDob && (
+                  <span className="text-[10px] text-muted-foreground/80">
+                    {t("contacts.table.lunarDobLabel")} {getLunarDateString(contact.dob)}
+                  </span>
+                )}
+                {prefs.showDetailedLunarAge && (
+                  <span className="text-[10px] text-muted-foreground/80">
+                    {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(contact.dob)}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="text-muted-foreground/40">—</span>
+            )}
+          </td>
+        );
       case "state":
         return <td key="state" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{contact.addresses?.[0]?.state || (contact.state as string) || (contact.province as string) || t('contacts.table.emptyDash')}</span></td>;
       case "country":
