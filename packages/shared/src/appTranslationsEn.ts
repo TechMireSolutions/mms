@@ -2027,6 +2027,7 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.table.emptyDash": "—",
   "contacts.table.copied": "Copied!",
   "contacts.table.copy": "Copy",
+  "contacts.table.selectContact": "Select {name}",
   "contacts.table.dobLabel": "DOB:",
   "contacts.table.notRegisteredWhatsApp": "Not registered on WhatsApp",
   "contacts.table.yesSyed": "Syed",

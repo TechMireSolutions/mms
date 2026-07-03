@@ -2024,6 +2024,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.table.emptyDash": "—",
   "contacts.table.copied": "تم النسخ!",
   "contacts.table.copy": "نسخ",
+  "contacts.table.selectContact": "حدد {name}",
   "contacts.table.dobLabel": "تاريخ الميلاد:",
   "contacts.table.notRegisteredWhatsApp": "غير مسجل على واتساب",
   "contacts.table.yesSyed": "سيد",

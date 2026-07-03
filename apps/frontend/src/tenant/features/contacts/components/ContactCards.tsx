@@ -214,6 +214,7 @@ export default function ContactCards({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {contacts.map((contact) => {
           const isSelected = selected.includes(contact.id);
+          const displayName = getDisplayName(contact);
 
           const phone = getPrimaryPhone(contact);
           const email = getPrimaryEmail(contact);
@@ -225,20 +226,25 @@ export default function ContactCards({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
-              className={`relative overflow-hidden group rounded-2xl border bg-gradient-to-br from-card/95 via-card/80 to-background/60 backdrop-blur-xl p-4 pl-5.5 space-y-4 transition-all duration-300 shadow-sm hover:shadow-md ${isSelected
-                  ? "border-primary/45 bg-primary/[0.02] shadow-sm shadow-primary/5"
-                  : "border-border/30 hover:border-primary/20"
+              role="region"
+              aria-label={displayName}
+              className={`relative overflow-hidden group rounded-2xl border bg-gradient-to-br from-card/95 via-card/85 to-background/70 dark:from-card/95 dark:via-card/80 dark:to-background/60 backdrop-blur-xl p-4 pl-5.5 space-y-4 transition-all duration-300 shadow-sm hover:shadow-md ${isSelected
+                  ? "border-primary/50 bg-primary/[0.015] dark:bg-primary/[0.02] shadow-sm shadow-primary/5"
+                  : "border-border/50 dark:border-border/30 hover:border-primary/35 dark:hover:border-primary/20"
                 }`}
             >
-              <div className={`absolute left-0 top-0 bottom-0 w-1 ${contact.isSyed ? "bg-amber-500/45 group-hover:bg-amber-500" : isSelected ? "bg-primary/65 group-hover:bg-primary" : "bg-primary/35 group-hover:bg-primary/60"} transition-colors duration-300`} />
-
+              <div 
+                aria-hidden="true"
+                className={`absolute left-0 top-0 bottom-0 w-1.5 ${contact.isSyed ? "bg-amber-500/50 group-hover:bg-amber-500" : isSelected ? "bg-primary/70 group-hover:bg-primary" : "bg-primary/40 group-hover:bg-primary/60"} transition-colors duration-300`} 
+              />
+ 
               {/* Core Profile Area */}
               <div className="flex gap-3 pr-16 items-start ml-1">
-                <div className="flex items-center justify-center flex-shrink-0 pt-0.5">
+                <div className="flex items-center justify-center flex-shrink-0 pt-1">
                   <Checkbox
                     checked={isSelected}
                     onCheckedChange={() => onSelect(contact.id)}
-                    aria-label={getDisplayName(contact)}
+                    aria-label={t("contacts.table.selectContact", { name: displayName }) || `Select ${displayName}`}
                   />
                 </div>
                 <Button
@@ -246,19 +252,24 @@ export default function ContactCards({
                   variant="ghost"
                   className="h-auto p-0 hover:bg-transparent flex flex-1 items-start gap-2.5 min-w-0 text-left cursor-pointer group hover:text-foreground shadow-none justify-start"
                   onClick={() => setViewContact(contact)}
+                  aria-label={t("contacts.table.viewProfile") || "View Profile"}
                 >
                   <div className="relative animate-none">
                     <ContactAvatar contact={contact} className="w-11 h-11 rounded-2xl text-sm shadow-inner group-hover:scale-105 transition-transform duration-200" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h4 className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
-                      {getDisplayName(contact)}
+                      {displayName}
                     </h4>
-
+                    {contact.dob && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                        {t("contacts.table.dobLabel")} {formatDate(contact.dob)}
+                      </p>
+                    )}
                   </div>
                 </Button>
               </div>
-
+ 
               {/* Contact Information Pills */}
               {(showPhonePill || showEmailPill) && (
                 <div className="space-y-2 py-0.5 ml-1">
@@ -267,11 +278,12 @@ export default function ContactCards({
                       type="button"
                       variant="ghost"
                       onClick={() => handleCopyContactValue(phone, `phone:${contact.id}`)}
-                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/30 hover:bg-muted/50 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
+                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
+                      aria-label={`${t("contacts.detail.call")}: ${phone}. ${t("contacts.table.copy")}`}
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
-                        <Phone className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
-                        <span className="font-medium tracking-tight truncate select-all">{phone}</span>
+                        <Phone aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 dark:text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
+                        <span className="font-semibold tracking-tight truncate select-all">{phone}</span>
                       </div>
                       <div className="w-4 h-4 flex items-center justify-center shrink-0">
                         <AnimatePresence mode="wait">
@@ -282,14 +294,14 @@ export default function ContactCards({
                               animate={{ scale: 1, opacity: 1 }}
                               exit={{ scale: 0.7, opacity: 0 }}
                             >
-                              <Check className="w-3.5 h-3.5 text-success" />
+                              <Check aria-hidden="true" className="w-3.5 h-3.5 text-success" />
                             </motion.div>
                           ) : (
                             <motion.div
                               key="copy"
-                              className="opacity-0 group-hover/pill:opacity-100 transition-all"
+                              className="opacity-40 group-focus-visible/pill:opacity-100 group-hover/pill:opacity-100 transition-all"
                             >
-                              <Copy className="w-3.5 h-3.5 text-muted-foreground/35" />
+                              <Copy aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground/50 dark:text-muted-foreground/35" />
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -301,11 +313,12 @@ export default function ContactCards({
                       type="button"
                       variant="ghost"
                       onClick={() => handleCopyContactValue(email, `email:${contact.id}`)}
-                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/30 hover:bg-muted/50 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
+                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 backdrop-blur-sm px-3 py-2 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
+                      aria-label={`${t("contacts.reportFields.email")}: ${email}. ${t("contacts.table.copy")}`}
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
-                        <Mail className="w-3.5 h-3.5 text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
-                        <span className="font-medium tracking-tight truncate select-all">{email}</span>
+                        <Mail aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 dark:text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
+                        <span className="font-semibold tracking-tight truncate select-all">{email}</span>
                       </div>
                       <div className="w-4 h-4 flex items-center justify-center shrink-0">
                         <AnimatePresence mode="wait">
@@ -316,14 +329,14 @@ export default function ContactCards({
                               animate={{ scale: 1, opacity: 1 }}
                               exit={{ scale: 0.7, opacity: 0 }}
                             >
-                              <Check className="w-3.5 h-3.5 text-success" />
+                              <Check aria-hidden="true" className="w-3.5 h-3.5 text-success" />
                             </motion.div>
                           ) : (
                             <motion.div
                               key="copy"
-                              className="opacity-0 group-hover/pill:opacity-100 transition-all"
+                              className="opacity-40 group-focus-visible/pill:opacity-100 group-hover/pill:opacity-100 transition-all"
                             >
-                              <Copy className="w-3.5 h-3.5 text-muted-foreground/35" />
+                              <Copy aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground/50 dark:text-muted-foreground/35" />
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -332,17 +345,17 @@ export default function ContactCards({
                   )}
                 </div>
               )}
-
+ 
               {/* Dynamic Metadata Section */}
               {otherColumns.length > 0 && (
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/10 ml-1">
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ml-1">
                   {otherColumns.map((col) => {
                     const value = contact[col.id as keyof Contact];
                     // Skip empty custom values unless they are booleans/ratings
                     if (value === undefined || value === null || (value === "" && col.id !== "rating")) return null;
                     return (
-                      <div key={col.id} className="flex flex-col gap-0.5 bg-muted/20 px-2.5 py-1.5 rounded-xl border border-border/10 text-left min-w-0">
-                        <span className="text-[9px] text-muted-foreground font-black uppercase tracking-wider">{col.label}</span>
+                      <div key={col.id} className="flex flex-col gap-0.5 bg-muted/40 dark:bg-muted/15 px-2.5 py-1.5 rounded-xl border border-border/30 dark:border-border/10 text-left min-w-0">
+                        <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{col.label}</span>
                         <div className="text-[12px] font-bold text-foreground truncate mt-0.5">
                           {renderMetadataValue(col.id, contact)}
                         </div>
@@ -351,7 +364,7 @@ export default function ContactCards({
                   })}
                 </div>
               )}
-
+ 
               {/* Archived Warning Banner */}
               {contact.deletedAt && (
                 <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 space-y-1 text-[11px] text-destructive text-left">
@@ -366,26 +379,27 @@ export default function ContactCards({
                   )}
                 </div>
               )}
-
+ 
               {/* Action Toolbar */}
-              <div className="pt-3 border-t border-border/30 flex items-center justify-between gap-1.5">
+              <div className="pt-3 border-t border-border/40 dark:border-border/20 flex items-center justify-between gap-1.5">
                 <div className="flex items-center gap-1.5">
                   {phone ? (
                     <motion.a
                       href={`tel:${phone}`}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-2.5 rounded-xl border border-border/40 bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-colors shadow-sm"
+                      className="p-2.5 rounded-xl border border-border/50 dark:border-border/30 bg-muted/40 dark:bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-colors shadow-sm"
                       title={t("contacts.detail.call")}
+                      aria-label={t("contacts.detail.call")}
                     >
-                      <Phone className="w-4 h-4" />
+                      <Phone aria-hidden="true" className="w-4 h-4" />
                     </motion.a>
                   ) : (
                     <div className="p-2.5 rounded-xl border border-border/20 bg-card/20 text-muted-foreground/30 cursor-not-allowed opacity-40">
-                      <Phone className="w-4 h-4" />
+                      <Phone aria-hidden="true" className="w-4 h-4" />
                     </div>
                   )}
-
+ 
                   <MotionButton
                     type="button"
                     variant="ghost"
@@ -394,14 +408,15 @@ export default function ContactCards({
                     whileTap={hasWhatsApp(contact) ? { scale: 0.95 } : undefined}
                     onClick={() => onWhatsApp([contact])}
                     className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${hasWhatsApp(contact)
-                        ? "border-success/20 bg-success/5 text-success hover:bg-success/10 cursor-pointer"
+                        ? "border-success/30 dark:border-success/20 bg-success/5 text-success hover:bg-success/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
                       }`}
                     title={t("contacts.whatsapp")}
+                    aria-label={t("contacts.whatsapp")}
                   >
-                    <MessageCircle className="w-4 h-4" />
+                    <MessageCircle aria-hidden="true" className="w-4 h-4" />
                   </MotionButton>
-
+ 
                   <MotionButton
                     type="button"
                     variant="ghost"
@@ -410,15 +425,16 @@ export default function ContactCards({
                     whileTap={phone ? { scale: 0.95 } : undefined}
                     onClick={() => onSms([contact])}
                     className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${phone
-                        ? "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer"
+                        ? "border-primary/30 dark:border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
                       }`}
                     title={t("contacts.sms")}
+                    aria-label={t("contacts.sms")}
                   >
-                    <MessageSquare className="w-4 h-4" />
+                    <MessageSquare aria-hidden="true" className="w-4 h-4" />
                   </MotionButton>
                 </div>
-
+ 
                 <div className="flex items-center gap-1.5">
                   <MotionButton
                     type="button"
@@ -426,9 +442,10 @@ export default function ContactCards({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setViewContact(contact)}
-                    className="flex items-center h-auto gap-1.5 px-3 py-2 rounded-xl border border-border/40 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:border-border transition-colors cursor-pointer shadow-none"
+                    className="flex items-center h-auto gap-1.5 px-3 py-2 rounded-xl border border-border/50 dark:border-border/30 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:border-border transition-colors cursor-pointer shadow-none"
+                    aria-label={t("contacts.table.viewProfile")}
                   >
-                    <Eye className="w-3.5 h-3.5" />
+                    <Eye aria-hidden="true" className="w-3.5 h-3.5" />
                     <span>{t("contacts.table.viewProfile")}</span>
                   </MotionButton>
                   <DropdownMenu>
@@ -438,16 +455,16 @@ export default function ContactCards({
                         variant="outline"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="p-2.5 rounded-xl border border-border/40 hover:bg-muted text-muted-foreground transition-colors cursor-pointer h-auto shadow-none"
+                        className="p-2.5 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted text-muted-foreground transition-colors cursor-pointer h-auto shadow-none"
                         aria-label={t("contacts.table.actions")}
                       >
-                        <MoreHorizontal className="w-4 h-4" />
+                        <MoreHorizontal aria-hidden="true" className="w-4 h-4" />
                       </MotionButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44">
                       {canWrite && !showArchived && (
                         <DropdownMenuItem onClick={() => onEdit(contact)}>
-                          <Edit2 className="w-3.5 h-3.5 mr-2" /> {t("contacts.table.edit")}
+                          <Edit2 aria-hidden="true" className="w-3.5 h-3.5 mr-2" /> {t("contacts.table.edit")}
                         </DropdownMenuItem>
                       )}
                       {!showArchived ? (
@@ -458,14 +475,14 @@ export default function ContactCards({
                               onClick={() => onDelete(contact.id)}
                               className="text-destructive focus:text-destructive"
                             >
-                              <Trash2 className="w-3.5 h-3.5 mr-2" /> {t("contacts.table.deleteContact")}
+                              <Trash2 aria-hidden="true" className="w-3.5 h-3.5 mr-2" /> {t("contacts.table.deleteContact")}
                             </DropdownMenuItem>
                           </>
                         )
                       ) : (
                         canDelete && (
                           <DropdownMenuItem onClick={() => onRestore?.(contact.id)}>
-                            <RotateCcw className="w-3.5 h-3.5 mr-2" /> {t("contacts.restoreContact")}
+                            <RotateCcw aria-hidden="true" className="w-3.5 h-3.5 mr-2" /> {t("contacts.restoreContact")}
                           </DropdownMenuItem>
                         )
                       )}

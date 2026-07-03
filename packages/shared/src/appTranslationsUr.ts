@@ -2022,6 +2022,7 @@ export const APP_TRANSLATIONS_UR = {
   "contacts.table.emptyDash": "—",
   "contacts.table.copied": "کاپی!",
   "contacts.table.copy": "کاپی",
+  "contacts.table.selectContact": "منتخب کریں {name}",
   "contacts.table.dobLabel": "تاریخ پیدائش:",
   "contacts.table.notRegisteredWhatsApp": "WhatsApp پر رجسٹرڈ نہیں",
   "contacts.table.yesSyed": "سید",
