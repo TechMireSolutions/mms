@@ -95,7 +95,7 @@ export default function ContactForm({
       firstName: "",
       lastName: "",
       name: "",
-      gender: "unspecified",
+      gender: "",
       dob: "",
       cnic: "",
       isSyed: false,
@@ -399,7 +399,7 @@ export default function ContactForm({
           >
             <EditableSelect
               options={genders.length > 0 ? genders : ["male", "female", "other", "unspecified"]}
-              value={contactDraft.gender || "unspecified"}
+              value={contactDraft.gender || ""}
               onChange={(val) => updateDraft({ gender: val })}
               placeholder={t("contacts.form.selectOption")}
               className="w-full"
