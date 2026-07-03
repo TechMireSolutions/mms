@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   MessageSquare, MessageCircle, Send, Search, 
-  Trash2, User, Clock, Plus, Tag, Filter, Check
+  Trash2, User, Clock, Plus, Tag, Filter, Check, Mail
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -37,14 +37,14 @@ export default function MessagingPage(): React.JSX.Element {
   
   // Advanced filters
   const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female' | 'unspecified'>('all');
-  const [channelFilter, setChannelFilter] = useState<'all' | 'sms' | 'whatsapp'>('all');
+  const [channelFilter, setChannelFilter] = useState<'all' | 'sms' | 'whatsapp' | 'email'>('all');
   
   // Custom templates form state
   const [templateLabel, setTemplateLabel] = useState('');
   const [templateBody, setTemplateBody] = useState('');
 
   const [selectedRecipients, setSelectedRecipients] = useState<Record<string | number, boolean>>({});
-  const [composerTarget, setComposerTarget] = useState<{ channel: 'sms' | 'whatsapp'; recipients: MessagingRecipient[] } | null>(null);
+  const [composerTarget, setComposerTarget] = useState<{ channel: 'sms' | 'whatsapp' | 'email'; recipients: MessagingRecipient[] } | null>(null);
 
   // Load templates from DB (merged with defaults)
   const templates = useMemo(() => {
@@ -103,13 +103,13 @@ export default function MessagingPage(): React.JSX.Element {
     }
   };
 
-  // Filter contacts to find eligible recipients (those with phone numbers and matching filters)
+  // Filter contacts to find eligible recipients (those with phone numbers or email address and matching filters)
   const filteredContacts = useMemo(() => {
     return allContacts.filter((c) => {
       const nameMatch = getDisplayName(c).toLowerCase().includes(searchContact.toLowerCase());
-      const hasPhone = Boolean(getPrimaryPhone(c));
+      const hasContactInfo = Boolean(getPrimaryPhone(c)) || Boolean(c.email?.trim());
       const genderMatch = genderFilter === 'all' || (c.gender || 'unspecified').toLowerCase() === genderFilter;
-      return nameMatch && hasPhone && genderMatch;
+      return nameMatch && hasContactInfo && genderMatch;
     });
   }, [allContacts, searchContact, genderFilter]);
 
@@ -155,13 +155,14 @@ export default function MessagingPage(): React.JSX.Element {
         id: c.id,
         name: getDisplayName(c),
         phone: getPrimaryPhone(c) || '',
+        email: c.email || '',
       }));
   }, [allContacts, selectedRecipients]);
 
   const allVisibleSelected = filteredContacts.length > 0 && filteredContacts.every((c) => selectedRecipients[c.id]);
 
   // Open Composer Dialog
-  const triggerCompose = (channel: 'sms' | 'whatsapp'): void => {
+  const triggerCompose = (channel: 'sms' | 'whatsapp' | 'email'): void => {
     if (currentSelectedList.length === 0) {
       notify.error('Please select at least one recipient first.');
       return;
@@ -177,7 +178,8 @@ export default function MessagingPage(): React.JSX.Element {
     const total = messageLogs.length;
     const sms = messageLogs.filter((l) => l.channel === 'sms').length;
     const wa = messageLogs.filter((l) => l.channel === 'whatsapp').length;
-    return { total, sms, wa };
+    const email = messageLogs.filter((l) => l.channel === 'email').length;
+    return { total, sms, wa, email };
   }, [messageLogs]);
 
   return (
@@ -190,7 +192,7 @@ export default function MessagingPage(): React.JSX.Element {
       />
 
       {/* Metrics Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.total')}</span>
@@ -220,6 +222,16 @@ export default function MessagingPage(): React.JSX.Element {
             <MessageCircle className="w-5 h-5" />
           </div>
         </div>
+
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Emails Dispatched</span>
+            <h3 className="text-2xl font-black text-foreground">{stats.email}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
+            <Mail className="w-5 h-5" />
+          </div>
+        </div>
       </div>
 
       {/* Tabs Menu */}
@@ -236,7 +248,7 @@ export default function MessagingPage(): React.JSX.Element {
       {activeTab === 'logs' && (
         <div className="border border-border rounded-xl bg-card p-4 space-y-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3 flex-grow max-w-xl">
+            <div className="flex items-center gap-3 flex-grow max-w-2xl">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -249,11 +261,11 @@ export default function MessagingPage(): React.JSX.Element {
 
               {/* Channel Filter Selector */}
               <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
-                {(['all', 'sms', 'whatsapp'] as const).map((ch) => (
+                {(['all', 'sms', 'whatsapp', 'email'] as const).map((ch) => (
                   <button
                     key={ch}
                     onClick={() => setChannelFilter(ch)}
-                    className={`px-3 py-1 rounded-md font-bold uppercase transition-all ${
+                    className={`px-2.5 py-1 rounded-md font-bold uppercase transition-all ${
                       channelFilter === ch 
                         ? 'bg-background shadow-sm text-foreground' 
                         : 'text-muted-foreground hover:text-foreground'
@@ -301,11 +313,13 @@ export default function MessagingPage(): React.JSX.Element {
                         </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                            log.channel === 'sms' 
+                            log.channel === 'email'
+                              ? 'bg-warning/10 text-warning border border-warning/20'
+                              : log.channel === 'sms' 
                               ? 'bg-info/10 text-info border border-info/20' 
                               : 'bg-success/10 text-success border border-success/20'
                           }`}>
-                            {log.channel === 'sms' ? <MessageSquare className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
+                            {log.channel === 'email' ? <Mail className="w-3 h-3" /> : log.channel === 'sms' ? <MessageSquare className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
                             {log.channel}
                           </span>
                         </td>
@@ -384,6 +398,7 @@ export default function MessagingPage(): React.JSX.Element {
                     </th>
                     <th className="px-4 py-2">Name</th>
                     <th className="px-4 py-2">Phone Number</th>
+                    <th className="px-4 py-2">Email Address</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
@@ -399,14 +414,15 @@ export default function MessagingPage(): React.JSX.Element {
                           />
                         </td>
                         <td className="px-4 py-2 font-medium text-foreground">{getDisplayName(c)}</td>
-                        <td className="px-4 py-2 font-mono text-muted-foreground">{phone}</td>
+                        <td className="px-4 py-2 font-mono text-muted-foreground">{phone || '-'}</td>
+                        <td className="px-4 py-2 text-muted-foreground">{c.email || '-'}</td>
                       </tr>
                     );
                   })}
                   {filteredContacts.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="text-center py-6 text-muted-foreground">
-                        No active contacts with valid phone numbers match your search filters.
+                      <td colSpan={4} className="text-center py-6 text-muted-foreground">
+                        No active contacts with valid phone numbers or emails match your filters.
                       </td>
                     </tr>
                   )}
@@ -433,7 +449,7 @@ export default function MessagingPage(): React.JSX.Element {
                     {currentSelectedList.map((rec) => (
                       <div key={rec.id} className="flex justify-between text-[10px] text-muted-foreground">
                         <span className="truncate max-w-[120px]">{rec.name}</span>
-                        <span className="font-mono">{rec.phone}</span>
+                        <span className="font-mono">{rec.phone || rec.email}</span>
                       </div>
                     ))}
                   </div>
@@ -457,6 +473,14 @@ export default function MessagingPage(): React.JSX.Element {
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Send SMS Campaign
+              </Button>
+              <Button
+                onClick={() => triggerCompose('email')}
+                disabled={currentSelectedList.length === 0}
+                className="w-full bg-warning hover:bg-warning/90 text-warning-foreground font-semibold"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Send Email Campaign
               </Button>
             </div>
           </div>

@@ -379,7 +379,7 @@ export interface Message {
   id: string;
   userId: string;
   contactId: string | number;
-  channel: 'sms' | 'whatsapp';
+  channel: 'sms' | 'whatsapp' | 'email';
   body: string;
   sentAt: string;
 }

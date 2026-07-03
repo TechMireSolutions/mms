@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { MessageCircle, MessageSquare, User, Info, Sparkles } from 'lucide-react';
+import { MessageCircle, MessageSquare, User, Info, Sparkles, Mail } from 'lucide-react';
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { openDeviceSmsComposer } from '@/lib/deviceSms';
 import { FormModal } from '@/components/ui/FormModal';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormPrimitives';
-import { FORM_LABEL, FORM_TEXTAREA } from '@/components/ui/formStyles';
+import { FORM_LABEL, FORM_TEXTAREA, FORM_INPUT } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { getCollection, saveCollection } from '@/lib/db';
@@ -14,6 +15,7 @@ export interface MessagingRecipient {
   id: string | number;
   name: string;
   phone: string;
+  email?: string;
 }
 
 export interface MessageTemplate {
@@ -23,7 +25,7 @@ export interface MessageTemplate {
 }
 
 export interface MessageComposerProps {
-  channel: 'sms' | 'whatsapp';
+  channel: 'sms' | 'whatsapp' | 'email';
   recipients: MessagingRecipient[];
   onClose: () => void;
   templates?: MessageTemplate[];
@@ -38,7 +40,7 @@ export function personalizeMessage(body: string, recipient: MessagingRecipient):
 }
 
 /**
- * Reusable and decoupled Message Composer for SMS and WhatsApp.
+ * Reusable and decoupled Message Composer for SMS, WhatsApp, and Email.
  */
 export default function MessageComposer({
   channel,
@@ -60,10 +62,13 @@ export default function MessageComposer({
     }
   })();
 
-  // Deduplicate and filter recipients with valid phone numbers
+  // Deduplicate and filter recipients with valid addresses/numbers
   const eligibleRecipients = useMemo(() => {
+    if (channel === 'email') {
+      return recipients.filter((r) => Boolean(r.email?.trim()));
+    }
     return recipients.filter((r) => Boolean(r.phone?.trim()));
-  }, [recipients]);
+  }, [recipients, channel]);
 
   const activeTemplates = useMemo(() => {
     if (templates) return templates;
@@ -75,6 +80,7 @@ export default function MessageComposer({
   }, [templates, contextTemplates]);
 
   const [template, setTemplate] = useState<string>(() => activeTemplates[0]?.id || 'custom');
+  const [subject, setSubject] = useState<string>('');
   const [message, setMessage] = useState<string>(() => activeTemplates[0]?.body || '');
   const [opening, setOpening] = useState<boolean>(false);
 
@@ -87,17 +93,25 @@ export default function MessageComposer({
   };
 
   const executeSend = (recipient: MessagingRecipient, text: string): boolean => {
-    const phone = recipient.phone;
-    if (!phone) return false;
+    const personalizedBody = personalizeMessage(text, recipient);
 
-    const personalized = personalizeMessage(text, recipient);
-
-    if (channel === 'sms') {
-      return openDeviceSmsComposer(phone, personalized);
-    } else {
-      const cleanNum = phone.replace(/\D/g, '');
-      window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(personalized)}`, '_blank');
+    if (channel === 'email') {
+      const email = recipient.email;
+      if (!email) return false;
+      const personalizedSubject = personalizeMessage(subject || 'Announcement', recipient);
+      window.open(`mailto:${email}?subject=${encodeURIComponent(personalizedSubject)}&body=${encodeURIComponent(personalizedBody)}`, '_blank');
       return true;
+    } else {
+      const phone = recipient.phone;
+      if (!phone) return false;
+
+      if (channel === 'sms') {
+        return openDeviceSmsComposer(phone, personalizedBody);
+      } else {
+        const cleanNum = phone.replace(/\D/g, '');
+        window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(personalizedBody)}`, '_blank');
+        return true;
+      }
     }
   };
 
@@ -118,24 +132,37 @@ export default function MessageComposer({
         executeSend(eligibleRecipients[0], message);
         sentRecords.push({ recipientId: eligibleRecipients[0].id, body: personalizeMessage(message, eligibleRecipients[0]) });
         onSent?.(sentRecords);
-        onClose();
+      } else {
+        setOpening(true);
+        eligibleRecipients.forEach((recipient, index) => {
+          window.setTimeout(() => {
+            executeSend(recipient, message);
+            sentRecords.push({ recipientId: recipient.id, body: personalizeMessage(message, recipient) });
+
+            if (index === eligibleRecipients.length - 1) {
+              setOpening(false);
+              onSent?.(sentRecords);
+              
+              // Save to local message history log if user is logged in
+              if (sentRecords.length > 0 && user) {
+                const dbKey = `messages_u:${user.id}`;
+                const newMsgs = sentRecords.map((rec) => ({
+                  id: crypto.randomUUID(),
+                  userId: user.id,
+                  contactId: rec.recipientId,
+                  channel,
+                  body: rec.body,
+                  sentAt: new Date().toISOString(),
+                }));
+                const currentMsgs = getCollection<unknown>(dbKey) || [];
+                saveCollection(dbKey, [...newMsgs, ...currentMsgs]);
+              }
+              onClose();
+            }
+          }, index * 600); // 600ms delay to prevent browser blockages
+        });
         return;
       }
-
-      setOpening(true);
-      eligibleRecipients.forEach((recipient, index) => {
-        window.setTimeout(() => {
-          executeSend(recipient, message);
-          sentRecords.push({ recipientId: recipient.id, body: personalizeMessage(message, recipient) });
-
-          if (index === eligibleRecipients.length - 1) {
-            setOpening(false);
-            onSent?.(sentRecords);
-            onClose();
-          }
-        }, index * 600); // 600ms delay to prevent browser blockages
-      });
-      return;
     }
 
     // Save to local message history log if user is logged in
@@ -149,36 +176,48 @@ export default function MessageComposer({
         body: rec.body,
         sentAt: new Date().toISOString(),
       }));
-      const currentMsgs = getCollection<unknown>(dbKey);
+      const currentMsgs = getCollection<unknown>(dbKey) || [];
       saveCollection(dbKey, [...newMsgs, ...currentMsgs]);
-      onSent?.(sentRecords);
     }
 
     onClose();
   };
 
+  const isEmail = channel === 'email';
   const isSms = channel === 'sms';
-  const Icon = isSms ? MessageSquare : MessageCircle;
+  const Icon = isEmail ? Mail : isSms ? MessageSquare : MessageCircle;
 
   const isBulk = recipients.length > 1;
   const title = isBulk
-    ? isSms
+    ? isEmail
+      ? 'Bulk Email Campaign'
+      : isSms
       ? t('contacts.bulkSmsMessage')
       : t('contacts.whatsapp.bulkTitle')
+    : isEmail
+    ? `Email – ${recipients[0]?.name}`
     : isSms
     ? `${t('contacts.sms')} – ${recipients[0]?.name}`
     : t('contacts.whatsapp.singleTitle', { name: recipients[0]?.name ?? '' });
 
   const subtitle = isBulk
-    ? isSms
+    ? isEmail
+      ? `${eligibleRecipients.length} of ${recipients.length} contacts have email`
+      : isSms
       ? `${eligibleRecipients.length} ${t('contacts.of')} ${recipients.length} ${t('contacts.contactsHavePhone')}`
       : `${eligibleRecipients.length} ${t('contacts.of')} ${recipients.length} ${t('contacts.whatsapp.contactsHaveWhatsapp')}`
     : undefined;
 
-  const note = isSms ? t('contacts.smsManualSendNote') : t('contacts.whatsapp.bulkManualNote');
+  const note = isEmail
+    ? 'Opens your default mail app with personalized subject and body drafts.'
+    : isSms
+    ? t('contacts.smsManualSendNote')
+    : t('contacts.whatsapp.bulkManualNote');
 
   const saveLabel = opening
-    ? t('contacts.whatsapp.openingTabs')
+    ? (isEmail ? 'Opening mail apps…' : t('contacts.whatsapp.openingTabs'))
+    : isEmail
+    ? (isBulk ? `Open all in Mail (${eligibleRecipients.length})` : 'Open Mail Draft')
     : isSms
     ? t('contacts.openSmsApp')
     : isBulk
@@ -201,12 +240,31 @@ export default function MessageComposer({
       cancelLabel={t('common.cancel')}
       saveLabel={saveLabel}
       onSave={handleSendAll}
-      saveDisabled={opening || eligibleRecipients.length === 0 || !message.trim()}
+      saveDisabled={opening || eligibleRecipients.length === 0 || !message.trim() || (isEmail && !subject.trim())}
     >
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground leading-relaxed">
           {note}
         </p>
+
+        {isEmail && (
+          <div>
+            <label className={FORM_LABEL} htmlFor="emailSubject">
+              Email Subject
+            </label>
+            <Input
+              id="emailSubject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="e.g. Important Announcement"
+              className={FORM_INPUT}
+              required
+            />
+            <div className="text-[10px] text-muted-foreground mt-1">
+              Use <code className="bg-muted px-1 py-0.5 rounded text-foreground font-mono">{`{name}`}</code> to personalize subject.
+            </div>
+          </div>
+        )}
 
         {activeTemplates.length > 0 && (
           <div>
@@ -224,7 +282,7 @@ export default function MessageComposer({
 
         <div>
           <label className={FORM_LABEL} htmlFor="messageBody">
-            {isSms ? t('contacts.messageBody') : t('contacts.whatsapp.message')}
+            {t('contacts.messageBody')}
           </label>
           <textarea
             id="messageBody"
@@ -237,7 +295,7 @@ export default function MessageComposer({
           <div className="flex justify-between items-center mt-1">
             <span className="text-[10px] text-muted-foreground flex items-center gap-1">
               <Info className="w-3 h-3 text-primary/70" />
-              Use <code className="bg-muted px-1 py-0.5 rounded text-foreground font-mono">{`{name}`}</code> to personalize.
+              Use <code className="bg-muted px-1 py-0.5 rounded text-foreground font-mono">{`{name}`}</code> to personalize body.
             </span>
             <span className="text-[10px] text-muted-foreground">
               {message.length} {t('contacts.whatsapp.chars')}
@@ -268,28 +326,31 @@ export default function MessageComposer({
               Recipients ({eligibleRecipients.length})
             </span>
             <ul className="space-y-1 max-h-32 overflow-y-auto border border-border/50 rounded-lg p-2 bg-muted/10">
-              {eligibleRecipients.map((recipient) => (
-                <li key={recipient.id} className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <User className="w-3 h-3 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="truncate">{recipient.name}</span>
-                  <span className="text-[10px] font-mono text-muted-foreground/60">({recipient.phone})</span>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="ml-auto text-primary font-semibold hover:underline flex-shrink-0 h-auto p-0 text-[11px]"
-                    onClick={() => executeSend(recipient, message)}
-                  >
-                    {isSms ? t('contacts.openSmsApp') : t('contacts.whatsapp.open')}
-                  </Button>
-                </li>
-              ))}
+              {eligibleRecipients.map((recipient) => {
+                const displayContactVal = isEmail ? recipient.email : recipient.phone;
+                return (
+                  <li key={recipient.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <User className="w-3 h-3 flex-shrink-0 text-muted-foreground/60" />
+                    <span className="truncate">{recipient.name}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground/60">({displayContactVal})</span>
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="ml-auto text-primary font-semibold hover:underline flex-shrink-0 h-auto p-0 text-[11px]"
+                      onClick={() => executeSend(recipient, message)}
+                    >
+                      {isEmail ? 'Send Email' : isSms ? t('contacts.openSmsApp') : t('contacts.whatsapp.open')}
+                    </Button>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
 
         {isBulk && eligibleRecipients.length === 0 && (
           <p className="text-xs text-destructive font-medium">
-            {isSms ? t('contacts.smsNoEligibleContacts') : t('contacts.whatsapp.skippedNote')}
+            {isEmail ? 'No selected contacts have an email address.' : isSms ? t('contacts.smsNoEligibleContacts') : t('contacts.whatsapp.skippedNote')}
           </p>
         )}
       </div>
