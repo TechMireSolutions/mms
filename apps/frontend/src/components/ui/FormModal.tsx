@@ -4,7 +4,7 @@ import { AlertCircle, CheckCircle2, Loader2, Save, Settings, Eye } from 'lucide-
 import { Modal } from '@/components/ui/Modal';
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { FormProgressBar } from '@/components/ui/FormProgressBar';
-import { SubTabBar, type SubTab } from '@/components/ui/SubTabBar';
+import type { SubTab } from '@/components/ui/SubTabBar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -77,7 +77,7 @@ export function FormModal<K extends string = string>({
   tabs,
   activeTab,
   onTabChange,
-  tabPanelIdPrefix = 'form-modal-tab',
+  tabPanelIdPrefix: _tabPanelIdPrefix = 'form-modal-tab',
   lang,
   dir,
   cancelLabel,
@@ -217,11 +217,11 @@ export function FormModal<K extends string = string>({
         builderMode ? null : (
           <div
             className={cn(
-              'flex w-full items-center gap-2.5',
+              'flex w-full flex-col items-stretch gap-2.5 sm:flex-row sm:items-center',
               footerStart ? 'justify-between' : 'justify-end',
             )}
           >
-            {footerStart ? <div className="hidden min-w-0 sm:block">{footerStart}</div> : null}
+            {footerStart ? <div className="min-w-0 sm:flex-1">{footerStart}</div> : null}
             <div className="ml-auto flex items-center gap-2.5">
               <Button type="button" variant="outline" onClick={onClose}>
                 {cancelLabel}

@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { GraduationCap, User, Users, Hash, Calendar, FileText } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, FileText, GraduationCap, Hash, User, Users } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Button } from "@/components/ui/button";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { FORM_INPUT } from "@/components/ui/formStyles";
@@ -35,10 +36,16 @@ import {
   type FieldDefinition,
 } from "@mms/shared";
 
+type StudentFormStep = "contact" | "registration" | "guardian" | "notes";
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export interface StudentFormProps {
   student?: Partial<Student> | null;
   onClose: () => void;
-  onSave: (student: Student) => void;
+  onSave: (student: Student) => void | Promise<void>;
 }
 
 const DUPLICATE_ERROR_KEYS: Record<StudentDuplicateReason, AppTranslationKey> = {
@@ -60,6 +67,7 @@ export default function StudentForm({
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [manualError, setManualError] = useState("");
+  const [activeStep, setActiveStep] = useState<StudentFormStep>("contact");
 
   const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => ({
     contactId: student?.contactId ?? "",
@@ -102,16 +110,6 @@ export default function StudentForm({
     [settings.fields]
   );
 
-  const isFieldRequired = useCallback(
-    (tabId: string, fieldId: string) => {
-      const tabFields = (settings.fields?.[tabId] || []) as FieldDefinition[];
-      const fieldDef = tabFields.find((fieldDefinition) => fieldDefinition.key === fieldId);
-      if (!fieldDef) return false;
-      return fieldDef.required === true;
-    },
-    [settings.fields]
-  );
-
   const getFieldError = (fieldId: string) => {
     const fieldError = validationErrors.find((validationError) => validationError.fieldId === fieldId);
     return fieldError ? fieldError.message : undefined;
@@ -135,9 +133,9 @@ export default function StudentForm({
 
   const { data: nextGrNumber } = useStudentNextGrNumber({
     registeredDate: studentDraft.registeredDate || new Date().toISOString().split("T")[0],
-    template: "GR-{YEAR}-{SEQ}",
-    digits: 4,
-    restartAnnually: true,
+    template: settings.grNumberTemplate,
+    digits: settings.grNumberDigits,
+    restartAnnually: settings.grNumberRestartAnnually,
     enabled: !student?.id,
   });
 
@@ -148,7 +146,7 @@ export default function StudentForm({
     }
   }, [nextGrNumber, student?.id, studentDraft.grNumber]);
 
-  const commitSave = (data: Partial<Student>) => {
+  const commitSave = async (data: Partial<Student>) => {
     const saved = {
       ...data,
       registeredDate: data.registeredDate || undefined,
@@ -157,12 +155,12 @@ export default function StudentForm({
       guardianName: data.guardianName ? toTitleCase(data.guardianName) : "",
     };
 
-    onSave(
+    await onSave(
       normalizeStoredStudent({
         ...saved,
         id: student?.id || `st${Date.now()}`,
         enrolledSessions: student?.enrolledSessions || [],
-        _blueprintId: "1",
+        ...(settings.version != null ? { _blueprintId: String(settings.version) } : {}),
       }) as unknown as Student,
     );
   };
@@ -180,10 +178,19 @@ export default function StudentForm({
       language
     );
 
-    const parseResult = schema.safeParse(studentDraft);
+    const validationDraft = {
+      ...studentDraft,
+      gender: linkedGender,
+      dob: linkedDob,
+    };
+    const parseResult = schema.safeParse(validationDraft);
     if (!parseResult.success) {
-      const zodErrors = formatStudentZodIssues(parseResult.error, studentDraft, settings.fields || {});
+      const zodErrors = formatStudentZodIssues(parseResult.error, validationDraft, settings.fields || {});
       setValidationErrors(zodErrors);
+      const firstError = zodErrors[0];
+      if (firstError) {
+        setActiveStep(fieldStep(firstError.fieldId, firstError.tabId));
+      }
 
       notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
       return;
@@ -208,22 +215,67 @@ export default function StudentForm({
         return;
       }
 
-      commitSave(studentDraft);
+      await commitSave(studentDraft);
       onClose();
-    } catch (err: any) {
-      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: err.message });
+    } catch (err: unknown) {
+      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: errorMessage(err) });
     } finally {
       setSaving(false);
     }
   };
 
   const confirmDuplicateSave = () => {
-    if (pendingSaveData) {
-      commitSave(pendingSaveData);
-      setPendingSaveData(null);
-    }
-    setDuplicateConfirmOpen(false);
-    onClose();
+    void (async () => {
+      if (!pendingSaveData) return;
+      setSaving(true);
+      try {
+        await commitSave(pendingSaveData);
+        setPendingSaveData(null);
+        setDuplicateConfirmOpen(false);
+        onClose();
+      } catch (err: unknown) {
+        notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: errorMessage(err) });
+      } finally {
+        setSaving(false);
+      }
+    })();
+  };
+
+  const genderError = getFieldError("gender");
+  const dobError = getFieldError("dob");
+  const validationErrorSummary = useMemo(() => {
+    if (validationErrors.length === 0) return undefined;
+    return validationErrors.map((validationError) => validationError.message);
+  }, [validationErrors]);
+
+  const renderContactOwnedFieldError = (message?: string) => {
+    if (!message) return null;
+    return <p className="text-[10px] text-destructive mt-1 font-medium">{message}</p>;
+  };
+
+  const renderContactProfileValue = (
+    label: string,
+    value: string,
+    icon: React.ComponentType<{ className?: string }>,
+    error?: string,
+  ) => {
+    const Icon = icon;
+    const hasValue = value.trim().length > 0;
+    return (
+      <Field label={label} hint={t("students.form.contactFieldHint")}>
+        <div
+          className={`flex min-h-11 items-center gap-3 rounded-lg border px-3.5 py-2.5 ${
+            error ? "border-destructive/40 bg-destructive/5" : "border-border/60 bg-muted/25"
+          }`}
+        >
+          <Icon className={`h-4 w-4 shrink-0 ${error ? "text-destructive" : "text-muted-foreground"}`} />
+          <span className={`text-sm font-semibold ${hasValue ? "text-foreground" : "text-muted-foreground"}`}>
+            {hasValue ? value : t("students.form.notSetOnContact")}
+          </span>
+        </div>
+        {renderContactOwnedFieldError(error)}
+      </Field>
+    );
   };
 
   const handleContactSelect = (id: string | number | null): void => {
@@ -288,12 +340,88 @@ export default function StudentForm({
     </span>
   );
 
-  const renderBasic = () => {
+  const formTabs = useMemo(() => {
+    const tabs: Array<{ key: StudentFormStep; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+      { key: "contact" as const, label: t("students.form.stepContact"), icon: User },
+      { key: "registration" as const, label: t("students.form.stepRegistration"), icon: GraduationCap },
+    ];
+    if (isTabEnabled("guardian")) {
+      tabs.push({ key: "guardian" as const, label: t("students.form.stepGuardians"), icon: Users });
+    }
+    if (isTabEnabled("academic")) {
+      tabs.push({ key: "notes" as const, label: t("students.form.stepNotes"), icon: FileText });
+    }
+    return tabs;
+  }, [isTabEnabled, t]);
+
+  const fieldStep = useCallback((fieldId: string, tabId?: string): StudentFormStep => {
+    const availableSteps = new Set(formTabs.map((tab) => tab.key));
+    if (["contactId", "gender", "dob"].includes(fieldId)) return "contact";
+    if (["grNumber", "status", "registeredDate"].includes(fieldId)) return "registration";
+    if (
+      tabId === "guardian"
+      || ["fatherLink", "motherLink", "guardianLink", "fatherContactId", "motherContactId", "guardianContactId"].includes(fieldId)
+    ) {
+      return availableSteps.has("guardian") ? "guardian" : "registration";
+    }
+    if (fieldId === "notes" || tabId === "academic") {
+      return availableSteps.has("notes") ? "notes" : "registration";
+    }
+    return "registration";
+  }, [formTabs]);
+
+  useEffect(() => {
+    if (!formTabs.some((tab) => tab.key === activeStep)) {
+      setActiveStep(formTabs[0]?.key ?? "contact");
+    }
+  }, [activeStep, formTabs]);
+
+  const activeStepIndex = Math.max(0, formTabs.findIndex((tab) => tab.key === activeStep));
+  const activeStepNumber = activeStepIndex + 1;
+  const canGoBack = activeStepIndex > 0;
+  const canGoForward = activeStepIndex < formTabs.length - 1;
+
+  const goToStepIndex = (stepIndex: number) => {
+    const nextStep = formTabs[stepIndex]?.key;
+    if (nextStep) {
+      setActiveStep(nextStep);
+    }
+  };
+
+  const renderStepNavigation = () => (
+    <div className="flex items-center justify-between gap-3 border-t border-border/50 pt-4">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => goToStepIndex(activeStepIndex - 1)}
+        disabled={!canGoBack}
+        className="min-w-[112px]"
+      >
+        <ChevronLeft className="h-4 w-4" aria-hidden />
+        {t("common.previous")}
+      </Button>
+      <span className="text-xs font-semibold text-muted-foreground">
+        {activeStepNumber}/{formTabs.length}
+      </span>
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={() => goToStepIndex(activeStepIndex + 1)}
+        disabled={!canGoForward}
+        className="min-w-[112px]"
+      >
+        {t("common.next")}
+        <ChevronRight className="h-4 w-4" aria-hidden />
+      </Button>
+    </div>
+  );
+
+  const renderContact = () => {
     return (
       <div className="space-y-6">
-        {/* Contact Link */}
         <SectionCard
           title={t("students.form.contactLabel") || "Linked Contact"}
+          subtitle={t("students.form.contactHint")}
           icon={User}
           accentColor="primary"
         >
@@ -315,26 +443,22 @@ export default function StudentForm({
 
             {studentDraft.contactId && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
-                <Field label="Gender (contact)" hint="From contact profile">
-                  <div className="relative flex items-center group/input">
-                    <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 transition-colors pointer-events-none" />
-                    <Input disabled value={linkedGender || "—"} className={`${FORM_INPUT} pl-10`} />
-                  </div>
-                </Field>
-                <Field label="Date of Birth (contact)" hint="From contact profile">
-                  <div className="relative flex items-center group/input">
-                    <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 transition-colors pointer-events-none" />
-                    <Input disabled value={linkedDob || "—"} className={`${FORM_INPUT} pl-10`} />
-                  </div>
-                </Field>
+                {renderContactProfileValue(t("students.gender"), linkedGender, User, genderError)}
+                {renderContactProfileValue(t("students.form.fieldDob"), linkedDob, Calendar, dobError)}
               </div>
             )}
           </div>
         </SectionCard>
+      </div>
+    );
+  };
 
-        {/* Identity details (GR Number, Status, Registration Type) */}
+  const renderRegistration = () => {
+    return (
+      <div className="space-y-6">
         <SectionCard
           title={t("students.form.registrationSection") || "Registration Details"}
+          subtitle={t("students.form.registrationSectionDesc")}
           icon={GraduationCap}
           accentColor="primary"
         >
@@ -373,8 +497,8 @@ export default function StudentForm({
     return (
       <div className="space-y-6">
         <SectionCard
-          title="Family & Guardians"
-          subtitle="Link parent/guardian contacts"
+          title={t("students.form.guardiansSection")}
+          subtitle={t("students.form.guardiansSectionDesc")}
           icon={Users}
           accentColor="indigo"
         >
@@ -450,7 +574,7 @@ export default function StudentForm({
             <Textarea
               value={studentDraft.notes || ""}
               onChange={(event) => updateDraft({ notes: event.target.value })}
-              placeholder="Additional notes..."
+              placeholder={t("students.form.notesPlaceholder")}
               className="min-h-[120px] bg-background"
             />
           </Field>
@@ -468,27 +592,37 @@ export default function StudentForm({
         subtitle={t("students.form.subtitle")}
         icon={GraduationCap}
         tall
+        tabs={formTabs}
+        activeTab={activeStep}
+        onTabChange={setActiveStep}
+        progress={Math.round((activeStepNumber / formTabs.length) * 100)}
+        progressLabel={`${activeStepNumber}/${formTabs.length}`}
         lang={language}
         cancelLabel={t("common.cancel") || "Cancel"}
         saveLabel={saving ? (t("students.form.saving") || "Saving...") : (student ? (t("students.form.saveUpdate") || "Update") : (t("students.form.saveRegister") || "Register"))}
         onSave={handleSave}
         saving={saving}
         saveDisabled={!studentDraft.contactId}
-        error={errorSummary || undefined}
+        error={validationErrorSummary ?? (errorSummary || undefined)}
         footerStart={footerStart}
       >
-        <div className="space-y-6 pb-36">
-          {renderBasic()}
-          {isTabEnabled("guardian") && renderGuardian()}
-          {isTabEnabled("academic") && renderAcademic()}
+        <div className="space-y-6 pb-10">
+          {activeStep === "contact" && renderContact()}
+          {activeStep === "registration" && renderRegistration()}
+          {activeStep === "guardian" && renderGuardian()}
+          {activeStep === "notes" && renderAcademic()}
+          {renderStepNavigation()}
         </div>
       </FormModal>
       <ConfirmAlertDialog
         open={duplicateConfirmOpen}
         onOpenChange={setDuplicateConfirmOpen}
         title={student ? t("students.form.editTitle") : t("students.form.addTitle")}
-        description={typedDuplicateReason ? `${t(DUPLICATE_ERROR_KEYS[typedDuplicateReason])} Save anyway?` : ""}
-        confirmLabel={t("common.yes")}
+        description={typedDuplicateReason
+          ? t("students.form.duplicateSaveWarning", { message: t(DUPLICATE_ERROR_KEYS[typedDuplicateReason]) })
+          : ""}
+        confirmLabel={t("students.form.saveAnyway")}
+        cancelLabel={t("students.form.reviewDuplicate")}
         onConfirm={confirmDuplicateSave}
       />
     </>

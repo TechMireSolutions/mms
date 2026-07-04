@@ -76,6 +76,7 @@ export * from './studentTypes.js';
 export * from './studentsModuleContract.js';
 export * from './studentsListQuery.js';
 export * from './studentRegistrationUtils.js';
+export * from './studentSettingsUtils.js';
 export * from './teachersModuleContract.js';
 export * from './teachersListQuery.js';
 export * from './teacherRegistrationUtils.js';

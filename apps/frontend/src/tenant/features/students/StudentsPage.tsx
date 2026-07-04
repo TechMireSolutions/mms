@@ -20,7 +20,7 @@ import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
 import StudentsSettingsPanel from "@/tenant/features/students/components/StudentsSettings";
 import { Student } from '@/lib/data/studentsData';
-import { type StudentsSettings, STUDENTS_MODULE_CONTRACT } from "@mms/shared";
+import { type Student as SharedStudent, type StudentsSettings, STUDENTS_MODULE_CONTRACT } from "@mms/shared";
 
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
@@ -168,24 +168,14 @@ export default function Students() {
 
   const filteredStudents = workStudents;
 
-  const handleSaveStudent = (studentToSave: Student) => {
+  const handleSaveStudent = async (studentToSave: SharedStudent) => {
     if (editStudent) {
-      updateStudent.mutate(
-        { id: String(studentToSave.id), student: studentToSave as unknown as StudentRecord },
-        {
-          onSuccess: () => {
-            setShowStudentForm(false);
-            setEditStudent(null);
-          },
-        },
-      );
-    } else {
-      createStudent.mutate(studentToSave as unknown as StudentRecord, {
-        onSuccess: () => {
-          setShowStudentForm(false);
-          setEditStudent(null);
-        },
+      await updateStudent.mutateAsync({
+        id: String(studentToSave.id),
+        student: studentToSave as unknown as StudentRecord,
       });
+    } else {
+      await createStudent.mutateAsync(studentToSave as unknown as StudentRecord);
     }
   };
 
@@ -418,9 +408,9 @@ export default function Students() {
       <AnimatePresence>
         {showStudentForm && (
           <StudentForm
-            student={editStudent as any}
+            student={editStudent as unknown as Partial<SharedStudent> | null}
             onClose={() => { setShowStudentForm(false); setEditStudent(null); }}
-            onSave={handleSaveStudent as (studentToSave: any) => void}
+            onSave={handleSaveStudent}
           />
         )}
       </AnimatePresence>
