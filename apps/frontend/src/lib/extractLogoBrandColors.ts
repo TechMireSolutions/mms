@@ -9,6 +9,8 @@ import { resolveApiUrl } from '@/lib/apiClient';
 export type ExtractLogoBrandColorsOptions = LogoPaletteSamplingOptions & {
   /** Longest canvas edge when downsampling before pixel read (performance vs accuracy). */
   sampleSize?: number;
+  /** Optional signal to cancel the image fetch/loading process. */
+  signal?: AbortSignal;
 };
 
 const DEFAULT_OPTIONS: Required<Pick<ExtractLogoBrandColorsOptions, 'sampleSize'>> &
@@ -60,6 +62,7 @@ function normalizeFetchedImageBlob(blob: Blob, url: string): Blob {
 /** Fetches server-stored AVIF/WebP logos as a blob URL so canvas sampling is not tainted in dev. */
 async function resolveImageLoadSource(
   src: string,
+  signal?: AbortSignal,
 ): Promise<{ src: string; revoke?: () => void }> {
   const normalized = normalizeImageSource(src);
   if (!normalized) {
@@ -70,7 +73,7 @@ async function resolveImageLoadSource(
     return { src: normalized };
   }
 
-  const response = await fetch(normalized, { credentials: 'include' });
+  const response = await fetch(normalized, { credentials: 'include', signal });
   if (!response.ok) {
     throw new Error('Failed to fetch image for colour extraction');
   }
@@ -80,12 +83,31 @@ async function resolveImageLoadSource(
   return { src: objectUrl, revoke: () => URL.revokeObjectURL(objectUrl) };
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+function loadImage(src: string, signal?: AbortSignal): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      return reject(new DOMException('Aborted', 'AbortError'));
+    }
     const image = new Image();
     image.decoding = 'async';
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('Failed to load image for colour extraction'));
+
+    const onAbort = () => {
+      image.src = '';
+      reject(new DOMException('Aborted', 'AbortError'));
+    };
+
+    if (signal) {
+      signal.addEventListener('abort', onAbort);
+    }
+
+    image.onload = () => {
+      if (signal) signal.removeEventListener('abort', onAbort);
+      resolve(image);
+    };
+    image.onerror = () => {
+      if (signal) signal.removeEventListener('abort', onAbort);
+      reject(new Error('Failed to load image for colour extraction'));
+    };
     image.src = src;
   });
 }
@@ -105,14 +127,18 @@ export async function extractLogoBrandColors(
 ): Promise<LogoBrandColors | null> {
   if (!imageSource.trim()) return null;
 
-  const { sampleSize, ...samplingOptions } = { ...DEFAULT_OPTIONS, ...options };
+  const { sampleSize, signal, ...samplingOptions } = { ...DEFAULT_OPTIONS, ...options };
   let revokeObjectUrl: (() => void) | undefined;
 
   try {
-    const loadSource = await resolveImageLoadSource(imageSource);
+    if (signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
+
+    const loadSource = await resolveImageLoadSource(imageSource, signal);
     revokeObjectUrl = loadSource.revoke;
 
-    const image = await loadImage(loadSource.src);
+    const image = await loadImage(loadSource.src, signal);
     const longestEdge = Math.max(image.naturalWidth, image.naturalHeight, 1);
     const scale = sampleSize / longestEdge;
     const width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -125,12 +151,19 @@ export async function extractLogoBrandColors(
     const context = canvas.getContext('2d', { willReadFrequently: true });
     if (!context) return null;
 
+    if (signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
+
     context.drawImage(image, 0, 0, width, height);
     const { data } = context.getImageData(0, 0, width, height);
     const swatches = extractDominantSwatchesFromRgba(data, width, height, samplingOptions);
 
     return deriveBrandColorsFromPalette(swatches);
-  } catch {
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      throw error;
+    }
     return null;
   } finally {
     revokeObjectUrl?.();
