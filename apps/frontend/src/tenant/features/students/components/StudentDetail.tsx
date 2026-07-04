@@ -401,7 +401,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
                             return (
                                <div key={field.key} className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
-                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/row:bg-emerald-500" />
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
                                 <div className="p-2 rounded-lg bg-muted text-muted-foreground ml-1">
                                   <Sparkles className="w-3.5 h-3.5" />
                                 </div>
@@ -439,7 +439,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                              key={session.id}
                              className="relative overflow-hidden group/session p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm space-y-2 hover:border-primary/20 hover:shadow-md transition-all duration-300"
                            >
-                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/session:bg-emerald-500" />
+                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/session:bg-primary" />
                              <div className="flex items-center justify-between ml-1">
                                <span className="bg-primary/5 text-primary border border-primary/10 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase">
                                  {session.type}
@@ -473,13 +473,13 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Engagement & Analytics</h4>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="relative overflow-hidden group/metric p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm text-center hover:shadow-md transition-all duration-300">
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/metric:bg-emerald-500" />
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/metric:bg-primary" />
                         <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Attendance Rate</span>
                         <p className="text-lg font-black text-success">94.8%</p>
                         <span className="text-[9px] text-muted-foreground">Last 30 days</span>
                       </div>
                       <div className="relative overflow-hidden group/metric p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm text-center hover:shadow-md transition-all duration-300">
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/metric:bg-emerald-500" />
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/metric:bg-primary" />
                         <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Conduct Rating</span>
                         <p className="text-lg font-black text-primary">Excellent</p>
                         <span className="text-[9px] text-muted-foreground">Term Review</span>

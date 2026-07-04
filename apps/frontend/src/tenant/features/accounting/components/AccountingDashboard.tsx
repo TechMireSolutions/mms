@@ -197,7 +197,7 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
 
         {/* Balance Sheet snapshot */}
         <div className="relative overflow-hidden group/snapshot rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/snapshot:bg-emerald-500" />
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/snapshot:bg-primary" />
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.balanceSheetSnapshot")}</h3>
           <div className="space-y-3">
             {bsData.map((balanceSheetItem) => {

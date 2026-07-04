@@ -235,10 +235,10 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
 
           {/* Lines */}
           <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
-            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
             <div className="flex items-center justify-between pb-1.5 border-b border-border/40 mb-2">
               <div className="flex items-center gap-2.5">
-                <BookOpen className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
+                <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Journal Lines *</h3>
               </div>
               <Button
@@ -345,7 +345,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
               </table>
             </div>
 
-            <div className={`mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 ${isBalanced ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 shadow-sm" : "bg-destructive/10 text-destructive border-destructive/20 shadow-sm"}`} role="status">
+            <div className={`mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 ${isBalanced ? "bg-success/10 text-success border-success/20 shadow-sm" : "bg-destructive/10 text-destructive border-destructive/20 shadow-sm"}`} role="status">
               {isBalanced ? <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> : <AlertCircle className="w-4 h-4" aria-hidden="true" />}
               {isBalanced ? "Entry is balanced — Debits equal Credits" : `Out of balance — Difference: ${Math.abs(totalDebit - totalCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
             </div>
