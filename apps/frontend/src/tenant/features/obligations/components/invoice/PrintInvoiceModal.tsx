@@ -1,5 +1,5 @@
 import React, { useRef, useMemo } from "react";
-import { X, Printer, FileDown, Settings } from "lucide-react";
+import { Printer, FileDown, Settings } from "lucide-react";
 import { loadTemplate, PAGE_SIZES, InvoiceTemplate } from "@/lib/invoiceTemplateStore";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES } from '@mms/shared';
@@ -7,6 +7,7 @@ import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { InvoicePrintPreview } from "@/tenant/features/obligations/components/invoice/InvoicePrintPreview";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/Modal";
 
 export interface PrintInvoiceModalProps {
   collection: ObligationCollection;
@@ -88,72 +89,69 @@ export function PrintInvoiceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <div 
-        role="dialog" 
-        aria-modal="true" 
-        aria-labelledby="print-modal-title" 
-        className="relative z-10 bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col backdrop-blur-xl"
-      >
-        {/* Header */}
-        <header className="flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-muted/5 flex-shrink-0">
-          <div>
-            <h2 id="print-modal-title" className="text-[15px] font-bold text-foreground m-0">Print Receipt</h2>
-            <p className="text-xs text-muted-foreground m-0">Receipt No: <span className="font-mono font-bold text-primary">{collection.receipt_no}</span></p>
-          </div>
-          <div className="flex items-center gap-2">
-            {onOpenEditor && (
-              <Button type="button" onClick={onOpenEditor}
-                variant="outline"
-                className="flex items-center gap-1.5 px-3 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
-                <Settings className="w-3.5 h-3.5" aria-hidden="true" /> Customize Template
-              </Button>
-            )}
-            <Button type="button" aria-label="Close modal" onClick={onClose}
-              variant="ghost"
-              className="p-2 h-auto rounded-lg hover:bg-muted transition-colors text-muted-foreground shadow-none">
-              <X className="w-4 h-4" aria-hidden="true" />
-            </Button>
-          </div>
-        </header>
-
-        {/* Preview */}
-        <section aria-label="Invoice Preview" className="flex-1 overflow-auto bg-muted/40 flex items-start justify-center py-6 px-4">
-          <div ref={printRef} style={{ lineHeight: 1.4 }}>
-            <InvoicePrintPreview
-              template={template}
-              collection={collection}
-              lookups={lookups}
-              showBoundary
-              scale={1}
-            />
-          </div>
-        </section>
-
-        {/* Footer actions */}
-        <footer className="flex items-center justify-between px-5 py-3.5 border-t border-border flex-shrink-0 bg-muted/20">
+    <Modal
+      open
+      onClose={onClose}
+      title="Print Receipt"
+      subtitle={`Receipt No: ${collection.receipt_no}`}
+      icon={Printer}
+      size="lg"
+      headerActions={
+        onOpenEditor ? (
+          <Button
+            type="button"
+            onClick={onOpenEditor}
+            variant="outline"
+            className="flex items-center gap-1.5 px-3 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none"
+          >
+            <Settings className="w-3.5 h-3.5" aria-hidden="true" /> Customize Template
+          </Button>
+        ) : null
+      }
+      footer={
+        <div className="flex w-full items-center justify-between">
           <p className="text-[10px] text-muted-foreground m-0">
             Page size: <span className="font-semibold">{template.pageSize}</span> · {size.width}×{size.height}px
           </p>
           <div className="flex items-center gap-2">
-            <Button type="button" onClick={onClose}
+            <Button
+              type="button"
+              onClick={onClose}
               variant="outline"
-              className="px-4 py-2 h-auto rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors shadow-none">
+              className="px-4 py-2 h-auto rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors shadow-none"
+            >
               Cancel
             </Button>
-            <Button type="button" onClick={handleExportPDF}
+            <Button
+              type="button"
+              onClick={handleExportPDF}
               variant="outline"
-              className="flex items-center gap-2 px-4 py-2 h-auto rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors shadow-none">
+              className="flex items-center gap-2 px-4 py-2 h-auto rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors shadow-none"
+            >
               <FileDown className="w-4 h-4" aria-hidden="true" /> Export PDF
             </Button>
-            <Button type="button" onClick={handlePrint}
-              className="flex items-center gap-2 px-5 py-2 h-auto rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors">
+            <Button
+              type="button"
+              onClick={handlePrint}
+              className="flex items-center gap-2 px-5 py-2 h-auto rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+            >
               <Printer className="w-4 h-4" aria-hidden="true" /> Print
             </Button>
           </div>
-        </footer>
+        </div>
+      }
+    >
+      <div className="flex justify-center bg-muted/20 border border-dashed border-border rounded-xl p-4 overflow-x-auto min-h-[300px]">
+        <div ref={printRef} style={{ lineHeight: 1.4 }}>
+          <InvoicePrintPreview
+            template={template}
+            collection={collection}
+            lookups={lookups}
+            showBoundary
+            scale={1}
+          />
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

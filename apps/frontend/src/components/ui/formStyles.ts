@@ -26,3 +26,7 @@ export const FORM_INPUT_BUILDER = `${FORM_INPUT_COMPACT} bg-card/40 backdrop-blu
 /** OTP digit cell (2FA, platform verify). */
 export const FORM_OTP_DIGIT =
   'w-11 min-h-[52px] text-center text-xl font-bold rounded-xl border-2 bg-card text-foreground focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20';
+
+/** Unified checkbox style — borders, focus rings, primary accent, cursor pointer. */
+export const FORM_CHECKBOX =
+  'h-4 w-4 shrink-0 rounded border border-border bg-background accent-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50';

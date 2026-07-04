@@ -5,7 +5,7 @@ import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccou
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA, FORM_CHECKBOX } from "@/components/ui/formStyles";
 
 interface AccountModalProps {
   initial: Account | null;
@@ -154,7 +154,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                       type="checkbox"
                       checked={!!value}
                       onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.checked }))}
-                      className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
+                      className={FORM_CHECKBOX}
                     />
                     <span className="text-xs font-medium text-foreground">{field.label}</span>
                   </label>
