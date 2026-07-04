@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { type Session } from "@/lib/data/sessionsData";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface UpcomingSessionItem {
   id: number;
@@ -31,6 +32,7 @@ function hashStringToId(value: string): number {
  * @returns {React.ReactElement} The sessions table widget.
  */
 export default function SessionsTable({ title }: { title?: string }) {
+  const { t } = useTranslation();
   const dbSessions = useLiveCollection<Session>("sessions");
 
   const sessions: UpcomingSessionItem[] = [];
@@ -56,7 +58,7 @@ export default function SessionsTable({ title }: { title?: string }) {
       sessions.push({
         id: hashStringToId(`${session.id}-${sessionClass.id}-${classIndex}`),
         name: `${session.name} – ${sessionClass.name}`,
-        teacher: sessionClass.teacherName || "Unassigned",
+        teacher: sessionClass.teacherName || t("sessions.classes.unassigned"),
         time: timeStr,
         room: sessionClass.room || "N/A",
         students: sessionClass.enrolled || 0,
@@ -71,13 +73,15 @@ export default function SessionsTable({ title }: { title?: string }) {
       <header className="px-6 py-4 border-b border-border/40 flex items-center justify-between pl-6.5">
         <div className="flex items-center gap-2.5">
           <h3 id="sessions-table-heading" className="text-sm font-semibold text-foreground m-0">
-            {title || "Today's Sessions"}
+            {title || t("dashboard.widgets.todaysSessions")}
           </h3>
           <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-            {sessions.length} scheduled
+            {t("dashboard.widgets.sessionsScheduled", { count: sessions.length })}
           </span>
         </div>
-        <Button variant="link" className="text-[12px] font-semibold h-auto p-0">View all</Button>
+        <Button variant="link" className="text-[12px] font-semibold h-auto p-0">
+          {t("dashboard.widgets.viewAll")}
+        </Button>
       </header>
 
       <div className="divide-y divide-border/50">
@@ -98,7 +102,7 @@ export default function SessionsTable({ title }: { title?: string }) {
             <div className="flex-shrink-0">
               {session.status === "live" ? (
                 <span className="flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full" aria-label="Session is live">
-                  <Radio className="w-2.5 h-2.5 animate-pulse" aria-hidden="true" /> LIVE
+                  <Radio className="w-2.5 h-2.5 animate-pulse" aria-hidden="true" /> {t("dashboard.widgets.live")}
                 </span>
               ) : (
                 <div className="w-2 h-2 rounded-full bg-border" aria-hidden="true" />

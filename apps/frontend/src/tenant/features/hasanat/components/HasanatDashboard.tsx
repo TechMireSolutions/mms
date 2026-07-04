@@ -5,6 +5,7 @@ import { Star, Package, Gift, RotateCcw, TrendingUp, Layers } from "lucide-react
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import type { Denomination, StockBatch, Distribution } from '@/lib/data/hasanatData';
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface HasanatDashboardProps {
   denoms?: Denomination[];
@@ -27,6 +28,7 @@ export function HasanatDashboard({
   batches = [],
   distributions = [],
 }: HasanatDashboardProps) {
+  const { t } = useTranslation();
   const palette = useBrandPalette();
 
   const totalStock = batches.reduce((sum: number, batch: StockBatch) => sum + batch.quantity, 0);
@@ -39,21 +41,21 @@ export function HasanatDashboard({
 
   const pieData = useMemo(
     () => [
-      { name: "Active", value: totalActive, color: palette.charts[3] },
-      { name: "Redeemed", value: totalRedeemed, color: palette.charts[4] },
-      { name: "Returned", value: totalReturned, color: palette.charts[1] },
-      { name: "Available", value: totalRemaining, color: palette.primary },
+      { name: t("hasanat.status.active"), value: totalActive, color: palette.charts[3] },
+      { name: t("hasanat.status.redeemed"), value: totalRedeemed, color: palette.charts[4] },
+      { name: t("hasanat.status.returned"), value: totalReturned, color: palette.charts[1] },
+      { name: t("hasanat.stats.available"), value: totalRemaining, color: palette.primary },
     ],
-    [palette, totalActive, totalRedeemed, totalReturned, totalRemaining],
+    [t, palette, totalActive, totalRedeemed, totalReturned, totalRemaining],
   );
 
   const stats = [
-    { label: "Total Stock", value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10", accent: "primary" as const },
-    { label: "Available", value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20", accent: "success" as const },
-    { label: "Distributed", value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20", accent: "warning" as const },
-    { label: "Redeemed", value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20", accent: "indigo" as const },
-    { label: "Active (In-Hand)", value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20", accent: "info" as const },
-    { label: "Returned", value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border", accent: "rose" as const },
+    { label: t("hasanat.stats.totalStock"), value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10", accent: "primary" as const },
+    { label: t("hasanat.stats.available"), value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20", accent: "success" as const },
+    { label: t("hasanat.stats.distributed"), value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20", accent: "warning" as const },
+    { label: t("hasanat.stats.redeemed"), value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20", accent: "indigo" as const },
+    { label: t("hasanat.stats.active"), value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20", accent: "info" as const },
+    { label: t("hasanat.stats.returned"), value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border", accent: "rose" as const },
   ];
 
   // Per-denomination stock
@@ -108,13 +110,13 @@ export function HasanatDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Distribution donut */}
         <Card accentColor="primary" className="p-5 shadow-sm hover:shadow-md border-border/80">
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0">Card Distribution</h3>
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t("hasanat.dashboard.cardDistribution")}</h3>
           <div className="flex items-center gap-6">
             <PieChart width={130} height={130}>
               <Pie data={pieData} cx={60} cy={60} innerRadius={38} outerRadius={58} dataKey="value" paddingAngle={3}>
                 {pieData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
               </Pie>
-              <Tooltip formatter={(value) => [`${value} cards`, ""]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+              <Tooltip formatter={(value) => [t("hasanat.dashboard.cardsCount", { count: Number(value) }), ""]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
             </PieChart>
             <div className="space-y-2.5">
               {pieData.map((entry) => (
@@ -130,7 +132,7 @@ export function HasanatDashboard({
 
         {/* Per-denomination stock */}
         <Card accentColor="indigo" className="p-5 shadow-sm hover:shadow-md border-border/80">
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0">Stock by Denomination</h3>
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t("hasanat.dashboard.stockByDenomination")}</h3>
           <div className="space-y-3">
             {denominationStock.map((denomination: DenStockEntry) => {
               const pct = denomination.total > 0 ? Math.round((denomination.used / denomination.total) * 100) : 0;
@@ -140,7 +142,9 @@ export function HasanatDashboard({
                     <div className="flex items-center gap-2">
                       <span className="text-[14px]" aria-hidden="true">{denomination.icon}</span>
                       <span className="text-[12px] font-semibold text-foreground">{denomination.name}</span>
-                      <span className="text-[10px] font-bold text-muted-foreground">{denomination.points} pts</span>
+                      <span className="text-[10px] font-bold text-muted-foreground">
+                        {t("hasanat.dashboard.pts", { count: denomination.points })}
+                      </span>
                     </div>
                     <span className="text-[11px] text-muted-foreground">{denomination.remaining}/{denomination.total}</span>
                   </div>
@@ -160,8 +164,10 @@ export function HasanatDashboard({
       {/* Usage meter */}
       <Card accentColor="success" className="p-5 shadow-sm hover:shadow-md border-border/80">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-foreground m-0">Overall Stock Usage</h3>
-          <span className="text-[13px] font-bold text-foreground">{usedPct}% used</span>
+          <h3 className="text-sm font-bold text-foreground m-0">{t("hasanat.dashboard.overallStockUsage")}</h3>
+          <span className="text-[13px] font-bold text-foreground">
+            {t("hasanat.dashboard.stockUsagePct", { count: usedPct })}
+          </span>
         </div>
         <div className="h-3 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={usedPct} aria-valuemin={0} aria-valuemax={100}>
           <motion.div
@@ -172,8 +178,12 @@ export function HasanatDashboard({
           />
         </div>
         <div className="flex justify-between mt-1.5">
-          <span className="text-[10px] text-muted-foreground">{totalStock - totalRemaining} used</span>
-          <span className="text-[10px] text-muted-foreground">{totalRemaining} remaining</span>
+          <span className="text-[10px] text-muted-foreground">
+            {t("hasanat.dashboard.stockUsed", { count: totalStock - totalRemaining })}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {t("hasanat.dashboard.stockRemaining", { count: totalRemaining })}
+          </span>
         </div>
       </Card>
     </div>

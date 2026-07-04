@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { TrendingUp } from "lucide-react";
 import { Invoice } from '@/lib/data/financeData';
 import { useLiveCollection } from "@/hooks/useLiveCollection";
+import { useTranslation } from "@/hooks/useTranslation";
+import { formatMoney, getIntlLocaleForLanguage } from "@mms/shared";
 
 /**
  * FeeCollectionSummary Component
@@ -12,6 +14,8 @@ import { useLiveCollection } from "@/hooks/useLiveCollection";
  * @returns {React.ReactElement} The fee collection summary widget.
  */
 export default function FeeCollectionSummary({ title }: { title?: string }) {
+  const { t, language } = useTranslation();
+  const locale = getIntlLocaleForLanguage(language);
   const invoices = useLiveCollection<Invoice>("finance_invoices");
 
   // Calculate overall metrics
@@ -35,8 +39,8 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
   const outstandingPct = totalTarget > 0 ? (100 - collectedPct) : 0;
 
   const breakdown = [
-    { label: "Collected",   value: totalCollected, total: totalTarget, color: "bg-success", pct: collectedPct },
-    { label: "Outstanding", value: totalOutstanding,  total: totalTarget, color: "bg-destructive",     pct: outstandingPct },
+    { label: t("finance.report.collected"),   value: totalCollected, total: totalTarget, color: "bg-success", pct: collectedPct },
+    { label: t("finance.report.outstanding"), value: totalOutstanding,  total: totalTarget, color: "bg-destructive",     pct: outstandingPct },
   ];
 
   // Group by Class
@@ -57,21 +61,34 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
 
   const byClass = Object.values(classMap);
 
+  const displayDate = useMemo(() => {
+    return new Date().toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  }, [locale]);
+
+  const comparisonMonthName = useMemo(() => {
+    // March is month index 2 (Mar)
+    const comparisonDate = new Date();
+    comparisonDate.setMonth(2);
+    return comparisonDate.toLocaleDateString(locale, { month: 'short' });
+  }, [locale]);
+
   return (
     <section aria-labelledby="fee-collection-heading" className="relative overflow-hidden group/summary bg-card/45 backdrop-blur-sm rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-all duration-300">
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/summary:bg-emerald-500" />
       <header className="flex items-start justify-between mb-5 pl-1.5">
         <div>
           <h3 id="fee-collection-heading" className="text-sm font-semibold text-foreground m-0">
-            {title || "Fee Collection Summary"}
+            {title || t("dashboard.widgets.feeCollectionSummary")}
           </h3>
-          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">April 2025</p>
+          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">{displayDate}</p>
         </div>
         <div className="text-right">
-          <p className="text-lg font-bold text-foreground m-0">₨ {totalCollected.toLocaleString()}</p>
+          <p className="text-lg font-bold text-foreground m-0">{formatMoney(totalCollected)}</p>
           <div className="flex items-center gap-1 text-success justify-end">
             <TrendingUp className="w-3 h-3" aria-hidden="true" />
-            <span className="text-[11px] font-semibold">+11% vs Mar</span>
+            <span className="text-[11px] font-semibold">
+              {t("dashboard.widgets.comparisonTrend", { value: 11, month: comparisonMonthName })}
+            </span>
           </div>
         </div>
       </header>
@@ -100,7 +117,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
               <header className="flex items-center justify-between mb-1">
                 <span className="text-[12px] text-foreground font-medium">{classSummary.name}</span>
                 <span className="text-[12px] text-muted-foreground">
-                  ₨ {classSummary.collected.toLocaleString()} / ₨ {classSummary.target.toLocaleString()}
+                  {formatMoney(classSummary.collected)} / {formatMoney(classSummary.target)}
                 </span>
               </header>
               <div className="h-1.5 rounded-full bg-muted overflow-hidden" aria-label={`${classSummary.name} collection is at ${pct}%`}>

@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { computeFinancials, Account, JournalEntry, AccountingSettings, FiscalYear } from '@/lib/data/accountingData';
+import { useTranslation } from "@/hooks/useTranslation";
+import { getIntlLocaleForLanguage } from "@mms/shared";
 
 interface KpiCardProps {
   label: string;
@@ -61,6 +63,8 @@ interface AccountingDashboardProps {
  * @returns {React.ReactElement}
  */
 export function AccountingDashboard({ accounts, entries, settings, fiscalYears, formatCurrency }: AccountingDashboardProps) {
+  const { t, language } = useTranslation();
+  const locale = getIntlLocaleForLanguage(language);
   const { primary, secondary, charts } = useBrandPalette();
   const pieColors = useMemo(() => [...charts], [charts]);
 
@@ -85,9 +89,9 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
     });
     return Object.values(totalsByMonth).sort((firstMonth, secondMonth) => firstMonth.month.localeCompare(secondMonth.month)).slice(-6).map((monthTotal) => ({
       ...monthTotal,
-      month: new Date(monthTotal.month + "-01").toLocaleDateString("en-PK", { month: "short" }),
+      month: new Date(monthTotal.month + "-01").toLocaleDateString(locale, { month: "short" }),
     }));
-  }, [postedEntries, accounts]);
+  }, [postedEntries, accounts, locale]);
 
   // Expense breakdown for pie
   const expenseBreakdown = useMemo(() => {
@@ -103,29 +107,29 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
 
   // Assets vs Liabilities
   const bsData = [
-    { name: "Assets",      value: Math.max(0, assets) },
-    { name: "Liabilities", value: Math.max(0, liabilities) },
-    { name: "Equity",      value: Math.max(0, equity) },
+    { id: "Assets",      name: t("accounting.dashboard.assets"),      value: Math.max(0, assets) },
+    { id: "Liabilities", name: t("accounting.dashboard.liabilities"), value: Math.max(0, liabilities) },
+    { id: "Equity",      name: t("accounting.dashboard.equity"),      value: Math.max(0, equity) },
   ];
 
   return (
     <section aria-label="Accounting Dashboard" className="space-y-5">
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard label="Total Revenue"   value={formatCurrency(revenue)}    icon={TrendingUp}   color="bg-success/10/60" />
-        <KpiCard label="Total Expenses"  value={formatCurrency(expenses)}   icon={TrendingDown} color="bg-destructive/10/60" />
-        <KpiCard label="Net Surplus"     value={formatCurrency(Math.abs(netSurplus))}
-          sub={netSurplus < 0 ? "Deficit" : "Surplus"} icon={DollarSign}
+        <KpiCard label={t("accounting.dashboard.totalRevenue")}   value={formatCurrency(revenue)}    icon={TrendingUp}   color="bg-success/10/60" />
+        <KpiCard label={t("accounting.dashboard.totalExpenses")}  value={formatCurrency(expenses)}   icon={TrendingDown} color="bg-destructive/10/60" />
+        <KpiCard label={t("accounting.dashboard.netSurplus")}     value={formatCurrency(Math.abs(netSurplus))}
+          sub={netSurplus < 0 ? t("accounting.dashboard.deficit") : t("accounting.dashboard.surplus")} icon={DollarSign}
           color={netSurplus >= 0 ? "bg-primary/5" : "bg-destructive/10/60"} />
-        <KpiCard label="Total Assets"    value={formatCurrency(assets)}     icon={Scale}        color="bg-info/10/60" />
+        <KpiCard label={t("accounting.dashboard.totalAssets")}    value={formatCurrency(assets)}     icon={Scale}        color="bg-info/10/60" />
       </div>
 
       {/* Second row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard label="Total Liabilities" value={formatCurrency(liabilities)} icon={null} color="bg-muted/40" />
-        <KpiCard label="Net Cash Flow"     value={formatCurrency(Math.abs(netCashFlow))} sub={netCashFlow >= 0 ? "Positive" : "Negative"} icon={null} color="bg-muted/40" />
-        <KpiCard label="Posted Entries"    value={postedEntries.length}   icon={CheckCircle2} color="bg-success/10/60" />
-        <KpiCard label="Pending Drafts"    value={draftEntries.length}   icon={Clock}        color={draftEntries.length > 0 ? "bg-warning/10/60" : "bg-muted/40"} />
+        <KpiCard label={t("accounting.dashboard.totalLiabilities")} value={formatCurrency(liabilities)} icon={null} color="bg-muted/40" />
+        <KpiCard label={t("accounting.dashboard.netCashFlow")}     value={formatCurrency(Math.abs(netCashFlow))} sub={netCashFlow >= 0 ? t("accounting.dashboard.positive") : t("accounting.dashboard.negative")} icon={null} color="bg-muted/40" />
+        <KpiCard label={t("accounting.dashboard.postedEntries")}    value={postedEntries.length}   icon={CheckCircle2} color="bg-success/10/60" />
+        <KpiCard label={t("accounting.dashboard.pendingDrafts")}    value={draftEntries.length}   icon={Clock}        color={draftEntries.length > 0 ? "bg-warning/10/60" : "bg-muted/40"} />
       </div>
 
       {/* Charts row */}
@@ -134,9 +138,9 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
         {/* Monthly Revenue vs Expenses */}
         <div className="relative overflow-hidden group/revenue lg:col-span-2 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/revenue:bg-primary" />
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">Monthly Revenue vs Expenses</h3>
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.revenueVsExpenses")}</h3>
           {monthlyData.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">No posted data yet</div>
+            <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">{t("accounting.dashboard.noPostedData")}</div>
           ) : (
             <div aria-hidden="true">
               <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
@@ -145,8 +149,8 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(tickValue) => tickValue >= 1000 ? `${(tickValue / 1000).toFixed(0)}k` : tickValue} />
                   <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? formatCurrency(Number(tooltipValue)) : ""} />
-                  <Bar dataKey="revenue"  name="Revenue"  fill={primary} radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expenses" name="Expenses" fill={secondary} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue"  name={t("accounting.dashboard.revenue")}  fill={primary} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expenses" name={t("accounting.dashboard.expenses")} fill={secondary} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -156,9 +160,9 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
         {/* Expense Breakdown Pie */}
         <div className="relative overflow-hidden group/expense rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/expense:bg-indigo-500" />
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">Expense Breakdown</h3>
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.expenseBreakdown")}</h3>
           {expenseBreakdown.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">No expense data</div>
+            <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">{t("accounting.dashboard.noExpenseData")}</div>
           ) : (
             <>
               <div aria-hidden="true">
@@ -194,20 +198,20 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
         {/* Balance Sheet snapshot */}
         <div className="relative overflow-hidden group/snapshot rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/snapshot:bg-emerald-500" />
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">Balance Sheet Snapshot</h3>
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.balanceSheetSnapshot")}</h3>
           <div className="space-y-3">
             {bsData.map((balanceSheetItem) => {
               const max = Math.max(...bsData.map((snapshotItem) => snapshotItem.value), 1);
               const percentage = (balanceSheetItem.value / max) * 100;
               const colors: Record<string, string> = { Assets: "bg-info", Liabilities: "bg-destructive", Equity: "bg-primary" };
               return (
-                <div key={balanceSheetItem.name} aria-label={`${balanceSheetItem.name}: ${formatCurrency(balanceSheetItem.value)}`}>
+                <div key={balanceSheetItem.id} aria-label={`${balanceSheetItem.name}: ${formatCurrency(balanceSheetItem.value)}`}>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="font-semibold text-foreground">{balanceSheetItem.name}</span>
                     <span className="font-mono font-bold text-foreground">{formatCurrency(balanceSheetItem.value)}</span>
                   </div>
                   <div className="h-2 rounded-full bg-muted overflow-hidden" aria-hidden="true">
-                    <div className={`h-full rounded-full transition-all ${colors[balanceSheetItem.name]}`} style={{ width: `${percentage}%` }} />
+                    <div className={`h-full rounded-full transition-all ${colors[balanceSheetItem.id]}`} style={{ width: `${percentage}%` }} />
                   </div>
                 </div>
               );
@@ -215,8 +219,8 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
           </div>
           <div className={`mt-4 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg ${Math.abs(assets - (liabilities + equity)) < 1 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
             {Math.abs(assets - (liabilities + equity)) < 1
-              ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Balance Sheet is balanced</>
-              : <><AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> Difference: {formatCurrency(Math.abs(assets - (liabilities + equity)))}</>
+              ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.dashboard.balanceSheetBalanced")}</>
+              : <><AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.dashboard.difference", { amount: formatCurrency(Math.abs(assets - (liabilities + equity))) })}</>
             }
           </div>
         </div>
@@ -224,7 +228,7 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
         {/* Recent Entries */}
         <div className="relative overflow-hidden group/entries rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500/45 transition-colors group-hover/entries:bg-amber-500" />
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">Recent Journal Entries</h3>
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.recentEntries")}</h3>
           <div className="space-y-2">
             {recentEntries.map((journalEntry) => {
               const totalDebit = journalEntry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
@@ -242,7 +246,7 @@ export function AccountingDashboard({ accounts, entries, settings, fiscalYears, 
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-mono font-bold text-foreground m-0">{formatCurrency(totalDebit)}</p>
-                    <p className="text-[10px] text-muted-foreground m-0">{new Date(journalEntry.date).toLocaleDateString("en-PK", { day: "numeric", month: "short" })}</p>
+                    <p className="text-[10px] text-muted-foreground m-0">{new Date(journalEntry.date).toLocaleDateString(locale, { day: "numeric", month: "short" })}</p>
                   </div>
                 </article>
               );

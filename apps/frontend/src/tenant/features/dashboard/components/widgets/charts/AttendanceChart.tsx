@@ -6,6 +6,11 @@ import {
   ComposedChart, Area, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from "recharts";
+import { useTranslation } from "@/hooks/useTranslation";
+import { getCollection } from "@/lib/db";
+import { AttendanceRecord } from '@/lib/data/attendanceData';
+import { Distribution } from '@/lib/data/hasanatData';
+
 interface AttendancePoint {
   day: string;
   rate: number;
@@ -16,9 +21,6 @@ interface HasanatPoint {
   value: number;
   color: string;
 }
-import { getCollection } from "@/lib/db";
-import { AttendanceRecord } from '@/lib/data/attendanceData';
-import { Distribution } from '@/lib/data/hasanatData';
 
 const AttTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
   if (!active || !payload?.length) return null;
@@ -46,6 +48,7 @@ const HasanatTooltip = ({ active = false, payload = [] }: Partial<TooltipContent
  * @returns {React.ReactElement}
  */
 export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }) {
+  const { t } = useTranslation();
   const { attendance: ATTENDANCE_COLORS } = useBrandedDashboardChartColors();
   const palette = useBrandPalette();
   const attendanceRecords = getCollection<AttendanceRecord>("attendance_records");
@@ -97,8 +100,12 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
     <section aria-labelledby="attendance-chart-heading" className="bg-card rounded-xl border border-border p-5">
       <header className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div>
-          <h3 id="attendance-chart-heading" className="text-sm font-semibold text-foreground m-0">Attendance Rate</h3>
-          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">This week by day</p>
+          <h3 id="attendance-chart-heading" className="text-sm font-semibold text-foreground m-0">
+            {t("widget.title.attendanceRate")}
+          </h3>
+          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">
+            {t("dashboard.charts.attendance.subtitle")}
+          </p>
         </div>
         
         <div className="flex items-center gap-2 ml-auto">
@@ -113,9 +120,9 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="bar">Bar Chart</option>
-                <option value="line">Line Chart</option>
-                <option value="area">Area Chart</option>
+                <option value="bar">{t("dashboard.charts.attendance.barChart")}</option>
+                <option value="line">{t("dashboard.charts.attendance.lineChart")}</option>
+                <option value="area">{t("dashboard.charts.attendance.areaChart")}</option>
               </select>
               <select
                 value={colorTheme}
@@ -126,18 +133,18 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="semantic">Semantic</option>
-                <option value="emerald">Emerald</option>
-                <option value="blue">Blue</option>
-                <option value="violet">Violet</option>
-                <option value="amber">Amber</option>
-                <option value="red">Red</option>
+                <option value="semantic">{t("dashboard.charts.attendance.semantic")}</option>
+                <option value="emerald">{t("dashboard.charts.attendance.emerald")}</option>
+                <option value="blue">{t("dashboard.charts.attendance.blue")}</option>
+                <option value="violet">{t("dashboard.charts.attendance.violet")}</option>
+                <option value="amber">{t("dashboard.charts.attendance.amber")}</option>
+                <option value="red">{t("dashboard.charts.attendance.red")}</option>
               </select>
             </div>
           )}
           <div className="text-right select-none">
             <p className="text-lg font-bold text-foreground m-0">{avg}%</p>
-            <p className="text-[11px] text-muted-foreground m-0">Weekly avg</p>
+            <p className="text-[11px] text-muted-foreground m-0">{t("dashboard.charts.attendance.weeklyAvg")}</p>
           </div>
         </div>
       </header>
@@ -200,6 +207,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
  * @returns {React.ReactElement}
  */
 export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
+  const { t } = useTranslation();
   const { hasanat: HASANAT_THEMES } = useBrandedDashboardChartColors();
   const distributions = getCollection<Distribution>("hasanat_distributions");
   const denominations = getCollection<any>("hasanat_denoms");
@@ -243,9 +251,9 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const activeColors = HASANAT_THEMES[colorTheme] || HASANAT_THEMES.mixed;
 
   const hasanatData: HasanatPoint[] = [
-    { name: "Memorisation", value: memorisationPoints, color: activeColors.mem },
-    { name: "Attendance",   value: attendancePoints, color: activeColors.att },
-    { name: "Behavior",     value: behaviorPoints, color: activeColors.beh }
+    { name: t("dashboard.charts.hasanat.memorisation"), value: memorisationPoints, color: activeColors.mem },
+    { name: t("dashboard.charts.hasanat.attendance"),   value: attendancePoints, color: activeColors.att },
+    { name: t("dashboard.charts.hasanat.behavior"),     value: behaviorPoints, color: activeColors.beh }
   ];
   
   const total = hasanatData.reduce((sum, hasanatPoint) => sum + hasanatPoint.value, 0);
@@ -254,8 +262,12 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
     <section aria-labelledby="hasanat-chart-heading" className="bg-card rounded-xl border border-border p-5">
       <header className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
-          <h3 id="hasanat-chart-heading" className="text-sm font-semibold text-foreground m-0">Hasanat Distribution</h3>
-          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">Points by category this week</p>
+          <h3 id="hasanat-chart-heading" className="text-sm font-semibold text-foreground m-0">
+            {t("widget.title.hasanatDistribution")}
+          </h3>
+          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">
+            {t("dashboard.charts.hasanat.subtitle")}
+          </p>
         </div>
         
         <div className="flex items-center gap-2 ml-auto">
@@ -270,9 +282,9 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="pie">Pie Donut</option>
-                <option value="bar">Bar Chart</option>
-                <option value="radar">Radar Chart</option>
+                <option value="pie">{t("dashboard.charts.hasanat.pieDonut")}</option>
+                <option value="bar">{t("dashboard.charts.hasanat.barChart")}</option>
+                <option value="radar">{t("dashboard.charts.hasanat.radarChart")}</option>
               </select>
               <select
                 value={colorTheme}
@@ -283,10 +295,10 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="mixed">Mixed</option>
-                <option value="emerald">Emerald</option>
-                <option value="blue">Blue</option>
-                <option value="violet">Violet</option>
+                <option value="mixed">{t("dashboard.charts.hasanat.mixed")}</option>
+                <option value="emerald">{t("dashboard.charts.attendance.emerald")}</option>
+                <option value="blue">{t("dashboard.charts.attendance.blue")}</option>
+                <option value="violet">{t("dashboard.charts.attendance.violet")}</option>
               </select>
             </div>
           )}

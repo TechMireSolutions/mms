@@ -102,7 +102,7 @@ export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): Re
             </span>
           </div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight m-0">
-            {userName ? `Assalamu Alaikum, ${userName}` : t(GREETING_BY_ROLE[dashboardRole])}
+            {userName ? t('dashboard.greeting.personal', { name: userName }) : t(GREETING_BY_ROLE[dashboardRole])}
           </h1>
           <p className="text-sm text-white/65 mt-1 max-w-lg mb-0">{subtitle}</p>
         </div>

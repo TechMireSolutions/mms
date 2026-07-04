@@ -147,7 +147,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
           className={cn("ml-auto", saved && "bg-success hover:bg-success/90 text-success-foreground")}
         >
           <Save className="w-3.5 h-3.5" />
-          <span>{saved ? "Saved!" : "Save Settings"}</span>
+          <span>{saved ? t("users.settingsSavedShort") : t("users.settingsSaveBtn")}</span>
         </Button>
       </footer>
     </Card>

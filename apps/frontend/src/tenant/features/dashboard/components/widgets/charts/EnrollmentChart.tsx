@@ -7,6 +7,7 @@ import {
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import type { Enrollment } from '@/lib/data/enrollmentData';
 import { TrendingUp } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface EnrollmentPoint {
   month: string;
@@ -18,11 +19,14 @@ interface EnrollmentPoint {
  * @param {TooltipProps<number, string>} props
  */
 const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
+  const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 shadow-lg text-sm">
       <p className="text-muted-foreground text-[11px] mb-0.5 m-0">{label}</p>
-      <p className="font-bold text-foreground m-0">{payload[0].value} students</p>
+      <p className="font-bold text-foreground m-0">
+        {t("dashboard.widgets.studentsCount", { count: Number(payload[0].value) })}
+      </p>
     </div>
   );
 };
@@ -33,6 +37,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
  * @returns {React.ReactElement}
  */
 export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: boolean }) {
+  const { t } = useTranslation();
   const { enrollment: COLOR_MAP } = useBrandedDashboardChartColors();
   const enrollments = useLiveCollection<Enrollment>("enrollments");
 
@@ -83,8 +88,12 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
     <section aria-labelledby="enrollment-chart-heading" className="bg-card rounded-xl border border-border p-5">
       <header className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div>
-          <h3 id="enrollment-chart-heading" className="text-sm font-semibold text-foreground m-0">Enrollment Trends</h3>
-          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">Student growth over time</p>
+          <h3 id="enrollment-chart-heading" className="text-sm font-semibold text-foreground m-0">
+            {t("widget.title.enrollmentTrends")}
+          </h3>
+          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">
+            {t("dashboard.charts.enrollment.subtitle")}
+          </p>
         </div>
         
         <div className="flex items-center gap-2 ml-auto">
@@ -99,9 +108,9 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="area">Area</option>
-                <option value="bar">Bar</option>
-                <option value="line">Line</option>
+                <option value="area">{t("dashboard.charts.enrollment.area")}</option>
+                <option value="bar">{t("dashboard.charts.enrollment.bar")}</option>
+                <option value="line">{t("dashboard.charts.enrollment.line")}</option>
               </select>
               <select
                 value={colorTheme}
@@ -112,11 +121,11 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="emerald">Emerald</option>
-                <option value="blue">Blue</option>
-                <option value="violet">Violet</option>
-                <option value="amber">Amber</option>
-                <option value="red">Red</option>
+                <option value="emerald">{t("dashboard.charts.attendance.emerald")}</option>
+                <option value="blue">{t("dashboard.charts.attendance.blue")}</option>
+                <option value="violet">{t("dashboard.charts.attendance.violet")}</option>
+                <option value="amber">{t("dashboard.charts.attendance.amber")}</option>
+                <option value="red">{t("dashboard.charts.attendance.red")}</option>
               </select>
               <select
                 value={monthsCount}
@@ -127,9 +136,9 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value={3}>3 Months</option>
-                <option value={6}>6 Months</option>
-                <option value={10}>10 Months</option>
+                <option value={3}>{t("dashboard.charts.monthsRange", { count: 3 })}</option>
+                <option value={6}>{t("dashboard.charts.monthsRange", { count: 6 })}</option>
+                <option value={10}>{t("dashboard.charts.monthsRange", { count: 10 })}</option>
               </select>
             </div>
           )}

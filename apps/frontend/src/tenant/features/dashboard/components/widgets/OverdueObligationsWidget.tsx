@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
+import { formatMoney } from "@mms/shared";
+import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
+import { uniqueRegistryIds } from "@/lib/registryResolve";
+import MessageComposer from "@/components/ui/MessageComposer";
 
 export interface OverdueStudent {
   id: number;
@@ -31,12 +36,6 @@ interface UrgencyBadge {
   cls: string;
 }
 
-function urgencyBadge(days: number): UrgencyBadge {
-  if (days >= 30) return { label: "Critical", cls: "bg-destructive/15 text-destructive border-destructive/30" };
-  if (days >= 14) return { label: "High",     cls: "bg-warning/15 text-warning border-warning/30" };
-  return              { label: "Moderate",    cls: "bg-warning/15 text-warning border-warning/30" };
-}
-
 /**
  * OverdueObligationsWidget Component
  *
@@ -46,20 +45,73 @@ function urgencyBadge(days: number): UrgencyBadge {
  * @returns {React.ReactElement} The overdue obligations widget.
  */
 export default function OverdueObligationsWidget({ title }: { title?: string }) {
+  const { t } = useTranslation();
   const overdueStudents = useLiveCollection<OverdueStudent>("overdue_obligations", DEFAULT_OVERDUE_STUDENTS);
 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<number>>(new Set());
+  const [messagingTarget, setMessagingTarget] = useState<{
+    channel: 'sms' | 'whatsapp' | 'email';
+    recipients: { id: string | number; name: string; phone: string; email?: string }[];
+  } | null>(null);
+
+  const studentIds = useMemo(
+    () => uniqueRegistryIds(overdueStudents.map((os) => os.id)),
+    [overdueStudents]
+  );
+  const { data: students = [] } = useStudentsByIds(studentIds);
 
   const totalOverdue = overdueStudents.reduce((sum, overdueStudent) => sum + overdueStudent.amount, 0);
 
-  const handleRemind = (id: number) => {
-    setRemindedIds((prev) => new Set([...prev, id]));
+  const handleRemind = (overdueStudent: OverdueStudent) => {
+    const student = students.find((s) => String(s.id) === String(overdueStudent.id));
+    setMessagingTarget({
+      channel: "sms",
+      recipients: [{
+        id: overdueStudent.id,
+        name: overdueStudent.name,
+        phone: student?.phone || "+92 300 1234567",
+        email: student?.email || "",
+      }],
+    });
+    setRemindedIds((prev) => new Set([...prev, overdueStudent.id]));
   };
 
   const handleRemindAll = () => {
+    const recipients = overdueStudents.map((os) => {
+      const student = students.find((s) => String(s.id) === String(os.id));
+      return {
+        id: os.id,
+        name: os.name,
+        phone: student?.phone || "+92 300 1234567",
+        email: student?.email || "",
+      };
+    });
+    setMessagingTarget({
+      channel: "sms",
+      recipients,
+    });
     setRemindedIds(new Set(overdueStudents.map((overdueStudent) => overdueStudent.id)));
   };
+
+  function getUrgencyBadge(days: number): UrgencyBadge {
+    if (days >= 30) {
+      return {
+        label: t("dashboard.widgets.urgency.critical"),
+        cls: "bg-destructive/15 text-destructive border-destructive/30",
+      };
+    }
+    if (days >= 14) {
+      return {
+        label: t("dashboard.widgets.urgency.high"),
+        cls: "bg-warning/15 text-warning border-warning/30",
+      };
+    }
+    return {
+      label: t("dashboard.widgets.urgency.moderate"),
+      cls: "bg-warning/15 text-warning border-warning/30",
+    };
+  }
 
   return (
     <section aria-labelledby="overdue-obligations-heading" className="relative overflow-hidden group/overdue rounded-2xl border border-destructive/30 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
@@ -72,10 +124,10 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
           </div>
           <div>
             <h3 id="overdue-obligations-heading" className="text-sm font-bold text-destructive m-0">
-              {title || "Overdue Obligations"}
+              {title || t("dashboard.widgets.overdueObligations")}
             </h3>
             <p className="text-xs text-destructive m-0">
-              {overdueStudents.length} students · PKR {totalOverdue.toLocaleString()} outstanding
+              {t("dashboard.widgets.studentsCount", { count: overdueStudents.length })} · {formatMoney(totalOverdue)} {t("finance.report.outstanding")}
             </p>
           </div>
         </div>
@@ -86,7 +138,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors h-auto"
           >
             <Bell className="w-3 h-3" aria-hidden="true" />
-            Remind All
+            {t("dashboard.widgets.remindAll")}
           </Button>
           <Button
             variant="ghost"
@@ -106,17 +158,29 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Student</th>
-                <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Obligation</th>
-                <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Due Date</th>
-                <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Amount</th>
-                <th scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Status</th>
-                <th scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Action</th>
+                <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  {t("hasanat.columns.redemption.student")}
+                </th>
+                <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  {t("nav.obligations")}
+                </th>
+                <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  {t("finance.columns.dueDate")}
+                </th>
+                <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  {t("finance.columns.amount")}
+                </th>
+                <th scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  {t("hasanat.columns.distribution.status")}
+                </th>
+                <th scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  {t("hasanat.columns.actions")}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {overdueStudents.map((overdueStudent) => {
-                const badge = urgencyBadge(overdueStudent.daysOverdue);
+                const badge = getUrgencyBadge(overdueStudent.daysOverdue);
                 const reminded = remindedIds.has(overdueStudent.id);
                 return (
                   <tr key={overdueStudent.id} className="hover:bg-muted/20 transition-colors">
@@ -139,12 +203,14 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                     <td className="px-3 py-2.5">
                       <div>
                         <p className="text-xs text-foreground m-0">{overdueStudent.dueDate}</p>
-                        <p className="text-[10px] text-destructive font-semibold m-0">{overdueStudent.daysOverdue}d overdue</p>
+                        <p className="text-[10px] text-destructive font-semibold m-0">
+                          {t("dashboard.widgets.daysOverdue", { count: overdueStudent.daysOverdue })}
+                        </p>
                       </div>
                     </td>
                     <td className="px-3 py-2.5 text-right">
                       <span className="text-xs font-bold text-foreground">
-                        {overdueStudent.currency} {overdueStudent.amount.toLocaleString()}
+                        {formatMoney(overdueStudent.amount)}
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-center">
@@ -155,7 +221,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                     <td className="px-3 py-2.5 text-center">
                       <Button
                         variant="ghost"
-                        onClick={() => handleRemind(overdueStudent.id)}
+                        onClick={() => handleRemind(overdueStudent)}
                         disabled={reminded}
                         aria-label={reminded ? `Reminder sent to ${overdueStudent.name}` : `Send reminder to ${overdueStudent.name}`}
                         className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors h-auto shadow-none ${
@@ -165,7 +231,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                         }`}
                       >
                         <Bell className="w-2.5 h-2.5" aria-hidden="true" />
-                        {reminded ? "Sent" : "Remind"}
+                        {reminded ? t("dashboard.widgets.sent") : t("dashboard.widgets.remind")}
                       </Button>
                     </td>
                   </tr>
@@ -177,13 +243,21 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
           {/* Footer */}
           <footer className="px-4 py-2.5 border-t border-border flex items-center justify-between bg-muted/20">
             <p className="text-xs text-muted-foreground m-0">
-              {remindedIds.size > 0 && `${remindedIds.size} reminder${remindedIds.size > 1 ? "s" : ""} sent`}
+              {remindedIds.size > 0 && t("dashboard.widgets.remindersSent", { count: remindedIds.size })}
             </p>
             <Link to={ROUTES.obligations} className="text-xs font-semibold text-primary hover:underline">
-              View Obligations →
+              {t("dashboard.widgets.viewObligations")}
             </Link>
           </footer>
         </div>
+      )}
+
+      {messagingTarget && (
+        <MessageComposer
+          channel={messagingTarget.channel}
+          recipients={messagingTarget.recipients}
+          onClose={() => setMessagingTarget(null)}
+        />
       )}
     </section>
   );

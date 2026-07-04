@@ -1,5 +1,5 @@
-import React from 'react';
-import { Shield, AlertTriangle, CheckCircle2, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Shield, AlertTriangle, CheckCircle2, Lock, Phone, Mail, Send } from 'lucide-react';
 import {
   filterRbacModulesForSettings,
   resolveWorkspaceRole,
@@ -12,8 +12,11 @@ import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
 import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/button';
 import { UserRoleBadge, UserStatusBadge } from '@/tenant/features/users/components/UserBadges';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+
+const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
 
 interface RowProps {
   label: string;
@@ -64,6 +67,11 @@ export function UserDetailModal({
   const workspaceRoles = useWorkspaceRoles();
   const visibleModules = filterRbacModulesForSettings(globalSettings.enabledModules);
 
+  const [messagingTarget, setMessagingTarget] = useState<{
+    channel: 'sms' | 'whatsapp' | 'email';
+    recipient: { id: string | number; name: string; phone: string; email?: string };
+  } | null>(null);
+
   if (!user) return null;
 
   const workspaceRole = resolveWorkspaceRole(user.role, workspaceRoles);
@@ -84,7 +92,26 @@ export function UserDetailModal({
       <div className="space-y-4">
         <Section icon={Shield} title={t('users.detailBasic')}>
           <Row label={t('users.fieldName')} value={user.name} />
-          <Row label={t('users.fieldContactEmail')} value={user.email} />
+          <Row
+            label={t('users.fieldContactEmail')}
+            value={
+              <div className="flex items-center gap-1.5 justify-end">
+                <span>{user.email}</span>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  className="h-6 w-6 rounded-lg p-0 text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
+                  onClick={() => setMessagingTarget({
+                    channel: 'email',
+                    recipient: { id: user.id, name: user.name, phone: user.phone || '', email: user.email }
+                  })}
+                  title={t('users.sendEmail')}
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            }
+          />
           <Row
             label={t('users.fieldLoginEmail')}
             value={user.loginEmail?.trim() || user.email}
@@ -92,7 +119,42 @@ export function UserDetailModal({
           {user.loginEmail && user.loginEmail.toLowerCase() !== user.email.toLowerCase() ? (
             <p className="py-2 text-[11px] text-muted-foreground">{t('users.loginEmailNote')}</p>
           ) : null}
-          <Row label={t('users.fieldPhone')} value={user.phone} />
+          <Row
+            label={t('users.fieldPhone')}
+            value={
+              <div className="flex items-center gap-1.5 justify-end">
+                <span>{user.phone || '—'}</span>
+                {user.phone && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      type="button"
+                      className="h-6 w-6 rounded-lg p-0 text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
+                      onClick={() => setMessagingTarget({
+                        channel: 'whatsapp',
+                        recipient: { id: user.id, name: user.name, phone: user.phone || '', email: user.email }
+                      })}
+                      title={t('contacts.detail.call')}
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      type="button"
+                      className="h-6 w-6 rounded-lg p-0 text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
+                      onClick={() => setMessagingTarget({
+                        channel: 'sms',
+                        recipient: { id: user.id, name: user.name, phone: user.phone || '', email: user.email }
+                      })}
+                      title={t('users.sendSms')}
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            }
+          />
           <Row label={t('users.detailMemberSince')} value={user.createdDate} />
           <Row label={t('users.colLastLogin')} value={fmtDate(user.lastLogin)} />
           <Row label={t('users.detailSessions')} value={user.activeSessions} />
@@ -150,6 +212,16 @@ export function UserDetailModal({
           <Row label={t('users.detailFailedLogins')} value={user.failedLoginAttempts} />
         </Section>
       </div>
+
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={[messagingTarget.recipient]}
+            onClose={() => setMessagingTarget(null)}
+          />
+        </React.Suspense>
+      )}
     </Modal>
   );
 }

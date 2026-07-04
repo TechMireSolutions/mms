@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Phone, Send } from "lucide-react";
 import type { Invoice } from '@/lib/data/financeData';
@@ -6,6 +6,9 @@ import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
+import { formatMoney } from "@mms/shared";
+import MessageComposer from "@/components/ui/MessageComposer";
 
 /**
  * OutstandingFeesTable Component
@@ -16,6 +19,7 @@ import { Button } from "@/components/ui/button";
  * @returns {React.ReactElement} The outstanding fees table widget.
  */
 export default function OutstandingFeesTable({ title }: { title?: string }) {
+  const { t } = useTranslation();
   const invoices = useLiveCollection<Invoice>("finance_invoices", []);
   const unpaidInvoices = useMemo(
     () => invoices.filter((invoice) => invoice.status !== "paid" && invoice.status !== "cancelled"),
@@ -26,6 +30,11 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
     [unpaidInvoices],
   );
   const { data: students = [] } = useStudentsByIds(studentIds);
+
+  const [messagingTarget, setMessagingTarget] = useState<{
+    channel: 'sms' | 'whatsapp' | 'email';
+    recipients: { id: string | number; name: string; phone: string; email?: string }[];
+  } | null>(null);
 
   const outstandingFeeRows = unpaidInvoices
     .map((invoice) => {
@@ -39,11 +48,13 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
 
       return {
         id: invoice.id,
+        studentId: invoice.studentId,
         student: invoice.studentName,
         class: invoice.class,
         amount,
         months: diffMonths,
         contact,
+        email: student?.email || "",
       };
     })
     .slice(0, 5);
@@ -57,14 +68,30 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         <div className="flex items-center gap-2.5">
           <AlertCircle className="w-4 h-4 text-destructive" aria-hidden="true" />
           <h3 id="outstanding-fees-heading" className="text-sm font-semibold text-foreground m-0">
-            {title || "Outstanding Payments"}
+            {title || t("dashboard.widgets.outstandingPayments")}
           </h3>
-          <span className="text-[11px] font-semibold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full" aria-label={`${totalUnpaid} students with unpaid fees`}>
-            {totalUnpaid} students
+          <span className="text-[11px] font-semibold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full" aria-label={t("dashboard.widgets.studentsCount", { count: totalUnpaid })}>
+            {t("dashboard.widgets.studentsCount", { count: totalUnpaid })}
           </span>
         </div>
-        <Button variant="link" className="text-[12px] font-semibold h-auto p-0">
-          Send all reminders
+        <Button
+          variant="link"
+          className="text-[12px] font-semibold h-auto p-0"
+          onClick={() => {
+            if (outstandingFeeRows.length > 0) {
+              setMessagingTarget({
+                channel: "sms",
+                recipients: outstandingFeeRows.map((row) => ({
+                  id: row.studentId,
+                  name: row.student,
+                  phone: row.contact,
+                  email: row.email,
+                })),
+              });
+            }
+          }}
+        >
+          {t("dashboard.widgets.sendAllReminders")}
         </Button>
       </header>
       
@@ -72,11 +99,21 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th scope="col" className="text-left px-5 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Student</th>
-              <th scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Class</th>
-              <th scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Amount</th>
-              <th scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Overdue</th>
-              <th scope="col" className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right">Actions</th>
+              <th scope="col" className="text-left px-5 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("hasanat.columns.redemption.student")}
+              </th>
+              <th scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
+                {t("sessions.report.colClass")}
+              </th>
+              <th scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("finance.columns.amount")}
+              </th>
+              <th scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">
+                {t("finance.metrics.overdue")}
+              </th>
+              <th scope="col" className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right">
+                {t("hasanat.columns.actions")}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/50">
@@ -100,7 +137,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                 </td>
                 <td className="px-3 py-3 text-[12px] text-muted-foreground hidden sm:table-cell">{outstandingFee.class}</td>
                 <td className="px-3 py-3">
-                  <span className="text-[13px] font-bold text-destructive">₨ {outstandingFee.amount.toLocaleString()}</span>
+                  <span className="text-[13px] font-bold text-destructive">{formatMoney(outstandingFee.amount)}</span>
                 </td>
                 <td className="px-3 py-3 hidden md:table-cell">
                   <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
@@ -108,24 +145,46 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                       ? "bg-destructive/10 text-destructive"
                       : "bg-warning/10 text-warning"
                   }`}>
-                    {outstandingFee.months} {outstandingFee.months === 1 ? "month" : "months"}
+                    {t("dashboard.widgets.overdueStatus", { count: outstandingFee.months })}
                   </span>
                 </td>
                 <td className="px-3 py-3 text-right">
                   <div className="flex items-center justify-end gap-1.5">
                     <Button
                       variant="ghost"
-                      aria-label={`Call ${outstandingFee.student}`}
-                      title="Call"
+                      aria-label={`${t("contacts.detail.call")} ${outstandingFee.student}`}
+                      title={t("contacts.detail.call")}
                       className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-none"
+                      onClick={() => {
+                        setMessagingTarget({
+                          channel: "whatsapp",
+                          recipients: [{
+                            id: outstandingFee.studentId,
+                            name: outstandingFee.student,
+                            phone: outstandingFee.contact,
+                            email: outstandingFee.email,
+                          }],
+                        });
+                      }}
                     >
                       <Phone className="w-3.5 h-3.5" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
-                      aria-label={`Send reminder to ${outstandingFee.student}`}
-                      title="Send reminder"
+                      aria-label={`${t("dashboard.widgets.sendReminder")} ${outstandingFee.student}`}
+                      title={t("dashboard.widgets.sendReminder")}
                       className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none"
+                      onClick={() => {
+                        setMessagingTarget({
+                          channel: "sms",
+                          recipients: [{
+                            id: outstandingFee.studentId,
+                            name: outstandingFee.student,
+                            phone: outstandingFee.contact,
+                            email: outstandingFee.email,
+                          }],
+                        });
+                      }}
                     >
                       <Send className="w-3.5 h-3.5" aria-hidden="true" />
                     </Button>
@@ -139,9 +198,17 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
 
       <footer className="px-5 py-3 border-t border-border">
         <Button variant="link" className="text-xs font-medium h-auto p-0">
-          View all outstanding payments
+          {t("dashboard.widgets.viewAllOutstanding")}
         </Button>
       </footer>
+
+      {messagingTarget && (
+        <MessageComposer
+          channel={messagingTarget.channel}
+          recipients={messagingTarget.recipients}
+          onClose={() => setMessagingTarget(null)}
+        />
+      )}
     </section>
   );
 }

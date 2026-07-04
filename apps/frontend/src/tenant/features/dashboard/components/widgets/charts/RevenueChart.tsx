@@ -14,6 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/useTranslation";
+import { formatMoney } from "@mms/shared";
 
 interface RevenuePoint {
   month: string;
@@ -26,6 +28,7 @@ interface RevenuePoint {
  * @param {TooltipContentProps<number, string>} props
  */
 const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
+  const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-card border border-border rounded-xl px-4 py-3 shadow-lg text-sm space-y-1.5">
@@ -33,8 +36,14 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
       {payload.map((payloadEntry: TooltipPayloadEntry) => (
         <div key={payloadEntry.dataKey as string | number} className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full" style={{ background: payloadEntry.color }} aria-hidden="true" />
-          <span className="text-muted-foreground text-xs capitalize">{payloadEntry.dataKey as string | number}</span>
-          <span className="font-semibold text-foreground ml-auto">₨ {payloadEntry.value?.toLocaleString()}</span>
+          <span className="text-muted-foreground text-xs capitalize">
+            {payloadEntry.dataKey === "revenue"
+              ? t("accounting.dashboard.revenue")
+              : t("accounting.dashboard.expenses")}
+          </span>
+          <span className="font-semibold text-foreground ml-auto">
+            {formatMoney(Number(payloadEntry.value))}
+          </span>
         </div>
       ))}
     </div>
@@ -47,6 +56,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
  * @returns {React.ReactElement}
  */
 export default function RevenueChart({ isEditMode = false }: { isEditMode?: boolean }) {
+  const { t } = useTranslation();
   const { revenue: COLOR_THEMES } = useBrandedDashboardChartColors();
   const [period, setPeriod] = useState<"6m" | "10m">("10m");
   const invoices = getCollection<Invoice>("finance_invoices");
@@ -97,12 +107,21 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
   const visibleRevenueData = period === "6m" ? revenueData.slice(-6) : revenueData;
   const activeColors = COLOR_THEMES[colorTheme] || COLOR_THEMES.mixed;
 
+  const formatYAxisTick = (value: number) => {
+    if (value === 0) return formatMoney(0);
+    return `${formatMoney(Math.round(value / 1000))}k`;
+  };
+
   return (
     <section aria-labelledby="revenue-chart-heading" className="bg-card rounded-xl border border-border p-5">
       <header className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div>
-          <h3 id="revenue-chart-heading" className="text-sm font-semibold text-foreground m-0">Revenue & Expenses</h3>
-          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">Monthly financial overview</p>
+          <h3 id="revenue-chart-heading" className="text-sm font-semibold text-foreground m-0">
+            {t("widget.title.revenueExpenses")}
+          </h3>
+          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">
+            {t("dashboard.charts.revenue.subtitle")}
+          </p>
         </div>
         
         <div className="flex items-center gap-2 ml-auto">
@@ -120,9 +139,9 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
                   <SelectValue placeholder="Select chart type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bar">Bar Chart</SelectItem>
-                  <SelectItem value="line">Line Chart</SelectItem>
-                  <SelectItem value="area">Area Chart</SelectItem>
+                  <SelectItem value="bar">{t("dashboard.charts.attendance.barChart")}</SelectItem>
+                  <SelectItem value="line">{t("dashboard.charts.attendance.lineChart")}</SelectItem>
+                  <SelectItem value="area">{t("dashboard.charts.attendance.areaChart")}</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -136,12 +155,12 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
                   <SelectValue placeholder="Select color theme" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mixed">Mixed</SelectItem>
-                  <SelectItem value="emerald">Emerald</SelectItem>
-                  <SelectItem value="violet">Violet</SelectItem>
-                  <SelectItem value="blue">Blue</SelectItem>
-                  <SelectItem value="amber">Amber</SelectItem>
-                  <SelectItem value="red">Red</SelectItem>
+                  <SelectItem value="mixed">{t("dashboard.charts.hasanat.mixed")}</SelectItem>
+                  <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
+                  <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
+                  <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
+                  <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
+                  <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -163,19 +182,23 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
           </div>
         </div>
       </header>
-
+ 
       {/* Legend */}
       <div className="flex items-center gap-4 mb-4" aria-hidden="true">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: activeColors.revenue }} />
-          <span className="text-[11px] text-muted-foreground">Revenue</span>
+          <span className="text-[11px] text-muted-foreground">
+            {t("accounting.dashboard.revenue")}
+          </span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: activeColors.expenses }} />
-          <span className="text-[11px] text-muted-foreground">Expenses</span>
+          <span className="text-[11px] text-muted-foreground">
+            {t("accounting.dashboard.expenses")}
+          </span>
         </div>
       </div>
-
+ 
       <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
         <ComposedChart data={visibleRevenueData} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
           <defs>
@@ -190,7 +213,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
           <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₨ ${v / 1000}k`} />
+          <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={formatYAxisTick} />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.5 }} />
           
           {chartType === "area" && (
