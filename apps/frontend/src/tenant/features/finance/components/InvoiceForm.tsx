@@ -6,6 +6,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/Modal";
+import { formatMoney } from "@mms/shared";
 
 interface InvoiceFormProps {
   open: boolean;
@@ -32,10 +33,6 @@ function todayIso(): string {
 function nextInvoiceId(): string {
   const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
   return `INV-${stamp}`;
-}
-
-function formatMoney(amount: number): string {
-  return `PKR ${Number(amount).toLocaleString()}`;
 }
 
 const INITIAL_DRAFT: InvoiceDraft = {

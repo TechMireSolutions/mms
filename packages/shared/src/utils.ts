@@ -731,3 +731,17 @@ export function calculateDetailedLunarAge(dob: string): string {
     return "";
   }
 }
+
+/**
+ * Formats a numeric amount as currency (defaults to PKR).
+ * @param amount - The numeric or string amount to format.
+ * @param currency - The currency symbol/code (defaults to "PKR").
+ * @returns The formatted currency string, or "—" if invalid.
+ */
+export function formatMoney(amount: number | string | null | undefined, currency = "PKR"): string {
+  if (amount === null || amount === undefined) return "—";
+  const numeric = typeof amount === "number" ? amount : parseFloat(amount);
+  if (isNaN(numeric)) return "—";
+  return `${currency} ${numeric.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+}
+

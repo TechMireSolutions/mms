@@ -11,8 +11,7 @@ const STATUS_CONFIG: Record<string, { label: string, className: string, icon: Re
   partial:   { label: "Partial",   className: "bg-info/10 text-info border-info/20",          icon: Clock },
   cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground border-border",      icon: X },
 };
-
-const formatMoney = (amount: number) => `PKR ${Number(amount).toLocaleString()}`;
+import { formatMoney } from "@mms/shared";
 
 interface InvoiceDetailProps {
   invoice: Invoice;

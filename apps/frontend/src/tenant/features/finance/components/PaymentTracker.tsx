@@ -7,9 +7,7 @@ import { PAYMENT_METHOD_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import type { ModuleColumnRegistryEntry } from "@mms/shared";
-
-const formatMoney = (amount: number) => `PKR ${Number(amount).toLocaleString()}`;
+import { formatMoney, type ModuleColumnRegistryEntry } from "@mms/shared";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];

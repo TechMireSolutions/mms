@@ -10,8 +10,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { notify } from "@/lib/notify";
 import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
 import { FORM_INPUT, FORM_SELECT } from "@/components/ui/formStyles";
-
-const formatMoney = (amount: number) => `PKR ${Number(amount).toLocaleString()}`;
+import { formatMoney } from "@mms/shared";
 
 interface PaymentFormProps {
   open: boolean;

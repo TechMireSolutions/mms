@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney } from "./utils.js";
 import type { Contact } from "./contactTypes.js";
 
 describe("parsePhoneNumber", () => {
@@ -147,4 +147,28 @@ describe("applyTitleCaseRecursive", () => {
     expect(applyTitleCaseRecursive(input)).toEqual(expected);
   });
 });
+
+describe("formatMoney", () => {
+  it("formats standard number with default PKR", () => {
+    expect(formatMoney(1500)).toBe("PKR 1,500");
+    expect(formatMoney(0)).toBe("PKR 0");
+  });
+
+  it("handles string numbers and decimal limits", () => {
+    expect(formatMoney("25000")).toBe("PKR 25,000");
+    expect(formatMoney(1234.567)).toBe("PKR 1,234.57");
+  });
+
+  it("handles custom currencies", () => {
+    expect(formatMoney(100, "USD")).toBe("USD 100");
+    expect(formatMoney(50.5, "₨")).toBe("₨ 50.5");
+  });
+
+  it("gracefully falls back for invalid/missing values", () => {
+    expect(formatMoney(null)).toBe("—");
+    expect(formatMoney(undefined)).toBe("—");
+    expect(formatMoney("invalid")).toBe("—");
+  });
+});
+
 

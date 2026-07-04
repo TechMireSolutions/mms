@@ -11,10 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/hooks/useTranslation";
 import { INVOICE_STATUSES, Invoice } from '@/lib/data/financeData';
-import type { AppTranslationKey, ModuleColumnRegistryEntry } from "@mms/shared";
 import { Button } from "@/components/ui/button";
-
-const formatMoney = (amount: number) => `PKR ${Number(amount).toLocaleString()}`;
+import { formatMoney, type AppTranslationKey, type ModuleColumnRegistryEntry } from "@mms/shared";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];

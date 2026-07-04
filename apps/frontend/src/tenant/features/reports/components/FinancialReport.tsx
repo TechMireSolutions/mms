@@ -35,8 +35,7 @@ interface FinancialReportProps {
   onEditVisual?: (config: unknown) => void;
 }
 
-/** Formats a number as a PKR currency string. */
-const PKR = (amount: number): string => `PKR ${Number(amount).toLocaleString()}`;
+import { formatMoney as PKR } from "@mms/shared";
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
   paid:      "bg-success/10 text-success",
