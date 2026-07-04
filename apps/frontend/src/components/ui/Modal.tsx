@@ -2,6 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 export interface ModalProps {
   open: boolean;
@@ -50,6 +51,20 @@ export function Modal({
   children,
 }: ModalProps): React.ReactElement {
   useBodyScrollLock(open);
+  const containerRef = useFocusTrap<HTMLDivElement>(open);
+  const titleId = React.useId();
+
+  React.useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
+
   return (
     <AnimatePresence>
       {open && (
@@ -62,10 +77,14 @@ export function Modal({
             onClick={onClose}
           />
           <motion.div
+            ref={containerRef}
             initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
             className={`relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full ${SIZE[size]} z-10 max-h-[90vh] flex flex-col backdrop-blur-xl ${panelClassName ?? ""}`}
           >
             {/* Header */}
@@ -78,7 +97,7 @@ export function Modal({
                     </div>
                   )}
                   <div>
-                    <h3 className="text-[14px] font-bold text-foreground leading-tight">{title}</h3>
+                    <h3 id={titleId} className="text-[14px] font-bold text-foreground leading-tight">{title}</h3>
                     {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
                   </div>
                 </div>
@@ -88,7 +107,7 @@ export function Modal({
                     type="button"
                     onClick={onClose}
                     aria-label="Close"
-                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
