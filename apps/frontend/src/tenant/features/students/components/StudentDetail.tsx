@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
-  X, Edit2, MessageCircle, Phone,
+  X, Edit2, MessageCircle, Phone, MessageSquare,
   Calendar, User, Clock, BookOpen, GraduationCap, Sparkles
 } from "lucide-react";
 import { formatDate } from "@/lib/db";
@@ -23,6 +23,8 @@ interface StudentDetailProps {
   onEdit: (student: Student) => void;
 }
 
+const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
+
 const DETAIL_TABS = [
   { id: "overview", label: "Overview", icon: User },
   { id: "academics", label: "Academic Profile", icon: BookOpen },
@@ -33,6 +35,10 @@ const DETAIL_TABS = [
  */
 export default function StudentDetail({ student, onClose, onEdit }: StudentDetailProps): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [messagingTarget, setMessagingTarget] = useState<{
+    channel: "whatsapp" | "sms" | "email";
+    phone: string;
+  } | null>(null);
   const sessions = useSessionsCollection();
   const linkedIds = useMemo(
     () => [student.contactId, student.fatherContactId, student.motherContactId, student.guardianContactId],
@@ -214,26 +220,35 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   </div>
 
                   {/* Quick communication */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {primaryPhone && (
                       <a
                         href={`tel:${primaryPhone.replace(/[^\d+]/g, "")}`}
                         className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-info/10 hover:border-info/30 transition-all text-info text-center"
                       >
                         <Phone className="w-4 h-4 mx-auto" />
-                        <span className="text-[10px] font-bold">Call Student</span>
+                        <span className="text-[10px] font-bold">Call</span>
                       </a>
                     )}
                     {primaryPhone && (
-                      <a
-                        href={`https://wa.me/${primaryPhone.replace(/[^\d]/g, "")}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center"
+                      <button
+                        type="button"
+                        onClick={() => setMessagingTarget({ channel: "whatsapp", phone: primaryPhone })}
+                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center cursor-pointer"
                       >
                         <MessageCircle className="w-4 h-4 mx-auto" />
                         <span className="text-[10px] font-bold">WhatsApp</span>
-                      </a>
+                      </button>
+                    )}
+                    {primaryPhone && (
+                      <button
+                        type="button"
+                        onClick={() => setMessagingTarget({ channel: "sms", phone: primaryPhone })}
+                        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-amber/10 hover:border-amber/30 transition-all text-amber-600 dark:text-amber-500 text-center cursor-pointer"
+                      >
+                        <MessageSquare className="w-4 h-4 mx-auto" />
+                        <span className="text-[10px] font-bold">SMS</span>
+                      </button>
                     )}
                   </div>
 
@@ -489,6 +504,20 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
           </div>
         </div>
       </motion.aside>
+
+      {messagingTarget && (
+        <Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={[{
+              id: student.id,
+              name: student.name,
+              phone: messagingTarget.phone,
+            }]}
+            onClose={() => setMessagingTarget(null)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
