@@ -36,7 +36,10 @@ export async function validateContactDynamic(
   }
 
   // Version Lock check (Rule 16.3 / CS-6)
-  const submittedBlueprintId = (contact as any)?._blueprintId;
+  let submittedBlueprintId: unknown;
+  if (contact && typeof contact === 'object' && !Array.isArray(contact)) {
+    submittedBlueprintId = (contact as Record<string, unknown>)._blueprintId;
+  }
   if (submittedBlueprintId !== undefined && submittedBlueprintId !== null) {
     if (String(submittedBlueprintId) !== String(fieldConfig.version)) {
       throw new Error(`Blueprint version mismatch. Expected version ${fieldConfig.version}, got ${submittedBlueprintId}. Please reload the form.`);

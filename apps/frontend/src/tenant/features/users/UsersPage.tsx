@@ -63,7 +63,6 @@ export default function Users(): React.JSX.Element {
     'users_config_subtab',
     'permissions',
   );
-  const viewerRole = useViewerRole();
   const isAdmin = useIsAdminViewer();
   const rawUsers = useUsersCollection();
   const users = useMemo(

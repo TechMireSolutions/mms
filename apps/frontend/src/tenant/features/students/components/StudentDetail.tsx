@@ -101,7 +101,6 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
   const avatarGradient = AVATAR_GRADIENT_ROTATION[colorIdx];
 
   const primaryPhone = studentContact?.phone || studentContact?.phones?.[0]?.number || student.phone;
-  const primaryEmail = studentContact?.email || studentContact?.emails?.[0]?.address || student.email;
 
   const fatherPhone = fatherContact?.phone || fatherContact?.phones?.[0]?.number;
   const motherPhone = motherContact?.phone || motherContact?.phones?.[0]?.number;
