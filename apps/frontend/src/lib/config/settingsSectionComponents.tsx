@@ -6,6 +6,7 @@ const SystemModulesSettings = lazy(() => import('@/tenant/features/settings/comp
 const BrandingSettings = lazy(() => import('@/tenant/features/settings/components/BrandingSettings'));
 const ThemeSettings = lazy(() => import('@/tenant/features/settings/components/ThemeSettings'));
 const BackupRestore = lazy(() => import('@/tenant/features/settings/components/BackupRestore'));
+const LlmSettings = lazy(() => import('@/tenant/features/settings/components/LlmSettings'));
 
 export const SETTINGS_SECTION_COMPONENTS: Record<
   SettingsSection,
@@ -16,4 +17,5 @@ export const SETTINGS_SECTION_COMPONENTS: Record<
   branding: BrandingSettings,
   theme: ThemeSettings,
   backup: BackupRestore,
+  llm: LlmSettings,
 };

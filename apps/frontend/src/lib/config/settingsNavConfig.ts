@@ -1,4 +1,4 @@
-import { Boxes, Database, Globe, Palette, Sparkles, type LucideIcon } from 'lucide-react';
+import { Brain, Boxes, Database, Globe, Palette, Sparkles, type LucideIcon } from 'lucide-react';
 import type { AppTranslationKey } from '@mms/shared';
 import { SETTINGS_SECTIONS, type SettingsSection } from '@/lib/config/routes';
 
@@ -13,6 +13,7 @@ export const SETTINGS_NAV: SettingsNavItem[] = [
   { id: 'global', labelKey: 'settings.global', icon: Globe },
   { id: 'branding', labelKey: 'settings.branding', icon: Palette },
   { id: 'theme', labelKey: 'settings.theme', icon: Sparkles },
+  { id: 'llm', labelKey: 'settings.llm', icon: Brain },
   { id: 'modules', labelKey: 'settings.modules', icon: Boxes },
   { id: 'backup', labelKey: 'settings.backup', icon: Database },
 ];

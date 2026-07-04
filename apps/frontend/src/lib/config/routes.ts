@@ -117,6 +117,7 @@ export const SETTINGS_SECTIONS = [
   "branding",
   "theme",
   "backup",
+  "llm",
 ] as const;
 
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
