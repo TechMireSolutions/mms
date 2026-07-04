@@ -173,8 +173,8 @@ export default function Attendance() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - Attendance Tracker</title>
-      <meta name="description" content="Track student daily attendance, view real-time class stats, and perform attendance auditing." />
+      <title>MMS - {t("nav.attendance")}</title>
+      <meta name="description" content={t("page.attendance.subtitle")} />
       <PageHeader
         icon={UserCheck}
         title={t("nav.attendance")}

@@ -37,6 +37,9 @@ export interface DashboardCollectionData {
   revenueExpenses: { revenue: number; expenses: number }[];
   dataVolume: number;
   studentMetricsInactive: number;
+  studentMetricsNew: number;
+  teacherMetricsNew: number;
+  contactMetricsNew: number;
 }
 
 function needsRevenueExpenses(widgets: CustomWidget[]): boolean {
@@ -158,5 +161,8 @@ export function useDashboardData(
     assessmentResults,
     revenueExpenses,
     dataVolume,
+    studentMetricsNew: studentMetrics?.newThisPeriod ?? 0,
+    teacherMetricsNew: teacherMetrics?.newThisPeriod ?? 0,
+    contactMetricsNew: contactMetrics?.newThisPeriod ?? 0,
   };
 }

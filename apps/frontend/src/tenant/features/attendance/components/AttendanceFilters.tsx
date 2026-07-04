@@ -99,7 +99,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
       >
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-foreground m-0">Filters</h2>
+          <h2 className="text-sm font-semibold text-foreground m-0">{t("attendance.filters.title")}</h2>
           {activeCount > 0 && (
             <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">{activeCount}</span>
           )}
@@ -113,7 +113,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
               onClick={(event) => { event.stopPropagation(); reset(); }}
               className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors h-auto p-0 hover:bg-transparent"
             >
-              <X className="w-3 h-3" /> Clear
+              <X className="w-3 h-3" /> {t("attendance.filters.clear")}
             </Button>
           )}
           {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -133,31 +133,31 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
             <div className="px-4 pb-4 pt-4 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-3">
               {/* Session */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="filter-session" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Session</label>
+                <label htmlFor="filter-session" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.session")}</label>
                 <FormSelect
                   id="filter-session"
                   value={filters.sessionId}
                   onChange={(value) => setFilterValue("sessionId", value)}
-                  placeholder="All Sessions"
+                  placeholder={t("attendance.filters.allSessions")}
                   options={sessions.map((session) => ({ value: session.id, label: session.name }))}
                 />
               </div>
 
               {/* Class */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="filter-class" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Class</label>
+                <label htmlFor="filter-class" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.class")}</label>
                 <FormSelect
                   id="filter-class"
                   value={filters.classId}
                   onChange={(value) => setFilterValue("classId", value)}
-                  placeholder="All Classes"
+                  placeholder={t("attendance.filters.allClasses")}
                   options={sessionClasses.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
                 />
               </div>
 
               {/* Teacher */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="filter-teacher" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Teacher</label>
+                <label htmlFor="filter-teacher" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.teacher")}</label>
                 <FormSelect
                   id="filter-teacher"
                   value={filters.teacherId}
@@ -169,7 +169,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
 
               {/* Date */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="filter-date" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Date</label>
+                <label htmlFor="filter-date" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.date")}</label>
                 <DatePicker
                   id="filter-date"
                   value={filters.date}

@@ -104,6 +104,9 @@ export default function Dashboard() {
     tests,
     assessmentResults,
     dataVolume,
+    studentMetricsNew,
+    teacherMetricsNew,
+    contactMetricsNew,
   } = useDashboardData(customWidgets, dashboardRole);
 
   const openWidgetBuilder = useCallback(
@@ -155,6 +158,121 @@ export default function Dashboard() {
   const dashboardMetricCards = useMemo(() => {
     const isModuleEnabled = (moduleId: string) => enabledModules[moduleId] !== false;
 
+    // 1. Dynamic Students Trend (Growth rate in last 30 days)
+    const studentTrend = studentsTotal && studentMetricsNew
+      ? Math.round((studentMetricsNew / Math.max(1, studentsTotal - studentMetricsNew)) * 100)
+      : 0;
+
+    // 2. Dynamic Teachers Trend
+    const teacherTrend = teachersTotal && teacherMetricsNew
+      ? Math.round((teacherMetricsNew / Math.max(1, teachersTotal - teacherMetricsNew)) * 100)
+      : 0;
+
+    // 3. Dynamic Contacts Trend
+    const contactTrend = contactsTotal && contactMetricsNew
+      ? Math.round((contactMetricsNew / Math.max(1, contactsTotal - contactMetricsNew)) * 100)
+      : 0;
+
+    // 4. Dynamic Attendance Today Trend (Latest vs Previous Day Rate Change)
+    const getAttendanceRateForDate = (dateStr: string) => {
+      const dayRecords = attendanceRecords.filter((r) => r.date === dateStr);
+      if (dayRecords.length === 0) return null;
+      const present = dayRecords.filter((r) => r.status === "present" || r.status === "late").length;
+      return (present / dayRecords.length) * 100;
+    };
+    const sortedDates = [...new Set(attendanceRecords.map((r) => r.date as string))].sort();
+    const latestDate = sortedDates[sortedDates.length - 1];
+    const prevDate = sortedDates[sortedDates.length - 2];
+    const latestRate = latestDate ? getAttendanceRateForDate(latestDate) : null;
+    const prevRate = prevDate ? getAttendanceRateForDate(prevDate) : null;
+    const attendanceTrend = (latestRate !== null && prevRate !== null && prevRate > 0)
+      ? Math.round(latestRate - prevRate)
+      : 0;
+
+    // 5. Dynamic Fees (Revenue) Trend (Current month collections vs Last month)
+    const getCollectedAmountForMonth = (year: number, month: number) => {
+      let sum = 0;
+      invoices.forEach((inv) => {
+        if (!inv || inv.status === "cancelled") return;
+        const dateStr = inv.paidDate || inv.dueDate || "";
+        const date = new Date(dateStr);
+        if (date.getFullYear() === year && date.getMonth() === month) {
+          if (inv.status === "paid") {
+            sum += inv.finalAmt;
+          } else if (inv.status === "partial") {
+            sum += inv.paidAmt || 0;
+          }
+        }
+      });
+      return sum;
+    };
+    const now = new Date();
+    const currentMonthCollected = getCollectedAmountForMonth(now.getFullYear(), now.getMonth());
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthCollected = getCollectedAmountForMonth(prevMonthDate.getFullYear(), prevMonthDate.getMonth());
+    const feesTrend = prevMonthCollected > 0
+      ? Math.round(((currentMonthCollected - prevMonthCollected) / prevMonthCollected) * 100)
+      : (currentMonthCollected > 0 ? 100 : 0);
+
+    // 6. Dynamic Outstanding Payments Trend
+    const getOutstandingAmountForMonth = (year: number, month: number) => {
+      let sum = 0;
+      invoices.forEach((inv) => {
+        if (!inv || inv.status === "cancelled" || inv.status === "paid") return;
+        const dateStr = inv.dueDate || "";
+        const date = new Date(dateStr);
+        if (date.getFullYear() === year && date.getMonth() === month) {
+          const outstanding = inv.status === "partial" ? (inv.finalAmt - (inv.paidAmt || 0)) : inv.finalAmt;
+          sum += outstanding;
+        }
+      });
+      return sum;
+    };
+    const currentOutstanding = getOutstandingAmountForMonth(now.getFullYear(), now.getMonth());
+    const prevOutstanding = getOutstandingAmountForMonth(prevMonthDate.getFullYear(), prevMonthDate.getMonth());
+    const outstandingTrend = prevOutstanding > 0
+      ? Math.round(((currentOutstanding - prevOutstanding) / prevOutstanding) * 100)
+      : (currentOutstanding > 0 ? 100 : 0);
+
+    // 7. Dynamic Hasanat Awarded Trend (This week vs Last week points issued)
+    const pointsMap = new Map<string, number>();
+    (denoms || []).forEach((d) => pointsMap.set(d.id, d.points));
+    const getHasanatPointsInPeriod = (daysStart: number, daysEnd: number) => {
+      let sum = 0;
+      const nowVal = new Date();
+      const startTime = new Date(nowVal.getTime() - daysStart * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const endTime = new Date(nowVal.getTime() - daysEnd * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      hasanatDistributions.forEach((d) => {
+        if (!d.issuedDate) return;
+        if (d.issuedDate >= endTime && d.issuedDate <= startTime) {
+          const points = pointsMap.get(d.denominationId) || 50;
+          sum += (d.quantity || 1) * points;
+        }
+      });
+      return sum;
+    };
+    const pointsThisWeek = getHasanatPointsInPeriod(0, 7);
+    const pointsLastWeek = getHasanatPointsInPeriod(7, 14);
+    const hasanatTrend = pointsLastWeek > 0
+      ? Math.round(((pointsThisWeek - pointsLastWeek) / pointsLastWeek) * 100)
+      : (pointsThisWeek > 0 ? 100 : 0);
+
+    // 8. Dynamic Active Sessions Trend (This week vs Last week counts)
+    const getSessionsInPeriod = (daysStart: number, daysEnd: number) => {
+      const nowVal = new Date();
+      const startTime = new Date(nowVal.getTime() - daysStart * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const endTime = new Date(nowVal.getTime() - daysEnd * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      return sessions.filter((s) => {
+        if (!s.startDate) return false;
+        return s.startDate >= endTime && s.startDate <= startTime;
+      }).length;
+    };
+    const sessionsThisWeek = getSessionsInPeriod(0, 7);
+    const sessionsLastWeek = getSessionsInPeriod(7, 14);
+    const sessionsTrend = sessionsLastWeek > 0
+      ? Math.round(((sessionsThisWeek - sessionsLastWeek) / sessionsLastWeek) * 100)
+      : (sessionsThisWeek > 0 ? 100 : 0);
+
     const dashboardCardWidgets = customWidgets.filter(
       (widget) => widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole),
     );
@@ -192,7 +310,7 @@ export default function Dashboard() {
             sub: widget.fixedSubText || `${contactsTotal} total`,
             icon: widget.icon || 'Users',
             color: widget.color || 'blue',
-            trend: widget.trend || 0,
+            trend: contactTrend,
           };
         }
       }
@@ -214,7 +332,7 @@ export default function Dashboard() {
             sub: widget.fixedSubText || `${studentsTotal} total`,
             icon: widget.icon || 'GraduationCap',
             color: widget.color || 'emerald',
-            trend: widget.trend || 0,
+            trend: studentTrend,
           };
         }
       }
@@ -236,7 +354,7 @@ export default function Dashboard() {
             sub: widget.fixedSubText || `${teachersTotal} total`,
             icon: widget.icon || 'School',
             color: widget.color || 'blue',
-            trend: widget.trend || 0,
+            trend: teacherTrend,
           };
         }
       }
@@ -274,6 +392,21 @@ export default function Dashboard() {
         },
       );
 
+      // Resolve dynamic trend for standard cards based on category/id keywords
+      let resolvedTrend = computedCard.trend || 0;
+      const widgetIdLower = widget.id.toLowerCase();
+      if (widgetIdLower.includes('attendance') || widgetIdLower.includes('rate')) {
+        resolvedTrend = attendanceTrend;
+      } else if (widgetIdLower.includes('fees') || widgetIdLower.includes('revenue') || widgetIdLower.includes('income')) {
+        resolvedTrend = feesTrend;
+      } else if (widgetIdLower.includes('outstanding') || widgetIdLower.includes('debt') || widgetIdLower.includes('overdue')) {
+        resolvedTrend = outstandingTrend;
+      } else if (widgetIdLower.includes('hasanat') || widgetIdLower.includes('points')) {
+        resolvedTrend = hasanatTrend;
+      } else if (widgetIdLower.includes('sessions') || widgetIdLower.includes('classes')) {
+        resolvedTrend = sessionsTrend;
+      }
+
       return {
         id: computedCard.id,
         title: resolveWidgetTitle(widget, t),
@@ -281,7 +414,7 @@ export default function Dashboard() {
         sub: computedCard.sub,
         icon: computedCard.icon,
         color: computedCard.color,
-        trend: computedCard.trend || 0,
+        trend: resolvedTrend,
       };
     });
   }, [
@@ -289,12 +422,16 @@ export default function Dashboard() {
     enabledModules,
     customWidgets,
     studentsTotal,
+    studentMetricsNew,
     teachersTotal,
+    teacherMetricsNew,
     sessions,
     invoices,
     attendanceRecords,
     hasanatDistributions,
+    denoms,
     contactsTotal,
+    contactMetricsNew,
     questions,
     tests,
     assessmentResults,

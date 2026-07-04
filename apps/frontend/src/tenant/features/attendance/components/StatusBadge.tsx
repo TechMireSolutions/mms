@@ -1,6 +1,8 @@
 import React from "react";
 import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
 import { getAttendanceStatusInfo } from "@/lib/data/attendanceData";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { AppTranslationKey } from "@mms/shared";
 
 interface StatusBadgeProps {
   status: string;
@@ -17,6 +19,7 @@ interface StatusBadgeProps {
  */
 export function StatusBadge({ status, size = "sm" }: StatusBadgeProps) {
   const { statuses } = useAttendanceConfig();
+  const { t } = useTranslation();
   const statusInfo = getAttendanceStatusInfo(status, statuses);
   
   if (!statusInfo) {
@@ -25,11 +28,13 @@ export function StatusBadge({ status, size = "sm" }: StatusBadgeProps) {
   }
   
   const padding = size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs";
+  const key = `attendance.status.${statusInfo.id}` as AppTranslationKey;
+  const label = t(key);
   
   return (
     <span className={`inline-flex items-center gap-1 rounded-full font-semibold ${padding} ${statusInfo.bg} ${statusInfo.text} border ${statusInfo.border}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot}`} />
-      {statusInfo.label}
+      {label && label !== key ? label : statusInfo.label}
     </span>
   );
 }

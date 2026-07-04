@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -184,6 +185,7 @@ function enrolledStudentsForClass(
 
 // ── Offline Banner ────────────────────────────────────────────────────────────
 function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: OfflinePayload[]; onSync: () => void }) {
+  const { t } = useTranslation();
   return (
     <AnimatePresence>
       {offline && (
@@ -191,11 +193,11 @@ function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: Of
           className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-warning/10 border border-warning/30 text-warning">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <WifiOff className="w-4 h-4" aria-hidden="true" />
-            Offline Mode — changes will sync when reconnected
-            {queue.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-warning/30 text-[10px] font-bold">{queue.length} pending</span>}
+            {t("attendance.mark.offlineBannerOffline")}
+            {queue.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-warning/30 text-[10px] font-bold">{queue.length} {t("attendance.mark.pending")}</span>}
           </div>
           <Button onClick={onSync} variant="ghost" size="sm" className="text-xs font-bold px-2.5 py-1 rounded-lg bg-warning/30 hover:bg-warning/40 hover:text-warning transition-colors flex items-center gap-1 h-auto">
-            <UploadCloud className="w-3 h-3" aria-hidden="true" /> Sync Now
+            <UploadCloud className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.syncNow")}
           </Button>
         </motion.div>
       )}
@@ -204,10 +206,10 @@ function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: Of
           className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-success/10 border border-success/30 text-success">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <Wifi className="w-4 h-4" aria-hidden="true" />
-            Back online — {queue.length} record{queue.length > 1 ? "s" : ""} ready to sync
+            {t("attendance.mark.offlineBannerOnline", { count: queue.length })}
           </div>
           <Button onClick={onSync} variant="ghost" size="sm" className="text-xs font-bold px-2.5 py-1 rounded-lg bg-success/30 hover:bg-success/40 hover:text-success transition-colors flex items-center gap-1 h-auto">
-            <UploadCloud className="w-3 h-3" aria-hidden="true" /> Sync Now
+            <UploadCloud className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.syncNow")}
           </Button>
         </motion.div>
       )}
@@ -217,9 +219,10 @@ function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: Of
 
 // ── Geo tag pill ──────────────────────────────────────────────────────────────
 function GeoTag({ geo, onRequest }: { geo: GeoData | "loading" | null; onRequest: () => void }) {
+  const { t } = useTranslation();
   if (geo === "loading") return (
     <span className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium px-2 py-1 rounded-lg bg-muted animate-pulse">
-      <MapPin className="w-3 h-3" aria-hidden="true" /> Getting location…
+      <MapPin className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.gettingLocation")}
     </span>
   );
   if (geo) return (
@@ -230,13 +233,14 @@ function GeoTag({ geo, onRequest }: { geo: GeoData | "loading" | null; onRequest
   return (
     <Button onClick={onRequest} variant="outline" size="sm"
       className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium px-2 py-1 rounded-lg border border-dashed border-border hover:bg-muted hover:text-muted-foreground transition-colors h-auto bg-transparent">
-      <MapPin className="w-3 h-3" aria-hidden="true" /> Tag Location
+      <MapPin className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.tagLocation")}
     </Button>
   );
 }
 
 // ── Facial Recognition Placeholder ───────────────────────────────────────────
 function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
       className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-6 text-center space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
@@ -245,19 +249,19 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
         <Scan className="w-8 h-8 text-primary" aria-hidden="true" />
       </div>
       <div>
-        <h3 className="text-sm font-bold text-foreground m-0">Facial Recognition</h3>
-        <p className="text-xs text-muted-foreground mt-1">AI-powered face scan for auto-attendance marking.</p>
-        <span className="inline-block mt-2 px-2.5 py-1 rounded-full bg-warning/15 text-warning text-[11px] font-bold">Coming Soon</span>
+        <h3 className="text-sm font-bold text-foreground m-0">{t("attendance.mark.facialRecognition")}</h3>
+        <p className="text-xs text-muted-foreground mt-1">{t("attendance.mark.facialRecognitionDesc")}</p>
+        <span className="inline-block mt-2 px-2.5 py-1 rounded-full bg-warning/15 text-warning text-[11px] font-bold">{t("attendance.mark.comingSoon")}</span>
       </div>
       <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 flex items-center justify-center" style={{ height: 160 }}>
         <div className="text-center space-y-2">
           <div className="w-16 h-20 border-2 border-primary/30 rounded-lg mx-auto flex items-center justify-center">
             <div className="w-8 h-10 border border-primary/20 rounded-sm" />
           </div>
-          <p className="text-[11px] text-muted-foreground">Camera preview will appear here</p>
+          <p className="text-[11px] text-muted-foreground">{t("attendance.mark.cameraPreview")}</p>
         </div>
       </div>
-      <Button onClick={onClose} variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground transition-colors h-auto py-1">Dismiss</Button>
+      <Button onClick={onClose} variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground transition-colors h-auto py-1">{t("attendance.mark.dismiss")}</Button>
     </motion.div>
   );
 }
@@ -268,6 +272,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
  * MarkAttendance
  */
 export function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
+  const { t } = useTranslation();
   const { settings, statuses, fields, customFields, orderedFields } = useAttendanceConfig();
   const { can } = usePermissions();
   const sessions = useSessionsCollection();
@@ -526,8 +531,8 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Users className="w-12 h-12 text-muted-foreground/40 mb-3" aria-hidden="true" />
-        <h2 className="text-base font-semibold text-foreground m-0">Select a Class to Mark Attendance</h2>
-        <p className="text-sm text-muted-foreground mt-1">Use the filters above to choose a session and class.</p>
+        <h2 className="text-base font-semibold text-foreground m-0">{t("attendance.mark.selectClassTitle")}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{t("attendance.mark.selectClassDesc")}</p>
       </div>
     );
   }
@@ -536,7 +541,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
     <section className="space-y-4">
       {/* Offline Banner */}
       <OfflineBanner offline={isOffline} queue={offlineQueue} onSync={handleSync} />
-      {syncedMsg && <div className="px-4 py-2 rounded-xl bg-success/10 border border-success/30 text-success text-sm font-semibold">✓ Offline records synced successfully.</div>}
+      {syncedMsg && <div className="px-4 py-2 rounded-xl bg-success/10 border border-success/30 text-success text-sm font-semibold">✓ {t("attendance.mark.syncSuccess")}</div>}
 
       {/* Facial Recognition Placeholder */}
       <AnimatePresence>
@@ -550,12 +555,12 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
             <h2 className="text-sm font-bold text-foreground m-0">{classInfo?.name}</h2>
             {submitted && (
               <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-success/15 text-success font-bold">
-                <CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" /> Submitted
+                <CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" /> {t("attendance.mark.submitted")}
               </span>
             )}
             {isOffline && (
               <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-warning/15 text-warning font-bold">
-                <WifiOff className="w-2.5 h-2.5" aria-hidden="true" /> Offline
+                <WifiOff className="w-2.5 h-2.5" aria-hidden="true" /> {t("attendance.mark.offline")}
               </span>
             )}
           </div>
@@ -567,17 +572,17 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {isDraft && <span className="px-2 py-1 rounded-lg bg-warning/15 text-warning text-[11px] font-bold">Draft Saved</span>}
+          {isDraft && <span className="px-2 py-1 rounded-lg bg-warning/15 text-warning text-[11px] font-bold">{t("attendance.mark.draftSaved")}</span>}
           <Button onClick={() => setShowFaceAI((isOpen) => !isOpen)} variant="outline" size="sm"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted hover:text-foreground transition-colors h-auto">
-            <Scan className="w-3 h-3" aria-hidden="true" /> Face AI
+            <Scan className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.faceAi")}
           </Button>
           <div className="flex rounded-lg border border-border overflow-hidden text-xs font-semibold" role="group" aria-label="Bulk actions">
             <Button onClick={() => markAll("present")} variant="ghost" className="px-3 py-1.5 rounded-none bg-success/10 text-success hover:bg-success/15 hover:text-success transition-colors flex items-center gap-1 h-auto font-semibold">
-              <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> All Present
+              <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.allPresent")}
             </Button>
             <Button onClick={() => markAll("absent")} variant="ghost" className="px-3 py-1.5 rounded-none bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive transition-colors flex items-center gap-1 h-auto font-semibold">
-              <XCircle className="w-3 h-3" aria-hidden="true" /> All Absent
+              <XCircle className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.allAbsent")}
             </Button>
           </div>
         </div>
@@ -599,12 +604,12 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-        <label htmlFor="search-mark" className="sr-only">Search student</label>
+        <label htmlFor="search-mark" className="sr-only">{t("attendance.searchStudent")}</label>
         <Input 
           id="search-mark"
           value={search} 
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search student…"
+          placeholder={t("attendance.searchStudent")}
           className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
         />
       </div>
@@ -616,7 +621,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
             <thead className="bg-muted/60 border-b border-border">
               <tr>
                 <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase w-8">#</th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Student</th>
+                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("attendance.columns.student")}</th>
                 {orderedFields.map((field) => {
                   const isEnabled = fields[field.id]?.enabled !== false;
                   if (!isEnabled) return null;
@@ -755,17 +760,17 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
       {/* Actions */}
       <footer className="flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-xs text-muted-foreground">{rows.length} students · {filteredRows.length} shown</p>
+        <p className="text-xs text-muted-foreground">{t("attendance.mark.summary", { total: rows.length, shown: filteredRows.length })}</p>
         <div className="flex gap-2">
           <Button onClick={handleSaveDraft} variant="outline"
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-auto">
-            <Save className="w-3.5 h-3.5" aria-hidden="true" /> Save Draft
+            <Save className="w-3.5 h-3.5" aria-hidden="true" /> {t("attendance.mark.saveDraft")}
           </Button>
           <Button onClick={handleSubmit}
             disabled={!can("attendance.write")}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors h-auto">
             <Send className="w-3.5 h-3.5" aria-hidden="true" />
-            {isOffline ? "Save Offline" : submitted ? "Update Attendance" : "Submit Attendance"}
+            {isOffline ? t("attendance.mark.saveOffline") : submitted ? t("attendance.mark.updateAttendance") : t("attendance.mark.submitAttendance")}
           </Button>
         </div>
       </footer>
