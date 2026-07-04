@@ -165,6 +165,7 @@ export const APP_TRANSLATIONS_FA = {
   "page.questionBank.title": "بانک سوالات",
   "page.questionBank.subtitle": "مدیریت سوالات، تولید آزمون و تحلیل عملکرد",
   "module.desc.questionBank": "مخزن سوالات و برگه‌های آزمون",
+  "module.desc.messaging": "پیامک، واتس‌اپ و اطلاعیه‌ها",
 
   "questionBank.questions": "سوالات",
   "questionBank.generator": "تولید آزمون",

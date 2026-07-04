@@ -57,6 +57,7 @@ const MODULE_NAV_KEYS: Partial<Record<string, AppTranslationKey>> = {
 const MODULE_DESC_KEYS: Partial<Record<string, AppTranslationKey>> = {
   dashboard: "module.desc.dashboard",
   contacts: "module.desc.contacts",
+  messaging: "module.desc.messaging",
   students: "module.desc.students",
   teachers: "module.desc.teachers",
   sessions: "module.desc.sessions",

@@ -640,6 +640,7 @@ export const APP_TRANSLATIONS_UR = {
 
   "module.desc.dashboard": "مرکزی جائزہ اور تجزیات",
   "module.desc.contacts": "مکمل CRM ڈائریکٹری",
+  "module.desc.messaging": "ایس ایم ایس، واٹس ایپ اور اعلانات",
   "module.desc.students": "طلبہ کی فہرست اور ریکارڈز",
   "module.desc.teachers": "اساتذہ کی فہرست اور تدریسی تعیناتیاں",
   "teachers.field.name": "مکمل نام",

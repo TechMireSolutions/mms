@@ -639,6 +639,7 @@ export const APP_TRANSLATIONS_EN = {
 
   "module.desc.dashboard": "Central overview and analytics",
   "module.desc.contacts": "Comprehensive CRM directory",
+  "module.desc.messaging": "SMS, WhatsApp and announcements",
   "module.desc.students": "Student directory and records",
   "module.desc.teachers": "Faculty directory and teaching assignments",
   "teachers.field.name": "Full name",

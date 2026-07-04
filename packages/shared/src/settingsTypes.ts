@@ -185,6 +185,7 @@ export interface ModuleDefinition {
 export const SYSTEM_MODULES: ModuleDefinition[] = [
   { id: "dashboard",   label: "Dashboard",      description: "Central overview and analytics",        icon: "LayoutDashboard", category: "core",     required: true },
   { id: "contacts",    label: "Contacts",       description: "Comprehensive CRM directory",         icon: "Users",           category: "core",     required: true },
+  { id: "messaging",   label: "Messaging",      description: "SMS, WhatsApp and announcements",     icon: "MessageSquare",   category: "core",     required: true },
   { id: "students",    label: "Students",       description: "Student directory and records",       icon: "GraduationCap",   category: "academic", required: true },
   { id: "teachers",    label: "Teachers",       description: "Faculty directory and assignments",   icon: "School",          category: "academic" },
   { id: "sessions",    label: "Sessions",       description: "Classes, schedules and timetables",   icon: "Calendar",        category: "academic" },
@@ -226,6 +227,7 @@ export type SystemModuleNavEntry = SystemModuleNavItem | SystemModuleNavGroup;
 export const SYSTEM_MODULE_NAV: SystemModuleNavEntry[] = [
   { type: "module", moduleId: "dashboard" },
   { type: "module", moduleId: "contacts" },
+  { type: "module", moduleId: "messaging" },
   {
     type: "group",
     labelKey: "nav.academics",
@@ -253,6 +255,7 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
     students: true,
     teachers: true,
     contacts: true,
+    messaging: true,
     sessions: true,
     enrollment: true,
     attendance: true,

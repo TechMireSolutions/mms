@@ -642,6 +642,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
 
   "module.desc.dashboard": "نظرة عامة وتحليلات مركزية",
   "module.desc.contacts": "دليل CRM شامل",
+  "module.desc.messaging": "الرسائل القصيرة والواتساب والإعلانات",
   "module.desc.students": "دليل الطلاب والسجلات",
   "module.desc.teachers": "دليل الهيئة التدريسية والتعيينات",
   "teachers.field.name": "الاسم الكامل",
