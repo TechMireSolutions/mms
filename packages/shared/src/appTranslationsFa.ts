@@ -406,6 +406,7 @@ export const APP_TRANSLATIONS_FA = {
   "contacts.deletionReasonPlaceholder": "چرا این مخاطب حذف می‌شود؟",
   "contacts.noDeletedContacts": "مخاطب حذف‌شده‌ای نیست",
   "backup.securityViolation": "بررسی امنیتی ناموفق بود. فایل پشتیبان حاوی کلیدهای نامعتبر یا داده‌های غیرمجاز است.",
+  "theme.cornerCustom": "سفارشی ({radius})",
   "theme.cornerPreviewTitle": "پیش‌نمایش زنده",
   "theme.cornerPreviewCard": "کارت پیش‌نمایش",
   "theme.cornerPreviewRadius": "شعاع",

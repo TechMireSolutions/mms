@@ -990,6 +990,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "theme.cornerRoundedDesc": "متوازن — الافتراضي",
   "theme.cornerSoft": "ناعم",
   "theme.cornerSoftDesc": "استدارة واسعة — مظهر ألطف",
+  "theme.cornerCustom": "مخصص ({radius})",
   "theme.applyLogoColors": "تطبيق من الشعار",
   "theme.applyingLogoColors": "جارٍ قراءة الألوان…",
   "theme.logoColorsApplied": "تم تطبيق الألوان من الشعار",

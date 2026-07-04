@@ -1,6 +1,6 @@
 import React from 'react';
 import { Palette, Monitor, Wand2, ImageIcon, Loader2, Box } from 'lucide-react';
-import { cornerStyleLabelKey, normalizeBrandingCornerStyle, normalizeThemeMode } from '@mms/shared';
+import { cornerStyleLabelKey, normalizeBrandingCornerStyle, normalizeThemeMode, resolveBrandingCornerRadius } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useApplyLogoColors } from '@/tenant/hooks/useApplyLogoColors';
 import { useThemeSettingsDraft } from '@/tenant/features/settings/hooks/useThemeSettingsDraft';
@@ -69,7 +69,12 @@ export default function ThemeSettings(): React.JSX.Element {
       <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium" aria-live="polite">
         <span className="text-muted-foreground">{t('theme.activeConfig')}:</span>
         <SettingsMetaBadge variant="primary">{displayModeSummary}</SettingsMetaBadge>
-        <SettingsMetaBadge variant="muted">{t(cornerStyleLabelKey(normalizeBrandingCornerStyle(data.cornerStyle)))}</SettingsMetaBadge>
+        <SettingsMetaBadge variant="muted">
+          {t(
+            cornerStyleLabelKey(normalizeBrandingCornerStyle(data.cornerStyle)),
+            { radius: resolveBrandingCornerRadius(normalizeBrandingCornerStyle(data.cornerStyle)) }
+          )}
+        </SettingsMetaBadge>
         <SettingsColoursBadge
           primaryColor={data.primaryColor}
           secondaryColor={data.secondaryColor}

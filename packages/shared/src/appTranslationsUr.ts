@@ -988,6 +988,7 @@ export const APP_TRANSLATIONS_UR = {
   "theme.cornerRoundedDesc": "متوازن ڈیفالٹ",
   "theme.cornerSoft": "نرم",
   "theme.cornerSoftDesc": "زیادہ گولائی — نرم محسوس",
+  "theme.cornerCustom": "حسب ضرورت ({radius})",
   "theme.applyLogoColors": "لوگو سے لاگو کریں",
   "theme.applyingLogoColors": "رنگ پڑھے جا رہے ہیں…",
   "theme.logoColorsApplied": "لوگو سے رنگ لاگو ہوئے",

@@ -988,6 +988,7 @@ export const APP_TRANSLATIONS_EN = {
   "theme.cornerRoundedDesc": "Balanced default — friendly but professional",
   "theme.cornerSoft": "Soft",
   "theme.cornerSoftDesc": "Generous rounding — softer feel",
+  "theme.cornerCustom": "Custom ({radius})",
   "theme.cornerPreviewTitle": "Live Preview",
   "theme.cornerPreviewCard": "Preview Card",
   "theme.cornerPreviewRadius": "Radius",
