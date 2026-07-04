@@ -2,11 +2,12 @@ import React from 'react';
 import {
   BRANDING_CORNER_RADIUS,
   BRANDING_CORNER_STYLE_OPTIONS,
+  BRANDING_CORNER_STYLE_VALUES,
   type BrandingCornerStyle,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 
 interface CornerStyleSelectorProps {
   value: BrandingCornerStyle;
@@ -22,48 +23,74 @@ export default function CornerStyleSelector({
 }: CornerStyleSelectorProps): React.JSX.Element {
   const { t } = useTranslation();
 
+  const activeIndex = BRANDING_CORNER_STYLE_VALUES.indexOf(value);
+  const activeOption =
+    BRANDING_CORNER_STYLE_OPTIONS.find((opt) => opt.value === value) ||
+    BRANDING_CORNER_STYLE_OPTIONS[2];
+
+  const handleSliderChange = (values: number[]): void => {
+    const nextIndex = values[0];
+    if (nextIndex >= 0 && nextIndex < BRANDING_CORNER_STYLE_VALUES.length) {
+      onChange(BRANDING_CORNER_STYLE_VALUES[nextIndex]);
+    }
+  };
+
   return (
-    <div
-      className="grid grid-cols-2 gap-2 sm:grid-cols-4"
-      role="radiogroup"
-      aria-label={t('theme.cornerStyleTitle')}
-    >
-      {BRANDING_CORNER_STYLE_OPTIONS.map((option) => {
-        const active = value === option.value;
-        const radius = BRANDING_CORNER_RADIUS[option.value];
-        return (
-          <Button
-            key={option.value}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            onClick={() => onChange(option.value)}
-            className={cn(
-              'flex min-h-[88px] flex-col items-center gap-2 rounded-xl border p-3 text-left transition-all',
-              active
-                ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                : 'border-border bg-muted/20 hover:border-primary/30 hover:bg-muted/30',
-            )}
+    <div className="flex flex-col gap-5 p-5 bg-card/45 backdrop-blur-sm rounded-2xl border border-border/80 shadow-xs">
+      {/* Live Preview Box */}
+      <div 
+        className="flex items-center justify-center py-7 bg-muted/10 rounded-xl border border-border/40 relative overflow-hidden transition-all duration-300"
+        aria-hidden="true"
+      >
+        <div
+          className="w-28 h-18 bg-primary/10 border border-primary/20 flex items-center justify-center shadow-xs transition-all duration-300"
+          style={{ borderRadius: BRANDING_CORNER_RADIUS[value] }}
+        >
+          <div
+            className="px-3.5 py-1.5 bg-primary text-primary-foreground text-[10px] font-extrabold shadow-sm transition-all duration-300"
+            style={{ borderRadius: BRANDING_CORNER_RADIUS[value] }}
           >
-            <span
-              className="flex h-10 w-full items-center justify-center border border-border bg-card"
-              style={{ borderRadius: radius }}
-              aria-hidden
+            {t(activeOption.labelKey)}
+          </div>
+        </div>
+      </div>
+
+      {/* Slider Track Container */}
+      <div className="space-y-4 px-1.5">
+        <Slider
+          min={0}
+          max={3}
+          step={1}
+          value={[activeIndex]}
+          onValueChange={handleSliderChange}
+          aria-label={t('theme.cornerStyleTitle')}
+          className="py-2"
+        />
+
+        {/* Step Snap Labels */}
+        <div className="flex justify-between px-0.5">
+          {BRANDING_CORNER_STYLE_OPTIONS.map((opt, idx) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(opt.value)}
+              className={cn(
+                "text-[9px] font-black uppercase tracking-widest transition-colors cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring p-1 rounded-sm",
+                activeIndex === idx 
+                  ? "text-primary" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
             >
-              <span
-                className="h-3 w-8 bg-primary"
-                style={{ borderRadius: radius }}
-              />
-            </span>
-            <span className="w-full text-center">
-              <span className="block text-xs font-semibold text-foreground">{t(option.labelKey)}</span>
-              <span className="mt-0.5 block text-[10px] leading-snug text-muted-foreground">
-                {t(option.descriptionKey)}
-              </span>
-            </span>
-          </Button>
-        );
-      })}
+              {t(opt.labelKey)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Current Description */}
+      <p className="text-[11px] text-muted-foreground leading-relaxed m-0 text-center px-1">
+        {t(activeOption.descriptionKey)}
+      </p>
     </div>
   );
 }
