@@ -8,7 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useQuestionBankConfig } from '@/tenant/features/questionBank/hooks/useQuestionBankConfig';
+import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import {
   formatQuestionSourcesCitation,
   getQuestionCategoryIds,

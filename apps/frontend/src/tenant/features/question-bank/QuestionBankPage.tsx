@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
-import { useQuestionBankConfig } from '@/tenant/features/questionBank/hooks/useQuestionBankConfig';
+import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, ClipboardList, Sparkles, Plus } from 'lucide-react';
 import { resolveModuleTierTab } from '@mms/shared';
@@ -11,23 +11,23 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { Button } from '@/components/ui/button';
-import { QuestionBank as QuestionsPanel } from "@/tenant/features/questionBank/components/QuestionBank";
-import { QuestionForm } from "@/tenant/features/questionBank/components/QuestionForm";
-import { GenerateTest } from "@/tenant/features/questionBank/components/GenerateTest";
-import { PerformanceAnalytics } from "@/tenant/features/questionBank/components/PerformanceAnalytics";
-import { AutoGrading } from "@/tenant/features/questionBank/components/AutoGrading";
-import { QuestionBankSettings } from "@/tenant/features/questionBank/components/QuestionBankSettings";
-import { QuestionBankCommandMetrics } from "@/tenant/features/questionBank/components/QuestionBankCommandMetrics";
+import { QuestionBank as QuestionsPanel } from "@/tenant/features/question-bank/components/QuestionBank";
+import { QuestionForm } from "@/tenant/features/question-bank/components/QuestionForm";
+import { GenerateTest } from "@/tenant/features/question-bank/components/GenerateTest";
+import { PerformanceAnalytics } from "@/tenant/features/question-bank/components/PerformanceAnalytics";
+import { AutoGrading } from "@/tenant/features/question-bank/components/AutoGrading";
+import { QuestionBankSettings } from "@/tenant/features/question-bank/components/QuestionBankSettings";
+import { QuestionBankCommandMetrics } from "@/tenant/features/question-bank/components/QuestionBankCommandMetrics";
 import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
 import KPISummary from '@/tenant/features/reports/components/KPISummary';
 import type { QuestionBankQuestion, QuestionBankTest } from '@mms/shared';
-import { useQuestionBankColumnLayout } from '@/tenant/features/questionBank/hooks/useQuestionBankColumnLayout';
+import { useQuestionBankColumnLayout } from '@/tenant/features/question-bank/hooks/useQuestionBankColumnLayout';
 import {
   useQuestionBankQuestionsCollection,
   useQuestionBankTestsCollection,
   useQuestionBankResultsCollection,
   useQuestionBankMutations,
-} from '@/tenant/features/questionBank/hooks/useQuestionBankApi';
+} from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
 
 /**
  * Question Bank — Work | Reports | Setup.

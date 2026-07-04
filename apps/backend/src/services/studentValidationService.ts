@@ -19,7 +19,10 @@ function getSubmittedBlueprintId(student: unknown): unknown {
   return (student as Record<string, unknown>)._blueprintId;
 }
 
-async function hydrateStudentValidationSubject(student: unknown): Promise<unknown> {
+async function hydrateStudentValidationSubject(
+  student: unknown,
+  getContacts: () => Promise<any[]>,
+): Promise<unknown> {
   if (!student || typeof student !== 'object' || Array.isArray(student)) {
     return student;
   }
@@ -30,7 +33,7 @@ async function hydrateStudentValidationSubject(student: unknown): Promise<unknow
     return studentRecord;
   }
 
-  const contacts = await loadContacts();
+  const contacts = await getContacts();
   const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(contactId));
   if (!contact) {
     return studentRecord;
@@ -92,16 +95,24 @@ export async function validateStudentDynamic(
     schemaCache.set(cacheKey, schema);
   }
 
+  let cachedContacts: any[] | undefined;
+  const getContacts = async () => {
+    if (!cachedContacts) {
+      cachedContacts = await loadContacts();
+    }
+    return cachedContacts;
+  };
+
   if (Array.isArray(student)) {
     for (const item of student) {
-      const validationSubject = await hydrateStudentValidationSubject(item);
+      const validationSubject = await hydrateStudentValidationSubject(item, getContacts);
       const parsed = schema.safeParse(validationSubject);
       if (!parsed.success) {
         throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
       }
     }
   } else {
-    const validationSubject = await hydrateStudentValidationSubject(student);
+    const validationSubject = await hydrateStudentValidationSubject(student, getContacts);
     const parsed = schema.safeParse(validationSubject);
     if (!parsed.success) {
       throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));

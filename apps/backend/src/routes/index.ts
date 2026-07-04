@@ -16,7 +16,7 @@ import obligationsRoutes from "./tenant/obligations.js";
 import accountingRoutes from "./tenant/accounting.js";
 import hasanatRoutes from "./tenant/hasanat.js";
 import examinationsRoutes from "./tenant/examinations.js";
-import questionBankRoutes from "./tenant/questionBank.js";
+import questionBankRoutes from "./tenant/question-bank.js";
 import usersRoutes from "./tenant/users.js";
 import attendanceRoutes from "./tenant/attendance.js";
 import sessionsRoutes from "./tenant/sessions.js";

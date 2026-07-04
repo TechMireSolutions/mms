@@ -20,7 +20,7 @@ import {
   questionAccuracyTextClass,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useQuestionBankConfig } from "@/tenant/features/questionBank/hooks/useQuestionBankConfig";
+import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 
 function pct(obtained: number, total: number): number {
   return total > 0 ? Math.round((obtained / total) * 100) : 0;

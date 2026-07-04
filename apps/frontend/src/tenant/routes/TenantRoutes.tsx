@@ -20,7 +20,7 @@ const Sessions = React.lazy(() => import("@/tenant/features/sessions/SessionsPag
 const Finance = React.lazy(() => import("@/tenant/features/finance/FinancePage"));
 const HasanatCards = React.lazy(() => import("@/tenant/features/hasanat/HasanatCardsPage"));
 const Examinations = React.lazy(() => import("@/tenant/features/examinations/ExaminationsPage"));
-const QuestionBankPage = React.lazy(() => import("@/tenant/features/questionBank/QuestionBankPage"));
+const QuestionBankPage = React.lazy(() => import("@/tenant/features/question-bank/QuestionBankPage"));
 const SettingsPage = React.lazy(() => import("@/tenant/features/settings/SettingsPage"));
 const Attendance = React.lazy(() => import("@/tenant/features/attendance/AttendancePage"));
 const Users = React.lazy(() => import("@/tenant/features/users/UsersPage"));

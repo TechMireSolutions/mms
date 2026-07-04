@@ -13,7 +13,7 @@ import {
   useQuestionBankQuestionsCollection,
   useQuestionBankTestsCollection,
   useQuestionBankResultsCollection,
-} from "@/tenant/features/questionBank/hooks/useQuestionBankApi";
+} from "@/tenant/features/question-bank/hooks/useQuestionBankApi";
 import { getObject, saveObject } from "@/lib/db";
 import { useContactsReportAnalytics, useContactsWidgetAggregates } from "@/tenant/features/contacts/hooks/useContacts";
 import { useStudentsMetrics, useStudentsWidgetAggregates } from "@/tenant/features/students/hooks/useStudents";

@@ -1,11 +1,34 @@
-#env
+# ------------------------------------------------------------------------------
+# MADRASA MANAGEMENT SYSTEM (MMS) - GLOBAL .GITIGNORE
+# ------------------------------------------------------------------------------
+
+# Dependency Directories
+node_modules/
+**/node_modules/
+.pnpm-store/
+
+# Build & Compilation Outputs
+dist/
+**/dist/
+dist-ssr/
+build/
+**/tsconfig.tsbuildinfo
+.turbo/
+.vite/
+
+# Temporary config timestamps (e.g. Vite)
+vite.config.ts.timestamp-*
+vite.config.js.timestamp-*
+
+# Environment and Secrets (Never commit secrets)
 .env
 .env.*
 !.env.example
 !**/.env.example
+*.local
 
-# Logs
-/logs
+# Logs and Debug Files
+/logs/
 .logs/
 .backups/
 *.log
@@ -15,44 +38,46 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-apps/backend/uploads
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# System & OS Files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs & Editor Directories
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*~
+# VS Code files - keep extensions.json for recommended workspace settings
+.vscode/*
+!.vscode/extensions.json
 
-.vite
-
-# Turbo build cache
-.turbo
-
-# Test / Playwright artifacts
+# Test Artifacts and Coverage reports
+coverage/
+**/coverage/
+.nyc_output/
 test-results/
 playwright-report/
 blob-report/
+playwright/.cache/
 
-# Local pnpm store (should never be committed)
-.pnpm-store/
+# Local Uploads & Media (Storage paths)
+/apps/backend/uploads/
+/apps/backend/src/db/seeds.json
 
-# Claude Code personal overrides
+# Tool & Model Overrides
 .claude/settings.local.json
+.wwebjs_auth/
+.wwebjs_cache/
 
-# WhatsApp Web session data
-.wwebjs_auth
-.wwebjs_cache
-
-# SQLite Database Files
+# SQLite Database Files (if used for local mocks)
 *.db
 *.db-shm
 *.db-wal

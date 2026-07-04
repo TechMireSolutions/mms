@@ -17,7 +17,7 @@ import {
 import {
   useQuestionBankColumnPrefs,
   useQuestionBankColumnPrefsMutation,
-} from '@/tenant/features/questionBank/hooks/useQuestionBankApi';
+} from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
 
 export function useQuestionBankColumnLayout() {
   const { user } = useAuth();

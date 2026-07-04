@@ -10,7 +10,7 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsDraft } from '@/tenant/features/settings/hooks/useSettingsDraft';
-import { useQuestionBankConfig } from '@/tenant/features/questionBank/hooks/useQuestionBankConfig';
+import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { useModuleFieldsEditor } from '@/tenant/hooks/useModuleFieldsEditor';
 import { notify } from '@/lib/notify';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
@@ -18,7 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
-import { CategoryManager } from "@/tenant/features/questionBank/components/CategoryManager";
+import { CategoryManager } from "@/tenant/features/question-bank/components/CategoryManager";
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 

@@ -3,7 +3,7 @@ import {
   HelpCircle, Filter, Sparkles, FileCheck, BarChart3, Layers, ClipboardList,
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useQuestionBankMetrics } from '@/tenant/features/questionBank/hooks/useQuestionBankApi';
+import { useQuestionBankMetrics } from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
 import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
 
 interface QuestionBankCommandMetricsProps {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Sparkles, X, Save, CheckCircle2, AlertCircle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useQuestionBankConfig } from "@/tenant/features/questionBank/hooks/useQuestionBankConfig";
+import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 import {
   getQuestionCategoryIds,
   QUESTION_DIFFICULTY_BADGE_CLASSES,

@@ -11,9 +11,9 @@ import {
   useQuestionBankQuestionsCollection,
   useQuestionBankTestsCollection,
   useQuestionBankResultsCollection,
-} from "@/tenant/features/questionBank/hooks/useQuestionBankApi";
+} from "@/tenant/features/question-bank/hooks/useQuestionBankApi";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useQuestionBankConfig } from "@/tenant/features/questionBank/hooks/useQuestionBankConfig";
+import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 

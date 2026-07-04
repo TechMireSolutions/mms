@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { BookOpen, HelpCircle, Tag } from 'lucide-react';
 import { FormModal } from '@/components/ui/FormModal';
-import { CategorySelector } from "@/tenant/features/questionBank/components/CategorySelector";
-import { QuestionSourcesTab } from "@/tenant/features/questionBank/components/QuestionSourcesTab";
-import { QuestionTypeAnswerFields } from "@/tenant/features/questionBank/components/QuestionTypeAnswerFields";
+import { CategorySelector } from "@/tenant/features/question-bank/components/CategorySelector";
+import { QuestionSourcesTab } from "@/tenant/features/question-bank/components/QuestionSourcesTab";
+import { QuestionTypeAnswerFields } from "@/tenant/features/question-bank/components/QuestionTypeAnswerFields";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';

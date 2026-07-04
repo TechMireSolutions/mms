@@ -13,7 +13,7 @@ const TENANT_ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   [ROUTES.finance]: () => import('@/tenant/features/finance/FinancePage'),
   [ROUTES.hasanatCards]: () => import('@/tenant/features/hasanat/HasanatCardsPage'),
   [ROUTES.examinations]: () => import('@/tenant/features/examinations/ExaminationsPage'),
-  [ROUTES.questionBank]: () => import('@/tenant/features/questionBank/QuestionBankPage'),
+  [ROUTES.questionBank]: () => import('@/tenant/features/question-bank/QuestionBankPage'),
   [ROUTES.accounting]: () => import('@/tenant/features/accounting/AccountingPage'),
   [ROUTES.obligations]: () => import('@/tenant/features/obligations/ObligationsPage'),
   [ROUTES.users]: () => import('@/tenant/features/users/UsersPage'),

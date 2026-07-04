@@ -24,7 +24,7 @@ import { UsersSettingsPanel } from "@/tenant/features/users/components/UsersSett
 import { ActivityLogs } from "@/tenant/features/users/components/ActivityLogs";
 import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
 import { SubTabBar } from '@/components/ui/SubTabBar';
-import { useIsAdminViewer, useViewerRole } from '@/tenant/hooks/useViewerRole';
+import { useIsAdminViewer } from '@/tenant/hooks/useViewerRole';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import {
   useUsersCollection,
