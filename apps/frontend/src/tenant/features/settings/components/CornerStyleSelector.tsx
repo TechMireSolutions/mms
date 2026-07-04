@@ -1,8 +1,6 @@
 import React from 'react';
 import {
-  BRANDING_CORNER_RADIUS,
   BRANDING_CORNER_STYLE_OPTIONS,
-  BRANDING_CORNER_STYLE_VALUES,
   resolveBrandingCornerRadius,
   type BrandingCornerStyle,
   type BrandingCornerPreset,
