@@ -122,7 +122,11 @@ export function TeacherForm({
         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
           ID: {teacherDraft.employeeId || "—"}
         </span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20 text-[10px] capitalize">
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-semibold border text-[10px] capitalize ${
+          teacherDraft.status === 'active' 
+            ? 'bg-success/10 text-success border-success/20' 
+            : 'bg-muted text-muted-foreground border-border'
+        }`}>
           {teacherDraft.status}
         </span>
       </div>

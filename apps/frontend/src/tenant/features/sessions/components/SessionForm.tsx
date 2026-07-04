@@ -114,7 +114,13 @@ export function SessionForm({
         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
           {sessionDraft.type}
         </span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20 text-[10px] capitalize">
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-semibold text-[10px] border capitalize ${
+          sessionDraft.status === 'active' 
+            ? 'bg-success/10 text-success border-success/20' 
+            : sessionDraft.status === 'completed'
+            ? 'bg-info/10 text-info border-info/20'
+            : 'bg-muted text-muted-foreground border-border'
+        }`}>
           {sessionDraft.status}
         </span>
       </div>
@@ -208,9 +214,9 @@ export function SessionForm({
   const renderFinancial = () => (
     <div className="space-y-4 text-left">
       <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-          <DollarSign className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
+          <DollarSign className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Financial Settings</h3>
         </div>
 

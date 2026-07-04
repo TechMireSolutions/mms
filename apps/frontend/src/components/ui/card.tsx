@@ -14,10 +14,10 @@ const Card = React.forwardRef<
     warning: "bg-warning/45 group-hover/card:bg-warning",
     destructive: "bg-destructive/45 group-hover/card:bg-destructive",
     info: "bg-info/45 group-hover/card:bg-info",
-    emerald: "bg-emerald-500/45 group-hover/card:bg-emerald-500",
-    indigo: "bg-indigo-500/45 group-hover/card:bg-indigo-500",
-    rose: "bg-rose-500/45 group-hover/card:bg-rose-500",
-    amber: "bg-amber-500/45 group-hover/card:bg-amber-500",
+    emerald: "bg-success/45 group-hover/card:bg-success",
+    indigo: "bg-primary/45 group-hover/card:bg-primary",
+    rose: "bg-destructive/45 group-hover/card:bg-destructive",
+    amber: "bg-warning/45 group-hover/card:bg-warning",
   }
 
   return (
