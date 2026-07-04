@@ -13,6 +13,9 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useContactMutations, useContactById } from "@/tenant/features/contacts/hooks/useContacts";
 import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { Textarea } from "@/components/ui/textarea";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   checkStudentRegistrationDuplicate,
   useStudentLinkedContactIds,
@@ -277,9 +280,7 @@ export default function StudentForm({
         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
           GR: {studentDraft.grNumber || "—"}
         </span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20 text-[10px] capitalize">
-          {studentDraft.status}
-        </span>
+        <StatusBadge status={studentDraft.status || "active"} size="sm" />
       </div>
     </div>
   ) : (
@@ -292,54 +293,52 @@ export default function StudentForm({
     return (
       <div className="space-y-6">
         {/* Contact Link */}
-        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-            <User className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.contactLabel") || "Linked Contact"}</h3>
+        <SectionCard
+          title={t("students.form.contactLabel") || "Linked Contact"}
+          icon={User}
+          accentColor="primary"
+        >
+          <div className="space-y-4">
+            <ContactPicker
+              label={t("students.form.contactLabel") || "Linked Contact"}
+              value={studentDraft.contactId ? String(studentDraft.contactId) : null}
+              onChange={handleContactSelect}
+              excludeIds={excludeIds}
+              onAvatarChange={handleStudentAvatarChange}
+              searchPlaceholder={t("teachers.form.searchContact")}
+              emptyTitle={t("teachers.form.noContacts")}
+              emptyHint={t("teachers.form.noContactsHint")}
+              error={!!getFieldError("contactId")}
+            />
+            {getFieldError("contactId") && (
+              <p className="text-[10px] text-destructive mt-1 font-medium">{getFieldError("contactId")}</p>
+            )}
+
+            {studentDraft.contactId && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
+                <Field label="Gender (contact)" hint="From contact profile">
+                  <div className="relative flex items-center group/input">
+                    <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 transition-colors pointer-events-none" />
+                    <Input disabled value={linkedGender || "—"} className={`${FORM_INPUT} pl-10`} />
+                  </div>
+                </Field>
+                <Field label="Date of Birth (contact)" hint="From contact profile">
+                  <div className="relative flex items-center group/input">
+                    <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 transition-colors pointer-events-none" />
+                    <Input disabled value={linkedDob || "—"} className={`${FORM_INPUT} pl-10`} />
+                  </div>
+                </Field>
+              </div>
+            )}
           </div>
-
-          <ContactPicker
-            label={t("students.form.contactLabel") || "Linked Contact"}
-            value={studentDraft.contactId ? String(studentDraft.contactId) : null}
-            onChange={handleContactSelect}
-            excludeIds={excludeIds}
-            onAvatarChange={handleStudentAvatarChange}
-            searchPlaceholder={t("teachers.form.searchContact")}
-            emptyTitle={t("teachers.form.noContacts")}
-            emptyHint={t("teachers.form.noContactsHint")}
-            error={!!getFieldError("contactId")}
-          />
-          {getFieldError("contactId") && (
-            <p className="text-[10px] text-destructive mt-1 font-medium">{getFieldError("contactId")}</p>
-          )}
-
-          {studentDraft.contactId && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
-              <Field label="Gender (contact)" hint="From contact profile">
-                <div className="relative flex items-center group/input">
-                  <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 transition-colors pointer-events-none" />
-                  <Input disabled value={linkedGender || "—"} className={`${FORM_INPUT} pl-10`} />
-                </div>
-              </Field>
-              <Field label="Date of Birth (contact)" hint="From contact profile">
-                <div className="relative flex items-center group/input">
-                  <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 transition-colors pointer-events-none" />
-                  <Input disabled value={linkedDob || "—"} className={`${FORM_INPUT} pl-10`} />
-                </div>
-              </Field>
-            </div>
-          )}
-        </section>
+        </SectionCard>
 
         {/* Identity details (GR Number, Status, Registration Type) */}
-        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-            <GraduationCap className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("students.form.registrationSection") || "Registration Details"}</h3>
-          </div>
-
+        <SectionCard
+          title={t("students.form.registrationSection") || "Registration Details"}
+          icon={GraduationCap}
+          accentColor="primary"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label={t("students.form.grNumber")} required error={getFieldError("grNumber")}>
               <div className="relative flex items-center group/input">
@@ -379,7 +378,7 @@ export default function StudentForm({
               </Field>
             </div>
           </div>
-        </section>
+        </SectionCard>
       </div>
     );
   };
@@ -387,16 +386,12 @@ export default function StudentForm({
   const renderGuardian = () => {
     return (
       <div className="space-y-6">
-        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-purple-500/60 transition-colors group-hover:bg-purple-500" />
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-            <Users className="w-4 h-4 text-purple-500/70 group-hover:text-purple-500 transition-colors" />
-            <div>
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Family & Guardians</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Link parent/guardian contacts</p>
-            </div>
-          </div>
-
+        <SectionCard
+          title="Family & Guardians"
+          subtitle="Link parent/guardian contacts"
+          icon={Users}
+          accentColor="indigo"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {isFieldEnabled("guardian", "fatherLink") && (
               <div className="space-y-1">
@@ -451,7 +446,7 @@ export default function StudentForm({
               </div>
             )}
           </div>
-        </section>
+        </SectionCard>
       </div>
     );
   };
@@ -460,13 +455,11 @@ export default function StudentForm({
     return (
       <div className="space-y-6">
         {/* Registration date & Finance Details */}
-        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-            <GraduationCap className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Enrollment & Finance</h3>
-          </div>
-
+        <SectionCard
+          title="Enrollment & Finance"
+          icon={GraduationCap}
+          accentColor="emerald"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {isFieldEnabled("academic", "registeredDate") && (
               <Field label={t("students.form.registeredDate") || "Registration Date"} required={isFieldRequired("academic", "registeredDate")} error={getFieldError("registeredDate")}>
@@ -501,24 +494,23 @@ export default function StudentForm({
               </div>
             </Field>
           </div>
-        </section>
+        </SectionCard>
 
         {/* Notes */}
-        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-            <FileText className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.field.notes") || "Notes"}</h3>
-          </div>
+        <SectionCard
+          title={t("teachers.field.notes") || "Notes"}
+          icon={FileText}
+          accentColor="emerald"
+        >
           <Field label="">
-            <textarea
+            <Textarea
               value={studentDraft.notes || ""}
               onChange={(event) => updateDraft({ notes: event.target.value })}
               placeholder="Additional notes..."
-              className="w-full min-h-[120px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
+              className="min-h-[120px] bg-background"
             />
           </Field>
-        </section>
+        </SectionCard>
       </div>
     );
   };

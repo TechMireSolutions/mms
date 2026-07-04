@@ -13,7 +13,6 @@ import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
-import { SubTabBar } from '@/components/ui/SubTabBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
