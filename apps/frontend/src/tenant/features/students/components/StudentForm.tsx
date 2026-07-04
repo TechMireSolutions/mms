@@ -1,9 +1,8 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { GraduationCap, User, Users, Hash, Tag, Percent, Calendar, FileText } from "lucide-react";
+import { GraduationCap, User, Users, Hash, Calendar, FileText } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { DatePicker } from "@/components/ui/DatePicker";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { FORM_INPUT } from "@/components/ui/formStyles";
@@ -364,19 +363,6 @@ export default function StudentForm({
               />
             </Field>
 
-            <div className="sm:col-span-2">
-              <Field label="Registration Type">
-                <div className="relative flex items-center group/input">
-                  <Tag className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                  <Input
-                    value={studentDraft.registrationType || ""}
-                    onChange={(event) => updateDraft({ registrationType: event.target.value })}
-                    placeholder="e.g. Regular, Online"
-                    className={`${FORM_INPUT} pl-10`}
-                  />
-                </div>
-              </Field>
-            </div>
           </div>
         </SectionCard>
       </div>
@@ -454,48 +440,6 @@ export default function StudentForm({
   const renderAcademic = () => {
     return (
       <div className="space-y-6">
-        {/* Registration date & Finance Details */}
-        <SectionCard
-          title="Enrollment & Finance"
-          icon={GraduationCap}
-          accentColor="emerald"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {isFieldEnabled("academic", "registeredDate") && (
-              <Field label={t("students.form.registeredDate") || "Registration Date"} required={isFieldRequired("academic", "registeredDate")} error={getFieldError("registeredDate")}>
-                <DatePicker
-                  value={studentDraft.registeredDate || undefined}
-                  onChange={(dateStr) => updateDraft({ registeredDate: dateStr })}
-                />
-              </Field>
-            )}
-
-            <Field label="Discount Type">
-              <div className="relative flex items-center group/input">
-                <Tag className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
-                  value={studentDraft.discountType || ""}
-                  onChange={(event) => updateDraft({ discountType: event.target.value })}
-                  placeholder="e.g. Sibling, Need-based"
-                  className={`${FORM_INPUT} pl-10`}
-                />
-              </div>
-            </Field>
-
-            <Field label="Discount %">
-              <div className="relative flex items-center group/input">
-                <Percent className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
-                  type="number"
-                  value={studentDraft.discountPct ?? 0}
-                  onChange={(event) => updateDraft({ discountPct: Number(event.target.value) })}
-                  className={`${FORM_INPUT} pl-10`}
-                />
-              </div>
-            </Field>
-          </div>
-        </SectionCard>
-
         {/* Notes */}
         <SectionCard
           title={t("teachers.field.notes") || "Notes"}
@@ -533,7 +477,7 @@ export default function StudentForm({
         error={errorSummary || undefined}
         footerStart={footerStart}
       >
-        <div className="space-y-6">
+        <div className="space-y-6 pb-36">
           {renderBasic()}
           {isTabEnabled("guardian") && renderGuardian()}
           {isTabEnabled("academic") && renderAcademic()}
