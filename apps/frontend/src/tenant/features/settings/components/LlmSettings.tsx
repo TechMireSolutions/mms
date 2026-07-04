@@ -33,13 +33,13 @@ import { Slider } from '@/components/ui/slider';
 
 
 const PROVIDER_METADATA: Record<string, { badgeBg: string; textCol: string; accentBorder: string }> = {
-  gemini: { badgeBg: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300', textCol: 'text-indigo-600', accentBorder: 'border-indigo-500/20' },
-  openai: { badgeBg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300', textCol: 'text-emerald-600', accentBorder: 'border-emerald-500/20' },
-  anthropic: { badgeBg: 'bg-amber-600/10 text-amber-700 dark:text-amber-300', textCol: 'text-amber-600', accentBorder: 'border-amber-500/20' },
-  deepseek: { badgeBg: 'bg-blue-500/10 text-blue-700 dark:text-blue-300', textCol: 'text-blue-600', accentBorder: 'border-blue-500/20' },
-  openrouter: { badgeBg: 'bg-purple-500/10 text-purple-700 dark:text-purple-300', textCol: 'text-purple-600', accentBorder: 'border-purple-500/20' },
-  groq: { badgeBg: 'bg-orange-500/10 text-orange-700 dark:text-orange-300', textCol: 'text-orange-600', accentBorder: 'border-orange-500/20' },
-  alibaba: { badgeBg: 'bg-rose-500/10 text-rose-700 dark:text-rose-300', textCol: 'text-rose-600', accentBorder: 'border-rose-500/20' },
+  gemini: { badgeBg: 'bg-primary/10 text-primary border-primary/20', textCol: 'text-primary', accentBorder: 'border-primary/20' },
+  openai: { badgeBg: 'bg-success/10 text-success border-success/20', textCol: 'text-success', accentBorder: 'border-success/20' },
+  anthropic: { badgeBg: 'bg-warning/10 text-warning border-warning/20', textCol: 'text-warning', accentBorder: 'border-warning/20' },
+  deepseek: { badgeBg: 'bg-info/10 text-info border-info/20', textCol: 'text-info', accentBorder: 'border-info/20' },
+  openrouter: { badgeBg: 'bg-primary/10 text-primary border-primary/20', textCol: 'text-primary', accentBorder: 'border-primary/20' },
+  groq: { badgeBg: 'bg-warning/10 text-warning border-warning/20', textCol: 'text-warning', accentBorder: 'border-warning/20' },
+  alibaba: { badgeBg: 'bg-destructive/10 text-destructive border-destructive/20', textCol: 'text-destructive', accentBorder: 'border-destructive/20' },
 };
 
 const PROVIDERS = Object.values(LLM_PROVIDERS_META);
@@ -595,11 +595,11 @@ export default function LlmSettings(): React.JSX.Element {
                                 {status === 'testing' ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
                                 ) : status === 'verified' ? (
-                                  <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)] shrink-0" title="Active Connection" />
+                                  <span className="h-2 w-2 rounded-full bg-success shadow-[0_0_8px_var(--color-success)] shrink-0" title="Active Connection" />
                                 ) : status === 'failed' ? (
-                                  <span className="h-2 w-2 rounded-full bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.7)] shrink-0" title="Connection Failed" />
+                                  <span className="h-2 w-2 rounded-full bg-destructive shadow-[0_0_8px_var(--color-destructive)] shrink-0" title="Connection Failed" />
                                 ) : (
-                                  <span className="h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.7)] shrink-0" title="Untested" />
+                                  <span className="h-2 w-2 rounded-full bg-warning shadow-[0_0_8px_var(--color-warning)] shrink-0" title="Untested" />
                                 )}
                               </span>
                               <h4 className="font-bold text-sm truncate">{config.name}</h4>
@@ -675,13 +675,13 @@ export default function LlmSettings(): React.JSX.Element {
             <div
               className={`rounded-xl border p-4 text-sm ${
                 testResult.success
-                  ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-800 dark:text-emerald-300'
+                  ? 'border-success/20 bg-success/5 text-success'
                   : 'border-destructive/20 bg-destructive/5 text-destructive-foreground'
               }`}
             >
               <div className="flex items-start gap-3">
                 {testResult.success ? (
-                  <CheckCircle className="mt-1 h-4 w-4 shrink-0 text-emerald-500" />
+                  <CheckCircle className="mt-1 h-4 w-4 shrink-0 text-success" />
                 ) : (
                   <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-destructive" />
                 )}
@@ -693,7 +693,7 @@ export default function LlmSettings(): React.JSX.Element {
                     {testResult.success ? testResult.response : testResult.message}
                   </p>
                   {testResult.success && testResult.metrics && (
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 border-t border-emerald-500/10 pt-3 text-[11px] font-semibold text-emerald-800/80 dark:text-emerald-300/80">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 border-t border-success/10 pt-3 text-[11px] font-semibold text-success/80">
                       <div>
                         <span className="block font-normal text-muted-foreground/85">{t('settings.llmLatency')}</span>
                         <span>{testResult.metrics.latencyMs} ms</span>
@@ -1084,7 +1084,7 @@ export default function LlmSettings(): React.JSX.Element {
                   <div
                     className={`rounded-xl border p-4 text-xs mt-3 ${
                       modalTestResult.success
-                        ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-800 dark:text-emerald-300'
+                        ? 'border-success/20 bg-success/5 text-success'
                         : 'border-destructive/20 bg-destructive/5 text-destructive-foreground'
                     }`}
                   >
@@ -1095,7 +1095,7 @@ export default function LlmSettings(): React.JSX.Element {
                       {modalTestResult.success ? modalTestResult.response : modalTestResult.message}
                     </p>
                     {modalTestResult.success && modalTestResult.metrics && (
-                      <div className="flex items-center gap-4 text-[9px] font-semibold text-emerald-800/80 dark:text-emerald-300/80 border-t border-emerald-500/10 pt-2">
+                      <div className="flex items-center gap-4 text-[9px] font-semibold text-success/80 border-t border-success/10 pt-2">
                         <span>{t('settings.llmLatency')}: {modalTestResult.metrics.latencyMs} ms</span>
                         <span>{t('settings.llmWordCount')}: {modalTestResult.metrics.wordCount}</span>
                         <span>{t('settings.llmSpeed')}: {modalTestResult.metrics.latencyMs > 0 ? `${(modalTestResult.metrics.wordCount / (modalTestResult.metrics.latencyMs / 1000)).toFixed(1)} W/s` : 'N/A'}</span>
