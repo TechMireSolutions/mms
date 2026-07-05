@@ -7,7 +7,7 @@ import {
   ShieldCheck, ClipboardList,
 } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { AttendanceFilters } from "@/tenant/features/attendance/components/AttendanceFilters";
@@ -172,21 +172,20 @@ export default function Attendance() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t("nav.attendance")}</title>
-      <meta name="description" content={t("page.attendance.subtitle")} />
-      <PageHeader
-        icon={UserCheck}
-        title={t("nav.attendance")}
-        subtitle={t("page.attendance.subtitle")}
-      />
-
-      <AttendanceCommandMetrics
-        total={attendanceRecords.length}
-        shown={pageFilteredCount}
-        selectedDate={filters.date}
-      />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t("nav.attendance")}`}
+      seoDescription={t("page.attendance.subtitle")}
+      headerIcon={UserCheck}
+      headerTitle={t("nav.attendance")}
+      headerSubtitle={t("page.attendance.subtitle")}
+      metricsStrip={
+        <AttendanceCommandMetrics
+          total={attendanceRecords.length}
+          shown={pageFilteredCount}
+          selectedDate={filters.date}
+        />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={visibleTopTabs}
         activeTab={effectiveTab}
@@ -222,6 +221,6 @@ export default function Attendance() {
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>
-    </div>
+    </ModulePageShell>
   );
 }

@@ -1,7 +1,7 @@
 import React, { Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings as SettingsIcon } from 'lucide-react';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ResponsiveAccordionTabs, type AccordionTabItem } from '@/components/ui/ResponsiveAccordionTabs';
 import { isSettingsSection, type SettingsSection } from '@/lib/config/routes';
@@ -62,15 +62,13 @@ export default function Settings(): React.JSX.Element {
           saveSuccessMessage={t('branding.savedToast')}
           saveSuccessDescription={t('branding.savedToastDesc')}
         >
-          <div className="mx-auto max-w-7xl space-y-5">
-            <title>MMS - {t('settings.title')}</title>
-            <meta name="description" content={t('settings.subtitle')} />
-            <PageHeader
-              icon={SettingsIcon}
-              title={t('settings.title')}
-              subtitle={t('settings.subtitle')}
-            />
-
+          <ModulePageShell
+            seoTitle={`MMS - ${t('settings.title')}`}
+            seoDescription={t('settings.subtitle')}
+            headerIcon={SettingsIcon}
+            headerTitle={t('settings.title')}
+            headerSubtitle={t('settings.subtitle')}
+          >
             <ResponsiveAccordionTabs
               tabs={tabs}
               activeTab={tab}
@@ -91,7 +89,7 @@ export default function Settings(): React.JSX.Element {
                 </motion.div>
               </AnimatePresence>
             </ResponsiveAccordionTabs>
-          </div>
+          </ModulePageShell>
         </SettingsBrandingDraftProvider>
       </SettingsGlobalDraftProvider>
     </SettingsTabProvider>

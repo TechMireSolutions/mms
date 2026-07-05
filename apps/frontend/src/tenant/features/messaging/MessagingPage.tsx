@@ -10,9 +10,9 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { ActionButton } from '@/components/ui/ActionButton';
-import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -223,42 +223,39 @@ export default function MessagingPage(): React.JSX.Element {
   }, [stats]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t('nav.messaging')}</title>
-      <meta name="description" content={t('messaging.subtitle')} />
-      
-      {/* Page Header */}
-      <PageHeader
-        icon={MessageSquare}
-        title={t('messaging.title')}
-        subtitle={t('messaging.subtitle')}
-        actions={
-          <ActionButton
-            variant="primary"
-            icon={Send}
-            onClick={() => {
-              setActiveTab("work");
-              if (currentSelectedList.length > 0) {
-                triggerCompose('whatsapp');
-              } else {
-                notify.info('Please select recipients from the checklist below to compose a campaign.');
-              }
-            }}
-          >
-            New Campaign
-          </ActionButton>
-        }
-      />
-
-      {/* Global Dashboard Metrics Banner */}
-      <ModuleCommandMetricsGrid
-        items={[
-          { icon: Send, label: t('messaging.stats.total'), value: stats.total, accent: 'primary' },
-          { icon: MessageSquare, label: t('messaging.stats.sms'), value: stats.sms, accent: 'info' },
-          { icon: MessageCircle, label: t('messaging.stats.whatsapp'), value: stats.wa, accent: 'success' },
-          { icon: Mail, label: 'Emails Dispatched', value: stats.email, accent: 'warning' },
-        ]}
-      />
+    <ModulePageShell
+      seoTitle={`MMS - ${t('nav.messaging')}`}
+      seoDescription={t('messaging.subtitle')}
+      headerIcon={MessageSquare}
+      headerTitle={t('messaging.title')}
+      headerSubtitle={t('messaging.subtitle')}
+      headerActions={
+        <ActionButton
+          variant="primary"
+          icon={Send}
+          onClick={() => {
+            setActiveTab("work");
+            if (currentSelectedList.length > 0) {
+              triggerCompose('whatsapp');
+            } else {
+              notify.info('Please select recipients from the checklist below to compose a campaign.');
+            }
+          }}
+        >
+          New Campaign
+        </ActionButton>
+      }
+      metricsStrip={
+        <ModuleCommandMetricsGrid
+          items={[
+            { icon: Send, label: t('messaging.stats.total'), value: stats.total, accent: 'primary' },
+            { icon: MessageSquare, label: t('messaging.stats.sms'), value: stats.sms, accent: 'info' },
+            { icon: MessageCircle, label: t('messaging.stats.whatsapp'), value: stats.wa, accent: 'success' },
+            { icon: Mail, label: 'Emails Dispatched', value: stats.email, accent: 'warning' },
+          ]}
+        />
+      }
+    >
 
       {/* Accordion Tabs Wrapper */}
       <ResponsiveAccordionTabs
@@ -656,6 +653,6 @@ export default function MessagingPage(): React.JSX.Element {
           }}
         />
       )}
-    </div>
+    </ModulePageShell>
   );
 }

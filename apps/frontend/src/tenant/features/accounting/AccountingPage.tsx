@@ -6,7 +6,7 @@ import {
   TrendingUp, List, BookMarked, Scale,
   BookOpen, LayoutDashboard,
 } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ChartOfAccounts } from "@/tenant/features/accounting/components/ChartOfAccounts";
@@ -104,24 +104,23 @@ export default function Accounting() {
   const formatCurrency = (amount: number) => `${activeCurrency.symbol} ${amount.toLocaleString(undefined, { minimumFractionDigits: settings.decimalPlaces })}`;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t("nav.accounting")}</title>
-      <meta name="description" content={t("page.accounting.subtitle")} />
-      <PageHeader
-        icon={TrendingUp}
-        title={t("nav.accounting")}
-        subtitle={`${t("page.accounting.subtitle")}${activeFiscalYear ? ` · ${activeFiscalYear.label}` : ""} · ${activeCurrency.code}`}
-        actions={
-          activeFiscalYear && (
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-success/15 text-success border border-success/30">
-              {activeFiscalYear.label} — Active
-            </span>
-          )
-        }
-      />
-
-      <AccountingCommandMetrics entryTotal={journalEntries.length} shown={filteredCount} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t("nav.accounting")}`}
+      seoDescription={t("page.accounting.subtitle")}
+      headerIcon={TrendingUp}
+      headerTitle={t("nav.accounting")}
+      headerSubtitle={`${t("page.accounting.subtitle")}${activeFiscalYear ? ` · ${activeFiscalYear.label}` : ""} · ${activeCurrency.code}`}
+      headerActions={
+        activeFiscalYear && (
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-success/15 text-success border border-success/30">
+            {activeFiscalYear.label} — Active
+          </span>
+        )
+      }
+      metricsStrip={
+        <AccountingCommandMetrics entryTotal={journalEntries.length} shown={filteredCount} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
         activeTab={activeTab}
@@ -210,6 +209,6 @@ export default function Accounting() {
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>
-    </div>
+    </ModulePageShell>
   );
 }

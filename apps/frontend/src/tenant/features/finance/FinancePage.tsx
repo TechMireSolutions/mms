@@ -3,10 +3,10 @@ import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReceiptText, CreditCard, Plus, DollarSign } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { ActionButton } from "@/components/ui/ActionButton";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { InvoiceList } from "@/tenant/features/finance/components/InvoiceList";
 import { InvoiceDetail } from "@/tenant/features/finance/components/InvoiceDetail";
 import { InvoiceForm } from "@/tenant/features/finance/components/InvoiceForm";
@@ -72,30 +72,29 @@ export default function Finance() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t("nav.finance")}</title>
-      <meta name="description" content={t("page.finance.subtitle")} />
-      <PageHeader
-        icon={DollarSign}
-        title={t("nav.finance")}
-        subtitle={t("page.finance.subtitle")}
-        actions={
-          <ActionButton
-            variant="primary"
-            icon={Plus}
-            onClick={() => {
-              setActiveTab("work");
-              setActiveSubTab("invoices");
-              setCreatingInvoice(true);
-            }}
-          >
-            {t("finance.newInvoice")}
-          </ActionButton>
-        }
-      />
-
-      <FinanceCommandMetrics invoiceTotal={invoices.length} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t("nav.finance")}`}
+      seoDescription={t("page.finance.subtitle")}
+      headerIcon={DollarSign}
+      headerTitle={t("nav.finance")}
+      headerSubtitle={t("page.finance.subtitle")}
+      headerActions={
+        <ActionButton
+          variant="primary"
+          icon={Plus}
+          onClick={() => {
+            setActiveTab("work");
+            setActiveSubTab("invoices");
+            setCreatingInvoice(true);
+          }}
+        >
+          {t("finance.newInvoice")}
+        </ActionButton>
+      }
+      metricsStrip={
+        <FinanceCommandMetrics invoiceTotal={invoices.length} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
         activeTab={activeTab}
@@ -168,6 +167,6 @@ export default function Finance() {
           <PaymentForm open={!!recordInvoice} invoice={recordInvoice} onClose={() => setRecordInvoice(null)} onSave={handleRecordPayment} />
         )}
       </AnimatePresence>
-    </div>
+    </ModulePageShell>
   );
 }

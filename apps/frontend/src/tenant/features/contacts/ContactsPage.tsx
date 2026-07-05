@@ -15,7 +15,7 @@ import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContac
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
@@ -357,41 +357,41 @@ function ContactsInner() {
   }, [openingDuplicates, shownCount, queryClient, t, setShowDuplicates]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t("nav.contacts")}</title>
-      <meta name="description" content={t("page.contacts.subtitle")} />
-      <PageHeader
-        icon={Users}
-        title={t("nav.contacts")}
-        subtitle={t("page.contacts.subtitle")}
-        actions={
-          <>
-            <ActionButton
-              variant="ghost"
-              icon={openingDuplicates ? Loader2 : AlertTriangle}
-              onClick={() => void handleOpenDuplicates()}
-              disabled={openingDuplicates}
-            >
-              {t("contacts.duplicates")}
-            </ActionButton>
-            {canExport && (
+    <ModulePageShell
+      seoTitle={`MMS - ${t("nav.contacts")}`}
+      seoDescription={t("page.contacts.subtitle")}
+      headerIcon={Users}
+      headerTitle={t("nav.contacts")}
+      headerSubtitle={t("page.contacts.subtitle")}
+      headerActions={
+        <>
+          <ActionButton
+            variant="ghost"
+            icon={openingDuplicates ? Loader2 : AlertTriangle}
+            onClick={() => void handleOpenDuplicates()}
+            disabled={openingDuplicates}
+          >
+            {t("contacts.duplicates")}
+          </ActionButton>
+          {canExport && (
             <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
               <Download className="w-3.5 h-3.5" /> {t("common.export")}
             </button>
-            )}
-            {canWrite && (
-              <ActionButton variant="primary" icon={UserPlus} onClick={handleNew}>{t("contacts.addContact")}</ActionButton>
-            )}
-          </>
-        }
-      />
-
-      <ContactsCommandMetrics
-        total={contacts.length}
-        shown={shownCount}
-        onOpenDuplicates={() => void handleOpenDuplicates()}
-        onReviewConflicts={openConflictReview}
-      />
+          )}
+          {canWrite && (
+            <ActionButton variant="primary" icon={UserPlus} onClick={handleNew}>{t("contacts.addContact")}</ActionButton>
+          )}
+        </>
+      }
+      metricsStrip={
+        <ContactsCommandMetrics
+          total={contacts.length}
+          shown={shownCount}
+          onOpenDuplicates={() => void handleOpenDuplicates()}
+          onReviewConflicts={openConflictReview}
+        />
+      }
+    >
 
       <ContactsDataBanner onReviewConflicts={openConflictReview} listFetchEnabled={needsFullContactsList} />
 
@@ -719,7 +719,7 @@ function ContactsInner() {
         confirmLabel={t("contacts.restoreContact")}
         onConfirm={confirmBulkRestore}
       />
-    </div>
+    </ModulePageShell>
   );
 }
 

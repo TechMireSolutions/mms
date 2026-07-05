@@ -6,7 +6,7 @@ import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/use
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, ClipboardList, Sparkles, Plus } from 'lucide-react';
 import { resolveModuleTierTab } from '@mms/shared';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
@@ -100,23 +100,22 @@ export default function QuestionBankPage(): React.JSX.Element {
   }, [effectiveTab, effectiveSubTab, questions.length]);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5">
-      <title>MMS - {t('page.questionBank.title')}</title>
-      <meta name="description" content={t('page.questionBank.subtitle')} />
-      <PageHeader
-        icon={Library}
-        title={t('nav.questionBank')}
-        subtitle={t('page.questionBank.subtitle')}
-        actions={
-          <Button type="button" size="sm" onClick={openAddQuestion}>
-            <Plus className="h-3.5 w-3.5" />
-            {t('questionBank.addQuestion')}
-          </Button>
-        }
-      />
-
-      <QuestionBankCommandMetrics total={questions.length} shown={filteredCount} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t('page.questionBank.title')}`}
+      seoDescription={t('page.questionBank.subtitle')}
+      headerIcon={Library}
+      headerTitle={t('nav.questionBank')}
+      headerSubtitle={t('page.questionBank.subtitle')}
+      headerActions={
+        <Button type="button" size="sm" onClick={openAddQuestion}>
+          <Plus className="h-3.5 w-3.5" />
+          {t('questionBank.addQuestion')}
+        </Button>
+      }
+      metricsStrip={
+        <QuestionBankCommandMetrics total={questions.length} shown={filteredCount} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
         activeTab={effectiveTab}
@@ -202,6 +201,6 @@ export default function QuestionBankPage(): React.JSX.Element {
         onClose={closeQuestionModal}
         onSave={handleQuestionSave}
       />
-    </div>
+    </ModulePageShell>
   );
 }

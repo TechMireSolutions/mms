@@ -4,7 +4,7 @@ import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutDashboard, Star, Package, Send, Gift } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useConfigSubTabs } from "@/tenant/hooks/useConfigSubTabs";
@@ -75,17 +75,16 @@ export default function HasanatCards() {
   }, [effectiveSubTab, distributions.length]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t("nav.hasanatCards")}</title>
-      <meta name="description" content={t("page.hasanat.subtitle")} />
-      <PageHeader
-        icon={Star}
-        title={t("nav.hasanatCards")}
-        subtitle={t("page.hasanat.subtitle")}
-      />
-
-      <HasanatCommandMetrics shown={filteredCount} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t("nav.hasanatCards")}`}
+      seoDescription={t("page.hasanat.subtitle")}
+      headerIcon={Star}
+      headerTitle={t("nav.hasanatCards")}
+      headerSubtitle={t("page.hasanat.subtitle")}
+      metricsStrip={
+        <HasanatCommandMetrics shown={filteredCount} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
         activeTab={effectiveTab}
@@ -164,6 +163,6 @@ export default function HasanatCards() {
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>
-    </div>
+    </ModulePageShell>
   );
 }

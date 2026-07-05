@@ -7,7 +7,7 @@ import {
   Shield, BookOpen, Plus
 } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
@@ -91,26 +91,25 @@ export default function Obligations() {
   const effectiveConfigTab = CONFIG_SUB_TABS.find((t) => t.id === activeConfigTab) ? activeConfigTab : "types";
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t("nav.obligations")}</title>
-      <meta name="description" content={t("page.obligations.subtitle")} />
-      <PageHeader
-        icon={Scale}
-        title={t("nav.obligations")}
-        subtitle={t("page.obligations.subtitle")}
-        actions={
-          <ActionButton
-            variant="primary"
-            icon={Plus}
-            onClick={() => setShowForm(true)}
-          >
-            {t("obligations.newCollection")}
-          </ActionButton>
-        }
-      />
-
-      <ObligationsCommandMetrics total={collections.length} shown={filteredCount} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t("nav.obligations")}`}
+      seoDescription={t("page.obligations.subtitle")}
+      headerIcon={Scale}
+      headerTitle={t("nav.obligations")}
+      headerSubtitle={t("page.obligations.subtitle")}
+      headerActions={
+        <ActionButton
+          variant="primary"
+          icon={Plus}
+          onClick={() => setShowForm(true)}
+        >
+          {t("obligations.newCollection")}
+        </ActionButton>
+      }
+      metricsStrip={
+        <ObligationsCommandMetrics total={collections.length} shown={filteredCount} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
         activeTab={effectiveTab}
@@ -217,6 +216,6 @@ export default function Obligations() {
           />
         )}
       </AnimatePresence>
-    </div>
+    </ModulePageShell>
   );
 }

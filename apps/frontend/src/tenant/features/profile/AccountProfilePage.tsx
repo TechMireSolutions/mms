@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTenantProfile, TENANT_PROFILE_KEY } from "@/tenant/hooks/useTenantProfile";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
@@ -263,12 +263,13 @@ export default function AccountProfile(): React.JSX.Element {
   };
 
   return (
-    <div className="space-y-6 pb-10">
-      <PageHeader
-        title={t("account.title")}
-        subtitle={t("account.subtitle")}
-        icon={User}
-      />
+    <ModulePageShell
+      seoTitle={`MMS - ${t("account.title")}`}
+      seoDescription={t("account.subtitle")}
+      headerIcon={User}
+      headerTitle={t("account.title")}
+      headerSubtitle={t("account.subtitle")}
+    >
 
       {isLoading ? (
         <div className="flex justify-center py-16" role="status" aria-live="polite">
@@ -754,6 +755,6 @@ export default function AccountProfile(): React.JSX.Element {
           onCancel={() => setShowCropper(null)}
         />
       )}
-    </div>
+    </ModulePageShell>
   );
 }

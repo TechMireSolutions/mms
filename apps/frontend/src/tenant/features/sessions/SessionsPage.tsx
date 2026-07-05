@@ -6,7 +6,7 @@ import {
   Plus, Calendar, Users, BookOpen,
   DollarSign, ChevronRight, Filter, ChevronDown,
 } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { FilterChips } from "@/components/ui/FilterChips";
@@ -210,22 +210,21 @@ export default function Sessions() {
   }, [statusOptions, t]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t("nav.sessions")}</title>
-      <meta name="description" content={t("page.sessions.subtitle")} />
-      <PageHeader
-        icon={Calendar}
-        title={t("nav.sessions")}
-        subtitle={t("page.sessions.subtitle")}
-        actions={
-          <ActionButton variant="primary" icon={Plus} onClick={() => { setEditSession(null); setShowForm(true); }}>
-            New Session
-          </ActionButton>
-        }
-      />
-
-      <SessionsCommandMetrics total={sessions.length} shown={filtered.length} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t("nav.sessions")}`}
+      seoDescription={t("page.sessions.subtitle")}
+      headerIcon={Calendar}
+      headerTitle={t("nav.sessions")}
+      headerSubtitle={t("page.sessions.subtitle")}
+      headerActions={
+        <ActionButton variant="primary" icon={Plus} onClick={() => { setEditSession(null); setShowForm(true); }}>
+          New Session
+        </ActionButton>
+      }
+      metricsStrip={
+        <SessionsCommandMetrics total={sessions.length} shown={filtered.length} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
         activeTab={activeTab}
@@ -442,6 +441,6 @@ export default function Sessions() {
           />
         )}
       </AnimatePresence>
-    </div>
+    </ModulePageShell>
   );
 }

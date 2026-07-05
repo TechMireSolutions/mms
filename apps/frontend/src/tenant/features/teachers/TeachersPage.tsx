@@ -8,8 +8,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SearchBar } from '@/components/ui/SearchBar';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { ActionButton } from '@/components/ui/ActionButton';
@@ -141,33 +141,31 @@ export default function Teachers(): React.JSX.Element {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t('nav.teachers')}</title>
-      <meta name="description" content={t('page.teachers.subtitle')} />
-
-      <PageHeader
-        icon={School}
-        title={t('nav.teachers')}
-        subtitle={
-          serverCount != null
-            ? `${t('page.teachers.subtitle')} · ${serverCount} ${t('nav.teachers').toLowerCase()}`
-            : t('page.teachers.subtitle')
-        }
-        actions={
-          canWrite ? (
-            <ActionButton
-              variant="primary"
-              icon={UserPlus}
-              onClick={() => { setEditTeacher(null); setShowForm(true); }}
-            >
-              {t('action.addTeacher')}
-            </ActionButton>
-          ) : undefined
-        }
-      />
-
-      <TeachersCommandMetrics total={serverCount ?? shownCount} shown={shownCount} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t('nav.teachers')}`}
+      seoDescription={t('page.teachers.subtitle')}
+      headerIcon={School}
+      headerTitle={t('nav.teachers')}
+      headerSubtitle={
+        serverCount != null
+          ? `${t('page.teachers.subtitle')} · ${serverCount} ${t('nav.teachers').toLowerCase()}`
+          : t('page.teachers.subtitle')
+      }
+      headerActions={
+        canWrite ? (
+          <ActionButton
+            variant="primary"
+            icon={UserPlus}
+            onClick={() => { setEditTeacher(null); setShowForm(true); }}
+          >
+            {t('action.addTeacher')}
+          </ActionButton>
+        ) : undefined
+      }
+      metricsStrip={
+        <TeachersCommandMetrics total={serverCount ?? shownCount} shown={shownCount} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
         activeTab={activeTab}
@@ -344,6 +342,6 @@ export default function Teachers(): React.JSX.Element {
           />
         )}
       </AnimatePresence>
-    </div>
+    </ModulePageShell>
   );
 }

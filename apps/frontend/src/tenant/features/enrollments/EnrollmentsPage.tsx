@@ -3,7 +3,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClipboardList, Plus, UserCheck } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
@@ -127,27 +127,26 @@ export default function EnrollmentsPage() {
   }, [enrollments.length]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t("nav.enrollments")}</title>
-      <meta name="description" content={t("page.enrollments.subtitle")} />
-      <PageHeader
-        icon={ClipboardList}
-        title={t("nav.enrollments")}
-        subtitle={t("page.enrollments.subtitle")}
-        actions={
-          <div className="flex items-center gap-2">
-            {canWriteEnrollments && (
-              <button onClick={() => { setTab("work"); setShowWizard(true); }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-                <Plus className="w-3.5 h-3.5" /> {t("enrollments.new")}
-              </button>
-            )}
-          </div>
-        }
-      />
-
-      <EnrollmentsCommandMetrics total={enrollments.length} shown={filteredCount} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t("nav.enrollments")}`}
+      seoDescription={t("page.enrollments.subtitle")}
+      headerIcon={ClipboardList}
+      headerTitle={t("nav.enrollments")}
+      headerSubtitle={t("page.enrollments.subtitle")}
+      headerActions={
+        <div className="flex items-center gap-2">
+          {canWriteEnrollments && (
+            <button onClick={() => { setTab("work"); setShowWizard(true); }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
+              <Plus className="w-3.5 h-3.5" /> {t("enrollments.new")}
+            </button>
+          )}
+        </div>
+      }
+      metricsStrip={
+        <EnrollmentsCommandMetrics total={enrollments.length} shown={filteredCount} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={TABS}
         activeTab={tab}
@@ -241,6 +240,6 @@ export default function EnrollmentsPage() {
           />
         </ErrorBoundary>
       </Modal>
-    </div>
+    </ModulePageShell>
   );
 }

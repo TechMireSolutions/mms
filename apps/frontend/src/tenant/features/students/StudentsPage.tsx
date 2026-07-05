@@ -9,7 +9,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { FilterChips } from "@/components/ui/FilterChips";
@@ -192,31 +192,29 @@ export default function Students() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t("nav.students")}</title>
-      <meta name="description" content={t("page.students.subtitle")} />
-
-      <PageHeader
-        icon={GraduationCap}
-        title={t("nav.students")}
-        subtitle={
-          serverCount != null
-            ? `${t("page.students.subtitle")} · ${serverCount} ${t("nav.students").toLowerCase()}`
-            : t("page.students.subtitle")
-        }
-        actions={
-          <ActionButton
-            variant="primary"
-            icon={UserPlus}
-            onClick={() => { setEditStudent(null); setShowStudentForm(true); }}
-          >
-            {t("action.addStudent")}
-          </ActionButton>
-        }
-      />
-
-      <StudentsCommandMetrics total={serverCount ?? shownCount} shown={shownCount} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t("nav.students")}`}
+      seoDescription={t("page.students.subtitle")}
+      headerIcon={GraduationCap}
+      headerTitle={t("nav.students")}
+      headerSubtitle={
+        serverCount != null
+          ? `${t("page.students.subtitle")} · ${serverCount} ${t("nav.students").toLowerCase()}`
+          : t("page.students.subtitle")
+      }
+      headerActions={
+        <ActionButton
+          variant="primary"
+          icon={UserPlus}
+          onClick={() => { setEditStudent(null); setShowStudentForm(true); }}
+        >
+          {t("action.addStudent")}
+        </ActionButton>
+      }
+      metricsStrip={
+        <StudentsCommandMetrics total={serverCount ?? shownCount} shown={shownCount} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
         activeTab={activeTab}
@@ -414,6 +412,6 @@ export default function Students() {
           />
         )}
       </AnimatePresence>
-    </div>
+    </ModulePageShell>
   );
 }

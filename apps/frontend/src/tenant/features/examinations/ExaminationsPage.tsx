@@ -4,7 +4,7 @@ import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, FileText, PenTool, Layers } from "lucide-react";
 import { resolveModuleTierTab } from "@mms/shared";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -84,27 +84,26 @@ export default function Examinations(): React.JSX.Element {
   }, [effectiveSubTab, exams.length]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - {t("nav.examinations")}</title>
-      <meta name="description" content={t("page.examinations.subtitle")} />
-      <PageHeader
-        icon={Layers}
-        title={t("nav.examinations")}
-        subtitle={t("page.examinations.subtitle")}
-        actions={
-          <button
-            type="button"
-            onClick={() => setShowMarksModal(true)}
-            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-          >
-            <PenTool className="h-3.5 w-3.5" />
-            {t("examinations.marks")}
-          </button>
-        }
-      />
-
-      <ExaminationsCommandMetrics total={exams.length} shown={filteredCount} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t("nav.examinations")}`}
+      seoDescription={t("page.examinations.subtitle")}
+      headerIcon={Layers}
+      headerTitle={t("nav.examinations")}
+      headerSubtitle={t("page.examinations.subtitle")}
+      headerActions={
+        <button
+          type="button"
+          onClick={() => setShowMarksModal(true)}
+          className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          <PenTool className="h-3.5 w-3.5" />
+          {t("examinations.marks")}
+        </button>
+      }
+      metricsStrip={
+        <ExaminationsCommandMetrics total={exams.length} shown={filteredCount} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={PAGE_TABS}
         activeTab={effectiveTab}
@@ -200,6 +199,6 @@ export default function Examinations(): React.JSX.Element {
       >
         <EnterMarks exams={exams} results={examResults} onSaveResults={handleSaveResults} />
       </Modal>
-    </div>
+    </ModulePageShell>
   );
 }

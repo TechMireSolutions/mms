@@ -11,7 +11,7 @@ import {
   type SystemUser,
   type UserStatus,
 } from '@mms/shared';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { Button } from '@/components/ui/button';
 import { UsersList } from "@/tenant/features/users/components/UsersList";
@@ -179,31 +179,30 @@ export default function Users(): React.JSX.Element {
   const effectiveSubTab = SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : 'users';
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5">
-      <title>MMS - {t('page.users.title')}</title>
-      <meta name="description" content={t('page.users.subtitle')} />
-      <PageHeader
-        icon={UserCog}
-        title={t('page.users.title')}
-        subtitle={t('page.users.subtitle')}
-        actions={
-          isAdmin ? (
-            <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setShowInvite(true)}>
-                <UserPlus className="h-3.5 w-3.5" />
-                {t('users.invite')}
-              </Button>
-              <Button type="button" size="sm" onClick={() => setShowAddUser(true)}>
-                <UserPlus className="h-3.5 w-3.5" />
-                {t('users.add')}
-              </Button>
-            </div>
-          ) : null
-        }
-      />
-
-      <UsersCommandMetrics users={users} shown={users.length} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t('page.users.title')}`}
+      seoDescription={t('page.users.subtitle')}
+      headerIcon={UserCog}
+      headerTitle={t('page.users.title')}
+      headerSubtitle={t('page.users.subtitle')}
+      headerActions={
+        isAdmin ? (
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setShowInvite(true)}>
+              <UserPlus className="h-3.5 w-3.5" />
+              {t('users.invite')}
+            </Button>
+            <Button type="button" size="sm" onClick={() => setShowAddUser(true)}>
+              <UserPlus className="h-3.5 w-3.5" />
+              {t('users.add')}
+            </Button>
+          </div>
+        ) : null
+      }
+      metricsStrip={
+        <UsersCommandMetrics users={users} shown={users.length} />
+      }
+    >
       <ResponsiveAccordionTabs
         tabs={visibleTopTabs}
         activeTab={effectiveTab}
@@ -288,6 +287,6 @@ export default function Users(): React.JSX.Element {
           />
         ) : null}
       </AnimatePresence>
-    </div>
+    </ModulePageShell>
   );
 }
