@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { formatDate } from "@/lib/utils";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,7 @@ async function downloadPDF(columns: ExportColumn[], rows: Record<string, unknown
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(120);
-  doc.text(`Generated: ${new Date().toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}  |  ${rows.length} record${rows.length !== 1 ? "s" : ""}`, 14, 20);
+  doc.text(`Generated: ${formatDate(new Date())}  |  ${rows.length} record${rows.length !== 1 ? "s" : ""}`, 14, 20);
   doc.setTextColor(0);
 
   // Column widths: distribute equally, max page width ~267mm (A4 landscape - margins)

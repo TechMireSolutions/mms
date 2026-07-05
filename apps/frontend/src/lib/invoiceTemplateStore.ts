@@ -1,4 +1,4 @@
-import { DEFAULT_BRANDING_SETTINGS, formatBrandingAddress, mergeBrandingSettings, type BrandingSettings } from "@mms/shared";
+import { DEFAULT_BRANDING_SETTINGS, formatBrandingAddress, mergeBrandingSettings, formatDate, type BrandingSettings } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 
@@ -417,7 +417,7 @@ export function resolveField(
 
   switch (field) {
     case "receipt_no":      return String(collection.receipt_no || "");
-    case "received_date":   return collection.received_date ? new Date(collection.received_date as string).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" }) : "";
+    case "received_date":   return collection.received_date ? formatDate(collection.received_date as string) : "";
     case "sender":          return String(findItem(contacts, collection.sender_id)?.name || "");
     case "reference":       return String(findItem(contacts, collection.reference_id)?.name || "");
     case "obligation_type": return String(findItem(obligationTypes, collection.obligation_type_id)?.name || "");

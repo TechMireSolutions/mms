@@ -13,6 +13,7 @@ import {
   PLATFORM_MIN_PASSWORD_LENGTH,
   validatePlatformSetupName,
   validatePlatformSetupPassword,
+  formatDate,
 } from "@mms/shared";
 import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { Button } from "@/components/ui/button";
@@ -161,7 +162,7 @@ export default function PlatformAdmins(): React.JSX.Element {
                     </div>
                     {admin.createdAt ? (
                       <p className="text-[10px] text-muted-foreground/70">
-                        {t("platform.profileMemberSince")}: {new Date(admin.createdAt).toLocaleDateString()}
+                        {t("platform.profileMemberSince")}: {formatDate(admin.createdAt)}
                       </p>
                     ) : null}
                   </li>

@@ -1,4 +1,5 @@
 import { Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
@@ -71,7 +72,7 @@ export function JournalEntryDetail({ entry, accounts, formatCurrency, onClose, o
             <div>
               <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Date</h3>
               <p className="font-semibold text-foreground m-0">
-                {new Date(entry.date).toLocaleDateString("en-PK", { day: "numeric", month: "long", year: "numeric" })}
+                {formatDate(entry.date)}
               </p>
             </div>
             <div>

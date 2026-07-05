@@ -21,9 +21,10 @@ function fmtAmount(amount: string | number, currencyId: string, currencies: any[
   return `${currency?.code || ""} ${parseFloat(amount as string).toLocaleString()}`;
 }
 
+import { formatDate } from "@/lib/utils";
+
 function fmtDate(date?: string | null): string {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(date);
 }
 
 interface ColumnCustomizerProps {

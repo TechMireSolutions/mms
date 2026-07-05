@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { formatDate } from "@/lib/utils";
 import { Download } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeLedger, Account, JournalEntry, AccountType } from '@/lib/data/accountingData';
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -186,7 +187,7 @@ export function GeneralLedger({ accounts, entries, formatCurrency }: GeneralLedg
                     {linesWithRunning.map((line, index) => (
                       <tr key={index} className="hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
-                          {new Date(line.date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}
+                          {formatDate(line.date)}
                         </td>
                         <td className="px-4 py-2.5 font-mono text-xs font-bold text-primary">{line.ref}</td>
                         <td className="px-4 py-2.5 text-foreground max-w-[180px] truncate">{line.description}</td>

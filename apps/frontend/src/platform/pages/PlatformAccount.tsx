@@ -13,6 +13,7 @@ import {
   PLATFORM_MIN_PASSWORD_LENGTH,
   validatePlatformSetupName,
   validatePlatformSetupPassword,
+  formatDate,
 } from "@mms/shared";
 import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { Button } from "@/components/ui/button";
@@ -122,7 +123,7 @@ export default function PlatformAccount(): React.JSX.Element {
   };
 
   const memberSince = profile?.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString()
+    ? formatDate(profile.createdAt)
     : null;
 
   return (

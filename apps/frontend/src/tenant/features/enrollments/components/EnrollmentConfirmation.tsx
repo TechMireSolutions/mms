@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { formatDate } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { CheckCircle2, Tag, Loader2, BookOpen, User, Clock, MapPin } from "lucide-react";
 import { Student, StudentSession } from '@/lib/data/studentsData';
@@ -122,7 +123,7 @@ export function EnrollmentConfirmation({ student, session, onConfirm, onBack }: 
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Student</span>
           </div>
           <p className="text-[14px] font-bold text-foreground">{student.name || "—"}</p>
-          <p className="text-[11px] text-muted-foreground">{student.gender || "—"} · {student.dob ? new Date(student.dob).toLocaleDateString("en-GB") : "—"}</p>
+          <p className="text-[11px] text-muted-foreground">{student.gender || "—"} · {formatDate(student.dob)}</p>
           {student.fatherName && <p className="text-[11px] text-muted-foreground">Father: {student.fatherName}</p>}
         </section>
 

@@ -8,7 +8,6 @@ import {
   Heart,
   Plus,
   Camera,
-  Calendar,
   FileText,
   Star,
 } from "lucide-react";
@@ -18,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/DatePicker";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -553,15 +553,10 @@ export default function ContactForm({
               error={getFieldError("dob")}
               id="dob"
             >
-              <div className="relative flex items-center group/input">
-                <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
-                  type="date"
-                  value={contactDraft.dob || ""}
-                  onChange={(e) => updateDraft({ dob: e.target.value })}
-                  className="pl-10"
-                />
-              </div>
+              <DatePicker
+                value={contactDraft.dob || undefined}
+                onChange={(dateStr) => updateDraft({ dob: dateStr })}
+              />
             </Field>
           )}
 

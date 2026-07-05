@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { formatDate } from "@/lib/utils";
 import {
   Plus, Eye, Pencil, Trash2, Search, CheckCircle2,
   RotateCcw, Filter, Download, BookOpen,
@@ -351,7 +352,7 @@ export function JournalEntries({
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-semibold text-foreground truncate m-0">{entry.description}</h4>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[11px] text-muted-foreground">{new Date(entry.date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}</span>
+                            <span className="text-[11px] text-muted-foreground">{formatDate(entry.date)}</span>
                             <span className="text-[11px] font-mono text-muted-foreground">{entry.ref}</span>
                             {(entry.tags || []).map((tag) => (
                               <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">{tag}</span>
@@ -555,7 +556,7 @@ export function JournalEntries({
                       )}
                       {showDate && (
                         <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
-                          {new Date(entry.date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}
+                          {formatDate(entry.date)}
                         </td>
                       )}
                       {showDescription && (

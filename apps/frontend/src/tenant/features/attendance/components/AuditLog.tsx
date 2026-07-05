@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { formatDate } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,7 @@ interface AuditLogProps {
 function formatTimestamp(timestamp?: string | number): string {
   if (!timestamp) return "—";
   const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " · " + date.toLocaleDateString();
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " · " + formatDate(date);
 }
 
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";

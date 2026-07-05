@@ -20,7 +20,7 @@ import {
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
-import { getCollection, getObject, saveObject } from "@/lib/db";
+import { getCollection, getObject, saveObject, formatDate } from "@/lib/db";
 import { METADATA_FIELDS, VisualizerConfig, type ReportCollection } from "@/tenant/features/reports/components/reportMetadata";
 
 interface CollectionMeta {
@@ -499,7 +499,7 @@ export default function DynamicChartVisualizer({
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 14, 26);
+      doc.text(`Generated on: ${formatDate(new Date())} at ${new Date().toLocaleTimeString()}`, 14, 26);
       doc.text(`Subject Dataset: ${activeMeta.name} (${operation.toUpperCase()} of ${xAxisField})`, 14, 31);
       
       doc.line(14, 34, formatWidth - 14, 34);

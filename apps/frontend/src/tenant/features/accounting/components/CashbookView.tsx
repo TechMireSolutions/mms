@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { formatDate } from "@/lib/utils";
 import { Search, TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { JournalEntry, Account } from '@/lib/data/accountingData';
 import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -170,7 +171,7 @@ export function CashbookView({ entries, accounts: _accounts, formatCurrency }: C
                 {rows.map((row) => (
                   <tr key={row.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(row.date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}
+                      {formatDate(row.date)}
                     </td>
                     <td className="px-3 py-3">
                       <span className={cn(

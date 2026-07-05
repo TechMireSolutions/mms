@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/button";
  * @param date - Date string to format.
  * @returns Formatted date.
  */
+import { formatDate as sharedFormatDate } from "@/lib/utils";
+
 function formatDate(date?: string): string {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
+  return sharedFormatDate(date);
 }
 
 interface Step2SelectSessionProps {

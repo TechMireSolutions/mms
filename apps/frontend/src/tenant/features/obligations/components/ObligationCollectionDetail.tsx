@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
+import { formatDate } from "@/lib/utils";
+
 function fmtDate(date?: string | null): string {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(date);
 }
 
 interface RowProps {
