@@ -51,6 +51,7 @@ Use `useModuleTierTabs()` to render exactly three tabs: `work` (operational list
   - `< lg`: Stacked section headings; tap expands the section contents.
   - `≥ lg`: Horizontal underline tabs for module tiers; sidebar + panels for Settings.
 - **Pills & SubTabs**: Use `SubTabBar` for inner sub-tabs (like Setup -> Fields/Prefs). Do not build custom pill bars.
+- **Command Metrics Grid**: Use `<ModuleCommandMetricsGrid />` (`components/ui/ModuleCommandMetricsGrid.tsx`) for rendering quick command metric strips with staggered entrance animations. Do not write custom inline grids or cards for metrics.
 
 ---
 

@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   BookOpen, Filter, CheckCircle2, FileEdit, Layers, EyeOff, TrendingUp,
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAccountingMetrics } from '@/tenant/features/accounting/hooks/useAccountingApi';
-import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 
 interface AccountingCommandMetricsProps {
   entryTotal: number;
@@ -28,15 +28,15 @@ export function AccountingCommandMetrics({
     postedVolume: serverMetrics?.postedVolume ?? 0,
   };
 
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2">
-      <ModuleCommandMetricCard icon={BookOpen} label={t('accounting.metrics.totalEntries')} value={metrics.totalEntries} />
-      <ModuleCommandMetricCard icon={Filter} label={t('accounting.metrics.filtered')} value={shown} />
-      <ModuleCommandMetricCard icon={CheckCircle2} label={t('accounting.metrics.posted')} value={metrics.posted} />
-      <ModuleCommandMetricCard icon={FileEdit} label={t('accounting.metrics.draft')} value={metrics.draft} />
-      <ModuleCommandMetricCard icon={Layers} label={t('accounting.metrics.activeAccounts')} value={metrics.activeAccounts} />
-      <ModuleCommandMetricCard icon={EyeOff} label={t('accounting.metrics.inactiveAccounts')} value={metrics.inactiveAccounts} />
-      <ModuleCommandMetricCard icon={TrendingUp} label={t('accounting.metrics.postedVolume')} value={metrics.postedVolume} />
-    </div>
-  );
+  const items = useMemo(() => [
+    { icon: BookOpen, label: t('accounting.metrics.totalEntries'), value: metrics.totalEntries, accent: 'primary' as const },
+    { icon: Filter, label: t('accounting.metrics.filtered'), value: shown, accent: 'info' as const },
+    { icon: CheckCircle2, label: t('accounting.metrics.posted'), value: metrics.posted, accent: 'success' as const },
+    { icon: FileEdit, label: t('accounting.metrics.draft'), value: metrics.draft, accent: 'warning' as const },
+    { icon: Layers, label: t('accounting.metrics.activeAccounts'), value: metrics.activeAccounts, accent: 'indigo' as const },
+    { icon: EyeOff, label: t('accounting.metrics.inactiveAccounts'), value: metrics.inactiveAccounts, accent: undefined },
+    { icon: TrendingUp, label: t('accounting.metrics.postedVolume'), value: metrics.postedVolume, accent: 'success' as const },
+  ], [t, metrics.totalEntries, shown, metrics.posted, metrics.draft, metrics.activeAccounts, metrics.inactiveAccounts, metrics.postedVolume]);
+
+  return <ModuleCommandMetricsGrid items={items} />;
 }
