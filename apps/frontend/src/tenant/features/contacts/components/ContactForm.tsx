@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback } from "react";
 import {
   User,
   Phone,
@@ -63,16 +63,7 @@ interface ContactFormProps {
   lockGender?: boolean;
 }
 
-const CONTACT_TABS = [
-  { key: "basic", label: "Basic Info", icon: User },
-  { key: "phones", label: "Phones", icon: Phone },
-  { key: "emails", label: "Emails", icon: Mail },
-  { key: "addresses", label: "Addresses", icon: MapPin },
-  { key: "socials", label: "Socials", icon: Share2 },
-  { key: "emergency", label: "Emergency", icon: Heart },
-] as const;
 
-type TabKey = (typeof CONTACT_TABS)[number]["key"];
 
 export default function ContactForm({
   open = true,
@@ -100,7 +91,6 @@ export default function ContactForm({
   } = useContactConfig();
   const validate = useContactValidation();
 
-  const [tab, setTab] = useState<TabKey>("basic");
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
     [],
@@ -147,12 +137,7 @@ export default function ContactForm({
     return initial;
   });
 
-  const visibleTabs = useMemo(() => {
-    return CONTACT_TABS.filter((tabItem) => {
-      if (tabItem.key === "basic") return true;
-      return enabledTabIds.has(tabItem.key);
-    });
-  }, [enabledTabIds]);
+
 
   const isFieldEnabled = useCallback(
     (tabId: string, fieldId: string) => {
@@ -264,10 +249,6 @@ export default function ContactForm({
 
     if (formErrors.length > 0) {
       setValidationErrors(formErrors);
-      const firstError = formErrors[0];
-      if (firstError.tabId) {
-        setTab(firstError.tabId as TabKey);
-      }
       notify.error(
         t("contacts.form.pleaseFixErrors") || "Please fix validation errors",
       );
@@ -591,7 +572,8 @@ export default function ContactForm({
     };
 
     return (
-      <div className="space-y-3 text-left">
+      <SectionCard title={t("contacts.form.phonesLabel") || "Phone Numbers"} icon={Phone} accentColor="primary">
+        <div className="space-y-3 text-left">
         {phones.length === 0 && (
           <div className="text-center py-8 border border-dashed border-border/85 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <Phone className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
@@ -710,6 +692,7 @@ export default function ContactForm({
           <span>{t("contacts.form.addPhoneNumber")}</span>
         </Button>
       </div>
+      </SectionCard>
     );
   };
 
@@ -726,7 +709,8 @@ export default function ContactForm({
     };
 
     return (
-      <div className="space-y-3 text-left">
+      <SectionCard title={t("contacts.form.emailsLabel") || "Email Addresses"} icon={Mail} accentColor="indigo">
+        <div className="space-y-3 text-left">
         {emails.length === 0 && (
           <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <Mail className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
@@ -810,6 +794,7 @@ export default function ContactForm({
           <span>{t("contacts.form.addEmailAddress")}</span>
         </Button>
       </div>
+      </SectionCard>
     );
   };
 
@@ -839,7 +824,8 @@ export default function ContactForm({
     };
 
     return (
-      <div className="space-y-3 text-left">
+      <SectionCard title={t("contacts.detail.addresses") || "Addresses"} icon={MapPin} accentColor="emerald">
+        <div className="space-y-3 text-left">
         {addresses.length === 0 && (
           <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <MapPin className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
@@ -961,6 +947,7 @@ export default function ContactForm({
           <span>{t("contacts.form.addAddress")}</span>
         </Button>
       </div>
+      </SectionCard>
     );
   };
 
@@ -977,7 +964,8 @@ export default function ContactForm({
     };
 
     return (
-      <div className="space-y-3 text-left">
+      <SectionCard title={t("contacts.detail.socials") || "Social Links"} icon={Share2} accentColor="indigo">
+        <div className="space-y-3 text-left">
         {socials.length === 0 && (
           <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <Share2 className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
@@ -1068,6 +1056,7 @@ export default function ContactForm({
           <span>{t("contacts.form.addSocialLink")}</span>
         </Button>
       </div>
+      </SectionCard>
     );
   };
 
@@ -1103,7 +1092,8 @@ export default function ContactForm({
     };
 
     return (
-      <div className="space-y-3 text-left">
+      <SectionCard title={t("contacts.detail.emergency") || "Emergency Contacts"} icon={Heart} accentColor="rose">
+        <div className="space-y-3 text-left">
         {emergencyContacts.length === 0 && (
           <div className="text-center py-8 border border-dashed border-rose-500/20 rounded-2xl bg-rose-500/5 backdrop-blur-sm">
             <Heart className="w-8 h-8 text-rose-500/60 mx-auto mb-2" />
@@ -1206,26 +1196,8 @@ export default function ContactForm({
           <span>{t("contacts.form.addEmergencyContact")}</span>
         </Button>
       </div>
+      </SectionCard>
     );
-  };
-
-  const renderActiveTabContent = () => {
-    switch (tab) {
-      case "basic":
-        return renderBasic();
-      case "phones":
-        return renderPhones();
-      case "emails":
-        return renderEmails();
-      case "addresses":
-        return renderAddresses();
-      case "socials":
-        return renderSocials();
-      case "emergency":
-        return renderEmergency();
-      default:
-        return null;
-    }
   };
 
   const footerStart = contactDraft.firstName ? (
@@ -1269,10 +1241,6 @@ export default function ContactForm({
       }
       icon={User}
       tall
-      tabs={visibleTabs}
-      activeTab={tab}
-      onTabChange={setTab}
-      tabPanelIdPrefix="contact-form-tab"
       lang={language}
       cancelLabel={t("common.cancel") || "Cancel"}
       saveLabel={t("contacts.form.saveContact") || "Save"}
@@ -1281,7 +1249,14 @@ export default function ContactForm({
       saveDisabled={!contactDraft.firstName?.trim()}
       footerStart={footerStart}
     >
-      {renderActiveTabContent()}
+      <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+        {renderBasic()}
+        {enabledTabIds.has("phones") && renderPhones()}
+        {enabledTabIds.has("emails") && renderEmails()}
+        {enabledTabIds.has("addresses") && renderAddresses()}
+        {enabledTabIds.has("socials") && renderSocials()}
+        {enabledTabIds.has("emergency") && renderEmergency()}
+      </div>
     </FormModal>
   );
 }
