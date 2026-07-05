@@ -4,6 +4,9 @@ import App from '@/App'
 import '@/index.css'
 import { isApexHost } from '@mms/shared/tenantUtils'
 import { getAppDomain } from '@/lib/config/tenantConfig'
+import { initErrorReporting } from '@/lib/clientErrorReporting'
+
+initErrorReporting()
 if (typeof window !== 'undefined' && isApexHost(window.location.hostname, getAppDomain())) {
   void import('@/lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => {
     applyApexPlatformTheme('en');
