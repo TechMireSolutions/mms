@@ -3,7 +3,7 @@ import type { Invoice, Payment } from '@mms/shared';
 import { FINANCE_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
+import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 
 export const FINANCE_INVOICES_QUERY_KEY = ['finance', 'invoices', 'list'] as const;
@@ -15,13 +15,13 @@ const FINANCE_API = FINANCE_MODULE_CONTRACT.restBasePath;
 async function fetchInvoices(): Promise<Invoice[]> {
   const invoicesResponse = await apiJson<{ invoices: Invoice[] }>(`${FINANCE_API}/invoices`);
   saveCollection('finance_invoices', invoicesResponse.invoices);
-  return getCollection<Invoice>('finance_invoices', []);
+  return invoicesResponse.invoices;
 }
 
 async function fetchPayments(): Promise<Payment[]> {
   const paymentsResponse = await apiJson<{ payments: Payment[] }>(`${FINANCE_API}/payments`);
   saveCollection('finance_payments', paymentsResponse.payments);
-  return getCollection<Payment>('finance_payments', []);
+  return paymentsResponse.payments;
 }
 
 export function useFinanceInvoices(options?: { enabled?: boolean }) {
@@ -48,10 +48,10 @@ export function useFinancePayments(options?: { enabled?: boolean }) {
 
 export function useFinanceInvoicesCollection(options?: { enabled?: boolean }): Invoice[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryInvoices = [] } = useFinanceInvoices({ enabled });
+  const { data: queryInvoices, isSuccess } = useFinanceInvoices({ enabled });
   const localInvoices = useLiveCollection<Invoice>('finance_invoices', [], { enabled });
   if (!enabled) return [];
-  if (queryInvoices.length > 0) {
+  if (isSuccess && queryInvoices) {
     return queryInvoices;
   }
   return localInvoices;
@@ -59,10 +59,10 @@ export function useFinanceInvoicesCollection(options?: { enabled?: boolean }): I
 
 export function useFinancePaymentsCollection(options?: { enabled?: boolean }): Payment[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryPayments = [] } = useFinancePayments({ enabled });
+  const { data: queryPayments, isSuccess } = useFinancePayments({ enabled });
   const localPayments = useLiveCollection<Payment>('finance_payments', [], { enabled });
   if (!enabled) return [];
-  if (queryPayments.length > 0) {
+  if (isSuccess && queryPayments) {
     return queryPayments;
   }
   return localPayments;

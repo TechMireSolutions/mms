@@ -3,7 +3,7 @@ import type { ModuleColumnPref, SessionsCommandMetricsSnapshot } from '@mms/shar
 import { SESSIONS_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
+import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
 import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
@@ -25,7 +25,7 @@ export interface SessionRecord {
 async function fetchSessions(): Promise<SessionRecord[]> {
   const sessionsResponse = await apiJson<{ sessions: SessionRecord[] }>(SESSIONS_API);
   saveCollection('sessions', sessionsResponse.sessions);
-  return getCollection<SessionRecord>('sessions', []);
+  return sessionsResponse.sessions;
 }
 
 export function useSessions(options?: { enabled?: boolean }) {
@@ -76,10 +76,10 @@ export function useSessionMutations() {
 /** Query-first sessions; falls back to localStorage cache (hydrated). */
 export function useSessionsCollection(options?: { enabled?: boolean }): Session[] {
   const enabled = options?.enabled ?? true;
-  const { data: querySessions = [] } = useSessions({ enabled });
+  const { data: querySessions, isSuccess } = useSessions({ enabled });
   const localSessions = useLiveCollection<Session>('sessions', SESSIONS_DATA, { enabled });
   if (!enabled) return [];
-  if (querySessions.length > 0) {
+  if (isSuccess && querySessions) {
     return querySessions as Session[];
   }
   return localSessions;

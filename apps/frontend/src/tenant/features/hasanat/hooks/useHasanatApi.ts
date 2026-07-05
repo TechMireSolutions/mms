@@ -3,7 +3,7 @@ import type { Denomination, StockBatch, Distribution, Redemption, ModuleColumnPr
 import { HASANAT_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
+import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
@@ -28,25 +28,25 @@ const HASANAT_API = HASANAT_MODULE_CONTRACT.restBasePath;
 async function fetchDenoms(): Promise<Denomination[]> {
   const denomsResponse = await apiJson<{ denoms: Denomination[] }>(`${HASANAT_API}/denoms`);
   saveCollection('hasanat_denoms', denomsResponse.denoms);
-  return getCollection<Denomination>('hasanat_denoms', []);
+  return denomsResponse.denoms;
 }
 
 async function fetchBatches(): Promise<StockBatch[]> {
   const batchesResponse = await apiJson<{ batches: StockBatch[] }>(`${HASANAT_API}/batches`);
   saveCollection('hasanat_batches', batchesResponse.batches);
-  return getCollection<StockBatch>('hasanat_batches', []);
+  return batchesResponse.batches;
 }
 
 async function fetchDistributions(): Promise<Distribution[]> {
   const distributionsResponse = await apiJson<{ distributions: Distribution[] }>(`${HASANAT_API}/distributions`);
   saveCollection('hasanat_distributions', distributionsResponse.distributions);
-  return getCollection<Distribution>('hasanat_distributions', []);
+  return distributionsResponse.distributions;
 }
 
 async function fetchRedemptions(): Promise<Redemption[]> {
   const redemptionsResponse = await apiJson<{ redemptions: Redemption[] }>(`${HASANAT_API}/redemptions`);
   saveCollection('hasanat_redemptions', redemptionsResponse.redemptions);
-  return getCollection<Redemption>('hasanat_redemptions', []);
+  return redemptionsResponse.redemptions;
 }
 
 export function useHasanatDenoms(options?: { enabled?: boolean }) {
@@ -62,10 +62,10 @@ export function useHasanatDenoms(options?: { enabled?: boolean }) {
 
 export function useHasanatDenomsCollection(options?: { enabled?: boolean }): Denomination[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryDenominations = [] } = useHasanatDenoms({ enabled });
+  const { data: queryDenominations, isSuccess } = useHasanatDenoms({ enabled });
   const localDenominations = useLiveCollection<Denomination>('hasanat_denoms', [], { enabled });
   if (!enabled) return [];
-  if (queryDenominations.length > 0) {
+  if (isSuccess && queryDenominations) {
     return queryDenominations;
   }
   return localDenominations;
@@ -84,10 +84,10 @@ export function useHasanatBatches(options?: { enabled?: boolean }) {
 
 export function useHasanatBatchesCollection(options?: { enabled?: boolean }): StockBatch[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryBatches = [] } = useHasanatBatches({ enabled });
+  const { data: queryBatches, isSuccess } = useHasanatBatches({ enabled });
   const localBatches = useLiveCollection<StockBatch>('hasanat_batches', [], { enabled });
   if (!enabled) return [];
-  if (queryBatches.length > 0) {
+  if (isSuccess && queryBatches) {
     return queryBatches;
   }
   return localBatches;
@@ -106,10 +106,10 @@ export function useHasanatDistributions(options?: { enabled?: boolean }) {
 
 export function useHasanatDistributionsCollection(options?: { enabled?: boolean }): Distribution[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryDistributions = [] } = useHasanatDistributions({ enabled });
+  const { data: queryDistributions, isSuccess } = useHasanatDistributions({ enabled });
   const localDistributions = useLiveCollection<Distribution>('hasanat_distributions', [], { enabled });
   if (!enabled) return [];
-  if (queryDistributions.length > 0) {
+  if (isSuccess && queryDistributions) {
     return queryDistributions;
   }
   return localDistributions;
@@ -128,10 +128,10 @@ export function useHasanatRedemptions(options?: { enabled?: boolean }) {
 
 export function useHasanatRedemptionsCollection(options?: { enabled?: boolean }): Redemption[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryRedemptions = [] } = useHasanatRedemptions({ enabled });
+  const { data: queryRedemptions, isSuccess } = useHasanatRedemptions({ enabled });
   const localRedemptions = useLiveCollection<Redemption>('hasanat_redemptions', [], { enabled });
   if (!enabled) return [];
-  if (queryRedemptions.length > 0) {
+  if (isSuccess && queryRedemptions) {
     return queryRedemptions;
   }
   return localRedemptions;

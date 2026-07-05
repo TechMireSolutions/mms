@@ -3,7 +3,7 @@ import type { Exam, ExamResult, ModuleColumnPref, ExaminationsCommandMetricsSnap
 import { EXAMINATIONS_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
+import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
@@ -26,13 +26,13 @@ const EXAMINATIONS_API = EXAMINATIONS_MODULE_CONTRACT.restBasePath;
 async function fetchExams(): Promise<Exam[]> {
   const examsResponse = await apiJson<{ exams: Exam[] }>(`${EXAMINATIONS_API}/exams`);
   saveCollection('exams', examsResponse.exams);
-  return getCollection<Exam>('exams', []);
+  return examsResponse.exams;
 }
 
 async function fetchExamResults(): Promise<ExamResult[]> {
   const resultsResponse = await apiJson<{ results: ExamResult[] }>(`${EXAMINATIONS_API}/results`);
   saveCollection('exam_results', resultsResponse.results);
-  return getCollection<ExamResult>('exam_results', []);
+  return resultsResponse.results;
 }
 
 export function useExaminationsExams(options?: { enabled?: boolean }) {
@@ -48,10 +48,10 @@ export function useExaminationsExams(options?: { enabled?: boolean }) {
 
 export function useExaminationsExamsCollection(options?: { enabled?: boolean }): Exam[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryExams = [] } = useExaminationsExams({ enabled });
+  const { data: queryExams, isSuccess } = useExaminationsExams({ enabled });
   const localExams = useLiveCollection<Exam>('exams', [], { enabled });
   if (!enabled) return [];
-  if (queryExams.length > 0) {
+  if (isSuccess && queryExams) {
     return queryExams;
   }
   return localExams;
@@ -70,10 +70,10 @@ export function useExaminationsResults(options?: { enabled?: boolean }) {
 
 export function useExaminationsResultsCollection(options?: { enabled?: boolean }): ExamResult[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryResults = [] } = useExaminationsResults({ enabled });
+  const { data: queryResults, isSuccess } = useExaminationsResults({ enabled });
   const localResults = useLiveCollection<ExamResult>('exam_results', [], { enabled });
   if (!enabled) return [];
-  if (queryResults.length > 0) {
+  if (isSuccess && queryResults) {
     return queryResults;
   }
   return localResults;

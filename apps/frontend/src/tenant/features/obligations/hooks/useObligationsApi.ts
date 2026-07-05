@@ -12,7 +12,7 @@ import type {
 import { OBLIGATIONS_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
+import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
@@ -34,37 +34,37 @@ const OBLIGATIONS_API = OBLIGATIONS_MODULE_CONTRACT.restBasePath;
 async function fetchTypes(): Promise<ObligationType[]> {
   const typesResponse = await apiJson<{ types: ObligationType[] }>(`${OBLIGATIONS_API}/types`);
   saveCollection('obligation_types', typesResponse.types);
-  return getCollection<ObligationType>('obligation_types', []);
+  return typesResponse.types;
 }
 
 async function fetchMujtahids(): Promise<Mujtahid[]> {
   const mujtahidsResponse = await apiJson<{ mujtahids: Mujtahid[] }>(`${OBLIGATIONS_API}/mujtahids`);
   saveCollection('mujtahids', mujtahidsResponse.mujtahids);
-  return getCollection<Mujtahid>('mujtahids', []);
+  return mujtahidsResponse.mujtahids;
 }
 
 async function fetchReps(): Promise<MujtahidRep[]> {
   const repsResponse = await apiJson<{ reps: MujtahidRep[] }>(`${OBLIGATIONS_API}/reps`);
   saveCollection('mujtahid_reps', repsResponse.reps);
-  return getCollection<MujtahidRep>('mujtahid_reps', []);
+  return repsResponse.reps;
 }
 
 async function fetchWakala(): Promise<WakalaType[]> {
   const wakalaResponse = await apiJson<{ wakalaTypes: WakalaType[] }>(`${OBLIGATIONS_API}/wakala`);
   saveCollection('wakala_types', wakalaResponse.wakalaTypes);
-  return getCollection<WakalaType>('wakala_types', []);
+  return wakalaResponse.wakalaTypes;
 }
 
 async function fetchDistributions(): Promise<ObligationDistribution[]> {
   const distributionsResponse = await apiJson<{ distributions: ObligationDistribution[] }>(`${OBLIGATIONS_API}/distributions`);
   saveCollection('obligation_distributions', distributionsResponse.distributions);
-  return getCollection<ObligationDistribution>('obligation_distributions', []);
+  return distributionsResponse.distributions;
 }
 
 async function fetchCollections(): Promise<ObligationCollection[]> {
   const collectionsResponse = await apiJson<{ collections: ObligationCollection[] }>(`${OBLIGATIONS_API}/collections`);
   saveCollection('obligation_collections', collectionsResponse.collections);
-  return getCollection<ObligationCollection>('obligation_collections', []);
+  return collectionsResponse.collections;
 }
 
 export function useObligationsTypes(options?: { enabled?: boolean }) {
@@ -80,10 +80,10 @@ export function useObligationsTypes(options?: { enabled?: boolean }) {
 
 export function useObligationsTypesCollection(options?: { enabled?: boolean }): ObligationType[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryTypes = [] } = useObligationsTypes({ enabled });
+  const { data: queryTypes, isSuccess } = useObligationsTypes({ enabled });
   const localTypes = useLiveCollection<ObligationType>('obligation_types', [], { enabled });
   if (!enabled) return [];
-  if (queryTypes.length > 0) return queryTypes;
+  if (isSuccess && queryTypes) return queryTypes;
   return localTypes;
 }
 
@@ -100,10 +100,10 @@ export function useObligationsMujtahids(options?: { enabled?: boolean }) {
 
 export function useObligationsMujtahidsCollection(options?: { enabled?: boolean }): Mujtahid[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryMujtahids = [] } = useObligationsMujtahids({ enabled });
+  const { data: queryMujtahids, isSuccess } = useObligationsMujtahids({ enabled });
   const localMujtahids = useLiveCollection<Mujtahid>('mujtahids', [], { enabled });
   if (!enabled) return [];
-  if (queryMujtahids.length > 0) return queryMujtahids;
+  if (isSuccess && queryMujtahids) return queryMujtahids;
   return localMujtahids;
 }
 
@@ -120,10 +120,10 @@ export function useObligationsReps(options?: { enabled?: boolean }) {
 
 export function useObligationsRepsCollection(options?: { enabled?: boolean }): MujtahidRep[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryReps = [] } = useObligationsReps({ enabled });
+  const { data: queryReps, isSuccess } = useObligationsReps({ enabled });
   const localReps = useLiveCollection<MujtahidRep>('mujtahid_reps', [], { enabled });
   if (!enabled) return [];
-  if (queryReps.length > 0) return queryReps;
+  if (isSuccess && queryReps) return queryReps;
   return localReps;
 }
 
@@ -140,10 +140,10 @@ export function useObligationsWakala(options?: { enabled?: boolean }) {
 
 export function useObligationsWakalaCollection(options?: { enabled?: boolean }): WakalaType[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryWakalaTypes = [] } = useObligationsWakala({ enabled });
+  const { data: queryWakalaTypes, isSuccess } = useObligationsWakala({ enabled });
   const localWakalaTypes = useLiveCollection<WakalaType>('wakala_types', [], { enabled });
   if (!enabled) return [];
-  if (queryWakalaTypes.length > 0) return queryWakalaTypes;
+  if (isSuccess && queryWakalaTypes) return queryWakalaTypes;
   return localWakalaTypes;
 }
 
@@ -160,10 +160,10 @@ export function useObligationsDistributions(options?: { enabled?: boolean }) {
 
 export function useObligationsDistributionsCollection(options?: { enabled?: boolean }): ObligationDistribution[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryDistributions = [] } = useObligationsDistributions({ enabled });
+  const { data: queryDistributions, isSuccess } = useObligationsDistributions({ enabled });
   const localDistributions = useLiveCollection<ObligationDistribution>('obligation_distributions', [], { enabled });
   if (!enabled) return [];
-  if (queryDistributions.length > 0) return queryDistributions;
+  if (isSuccess && queryDistributions) return queryDistributions;
   return localDistributions;
 }
 
@@ -180,10 +180,10 @@ export function useObligationsCollections(options?: { enabled?: boolean }) {
 
 export function useObligationsCollectionsCollection(options?: { enabled?: boolean }): ObligationCollection[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryCollections = [] } = useObligationsCollections({ enabled });
+  const { data: queryCollections, isSuccess } = useObligationsCollections({ enabled });
   const localCollections = useLiveCollection<ObligationCollection>('obligation_collections', [], { enabled });
   if (!enabled) return [];
-  if (queryCollections.length > 0) return queryCollections;
+  if (isSuccess && queryCollections) return queryCollections;
   return localCollections;
 }
 

@@ -3,7 +3,7 @@ import type { WorkspaceUser, ActivityLog, ModuleColumnPref } from '@mms/shared';
 import { USERS_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
+import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
@@ -16,7 +16,7 @@ export const USERS_COLUMN_PREFS_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'co
 async function fetchUsers(): Promise<WorkspaceUser[]> {
   const usersResponse = await apiJson<{ users: WorkspaceUser[] }>(USERS_API);
   saveCollection('users', usersResponse.users);
-  return getCollection<WorkspaceUser>('users', []);
+  return usersResponse.users;
 }
 
 export function useUsers(options?: { enabled?: boolean }) {
@@ -32,10 +32,10 @@ export function useUsers(options?: { enabled?: boolean }) {
 
 export function useUsersCollection(options?: { enabled?: boolean }): WorkspaceUser[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryUsers = [] } = useUsers({ enabled });
+  const { data: queryUsers, isSuccess } = useUsers({ enabled });
   const localUsers = useLiveCollection<WorkspaceUser>('users', [], { enabled });
   if (!enabled) return [];
-  if (queryUsers.length > 0) {
+  if (isSuccess && queryUsers) {
     return queryUsers;
   }
   return localUsers;
@@ -44,7 +44,7 @@ export function useUsersCollection(options?: { enabled?: boolean }): WorkspaceUs
 async function fetchLogs(): Promise<ActivityLog[]> {
   const logsResponse = await apiJson<{ logs: ActivityLog[] }>(`${USERS_API}/activity`);
   saveCollection('user_activity_logs', logsResponse.logs);
-  return getCollection<ActivityLog>('user_activity_logs', []);
+  return logsResponse.logs;
 }
 
 export function useActivityLogs(options?: { enabled?: boolean }) {
@@ -60,10 +60,10 @@ export function useActivityLogs(options?: { enabled?: boolean }) {
 
 export function useActivityLogsCollection(options?: { enabled?: boolean }): ActivityLog[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryLogs = [] } = useActivityLogs({ enabled });
+  const { data: queryLogs, isSuccess } = useActivityLogs({ enabled });
   const localLogs = useLiveCollection<ActivityLog>('user_activity_logs', [], { enabled });
   if (!enabled) return [];
-  if (queryLogs.length > 0) {
+  if (isSuccess && queryLogs) {
     return queryLogs;
   }
   return localLogs;

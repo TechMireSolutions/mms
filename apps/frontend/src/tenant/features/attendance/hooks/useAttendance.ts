@@ -3,7 +3,7 @@ import type { AttendanceCommandMetricsSnapshot, ModuleColumnPref } from '@mms/sh
 import { ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
+import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
@@ -21,7 +21,7 @@ const ATTENDANCE_API = ATTENDANCE_MODULE_CONTRACT.restBasePath;
 async function fetchAttendanceRecords(): Promise<AttendanceRecord[]> {
   const recordsResponse = await apiJson<{ records: AttendanceRecord[] }>(ATTENDANCE_API);
   saveCollection('attendance_records', recordsResponse.records);
-  return getCollection<AttendanceRecord>('attendance_records', []);
+  return recordsResponse.records;
 }
 
 export function useAttendanceRecords(options?: { enabled?: boolean }) {
@@ -84,10 +84,10 @@ export function useAttendanceMutations() {
 /** Query-first attendance; falls back to localStorage cache (hydrated). */
 export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryRecords = [] } = useAttendanceRecords({ enabled });
+  const { data: queryRecords, isSuccess } = useAttendanceRecords({ enabled });
   const localRecords = useLiveCollection<AttendanceRecord>('attendance_records', ATTENDANCE_RECORDS, { enabled });
   if (!enabled) return [];
-  if (queryRecords.length > 0) {
+  if (isSuccess && queryRecords) {
     return queryRecords;
   }
   return localRecords;
