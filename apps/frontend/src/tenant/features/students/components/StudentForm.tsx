@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { Calendar, ChevronLeft, ChevronRight, FileText, GraduationCap, Hash, User, Users } from "lucide-react";
+import { Calendar, FileText, GraduationCap, Hash, User, Users } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -36,8 +36,6 @@ import {
   type FieldDefinition,
 } from "@mms/shared";
 
-type StudentFormStep = "contact" | "registration" | "guardian" | "notes";
-
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
@@ -67,7 +65,6 @@ export default function StudentForm({
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [manualError, setManualError] = useState("");
-  const [activeStep, setActiveStep] = useState<StudentFormStep>("contact");
 
   const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => ({
     contactId: student?.contactId ?? "",
@@ -187,10 +184,6 @@ export default function StudentForm({
     if (!parseResult.success) {
       const zodErrors = formatStudentZodIssues(parseResult.error, validationDraft, settings.fields || {});
       setValidationErrors(zodErrors);
-      const firstError = zodErrors[0];
-      if (firstError) {
-        setActiveStep(fieldStep(firstError.fieldId, firstError.tabId));
-      }
 
       notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
       return;
@@ -340,81 +333,7 @@ export default function StudentForm({
     </span>
   );
 
-  const formTabs = useMemo(() => {
-    const tabs: Array<{ key: StudentFormStep; label: string; icon: React.ComponentType<{ className?: string }> }> = [
-      { key: "contact" as const, label: t("students.form.stepContact"), icon: User },
-      { key: "registration" as const, label: t("students.form.stepRegistration"), icon: GraduationCap },
-    ];
-    if (isTabEnabled("guardian")) {
-      tabs.push({ key: "guardian" as const, label: t("students.form.stepGuardians"), icon: Users });
-    }
-    if (isTabEnabled("academic")) {
-      tabs.push({ key: "notes" as const, label: t("students.form.stepNotes"), icon: FileText });
-    }
-    return tabs;
-  }, [isTabEnabled, t]);
 
-  const fieldStep = useCallback((fieldId: string, tabId?: string): StudentFormStep => {
-    const availableSteps = new Set(formTabs.map((tab) => tab.key));
-    if (["contactId", "gender", "dob"].includes(fieldId)) return "contact";
-    if (["grNumber", "status", "registeredDate"].includes(fieldId)) return "registration";
-    if (
-      tabId === "guardian"
-      || ["fatherLink", "motherLink", "guardianLink", "fatherContactId", "motherContactId", "guardianContactId"].includes(fieldId)
-    ) {
-      return availableSteps.has("guardian") ? "guardian" : "registration";
-    }
-    if (fieldId === "notes" || tabId === "academic") {
-      return availableSteps.has("notes") ? "notes" : "registration";
-    }
-    return "registration";
-  }, [formTabs]);
-
-  useEffect(() => {
-    if (!formTabs.some((tab) => tab.key === activeStep)) {
-      setActiveStep(formTabs[0]?.key ?? "contact");
-    }
-  }, [activeStep, formTabs]);
-
-  const activeStepIndex = Math.max(0, formTabs.findIndex((tab) => tab.key === activeStep));
-  const activeStepNumber = activeStepIndex + 1;
-  const canGoBack = activeStepIndex > 0;
-  const canGoForward = activeStepIndex < formTabs.length - 1;
-
-  const goToStepIndex = (stepIndex: number) => {
-    const nextStep = formTabs[stepIndex]?.key;
-    if (nextStep) {
-      setActiveStep(nextStep);
-    }
-  };
-
-  const renderStepNavigation = () => (
-    <div className="flex items-center justify-between gap-3 border-t border-border/50 pt-4">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => goToStepIndex(activeStepIndex - 1)}
-        disabled={!canGoBack}
-        className="min-w-[112px]"
-      >
-        <ChevronLeft className="h-4 w-4" aria-hidden />
-        {t("common.previous")}
-      </Button>
-      <span className="text-xs font-semibold text-muted-foreground">
-        {activeStepNumber}/{formTabs.length}
-      </span>
-      <Button
-        type="button"
-        variant="secondary"
-        onClick={() => goToStepIndex(activeStepIndex + 1)}
-        disabled={!canGoForward}
-        className="min-w-[112px]"
-      >
-        {t("common.next")}
-        <ChevronRight className="h-4 w-4" aria-hidden />
-      </Button>
-    </div>
-  );
 
   const renderContact = () => {
     return (
@@ -591,12 +510,6 @@ export default function StudentForm({
         title={student ? t("students.form.editTitle") : t("students.form.addTitle")}
         subtitle={t("students.form.subtitle")}
         icon={GraduationCap}
-        tall
-        tabs={formTabs}
-        activeTab={activeStep}
-        onTabChange={setActiveStep}
-        progress={Math.round((activeStepNumber / formTabs.length) * 100)}
-        progressLabel={`${activeStepNumber}/${formTabs.length}`}
         lang={language}
         cancelLabel={t("common.cancel") || "Cancel"}
         saveLabel={saving ? (t("students.form.saving") || "Saving...") : (student ? (t("students.form.saveUpdate") || "Update") : (t("students.form.saveRegister") || "Register"))}
@@ -606,12 +519,11 @@ export default function StudentForm({
         error={validationErrorSummary ?? (errorSummary || undefined)}
         footerStart={footerStart}
       >
-        <div className="space-y-6 pb-10">
-          {activeStep === "contact" && renderContact()}
-          {activeStep === "registration" && renderRegistration()}
-          {activeStep === "guardian" && renderGuardian()}
-          {activeStep === "notes" && renderAcademic()}
-          {renderStepNavigation()}
+        <div className="space-y-6 pb-6">
+          {renderContact()}
+          {renderRegistration()}
+          {isTabEnabled("guardian") && renderGuardian()}
+          {isTabEnabled("academic") && renderAcademic()}
         </div>
       </FormModal>
       <ConfirmAlertDialog
