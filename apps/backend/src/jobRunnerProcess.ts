@@ -36,12 +36,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  let payload: unknown = {};
-  try {
-    payload = JSON.parse(job.payload);
-  } catch (error) {
-    console.error(`[Job Runner Process] Failed to parse payload for job ${job.id}:`, error);
-  }
+  const payload = job.payload;
 
   console.log(`[Job Runner Process] Running job ${job.id} (${job.moduleId}:${job.kind}) for tenant ${job.tenantId}`);
   

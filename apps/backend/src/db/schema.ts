@@ -1,15 +1,15 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb } from 'drizzle-orm/pg-core';
 import type { PlatformRole } from '@mms/shared';
 
 export const collections = pgTable('collections', {
   name: text('name').primaryKey(),
-  data: text('data').notNull(),
+  data: jsonb('data').$type<unknown[]>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 });
 
 export const objects = pgTable('objects', {
   key: text('key').primaryKey(),
-  data: text('data').notNull(),
+  data: jsonb('data').$type<unknown>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 });
 
@@ -17,7 +17,7 @@ export const objects = pgTable('objects', {
 export const authArtifacts = pgTable('auth_artifacts', {
   id: text('id').primaryKey(),
   kind: text('kind').notNull(),
-  payload: text('payload').notNull(),
+  payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
   expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -52,7 +52,7 @@ export const tenantUsers = pgTable('tenant_users', {
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
   /** Non-auth profile fields from legacy JSON user rows. */
-  profileJson: text('profile_json'),
+  profileJson: jsonb('profile_json').$type<Record<string, unknown>>(),
 }, (table) => [
   uniqueIndex('tenant_users_workspace_login_email_idx').on(table.workspaceSubdomain, table.loginEmail),
   index('tenant_users_workspace_idx').on(table.workspaceSubdomain),
@@ -66,7 +66,7 @@ export const dataMigrations = pgTable('data_migrations', {
 export const contacts = pgTable('contacts', {
   id: text('id').primaryKey(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
-  customData: text('custom_data').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   index('contacts_workspace_subdomain_idx').on(table.workspaceSubdomain),
@@ -80,7 +80,7 @@ export const backgroundJobs = pgTable('background_jobs', {
   kind: text('kind').notNull(),
   status: text('status').notNull().default('pending'),
   label: text('label').notNull(),
-  payload: text('payload').notNull(),
+  payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
   progressCurrent: integer('progress_current'),
   progressTotal: integer('progress_total'),
   artifactId: text('artifact_id'),

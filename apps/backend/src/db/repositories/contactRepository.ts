@@ -4,16 +4,10 @@ import { getDb } from '../dbClient.js';
 import { contacts } from '../schema.js';
 
 function rowToContact(row: typeof contacts.$inferSelect): Contact {
-  try {
-    const extra = JSON.parse(row.customData) as Omit<Contact, 'id'>;
-    return {
-      ...extra,
-      id: row.id,
-    } as Contact;
-  } catch (error) {
-    console.error(`Failed to parse contact customData for id=${row.id}:`, error);
-    return { id: row.id } as Contact;
-  }
+  return {
+    ...(row.customData as Omit<Contact, 'id'>),
+    id: row.id,
+  } as Contact;
 }
 
 export async function listContactsByWorkspace(workspaceSubdomain: string): Promise<Contact[]> {
@@ -50,7 +44,6 @@ export async function saveContact(workspaceSubdomain: string, contact: Contact):
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const id = String(processedContact.id);
   const { id: _, ...extra } = processedContact;
-  const customDataJson = JSON.stringify(extra);
   const db = getDb();
 
   const existing = await db
@@ -62,7 +55,7 @@ export async function saveContact(workspaceSubdomain: string, contact: Contact):
     await db
       .update(contacts)
       .set({
-        customData: sql`(COALESCE(NULLIF(${contacts.customData}, ''), '{}')::jsonb || ${customDataJson}::jsonb)::text`,
+        customData: sql`COALESCE(${contacts.customData}, '{}'::jsonb) || ${JSON.stringify(extra)}::jsonb`,
         updatedAt: new Date(),
       })
       .where(and(eq(contacts.workspaceSubdomain, subdomain), eq(contacts.id, id)));
@@ -70,7 +63,7 @@ export async function saveContact(workspaceSubdomain: string, contact: Contact):
     await db.insert(contacts).values({
       id,
       workspaceSubdomain: subdomain,
-      customData: customDataJson,
+      customData: extra,
       updatedAt: new Date(),
     });
   }
@@ -88,7 +81,7 @@ export async function bulkSaveContacts(workspaceSubdomain: string, list: Contact
     return {
       id,
       workspaceSubdomain: subdomain,
-      customData: JSON.stringify(extra),
+      customData: extra,
       updatedAt: new Date(),
     };
   });
@@ -99,7 +92,7 @@ export async function bulkSaveContacts(workspaceSubdomain: string, list: Contact
     .onConflictDoUpdate({
       target: contacts.id,
       set: {
-        customData: sql`(COALESCE(NULLIF(${contacts.customData}, ''), '{}')::jsonb || excluded.custom_data::jsonb)::text`,
+        customData: sql`COALESCE(${contacts.customData}, '{}'::jsonb) || excluded.custom_data`,
         updatedAt: sql`excluded.updated_at`,
       },
     });
@@ -129,7 +122,7 @@ export async function replaceContactsForWorkspace(
     return {
       id,
       workspaceSubdomain: subdomain,
-      customData: JSON.stringify(extra),
+      customData: extra,
       updatedAt: new Date(),
     };
   });

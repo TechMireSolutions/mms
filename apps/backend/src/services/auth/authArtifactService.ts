@@ -38,7 +38,7 @@ export async function putAuthArtifact<T>(
     .values({
       id,
       kind,
-      payload: JSON.stringify(payload),
+      payload: payload as any,
       expiresAt,
     });
   return id;
@@ -62,7 +62,7 @@ export async function takeAuthArtifact<T>(
   return {
     id: row.id,
     kind: row.kind as AuthArtifactKind,
-    payload: JSON.parse(row.payload) as T,
+    payload: row.payload as T,
     expiresAt: row.expiresAt,
   };
 }
@@ -84,7 +84,7 @@ export async function getAuthArtifact<T>(
   return {
     id: row.id,
     kind: row.kind as AuthArtifactKind,
-    payload: JSON.parse(row.payload) as T,
+    payload: row.payload as T,
     expiresAt: row.expiresAt,
   };
 }
@@ -108,7 +108,7 @@ export async function findRefreshTokenByHash<T>(
 
   for (const row of rows) {
     if (row.expiresAt.getTime() < Date.now()) continue;
-    const payload = JSON.parse(row.payload) as T & { tokenHash?: string };
+    const payload = row.payload as T & { tokenHash?: string };
     if ((payload as { tokenHash: string }).tokenHash === tokenHash) {
       return {
         id: row.id,
@@ -129,7 +129,7 @@ export async function deleteRefreshTokensForUser(userId: string): Promise<void> 
     .where(eq(authArtifacts.kind, 'refresh_token'));
 
   for (const row of rows) {
-    const payload = JSON.parse(row.payload) as { userId?: string };
+    const payload = row.payload as { userId?: string };
     if (payload.userId === userId) {
       await db().delete(authArtifacts).where(eq(authArtifacts.id, row.id));
     }
@@ -142,7 +142,7 @@ export async function deleteAuthArtifactsForWorkspace(subdomain: string): Promis
   const rows = await db().select().from(authArtifacts);
   for (const row of rows) {
     try {
-      const payload = JSON.parse(row.payload) as Record<string, unknown>;
+      const payload = row.payload as Record<string, unknown>;
       const userObj = payload.user && typeof payload.user === 'object' ? (payload.user as Record<string, unknown>) : null;
       if (
         payload.workspaceSubdomain === normalized ||

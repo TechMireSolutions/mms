@@ -166,7 +166,7 @@ export async function getCollection(name: string): Promise<unknown[] | null> {
     const rows = await activeDb().select().from(schema.collections).where(eq(schema.collections.name, storageName));
     const row = rows[0];
     if (!row) return null;
-    return JSON.parse(row.data) as unknown[];
+    return row.data;
   } catch (error) {
     console.error(`Error getting collection "${name}":`, error);
     throw error;
@@ -177,12 +177,11 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
   try {
     const storageName = resolveCollectionStorageName(name);
     const processedData = applyTitleCaseRecursive(data) as unknown[];
-    const serialized = JSON.stringify(processedData);
     await activeDb().insert(schema.collections)
-      .values({ name: storageName, data: serialized })
+      .values({ name: storageName, data: processedData })
       .onConflictDoUpdate({
         target: schema.collections.name,
-        set: { data: serialized },
+        set: { data: processedData },
       });
 
     const parsed = parseTenantScopedStorageKey(storageName);
@@ -205,7 +204,7 @@ export async function getObject(key: string): Promise<unknown | null> {
     const rows = await activeDb().select().from(schema.objects).where(eq(schema.objects.key, storageKey));
     const row = rows[0];
     if (!row) return null;
-    return JSON.parse(row.data) as unknown;
+    return row.data;
   } catch (error) {
     console.error(`Error getting object "${key}":`, error);
     throw error;
@@ -216,12 +215,11 @@ export async function saveObject(key: string, data: unknown): Promise<void> {
   try {
     const storageKey = resolveObjectStorageKey(key);
     const processedData = applyTitleCaseRecursive(data);
-    const serialized = JSON.stringify(processedData);
     await activeDb().insert(schema.objects)
-      .values({ key: storageKey, data: serialized })
+      .values({ key: storageKey, data: processedData })
       .onConflictDoUpdate({
         target: schema.objects.key,
-        set: { data: serialized },
+        set: { data: processedData },
       });
   } catch (error) {
     console.error(`Error saving object "${key}":`, error);
@@ -245,9 +243,9 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
       const parsed = parseTenantScopedStorageKey(row.name);
       if (tenant) {
         if (!parsed || parsed.subdomain !== tenant) continue;
-        collections[parsed.logicalKey] = JSON.parse(row.data) as unknown[];
+        collections[parsed.logicalKey] = row.data;
       } else if (!parsed) {
-        collections[row.name] = JSON.parse(row.data) as unknown[];
+        collections[row.name] = row.data;
       }
     }
 
@@ -260,9 +258,9 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
 
       if (tenant) {
         if (!parsed || parsed.subdomain !== tenant) continue;
-        objects[parsed.logicalKey] = JSON.parse(row.data) as unknown;
+        objects[parsed.logicalKey] = row.data;
       } else if (!parsed) {
-        objects[row.key] = JSON.parse(row.data) as unknown;
+        objects[row.key] = row.data;
       }
     }
 
@@ -349,7 +347,7 @@ export async function getCollectionByStorageName(name: string): Promise<unknown[
   const rows = await activeDb().select().from(schema.collections).where(eq(schema.collections.name, name));
   const row = rows[0];
   if (!row) return null;
-  return JSON.parse(row.data) as unknown[];
+  return row.data;
 }
 
 /** Deletes a collection row by exact storage name. */
@@ -373,7 +371,7 @@ export async function getObjectByStorageKey(key: string): Promise<unknown | null
   const rows = await activeDb().select().from(schema.objects).where(eq(schema.objects.key, key));
   const row = rows[0];
   if (!row) return null;
-  return JSON.parse(row.data) as unknown;
+  return row.data;
 }
 
 /** Lightweight DB connectivity check for `/ready`. */

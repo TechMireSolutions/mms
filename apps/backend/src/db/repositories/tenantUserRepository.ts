@@ -49,7 +49,7 @@ function splitProfileFields(user: TenantUserRow): {
         typeof user.pendingLoginEmail === 'string' ? user.pendingLoginEmail.toLowerCase() : null,
       createdAt:
         typeof user.createdAt === 'string' ? new Date(user.createdAt) : new Date(),
-      profileJson: Object.keys(profile).length > 0 ? JSON.stringify(profile) : null,
+      profileJson: Object.keys(profile).length > 0 ? profile : null,
     },
     profile,
   };
@@ -70,12 +70,8 @@ function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUserRow {
   };
 
   if (row.profileJson) {
-    try {
-      const extra = JSON.parse(row.profileJson) as Record<string, unknown>;
-      return { ...extra, ...base };
-    } catch {
-      return base;
-    }
+    const extra = row.profileJson as Record<string, unknown>;
+    return { ...extra, ...base };
   }
 
   return base;

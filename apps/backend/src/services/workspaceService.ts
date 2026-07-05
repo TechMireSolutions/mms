@@ -197,7 +197,7 @@ export async function createWorkspace(workspaceInput: {
       .from(collections)
       .where(eq(collections.name, WORKSPACES_COLLECTION));
 
-    const workspaces: Workspace[] = rows[0] ? (JSON.parse(rows[0].data) as Workspace[]) : [];
+    const workspaces: Workspace[] = rows[0] ? (rows[0].data as Workspace[]) : [];
 
     if (workspaces.some((ws) => ws.subdomain === subdomain)) {
       throw Object.assign(new Error('This workspace subdomain is already taken.'), {
