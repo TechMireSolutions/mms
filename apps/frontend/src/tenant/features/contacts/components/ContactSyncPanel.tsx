@@ -20,7 +20,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Contact, normalizeToE164, parsePhoneNumber } from "@mms/shared";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { isApiError } from "@/lib/apiClient";
-import { queryClientInstance } from "@/lib/query-client";
+import { queryClientInstance } from "@/lib/queryClient";
 import { CONTACTS_GOOGLE_SYNC_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 

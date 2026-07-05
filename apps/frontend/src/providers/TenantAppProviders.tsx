@@ -6,7 +6,7 @@ import { BrandingPaletteProvider } from '@/lib/contexts/BrandingPaletteContext';
 import { TenantProvider } from '@/lib/contexts/TenantContext';
 import { TranslationProvider } from '@/lib/contexts/TranslationContext';
 import { ContactConfigProvider } from '@/lib/contexts/ContactConfigContext';
-import { queryClientInstance } from '@/lib/query-client';
+import { queryClientInstance } from '@/lib/queryClient';
 import RootErrorBoundary from '@/components/routing/RootErrorBoundary';
 import QueryDevtools from '@/components/dev/QueryDevtools';
 import { Toaster } from '@/components/ui/toaster';

@@ -6,7 +6,7 @@ import {
   getContactsSyncConflicts,
 } from '@/lib/contacts/contactsSyncOutbox';
 import { useContactMutations, CONTACTS_QUERY_KEY } from '@/tenant/features/contacts/hooks/useContacts';
-import { queryClientInstance } from '@/lib/query-client';
+import { queryClientInstance } from '@/lib/queryClient';
 import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';
 

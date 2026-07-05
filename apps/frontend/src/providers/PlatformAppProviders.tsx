@@ -3,7 +3,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { PlatformAuthProvider } from '@/platform/lib/PlatformAuthContext';
 import { ApexBootPrefetch } from '@/platform/components/ApexBootPrefetch';
-import { queryClientInstance } from '@/lib/query-client';
+import { queryClientInstance } from '@/lib/queryClient';
 import RootErrorBoundary from '@/components/routing/RootErrorBoundary';
 import { Toaster } from '@/components/ui/toaster';
 

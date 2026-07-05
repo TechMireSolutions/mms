@@ -5,7 +5,7 @@ import {
   type TeachersWidgetAggregateResult,
   type Contact,
 } from "@mms/shared";
-import { queryClientInstance } from "@/lib/query-client";
+import { queryClientInstance } from "@/lib/queryClient";
 import {
   CONTACTS_METRICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
