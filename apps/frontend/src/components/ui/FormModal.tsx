@@ -99,8 +99,73 @@ export function FormModal<K extends string = string>({
     return (Array.isArray(error) ? error : [error]).filter(Boolean);
   }, [error]);
 
-  const panelClassName = tall ? 'h-[88vh] max-h-[700px]' : undefined;
   const hasTabs = !builderMode && tabs && tabs.length > 1 && activeTab !== undefined && onTabChange;
+
+  const [domProgress, setDomProgress] = React.useState<number | undefined>(undefined);
+  const [domLabel, setDomLabel] = React.useState<string | undefined>(undefined);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (open && !hasTabs && progress === undefined) {
+      const updateProgress = () => {
+        if (!containerRef.current) return;
+        const inputs = Array.from(containerRef.current.querySelectorAll('input, select, textarea')) as (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)[];
+        if (inputs.length === 0) {
+          setDomProgress(undefined);
+          setDomLabel(undefined);
+          return;
+        }
+
+        const targetInputs = inputs.filter(el => {
+          const type = el.getAttribute('type');
+          if (type === 'submit' || type === 'button' || type === 'hidden') return false;
+          return el.offsetParent !== null;
+        });
+
+        if (targetInputs.length === 0) {
+          setDomProgress(undefined);
+          setDomLabel(undefined);
+          return;
+        }
+
+        const requiredInputs = targetInputs.filter(el => el.required || el.getAttribute('aria-required') === 'true' || el.classList.contains('required'));
+        const sourceList = requiredInputs.length > 0 ? requiredInputs : targetInputs;
+
+        const filledCount = sourceList.filter(el => {
+          if (el.type === 'checkbox' || el.type === 'radio') {
+            return (el as HTMLInputElement).checked;
+          }
+          return el.value.trim() !== '';
+        }).length;
+
+        const percentage = Math.round((filledCount / sourceList.length) * 100);
+        setDomProgress(percentage);
+        setDomLabel(`${filledCount}/${sourceList.length}`);
+      };
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      updateProgress();
+
+      const observer = new MutationObserver(updateProgress);
+      observer.observe(container, { childList: true, subtree: true, attributes: true });
+
+      container.addEventListener('input', updateProgress);
+      container.addEventListener('change', updateProgress);
+
+      return () => {
+        container.removeEventListener('input', updateProgress);
+        container.removeEventListener('change', updateProgress);
+        observer.disconnect();
+      };
+    } else {
+      setDomProgress(undefined);
+      setDomLabel(undefined);
+    }
+  }, [open, hasTabs, progress]);
+
+  const panelClassName = tall ? 'h-[88vh] max-h-[700px]' : undefined;
 
   const effectiveSize = useMemo((): NonNullable<FormModalProps<K>['size']> => {
     const requested = size ?? 'lg';
@@ -119,16 +184,16 @@ export function FormModal<K extends string = string>({
     if (hasTabs && activeIndex !== -1 && tabs) {
       return Math.round(((activeIndex + 1) / tabs.length) * 100);
     }
-    return undefined;
-  }, [progress, hasTabs, activeIndex, tabs]);
+    return domProgress;
+  }, [progress, hasTabs, activeIndex, tabs, domProgress]);
 
   const computedProgressLabel = useMemo(() => {
     if (progressLabel !== undefined) return progressLabel;
     if (hasTabs && activeIndex !== -1 && tabs) {
       return `${activeIndex + 1}/${tabs.length}`;
     }
-    return undefined;
-  }, [progressLabel, hasTabs, activeIndex, tabs]);
+    return domLabel;
+  }, [progressLabel, hasTabs, activeIndex, tabs, domLabel]);
 
   const resolvedHeaderExtra = useMemo(() => {
     if (computedProgress === undefined) return headerExtra;
@@ -167,7 +232,7 @@ export function FormModal<K extends string = string>({
   }, [showBuilderToggle, builderMode, onBuilderModeChange, t]);
 
   const body = (
-    <div lang={lang} dir={dir} className="h-full">
+    <div ref={containerRef} lang={lang} dir={dir} className="h-full">
       <FormErrorBanner errors={errors} />
       {hasTabs ? (
         <TabsPrimitive.Root
