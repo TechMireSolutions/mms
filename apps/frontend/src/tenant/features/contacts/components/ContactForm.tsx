@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
 import { notify } from "@/lib/notify";
@@ -479,11 +480,11 @@ export default function ContactForm({
 
       {isFieldEnabled("basic", "notes") && (
         <Field label={t("teachers.field.notes")} id="notes" error={getFieldError("notes")}>
-          <textarea
+          <Textarea
             value={(contactDraft.notes as string) || ""}
             onChange={(e) => updateDraft({ notes: e.target.value })}
             placeholder={t("teachers.field.notes")}
-            className="w-full min-h-[88px] p-3.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
+            className="min-h-[88px] resize-y"
           />
         </Field>
       )}
