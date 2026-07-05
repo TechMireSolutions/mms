@@ -160,7 +160,7 @@ export function DatePicker({
   }
 
   return (
-    <div className={cn("relative flex w-full items-center rounded-lg border border-border bg-background/50 backdrop-blur-md px-3 py-1 shadow-sm transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:border-primary/50 focus-within:bg-background/80", className)}>
+    <div className={cn("relative flex w-full items-center rounded-lg border border-border bg-background px-3 py-2.5 min-h-[44px] text-sm text-foreground focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40 transition-all", className)}>
       <input
         type="text"
         id={resolvedId}
