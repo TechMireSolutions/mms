@@ -24,6 +24,8 @@ This specification governs all code, form structure, layout, UX/UI patterns, and
   - Multi-select choices and lists **MUST initialize to `[]`**.
 - Keep form state simple, clean, and flat to simplify payload validation mapping.
 - **Form Fields Accessibility**: Every input field, select box, textarea, and picker control must declare explicit `name` and `id` properties. Primitives must fallback automatically to `React.useId()` if not passed down.
+- **Unified Phone Fields**: Phone inputs must use a single, unified text input field (marked with `type="tel"`) instead of separate country code (`cc`) and number fields to support standard browser autofill and copy-paste. Apply a blur handler to parse and split it into country code and local number values for database storage.
+- **Zero-Click List Pre-population**: Forms with editable list sections (e.g. phones, emails, addresses, socials, emergency contacts) must pre-populate exactly one empty default item when the list is empty to save the user an initial "Add" click. Completely blank/unedited list rows must be stripped out by a sanitization/clean helper prior to validation and database saving.
 
 ### Rule 3: Decimal Precision & Currency Math
 - Currency and fee values must be treated as strings on input and validated without floating-point arithmetic to prevent IEEE 754 precision inaccuracies.

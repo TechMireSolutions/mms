@@ -26,6 +26,10 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | Settings monolithic panels | Split into hooks + section components; `useBackupRestore`, `ModuleSettingsNavGrid`, `settingsSectionComponents` |
 | Accessible branding theme | `logoBrandColors.ts` + `brandingTheme.ts` WCAG AA tokens |
 | Legacy `mms_token` cleanup | Removed — cookie-only session via `apiClient` |
+| Composite primary keys | Changed to `(workspace_subdomain, id)` for strict isolation in schema.ts |
+| Form modal progress tracking | Built progress scanning inside FormModal.tsx for forms |
+| Linter warnings cleanup | Fixed all react-hooks dependency array and unused variable lint errors |
+| Unified Phone & Zero-Click Form | Unified phone inputs & zero-click form sublist auto-population in ContactForm and Branding |
 
 ## Open priorities
 

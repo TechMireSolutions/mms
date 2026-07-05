@@ -40,5 +40,9 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 - **Cross-Module Boundaries**: Replaced direct collection imports with paginated `/api/...` pagination, batch resolution endpoints (`/resolve`), and server KPI analytics, removing legacy frontend list queries.
 - **Offline/Sync UX & Columns**: Shipped conflict resolution merge logic on sync and `userColumnPrefsService` workspace column customizing.
 - **Metrics & Subdomains**: Enabled server-side `/metrics` endpoints, Work metrics strips, and dynamic subdomain Google OAuth synchronization lifecycles.
+- **Composite Keys & Relational Schemas**: Converted primary keys of migrated tables to composite `(workspace_subdomain, id)` keys to ensure strict tenant isolation in schema.ts.
+- **Form Progress Scanning**: Implemented automatic progress tracking inside FormModal.tsx for both multi-tab and single-page forms.
+- **Linter Cleanups**: Resolved 100% of react-hooks dependency and unused variable lint errors across all feature modules.
+- **Unified Phone & Zero-Click Form Rows**: Consolidated split phone fields in ContactForm into a single input field, and implemented automatic first-row pre-population for form lists (phones, emails, addresses, socials, emergency contacts) with background cleanups.
 
 Do not reintroduce resolved violations.
