@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { Calendar, FileText, GraduationCap, Hash, User, Users } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
+import { formatDate } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
@@ -117,7 +118,7 @@ export default function StudentForm({
   );
 
   const linkedGender = linkedContact?.gender?.trim() || "";
-  const linkedDob = linkedContact?.dob?.trim() || "";
+  const linkedDob = linkedContact?.dob?.trim() ? formatDate(linkedContact.dob.trim()) : "";
 
   const [typedDuplicateReason, setTypedDuplicateReason] = useState<StudentDuplicateReason | null>(null);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
