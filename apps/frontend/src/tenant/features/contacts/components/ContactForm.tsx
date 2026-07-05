@@ -369,7 +369,7 @@ export default function ContactForm({
                 value={contactDraft.firstName || ""}
                 onChange={(e) => updateDraft({ firstName: e.target.value })}
                 placeholder={t("contacts.reportFields.firstName")}
-                className="min-h-[44px] pl-10"
+                className="pl-10"
               />
             </div>
           </Field>
@@ -387,7 +387,7 @@ export default function ContactForm({
                 value={contactDraft.lastName || ""}
                 onChange={(e) => updateDraft({ lastName: e.target.value })}
                 placeholder={t("contacts.reportFields.lastName")}
-                className="min-h-[44px] pl-10"
+                className="pl-10"
               />
             </div>
           </Field>
@@ -417,7 +417,7 @@ export default function ContactForm({
                 type="date"
                 value={contactDraft.dob || ""}
                 onChange={(e) => updateDraft({ dob: e.target.value })}
-                className="min-h-[44px] pl-10"
+                className="pl-10"
               />
             </div>
           </Field>
@@ -438,7 +438,7 @@ export default function ContactForm({
                   updateDraft({ cnic: formatted });
                 }}
                 placeholder={t("contacts.form.cnicPlaceholder") || "99999 9999999 9"}
-                className="min-h-[44px] pl-10"
+                className="pl-10"
               />
             </div>
           </Field>
@@ -545,7 +545,7 @@ export default function ContactForm({
                         onChange={(e) => updatePhone(idx, { countryCode: e.target.value })}
                         onBlur={() => handlePhoneBlur(idx)}
                         placeholder="+92"
-                        className="min-h-[44px] pl-9 font-medium"
+                        className="pl-9 font-medium"
                       />
                     </div>
                     <div className="flex-1 relative flex items-center group/input">
@@ -566,7 +566,7 @@ export default function ContactForm({
                         }}
                         onBlur={() => handlePhoneBlur(idx)}
                         placeholder={t("contacts.form.phoneNumberPlaceholder")}
-                        className={`min-h-[44px] pl-10 ${numError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        className={cn("pl-10", numError && "border-destructive focus-visible:ring-destructive")}
                       />
                     </div>
                   </div>
@@ -644,7 +644,7 @@ export default function ContactForm({
                       value={email.address || ""}
                       onChange={(e) => updateEmail(idx, { address: e.target.value })}
                       placeholder={t("auth.emailAddress")}
-                      className={`min-h-[44px] pl-10 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                      className={cn("pl-10", emailError && "border-destructive focus-visible:ring-destructive")}
                     />
                   </div>
                   {emailError && (
@@ -729,7 +729,7 @@ export default function ContactForm({
                           value={addr.line1 || ""}
                           onChange={(e) => updateAddress(idx, { line1: e.target.value })}
                           placeholder={t("contacts.reportFields.streetAddress")}
-                          className={`min-h-[44px] pl-10 ${line1Error ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                          className={cn("pl-10", line1Error && "border-destructive focus-visible:ring-destructive")}
                         />
                       </div>
                       {line1Error && (
@@ -742,7 +742,7 @@ export default function ContactForm({
                           value={addr.city || ""}
                           onChange={(e) => updateAddress(idx, { city: e.target.value })}
                           placeholder={t("contacts.reportFields.city")}
-                          className={`min-h-[44px] ${cityError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                          className={cn(cityError && "border-destructive focus-visible:ring-destructive")}
                         />
                         {cityError && (
                           <p className="text-[10px] text-destructive mt-1 font-medium">{cityError}</p>
@@ -752,13 +752,11 @@ export default function ContactForm({
                         value={addr.state || ""}
                         onChange={(e) => updateAddress(idx, { state: e.target.value })}
                         placeholder={t("contacts.reportFields.state")}
-                        className="min-h-[44px]"
                       />
                       <Input
                         value={addr.country || ""}
                         onChange={(e) => updateAddress(idx, { country: e.target.value })}
                         placeholder={t("contacts.reportFields.country")}
-                        className="min-h-[44px]"
                       />
                     </div>
                   </div>
@@ -832,7 +830,7 @@ export default function ContactForm({
                       value={soc.url || ""}
                       onChange={(e) => updateSocial(idx, { url: e.target.value })}
                       placeholder="Username, Handle or Link URL"
-                      className={`min-h-[44px] pl-10 ${urlError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                      className={cn("pl-10", urlError && "border-destructive focus-visible:ring-destructive")}
                     />
                   </div>
                   {urlError && (
