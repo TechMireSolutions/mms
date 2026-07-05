@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/DatePicker";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
 import { Field } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT, FORM_SELECT } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_TEXTAREA, FORM_SELECT } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactById } from "@/tenant/features/contacts/hooks/useContacts";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
@@ -242,7 +242,7 @@ export function TeacherForm({
             value={teacherDraft.notes || ""}
             onChange={(event) => updateDraft({ notes: event.target.value })}
             placeholder="Employment notes..."
-            className="w-full min-h-[80px] p-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-y"
+            className={`${FORM_TEXTAREA} min-h-[80px]`}
           />
         </Field>
       </section>

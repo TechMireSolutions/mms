@@ -19,7 +19,7 @@ import {
   removeQuestionSourceBook,
 } from '@/lib/data/questionBankSourceBooks';
 import { FormModal } from '@/components/ui/FormModal';
-import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_INPUT, FORM_TEXTAREA, FORM_LABEL } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
@@ -53,7 +53,7 @@ function renderSourceInput(
         <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
         <textarea
           id={inputId}
-          className={`${FORM_INPUT} resize-none`}
+          className={`${FORM_TEXTAREA} resize-none`}
           rows={2}
           value={value}
           onChange={(event) => onChange(event.target.value)}

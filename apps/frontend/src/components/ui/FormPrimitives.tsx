@@ -11,9 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
 export const INPUT = FORM_INPUT;
 export const SELECT = FORM_SELECT;
+export const TEXTAREA = FORM_TEXTAREA;
 export const LABEL = FORM_LABEL;
 export const COLLECTION_CARD = "rounded-xl border border-border bg-muted/20 p-3 space-y-3";
 export const COLLECTION_BODY = "space-y-3";
@@ -495,7 +496,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
       <textarea
         id={field.key}
         name={field.key}
-        className={cn(INPUT, "resize-none h-20", error && "border-destructive focus-visible:ring-destructive")}
+        className={cn(TEXTAREA, "resize-none h-20", error && "border-destructive focus-visible:ring-destructive")}
         value={String(displayValue)}
         onChange={(event) => onChange(event.target.value)}
         placeholder={field.placeholder || ""}

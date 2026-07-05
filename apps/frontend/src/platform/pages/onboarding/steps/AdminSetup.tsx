@@ -4,7 +4,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHint } from "@mms/shared";
 import { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_INPUT_ICON, FORM_LABEL, FORM_CHECKBOX } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 /** The subset of onboarding data used by this step. */
@@ -200,7 +200,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           id="terms"
           checked={data.agreedTerms || false}
           onChange={(event) => update("agreedTerms", event.target.checked)}
-          className="mt-0.5 w-4 h-4 rounded border-border accent-primary"
+          className={`${FORM_CHECKBOX} mt-0.5`}
         />
         <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed">
           {t("onboarding.agreeTerms")}

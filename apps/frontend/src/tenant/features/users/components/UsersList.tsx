@@ -18,6 +18,7 @@ import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { UserRoleBadge, UserStatusBadge } from '@/tenant/features/users/components/UserBadges';
+import { FORM_CHECKBOX } from '@/components/ui/formStyles';
 
 interface AvatarProps {
   user: SystemUser;
@@ -195,7 +196,7 @@ export function UsersList({
                         type="checkbox"
                         checked={selected.length === filtered.length && filtered.length > 0}
                         onChange={toggleAll}
-                        className="rounded"
+                        className={FORM_CHECKBOX}
                         aria-label={t('users.selectAll')}
                       />
                     </th>
@@ -232,7 +233,7 @@ export function UsersList({
                           type="checkbox"
                           checked={selected.includes(user.id)}
                           onChange={() => toggleSelect(user.id)}
-                          className="rounded"
+                          className={FORM_CHECKBOX}
                           aria-label={t('users.selectRow', { name: user.name })}
                         />
                       </td>

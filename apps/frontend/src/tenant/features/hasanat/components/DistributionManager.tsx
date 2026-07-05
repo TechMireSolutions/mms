@@ -13,7 +13,7 @@ import {
 } from "@mms/shared";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_TEXTAREA, FORM_LABEL } from "@/components/ui/formStyles";
 import { RegistryPersonSelect } from "@/components/ui/RegistryPersonSelect";
 import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -308,7 +308,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                     </label>
                     {field.type === "textarea" ? (
                       <textarea
-                        className={FORM_INPUT + " min-h-[80px] py-2"}
+                        className={FORM_TEXTAREA + " min-h-[80px] py-2"}
                         value={fieldValue as string}
                         onChange={(event) => updateField(field.id as any, event.target.value as any)}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}

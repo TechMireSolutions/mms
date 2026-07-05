@@ -4,7 +4,7 @@ import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { CalculatedFee } from '@/lib/data/enrollmentData';
 import { useEnrollmentConfig } from "@/tenant/features/enrollments/hooks/useEnrollmentConfig";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA, FORM_CHECKBOX } from "@/components/ui/formStyles";
 
 interface RowProps {
   label: string;
@@ -180,7 +180,7 @@ export function Step6Confirmation({
                       type="checkbox"
                       checked={!!fieldValue}
                       onChange={(event) => onCustomFieldChange(field.id, event.target.checked)}
-                      className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
+                      className={FORM_CHECKBOX}
                     />
                     <span className="text-xs font-medium text-foreground">{field.label}</span>
                   </label>

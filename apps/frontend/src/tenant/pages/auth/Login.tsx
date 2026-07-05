@@ -13,7 +13,7 @@ import {
 import { requiresTwoFactor } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { FORM_ERROR, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_ERROR, FORM_INPUT_ICON, FORM_LABEL, FORM_CHECKBOX } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 const REMEMBER_EMAIL_KEY = "mms_login_remember_email";
@@ -276,7 +276,7 @@ export default function Login(): React.ReactElement {
                   persistRememberedEmail("", false);
                 }
               }}
-              className="h-4 w-4 shrink-0 rounded border-border text-primary accent-primary"
+              className={FORM_CHECKBOX}
             />
             <span className="text-sm text-muted-foreground">{t("auth.rememberMe")}</span>
           </label>
