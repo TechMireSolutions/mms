@@ -1190,6 +1190,7 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
+                  style={{ zIndex: 100 - idx }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500/60 transition-colors group-hover:bg-rose-500" />

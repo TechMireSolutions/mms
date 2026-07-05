@@ -519,10 +519,10 @@ export default function StudentForm({
         footerStart={footerStart}
       >
         <div className="space-y-6 pb-6">
-          {renderContact()}
-          {renderRegistration()}
-          {isTabEnabled("guardian") && renderGuardian()}
-          {isTabEnabled("academic") && renderAcademic()}
+          <div className="relative z-30">{renderContact()}</div>
+          <div className="relative z-20">{renderRegistration()}</div>
+          {isTabEnabled("guardian") && <div className="relative z-10">{renderGuardian()}</div>}
+          {isTabEnabled("academic") && <div className="relative z-0">{renderAcademic()}</div>}
         </div>
       </FormModal>
       <ConfirmAlertDialog

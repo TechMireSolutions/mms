@@ -186,7 +186,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
           </div>
         </fieldset>
 
-        <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
+        <fieldset className="relative z-20 overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-purple-500/60 transition-colors group-hover:bg-purple-500" />
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
             <Users className="w-4 h-4 text-purple-500/70 group-hover:text-purple-500 transition-colors" />
@@ -213,7 +213,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
           </div>
         </fieldset>
 
-        <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
+        <fieldset className="relative z-10 overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
             <Coins className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
