@@ -2,6 +2,38 @@ import { useEffect, useRef } from 'react';
 import { getWorkspaceLocalStoragePrefix } from '@/lib/db';
 import { parseTenantFromHost } from '@mms/shared';
 import { getAppDomain } from '@/lib/config/tenantConfig';
+import { queryClientInstance } from '@/lib/queryClient';
+
+const COLLECTION_TO_QUERY_KEYS: Record<string, string[]> = {
+  students: ['students'],
+  teachers: ['teachers'],
+  contacts: ['contacts'],
+  sessions: ['sessions'],
+  attendance_records: ['attendance'],
+  finance_invoices: ['finance'],
+  finance_payments: ['finance'],
+  obligation_types: ['obligations'],
+  obligation_distributions: ['obligations'],
+  obligation_collections: ['obligations'],
+  mujtahids: ['obligations'],
+  mujtahid_reps: ['obligations'],
+  wakala_types: ['obligations'],
+  exams: ['examinations'],
+  exam_results: ['examinations'],
+  questions: ['question-bank'],
+  tests: ['question-bank'],
+  assessment_results: ['question-bank'],
+  users: ['users'],
+  user_activity_logs: ['users'],
+  hasanat_denoms: ['hasanat'],
+  hasanat_batches: ['hasanat'],
+  hasanat_distributions: ['hasanat'],
+  hasanat_redemptions: ['hasanat'],
+  enrollments: ['enrollments'],
+  accounting_accounts: ['accounting'],
+  accounting_entries: ['accounting'],
+  accounting_fiscal_years: ['accounting'],
+};
 
 /**
  * A custom React hook that maintains a persistent WebSocket connection to the backend
@@ -37,12 +69,21 @@ export function useWebSocketSync(): void {
         try {
           const message = JSON.parse(event.data);
           if (message.event === 'database-update') {
-            const { key } = message;
+            const { key, type } = message;
             const prefix = getWorkspaceLocalStoragePrefix();
             const storageKey = `${prefix}${key}`;
 
             console.log(`[WS-Sync] Invaliding local cache key "${storageKey}" due to remote update.`);
             localStorage.removeItem(storageKey);
+
+            // Invalidate corresponding TanStack Query keys if this is a collection update
+            if (type === 'collection') {
+              const queryPrefixes = COLLECTION_TO_QUERY_KEYS[key] || [key];
+              for (const queryPrefix of queryPrefixes) {
+                console.log(`[WS-Sync] Invaliding TanStack Query key prefix ["${queryPrefix}"]`);
+                void queryClientInstance.invalidateQueries({ queryKey: [queryPrefix] });
+              }
+            }
 
             // Dispatch local-database-update so reactive hooks pull fresh data
             window.dispatchEvent(new Event('local-database-update'));
