@@ -112,7 +112,11 @@ export function useBrandingDraft({
     ): Promise<boolean> => {
       setSaving(true);
       try {
-        const merged = mergeBrandingSettings(data);
+        const cleanedSocialLinks = (data.socialLinks || []).filter(
+          (link) => (link.url || "").trim().length > 0,
+        );
+        const cleanedData = { ...data, socialLinks: cleanedSocialLinks };
+        const merged = mergeBrandingSettings(cleanedData);
         const result = await saveBrandingSettings(merged);
         if (!result.ok) {
           notify.error(t('settings.serverSaveFailed'), {
@@ -141,7 +145,11 @@ export function useBrandingDraft({
     async (toast?: UseBrandingDraftSaveToast): Promise<boolean> => {
       setSaving(true);
       try {
-        const persisted = mergeBrandingIdentityForSave(data, baseline);
+        const cleanedSocialLinks = (data.socialLinks || []).filter(
+          (link) => (link.url || "").trim().length > 0,
+        );
+        const cleanedData = { ...data, socialLinks: cleanedSocialLinks };
+        const persisted = mergeBrandingIdentityForSave(cleanedData, baseline);
         const result = await saveBrandingSettings(persisted);
         if (!result.ok) {
           notify.error(t('settings.serverSaveFailed'), {
@@ -149,7 +157,7 @@ export function useBrandingDraft({
           });
           return false;
         }
-        const nextData = retainThemeDraftAfterIdentitySave(persisted, data);
+        const nextData = retainThemeDraftAfterIdentitySave(persisted, cleanedData);
         setBaseline(persisted);
         setData(nextData);
         previewBrandingSettings(buildBrandingPreviewPatch(nextData, trackKeys));
