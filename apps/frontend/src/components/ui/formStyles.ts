@@ -33,4 +33,4 @@ export const FORM_CHECKBOX =
 
 /** Unified form card container style — matching the centralized Card component. */
 export const FORM_CARD =
-  'relative overflow-hidden group/card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300';
+  'relative overflow-hidden group group/card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300';

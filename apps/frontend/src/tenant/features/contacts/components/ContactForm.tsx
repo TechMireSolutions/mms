@@ -49,6 +49,7 @@ import {
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/FormPrimitives";
 import { FORM_CARD } from "@/components/ui/formStyles";
+import { SectionCard } from "@/components/ui/SectionCard";
 
 interface ContactFormProps {
   open?: boolean;
@@ -338,223 +339,236 @@ export default function ContactForm({
 
   // Tab sub-renders
   const renderBasic = () => (
-    <div className="space-y-6 text-left">
-      {isFieldEnabled("basic", "avatar") && (
-        <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 mb-2 border-b border-border/60">
-          {cropSrc && (
-            <AvatarCropper
-              src={cropSrc}
-              onCrop={(url) => {
-                updateDraft({ avatar: url });
-                setCropSrc(null);
-              }}
-              onCancel={() => setCropSrc(null)}
-            />
-          )}
-          <div className="relative flex-shrink-0 group">
-            <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-primary/30 via-accent/30 to-secondary/30 group-hover:from-primary/60 group-hover:via-accent/60 group-hover:to-secondary/60 blur-[2px] transition-all duration-500 opacity-75 group-hover:opacity-100" />
-            <div className="relative w-20 h-20 rounded-full bg-card overflow-hidden flex items-center justify-center border border-border/80 shadow-surface group-hover:scale-[1.02] transition-transform duration-300">
-              {contactDraft.avatar ? (
-                <img
-                  src={contactDraft.avatar}
-                  alt="Profile"
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              ) : (
-                <span className="text-2xl font-bold text-primary select-none">
-                  {getInitials(
-                    contactDraft.name ||
-                      `${contactDraft.firstName || ""} ${contactDraft.lastName || ""}`.trim(),
-                  )}
-                </span>
-              )}
-
-              <label className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white gap-1 rounded-full">
-                <Camera className="w-4 h-4" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">
-                  {t("account.changePhoto") || "Change"}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarChange}
-                />
-              </label>
-            </div>
-          </div>
-
-          <div className="text-center sm:text-left flex-1 min-w-0">
-            <h3 className="text-base font-bold text-foreground truncate">
-              {contactDraft.name ||
-                t("contacts.form.createNewContact") ||
-                "New Contact"}
-            </h3>
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
-              {contactDraft.gender && contactDraft.gender !== "unspecified" && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground border border-border/80">
-                  {contactDraft.gender}
-                </span>
-              )}
-              {contactDraft.isSyed && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/15 text-primary border border-primary/20">
-                  {t("contacts.reportFields.isSyed") || "Syed"}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {isFieldEnabled("basic", "firstName") && (
-          <Field
-            label={t("contacts.reportFields.firstName")}
-            required
-            error={getFieldError("firstName")}
-            id="firstName"
-          >
-            <div className="relative flex items-center group/input">
-              <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-              <Input
-                value={contactDraft.firstName || ""}
-                onChange={(e) => updateDraft({ firstName: e.target.value })}
-                placeholder={t("contacts.reportFields.firstName")}
-                className="pl-10"
-              />
-            </div>
-          </Field>
-        )}
-
-        {isFieldEnabled("basic", "lastName") && (
-          <Field
-            label={t("contacts.reportFields.lastName")}
-            error={getFieldError("lastName")}
-            id="lastName"
-          >
-            <div className="relative flex items-center group/input">
-              <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-              <Input
-                value={contactDraft.lastName || ""}
-                onChange={(e) => updateDraft({ lastName: e.target.value })}
-                placeholder={t("contacts.reportFields.lastName")}
-                className="pl-10"
-              />
-            </div>
-          </Field>
-        )}
-
-        {isFieldEnabled("basic", "gender") && (
-          <Field
-            label={t("contacts.reportFields.gender")}
-            error={getFieldError("gender")}
-            id="gender"
-          >
-            <EditableSelect
-              options={
-                genders.length > 0
-                  ? genders
-                  : ["male", "female", "other", "unspecified"]
-              }
-              value={contactDraft.gender || ""}
-              onChange={(val) => updateDraft({ gender: val.toLowerCase() })}
-              placeholder={t("contacts.form.selectOption")}
-              className="w-full"
-            />
-          </Field>
-        )}
-
-        {isFieldEnabled("basic", "dob") && (
-          <Field
-            label={t("contacts.reportFields.dob")}
-            error={getFieldError("dob")}
-            id="dob"
-          >
-            <div className="relative flex items-center group/input">
-              <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-              <Input
-                type="date"
-                value={contactDraft.dob || ""}
-                onChange={(e) => updateDraft({ dob: e.target.value })}
-                className="pl-10"
-              />
-            </div>
-          </Field>
-        )}
-
-        {isFieldEnabled("basic", "cnic") && (
-          <Field
-            label={t("contacts.form.cnic") || "CNIC"}
-            id="cnic"
-            error={getFieldError("cnic")}
-          >
-            <div className="relative flex items-center group/input">
-              <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-              <Input
-                value={contactDraft.cnic || ""}
-                onChange={(e) => {
-                  const formatted = formatCnic(e.target.value);
-                  updateDraft({ cnic: formatted });
+    <div className="space-y-4 text-left">
+      <SectionCard
+        title={t("contacts.form.createNewContact") || "Basic Info"}
+        icon={User}
+        accentColor="primary"
+      >
+        {isFieldEnabled("basic", "avatar") && (
+          <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 mb-2 border-b border-border/60">
+            {cropSrc && (
+              <AvatarCropper
+                src={cropSrc}
+                onCrop={(url) => {
+                  updateDraft({ avatar: url });
+                  setCropSrc(null);
                 }}
-                placeholder={
-                  t("contacts.form.cnicPlaceholder") || "99999 9999999 9"
-                }
-                className="pl-10"
+                onCancel={() => setCropSrc(null)}
               />
+            )}
+            <div className="relative flex-shrink-0 group">
+              <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-primary/30 via-accent/30 to-secondary/30 group-hover:from-primary/60 group-hover:via-accent/60 group-hover:to-secondary/60 blur-[2px] transition-all duration-500 opacity-75 group-hover:opacity-100" />
+              <div className="relative w-20 h-20 rounded-full bg-card overflow-hidden flex items-center justify-center border border-border/80 shadow-surface group-hover:scale-[1.02] transition-transform duration-300">
+                {contactDraft.avatar ? (
+                  <img
+                    src={contactDraft.avatar}
+                    alt="Profile"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <span className="text-2xl font-bold text-primary select-none">
+                    {getInitials(
+                      contactDraft.name ||
+                        `${contactDraft.firstName || ""} ${contactDraft.lastName || ""}`.trim(),
+                    )}
+                  </span>
+                )}
+
+                <label className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white gap-1 rounded-full">
+                  <Camera className="w-4 h-4" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">
+                    {t("account.changePhoto") || "Change"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
+                </label>
+              </div>
             </div>
-          </Field>
+
+            <div className="text-center sm:text-left flex-1 min-w-0">
+              <h3 className="text-base font-bold text-foreground truncate">
+                {contactDraft.name ||
+                  t("contacts.form.createNewContact") ||
+                  "New Contact"}
+              </h3>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
+                {contactDraft.gender &&
+                  contactDraft.gender !== "unspecified" && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground border border-border/80">
+                      {contactDraft.gender}
+                    </span>
+                  )}
+                {contactDraft.isSyed && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/15 text-primary border border-primary/20">
+                    {t("contacts.reportFields.isSyed") || "Syed"}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
-        {isFieldEnabled("basic", "isSyed") && (
-          <div className="flex flex-col justify-end min-h-[44px]">
-            <label
-              htmlFor="isSyed"
-              className={cn(
-                "flex items-center gap-3 py-3 px-4.5 rounded-xl border select-none cursor-pointer transition-all duration-300",
-                contactDraft.isSyed
-                  ? "bg-primary/10 border-primary/45 shadow-sm"
-                  : "bg-muted/5 border-border/80 hover:bg-muted/10 hover:border-border",
-              )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {isFieldEnabled("basic", "firstName") && (
+            <Field
+              label={t("contacts.reportFields.firstName")}
+              required
+              error={getFieldError("firstName")}
+              id="firstName"
             >
-              <Checkbox
-                id="isSyed"
-                checked={!!contactDraft.isSyed}
-                onCheckedChange={(checked) =>
-                  updateDraft({ isSyed: !!checked })
-                }
-                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-              />
-              <div className="flex-1 flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground">
-                  {t("contacts.reportFields.isSyed")}
-                </span>
-                <Star
-                  className={cn(
-                    "w-4 h-4 transition-all duration-300",
-                    contactDraft.isSyed
-                      ? "text-amber-500 fill-amber-500 scale-110"
-                      : "text-muted-foreground/40",
-                  )}
+              <div className="relative flex items-center group/input">
+                <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  value={contactDraft.firstName || ""}
+                  onChange={(e) => updateDraft({ firstName: e.target.value })}
+                  placeholder={t("contacts.reportFields.firstName")}
+                  className="pl-10"
                 />
               </div>
-            </label>
-          </div>
-        )}
-      </div>
+            </Field>
+          )}
+
+          {isFieldEnabled("basic", "lastName") && (
+            <Field
+              label={t("contacts.reportFields.lastName")}
+              error={getFieldError("lastName")}
+              id="lastName"
+            >
+              <div className="relative flex items-center group/input">
+                <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  value={contactDraft.lastName || ""}
+                  onChange={(e) => updateDraft({ lastName: e.target.value })}
+                  placeholder={t("contacts.reportFields.lastName")}
+                  className="pl-10"
+                />
+              </div>
+            </Field>
+          )}
+
+          {isFieldEnabled("basic", "gender") && (
+            <Field
+              label={t("contacts.reportFields.gender")}
+              error={getFieldError("gender")}
+              id="gender"
+            >
+              <EditableSelect
+                options={
+                  genders.length > 0
+                    ? genders
+                    : ["male", "female", "other", "unspecified"]
+                }
+                value={contactDraft.gender || ""}
+                onChange={(val) => updateDraft({ gender: val.toLowerCase() })}
+                placeholder={t("contacts.form.selectOption")}
+                className="w-full"
+              />
+            </Field>
+          )}
+
+          {isFieldEnabled("basic", "dob") && (
+            <Field
+              label={t("contacts.reportFields.dob")}
+              error={getFieldError("dob")}
+              id="dob"
+            >
+              <div className="relative flex items-center group/input">
+                <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  type="date"
+                  value={contactDraft.dob || ""}
+                  onChange={(e) => updateDraft({ dob: e.target.value })}
+                  className="pl-10"
+                />
+              </div>
+            </Field>
+          )}
+
+          {isFieldEnabled("basic", "cnic") && (
+            <Field
+              label={t("contacts.form.cnic") || "CNIC"}
+              id="cnic"
+              error={getFieldError("cnic")}
+            >
+              <div className="relative flex items-center group/input">
+                <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  value={contactDraft.cnic || ""}
+                  onChange={(e) => {
+                    const formatted = formatCnic(e.target.value);
+                    updateDraft({ cnic: formatted });
+                  }}
+                  placeholder={
+                    t("contacts.form.cnicPlaceholder") || "99999 9999999 9"
+                  }
+                  className="pl-10"
+                />
+              </div>
+            </Field>
+          )}
+
+          {isFieldEnabled("basic", "isSyed") && (
+            <div className="flex flex-col justify-end min-h-[44px]">
+              <label
+                htmlFor="isSyed"
+                className={cn(
+                  "flex items-center gap-3 py-3 px-4.5 rounded-xl border select-none cursor-pointer transition-all duration-300",
+                  contactDraft.isSyed
+                    ? "bg-primary/10 border-primary/45 shadow-sm"
+                    : "bg-muted/5 border-border/80 hover:bg-muted/10 hover:border-border",
+                )}
+              >
+                <Checkbox
+                  id="isSyed"
+                  checked={!!contactDraft.isSyed}
+                  onCheckedChange={(checked) =>
+                    updateDraft({ isSyed: !!checked })
+                  }
+                  className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                />
+                <div className="flex-1 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground">
+                    {t("contacts.reportFields.isSyed")}
+                  </span>
+                  <Star
+                    className={cn(
+                      "w-4 h-4 transition-all duration-300",
+                      contactDraft.isSyed
+                        ? "text-amber-500 fill-amber-500 scale-110"
+                        : "text-muted-foreground/40",
+                    )}
+                  />
+                </div>
+              </label>
+            </div>
+          )}
+        </div>
+      </SectionCard>
 
       {isFieldEnabled("basic", "notes") && (
-        <Field
-          label={t("teachers.field.notes")}
-          id="notes"
-          error={getFieldError("notes")}
+        <SectionCard
+          title={t("teachers.field.notes") || "Notes"}
+          icon={FileText}
+          accentColor="amber"
         >
-          <Textarea
-            value={(contactDraft.notes as string) || ""}
-            onChange={(e) => updateDraft({ notes: e.target.value })}
-            placeholder={t("teachers.field.notes")}
-            className="min-h-[88px] resize-y"
-          />
-        </Field>
+          <Field
+            label={t("teachers.field.notes")}
+            id="notes"
+            error={getFieldError("notes")}
+          >
+            <Textarea
+              value={(contactDraft.notes as string) || ""}
+              onChange={(e) => updateDraft({ notes: e.target.value })}
+              placeholder={t("teachers.field.notes")}
+              className="min-h-[88px] resize-y"
+            />
+          </Field>
+        </SectionCard>
       )}
     </div>
   );
