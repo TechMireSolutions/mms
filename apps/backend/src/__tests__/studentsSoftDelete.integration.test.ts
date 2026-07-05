@@ -55,6 +55,7 @@ function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
 
 describe('students soft delete routes', () => {
   beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
     vi.clearAllMocks();
   });
 
