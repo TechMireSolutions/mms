@@ -37,7 +37,7 @@ export function useWebSocketSync(): void {
         try {
           const message = JSON.parse(event.data);
           if (message.event === 'database-update') {
-            const { type, key } = message;
+            const { key } = message;
             const prefix = getWorkspaceLocalStoragePrefix();
             const storageKey = `${prefix}${key}`;
 

@@ -85,7 +85,7 @@ export function useBrandingDraft({
     };
     window.addEventListener('local-database-update', sync);
     return () => window.removeEventListener('local-database-update', sync);
-  }, [isDirty]);
+  }, [isDirty, clearSaved]);
 
   useEffect(() => {
     const merged = mergeBrandingSettings(data);

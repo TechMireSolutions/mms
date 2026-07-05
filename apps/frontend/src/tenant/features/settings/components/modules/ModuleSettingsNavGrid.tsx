@@ -80,14 +80,15 @@ export default function ModuleSettingsNavGrid({
 }: ModuleSettingsNavGridProps): React.JSX.Element {
   const { t, language } = useTranslation();
 
-  const moduleLabel = (mod: ModuleDefinition): string =>
-    translateSystemModuleLabel(mod.id, language, mod.label);
-  const moduleDesc = (mod: ModuleDefinition): string =>
-    translateSystemModuleDescription(mod.id, language, mod.description);
-  const isEnabled = (moduleId: string): boolean => enabledModules[moduleId] !== false;
   const requiredLabel = t('module.system.required');
 
   const blocks = useMemo(() => {
+    const moduleLabel = (mod: ModuleDefinition): string =>
+      translateSystemModuleLabel(mod.id, language, mod.label);
+    const moduleDesc = (mod: ModuleDefinition): string =>
+      translateSystemModuleDescription(mod.id, language, mod.description);
+    const isEnabled = (moduleId: string): boolean => enabledModules[moduleId] !== false;
+
     const nodes: React.ReactNode[] = [];
     let standaloneBatch: string[] = [];
 

@@ -32,17 +32,8 @@ import { LLM_PROVIDERS_META, type LlmProviderType, type LlmConfig } from '@mms/s
 import { Slider } from '@/components/ui/slider';
 
 
-const PROVIDER_METADATA: Record<string, { badgeBg: string; textCol: string; accentBorder: string }> = {
-  gemini: { badgeBg: 'bg-primary/10 text-primary border-primary/20', textCol: 'text-primary', accentBorder: 'border-primary/20' },
-  openai: { badgeBg: 'bg-success/10 text-success border-success/20', textCol: 'text-success', accentBorder: 'border-success/20' },
-  anthropic: { badgeBg: 'bg-warning/10 text-warning border-warning/20', textCol: 'text-warning', accentBorder: 'border-warning/20' },
-  deepseek: { badgeBg: 'bg-info/10 text-info border-info/20', textCol: 'text-info', accentBorder: 'border-info/20' },
-  openrouter: { badgeBg: 'bg-primary/10 text-primary border-primary/20', textCol: 'text-primary', accentBorder: 'border-primary/20' },
-  groq: { badgeBg: 'bg-warning/10 text-warning border-warning/20', textCol: 'text-warning', accentBorder: 'border-warning/20' },
-  alibaba: { badgeBg: 'bg-destructive/10 text-destructive border-destructive/20', textCol: 'text-destructive', accentBorder: 'border-destructive/20' },
-};
 
-const PROVIDERS = Object.values(LLM_PROVIDERS_META);
+
 
 export default function LlmSettings(): React.JSX.Element {
   const { t } = useTranslation();
@@ -127,6 +118,7 @@ export default function LlmSettings(): React.JSX.Element {
     }, 800); // 800ms debounce
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formApiKey, formProvider, formBaseUrl, modalOpen]);
 
   const dragControls = useDragControls();
@@ -197,7 +189,7 @@ export default function LlmSettings(): React.JSX.Element {
   };
 
   // Connection testing state (can test within modal or globally)
-  const [testPrompt, setTestPrompt] = useState('Write a short greeting for a school portal.');
+  const testPrompt = 'Write a short greeting for a school portal.';
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{
     configId: string;
@@ -246,6 +238,7 @@ export default function LlmSettings(): React.JSX.Element {
         void runHealthCheck(config.id);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configs]);
 
   // Sandbox states (conversational)
@@ -570,11 +563,7 @@ export default function LlmSettings(): React.JSX.Element {
               return (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {filtered.map((config) => {
-                    const meta = PROVIDER_METADATA[config.provider] || {
-                      badgeBg: 'bg-muted text-muted-foreground',
-                      textCol: 'text-muted-foreground',
-                      accentBorder: 'border-border'
-                    };
+
                     const status = healthStatuses[config.id] || 'untested';
                     return (
                       <motion.div

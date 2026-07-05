@@ -103,7 +103,7 @@ export function useThemeSettingsDraft(
   const setDisplayMode = useCallback((mode: ThemeMode): void => {
     setDisplayModeState(normalizeThemeMode(mode));
     clearSavedFlash();
-  }, []);
+  }, [clearSavedFlash]);
 
   const handleSave = useCallback(async (): Promise<void> => {
     const wasBrandingDirty = branding.isThemeFieldsDirty;

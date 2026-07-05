@@ -34,10 +34,10 @@ export function useBackgroundJobs() {
     return () => window.removeEventListener(BACKGROUND_JOBS_EVENT, handler);
   }, [queryClient]);
 
-  const jobs = useMemo(
-    () => mergeServerBackgroundJobs(serverJobs.length > 0 ? serverJobs : getAllBackgroundJobs()),
-    [serverJobs, localTick],
-  );
+  const jobs = useMemo(() => {
+    const _tick = localTick; // forces local cache re-evaluation
+    return mergeServerBackgroundJobs(serverJobs.length > 0 ? serverJobs : getAllBackgroundJobs());
+  }, [serverJobs, localTick]);
 
   const refresh = useCallback(() => {
     setLocalTick((n) => n + 1);
