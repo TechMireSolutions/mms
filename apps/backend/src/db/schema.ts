@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, serial } from 'drizzle-orm/pg-core';
 import type { PlatformRole } from '@mms/shared';
 
 export const collections = pgTable('collections', {
@@ -94,4 +94,37 @@ export const backgroundJobs = pgTable('background_jobs', {
   index('background_jobs_tenant_user_idx').on(table.tenantId, table.userId),
   index('background_jobs_status_idx').on(table.status),
 ]);
+
+export const auditLogs = pgTable('audit_logs', {
+  id: serial('id').primaryKey(),
+  tableName: text('table_name').notNull(),
+  recordId: text('record_id').notNull(),
+  action: text('action').notNull(),
+  oldValues: jsonb('old_values'),
+  newValues: jsonb('new_values'),
+  userId: text('user_id'),
+  changedAt: timestamp('changed_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('audit_logs_table_record_idx').on(table.tableName, table.recordId),
+]);
+
+export const customTabs = pgTable('custom_tabs', {
+  id: text('id').primaryKey(), // e.g. subdomain:moduleId:key
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  moduleId: text('module_id').notNull(),
+  key: text('key').notNull(),
+  label: text('label').notNull(),
+  icon: text('icon'),
+  enabled: boolean('enabled').notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
+  permissions: jsonb('permissions').$type<string[]>(),
+  description: text('description'),
+  color: text('color'),
+  isSystem: boolean('is_system').notNull().default(false),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('custom_tabs_workspace_module_key_idx').on(table.workspaceSubdomain, table.moduleId, table.key),
+  index('custom_tabs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
 

@@ -24,6 +24,7 @@ import backgroundJobRoutes from "./common/backgroundJobs.js";
 import uploadRoutes from "./common/uploads.js";
 import workspaceRoutes from "./tenant/workspace.js";
 import aiRoutes from "./common/ai.js";
+import websocketRoutes from "./common/websocket.js";
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(healthRoutes);
@@ -51,4 +52,5 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(sessionsRoutes, { prefix: '/api/sessions' });
   await app.register(backgroundJobRoutes, { prefix: '/api/background-jobs' });
   await app.register(aiRoutes, { prefix: '/api/ai' });
+  await app.register(websocketRoutes, { prefix: '/api' });
 }

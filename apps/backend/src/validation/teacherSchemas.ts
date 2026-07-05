@@ -50,6 +50,7 @@ export const teachersListQuerySchema = z.object({
   specialization: z.string().optional(),
   sortField: z.string().optional(),
   sortDir: z.enum(['asc', 'desc']).optional(),
+  includeDeleted: z.enum(['true', 'false']).optional(),
 });
 
 export const teachersResolveBodySchema = entityResolveBodySchema;

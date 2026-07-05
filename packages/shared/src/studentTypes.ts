@@ -36,5 +36,8 @@ export interface Student {
   discountPct?: number;
   registrationType?: string;
   notes?: string;
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
   [key: string]: unknown;
 }

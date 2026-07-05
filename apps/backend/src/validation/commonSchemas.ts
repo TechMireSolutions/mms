@@ -22,3 +22,7 @@ export const handoffBodySchema = z.object({
 export const entityResolveBodySchema = z.object({
   ids: z.array(z.string().min(1).max(64)).max(100),
 });
+
+export const softDeleteBodySchema = z.object({
+  deletionReason: z.string().max(500).optional(),
+});

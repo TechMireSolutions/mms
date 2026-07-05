@@ -23,4 +23,8 @@ const sessionCoreSchema = z
 export const sessionRecordSchema = sessionCoreSchema;
 export const sessionListSchema = z.array(sessionCoreSchema);
 
+export const sessionsListQuerySchema = z.object({
+  includeDeleted: z.enum(['true', 'false']).optional(),
+});
+
 export type SessionRecord = z.infer<typeof sessionCoreSchema>;

@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
-import { sql, eq, like } from 'drizzle-orm';
+import { sql, eq, like, and } from 'drizzle-orm';
 import { join } from 'path';
 import { loadServerConfig } from '../config/serverConfig.js';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -39,6 +39,7 @@ import { runMigration017 } from './migrations/017_seed_attendance_config.js';
 import { runMigration018 } from './migrations/018_seed_overdue_obligations.js';
 import { runMigration019 } from './migrations/019_seed_question_bank.js';
 import { runMigration020 } from './migrations/020_migrate_contacts_to_tables.js';
+import { runMigration021 } from './migrations/021_migrate_custom_tabs.js';
 import { deleteTenantUsersByWorkspace, type TenantUserRow } from './repositories/tenantUserRepository.js';
 import { deleteAuthArtifactsForWorkspace, purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
@@ -115,6 +116,7 @@ export async function initDb(): Promise<void> {
       { id: '018', run: runMigration018 },
       { id: '019', run: runMigration019 },
       { id: '020', run: runMigration020 },
+      { id: '021', run: runMigration021 },
     ];
 
     const applied = await _rootDb.select().from(schema.dataMigrations);
@@ -192,6 +194,12 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
       const { replaceContactsForWorkspace } = await import('./repositories/contactRepository.js');
       await replaceContactsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Contact[]);
     }
+
+    const tenant = getRequestTenant();
+    if (tenant) {
+      const { broadcastTenantUpdate } = await import('../services/websocketService.js');
+      broadcastTenantUpdate(tenant, 'collection', name);
+    }
   } catch (error) {
     console.error(`Error saving collection "${name}":`, error);
     throw error;
@@ -204,6 +212,10 @@ export async function getObject(key: string): Promise<unknown | null> {
     const rows = await activeDb().select().from(schema.objects).where(eq(schema.objects.key, storageKey));
     const row = rows[0];
     if (!row) return null;
+    const tenant = getRequestTenant();
+    if (tenant) {
+      return await hydrateObjectData(key, row.data, tenant);
+    }
     return row.data;
   } catch (error) {
     console.error(`Error getting object "${key}":`, error);
@@ -214,13 +226,22 @@ export async function getObject(key: string): Promise<unknown | null> {
 export async function saveObject(key: string, data: unknown): Promise<void> {
   try {
     const storageKey = resolveObjectStorageKey(key);
-    const processedData = applyTitleCaseRecursive(data);
+    const tenant = getRequestTenant();
+    let processedData = applyTitleCaseRecursive(data);
+    if (tenant) {
+      processedData = await saveCustomTabsForObject(key, processedData, tenant);
+    }
     await activeDb().insert(schema.objects)
       .values({ key: storageKey, data: processedData })
       .onConflictDoUpdate({
         target: schema.objects.key,
         set: { data: processedData },
       });
+
+    if (tenant) {
+      const { broadcastTenantUpdate } = await import('../services/websocketService.js');
+      broadcastTenantUpdate(tenant, 'object', key);
+    }
   } catch (error) {
     console.error(`Error saving object "${key}":`, error);
     throw error;
@@ -231,6 +252,11 @@ export async function saveObject(key: string, data: unknown): Promise<void> {
 export async function deleteObject(key: string): Promise<void> {
   const storageKey = resolveObjectStorageKey(key);
   await deleteObjectByStorageKey(storageKey);
+  const tenant = getRequestTenant();
+  if (tenant) {
+    const { broadcastTenantUpdate } = await import('../services/websocketService.js');
+    broadcastTenantUpdate(tenant, 'object', key);
+  }
 }
 
 export async function getAllData(): Promise<{ collections: Record<string, unknown[]>; objects: Record<string, unknown> }> {
@@ -258,7 +284,7 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
 
       if (tenant) {
         if (!parsed || parsed.subdomain !== tenant) continue;
-        objects[parsed.logicalKey] = row.data;
+        objects[parsed.logicalKey] = await hydrateObjectData(parsed.logicalKey, row.data, tenant);
       } else if (!parsed) {
         objects[row.key] = row.data;
       }
@@ -405,4 +431,89 @@ export async function runInTransaction<T>(cb: () => Promise<T>): Promise<T> {
   return await _rootDb.transaction(async (tx) => {
     return await txStorage.run(tx, cb);
   });
+}
+
+const CONFIG_KEY_TO_MODULE: Record<string, string> = {
+  'contact_field_config': 'contacts',
+  'students_settings': 'students',
+  'teachers_settings': 'teachers',
+  'sessions_settings': 'sessions',
+  'attendance_settings': 'attendance',
+  'enrollments_settings': 'enrollment',
+  'finance_settings': 'finance',
+  'obligations_settings': 'obligations',
+  'accounting_settings': 'accounting',
+  'hasanat_settings': 'hasanat',
+  'examinations_settings': 'examination',
+  'question_bank_settings': 'questionBank',
+  'users_settings': 'users',
+};
+
+async function hydrateObjectData(key: string, data: any, tenant: string): Promise<any> {
+  const moduleId = CONFIG_KEY_TO_MODULE[key];
+  if (!moduleId || !data || typeof data !== 'object') return data;
+
+  const tabRows = await activeDb()
+    .select()
+    .from(schema.customTabs)
+    .where(
+      and(
+        eq(schema.customTabs.workspaceSubdomain, tenant),
+        eq(schema.customTabs.moduleId, moduleId)
+      )
+    )
+    .orderBy(schema.customTabs.sortOrder);
+
+  const formTabs = tabRows.map(row => ({
+    key: row.key,
+    label: row.label,
+    icon: row.icon ?? undefined,
+    enabled: row.enabled,
+    order: row.sortOrder,
+    permissions: (row.permissions as string[]) ?? undefined,
+    description: row.description ?? undefined,
+    color: row.color ?? undefined,
+    isSystem: row.isSystem,
+  }));
+
+  return { ...data, formTabs };
+}
+
+async function saveCustomTabsForObject(key: string, data: any, tenant: string): Promise<any> {
+  const moduleId = CONFIG_KEY_TO_MODULE[key];
+  if (!moduleId || !data || typeof data !== 'object') return data;
+
+  const formTabs = data.formTabs;
+  const cleanedData = { ...data };
+  delete cleanedData.formTabs;
+
+  await activeDb()
+    .delete(schema.customTabs)
+    .where(
+      and(
+        eq(schema.customTabs.workspaceSubdomain, tenant),
+        eq(schema.customTabs.moduleId, moduleId)
+      )
+    );
+
+  if (Array.isArray(formTabs) && formTabs.length > 0) {
+    const values = formTabs.map((tab: any, idx: number) => ({
+      id: `${tenant}:${moduleId}:${tab.key}`,
+      workspaceSubdomain: tenant,
+      moduleId,
+      key: tab.key,
+      label: tab.label,
+      icon: tab.icon || null,
+      enabled: tab.enabled !== false,
+      sortOrder: tab.order ?? idx,
+      permissions: tab.permissions || null,
+      description: tab.description || null,
+      color: tab.color || null,
+      isSystem: tab.isSystem === true,
+    }));
+
+    await activeDb().insert(schema.customTabs).values(values);
+  }
+
+  return cleanedData;
 }

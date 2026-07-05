@@ -4,6 +4,7 @@ import { canReadCollection, canWriteCollection } from '../../services/rbacServic
 import {
   createTeacher,
   deleteTeacherById,
+  restoreTeacherById,
   loadTeachers,
   loadTeachersPage,
   loadTeachersByIds,
@@ -16,7 +17,7 @@ import {
 import type { User } from '@mms/shared';
 import { TEACHERS_MODULE_CONTRACT, computeTeachersCommandMetrics } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
+import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
 import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
 import { teacherRecordSchema, teachersListQuerySchema, teachersResolveBodySchema, teachersWidgetAggregatesBodySchema, teachersNextEmployeeIdQuerySchema, teachersLinkedContactIdsQuerySchema } from '../../validation/teacherSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
@@ -41,6 +42,10 @@ export default async function teachersRoutes(
     if (!queryParsed.ok) return replyValidationError(reply, queryParsed.message);
     try {
       const query = queryParsed.data;
+      const includeDeleted = query.includeDeleted === 'true';
+      if (includeDeleted && !canWriteCollection(user, 'teachers')) {
+        return sendForbidden(reply);
+      }
       const page = await loadTeachersPage({
         page: query.page,
         limit: query.limit ?? TEACHERS_MODULE_CONTRACT.defaultPageSize,
@@ -49,6 +54,7 @@ export default async function teachersRoutes(
         specialization: query.specialization,
         sortField: query.sortField,
         sortDir: query.sortDir,
+        includeDeleted,
       });
       return reply.send(page);
     } catch {
@@ -217,14 +223,32 @@ export default async function teachersRoutes(
     if (!canWriteCollection(user, 'teachers')) return sendForbidden(reply);
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
+    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
+    if (!body.ok) return replyValidationError(reply, body.message);
     try {
-      const deleted = await deleteTeacherById(params.data.id);
+      const deleted = await deleteTeacherById(params.data.id, String(user.id), body.data.deletionReason);
       if (!deleted) {
         return reply.status(404).send({ type: 'not_found', message: 'Teacher not found' });
       }
       return reply.send({ success: true });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to delete teacher' });
+    }
+  });
+
+  fastify.post('/:id/restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, 'teachers')) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    try {
+      const restored = await restoreTeacherById(params.data.id);
+      if (!restored) {
+        return reply.status(404).send({ type: 'not_found', message: 'Teacher not found or not deleted' });
+      }
+      return reply.send({ success: true });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore teacher' });
     }
   });
 }

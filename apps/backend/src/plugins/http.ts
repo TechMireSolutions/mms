@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import jwt from '@fastify/jwt';
+import websocket from '@fastify/websocket';
 import { isOriginAllowedForAppDomain, isTrustedWorkspaceOrigin } from '@mms/shared';
 import type { ServerConfig } from '../config/serverConfig.js';
 
@@ -36,4 +37,5 @@ export async function registerHttpPlugins(
     credentials: true,
   });
   await app.register(jwt, { secret: config.jwtSecret });
+  await app.register(websocket);
 }

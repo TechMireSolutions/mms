@@ -55,6 +55,7 @@ export const studentsListQuerySchema = z.object({
   gender: z.string().optional(),
   sortField: z.string().optional(),
   sortDir: z.enum(['asc', 'desc']).optional(),
+  includeDeleted: z.enum(['true', 'false']).optional(),
 });
 
 export const studentsResolveBodySchema = entityResolveBodySchema;

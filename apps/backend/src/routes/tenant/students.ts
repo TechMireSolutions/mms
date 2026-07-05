@@ -4,6 +4,7 @@ import { canReadCollection, canWriteCollection } from '../../services/rbacServic
 import {
   createStudent,
   deleteStudentById,
+  restoreStudentById,
   loadStudents,
   loadStudentsPage,
   loadStudentsByIds,
@@ -17,7 +18,7 @@ import {
 import type { User } from '@mms/shared';
 import { STUDENTS_MODULE_CONTRACT, computeStudentsCommandMetrics } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
+import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
 import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
 import { studentRecordSchema, studentsListQuerySchema, studentsResolveBodySchema, studentsWidgetAggregatesBodySchema, studentsNextGrNumberQuerySchema, studentsDuplicateCheckBodySchema, studentsLinkedContactIdsQuerySchema } from '../../validation/studentSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
@@ -44,6 +45,10 @@ export default async function studentsRoutes(
     if (!queryParsed.ok) return replyValidationError(reply, queryParsed.message);
     try {
       const query = queryParsed.data;
+      const includeDeleted = query.includeDeleted === 'true';
+      if (includeDeleted && !canWriteCollection(user, 'students')) {
+        return sendForbidden(reply);
+      }
       const page = await loadStudentsPage({
         page: query.page,
         limit: query.limit ?? STUDENTS_MODULE_CONTRACT.defaultPageSize,
@@ -52,6 +57,7 @@ export default async function studentsRoutes(
         gender: query.gender,
         sortField: query.sortField,
         sortDir: query.sortDir,
+        includeDeleted,
       });
       return reply.send(page);
     } catch {
@@ -267,14 +273,32 @@ export default async function studentsRoutes(
     if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
+    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
+    if (!body.ok) return replyValidationError(reply, body.message);
     try {
-      const deleted = await deleteStudentById(params.data.id);
+      const deleted = await deleteStudentById(params.data.id, String(user.id), body.data.deletionReason);
       if (!deleted) {
         return reply.status(404).send({ type: 'not_found', message: 'Student not found' });
       }
       return reply.send({ success: true });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to delete student' });
+    }
+  });
+
+  fastify.post('/:id/restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    try {
+      const restored = await restoreStudentById(params.data.id);
+      if (!restored) {
+        return reply.status(404).send({ type: 'not_found', message: 'Student not found or not deleted' });
+      }
+      return reply.send({ success: true });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore student' });
     }
   });
 }

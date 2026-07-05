@@ -4,8 +4,11 @@ import { SETTINGS_PREVIEW_EVENT } from "@/lib/settingsPreview";
 import { TenantAppProviders } from "@/providers/TenantAppProviders";
 import RouterBridge from "@/components/routing/RouterBridge";
 import TenantRoutes from "@/tenant/routes/TenantRoutes";
+import { useWebSocketSync } from "@/tenant/hooks/useWebSocketSync";
 
 export default function TenantApp(): React.JSX.Element {
+  useWebSocketSync();
+
   useEffect(() => {
     applyAppTheme();
 

@@ -33,4 +33,7 @@ export interface Teacher {
   qualification?: string;
   notes?: string;
   userId?: string | null;
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
 }
