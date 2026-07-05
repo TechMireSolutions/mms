@@ -118,27 +118,6 @@ function Label({ children, required = false }: LabelProps): JSX.Element {
   );
 }
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  icon?: React.ComponentType<{ className?: string }>;
-}
-
-/**
- * Customized text input field wrapper.
- *
- * @param props - Input options and HTML attributes.
- * @returns The styled input field.
- */
-function Input({ icon: Icon, className = "", ...props }: InputProps): JSX.Element {
-  return (
-    <div className="relative">
-      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />}
-      <UiInput
-        {...props}
-        className={`${Icon ? "pl-9" : ""} ${className}`}
-      />
-    </div>
-  );
-}
 
 interface RoleCardProps {
   role: WorkspaceRole;
@@ -539,7 +518,7 @@ export interface AddUserModalProps {
  */
 export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserModalProps): JSX.Element {
   const { t } = useTranslation();
-  const { settings, customFields } = useUsersConfig();
+  const { customFields } = useUsersConfig();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);

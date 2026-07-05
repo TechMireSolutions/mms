@@ -139,8 +139,12 @@ export default function Sessions() {
   const { createSession, updateSession } = useSessionMutations();
   const { settings, statuses, types } = useSessionConfig();
   
-  const statusOptions = statuses.length > 0 ? statuses : ["active", "upcoming", "completed", "cancelled"];
-  const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
+  const statusOptions = useMemo(() => {
+    return statuses.length > 0 ? statuses : ["active", "upcoming", "completed", "cancelled"];
+  }, [statuses]);
+  const typeOptions = useMemo(() => {
+    return types.length > 0 ? types : [...SESSION_TYPES];
+  }, [types]);
 
   const columnLayout = useSessionColumnLayout();
   const listLayout = (settings.defaultViewLayout || "cards") === "list";
@@ -194,7 +198,6 @@ export default function Sessions() {
       ? currentValues.filter((selectedValue) => selectedValue !== nextValue)
       : [...currentValues, nextValue]);
 
-  const hasFilters = filterStatus.length > 0 || filterType.length > 0;
 
   const statusLabels = useMemo(() => {
     const sessionStatusLabelsByValue: Record<string, string> = {};

@@ -38,7 +38,6 @@ export interface UsersListProps {
   onEdit: (user: SystemUser) => void;
   onToggleStatus: (id: string, status: 'active' | 'inactive') => void;
   onResetPassword: (user: SystemUser) => void;
-  onInvite: () => void;
   onAddUser: () => void;
 }
 
@@ -48,7 +47,6 @@ export function UsersList({
   onEdit,
   onToggleStatus,
   onResetPassword,
-  onInvite,
   onAddUser,
 }: UsersListProps): React.JSX.Element {
   const { t } = useTranslation();

@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Switch } from "@/components/ui/switch";
-import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 
 interface ToggleProps {
@@ -44,7 +43,6 @@ interface SessionsSettingsProps {
 }
 
 export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Element {
-  const { t } = useTranslation();
   const { settings, types, updateSettings } = useSessionConfig();
   const [saved, setSaved] = useState<boolean>(false);
 
@@ -96,7 +94,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
       settings.enabledTabs || ["basic"],
       settings.requiredTabs || []
     );
-  }, [settings]);
+  }, [settings, fieldsEditor]);
 
   const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
 

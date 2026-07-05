@@ -79,7 +79,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
       settings.enabledTabs || ["basic"],
       settings.requiredTabs || []
     );
-  }, [settings]);
+  }, [settings, fieldsEditor]);
 
   const handleSave = (): void => {
     const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({

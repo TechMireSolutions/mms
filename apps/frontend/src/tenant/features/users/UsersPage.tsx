@@ -247,7 +247,6 @@ export default function Users(): React.JSX.Element {
                   onEdit={setEditing}
                   onToggleStatus={handleToggleStatus}
                   onResetPassword={handleResetPassword}
-                  onInvite={() => setShowInvite(true)}
                   onAddUser={() => setShowAddUser(true)}
                 />
               )}

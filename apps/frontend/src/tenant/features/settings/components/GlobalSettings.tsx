@@ -53,7 +53,7 @@ export default function GlobalSettings(): React.JSX.Element {
 
   const notificationChannel = useMemo(
     () => resolveNotificationChannel(data),
-    [data.emailNotifications, data.smsNotifications],
+    [data],
   );
 
   const passwordPolicy = normalizePasswordPolicy(data.passwordPolicy);

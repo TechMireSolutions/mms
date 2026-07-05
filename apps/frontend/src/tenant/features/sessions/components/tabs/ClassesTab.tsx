@@ -116,7 +116,9 @@ function ClassModal({ open, sessionClass, onClose, onSave }: ClassModalProps) {
   });
 
   const currentTeacherId = classDraft.teacherId || sessionClass?.teacherId;
-  const activeTeachers = (activeTeachersPage?.teachers ?? []) as Teacher[];
+  const activeTeachers = useMemo(() => {
+    return (activeTeachersPage?.teachers ?? []) as Teacher[];
+  }, [activeTeachersPage?.teachers]);
   const needsCurrentResolve = Boolean(
     currentTeacherId
     && !activeTeachers.some((teacher) => String(teacher.id) === String(currentTeacherId)),

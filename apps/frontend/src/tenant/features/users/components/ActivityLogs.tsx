@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card } from "@/components/ui/card";
 import { Search, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import {
@@ -32,8 +32,8 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
   const [dateTo, setTo] = useState('');
   const [page, setPage] = useState(1);
 
-  const userNameFor = (log: ActivityLog): string =>
-    log.userName ?? users.find((user) => user.id === log.userId)?.name ?? log.userId;
+  const userNameFor = useCallback((log: ActivityLog): string =>
+    log.userName ?? users.find((user) => user.id === log.userId)?.name ?? log.userId, [users]);
 
   const filtered = useMemo(() => {
     return logs.filter((log) => {
@@ -47,7 +47,7 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
       }
       return true;
     });
-  }, [logs, search, userFilter, actionFilter, dateFrom, dateTo, users]);
+  }, [logs, search, userFilter, actionFilter, dateFrom, dateTo, userNameFor]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
