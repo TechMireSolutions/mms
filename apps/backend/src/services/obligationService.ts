@@ -6,84 +6,129 @@ import {
   type ObligationDistribution,
   type ObligationCollection,
   obligationTypeListSchema,
-  obligationTypeRecordSchema,
   mujtahidListSchema,
-  mujtahidRecordSchema,
   mujtahidRepListSchema,
-  mujtahidRepRecordSchema,
   wakalaTypeListSchema,
-  wakalaTypeRecordSchema,
   obligationDistributionListSchema,
-  obligationDistributionRecordSchema,
   obligationCollectionListSchema,
-  obligationCollectionRecordSchema,
 } from '@mms/shared';
-import { defineCollectionCrudService } from './collectionCrudService.js';
-import { persistCollection } from './dbSyncService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  listObligationTypesByWorkspace,
+  replaceObligationTypesForWorkspace,
+  listMujtahidsByWorkspace,
+  replaceMujtahidsForWorkspace,
+  listMujtahidRepsByWorkspace,
+  replaceMujtahidRepsForWorkspace,
+  listWakalaTypesByWorkspace,
+  replaceWakalaTypesForWorkspace,
+  listObligationDistributionsByWorkspace,
+  replaceObligationDistributionsForWorkspace,
+  listObligationCollectionsByWorkspace,
+  replaceObligationCollectionsForWorkspace,
+} from '../db/repositories/obligationRepository.js';
 
-const TYPES_COLLECTION = 'obligation_types';
-const MUJTAHIDS_COLLECTION = 'mujtahids';
-const REPS_COLLECTION = 'mujtahid_reps';
-const WAKALA_COLLECTION = 'wakala_types';
-const DISTRIBUTIONS_COLLECTION = 'obligation_distributions';
-const COLLECTIONS_COLLECTION = 'obligation_collections';
+// --- Helper WebSocket broadcaster ---
+async function broadcast(logicalKey: string) {
+  const tenant = getRequestTenant();
+  if (tenant) {
+    const { broadcastTenantUpdate } = await import('./websocketService.js');
+    broadcastTenantUpdate(tenant, 'collection', logicalKey);
+  }
+}
 
 // --- Obligation Types ---
-const normalizeType = (record: ObligationType) => obligationTypeRecordSchema.parse(record);
-const typeCrud = defineCollectionCrudService(TYPES_COLLECTION, obligationTypeListSchema, normalizeType);
-export const loadObligationTypes = typeCrud.load;
+export async function loadObligationTypes(): Promise<ObligationType[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listObligationTypesByWorkspace(tenant);
+}
+
 export async function replaceObligationTypes(records: ObligationType[]): Promise<ObligationType[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = obligationTypeListSchema.parse(records);
-  await persistCollection(TYPES_COLLECTION, parsed);
+  await replaceObligationTypesForWorkspace(tenant, parsed);
+  await broadcast('obligation_types');
   return parsed;
 }
 
 // --- Mujtahids ---
-const normalizeMujtahid = (record: Mujtahid) => mujtahidRecordSchema.parse(record);
-const mujtahidCrud = defineCollectionCrudService(MUJTAHIDS_COLLECTION, mujtahidListSchema, normalizeMujtahid);
-export const loadMujtahids = mujtahidCrud.load;
+export async function loadMujtahids(): Promise<Mujtahid[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listMujtahidsByWorkspace(tenant);
+}
+
 export async function replaceMujtahids(records: Mujtahid[]): Promise<Mujtahid[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = mujtahidListSchema.parse(records);
-  await persistCollection(MUJTAHIDS_COLLECTION, parsed);
+  await replaceMujtahidsForWorkspace(tenant, parsed);
+  await broadcast('mujtahids');
   return parsed;
 }
 
 // --- Mujtahid Reps ---
-const normalizeRep = (record: MujtahidRep) => mujtahidRepRecordSchema.parse(record);
-const repCrud = defineCollectionCrudService(REPS_COLLECTION, mujtahidRepListSchema, normalizeRep);
-export const loadMujtahidReps = repCrud.load;
+export async function loadMujtahidReps(): Promise<MujtahidRep[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listMujtahidRepsByWorkspace(tenant);
+}
+
 export async function replaceMujtahidReps(records: MujtahidRep[]): Promise<MujtahidRep[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = mujtahidRepListSchema.parse(records);
-  await persistCollection(REPS_COLLECTION, parsed);
+  await replaceMujtahidRepsForWorkspace(tenant, parsed);
+  await broadcast('mujtahid_reps');
   return parsed;
 }
 
 // --- Wakala Types ---
-const normalizeWakala = (record: WakalaType) => wakalaTypeRecordSchema.parse(record);
-const wakalaCrud = defineCollectionCrudService(WAKALA_COLLECTION, wakalaTypeListSchema, normalizeWakala);
-export const loadWakalaTypes = wakalaCrud.load;
+export async function loadWakalaTypes(): Promise<WakalaType[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listWakalaTypesByWorkspace(tenant);
+}
+
 export async function replaceWakalaTypes(records: WakalaType[]): Promise<WakalaType[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = wakalaTypeListSchema.parse(records);
-  await persistCollection(WAKALA_COLLECTION, parsed);
+  await replaceWakalaTypesForWorkspace(tenant, parsed);
+  await broadcast('wakala_types');
   return parsed;
 }
 
 // --- Obligation Distributions ---
-const normalizeDistribution = (record: ObligationDistribution) => obligationDistributionRecordSchema.parse(record);
-const distributionCrud = defineCollectionCrudService(DISTRIBUTIONS_COLLECTION, obligationDistributionListSchema, normalizeDistribution);
-export const loadObligationDistributions = distributionCrud.load;
+export async function loadObligationDistributions(): Promise<ObligationDistribution[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listObligationDistributionsByWorkspace(tenant);
+}
+
 export async function replaceObligationDistributions(records: ObligationDistribution[]): Promise<ObligationDistribution[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = obligationDistributionListSchema.parse(records);
-  await persistCollection(DISTRIBUTIONS_COLLECTION, parsed);
+  await replaceObligationDistributionsForWorkspace(tenant, parsed);
+  await broadcast('obligation_distributions');
   return parsed;
 }
 
 // --- Obligation Collections ---
-const normalizeCollection = (record: ObligationCollection) => obligationCollectionRecordSchema.parse(record);
-const collectionCrud = defineCollectionCrudService(COLLECTIONS_COLLECTION, obligationCollectionListSchema, normalizeCollection);
-export const loadObligationCollections = collectionCrud.load;
+export async function loadObligationCollections(): Promise<ObligationCollection[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listObligationCollectionsByWorkspace(tenant);
+}
+
 export async function replaceObligationCollections(records: ObligationCollection[]): Promise<ObligationCollection[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = obligationCollectionListSchema.parse(records);
-  await persistCollection(COLLECTIONS_COLLECTION, parsed);
+  await replaceObligationCollectionsForWorkspace(tenant, parsed);
+  await broadcast('obligation_collections');
   return parsed;
 }

@@ -6,10 +6,20 @@ import {
   activityLogListSchema,
 } from '@mms/shared';
 import { getHydratedUsers, saveUsers } from './auth/userService.js';
-import { defineCollectionCrudService } from './collectionCrudService.js';
-import { persistCollection } from './dbSyncService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  listActivityLogsByWorkspace,
+  replaceActivityLogsForWorkspace,
+} from '../db/repositories/logsRepository.js';
 
-const LOGS_COLLECTION = 'user_activity_logs';
+// --- Helper WebSocket broadcaster ---
+async function broadcast(logicalKey: string) {
+  const tenant = getRequestTenant();
+  if (tenant) {
+    const { broadcastTenantUpdate } = await import('./websocketService.js');
+    broadcastTenantUpdate(tenant, 'collection', logicalKey);
+  }
+}
 
 // --- Users ---
 export async function loadWorkspaceUsers(): Promise<WorkspaceUser[]> {
@@ -24,10 +34,17 @@ export async function replaceWorkspaceUsers(records: WorkspaceUser[]): Promise<W
 }
 
 // --- Activity Logs ---
-const logCrud = defineCollectionCrudService(LOGS_COLLECTION, activityLogListSchema, (record: ActivityLog) => record);
-export const loadLogs = logCrud.load;
+export async function loadLogs(): Promise<ActivityLog[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listActivityLogsByWorkspace(tenant);
+}
+
 export async function replaceLogs(records: ActivityLog[]): Promise<ActivityLog[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = activityLogListSchema.parse(records);
-  await persistCollection(LOGS_COLLECTION, parsed);
+  await replaceActivityLogsForWorkspace(tenant, parsed);
+  await broadcast('user_activity_logs');
   return parsed;
 }

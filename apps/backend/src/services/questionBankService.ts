@@ -3,45 +3,72 @@ import {
   type QuestionBankTest,
   type QuestionBankResult,
   questionBankQuestionListSchema,
-  questionBankQuestionRecordSchema,
   questionBankTestListSchema,
-  questionBankTestRecordSchema,
   questionBankResultListSchema,
-  questionBankResultRecordSchema,
 } from '@mms/shared';
-import { defineCollectionCrudService } from './collectionCrudService.js';
-import { persistCollection } from './dbSyncService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  listQuestionsByWorkspace,
+  replaceQuestionsForWorkspace,
+  listTestsByWorkspace,
+  replaceTestsForWorkspace,
+  listResultsByWorkspace,
+  replaceResultsForWorkspace,
+} from '../db/repositories/questionBankRepository.js';
 
-const QUESTIONS_COLLECTION = 'questions';
-const TESTS_COLLECTION = 'tests';
-const RESULTS_COLLECTION = 'assessment_results';
+// --- Helper WebSocket broadcaster ---
+async function broadcast(logicalKey: string) {
+  const tenant = getRequestTenant();
+  if (tenant) {
+    const { broadcastTenantUpdate } = await import('./websocketService.js');
+    broadcastTenantUpdate(tenant, 'collection', logicalKey);
+  }
+}
 
 // --- Questions ---
-const normalizeQuestion = (record: QuestionBankQuestion) => questionBankQuestionRecordSchema.parse(record);
-const questionCrud = defineCollectionCrudService(QUESTIONS_COLLECTION, questionBankQuestionListSchema, normalizeQuestion);
-export const loadQuestions = questionCrud.load;
+export async function loadQuestions(): Promise<QuestionBankQuestion[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listQuestionsByWorkspace(tenant);
+}
+
 export async function replaceQuestions(records: QuestionBankQuestion[]): Promise<QuestionBankQuestion[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = questionBankQuestionListSchema.parse(records);
-  await persistCollection(QUESTIONS_COLLECTION, parsed);
+  await replaceQuestionsForWorkspace(tenant, parsed);
+  await broadcast('questions');
   return parsed;
 }
 
 // --- Tests ---
-const normalizeTest = (record: QuestionBankTest) => questionBankTestRecordSchema.parse(record);
-const testCrud = defineCollectionCrudService(TESTS_COLLECTION, questionBankTestListSchema, normalizeTest);
-export const loadTests = testCrud.load;
+export async function loadTests(): Promise<QuestionBankTest[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listTestsByWorkspace(tenant);
+}
+
 export async function replaceTests(records: QuestionBankTest[]): Promise<QuestionBankTest[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = questionBankTestListSchema.parse(records);
-  await persistCollection(TESTS_COLLECTION, parsed);
+  await replaceTestsForWorkspace(tenant, parsed);
+  await broadcast('tests');
   return parsed;
 }
 
 // --- Assessment Results ---
-const normalizeResult = (record: QuestionBankResult) => questionBankResultRecordSchema.parse(record);
-const resultCrud = defineCollectionCrudService(RESULTS_COLLECTION, questionBankResultListSchema, normalizeResult);
-export const loadResults = resultCrud.load;
+export async function loadResults(): Promise<QuestionBankResult[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listResultsByWorkspace(tenant);
+}
+
 export async function replaceResults(records: QuestionBankResult[]): Promise<QuestionBankResult[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = questionBankResultListSchema.parse(records);
-  await persistCollection(RESULTS_COLLECTION, parsed);
+  await replaceResultsForWorkspace(tenant, parsed);
+  await broadcast('assessment_results');
   return parsed;
 }

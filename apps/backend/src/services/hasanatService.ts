@@ -4,58 +4,91 @@ import {
   type Distribution,
   type Redemption,
   denomListSchema,
-  denomRecordSchema,
   batchListSchema,
-  batchRecordSchema,
   distributionListSchema,
-  distributionRecordSchema,
   redemptionListSchema,
-  redemptionRecordSchema,
 } from '@mms/shared';
-import { defineCollectionCrudService } from './collectionCrudService.js';
-import { persistCollection } from './dbSyncService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  listDenomsByWorkspace,
+  replaceDenomsForWorkspace,
+  listBatchesByWorkspace,
+  replaceBatchesForWorkspace,
+  listDistributionsByWorkspace,
+  replaceDistributionsForWorkspace,
+  listRedemptionsByWorkspace,
+  replaceRedemptionsForWorkspace,
+} from '../db/repositories/hasanatRepository.js';
 
-const DENOMS_COLLECTION = 'hasanat_denoms';
-const BATCHES_COLLECTION = 'hasanat_batches';
-const DISTRIBUTIONS_COLLECTION = 'hasanat_distributions';
-const REDEMPTIONS_COLLECTION = 'hasanat_redemptions';
+// --- Helper WebSocket broadcaster ---
+async function broadcast(logicalKey: string) {
+  const tenant = getRequestTenant();
+  if (tenant) {
+    const { broadcastTenantUpdate } = await import('./websocketService.js');
+    broadcastTenantUpdate(tenant, 'collection', logicalKey);
+  }
+}
 
 // --- Denominations ---
-const normalizeDenom = (record: Denomination) => denomRecordSchema.parse(record);
-const denomCrud = defineCollectionCrudService(DENOMS_COLLECTION, denomListSchema, normalizeDenom);
-export const loadDenoms = denomCrud.load;
+export async function loadDenoms(): Promise<Denomination[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listDenomsByWorkspace(tenant);
+}
+
 export async function replaceDenoms(records: Denomination[]): Promise<Denomination[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = denomListSchema.parse(records);
-  await persistCollection(DENOMS_COLLECTION, parsed);
+  await replaceDenomsForWorkspace(tenant, parsed);
+  await broadcast('hasanat_denoms');
   return parsed;
 }
 
 // --- Batches ---
-const normalizeBatch = (record: StockBatch) => batchRecordSchema.parse(record);
-const batchCrud = defineCollectionCrudService(BATCHES_COLLECTION, batchListSchema, normalizeBatch);
-export const loadBatches = batchCrud.load;
+export async function loadBatches(): Promise<StockBatch[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listBatchesByWorkspace(tenant);
+}
+
 export async function replaceBatches(records: StockBatch[]): Promise<StockBatch[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = batchListSchema.parse(records);
-  await persistCollection(BATCHES_COLLECTION, parsed);
+  await replaceBatchesForWorkspace(tenant, parsed);
+  await broadcast('hasanat_batches');
   return parsed;
 }
 
 // --- Distributions ---
-const normalizeDist = (record: Distribution) => distributionRecordSchema.parse(record);
-const distCrud = defineCollectionCrudService(DISTRIBUTIONS_COLLECTION, distributionListSchema, normalizeDist);
-export const loadDistributions = distCrud.load;
+export async function loadDistributions(): Promise<Distribution[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listDistributionsByWorkspace(tenant);
+}
+
 export async function replaceDistributions(records: Distribution[]): Promise<Distribution[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = distributionListSchema.parse(records);
-  await persistCollection(DISTRIBUTIONS_COLLECTION, parsed);
+  await replaceDistributionsForWorkspace(tenant, parsed);
+  await broadcast('hasanat_distributions');
   return parsed;
 }
 
 // --- Redemptions ---
-const normalizeRedemption = (record: Redemption) => redemptionRecordSchema.parse(record);
-const redemptionCrud = defineCollectionCrudService(REDEMPTIONS_COLLECTION, redemptionListSchema, normalizeRedemption);
-export const loadRedemptions = redemptionCrud.load;
+export async function loadRedemptions(): Promise<Redemption[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listRedemptionsByWorkspace(tenant);
+}
+
 export async function replaceRedemptions(records: Redemption[]): Promise<Redemption[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = redemptionListSchema.parse(records);
-  await persistCollection(REDEMPTIONS_COLLECTION, parsed);
+  await replaceRedemptionsForWorkspace(tenant, parsed);
+  await broadcast('hasanat_redemptions');
   return parsed;
 }

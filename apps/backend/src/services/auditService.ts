@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { AUDIT_LOG_COLLECTION, type AuditLogEntry } from '@mms/shared';
-import { fetchCollection, persistCollection } from './dbSyncService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { saveAuditLogEntry } from '../db/repositories/logsRepository.js';
 
 export interface RecordAuditInput {
   userId: string;
@@ -12,25 +12,37 @@ export interface RecordAuditInput {
   summary?: string;
 }
 
+// --- Helper WebSocket broadcaster ---
+async function broadcast(logicalKey: string) {
+  const tenant = getRequestTenant();
+  if (tenant) {
+    const { broadcastTenantUpdate } = await import('./websocketService.js');
+    broadcastTenantUpdate(tenant, 'collection', logicalKey);
+  }
+}
+
 /**
  * Appends an audit log entry. Failures are logged and do not block the parent write.
  */
 export async function recordAudit(input: RecordAuditInput): Promise<void> {
   try {
-    const existing = (await fetchCollection(AUDIT_LOG_COLLECTION)) as AuditLogEntry[];
-    const rows = Array.isArray(existing) ? existing : [];
+    const tenant = getRequestTenant();
+    if (!tenant) return;
+
     const entry: AuditLogEntry = {
       id: `audit_${Date.now()}_${randomBytes(4).toString('hex')}`,
       at: new Date().toISOString(),
       userId: input.userId,
       userEmail: input.userEmail,
-      tenant: getRequestTenant(),
+      tenant,
       action: input.action,
       entityType: input.entityType,
       entityId: input.entityId,
       summary: input.summary,
     };
-    await persistCollection(AUDIT_LOG_COLLECTION, [...rows, entry]);
+
+    await saveAuditLogEntry(tenant, entry);
+    await broadcast(AUDIT_LOG_COLLECTION);
   } catch (error) {
     console.error('audit_log append failed:', error);
   }

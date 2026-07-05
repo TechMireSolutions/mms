@@ -64,6 +64,83 @@
       "when": 1783216433010,
       "tag": "0008_nifty_sprite",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1783220941517,
+      "tag": "0009_glorious_union_jack",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783221202902,
+      "tag": "0010_glamorous_newton_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783221462057,
+      "tag": "0011_breezy_young_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1783221820778,
+      "tag": "0012_rare_swordsman",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1783222100588,
+      "tag": "0013_hot_monster_badoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1783222443715,
+      "tag": "0014_cheerful_marauders",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1783222863953,
+      "tag": "0015_true_gravity",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1783223082812,
+      "tag": "0016_orange_bruce_banner",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1783223326857,
+      "tag": "0017_aromatic_wrecker",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1783223596043,
+      "tag": "0018_light_princess_powerful",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1783223948659,
+      "tag": "0019_tearful_ricochet",
+      "breakpoints": true
     }
   ]
 }

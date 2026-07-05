@@ -83,6 +83,267 @@ export const students = pgTable('students', {
   index('students_custom_data_gin_idx').using('gin', table.customData),
 ]);
 
+export const teachers = pgTable('teachers', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('teachers_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('teachers_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const sessions = pgTable('sessions', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('sessions_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('sessions_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const attendance = pgTable('attendance', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('attendance_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('attendance_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const enrollments = pgTable('enrollments', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('enrollments_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('enrollments_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const obligationTypes = pgTable('obligation_types', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('obligation_types_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('obligation_types_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const mujtahids = pgTable('mujtahids', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('mujtahids_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('mujtahids_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const mujtahidReps = pgTable('mujtahid_reps', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('mujtahid_reps_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('mujtahid_reps_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const wakalaTypes = pgTable('wakala_types', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('wakala_types_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('wakala_types_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const obligationDistributions = pgTable('obligation_distributions', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('obligation_distributions_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('obligation_distributions_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const obligationCollections = pgTable('obligation_collections', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('obligation_collections_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('obligation_collections_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const financeInvoices = pgTable('finance_invoices', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('finance_invoices_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('finance_invoices_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const financePayments = pgTable('finance_payments', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('finance_payments_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('finance_payments_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const exams = pgTable('exams', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('exams_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('exams_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const examResults = pgTable('exam_results', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('exam_results_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('exam_results_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const hasanatDenoms = pgTable('hasanat_denoms', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('hasanat_denoms_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('hasanat_denoms_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const hasanatBatches = pgTable('hasanat_batches', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('hasanat_batches_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('hasanat_batches_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const hasanatDistributions = pgTable('hasanat_distributions', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('hasanat_distributions_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('hasanat_distributions_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const hasanatRedemptions = pgTable('hasanat_redemptions', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('hasanat_redemptions_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('hasanat_redemptions_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const accountingAccounts = pgTable('accounting_accounts', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('accounting_accounts_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('accounting_accounts_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const accountingEntries = pgTable('accounting_entries', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('accounting_entries_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('accounting_entries_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const accountingFiscalYears = pgTable('accounting_fiscal_years', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('accounting_fiscal_years_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('accounting_fiscal_years_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const questions = pgTable('questions', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('questions_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('questions_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const tests = pgTable('tests', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('tests_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('tests_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const assessmentResults = pgTable('assessment_results', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('assessment_results_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('assessment_results_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const userActivityLogs = pgTable('user_activity_logs', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('user_activity_logs_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('user_activity_logs_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const auditLogEntries = pgTable('audit_log_entries', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('audit_log_entries_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('audit_log_entries_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+
 
 export const backgroundJobs = pgTable('background_jobs', {
   id: text('id').primaryKey(),

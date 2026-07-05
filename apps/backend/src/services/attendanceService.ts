@@ -1,25 +1,64 @@
-import { persistCollection } from './dbSyncService.js';
 import {
-  attendanceListSchema,
   attendanceRecordSchema,
   type AttendanceRecord,
 } from '../validation/attendanceSchemas.js';
-import { defineCollectionCrudService } from './collectionCrudService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  listAttendanceRecordsByWorkspace,
+  findAttendanceRecordById,
+  saveAttendanceRecord,
+  deleteAttendanceRecord,
+  replaceAttendanceRecordsForWorkspace,
+} from '../db/repositories/attendanceRepository.js';
 
-const COLLECTION = 'attendance_records';
+export async function loadAttendanceRecords(options?: { includeDeleted?: boolean }): Promise<AttendanceRecord[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  const all = await listAttendanceRecordsByWorkspace(tenant);
+  return options?.includeDeleted ? all : all.filter((row) => !row.deletedAt);
+}
 
-const normalize = (record: AttendanceRecord): AttendanceRecord => attendanceRecordSchema.parse(record);
+export async function createAttendanceRecord(record: AttendanceRecord): Promise<AttendanceRecord> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
+  const resolvedId = String(record.id ?? `att-${Date.now()}`);
+  const normalized = attendanceRecordSchema.parse({ ...record, id: resolvedId });
+  await saveAttendanceRecord(tenant, normalized);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'attendance_records');
+  return normalized;
+}
 
-const crud = defineCollectionCrudService(COLLECTION, attendanceListSchema, normalize);
+export async function updateAttendanceRecordById(id: string, record: AttendanceRecord): Promise<AttendanceRecord | null> {
+  const tenant = getRequestTenant();
+  if (!tenant) return null;
+  const existing = await findAttendanceRecordById(tenant, id);
+  if (!existing || existing.deletedAt) return null;
+  const normalized = attendanceRecordSchema.parse({ ...record, id });
+  await saveAttendanceRecord(tenant, normalized);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'attendance_records');
+  return normalized;
+}
 
-export const loadAttendanceRecords = crud.load;
-export const createAttendanceRecord = crud.create;
-export const updateAttendanceRecordById = crud.updateById;
-export const deleteAttendanceRecordById = crud.deleteById;
+export async function deleteAttendanceRecordById(id: string): Promise<boolean> {
+  const tenant = getRequestTenant();
+  if (!tenant) return false;
+  const existing = await findAttendanceRecordById(tenant, id);
+  if (!existing) return false;
+  await deleteAttendanceRecord(tenant, id);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'attendance_records');
+  return true;
+}
 
 /** Replace full attendance collection (mark-attendance batch save). */
 export async function replaceAttendanceRecords(records: AttendanceRecord[]): Promise<AttendanceRecord[]> {
-  const parsed = attendanceListSchema.parse(records);
-  await persistCollection(COLLECTION, parsed);
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
+  const parsed = records.map((record) => attendanceRecordSchema.parse(record));
+  await replaceAttendanceRecordsForWorkspace(tenant, parsed);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'attendance_records');
   return parsed;
 }

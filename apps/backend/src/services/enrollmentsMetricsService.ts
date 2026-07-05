@@ -1,9 +1,8 @@
 import { computeEnrollmentsCommandMetrics, type EnrollmentsCommandMetricsSnapshot } from '@mms/shared';
-import { fetchCollection } from './dbSyncService.js';
+import { loadEnrollments } from './enrollmentService.js';
 
 export async function loadEnrollmentsCommandMetrics(): Promise<EnrollmentsCommandMetricsSnapshot> {
-  const raw = (await fetchCollection('enrollments')) ?? [];
-  const enrollments = Array.isArray(raw) ? raw : [];
+  const enrollments = await loadEnrollments();
   return computeEnrollmentsCommandMetrics(
     enrollments as Array<{ status?: string; finalFee?: number; enrolledDate?: string }>,
   );

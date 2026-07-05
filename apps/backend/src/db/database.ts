@@ -41,6 +41,17 @@ import { runMigration019 } from './migrations/019_seed_question_bank.js';
 import { runMigration020 } from './migrations/020_migrate_contacts_to_tables.js';
 import { runMigration021 } from './migrations/021_migrate_custom_tabs.js';
 import { runMigration022 } from './migrations/022_migrate_students_to_tables.js';
+import { runMigration023 } from './migrations/023_migrate_teachers_to_tables.js';
+import { runMigration024 } from './migrations/024_migrate_sessions_to_tables.js';
+import { runMigration025 } from './migrations/025_migrate_attendance_to_tables.js';
+import { runMigration026 } from './migrations/026_migrate_enrollments_to_tables.js';
+import { runMigration027 } from './migrations/027_migrate_obligations_to_tables.js';
+import { runMigration028 } from './migrations/028_migrate_finance_to_tables.js';
+import { runMigration029 } from './migrations/029_migrate_examinations_to_tables.js';
+import { runMigration030 } from './migrations/030_migrate_hasanat_to_tables.js';
+import { runMigration031 } from './migrations/031_migrate_accounting_to_tables.js';
+import { runMigration032 } from './migrations/032_migrate_question_bank_to_tables.js';
+import { runMigration033 } from './migrations/033_migrate_logs_to_tables.js';
 import { deleteTenantUsersByWorkspace, type TenantUserRow } from './repositories/tenantUserRepository.js';
 import { deleteAuthArtifactsForWorkspace, purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
@@ -119,6 +130,17 @@ export async function initDb(): Promise<void> {
       { id: '020', run: runMigration020 },
       { id: '021', run: runMigration021 },
       { id: '022', run: runMigration022 },
+      { id: '023', run: runMigration023 },
+      { id: '024', run: runMigration024 },
+      { id: '025', run: runMigration025 },
+      { id: '026', run: runMigration026 },
+      { id: '027', run: runMigration027 },
+      { id: '028', run: runMigration028 },
+      { id: '029', run: runMigration029 },
+      { id: '030', run: runMigration030 },
+      { id: '031', run: runMigration031 },
+      { id: '032', run: runMigration032 },
+      { id: '033', run: runMigration033 },
     ];
 
     const applied = await _rootDb.select().from(schema.dataMigrations);
@@ -198,6 +220,84 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
     } else if (parsed && parsed.logicalKey === 'students') {
       const { replaceStudentsForWorkspace } = await import('./repositories/studentRepository.js');
       await replaceStudentsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Student[]);
+    } else if (parsed && parsed.logicalKey === 'teachers') {
+      const { replaceTeachersForWorkspace } = await import('./repositories/teacherRepository.js');
+      await replaceTeachersForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Teacher[]);
+    } else if (parsed && parsed.logicalKey === 'sessions') {
+      const { replaceSessionsForWorkspace } = await import('./repositories/sessionRepository.js');
+      await replaceSessionsForWorkspace(parsed.subdomain, processedData as import('../validation/sessionSchemas.js').SessionRecord[]);
+    } else if (parsed && parsed.logicalKey === 'attendance_records') {
+      const { replaceAttendanceRecordsForWorkspace } = await import('./repositories/attendanceRepository.js');
+      await replaceAttendanceRecordsForWorkspace(parsed.subdomain, processedData as import('../validation/attendanceSchemas.js').AttendanceRecord[]);
+    } else if (parsed && parsed.logicalKey === 'enrollments') {
+      const { replaceEnrollmentsForWorkspace } = await import('./repositories/enrollmentRepository.js');
+      await replaceEnrollmentsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Enrollment[]);
+    } else if (parsed && parsed.logicalKey === 'obligation_types') {
+      const { replaceObligationTypesForWorkspace } = await import('./repositories/obligationRepository.js');
+      await replaceObligationTypesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').ObligationType[]);
+    } else if (parsed && parsed.logicalKey === 'mujtahids') {
+      const { replaceMujtahidsForWorkspace } = await import('./repositories/obligationRepository.js');
+      await replaceMujtahidsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Mujtahid[]);
+    } else if (parsed && parsed.logicalKey === 'mujtahid_reps') {
+      const { replaceMujtahidRepsForWorkspace } = await import('./repositories/obligationRepository.js');
+      await replaceMujtahidRepsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').MujtahidRep[]);
+    } else if (parsed && parsed.logicalKey === 'wakala_types') {
+      const { replaceWakalaTypesForWorkspace } = await import('./repositories/obligationRepository.js');
+      await replaceWakalaTypesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').WakalaType[]);
+    } else if (parsed && parsed.logicalKey === 'obligation_distributions') {
+      const { replaceObligationDistributionsForWorkspace } = await import('./repositories/obligationRepository.js');
+      await replaceObligationDistributionsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').ObligationDistribution[]);
+    } else if (parsed && parsed.logicalKey === 'obligation_collections') {
+      const { replaceObligationCollectionsForWorkspace } = await import('./repositories/obligationRepository.js');
+      await replaceObligationCollectionsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').ObligationCollection[]);
+    } else if (parsed && parsed.logicalKey === 'finance_invoices') {
+      const { replaceInvoicesForWorkspace } = await import('./repositories/financeRepository.js');
+      await replaceInvoicesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Invoice[]);
+    } else if (parsed && parsed.logicalKey === 'finance_payments') {
+      const { replacePaymentsForWorkspace } = await import('./repositories/financeRepository.js');
+      await replacePaymentsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Payment[]);
+    } else if (parsed && parsed.logicalKey === 'exams') {
+      const { replaceExamsForWorkspace } = await import('./repositories/examinationRepository.js');
+      await replaceExamsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Exam[]);
+    } else if (parsed && parsed.logicalKey === 'exam_results') {
+      const { replaceExamResultsForWorkspace } = await import('./repositories/examinationRepository.js');
+      await replaceExamResultsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').ExamResult[]);
+    } else if (parsed && parsed.logicalKey === 'hasanat_denoms') {
+      const { replaceDenomsForWorkspace } = await import('./repositories/hasanatRepository.js');
+      await replaceDenomsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Denomination[]);
+    } else if (parsed && parsed.logicalKey === 'hasanat_batches') {
+      const { replaceBatchesForWorkspace } = await import('./repositories/hasanatRepository.js');
+      await replaceBatchesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').StockBatch[]);
+    } else if (parsed && parsed.logicalKey === 'hasanat_distributions') {
+      const { replaceDistributionsForWorkspace } = await import('./repositories/hasanatRepository.js');
+      await replaceDistributionsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Distribution[]);
+    } else if (parsed && parsed.logicalKey === 'hasanat_redemptions') {
+      const { replaceRedemptionsForWorkspace } = await import('./repositories/hasanatRepository.js');
+      await replaceRedemptionsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Redemption[]);
+    } else if (parsed && parsed.logicalKey === 'accounting_accounts') {
+      const { replaceAccountsForWorkspace } = await import('./repositories/accountingRepository.js');
+      await replaceAccountsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Account[]);
+    } else if (parsed && parsed.logicalKey === 'accounting_entries') {
+      const { replaceEntriesForWorkspace } = await import('./repositories/accountingRepository.js');
+      await replaceEntriesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').JournalEntry[]);
+    } else if (parsed && parsed.logicalKey === 'accounting_fiscal_years') {
+      const { replaceFiscalYearsForWorkspace } = await import('./repositories/accountingRepository.js');
+      await replaceFiscalYearsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').FiscalYear[]);
+    } else if (parsed && parsed.logicalKey === 'questions') {
+      const { replaceQuestionsForWorkspace } = await import('./repositories/questionBankRepository.js');
+      await replaceQuestionsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').QuestionBankQuestion[]);
+    } else if (parsed && parsed.logicalKey === 'tests') {
+      const { replaceTestsForWorkspace } = await import('./repositories/questionBankRepository.js');
+      await replaceTestsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').QuestionBankTest[]);
+    } else if (parsed && parsed.logicalKey === 'assessment_results') {
+      const { replaceResultsForWorkspace } = await import('./repositories/questionBankRepository.js');
+      await replaceResultsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').QuestionBankResult[]);
+    } else if (parsed && parsed.logicalKey === 'user_activity_logs') {
+      const { replaceActivityLogsForWorkspace } = await import('./repositories/logsRepository.js');
+      await replaceActivityLogsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').ActivityLog[]);
+    } else if (parsed && parsed.logicalKey === 'audit_log') {
+      const { replaceAuditLogEntriesForWorkspace } = await import('./repositories/logsRepository.js');
+      await replaceAuditLogEntriesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').AuditLogEntry[]);
     }
 
     const tenant = getRequestTenant();
@@ -323,6 +423,28 @@ export async function purgeTenantDataBySubdomain(subdomain: string): Promise<voi
   await deleteContactsByWorkspace(tenant);
   const { deleteStudentsByWorkspace } = await import('./repositories/studentRepository.js');
   await deleteStudentsByWorkspace(tenant);
+  const { deleteTeachersByWorkspace } = await import('./repositories/teacherRepository.js');
+  await deleteTeachersByWorkspace(tenant);
+  const { deleteSessionsByWorkspace } = await import('./repositories/sessionRepository.js');
+  await deleteSessionsByWorkspace(tenant);
+  const { deleteAttendanceRecordsByWorkspace } = await import('./repositories/attendanceRepository.js');
+  await deleteAttendanceRecordsByWorkspace(tenant);
+  const { deleteEnrollmentsByWorkspace } = await import('./repositories/enrollmentRepository.js');
+  await deleteEnrollmentsByWorkspace(tenant);
+  const { deleteObligationsByWorkspace } = await import('./repositories/obligationRepository.js');
+  await deleteObligationsByWorkspace(tenant);
+  const { deleteFinanceByWorkspace } = await import('./repositories/financeRepository.js');
+  await deleteFinanceByWorkspace(tenant);
+  const { deleteExaminationsByWorkspace } = await import('./repositories/examinationRepository.js');
+  await deleteExaminationsByWorkspace(tenant);
+  const { deleteHasanatByWorkspace } = await import('./repositories/hasanatRepository.js');
+  await deleteHasanatByWorkspace(tenant);
+  const { deleteAccountingByWorkspace } = await import('./repositories/accountingRepository.js');
+  await deleteAccountingByWorkspace(tenant);
+  const { deleteQuestionBankByWorkspace } = await import('./repositories/questionBankRepository.js');
+  await deleteQuestionBankByWorkspace(tenant);
+  const { deleteLogsByWorkspace } = await import('./repositories/logsRepository.js');
+  await deleteLogsByWorkspace(tenant);
   await deleteAuthArtifactsForWorkspace(tenant);
 }
 

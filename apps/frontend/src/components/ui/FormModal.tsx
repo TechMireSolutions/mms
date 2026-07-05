@@ -109,9 +109,30 @@ export function FormModal<K extends string = string>({
     return requested;
   }, [size, tall, hasTabs]);
 
+  const activeIndex = useMemo(() => {
+    if (!tabs || !activeTab) return -1;
+    return tabs.findIndex((tab) => tab.key === activeTab);
+  }, [tabs, activeTab]);
+
+  const computedProgress = useMemo(() => {
+    if (progress !== undefined) return progress;
+    if (hasTabs && activeIndex !== -1 && tabs) {
+      return Math.round(((activeIndex + 1) / tabs.length) * 100);
+    }
+    return undefined;
+  }, [progress, hasTabs, activeIndex, tabs]);
+
+  const computedProgressLabel = useMemo(() => {
+    if (progressLabel !== undefined) return progressLabel;
+    if (hasTabs && activeIndex !== -1 && tabs) {
+      return `${activeIndex + 1}/${tabs.length}`;
+    }
+    return undefined;
+  }, [progressLabel, hasTabs, activeIndex, tabs]);
+
   const resolvedHeaderExtra = useMemo(() => {
-    if (progress === undefined) return headerExtra;
-    const bar = <FormProgressBar value={progress} label={progressLabel} />;
+    if (computedProgress === undefined) return headerExtra;
+    const bar = <FormProgressBar value={computedProgress} label={computedProgressLabel} />;
     if (!headerExtra) return bar;
     return (
       <div className="space-y-3">
@@ -119,7 +140,7 @@ export function FormModal<K extends string = string>({
         {headerExtra}
       </div>
     );
-  }, [headerExtra, progress, progressLabel]);
+  }, [headerExtra, computedProgress, computedProgressLabel]);
 
   const headerActions = useMemo(() => {
     if (!showBuilderToggle || !onBuilderModeChange) return null;

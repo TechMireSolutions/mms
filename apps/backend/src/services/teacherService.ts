@@ -10,59 +10,84 @@ import {
   type TeachersWidgetQuery,
 } from '@mms/shared';
 import {
-  teacherListSchema,
   type TeacherRecord,
 } from '../validation/teacherSchemas.js';
 import { loadContacts } from './contactService.js';
-import { defineCollectionCrudService } from './collectionCrudService.js';
-import { persistCollection } from './dbSyncService.js';
-
-const teachers = defineCollectionCrudService(
-  'teachers',
-  teacherListSchema,
-  (record) => normalizeStoredTeacher(record) as TeacherRecord,
-);
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  listTeachersByWorkspace,
+  findTeacherById,
+  saveTeacher,
+} from '../db/repositories/teacherRepository.js';
 
 export async function loadTeachers(options?: { includeDeleted?: boolean }): Promise<TeacherRecord[]> {
-  const rawRows = await teachers.load();
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  const rawRows = await listTeachersByWorkspace(tenant);
   const filtered = options?.includeDeleted ? rawRows : rawRows.filter((row) => !row.deletedAt);
   const contactsData = await loadContacts();
   if (!contactsData || !Array.isArray(contactsData)) {
-    return filtered;
+    return filtered as unknown as TeacherRecord[];
   }
   return filtered.map((row) =>
     hydrateTeacherFromContact(row as never, contactsData as never)
   ) as unknown as TeacherRecord[];
 }
 
-export const createTeacher = teachers.create;
-export const updateTeacherById = teachers.updateById;
+export async function createTeacher(record: TeacherRecord): Promise<TeacherRecord> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
+  const resolvedId = String(record.id ?? `tch-${Date.now()}`);
+  const normalized = normalizeStoredTeacher({ ...record, id: resolvedId }) as TeacherRecord;
+  await saveTeacher(tenant, normalized as any);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'teachers');
+  return normalized;
+}
+
+export async function updateTeacherById(id: string, record: TeacherRecord): Promise<TeacherRecord | null> {
+  const tenant = getRequestTenant();
+  if (!tenant) return null;
+  const existing = await findTeacherById(tenant, id);
+  if (!existing || existing.deletedAt) return null;
+  const normalized = normalizeStoredTeacher({ ...record, id }) as TeacherRecord;
+  await saveTeacher(tenant, normalized as any);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'teachers');
+  return normalized;
+}
 
 export async function deleteTeacherById(
   id: string,
   deletedBy: string,
   deletionReason?: string,
 ): Promise<boolean> {
-  const all = await teachers.load();
-  const index = all.findIndex((row) => String(row.id) === id);
-  if (index < 0 || all[index].deletedAt) return false;
-  all[index] = {
-    ...all[index],
+  const tenant = getRequestTenant();
+  if (!tenant) return false;
+  const existing = await findTeacherById(tenant, id);
+  if (!existing || existing.deletedAt) return false;
+  const updated = {
+    ...existing,
     deletedAt: new Date().toISOString(),
     deletedBy,
     deletionReason: deletionReason || undefined,
-  };
-  await persistCollection('teachers', all);
+  } as any;
+  await saveTeacher(tenant, updated);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'teachers');
   return true;
 }
 
 export async function restoreTeacherById(id: string): Promise<boolean> {
-  const all = await teachers.load();
-  const index = all.findIndex((row) => String(row.id) === id);
-  if (index < 0 || !all[index].deletedAt) return false;
-  const { deletedAt: _deletedAt, deletedBy: _deletedBy, deletionReason: _deletionReason, ...rest } = all[index];
-  all[index] = rest as TeacherRecord;
-  await persistCollection('teachers', all);
+  const tenant = getRequestTenant();
+  if (!tenant) return false;
+  const existing = await findTeacherById(tenant, id);
+  if (!existing || !existing.deletedAt) return false;
+  const { deletedAt: _deletedAt, deletedBy: _deletedBy, deletionReason: _deletionReason, ...rest } = existing;
+  const restored = rest as any;
+  await saveTeacher(tenant, restored);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'teachers');
   return true;
 }
 

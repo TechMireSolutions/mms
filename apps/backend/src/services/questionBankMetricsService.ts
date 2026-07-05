@@ -4,16 +4,14 @@ import {
   normalizeQuestionBankSettings,
   type QuestionBankCommandMetricsSnapshot,
 } from '@mms/shared';
-import { fetchCollection, fetchObject } from './dbSyncService.js';
+import { fetchObject } from './dbSyncService.js';
+import { loadQuestions, loadTests, loadResults } from './questionBankService.js';
 
 export async function loadQuestionBankCommandMetrics(): Promise<QuestionBankCommandMetricsSnapshot> {
-  const questionsRaw = (await fetchCollection('questions')) ?? [];
-  const testsRaw = (await fetchCollection('tests')) ?? [];
-  const resultsRaw = (await fetchCollection('assessment_results')) ?? [];
+  const questions = await loadQuestions();
+  const tests = await loadTests();
+  const results = await loadResults();
   const settingsRaw = await fetchObject('question_bank_settings');
-  const questions = Array.isArray(questionsRaw) ? questionsRaw : [];
-  const tests = Array.isArray(testsRaw) ? testsRaw : [];
-  const results = Array.isArray(resultsRaw) ? resultsRaw : [];
   const settings = normalizeQuestionBankSettings(
     settingsRaw && typeof settingsRaw === 'object'
       ? (settingsRaw as Partial<typeof DEFAULT_QUESTION_BANK_SETTINGS>)

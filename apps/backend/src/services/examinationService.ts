@@ -2,32 +2,53 @@ import {
   type Exam,
   type ExamResult,
   examListSchema,
-  examRecordSchema,
   examResultListSchema,
-  examResultRecordSchema,
 } from '@mms/shared';
-import { defineCollectionCrudService } from './collectionCrudService.js';
-import { persistCollection } from './dbSyncService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  listExamsByWorkspace,
+  replaceExamsForWorkspace,
+  listExamResultsByWorkspace,
+  replaceExamResultsForWorkspace,
+} from '../db/repositories/examinationRepository.js';
 
-const EXAMS_COLLECTION = 'exams';
-const EXAM_RESULTS_COLLECTION = 'exam_results';
+// --- Helper WebSocket broadcaster ---
+async function broadcast(logicalKey: string) {
+  const tenant = getRequestTenant();
+  if (tenant) {
+    const { broadcastTenantUpdate } = await import('./websocketService.js');
+    broadcastTenantUpdate(tenant, 'collection', logicalKey);
+  }
+}
 
 // --- Exams ---
-const normalizeExam = (record: Exam) => examRecordSchema.parse(record);
-const examCrud = defineCollectionCrudService(EXAMS_COLLECTION, examListSchema, normalizeExam);
-export const loadExams = examCrud.load;
+export async function loadExams(): Promise<Exam[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listExamsByWorkspace(tenant);
+}
+
 export async function replaceExams(records: Exam[]): Promise<Exam[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = examListSchema.parse(records);
-  await persistCollection(EXAMS_COLLECTION, parsed);
+  await replaceExamsForWorkspace(tenant, parsed);
+  await broadcast('exams');
   return parsed;
 }
 
 // --- Exam Results ---
-const normalizeExamResult = (record: ExamResult) => examResultRecordSchema.parse(record);
-const examResultCrud = defineCollectionCrudService(EXAM_RESULTS_COLLECTION, examResultListSchema, normalizeExamResult);
-export const loadExamResults = examResultCrud.load;
+export async function loadExamResults(): Promise<ExamResult[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listExamResultsByWorkspace(tenant);
+}
+
 export async function replaceExamResults(records: ExamResult[]): Promise<ExamResult[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
   const parsed = examResultListSchema.parse(records);
-  await persistCollection(EXAM_RESULTS_COLLECTION, parsed);
+  await replaceExamResultsForWorkspace(tenant, parsed);
+  await broadcast('exam_results');
   return parsed;
 }
