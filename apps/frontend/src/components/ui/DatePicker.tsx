@@ -161,6 +161,26 @@ export function DatePicker({
 
   return (
     <div className={cn("relative flex w-full items-center rounded-lg border border-border bg-background px-3 py-2.5 min-h-[44px] text-sm text-foreground focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40 transition-all", className)}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger
+          type="button"
+          disabled={disabled}
+          className="mr-2 p-1 hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
+          aria-label="Open calendar popup"
+        >
+          <CalendarIcon className="h-4 w-4 opacity-70" />
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0 border border-border/80 shadow-xl bg-background/90 backdrop-blur-xl rounded-xl" align="start">
+          <Calendar
+            mode="single"
+            selected={dateValue}
+            onSelect={handleSelect}
+            disabled={disabledDays}
+            autoFocus
+          />
+        </PopoverContent>
+      </Popover>
+
       <input
         type="text"
         id={resolvedId}
@@ -180,34 +200,12 @@ export function DatePicker({
         <button
           type="button"
           onClick={handleClear}
-          className="p-1 hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors mr-1 cursor-pointer"
+          className="p-1 hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0 ml-1"
           aria-label="Clear date"
         >
           <X className="h-3.5 w-3.5" />
         </button>
       )}
-      
-      <div className="h-4 w-px bg-border mx-1.5" />
- 
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger
-          type="button"
-          disabled={disabled}
-          className="p-1 hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-          aria-label="Open calendar popup"
-        >
-          <CalendarIcon className="h-4 w-4 opacity-70" />
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 border border-border/80 shadow-xl bg-background/90 backdrop-blur-xl rounded-xl" align="end">
-          <Calendar
-            mode="single"
-            selected={dateValue}
-            onSelect={handleSelect}
-            disabled={disabledDays}
-            autoFocus
-          />
-        </PopoverContent>
-      </Popover>
  
       {required && !value && (
         <input
