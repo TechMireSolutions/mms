@@ -23,6 +23,8 @@ import { RolesPermissions } from "@/tenant/features/users/components/RolesPermis
 import { UsersSettingsPanel } from "@/tenant/features/users/components/UsersSettingsPanel";
 import { ActivityLogs } from "@/tenant/features/users/components/ActivityLogs";
 import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
+import KPISummary from '@/tenant/features/reports/components/KPISummary';
+import { UsersCommandMetrics } from '@/tenant/features/users/components/UsersCommandMetrics';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { useIsAdminViewer } from '@/tenant/hooks/useViewerRole';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
@@ -200,6 +202,8 @@ export default function Users(): React.JSX.Element {
         }
       />
 
+      <UsersCommandMetrics users={users} shown={users.length} />
+
       <ResponsiveAccordionTabs
         tabs={visibleTopTabs}
         activeTab={effectiveTab}
@@ -226,7 +230,10 @@ export default function Users(): React.JSX.Element {
               className="space-y-4"
             >
               {effectiveTab === 'reports' && (
-                <ModuleReports category="faculty" />
+                <div className="space-y-4">
+                  <KPISummary category="faculty" />
+                  <ModuleReports category="faculty" />
+                </div>
               )}
               {effectiveTab === 'setup' && (
                 <div className="space-y-4">
