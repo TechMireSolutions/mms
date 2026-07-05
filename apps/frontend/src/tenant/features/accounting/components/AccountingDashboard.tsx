@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { formatDate } from "@/lib/utils";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   TrendingUp, TrendingDown, Scale, DollarSign, AlertCircle, CheckCircle2, Clock,
@@ -246,7 +247,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-mono font-bold text-foreground m-0">{formatCurrency(totalDebit)}</p>
-                    <p className="text-[10px] text-muted-foreground m-0">{new Date(journalEntry.date).toLocaleDateString(locale, { day: "numeric", month: "short" })}</p>
+                    <p className="text-[10px] text-muted-foreground m-0">{formatDate(journalEntry.date)}</p>
                   </div>
                 </article>
               );
