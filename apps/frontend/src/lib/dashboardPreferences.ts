@@ -2,7 +2,6 @@ import { getObject, saveObject } from '@/lib/db';
 
 export const DASHBOARD_DISABLED_CARDS_KEY = 'mms_dashboard_disabled_cards';
 export const DASHBOARD_WIDGETS_KEY = 'kpi_custom_widgets';
-const LEGACY_DISABLED_CARDS_KEY = 'dashboard_disabled_cards';
 
 export function loadDisabledCardIds(): string[] {
   return getObject<string[]>(DASHBOARD_DISABLED_CARDS_KEY, []);

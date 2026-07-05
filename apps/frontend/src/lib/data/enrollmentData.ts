@@ -116,8 +116,8 @@ export function runFullEligibility(
 export function calcFee(
   baseFee: number,
   student: Partial<Student>,
-  students: Student[],
-  sessionDiscounts: Discount[]
+  _students: Student[],
+  _sessionDiscounts: Discount[]
 ): CalculatedFee {
   const discountType = student.discountType || "none";
   let pct = student.discountPct || 0;
