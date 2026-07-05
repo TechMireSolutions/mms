@@ -46,7 +46,7 @@ export const tenantUsers = pgTable('tenant_users', {
   passwordHash: text('password_hash').notNull(),
   name: text('name').notNull().default(''),
   role: text('role').notNull().default('assistant_teacher'),
-  contactId: text('contact_id'),
+  contactId: text('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
   emailVerifiedAt: timestamp('email_verified_at', { mode: 'date' }),
   pendingLoginEmail: text('pending_login_email'),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
@@ -70,12 +70,13 @@ export const contacts = pgTable('contacts', {
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   index('contacts_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('contacts_custom_data_gin_idx').using('gin', table.customData),
 ]);
 
 export const backgroundJobs = pgTable('background_jobs', {
   id: text('id').primaryKey(),
   tenantId: text('tenant_id').notNull(),
-  userId: text('user_id').notNull(),
+  userId: text('user_id').notNull().references(() => tenantUsers.id, { onDelete: 'cascade' }),
   moduleId: text('module_id').notNull(),
   kind: text('kind').notNull(),
   status: text('status').notNull().default('pending'),
