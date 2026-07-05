@@ -23,18 +23,9 @@ interface AttendanceFiltersProps {
   onChange: (newFilters: AttendanceFilterState) => void;
 }
 
-interface ClassInfo {
-  id: string;
-  name: string;
-  sessionId?: string;
-  sessionName?: string;
-}
 
-interface Session {
-  id: string;
-  name: string;
-  classes?: ClassInfo[];
-}
+
+
 
 /**
  * AttendanceFilters

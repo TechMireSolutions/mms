@@ -9,10 +9,7 @@ import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessi
 import { useTranslation } from "@/hooks/useTranslation";
 
 // Type definitions
-interface ClassInfo {
-  id: string;
-  name: string;
-}
+
 
 interface ClassBreakdown {
   classId: string;

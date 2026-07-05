@@ -23,7 +23,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
   const type = form.type as AccountType;
   const subtypes = type ? (ACCOUNT_SUBTYPES[type] || []) : [];
 
-  const { fields, customFields, orderedFields } = useAccountingConfig();
+  const { fields, orderedFields } = useAccountingConfig();
 
   const validate = () => {
     const e: Record<string, string> = {};

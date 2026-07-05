@@ -76,7 +76,7 @@ export default function Dashboard() {
   const { can } = usePermissions();
   const dashboardRole = useMemo(() => resolveDashboardRole(can), [can]);
   const globalSettings = useGlobalSettings();
-  const enabledModules = globalSettings.enabledModules || {};
+  const enabledModules = useMemo(() => globalSettings.enabledModules || {}, [globalSettings.enabledModules]);
 
   const {
     disabledCardIds,
@@ -103,7 +103,7 @@ export default function Dashboard() {
     questions,
     tests,
     assessmentResults,
-    dataVolume,
+
     studentMetricsNew,
     teacherMetricsNew,
     contactMetricsNew,

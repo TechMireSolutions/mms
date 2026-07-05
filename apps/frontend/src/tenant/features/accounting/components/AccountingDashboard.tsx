@@ -62,7 +62,7 @@ interface AccountingDashboardProps {
  * @param {AccountingDashboardProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function AccountingDashboard({ accounts, entries, settings, fiscalYears, formatCurrency }: AccountingDashboardProps) {
+export function AccountingDashboard({ accounts, entries, settings: _settings, fiscalYears: _fiscalYears, formatCurrency }: AccountingDashboardProps) {
   const { t, language } = useTranslation();
   const locale = getIntlLocaleForLanguage(language);
   const { primary, secondary, charts } = useBrandPalette();

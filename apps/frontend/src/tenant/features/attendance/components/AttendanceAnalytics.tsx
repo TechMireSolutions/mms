@@ -131,7 +131,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
       name: student.name.split(" ")[0] + " " + (student.name.split(" ")[1]?.[0] ?? "") + ".",
       rate: calcStudentRate(student.id, records),
     })).sort((firstStudent, secondStudent) => firstStudent.rate - secondStudent.rate),
-    [students, trendClassId, records]
+    [students, records]
   );
 
   const lowAttendance = studentRates.filter((studentRate) => studentRate.rate < 75);

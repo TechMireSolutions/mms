@@ -98,8 +98,7 @@ function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: R
   );
 }
 
-const VIEW_IDS = ["income", "balance", "cashflow"] as const;
-type ViewType = typeof VIEW_IDS[number];
+type ViewType = "income" | "balance" | "cashflow";
 
 interface FinancialReportsProps {
   accounts: Account[];
@@ -117,7 +116,7 @@ interface FinancialReportsProps {
  * @param {FinancialReportsProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function FinancialReports({ accounts, entries, fiscalYears, settings, formatCurrency }: FinancialReportsProps) {
+export function FinancialReports({ accounts, entries, fiscalYears, settings: _settings, formatCurrency }: FinancialReportsProps) {
   const { t } = useTranslation();
   const reportViews = useMemo(
     () => [

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -91,7 +91,7 @@ export function AuditLog({ filters }: AuditLogProps) {
   const [classId, setClassId] = useState(filters.classId || "");
   const [date, setDate] = useState(filters.date || new Date().toISOString().slice(0, 10));
 
-  const reload = () => {
+  const reload = useCallback(() => {
     try {
       const result = getAuditLog(classId, date);
       setLog(Array.isArray(result) ? result : []);
@@ -99,9 +99,9 @@ export function AuditLog({ filters }: AuditLogProps) {
       console.error("Failed to load audit log", error);
       setLog([]);
     }
-  };
+  }, [classId, date]);
 
-  useEffect(() => { reload(); }, [classId, date]);
+  useEffect(() => { reload(); }, [reload]);
   
   useEffect(() => {
     if (filters.classId) setClassId(filters.classId);

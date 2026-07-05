@@ -6,7 +6,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/FormPrimitives";
-import { useTranslation } from "@/hooks/useTranslation";
+
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { notify } from "@/lib/notify";
 import { Exam } from '@/lib/data/examinationData';
@@ -35,7 +35,6 @@ interface ExamFormProps {
 }
 
 export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFormProps): React.JSX.Element {
-  const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const sessions = useSessionsCollection();

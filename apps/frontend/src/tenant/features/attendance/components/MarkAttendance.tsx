@@ -273,7 +273,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
  */
 export function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
   const { t } = useTranslation();
-  const { settings, statuses, fields, customFields, orderedFields } = useAttendanceConfig();
+  const { statuses, fields, customFields, orderedFields } = useAttendanceConfig();
   const { can } = usePermissions();
   const sessions = useSessionsCollection();
   const enrollments = useLiveCollection<Enrollment>("enrollments");

@@ -251,7 +251,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
       settings.enabledTabs || ["basic"],
       settings.requiredTabs || []
     );
-  }, [settings]);
+  }, [settings, fieldsEditor]);
 
   const handleSave = () => {
     const updatedFormTabs = fieldsEditor.formTabs.map(tabDefinition => ({

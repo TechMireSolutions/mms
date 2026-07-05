@@ -52,7 +52,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
   const [done, setDone]             = useState<boolean>(false);
   const [direction, setDirection]   = useState<number>(1);
 
-  const { settings, fields, customFields } = useEnrollmentConfig();
+  const { fields, customFields } = useEnrollmentConfig();
 
   const suggested = student && session ? suggestClass(student, session) : null;
 

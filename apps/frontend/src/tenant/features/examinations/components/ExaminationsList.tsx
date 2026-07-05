@@ -67,7 +67,7 @@ export default function ExamsList({
   exams,
   onNew,
   onEdit,
-  listLayout = false,
+  listLayout: _listLayout = false,
   onFilteredCountChange,
   isColumnVisible,
   columnCustomizer,

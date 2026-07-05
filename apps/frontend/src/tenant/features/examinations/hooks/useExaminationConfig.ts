@@ -61,8 +61,8 @@ export function useExaminationConfig() {
   }, []);
 
   const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = settings.customFields ?? [];
-  const fieldOrder = settings.fieldOrder ?? DEFAULT_EXAMINATIONS_SETTINGS.fieldOrder ?? [];
+  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
+  const fieldOrder = useMemo(() => settings.fieldOrder ?? DEFAULT_EXAMINATIONS_SETTINGS.fieldOrder ?? [], [settings.fieldOrder]);
 
   const orderedFields = useMemo(
     () => getSortedFields(DEFAULT_EXAMINATIONS_FIELD_DEFS, fieldOrder, fields, customFields),

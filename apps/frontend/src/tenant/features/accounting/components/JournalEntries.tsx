@@ -94,7 +94,7 @@ interface JournalEntriesProps {
 export function JournalEntries({
   entries,
   accounts,
-  settings,
+  settings: _settings,
   fiscalYears,
   onChange,
   formatCurrency,

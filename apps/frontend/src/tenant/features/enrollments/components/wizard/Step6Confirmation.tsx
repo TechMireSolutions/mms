@@ -74,7 +74,7 @@ export function Step6Confirmation({
 }: Step6ConfirmationProps): React.ReactElement {
   const age = student ? calcAge(student.dob) : null;
 
-  const { fields, customFields, orderedFields: allOrderedFields } = useEnrollmentConfig();
+  const { fields, orderedFields: allOrderedFields } = useEnrollmentConfig();
 
   const orderedFields = React.useMemo(() => {
     return allOrderedFields.filter((field) => !["studentId", "sessionId", "classId"].includes(field.id));

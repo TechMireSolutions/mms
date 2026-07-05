@@ -82,10 +82,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
     initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
   });
 
-  const [isAddTabModalOpen, setIsAddTabModalOpen] = useState(false);
-  const [newTabLabel, setNewTabLabel] = useState("");
-  const [renamingTabKey, setRenamingTabKey] = useState<string | null>(null);
-  const [renameTabLabel, setRenameTabLabel] = useState("");
+
 
   useEffect(() => {
     if (!settings) return;
@@ -122,7 +119,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
       settings.enabledTabs || ["basic"],
       settings.requiredTabs || []
     );
-  }, [settings]);
+  }, [settings, fieldsEditor]);
 
   if (role !== "admin") {
     return (
