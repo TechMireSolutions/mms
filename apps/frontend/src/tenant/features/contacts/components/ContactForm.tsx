@@ -1,5 +1,17 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { User, Phone, Mail, MapPin, Share2, Heart, Plus, Camera, Calendar, FileText, Star } from "lucide-react";
+import {
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  Share2,
+  Heart,
+  Plus,
+  Camera,
+  Calendar,
+  FileText,
+  Star,
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -89,7 +101,9 @@ export default function ContactForm({
 
   const [tab, setTab] = useState<TabKey>("basic");
   const [saving, setSaving] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
+    [],
+  );
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() => {
@@ -116,7 +130,11 @@ export default function ContactForm({
     if (initial.phones) {
       initial.phones = initial.phones.map((phone) => {
         if (phone.countryCode) return phone;
-        const parsed = parsePhoneNumber(phone.number || "", "+92", ["+92", "+1", "+44"]);
+        const parsed = parsePhoneNumber(phone.number || "", "+92", [
+          "+92",
+          "+1",
+          "+44",
+        ]);
         return {
           ...phone,
           countryCode: parsed.countryCode,
@@ -142,27 +160,28 @@ export default function ContactForm({
       if (!exists) return true; // Default standard database columns to true if not registered in fields
       return isTabFieldEnabled(tabId, fieldId);
     },
-    [fields, isTabFieldEnabled]
+    [fields, isTabFieldEnabled],
   );
 
   const getFieldError = useCallback(
     (fieldId: string) => {
       const found = validationErrors.find(
-        (err) => err.fieldId === fieldId && err.index === undefined
+        (err) => err.fieldId === fieldId && err.index === undefined,
       );
       return found?.message;
     },
-    [validationErrors]
+    [validationErrors],
   );
 
   const getListItemError = useCallback(
     (tabId: string, fieldId: string, index: number) => {
       const found = validationErrors.find(
-        (err) => err.tabId === tabId && err.fieldId === fieldId && err.index === index
+        (err) =>
+          err.tabId === tabId && err.fieldId === fieldId && err.index === index,
       );
       return found?.message;
     },
-    [validationErrors]
+    [validationErrors],
   );
 
   const updateDraft = useCallback((patch: Partial<Contact>) => {
@@ -177,7 +196,9 @@ export default function ContactForm({
     });
   }, []);
 
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
     if (file.type.startsWith("image/")) {
@@ -199,10 +220,18 @@ export default function ContactForm({
     let parsed;
     const trimmedNumber = phone.number.trim();
     if (trimmedNumber.startsWith("+") || trimmedNumber.startsWith("00")) {
-      parsed = parsePhoneNumber(trimmedNumber, phone.countryCode || "+92", ["+92", "+1", "+44"]);
+      parsed = parsePhoneNumber(trimmedNumber, phone.countryCode || "+92", [
+        "+92",
+        "+1",
+        "+44",
+      ]);
     } else {
       const e164 = normalizeToE164(phone.countryCode || "+92", phone.number);
-      parsed = parsePhoneNumber(e164, phone.countryCode || "+92", ["+92", "+1", "+44"]);
+      parsed = parsePhoneNumber(e164, phone.countryCode || "+92", [
+        "+92",
+        "+1",
+        "+44",
+      ]);
     }
 
     const updatedPhones = [...(contactDraft.phones || [])];
@@ -225,7 +254,9 @@ export default function ContactForm({
         formErrors.push({
           fieldId: "cnic",
           tabId: "basic",
-          message: t("contacts.form.cnicInvalid") || "CNIC must be in the format 99999 9999999 9",
+          message:
+            t("contacts.form.cnicInvalid") ||
+            "CNIC must be in the format 99999 9999999 9",
         });
       }
     }
@@ -236,7 +267,9 @@ export default function ContactForm({
       if (firstError.tabId) {
         setTab(firstError.tabId as TabKey);
       }
-      notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
+      notify.error(
+        t("contacts.form.pleaseFixErrors") || "Please fix validation errors",
+      );
       return;
     }
 
@@ -250,10 +283,21 @@ export default function ContactForm({
         const trimmedNumber = (phone.number || "").trim();
         let parsed;
         if (trimmedNumber.startsWith("+") || trimmedNumber.startsWith("00")) {
-          parsed = parsePhoneNumber(trimmedNumber, phone.countryCode || "+92", ["+92", "+1", "+44"]);
+          parsed = parsePhoneNumber(trimmedNumber, phone.countryCode || "+92", [
+            "+92",
+            "+1",
+            "+44",
+          ]);
         } else {
-          const e164 = normalizeToE164(phone.countryCode || "+92", phone.number);
-          parsed = parsePhoneNumber(e164, phone.countryCode || "+92", ["+92", "+1", "+44"]);
+          const e164 = normalizeToE164(
+            phone.countryCode || "+92",
+            phone.number,
+          );
+          parsed = parsePhoneNumber(e164, phone.countryCode || "+92", [
+            "+92",
+            "+1",
+            "+44",
+          ]);
         }
         return {
           ...phone,
@@ -270,18 +314,23 @@ export default function ContactForm({
         name: [firstName, lastName].filter(Boolean).join(" "),
         phones: normalizedPhones,
         updatedAt: new Date().toISOString().slice(0, 10),
-        createdAt: contactDraft.createdAt || new Date().toISOString().slice(0, 10),
+        createdAt:
+          contactDraft.createdAt || new Date().toISOString().slice(0, 10),
       } as Contact;
 
       const finalized = applyTitleCaseToContact(contactRaw) as Contact;
 
       onSave(finalized);
       notify.success(
-        contact ? t("contacts.form.contactUpdated") : t("contacts.form.contactCreated")
+        contact
+          ? t("contacts.form.contactUpdated")
+          : t("contacts.form.contactCreated"),
       );
       onClose();
     } catch (err: any) {
-      notify.error(t("settings.serverSaveFailed"), { description: err.message });
+      notify.error(t("settings.serverSaveFailed"), {
+        description: err.message,
+      });
     } finally {
       setSaving(false);
     }
@@ -315,7 +364,7 @@ export default function ContactForm({
                 <span className="text-2xl font-bold text-primary select-none">
                   {getInitials(
                     contactDraft.name ||
-                      `${contactDraft.firstName || ""} ${contactDraft.lastName || ""}`.trim()
+                      `${contactDraft.firstName || ""} ${contactDraft.lastName || ""}`.trim(),
                   )}
                 </span>
               )}
@@ -337,7 +386,9 @@ export default function ContactForm({
 
           <div className="text-center sm:text-left flex-1 min-w-0">
             <h3 className="text-base font-bold text-foreground truncate">
-              {contactDraft.name || t("contacts.form.createNewContact") || "New Contact"}
+              {contactDraft.name ||
+                t("contacts.form.createNewContact") ||
+                "New Contact"}
             </h3>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
               {contactDraft.gender && contactDraft.gender !== "unspecified" && (
@@ -400,7 +451,11 @@ export default function ContactForm({
             id="gender"
           >
             <EditableSelect
-              options={genders.length > 0 ? genders : ["male", "female", "other", "unspecified"]}
+              options={
+                genders.length > 0
+                  ? genders
+                  : ["male", "female", "other", "unspecified"]
+              }
               value={contactDraft.gender || ""}
               onChange={(val) => updateDraft({ gender: val.toLowerCase() })}
               placeholder={t("contacts.form.selectOption")}
@@ -410,7 +465,11 @@ export default function ContactForm({
         )}
 
         {isFieldEnabled("basic", "dob") && (
-          <Field label={t("contacts.reportFields.dob")} error={getFieldError("dob")} id="dob">
+          <Field
+            label={t("contacts.reportFields.dob")}
+            error={getFieldError("dob")}
+            id="dob"
+          >
             <div className="relative flex items-center group/input">
               <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
               <Input
@@ -437,7 +496,9 @@ export default function ContactForm({
                   const formatted = formatCnic(e.target.value);
                   updateDraft({ cnic: formatted });
                 }}
-                placeholder={t("contacts.form.cnicPlaceholder") || "99999 9999999 9"}
+                placeholder={
+                  t("contacts.form.cnicPlaceholder") || "99999 9999999 9"
+                }
                 className="pl-10"
               />
             </div>
@@ -452,13 +513,15 @@ export default function ContactForm({
                 "flex items-center gap-3 py-3 px-4.5 rounded-xl border select-none cursor-pointer transition-all duration-300",
                 contactDraft.isSyed
                   ? "bg-primary/10 border-primary/45 shadow-sm"
-                  : "bg-muted/5 border-border/80 hover:bg-muted/10 hover:border-border"
+                  : "bg-muted/5 border-border/80 hover:bg-muted/10 hover:border-border",
               )}
             >
               <Checkbox
                 id="isSyed"
                 checked={!!contactDraft.isSyed}
-                onCheckedChange={(checked) => updateDraft({ isSyed: !!checked })}
+                onCheckedChange={(checked) =>
+                  updateDraft({ isSyed: !!checked })
+                }
                 className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
               />
               <div className="flex-1 flex items-center justify-between">
@@ -470,7 +533,7 @@ export default function ContactForm({
                     "w-4 h-4 transition-all duration-300",
                     contactDraft.isSyed
                       ? "text-amber-500 fill-amber-500 scale-110"
-                      : "text-muted-foreground/40"
+                      : "text-muted-foreground/40",
                   )}
                 />
               </div>
@@ -480,7 +543,11 @@ export default function ContactForm({
       </div>
 
       {isFieldEnabled("basic", "notes") && (
-        <Field label={t("teachers.field.notes")} id="notes" error={getFieldError("notes")}>
+        <Field
+          label={t("teachers.field.notes")}
+          id="notes"
+          error={getFieldError("notes")}
+        >
           <Textarea
             value={(contactDraft.notes as string) || ""}
             onChange={(e) => updateDraft({ notes: e.target.value })}
@@ -494,10 +561,19 @@ export default function ContactForm({
 
   const renderPhones = () => {
     const phones = contactDraft.phones || [];
-    const addPhone = () => updateDraft({ phones: [...phones, { label: "Mobile", number: "", countryCode: "+92" }] });
-    const removePhone = (idx: number) => updateDraft({ phones: phones.filter((_, i) => i !== idx) });
+    const addPhone = () =>
+      updateDraft({
+        phones: [
+          ...phones,
+          { label: "Mobile", number: "", countryCode: "+92" },
+        ],
+      });
+    const removePhone = (idx: number) =>
+      updateDraft({ phones: phones.filter((_, i) => i !== idx) });
     const updatePhone = (idx: number, patch: Partial<PhoneNumber>) => {
-      updateDraft({ phones: phones.map((p, i) => (i === idx ? { ...p, ...patch } : p)) });
+      updateDraft({
+        phones: phones.map((p, i) => (i === idx ? { ...p, ...patch } : p)),
+      });
     };
 
     return (
@@ -505,7 +581,9 @@ export default function ContactForm({
         {phones.length === 0 && (
           <div className="text-center py-8 border border-dashed border-border/85 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <Phone className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">{t("contacts.form.noPhoneNumbersYet")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("contacts.form.noPhoneNumbersYet")}
+            </p>
           </div>
         )}
 
@@ -526,23 +604,36 @@ export default function ContactForm({
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
                     <div className="flex items-center gap-2.5">
                       <Phone className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-                      <span className="text-xs font-semibold text-foreground/80">{t("contacts.form.type")}:</span>
+                      <span className="text-xs font-semibold text-foreground/80">
+                        {t("contacts.form.type")}:
+                      </span>
                       <EditableSelect
-                        options={phoneLabels.length > 0 ? phoneLabels : ["Mobile", "Home", "Work", "WhatsApp", "Other"]}
+                        options={
+                          phoneLabels.length > 0
+                            ? phoneLabels
+                            : ["Mobile", "Home", "Work", "WhatsApp", "Other"]
+                        }
                         value={phone.label || "Mobile"}
                         onChange={(val) => updatePhone(idx, { label: val })}
                         className={TYPE_SELECT_WIDTH}
                       />
                     </div>
-                    <CardRemoveButton onClick={() => removePhone(idx)} label="Remove Phone" />
+                    <CardRemoveButton
+                      onClick={() => removePhone(idx)}
+                      label="Remove Phone"
+                    />
                   </div>
 
                   <div className="flex gap-2.5">
                     <div className="w-24 flex-shrink-0 relative flex items-center group/input">
-                      <span className="absolute left-3.5 text-xs text-muted-foreground/60 font-semibold select-none pointer-events-none">cc</span>
+                      <span className="absolute left-3.5 text-xs text-muted-foreground/60 font-semibold select-none pointer-events-none">
+                        cc
+                      </span>
                       <Input
                         value={phone.countryCode || "+92"}
-                        onChange={(e) => updatePhone(idx, { countryCode: e.target.value })}
+                        onChange={(e) =>
+                          updatePhone(idx, { countryCode: e.target.value })
+                        }
                         onBlur={() => handlePhoneBlur(idx)}
                         placeholder="+92"
                         className="pl-9 font-medium"
@@ -555,10 +646,20 @@ export default function ContactForm({
                         onChange={(e) => {
                           const val = e.target.value;
                           const trimmed = val.trim();
-                          if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
+                          if (
+                            trimmed.startsWith("+") ||
+                            trimmed.startsWith("00")
+                          ) {
                             if (trimmed.length > 6) {
-                              const parsed = parsePhoneNumber(val, phone.countryCode || "+92", ["+92", "+1", "+44"]);
-                              updatePhone(idx, { countryCode: parsed.countryCode, number: parsed.number });
+                              const parsed = parsePhoneNumber(
+                                val,
+                                phone.countryCode || "+92",
+                                ["+92", "+1", "+44"],
+                              );
+                              updatePhone(idx, {
+                                countryCode: parsed.countryCode,
+                                number: parsed.number,
+                              });
                               return;
                             }
                           }
@@ -566,12 +667,18 @@ export default function ContactForm({
                         }}
                         onBlur={() => handlePhoneBlur(idx)}
                         placeholder={t("contacts.form.phoneNumberPlaceholder")}
-                        className={cn("pl-10", numError && "border-destructive focus-visible:ring-destructive")}
+                        className={cn(
+                          "pl-10",
+                          numError &&
+                            "border-destructive focus-visible:ring-destructive",
+                        )}
                       />
                     </div>
                   </div>
                   {numError && (
-                    <p className="text-[10px] text-destructive mt-1 font-medium">{numError}</p>
+                    <p className="text-[10px] text-destructive mt-1 font-medium">
+                      {numError}
+                    </p>
                   )}
                 </motion.div>
               );
@@ -594,10 +701,14 @@ export default function ContactForm({
 
   const renderEmails = () => {
     const emails = contactDraft.emails || [];
-    const addEmail = () => updateDraft({ emails: [...emails, { label: "Personal", address: "" }] });
-    const removeEmail = (idx: number) => updateDraft({ emails: emails.filter((_, i) => i !== idx) });
+    const addEmail = () =>
+      updateDraft({ emails: [...emails, { label: "Personal", address: "" }] });
+    const removeEmail = (idx: number) =>
+      updateDraft({ emails: emails.filter((_, i) => i !== idx) });
     const updateEmail = (idx: number, patch: Partial<EmailAddress>) => {
-      updateDraft({ emails: emails.map((e, i) => (i === idx ? { ...e, ...patch } : e)) });
+      updateDraft({
+        emails: emails.map((e, i) => (i === idx ? { ...e, ...patch } : e)),
+      });
     };
 
     return (
@@ -605,7 +716,9 @@ export default function ContactForm({
         {emails.length === 0 && (
           <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <Mail className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">{t("contacts.form.noEmailAddressesYet")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("contacts.form.noEmailAddressesYet")}
+            </p>
           </div>
         )}
 
@@ -626,15 +739,24 @@ export default function ContactForm({
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
                     <div className="flex items-center gap-2.5">
                       <Mail className="w-4 h-4 text-amber-500/70 group-hover:text-amber-500 transition-colors" />
-                      <span className="text-xs font-semibold text-foreground/80">{t("contacts.form.type")}:</span>
+                      <span className="text-xs font-semibold text-foreground/80">
+                        {t("contacts.form.type")}:
+                      </span>
                       <EditableSelect
-                        options={emailLabels.length > 0 ? emailLabels : ["Personal", "Work", "Other"]}
+                        options={
+                          emailLabels.length > 0
+                            ? emailLabels
+                            : ["Personal", "Work", "Other"]
+                        }
                         value={email.label || "Personal"}
                         onChange={(val) => updateEmail(idx, { label: val })}
                         className={TYPE_SELECT_WIDTH}
                       />
                     </div>
-                    <CardRemoveButton onClick={() => removeEmail(idx)} label="Remove Email" />
+                    <CardRemoveButton
+                      onClick={() => removeEmail(idx)}
+                      label="Remove Email"
+                    />
                   </div>
 
                   <div className="relative flex items-center group/input">
@@ -642,13 +764,21 @@ export default function ContactForm({
                     <Input
                       type="email"
                       value={email.address || ""}
-                      onChange={(e) => updateEmail(idx, { address: e.target.value })}
+                      onChange={(e) =>
+                        updateEmail(idx, { address: e.target.value })
+                      }
                       placeholder={t("auth.emailAddress")}
-                      className={cn("pl-10", emailError && "border-destructive focus-visible:ring-destructive")}
+                      className={cn(
+                        "pl-10",
+                        emailError &&
+                          "border-destructive focus-visible:ring-destructive",
+                      )}
                     />
                   </div>
                   {emailError && (
-                    <p className="text-[10px] text-destructive mt-1 font-medium">{emailError}</p>
+                    <p className="text-[10px] text-destructive mt-1 font-medium">
+                      {emailError}
+                    </p>
                   )}
                 </motion.div>
               );
@@ -675,12 +805,23 @@ export default function ContactForm({
       updateDraft({
         addresses: [
           ...addresses,
-          { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry },
+          {
+            label: "Home",
+            line1: "",
+            city: defaultCity,
+            state: defaultProvince,
+            country: defaultCountry,
+          },
         ],
       });
-    const removeAddress = (idx: number) => updateDraft({ addresses: addresses.filter((_, i) => i !== idx) });
+    const removeAddress = (idx: number) =>
+      updateDraft({ addresses: addresses.filter((_, i) => i !== idx) });
     const updateAddress = (idx: number, patch: Partial<Address>) => {
-      updateDraft({ addresses: addresses.map((a, i) => (i === idx ? { ...a, ...patch } : a)) });
+      updateDraft({
+        addresses: addresses.map((a, i) =>
+          i === idx ? { ...a, ...patch } : a,
+        ),
+      });
     };
 
     return (
@@ -688,7 +829,9 @@ export default function ContactForm({
         {addresses.length === 0 && (
           <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <MapPin className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">{t("contacts.form.noAddressesYet")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("contacts.form.noAddressesYet")}
+            </p>
           </div>
         )}
 
@@ -710,15 +853,24 @@ export default function ContactForm({
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
                     <div className="flex items-center gap-2.5">
                       <MapPin className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
-                      <span className="text-xs font-semibold text-foreground/80">{t("contacts.form.type")}:</span>
+                      <span className="text-xs font-semibold text-foreground/80">
+                        {t("contacts.form.type")}:
+                      </span>
                       <EditableSelect
-                        options={addressLabels.length > 0 ? addressLabels : ["Home", "Work", "Billing", "Other"]}
+                        options={
+                          addressLabels.length > 0
+                            ? addressLabels
+                            : ["Home", "Work", "Billing", "Other"]
+                        }
                         value={addr.label || "Home"}
                         onChange={(val) => updateAddress(idx, { label: val })}
                         className={TYPE_SELECT_WIDTH}
                       />
                     </div>
-                    <CardRemoveButton onClick={() => removeAddress(idx)} label="Remove Address" />
+                    <CardRemoveButton
+                      onClick={() => removeAddress(idx)}
+                      label="Remove Address"
+                    />
                   </div>
 
                   <div className="space-y-3">
@@ -727,35 +879,54 @@ export default function ContactForm({
                         <MapPin className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                         <Input
                           value={addr.line1 || ""}
-                          onChange={(e) => updateAddress(idx, { line1: e.target.value })}
+                          onChange={(e) =>
+                            updateAddress(idx, { line1: e.target.value })
+                          }
                           placeholder={t("contacts.reportFields.streetAddress")}
-                          className={cn("pl-10", line1Error && "border-destructive focus-visible:ring-destructive")}
+                          className={cn(
+                            "pl-10",
+                            line1Error &&
+                              "border-destructive focus-visible:ring-destructive",
+                          )}
                         />
                       </div>
                       {line1Error && (
-                        <p className="text-[10px] text-destructive mt-1 font-medium">{line1Error}</p>
+                        <p className="text-[10px] text-destructive mt-1 font-medium">
+                          {line1Error}
+                        </p>
                       )}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div>
                         <Input
                           value={addr.city || ""}
-                          onChange={(e) => updateAddress(idx, { city: e.target.value })}
+                          onChange={(e) =>
+                            updateAddress(idx, { city: e.target.value })
+                          }
                           placeholder={t("contacts.reportFields.city")}
-                          className={cn(cityError && "border-destructive focus-visible:ring-destructive")}
+                          className={cn(
+                            cityError &&
+                              "border-destructive focus-visible:ring-destructive",
+                          )}
                         />
                         {cityError && (
-                          <p className="text-[10px] text-destructive mt-1 font-medium">{cityError}</p>
+                          <p className="text-[10px] text-destructive mt-1 font-medium">
+                            {cityError}
+                          </p>
                         )}
                       </div>
                       <Input
                         value={addr.state || ""}
-                        onChange={(e) => updateAddress(idx, { state: e.target.value })}
+                        onChange={(e) =>
+                          updateAddress(idx, { state: e.target.value })
+                        }
                         placeholder={t("contacts.reportFields.state")}
                       />
                       <Input
                         value={addr.country || ""}
-                        onChange={(e) => updateAddress(idx, { country: e.target.value })}
+                        onChange={(e) =>
+                          updateAddress(idx, { country: e.target.value })
+                        }
                         placeholder={t("contacts.reportFields.country")}
                       />
                     </div>
@@ -781,10 +952,14 @@ export default function ContactForm({
 
   const renderSocials = () => {
     const socials = contactDraft.socials || [];
-    const addSocial = () => updateDraft({ socials: [...socials, { platform: "WhatsApp", url: "" }] });
-    const removeSocial = (idx: number) => updateDraft({ socials: socials.filter((_, i) => i !== idx) });
+    const addSocial = () =>
+      updateDraft({ socials: [...socials, { platform: "WhatsApp", url: "" }] });
+    const removeSocial = (idx: number) =>
+      updateDraft({ socials: socials.filter((_, i) => i !== idx) });
     const updateSocial = (idx: number, patch: Partial<SocialLink>) => {
-      updateDraft({ socials: socials.map((s, i) => (i === idx ? { ...s, ...patch } : s)) });
+      updateDraft({
+        socials: socials.map((s, i) => (i === idx ? { ...s, ...patch } : s)),
+      });
     };
 
     return (
@@ -792,7 +967,9 @@ export default function ContactForm({
         {socials.length === 0 && (
           <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
             <Share2 className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">{t("contacts.form.noSocialLinksYet")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("contacts.form.noSocialLinksYet")}
+            </p>
           </div>
         )}
 
@@ -813,28 +990,53 @@ export default function ContactForm({
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
                     <div className="flex items-center gap-2.5">
                       <Share2 className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
-                      <span className="text-xs font-semibold text-foreground/80">{t("contacts.form.type")}:</span>
+                      <span className="text-xs font-semibold text-foreground/80">
+                        {t("contacts.form.type")}:
+                      </span>
                       <EditableSelect
-                        options={socialPlatforms.length > 0 ? socialPlatforms : ["WhatsApp", "Facebook", "Twitter/X", "LinkedIn", "Instagram", "YouTube", "Other"]}
+                        options={
+                          socialPlatforms.length > 0
+                            ? socialPlatforms
+                            : [
+                                "WhatsApp",
+                                "Facebook",
+                                "Twitter/X",
+                                "LinkedIn",
+                                "Instagram",
+                                "YouTube",
+                                "Other",
+                              ]
+                        }
                         value={soc.platform || "WhatsApp"}
                         onChange={(val) => updateSocial(idx, { platform: val })}
                         className={TYPE_SELECT_WIDTH}
                       />
                     </div>
-                    <CardRemoveButton onClick={() => removeSocial(idx)} label="Remove Social" />
+                    <CardRemoveButton
+                      onClick={() => removeSocial(idx)}
+                      label="Remove Social"
+                    />
                   </div>
 
                   <div className="relative flex items-center group/input">
                     <Share2 className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                     <Input
                       value={soc.url || ""}
-                      onChange={(e) => updateSocial(idx, { url: e.target.value })}
+                      onChange={(e) =>
+                        updateSocial(idx, { url: e.target.value })
+                      }
                       placeholder="Username, Handle or Link URL"
-                      className={cn("pl-10", urlError && "border-destructive focus-visible:ring-destructive")}
+                      className={cn(
+                        "pl-10",
+                        urlError &&
+                          "border-destructive focus-visible:ring-destructive",
+                      )}
                     />
                   </div>
                   {urlError && (
-                    <p className="text-[10px] text-destructive mt-1 font-medium">{urlError}</p>
+                    <p className="text-[10px] text-destructive mt-1 font-medium">
+                      {urlError}
+                    </p>
                   )}
                 </motion.div>
               );
@@ -859,20 +1061,29 @@ export default function ContactForm({
     const emergencyContacts = contactDraft.emergencyContacts || [];
     const addEmergency = () =>
       updateDraft({
-        emergencyContacts: [...emergencyContacts, { relationship: "Father", contactId: "" }],
+        emergencyContacts: [
+          ...emergencyContacts,
+          { relationship: "Father", contactId: "" },
+        ],
       });
     const removeEmergency = (idx: number) =>
-      updateDraft({ emergencyContacts: emergencyContacts.filter((_, i) => i !== idx) });
+      updateDraft({
+        emergencyContacts: emergencyContacts.filter((_, i) => i !== idx),
+      });
     const updateEmergency = (idx: number, patch: Partial<EmergencyContact>) => {
       updateDraft({
-        emergencyContacts: emergencyContacts.map((em, i) => (i === idx ? { ...em, ...patch } : em)),
+        emergencyContacts: emergencyContacts.map((em, i) =>
+          i === idx ? { ...em, ...patch } : em,
+        ),
       });
     };
     const excludeIds = (idx: number): (string | number)[] => {
       const linked = emergencyContacts
         .filter((_, i) => i !== idx)
         .map((em) => em.contactId)
-        .filter((cid) => cid != null && String(cid).length > 0) as (string | number)[];
+        .filter((cid) => cid != null && String(cid).length > 0) as (
+        string | number
+      )[];
       if (contactDraft.id != null) linked.unshift(contactDraft.id);
       return linked;
     };
@@ -882,15 +1093,21 @@ export default function ContactForm({
         {emergencyContacts.length === 0 && (
           <div className="text-center py-8 border border-dashed border-rose-500/20 rounded-2xl bg-rose-500/5 backdrop-blur-sm">
             <Heart className="w-8 h-8 text-rose-500/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">{t("contacts.form.noEmergencyContactsYet")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("contacts.form.noEmergencyContactsYet")}
+            </p>
           </div>
         )}
 
         <div className="space-y-3">
           <AnimatePresence initial={false}>
             {emergencyContacts.map((em, idx) => {
-              const pickerError = getListItemError("emergency", "contactId", idx);
-              
+              const pickerError = getListItemError(
+                "emergency",
+                "contactId",
+                idx,
+              );
+
               return (
                 <motion.div
                   key={idx}
@@ -908,7 +1125,10 @@ export default function ContactForm({
                         {t("contacts.form.contact")} {idx + 1}
                       </span>
                     </div>
-                    <CardRemoveButton onClick={() => removeEmergency(idx)} label="Remove Emergency Contact" />
+                    <CardRemoveButton
+                      onClick={() => removeEmergency(idx)}
+                      label="Remove Emergency Contact"
+                    />
                   </div>
 
                   <div className="space-y-3">
@@ -916,7 +1136,9 @@ export default function ContactForm({
                       label={t("contacts.form.linkContact")}
                       value={em.contactId ?? null}
                       onChange={(id) => {
-                        updateEmergency(idx, { contactId: id != null ? String(id) : "" });
+                        updateEmergency(idx, {
+                          contactId: id != null ? String(id) : "",
+                        });
                       }}
                       excludeIds={excludeIds(idx)}
                       hasPhone={true}
@@ -925,14 +1147,31 @@ export default function ContactForm({
                       emptyTitle={t("contacts.form.noContactsFound")}
                     />
                     {pickerError && (
-                      <p className="text-[10px] text-destructive mt-0.5 font-medium">{pickerError}</p>
+                      <p className="text-[10px] text-destructive mt-0.5 font-medium">
+                        {pickerError}
+                      </p>
                     )}
 
                     <Field label={t("contacts.form.relationshipType")}>
                       <EditableSelect
-                        options={relationshipOptions.length > 0 ? relationshipOptions : ["Father", "Mother", "Guardian", "Spouse", "Sibling", "Uncle", "Aunt", "Other"]}
+                        options={
+                          relationshipOptions.length > 0
+                            ? relationshipOptions
+                            : [
+                                "Father",
+                                "Mother",
+                                "Guardian",
+                                "Spouse",
+                                "Sibling",
+                                "Uncle",
+                                "Aunt",
+                                "Other",
+                              ]
+                        }
                         value={em.relationship || "Father"}
-                        onChange={(val) => updateEmergency(idx, { relationship: val })}
+                        onChange={(val) =>
+                          updateEmergency(idx, { relationship: val })
+                        }
                         className="w-full"
                       />
                     </Field>
@@ -987,11 +1226,13 @@ export default function ContactForm({
         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/20 text-[10px]">
           {contactDraft.emails?.length || 0} {t("contacts.form.emailsLabel")}
         </span>
-        {contactDraft.emergencyContacts && contactDraft.emergencyContacts.length > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/20 text-[10px]">
-            {contactDraft.emergencyContacts.length} {t("contacts.detail.emergency")}
-          </span>
-        )}
+        {contactDraft.emergencyContacts &&
+          contactDraft.emergencyContacts.length > 0 && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/20 text-[10px]">
+              {contactDraft.emergencyContacts.length}{" "}
+              {t("contacts.detail.emergency")}
+            </span>
+          )}
       </div>
     </div>
   ) : (
@@ -1004,7 +1245,9 @@ export default function ContactForm({
     <FormModal
       open={open}
       onClose={onClose}
-      title={contact ? t("contacts.form.editTitle") : t("contacts.form.addTitle")}
+      title={
+        contact ? t("contacts.form.editTitle") : t("contacts.form.addTitle")
+      }
       subtitle={
         contact
           ? t("contacts.form.editing", { name: contact.name || "" })
