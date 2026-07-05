@@ -18,13 +18,6 @@ interface SessionFormProps {
   onSave: (session: Session) => void;
 }
 
-const SESSION_TABS = [
-  { key: "basic", label: "Basic Info", icon: Calendar },
-  { key: "financial", label: "Financials", icon: DollarSign },
-] as const;
-
-type TabKey = (typeof SESSION_TABS)[number]["key"];
-
 const SESSION_TYPES = ["Hifz", "Qaidah", "Tajweed", "Islamic Studies", "Arabic", "Other"];
 const SESSION_STATUSES = ["active", "upcoming", "completed", "cancelled"];
 const CURRENCIES = ["PKR", "USD", "GBP", "AED", "SAR"];
@@ -38,7 +31,6 @@ export function SessionForm({
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
 
-  const [tab, setTab] = useState<TabKey>("basic");
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -79,7 +71,6 @@ export function SessionForm({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setTab("basic");
       notify.error("Please fix form validation errors");
       return;
     }
@@ -254,11 +245,6 @@ export function SessionForm({
       title={session ? "Edit Session" : "New Session"}
       subtitle="Fill in the session details below"
       icon={Calendar}
-      tall
-      tabs={SESSION_TABS}
-      activeTab={tab}
-      onTabChange={setTab}
-      tabPanelIdPrefix="session-form-tab"
       lang={language}
       cancelLabel="Cancel"
       saveLabel={session ? "Update" : "Create Session"}
@@ -267,7 +253,10 @@ export function SessionForm({
       saveDisabled={!sessionDraft.name?.trim() || !sessionDraft.startDate || !sessionDraft.endDate}
       footerStart={footerStart}
     >
-      {tab === "basic" ? renderBasic() : renderFinancial()}
+      <div className="space-y-4">
+        {renderBasic()}
+        {renderFinancial()}
+      </div>
     </FormModal>
   );
 }

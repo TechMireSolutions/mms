@@ -24,13 +24,6 @@ export interface TeacherFormProps {
   onSave: (teacher: Teacher) => void;
 }
 
-const TEACHER_TABS = [
-  { key: "basic", label: "Basic Info", icon: User },
-  { key: "employment", label: "Employment", icon: Briefcase },
-] as const;
-
-type TabKey = (typeof TEACHER_TABS)[number]["key"];
-
 export function TeacherForm({
   teacher,
   onClose,
@@ -39,7 +32,6 @@ export function TeacherForm({
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
 
-  const [tab, setTab] = useState<TabKey>("basic");
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -91,8 +83,6 @@ export function TeacherForm({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      if (newErrors.contactId) setTab("basic");
-      else setTab("employment");
       notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
       return;
     }
@@ -256,11 +246,6 @@ export function TeacherForm({
       title={teacher ? (t("teachers.form.editTitle") || "Edit Teacher") : (t("teachers.form.addTitle") || "Add Teacher")}
       subtitle={t("teachers.form.contactHint")}
       icon={School}
-      tall
-      tabs={TEACHER_TABS}
-      activeTab={tab}
-      onTabChange={setTab}
-      tabPanelIdPrefix="teacher-form-tab"
       lang={language}
       cancelLabel={t("common.cancel") || "Cancel"}
       saveLabel={t("common.save") || "Save"}
@@ -269,7 +254,10 @@ export function TeacherForm({
       saveDisabled={!teacherDraft.contactId}
       footerStart={footerStart}
     >
-      {tab === "basic" ? renderBasic() : renderEmployment()}
+      <div className="space-y-4">
+        {renderBasic()}
+        {renderEmployment()}
+      </div>
     </FormModal>
   );
 }

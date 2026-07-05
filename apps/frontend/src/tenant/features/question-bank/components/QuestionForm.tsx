@@ -33,14 +33,6 @@ interface QuestionFormProps {
   onSave: (q: Question) => void;
 }
 
-const QUESTION_TABS = [
-  { key: 'categories', label: 'Categories' },
-  { key: 'question', label: 'Question Content' },
-  { key: 'sources', label: 'Sources' },
-] as const;
-
-type TabKey = (typeof QUESTION_TABS)[number]['key'];
-
 const COMPOUND_ANSWER_TYPES = new Set<QuestionType>([
   'fill_blank',
   'matching',
@@ -55,7 +47,6 @@ export function QuestionForm({
   onSave,
 }: QuestionFormProps): React.JSX.Element {
   const { t, language } = useTranslation();
-  const [tab, setTab] = useState<TabKey>('categories');
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -118,8 +109,6 @@ export function QuestionForm({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      if (newErrors.categoryIds) setTab('categories');
-      else setTab('question');
       notify.error("Please fix validation errors");
       return;
     }
@@ -365,19 +354,6 @@ export function QuestionForm({
     );
   };
 
-  const renderActiveTabContent = () => {
-    switch (tab) {
-      case 'categories':
-        return renderCategoriesTab();
-      case 'question':
-        return renderQuestionTab();
-      case 'sources':
-        return renderSourcesTab();
-      default:
-        return null;
-    }
-  };
-
   const footerStart = questionDraft.text ? (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
       <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60 truncate max-w-[200px]">
@@ -405,11 +381,6 @@ export function QuestionForm({
       title={question ? "Edit Question" : "Add Question"}
       subtitle="Define question tags, choices, and answers"
       icon={BookOpen}
-      tall
-      tabs={QUESTION_TABS}
-      activeTab={tab}
-      onTabChange={setTab}
-      tabPanelIdPrefix="question-form-tab"
       lang={language}
       dir={getLanguageDirection(language)}
       cancelLabel="Cancel"
@@ -419,7 +390,11 @@ export function QuestionForm({
       saveDisabled={!questionDraft.text?.trim() || questionDraft.categoryIds.length === 0}
       footerStart={footerStart}
     >
-      {renderActiveTabContent()}
+      <div className="space-y-5 pb-6">
+        <div className="relative z-30">{renderCategoriesTab()}</div>
+        <div className="relative z-20">{renderQuestionTab()}</div>
+        <div className="relative z-10">{renderSourcesTab()}</div>
+      </div>
     </FormModal>
   );
 }

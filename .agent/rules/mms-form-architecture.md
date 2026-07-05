@@ -16,6 +16,7 @@ This specification governs all code, form structure, layout, UX/UI patterns, and
 - **Tab-to-Table Mapping**: Forms must map tabs to target database tables on a 1-to-1 basis. If a form is persisting inputs for exactly one table, it must be represented in a single-tab layout. If the form targets multiple tables, it must split its fields across multiple distinct tabs, allocating exactly one tab per table.
 - Dynamic form compilation engines, visual builders, and dynamic schema generation configurations are prohibited on the frontend.
 - Structure must use a unified standard `<FormModal>` container to ensure visual and responsive consistency.
+- **Stacking Context & Dropdown Z-Indices**: When vertical sections, fieldsets, or cards containing pickers/dropdowns (like `ContactPicker`) are stacked in a single scrolling layout, they must be wrapped in container elements with descending z-indices (e.g. `z-30`, `z-20`, `z-10`) or dynamically styled based on list indices (`style={{ zIndex: 100 - idx }}`). This prevents absolute/floating picker list overlays from hiding underneath subsequent sibling cards or fields.
 
 ### Rule 2: React Hook Form & Component State Initialization
 - To prevent React 19 uncontrolled-to-controlled component warning crashes, all form input fields must initialize with standard defaults:
