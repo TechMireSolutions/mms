@@ -73,6 +73,17 @@ export const contacts = pgTable('contacts', {
   index('contacts_custom_data_gin_idx').using('gin', table.customData),
 ]);
 
+export const students = pgTable('students', {
+  id: text('id').primaryKey(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('students_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('students_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+
 export const backgroundJobs = pgTable('background_jobs', {
   id: text('id').primaryKey(),
   tenantId: text('tenant_id').notNull(),

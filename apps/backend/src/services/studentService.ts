@@ -12,59 +12,85 @@ import {
   type StudentsWidgetQuery,
 } from '@mms/shared';
 import {
-  studentListSchema,
   type StudentRecord,
 } from '../validation/studentSchemas.js';
 import { loadContacts } from './contactService.js';
-import { defineCollectionCrudService } from './collectionCrudService.js';
-import { persistCollection } from './dbSyncService.js';
-
-const students = defineCollectionCrudService(
-  'students',
-  studentListSchema,
-  (record) => normalizeStoredStudent(record) as StudentRecord,
-);
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  listStudentsByWorkspace,
+  findStudentById,
+  findStudentsByIds,
+  saveStudent,
+} from '../db/repositories/studentRepository.js';
 
 export async function loadStudents(options?: { includeDeleted?: boolean }): Promise<StudentRecord[]> {
-  const rawRows = await students.load();
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  const rawRows = await listStudentsByWorkspace(tenant);
   const filtered = options?.includeDeleted ? rawRows : rawRows.filter((row) => !row.deletedAt);
   const contactsData = await loadContacts();
   if (!contactsData || !Array.isArray(contactsData)) {
-    return filtered;
+    return filtered as unknown as StudentRecord[];
   }
   return filtered.map((row) =>
     hydrateStudentFromContacts(row as never, contactsData as never)
   ) as unknown as StudentRecord[];
 }
 
-export const createStudent = students.create;
-export const updateStudentById = students.updateById;
+export async function createStudent(record: StudentRecord): Promise<StudentRecord> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
+  const resolvedId = String(record.id ?? `st-${Date.now()}`);
+  const normalized = normalizeStoredStudent({ ...record, id: resolvedId }) as StudentRecord;
+  await saveStudent(tenant, normalized as any);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'students');
+  return normalized;
+}
+
+export async function updateStudentById(id: string, record: StudentRecord): Promise<StudentRecord | null> {
+  const tenant = getRequestTenant();
+  if (!tenant) return null;
+  const existing = await findStudentById(tenant, id);
+  if (!existing || existing.deletedAt) return null;
+  const normalized = normalizeStoredStudent({ ...record, id }) as StudentRecord;
+  await saveStudent(tenant, normalized as any);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'students');
+  return normalized;
+}
 
 export async function deleteStudentById(
   id: string,
   deletedBy: string,
   deletionReason?: string,
 ): Promise<boolean> {
-  const all = await students.load();
-  const index = all.findIndex((row) => String(row.id) === id);
-  if (index < 0 || all[index].deletedAt) return false;
-  all[index] = {
-    ...all[index],
+  const tenant = getRequestTenant();
+  if (!tenant) return false;
+  const existing = await findStudentById(tenant, id);
+  if (!existing || existing.deletedAt) return false;
+  const updated = {
+    ...existing,
     deletedAt: new Date().toISOString(),
     deletedBy,
     deletionReason: deletionReason || undefined,
-  };
-  await persistCollection('students', all);
+  } as any;
+  await saveStudent(tenant, updated);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'students');
   return true;
 }
 
 export async function restoreStudentById(id: string): Promise<boolean> {
-  const all = await students.load();
-  const index = all.findIndex((row) => String(row.id) === id);
-  if (index < 0 || !all[index].deletedAt) return false;
-  const { deletedAt: _deletedAt, deletedBy: _deletedBy, deletionReason: _deletionReason, ...rest } = all[index];
-  all[index] = rest as StudentRecord;
-  await persistCollection('students', all);
+  const tenant = getRequestTenant();
+  if (!tenant) return false;
+  const existing = await findStudentById(tenant, id);
+  if (!existing || !existing.deletedAt) return false;
+  const { deletedAt: _deletedAt, deletedBy: _deletedBy, deletionReason: _deletionReason, ...rest } = existing;
+  const restored = rest as any;
+  await saveStudent(tenant, restored);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'students');
   return true;
 }
 
@@ -81,10 +107,16 @@ export async function loadStudentsPage(query: StudentsListQuery & { includeDelet
 }
 
 export async function loadStudentsByIds(ids: string[]) {
-  if (ids.length === 0) return [];
-  const wanted = new Set(ids.map(String));
-  const all = await loadStudents({ includeDeleted: true });
-  return all.filter((row) => wanted.has(String(row.id)));
+  const tenant = getRequestTenant();
+  if (!tenant || ids.length === 0) return [];
+  const matched = await findStudentsByIds(tenant, ids);
+  const contactsData = await loadContacts();
+  if (!contactsData || !Array.isArray(contactsData)) {
+    return matched as unknown as StudentRecord[];
+  }
+  return matched.map((row) =>
+    hydrateStudentFromContacts(row as never, contactsData as never)
+  ) as unknown as StudentRecord[];
 }
 
 export async function loadStudentById(id: string, includeDeleted = false) {

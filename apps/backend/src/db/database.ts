@@ -40,6 +40,7 @@ import { runMigration018 } from './migrations/018_seed_overdue_obligations.js';
 import { runMigration019 } from './migrations/019_seed_question_bank.js';
 import { runMigration020 } from './migrations/020_migrate_contacts_to_tables.js';
 import { runMigration021 } from './migrations/021_migrate_custom_tabs.js';
+import { runMigration022 } from './migrations/022_migrate_students_to_tables.js';
 import { deleteTenantUsersByWorkspace, type TenantUserRow } from './repositories/tenantUserRepository.js';
 import { deleteAuthArtifactsForWorkspace, purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
@@ -117,6 +118,7 @@ export async function initDb(): Promise<void> {
       { id: '019', run: runMigration019 },
       { id: '020', run: runMigration020 },
       { id: '021', run: runMigration021 },
+      { id: '022', run: runMigration022 },
     ];
 
     const applied = await _rootDb.select().from(schema.dataMigrations);
@@ -193,6 +195,9 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
     } else if (parsed && parsed.logicalKey === 'contacts') {
       const { replaceContactsForWorkspace } = await import('./repositories/contactRepository.js');
       await replaceContactsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Contact[]);
+    } else if (parsed && parsed.logicalKey === 'students') {
+      const { replaceStudentsForWorkspace } = await import('./repositories/studentRepository.js');
+      await replaceStudentsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Student[]);
     }
 
     const tenant = getRequestTenant();
@@ -316,6 +321,8 @@ export async function purgeTenantDataBySubdomain(subdomain: string): Promise<voi
   await deleteTenantUsersByWorkspace(tenant);
   const { deleteContactsByWorkspace } = await import('./repositories/contactRepository.js');
   await deleteContactsByWorkspace(tenant);
+  const { deleteStudentsByWorkspace } = await import('./repositories/studentRepository.js');
+  await deleteStudentsByWorkspace(tenant);
   await deleteAuthArtifactsForWorkspace(tenant);
 }
 
