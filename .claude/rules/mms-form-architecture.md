@@ -19,6 +19,8 @@ This specification governs all code, form structure, layout, UX/UI patterns, and
 
 ### Rule 1: Form Structure and Layout Strategy
 - Forms must be implemented statically using React state and standard HTML/Tailwind input primitives.
+- Standard input elements (inputs, textareas, checkboxes) must utilize the central primitives (`Input`, `Textarea`, `Checkbox`) and resolve to style constants from `formStyles.ts` to ensure consistent borders, outline rings, and focus states. Inline custom stylings on inputs are prohibited.
+- **Tab-to-Table Mapping**: Forms must map tabs to target database tables on a 1-to-1 basis. If a form is persisting inputs for exactly one table, it must be represented in a single-tab layout. If the form targets multiple tables, it must split its fields across multiple distinct tabs, allocating exactly one tab per table.
 - Dynamic form compilation engines, visual builders, and dynamic schema generation configurations are prohibited on the frontend.
 - Structure must use a unified standard `<FormModal>` container to ensure visual and responsive consistency.
 
