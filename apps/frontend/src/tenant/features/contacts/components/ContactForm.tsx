@@ -36,6 +36,7 @@ import {
   EditableSelect,
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/FormPrimitives";
+import { FORM_CARD } from "@/components/ui/formStyles";
 
 interface ContactFormProps {
   open?: boolean;
@@ -519,7 +520,7 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 ps-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
+                  className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
@@ -619,7 +620,7 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 ps-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
+                  className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500/60 transition-colors group-hover:bg-amber-500" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
@@ -703,7 +704,7 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 ps-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
+                  className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
@@ -808,7 +809,7 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 ps-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
+                  className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
@@ -899,7 +900,7 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 ps-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
+                  className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500/60 transition-colors group-hover:bg-rose-500" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">

@@ -30,3 +30,7 @@ export const FORM_OTP_DIGIT =
 /** Unified checkbox style — borders, focus rings, primary accent, cursor pointer. */
 export const FORM_CHECKBOX =
   'h-4 w-4 shrink-0 rounded border border-border bg-background accent-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50';
+
+/** Unified form card container style — matching the centralized Card component. */
+export const FORM_CARD =
+  'relative overflow-hidden group/card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300';
