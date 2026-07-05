@@ -105,8 +105,8 @@ export default function Accounting() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - Accounting Ledgers</title>
-      <meta name="description" content="View double-entry bookkeeping journals, manage fiscal years, and generate accounting balance reports." />
+      <title>MMS - {t("nav.accounting")}</title>
+      <meta name="description" content={t("page.accounting.subtitle")} />
       <PageHeader
         icon={TrendingUp}
         title={t("nav.accounting")}

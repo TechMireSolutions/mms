@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { motion } from "framer-motion";
 import { formatDate } from "@/lib/utils";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
@@ -15,26 +16,81 @@ interface KpiCardProps {
   value: string | number;
   icon?: React.ElementType | null;
   sub?: string;
-  color?: string;
+  accent?: "success" | "destructive" | "primary" | "info" | "warning" | "muted";
   trend?: number;
+  delayIndex?: number;
 }
+
+const ACCENT_CLASSES = {
+  success: {
+    stripe: "bg-success/60 group-hover:bg-success",
+    iconBg: "bg-success/10",
+    iconText: "text-success",
+    ring: "ring-success/20",
+  },
+  destructive: {
+    stripe: "bg-destructive/60 group-hover:bg-destructive",
+    iconBg: "bg-destructive/10",
+    iconText: "text-destructive",
+    ring: "ring-destructive/20",
+  },
+  primary: {
+    stripe: "bg-primary/60 group-hover:bg-primary",
+    iconBg: "bg-primary/10",
+    iconText: "text-primary",
+    ring: "ring-primary/20",
+  },
+  info: {
+    stripe: "bg-info/60 group-hover:bg-info",
+    iconBg: "bg-info/10",
+    iconText: "text-info",
+    ring: "ring-info/20",
+  },
+  warning: {
+    stripe: "bg-warning/60 group-hover:bg-warning",
+    iconBg: "bg-warning/10",
+    iconText: "text-warning",
+    ring: "ring-warning/20",
+  },
+  muted: {
+    stripe: "bg-muted-foreground/30 group-hover:bg-muted-foreground",
+    iconBg: "bg-muted",
+    iconText: "text-muted-foreground",
+    ring: "ring-muted/20",
+  },
+};
 
 /**
  * A KPI Card component.
  */
-function KpiCard({ label, value, icon: Icon = null, sub = undefined, color = "bg-card", trend = undefined }: KpiCardProps) {
+function KpiCard({
+  label,
+  value,
+  icon: Icon = null,
+  sub = undefined,
+  accent = "muted",
+  trend = undefined,
+  delayIndex = 0,
+}: KpiCardProps) {
+  const theme = ACCENT_CLASSES[accent] || ACCENT_CLASSES.muted;
   return (
-    <div className={`rounded-xl border border-border ${color} px-5 py-4`}>
-      <div className="flex items-start justify-between">
+    <motion.article
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: delayIndex * 0.05, duration: 0.35, ease: "easeOut" }}
+      className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 md:p-5 px-5.5 hover:shadow-md transition-all duration-300 text-left flex flex-col justify-between"
+    >
+      <div className={`absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300 ${theme.stripe}`} />
+      <div className="flex items-start justify-between w-full">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{label}</p>
           <p className="text-xl font-bold text-foreground mt-1 font-mono truncate m-0">{value}</p>
-          {sub && <p className="text-xs text-muted-foreground mt-0.5 m-0">{sub}</p>}
+          {sub && <p className="text-xs text-muted-foreground mt-0.5 m-0 font-medium">{sub}</p>}
         </div>
-        <div className="flex flex-col items-end gap-1 ml-2">
+        <div className="flex flex-col items-end gap-1 ml-2 select-none">
           {Icon && (
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
-              <Icon className="w-5 h-5 text-primary" />
+            <div className={`w-9 h-9 rounded-lg ${theme.iconBg} ring-4 ${theme.ring} flex items-center justify-center aspect-square flex-shrink-0`} aria-hidden="true">
+              <Icon className={`w-4.5 h-4.5 ${theme.iconText}`} style={{ width: 18, height: 18 }} />
             </div>
           )}
           {trend !== undefined && (
@@ -45,7 +101,7 @@ function KpiCard({ label, value, icon: Icon = null, sub = undefined, color = "bg
           )}
         </div>
       </div>
-    </div>
+    </motion.article>
   );
 }
 
@@ -117,24 +173,29 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
     <section aria-label="Accounting Dashboard" className="space-y-5">
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard label={t("accounting.dashboard.totalRevenue")}   value={formatCurrency(revenue)}    icon={TrendingUp}   color="bg-success/10/60" />
-        <KpiCard label={t("accounting.dashboard.totalExpenses")}  value={formatCurrency(expenses)}   icon={TrendingDown} color="bg-destructive/10/60" />
+        <KpiCard label={t("accounting.dashboard.totalRevenue")}   value={formatCurrency(revenue)}    icon={TrendingUp}   accent="success" delayIndex={0} />
+        <KpiCard label={t("accounting.dashboard.totalExpenses")}  value={formatCurrency(expenses)}   icon={TrendingDown} accent="destructive" delayIndex={1} />
         <KpiCard label={t("accounting.dashboard.netSurplus")}     value={formatCurrency(Math.abs(netSurplus))}
           sub={netSurplus < 0 ? t("accounting.dashboard.deficit") : t("accounting.dashboard.surplus")} icon={DollarSign}
-          color={netSurplus >= 0 ? "bg-primary/5" : "bg-destructive/10/60"} />
-        <KpiCard label={t("accounting.dashboard.totalAssets")}    value={formatCurrency(assets)}     icon={Scale}        color="bg-info/10/60" />
+          accent={netSurplus >= 0 ? "primary" : "destructive"} delayIndex={2} />
+        <KpiCard label={t("accounting.dashboard.totalAssets")}    value={formatCurrency(assets)}     icon={Scale}        accent="info" delayIndex={3} />
       </div>
 
       {/* Second row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard label={t("accounting.dashboard.totalLiabilities")} value={formatCurrency(liabilities)} icon={null} color="bg-muted/40" />
-        <KpiCard label={t("accounting.dashboard.netCashFlow")}     value={formatCurrency(Math.abs(netCashFlow))} sub={netCashFlow >= 0 ? t("accounting.dashboard.positive") : t("accounting.dashboard.negative")} icon={null} color="bg-muted/40" />
-        <KpiCard label={t("accounting.dashboard.postedEntries")}    value={postedEntries.length}   icon={CheckCircle2} color="bg-success/10/60" />
-        <KpiCard label={t("accounting.dashboard.pendingDrafts")}    value={draftEntries.length}   icon={Clock}        color={draftEntries.length > 0 ? "bg-warning/10/60" : "bg-muted/40"} />
+        <KpiCard label={t("accounting.dashboard.totalLiabilities")} value={formatCurrency(liabilities)} icon={Scale} accent="muted" delayIndex={4} />
+        <KpiCard label={t("accounting.dashboard.netCashFlow")}     value={formatCurrency(Math.abs(netCashFlow))} sub={netCashFlow >= 0 ? t("accounting.dashboard.positive") : t("accounting.dashboard.negative")} icon={TrendingUp} accent="primary" delayIndex={5} />
+        <KpiCard label={t("accounting.dashboard.postedEntries")}    value={postedEntries.length}   icon={CheckCircle2} accent="success" delayIndex={6} />
+        <KpiCard label={t("accounting.dashboard.pendingDrafts")}    value={draftEntries.length}   icon={Clock}        accent={draftEntries.length > 0 ? "warning" : "muted"} delayIndex={7} />
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.4 }}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-4"
+      >
 
         {/* Monthly Revenue vs Expenses */}
         <div className="relative overflow-hidden group/revenue lg:col-span-2 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
@@ -191,10 +252,15 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
             </>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Balance Sheet summary + Recent Entries */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.4 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+      >
 
         {/* Balance Sheet snapshot */}
         <div className="relative overflow-hidden group/snapshot rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
@@ -254,7 +320,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
             })}
           </div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

@@ -13,6 +13,7 @@ import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -222,9 +223,9 @@ export default function MessagingPage(): React.JSX.Element {
   }, [stats]);
 
   return (
-    <div className="space-y-4">
-      <title>MMS - Messaging Center</title>
-      <meta name="description" content="Send personalized SMS, WhatsApp, and Email campaigns to contacts and students." />
+    <div className="max-w-7xl mx-auto space-y-5">
+      <title>MMS - {t('nav.messaging')}</title>
+      <meta name="description" content={t('messaging.subtitle')} />
       
       {/* Page Header */}
       <PageHeader
@@ -250,47 +251,14 @@ export default function MessagingPage(): React.JSX.Element {
       />
 
       {/* Global Dashboard Metrics Banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.total')}</span>
-            <h3 className="text-2xl font-black text-foreground">{stats.total}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-            <Send className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.sms')}</span>
-            <h3 className="text-2xl font-black text-foreground">{stats.sms}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center text-info">
-            <MessageSquare className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('messaging.stats.whatsapp')}</span>
-            <h3 className="text-2xl font-black text-foreground">{stats.wa}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
-            <MessageCircle className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl border border-border bg-card shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Emails Dispatched</span>
-            <h3 className="text-2xl font-black text-foreground">{stats.email}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
-            <Mail className="w-5 h-5" />
-          </div>
-        </div>
-      </div>
+      <ModuleCommandMetricsGrid
+        items={[
+          { icon: Send, label: t('messaging.stats.total'), value: stats.total, accent: 'primary' },
+          { icon: MessageSquare, label: t('messaging.stats.sms'), value: stats.sms, accent: 'info' },
+          { icon: MessageCircle, label: t('messaging.stats.whatsapp'), value: stats.wa, accent: 'success' },
+          { icon: Mail, label: 'Emails Dispatched', value: stats.email, accent: 'warning' },
+        ]}
+      />
 
       {/* Accordion Tabs Wrapper */}
       <ResponsiveAccordionTabs

@@ -28,7 +28,7 @@ import { useStudentCount } from "@/tenant/features/students/hooks/useStudentCoun
 import { useStudentsPaginated, useStudentMutations, fetchAllStudentsForQuery, type StudentRecord } from "@/tenant/features/students/hooks/useStudents";
 import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import StudentsCommandMetrics from "@/tenant/features/students/components/StudentsCommandMetrics";
+import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
 import StudentsListPagination from "@/tenant/features/students/components/StudentsListPagination";
 import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
 
@@ -193,8 +193,8 @@ export default function Students() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - Students Portal</title>
-      <meta name="description" content="Manage students directory, register new students, edit details, and configure student records settings." />
+      <title>MMS - {t("nav.students")}</title>
+      <meta name="description" content={t("page.students.subtitle")} />
 
       <PageHeader
         icon={GraduationCap}

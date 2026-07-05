@@ -22,7 +22,7 @@ import { ActionButton } from "@/components/ui/ActionButton";
 import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
 import ContactCards from "@/tenant/features/contacts/components/ContactCards";
 import ContactsToolbar from "@/tenant/features/contacts/components/ContactsToolbar";
-import ContactsCommandMetrics from "@/tenant/features/contacts/components/ContactsCommandMetrics";
+import { ContactsCommandMetrics } from "@/tenant/features/contacts/components/ContactsCommandMetrics";
 import ContactsDataBanner from "@/tenant/features/contacts/components/ContactsDataBanner";
 import ContactsSyncConflictPanel from "@/tenant/features/contacts/components/ContactsSyncConflictPanel";
 import ContactsListPagination from "@/tenant/features/contacts/components/ContactsListPagination";
@@ -357,9 +357,9 @@ function ContactsInner() {
   }, [openingDuplicates, shownCount, queryClient, t, setShowDuplicates]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4">
+    <div className="max-w-7xl mx-auto space-y-5">
       <title>MMS - {t("nav.contacts")}</title>
-      <meta name="description" content={t("contacts.pageDescription")} />
+      <meta name="description" content={t("page.contacts.subtitle")} />
       <PageHeader
         icon={Users}
         title={t("nav.contacts")}

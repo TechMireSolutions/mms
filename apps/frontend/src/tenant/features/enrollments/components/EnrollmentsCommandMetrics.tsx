@@ -2,9 +2,10 @@ import React from 'react';
 import {
   ClipboardList, Filter, CheckCircle2, Clock, XCircle, CalendarPlus, Banknote,
 } from 'lucide-react';
+import { formatMoney } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useEnrollmentsMetrics } from '@/tenant/features/enrollments/hooks/useEnrollmentsApi';
-import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 
 interface EnrollmentsCommandMetricsProps {
   total: number;
@@ -27,15 +28,15 @@ export function EnrollmentsCommandMetrics({
     newThisPeriod: serverMetrics?.newThisPeriod ?? 0,
   };
 
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2">
-      <ModuleCommandMetricCard icon={ClipboardList} label={t('enrollments.metrics.total')} value={metrics.total} />
-      <ModuleCommandMetricCard icon={Filter} label={t('enrollments.metrics.filtered')} value={shown} />
-      <ModuleCommandMetricCard icon={CheckCircle2} label={t('enrollments.metrics.confirmed')} value={metrics.confirmed} />
-      <ModuleCommandMetricCard icon={Clock} label={t('enrollments.metrics.pending')} value={metrics.pending} />
-      <ModuleCommandMetricCard icon={Banknote} label={t('enrollments.metrics.revenue')} value={metrics.revenue} />
-      <ModuleCommandMetricCard icon={XCircle} label={t('enrollments.metrics.cancelled')} value={metrics.cancelled} />
-      <ModuleCommandMetricCard icon={CalendarPlus} label={t('enrollments.metrics.newThisPeriod')} value={metrics.newThisPeriod} />
-    </div>
-  );
+  const items = [
+    { icon: ClipboardList, label: t('enrollments.metrics.total'), value: metrics.total, accent: 'primary' as const },
+    { icon: Filter, label: t('enrollments.metrics.filtered'), value: shown, accent: 'info' as const },
+    { icon: CheckCircle2, label: t('enrollments.metrics.confirmed'), value: metrics.confirmed, accent: 'success' as const },
+    { icon: Clock, label: t('enrollments.metrics.pending'), value: metrics.pending, accent: 'warning' as const },
+    { icon: Banknote, label: t('enrollments.metrics.revenue'), value: formatMoney(metrics.revenue), accent: 'indigo' as const },
+    { icon: XCircle, label: t('enrollments.metrics.cancelled'), value: metrics.cancelled, accent: 'destructive' as const },
+    { icon: CalendarPlus, label: t('enrollments.metrics.newThisPeriod'), value: metrics.newThisPeriod, accent: 'success' as const },
+  ];
+
+  return <ModuleCommandMetricsGrid items={items} />;
 }

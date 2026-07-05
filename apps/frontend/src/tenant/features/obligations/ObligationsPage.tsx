@@ -92,8 +92,8 @@ export default function Obligations() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - Obligations & Wakala</title>
-      <meta name="description" content="Manage Mujtahid configurations, Wakala settings, and obligation collection tracking." />
+      <title>MMS - {t("nav.obligations")}</title>
+      <meta name="description" content={t("page.obligations.subtitle")} />
       <PageHeader
         icon={Scale}
         title={t("nav.obligations")}

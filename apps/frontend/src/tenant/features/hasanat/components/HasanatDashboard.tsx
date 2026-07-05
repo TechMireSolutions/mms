@@ -78,36 +78,51 @@ export function HasanatDashboard({
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           const stripeColors = {
-            primary: "bg-primary/45 group-hover:bg-primary",
-            success: "bg-success/45 group-hover:bg-success",
-            warning: "bg-warning/45 group-hover:bg-warning",
-            indigo: "bg-indigo-500/45 group-hover:bg-indigo-500",
-            info: "bg-info/45 group-hover:bg-info",
-            rose: "bg-rose-500/45 group-hover:bg-rose-500",
-          }
+            primary: "bg-primary/60 group-hover:bg-primary",
+            success: "bg-success/60 group-hover:bg-success",
+            warning: "bg-warning/60 group-hover:bg-warning",
+            indigo: "bg-indigo-500/60 group-hover:bg-indigo-500",
+            info: "bg-info/60 group-hover:bg-info",
+            rose: "bg-rose-500/60 group-hover:bg-rose-500",
+          };
+          const ringClasses = {
+            primary: "ring-primary/20",
+            success: "ring-success/20",
+            warning: "ring-warning/20",
+            indigo: "ring-indigo-500/20",
+            info: "ring-info/20",
+            rose: "ring-rose-500/20",
+          };
           return (
-            <motion.div
+            <motion.article
               key={stat.label}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.06 }}
-              className="relative overflow-hidden group rounded-2xl border border-border/85 bg-card/45 backdrop-blur-sm p-4 pl-5.5 space-y-2 transition-all duration-300 shadow-sm hover:shadow-md"
+              transition={{ delay: index * 0.05, duration: 0.35, ease: "easeOut" }}
+              className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 md:p-5 px-5.5 hover:shadow-md transition-all duration-300 text-left flex flex-col justify-between"
             >
               <div className={`absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300 ${stripeColors[stat.accent]}`} />
-              <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`} aria-hidden="true">
-                <Icon className={`w-4 h-4 ${stat.color}`} />
-              </div>
+              <header className="flex items-start justify-between mb-3 select-none">
+                <div className={`w-9 h-9 rounded-lg ${stat.bg} ring-4 ${ringClasses[stat.accent]} flex items-center justify-center aspect-square flex-shrink-0`} aria-hidden="true">
+                  <Icon className={`w-4.5 h-4.5 ${stat.color}`} style={{ width: 18, height: 18 }} />
+                </div>
+              </header>
               <div>
-                <p className={`text-[20px] font-bold ${stat.color} leading-tight m-0`}>{stat.value}</p>
-                <h3 className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mt-1 m-0">{stat.label}</h3>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{stat.label}</p>
+                <p className="text-xl font-bold text-foreground mt-1 m-0">{stat.value}</p>
               </div>
-            </motion.div>
+            </motion.article>
           );
         })}
       </section>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.4 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+      >
         {/* Distribution donut */}
         <Card accentColor="primary" className="p-5 shadow-sm hover:shadow-md border-border/80">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t("hasanat.dashboard.cardDistribution")}</h3>
@@ -159,33 +174,39 @@ export function HasanatDashboard({
             })}
           </div>
         </Card>
-      </div>
+      </motion.div>
 
       {/* Usage meter */}
-      <Card accentColor="success" className="p-5 shadow-sm hover:shadow-md border-border/80">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-foreground m-0">{t("hasanat.dashboard.overallStockUsage")}</h3>
-          <span className="text-[13px] font-bold text-foreground">
-            {t("hasanat.dashboard.stockUsagePct", { count: usedPct })}
-          </span>
-        </div>
-        <div className="h-3 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={usedPct} aria-valuemin={0} aria-valuemax={100}>
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${usedPct}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full rounded-full bg-gradient-to-r from-primary to-success"
-          />
-        </div>
-        <div className="flex justify-between mt-1.5">
-          <span className="text-[10px] text-muted-foreground">
-            {t("hasanat.dashboard.stockUsed", { count: totalStock - totalRemaining })}
-          </span>
-          <span className="text-[10px] text-muted-foreground">
-            {t("hasanat.dashboard.stockRemaining", { count: totalRemaining })}
-          </span>
-        </div>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.4 }}
+      >
+        <Card accentColor="success" className="p-5 shadow-sm hover:shadow-md border-border/80">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-foreground m-0">{t("hasanat.dashboard.overallStockUsage")}</h3>
+            <span className="text-[13px] font-bold text-foreground">
+              {t("hasanat.dashboard.stockUsagePct", { count: usedPct })}
+            </span>
+          </div>
+          <div className="h-3 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={usedPct} aria-valuemin={0} aria-valuemax={100}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${usedPct}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="h-full rounded-full bg-gradient-to-r from-primary to-success"
+            />
+          </div>
+          <div className="flex justify-between mt-1.5">
+            <span className="text-[10px] text-muted-foreground">
+              {t("hasanat.dashboard.stockUsed", { count: totalStock - totalRemaining })}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {t("hasanat.dashboard.stockRemaining", { count: totalRemaining })}
+            </span>
+          </div>
+        </Card>
+      </motion.div>
     </div>
   );
 }

@@ -76,8 +76,8 @@ export default function HasanatCards() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - Hasanat Reward Cards</title>
-      <meta name="description" content="Configure reward points, manage card stock distribution, and trace card redemption logs." />
+      <title>MMS - {t("nav.hasanatCards")}</title>
+      <meta name="description" content={t("page.hasanat.subtitle")} />
       <PageHeader
         icon={Star}
         title={t("nav.hasanatCards")}

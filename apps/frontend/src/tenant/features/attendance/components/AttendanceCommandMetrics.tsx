@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAttendanceMetrics } from '@/tenant/features/attendance/hooks/useAttendance';
-import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 
 interface AttendanceCommandMetricsProps {
   total: number;
@@ -29,15 +29,15 @@ export function AttendanceCommandMetrics({
     periodTotal: serverMetrics?.periodTotal ?? 0,
   };
 
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2">
-      <ModuleCommandMetricCard icon={ClipboardList} label={t('attendance.metrics.total')} value={metrics.total} />
-      <ModuleCommandMetricCard icon={Filter} label={t('attendance.metrics.filtered')} value={shown} />
-      <ModuleCommandMetricCard icon={UserCheck} label={t('attendance.metrics.present')} value={metrics.selectedDatePresent} />
-      <ModuleCommandMetricCard icon={UserX} label={t('attendance.metrics.absent')} value={metrics.selectedDateAbsent} />
-      <ModuleCommandMetricCard icon={Clock} label={t('attendance.metrics.late')} value={metrics.selectedDateLate} />
-      <ModuleCommandMetricCard icon={CalendarClock} label={t('attendance.metrics.excused')} value={metrics.selectedDateExcused} />
-      <ModuleCommandMetricCard icon={CalendarDays} label={t('attendance.metrics.periodTotal')} value={metrics.periodTotal} />
-    </div>
-  );
+  const items = [
+    { icon: ClipboardList, label: t('attendance.metrics.total'), value: metrics.total, accent: 'primary' as const },
+    { icon: Filter, label: t('attendance.metrics.filtered'), value: shown, accent: 'info' as const },
+    { icon: UserCheck, label: t('attendance.metrics.present'), value: metrics.selectedDatePresent, accent: 'success' as const },
+    { icon: UserX, label: t('attendance.metrics.absent'), value: metrics.selectedDateAbsent, accent: 'destructive' as const },
+    { icon: Clock, label: t('attendance.metrics.late'), value: metrics.selectedDateLate, accent: 'warning' as const },
+    { icon: CalendarClock, label: t('attendance.metrics.excused'), value: metrics.selectedDateExcused, accent: 'indigo' as const },
+    { icon: CalendarDays, label: t('attendance.metrics.periodTotal'), value: metrics.periodTotal, accent: 'purple' as const },
+  ];
+
+  return <ModuleCommandMetricsGrid items={items} />;
 }

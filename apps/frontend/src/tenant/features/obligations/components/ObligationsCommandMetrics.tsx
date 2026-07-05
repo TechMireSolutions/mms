@@ -2,9 +2,10 @@ import React from 'react';
 import {
   Receipt, Filter, Banknote, Wallet, Globe, CalendarPlus, ClipboardList,
 } from 'lucide-react';
+import { formatMoney } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useObligationsMetrics } from '@/tenant/features/obligations/hooks/useObligationsApi';
-import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 
 interface ObligationsCommandMetricsProps {
   total: number;
@@ -27,15 +28,15 @@ export function ObligationsCommandMetrics({
     obligationTypes: serverMetrics?.obligationTypes ?? 0,
   };
 
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2">
-      <ModuleCommandMetricCard icon={Receipt} label={t('obligations.metrics.total')} value={metrics.total} />
-      <ModuleCommandMetricCard icon={Filter} label={t('obligations.metrics.filtered')} value={shown} />
-      <ModuleCommandMetricCard icon={Banknote} label={t('obligations.metrics.totalAmount')} value={metrics.totalAmount} />
-      <ModuleCommandMetricCard icon={Wallet} label={t('obligations.metrics.cash')} value={metrics.cash} />
-      <ModuleCommandMetricCard icon={Globe} label={t('obligations.metrics.online')} value={metrics.online} />
-      <ModuleCommandMetricCard icon={CalendarPlus} label={t('obligations.metrics.newThisPeriod')} value={metrics.newThisPeriod} />
-      <ModuleCommandMetricCard icon={ClipboardList} label={t('obligations.metrics.obligationTypes')} value={metrics.obligationTypes} />
-    </div>
-  );
+  const items = [
+    { icon: Receipt, label: t('obligations.metrics.total'), value: metrics.total, accent: 'primary' as const },
+    { icon: Filter, label: t('obligations.metrics.filtered'), value: shown, accent: 'info' as const },
+    { icon: Banknote, label: t('obligations.metrics.totalAmount'), value: formatMoney(metrics.totalAmount), accent: 'indigo' as const },
+    { icon: Wallet, label: t('obligations.metrics.cash'), value: metrics.cash, accent: 'success' as const },
+    { icon: Globe, label: t('obligations.metrics.online'), value: metrics.online, accent: 'teal' as const },
+    { icon: CalendarPlus, label: t('obligations.metrics.newThisPeriod'), value: metrics.newThisPeriod, accent: 'warning' as const },
+    { icon: ClipboardList, label: t('obligations.metrics.obligationTypes'), value: metrics.obligationTypes, accent: 'purple' as const },
+  ];
+
+  return <ModuleCommandMetricsGrid items={items} />;
 }

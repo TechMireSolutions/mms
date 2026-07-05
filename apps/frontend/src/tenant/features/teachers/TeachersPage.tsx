@@ -142,7 +142,7 @@ export default function Teachers(): React.JSX.Element {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - Teachers</title>
+      <title>MMS - {t('nav.teachers')}</title>
       <meta name="description" content={t('page.teachers.subtitle')} />
 
       <PageHeader

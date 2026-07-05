@@ -94,13 +94,13 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
   const rateBarColor = rate >= 90 ? "bg-success" : rate >= 75 ? "bg-warning" : "bg-destructive";
 
   return (
-    <article className="relative overflow-hidden group rounded-2xl border border-border bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover:bg-primary" />
+    <section aria-labelledby="todays-attendance-heading" className="relative overflow-hidden group/attendance rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/attendance:bg-primary" />
       {/* Header */}
-      <header className="flex items-center justify-between px-5 py-3 border-b border-border/40 bg-muted/20 pl-6">
+      <header className="flex items-center justify-between px-5 py-3 border-b border-border/40 bg-muted/20 pl-6.5">
         <div className="flex items-center gap-2">
           <UserCheck className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-bold text-foreground">
+          <h2 id="todays-attendance-heading" className="text-sm font-bold text-foreground">
             {title || (isToday ? t("dashboard.widgets.todaysAttendanceSummary") : t("dashboard.widgets.latestAttendanceSummary"))}
           </h2>
           {!isToday && (
@@ -181,6 +181,6 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
           </>
         )}
       </section>
-    </article>
+    </section>
   );
 }

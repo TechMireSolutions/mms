@@ -73,8 +73,8 @@ export default function Finance() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - Finance Portal</title>
-      <meta name="description" content="Manage student invoices, track payments, and review financial collections and reports." />
+      <title>MMS - {t("nav.finance")}</title>
+      <meta name="description" content={t("page.finance.subtitle")} />
       <PageHeader
         icon={DollarSign}
         title={t("nav.finance")}

@@ -2,7 +2,7 @@ import React from "react";
 import { School, Filter, UserCheck, UserX, CalendarClock, CalendarPlus } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTeachersMetrics } from "@/tenant/features/teachers/hooks/useTeachers";
-import { ModuleCommandMetricCard } from "@/components/ui/ModuleCommandMetricCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 
 interface TeachersCommandMetricsProps {
   total: number;
@@ -24,14 +24,14 @@ export function TeachersCommandMetrics({
     newThisPeriod: serverMetrics?.newThisPeriod ?? 0,
   };
 
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-      <ModuleCommandMetricCard icon={School} label={t("teachers.metrics.total")} value={metrics.total} />
-      <ModuleCommandMetricCard icon={Filter} label={t("teachers.metrics.filtered")} value={shown} />
-      <ModuleCommandMetricCard icon={UserCheck} label={t("teachers.metrics.active")} value={metrics.active} />
-      <ModuleCommandMetricCard icon={UserX} label={t("teachers.metrics.inactive")} value={metrics.inactive} />
-      <ModuleCommandMetricCard icon={CalendarClock} label={t("teachers.metrics.onLeave")} value={metrics.onLeave} />
-      <ModuleCommandMetricCard icon={CalendarPlus} label={t("teachers.metrics.newThisPeriod")} value={metrics.newThisPeriod} />
-    </div>
-  );
+  const items = [
+    { icon: School, label: t("teachers.metrics.total"), value: metrics.total, accent: "primary" as const },
+    { icon: Filter, label: t("teachers.metrics.filtered"), value: shown, accent: "info" as const },
+    { icon: UserCheck, label: t("teachers.metrics.active"), value: metrics.active, accent: "success" as const },
+    { icon: UserX, label: t("teachers.metrics.inactive"), value: metrics.inactive, accent: "warning" as const },
+    { icon: CalendarClock, label: t("teachers.metrics.onLeave"), value: metrics.onLeave, accent: "rose" as const },
+    { icon: CalendarPlus, label: t("teachers.metrics.newThisPeriod"), value: metrics.newThisPeriod, accent: "indigo" as const },
+  ];
+
+  return <ModuleCommandMetricsGrid items={items} />;
 }

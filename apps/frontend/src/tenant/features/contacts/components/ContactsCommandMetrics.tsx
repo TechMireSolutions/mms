@@ -3,7 +3,7 @@ import { Users, Filter, MessageCircle, AlertCircle, GitMerge, Clock, CalendarPlu
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 import { useContactsMetrics } from "@/tenant/features/contacts/hooks/useContacts";
-import { ModuleCommandMetricCard } from "@/components/ui/ModuleCommandMetricCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 
 interface ContactsCommandMetricsProps {
   total: number;
@@ -13,7 +13,7 @@ interface ContactsCommandMetricsProps {
 }
 
 /** Permission-scoped quick metrics for the Contacts module command centre (globle1 §2.1). */
-export default function ContactsCommandMetrics({
+export function ContactsCommandMetrics({
   total,
   shown,
   onOpenDuplicates,
@@ -31,31 +31,34 @@ export default function ContactsCommandMetrics({
     duplicatePairCount: serverMetrics?.duplicatePairCount ?? 0,
   };
 
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8 gap-2">
-      <ModuleCommandMetricCard icon={Users} label={t("contacts.metrics.total")} value={metrics.total} />
-      <ModuleCommandMetricCard icon={Filter} label={t("contacts.metrics.filtered")} value={shown} />
-      <ModuleCommandMetricCard icon={CalendarPlus} label={t("contacts.metrics.newThisPeriod")} value={metrics.newThisPeriod} />
-      <ModuleCommandMetricCard
-        icon={Clock}
-        label={t("contacts.metrics.pendingSync")}
-        value={pendingCount}
-        onClick={pendingCount > 0 && !flushing ? () => void flush() : undefined}
-      />
-      <ModuleCommandMetricCard
-        icon={AlertTriangle}
-        label={t("contacts.metrics.syncConflicts")}
-        value={conflictCount}
-        onClick={conflictCount > 0 ? onReviewConflicts : undefined}
-      />
-      <ModuleCommandMetricCard icon={MessageCircle} label={t("contacts.metrics.whatsapp")} value={metrics.whatsappCount} />
-      <ModuleCommandMetricCard icon={AlertCircle} label={t("contacts.metrics.incomplete")} value={metrics.incompleteCount} />
-      <ModuleCommandMetricCard
-        icon={GitMerge}
-        label={t("contacts.metrics.duplicates")}
-        value={metrics.duplicatePairCount}
-        onClick={metrics.duplicatePairCount > 0 ? onOpenDuplicates : undefined}
-      />
-    </div>
-  );
+  const items = [
+    { icon: Users, label: t("contacts.metrics.total"), value: metrics.total, accent: "primary" as const },
+    { icon: Filter, label: t("contacts.metrics.filtered"), value: shown, accent: "info" as const },
+    { icon: CalendarPlus, label: t("contacts.metrics.newThisPeriod"), value: metrics.newThisPeriod, accent: "success" as const },
+    {
+      icon: Clock,
+      label: t("contacts.metrics.pendingSync"),
+      value: pendingCount,
+      accent: "warning" as const,
+      onClick: pendingCount > 0 && !flushing ? () => void flush() : undefined,
+    },
+    {
+      icon: AlertTriangle,
+      label: t("contacts.metrics.syncConflicts"),
+      value: conflictCount,
+      accent: "destructive" as const,
+      onClick: conflictCount > 0 ? onReviewConflicts : undefined,
+    },
+    { icon: MessageCircle, label: t("contacts.metrics.whatsapp"), value: metrics.whatsappCount, accent: "teal" as const },
+    { icon: AlertCircle, label: t("contacts.metrics.incomplete"), value: metrics.incompleteCount, accent: "rose" as const },
+    {
+      icon: GitMerge,
+      label: t("contacts.metrics.duplicates"),
+      value: metrics.duplicatePairCount,
+      accent: "warning" as const,
+      onClick: metrics.duplicatePairCount > 0 ? onOpenDuplicates : undefined,
+    },
+  ];
+
+  return <ModuleCommandMetricsGrid items={items} />;
 }

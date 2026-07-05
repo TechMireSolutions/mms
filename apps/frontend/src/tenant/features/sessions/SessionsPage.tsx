@@ -211,8 +211,8 @@ export default function Sessions() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - Sessions & Classes</title>
-      <meta name="description" content="Manage academic sessions, class schedules, timings, and class-wise registries." />
+      <title>MMS - {t("nav.sessions")}</title>
+      <meta name="description" content={t("page.sessions.subtitle")} />
       <PageHeader
         icon={Calendar}
         title={t("nav.sessions")}

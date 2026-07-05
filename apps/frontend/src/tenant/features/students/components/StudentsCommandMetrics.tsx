@@ -2,14 +2,14 @@ import React from "react";
 import { GraduationCap, Filter, UserCheck, UserX, UserMinus, CalendarPlus } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsMetrics } from "@/tenant/features/students/hooks/useStudents";
-import { ModuleCommandMetricCard } from "@/components/ui/ModuleCommandMetricCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 
 interface StudentsCommandMetricsProps {
   total: number;
   shown: number;
 }
 
-export default function StudentsCommandMetrics({
+export function StudentsCommandMetrics({
   total,
   shown,
 }: StudentsCommandMetricsProps): React.JSX.Element {
@@ -24,14 +24,14 @@ export default function StudentsCommandMetrics({
     newThisPeriod: serverMetrics?.newThisPeriod ?? 0,
   };
 
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-      <ModuleCommandMetricCard icon={GraduationCap} label={t("students.metrics.total")} value={metrics.total} />
-      <ModuleCommandMetricCard icon={Filter} label={t("students.metrics.filtered")} value={shown} />
-      <ModuleCommandMetricCard icon={UserCheck} label={t("students.metrics.active")} value={metrics.active} />
-      <ModuleCommandMetricCard icon={UserX} label={t("students.metrics.inactive")} value={metrics.inactive} />
-      <ModuleCommandMetricCard icon={UserMinus} label={t("students.metrics.suspended")} value={metrics.suspended} />
-      <ModuleCommandMetricCard icon={CalendarPlus} label={t("students.metrics.newThisPeriod")} value={metrics.newThisPeriod} />
-    </div>
-  );
+  const items = [
+    { icon: GraduationCap, label: t("students.metrics.total"), value: metrics.total, accent: "primary" as const },
+    { icon: Filter, label: t("students.metrics.filtered"), value: shown, accent: "info" as const },
+    { icon: UserCheck, label: t("students.metrics.active"), value: metrics.active, accent: "success" as const },
+    { icon: UserX, label: t("students.metrics.inactive"), value: metrics.inactive, accent: "warning" as const },
+    { icon: UserMinus, label: t("students.metrics.suspended"), value: metrics.suspended, accent: "destructive" as const },
+    { icon: CalendarPlus, label: t("students.metrics.newThisPeriod"), value: metrics.newThisPeriod, accent: "indigo" as const },
+  ];
+
+  return <ModuleCommandMetricsGrid items={items} />;
 }

@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useExaminationsMetrics } from '@/tenant/features/examinations/hooks/useExaminationsApi';
-import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 
 interface ExaminationsCommandMetricsProps {
   shown: number;
@@ -27,15 +27,15 @@ export function ExaminationsCommandMetrics({
     examsWithResults: serverMetrics?.examsWithResults ?? 0,
   };
 
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2">
-      <ModuleCommandMetricCard icon={BookOpen} label={t('examinations.metrics.total')} value={metrics.total} />
-      <ModuleCommandMetricCard icon={Filter} label={t('examinations.metrics.filtered')} value={shown} />
-      <ModuleCommandMetricCard icon={Clock} label={t('examinations.metrics.upcoming')} value={metrics.upcoming} />
-      <ModuleCommandMetricCard icon={PlayCircle} label={t('examinations.metrics.ongoing')} value={metrics.ongoing} />
-      <ModuleCommandMetricCard icon={CheckCircle2} label={t('examinations.metrics.completed')} value={metrics.completed} />
-      <ModuleCommandMetricCard icon={FileText} label={t('examinations.metrics.totalResults')} value={metrics.totalResults} />
-      <ModuleCommandMetricCard icon={ClipboardList} label={t('examinations.metrics.examsWithResults')} value={metrics.examsWithResults} />
-    </div>
-  );
+  const items = [
+    { icon: BookOpen, label: t('examinations.metrics.total'), value: metrics.total, accent: 'primary' as const },
+    { icon: Filter, label: t('examinations.metrics.filtered'), value: shown, accent: 'info' as const },
+    { icon: Clock, label: t('examinations.metrics.upcoming'), value: metrics.upcoming, accent: 'warning' as const },
+    { icon: PlayCircle, label: t('examinations.metrics.ongoing'), value: metrics.ongoing, accent: 'indigo' as const },
+    { icon: CheckCircle2, label: t('examinations.metrics.completed'), value: metrics.completed, accent: 'success' as const },
+    { icon: FileText, label: t('examinations.metrics.totalResults'), value: metrics.totalResults, accent: 'teal' as const },
+    { icon: ClipboardList, label: t('examinations.metrics.examsWithResults'), value: metrics.examsWithResults, accent: 'purple' as const },
+  ];
+
+  return <ModuleCommandMetricsGrid items={items} />;
 }

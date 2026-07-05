@@ -84,7 +84,7 @@ export default function Examinations(): React.JSX.Element {
   }, [effectiveSubTab, exams.length]);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5">
+    <div className="max-w-7xl mx-auto space-y-5">
       <title>MMS - {t("nav.examinations")}</title>
       <meta name="description" content={t("page.examinations.subtitle")} />
       <PageHeader

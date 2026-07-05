@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -21,22 +22,52 @@ interface StatCardProps {
   value: string | number;
   sub?: string;
   icon: React.ElementType;
-  color: string;
+  accent: "primary" | "success" | "warning" | "destructive" | "info" | "indigo" | "rose" | "teal" | "purple";
+  delayIndex: number;
 }
 
-function StatCard({ label, value, sub, icon: Icon, color }: StatCardProps) {
+function StatCard({ label, value, sub, icon: Icon, accent, delayIndex }: StatCardProps) {
+  const stripeColors = {
+    primary: "bg-primary",
+    success: "bg-success",
+    warning: "bg-warning",
+    destructive: "bg-destructive",
+    info: "bg-info",
+    indigo: "bg-indigo-500",
+    rose: "bg-rose-500",
+    teal: "bg-teal-500",
+    purple: "bg-purple-500",
+  };
+
+  const bgColors = {
+    primary: "bg-primary/10 text-primary ring-primary/20",
+    success: "bg-success/10 text-success ring-success/20",
+    warning: "bg-warning/10 text-warning ring-warning/20",
+    destructive: "bg-destructive/10 text-destructive ring-destructive/20",
+    info: "bg-info/10 text-info ring-info/20",
+    indigo: "bg-indigo-500/10 text-indigo-500 ring-indigo-500/20",
+    rose: "bg-rose-500/10 text-rose-500 ring-rose-500/20",
+    teal: "bg-teal-500/10 text-teal-500 ring-teal-500/20",
+    purple: "bg-purple-500/10 text-purple-500 ring-purple-500/20",
+  };
+
   return (
-    <Card className="p-4 flex items-center gap-3 relative overflow-hidden group/stat-card shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/stat-card:bg-primary" />
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color} ml-1`}>
-        <Icon className="w-5 h-5 text-white" aria-hidden="true" />
+    <motion.article
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: delayIndex * 0.05, ease: "easeOut" }}
+      className="p-4 flex items-center gap-3 relative overflow-hidden rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300"
+    >
+      <div className={`absolute left-0 top-0 bottom-0 w-1.25 ${stripeColors[accent]}`} />
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ring-4 ${bgColors[accent]} ml-1`}>
+        <Icon className="w-5 h-5" aria-hidden="true" />
       </div>
       <div>
         <p className="text-xl font-bold text-foreground leading-tight">{value}</p>
         <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">{label}</p>
         {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
       </div>
-    </Card>
+    </motion.article>
   );
 }
 
@@ -150,91 +181,120 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
     <section className="space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Overall Attendance" value={`${overallRate}%`} sub="All classes" icon={Award} color="bg-success" />
-        <StatCard label="Total Present"   value={totalStats.present} sub="Across all records" icon={Award}         color="bg-primary"       />
-        <StatCard label="Low Attendance"  value={lowAttendance.length} sub="Below 75%"         icon={AlertTriangle} color="bg-warning"     />
-        <StatCard label="Most Absent"     value={studentRates[0]?.name || "—"} sub={`${studentRates[0]?.rate || 0}%`} icon={TrendingDown} color="bg-destructive" />
+        <StatCard label="Overall Attendance" value={`${overallRate}%`} sub="All classes" icon={Award} accent="success" delayIndex={0} />
+        <StatCard label="Total Present" value={totalStats.present} sub="Across all records" icon={Award} accent="primary" delayIndex={1} />
+        <StatCard label="Low Attendance" value={lowAttendance.length} sub="Below 75%" icon={AlertTriangle} accent="warning" delayIndex={2} />
+        <StatCard label="Most Absent" value={studentRates[0]?.name || "—"} sub={`${studentRates[0]?.rate || 0}%`} icon={TrendingDown} accent="destructive" delayIndex={3} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Class attendance rate bar chart */}
-        <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-          <h2 className="text-sm font-bold text-foreground mb-3 m-0">Attendance % by Class</h2>
-          <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
-            <BarChart data={classStats} barSize={32}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Bar dataKey="rate" name="Attendance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}
-                label={{ position: "top", fontSize: 10, fill: "hsl(var(--muted-foreground))", formatter: (value) => value !== undefined && value !== null ? `${value}%` : "" }} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.2, ease: "easeOut" }}
+        >
+          <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+            <h2 className="text-sm font-bold text-foreground mb-3 m-0">Attendance % by Class</h2>
+            <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+              <BarChart data={classStats} barSize={32}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
+                <Tooltip formatter={(value) => `${value}%`} />
+                <Bar dataKey="rate" name="Attendance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}
+                  label={{ position: "top", fontSize: 10, fill: "hsl(var(--muted-foreground))", formatter: (value) => value !== undefined && value !== null ? `${value}%` : "" }} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </motion.div>
 
         {/* Monthly trend */}
-        <Card accentColor="info" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-          <h2 className="text-sm font-bold text-foreground mb-3 m-0">Monthly Attendance Trend</h2>
-          <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
-            <AreaChart data={monthlyTrend}>
-              <defs>
-                <linearGradient id="att-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="hsl(var(--primary))" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Area type="monotone" dataKey="rate" name="Attendance%" stroke="hsl(var(--primary))" fill="url(#att-grad)" strokeWidth={2} dot={{ r: 3 }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.25, ease: "easeOut" }}
+        >
+          <Card accentColor="info" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+            <h2 className="text-sm font-bold text-foreground mb-3 m-0">Monthly Attendance Trend</h2>
+            <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+              <AreaChart data={monthlyTrend}>
+                <defs>
+                  <linearGradient id="att-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
+                <Tooltip formatter={(value) => `${value}%`} />
+                <Area type="monotone" dataKey="rate" name="Attendance%" stroke="hsl(var(--primary))" fill="url(#att-grad)" strokeWidth={2} dot={{ r: 3 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Card>
+        </motion.div>
 
         {/* Student rates */}
-        <Card accentColor="indigo" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-          <h2 className="text-sm font-bold text-foreground mb-3 m-0">Student Attendance Rates</h2>
-          <ResponsiveContainer width="100%" height={220} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
-            <BarChart data={studentRates} layout="vertical" barSize={12}>
-              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
-              <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Bar dataKey="rate" name="Rate" radius={[0, 4, 4, 0]}
-                fill="hsl(var(--primary))"
-                background={{ fill: "hsl(var(--muted))", radius: 4 }} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.3, ease: "easeOut" }}
+        >
+          <Card accentColor="indigo" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+            <h2 className="text-sm font-bold text-foreground mb-3 m-0">Student Attendance Rates</h2>
+            <ResponsiveContainer width="100%" height={220} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+              <BarChart data={studentRates} layout="vertical" barSize={12}>
+                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
+                <Tooltip formatter={(value) => `${value}%`} />
+                <Bar dataKey="rate" name="Rate" radius={[0, 4, 4, 0]}
+                  fill="hsl(var(--primary))"
+                  background={{ fill: "hsl(var(--muted))", radius: 4 }} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </motion.div>
 
         {/* Pie */}
-        <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-          <h2 className="text-sm font-bold text-foreground mb-3 m-0">Status Distribution</h2>
-          <div className="flex items-center gap-4">
-            <ResponsiveContainer width="60%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value">
-                  {pieData.map((entry, index) => <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-2">
-              {statuses.map((status: AttendanceStatus, index: number) => (
-                <div key={status.id} className="flex items-center gap-2 text-xs">
-                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[index % COLORS.length] }} />
-                  <span className="text-muted-foreground">{status.label}</span>
-                  <span className="font-bold text-foreground ml-auto">{totalStats[status.id] || 0}</span>
-                </div>
-              ))}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.35, ease: "easeOut" }}
+        >
+          <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+            <h2 className="text-sm font-bold text-foreground mb-3 m-0">Status Distribution</h2>
+            <div className="flex items-center gap-4">
+              <ResponsiveContainer width="60%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value">
+                    {pieData.map((entry, index) => <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="space-y-2">
+                {statuses.map((status: AttendanceStatus, index: number) => (
+                  <div key={status.id} className="flex items-center gap-2 text-xs">
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[index % COLORS.length] }} />
+                    <span className="text-muted-foreground">{status.label}</span>
+                    <span className="font-bold text-foreground ml-auto">{totalStats[status.id] || 0}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </motion.div>
       </div>
 
       {/* Low attendance alerts */}
       {lowAttendance.length > 0 && (
-        <article className="rounded-xl border border-warning/30 bg-warning/10 p-4 space-y-3">
+        <motion.article
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+          className="rounded-xl border border-warning/30 bg-warning/10 p-4 space-y-3"
+        >
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-warning" aria-hidden="true" />
             <h3 className="text-sm font-bold text-warning m-0">Low Attendance Alert — {lowAttendance.length} student{lowAttendance.length > 1 ? "s" : ""} below 75%</h3>
@@ -247,29 +307,35 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
               </div>
             ))}
           </div>
-        </article>
+        </motion.article>
       )}
 
       {/* Top performers */}
-      <Card accentColor="success" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-        <h2 className="text-sm font-bold text-foreground mb-3 m-0">Top Performers</h2>
-        <div className="space-y-2">
-          {topStudents.map((studentRate, index) => (
-            <div key={studentRate.name} className="flex items-center gap-3">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${index === 0 ? "bg-warning/15 text-warning" : index === 1 ? "bg-muted text-muted-foreground" : "bg-warning/10 text-warning"}`}>{index + 1}</span>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-sm font-semibold text-foreground">{studentRate.name}</span>
-                  <span className="text-xs font-bold text-success">{studentRate.rate}%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full bg-success" style={{ width: `${studentRate.rate}%` }} />
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.45, ease: "easeOut" }}
+      >
+        <Card accentColor="success" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+          <h2 className="text-sm font-bold text-foreground mb-3 m-0">Top Performers</h2>
+          <div className="space-y-2">
+            {topStudents.map((studentRate, index) => (
+              <div key={studentRate.name} className="flex items-center gap-3">
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${index === 0 ? "bg-warning/15 text-warning" : index === 1 ? "bg-muted text-muted-foreground" : "bg-warning/10 text-warning"}`}>{index + 1}</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-sm font-semibold text-foreground">{studentRate.name}</span>
+                    <span className="text-xs font-bold text-success">{studentRate.rate}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-success" style={{ width: `${studentRate.rate}%` }} />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </Card>
+      </motion.div>
     </section>
   );
 }

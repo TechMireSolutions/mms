@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useQuestionBankMetrics } from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
-import { ModuleCommandMetricCard } from '@/components/ui/ModuleCommandMetricCard';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 
 interface QuestionBankCommandMetricsProps {
   shown: number;
@@ -28,15 +28,15 @@ export function QuestionBankCommandMetrics({
     categories: serverMetrics?.categories ?? 0,
   };
 
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2">
-      <ModuleCommandMetricCard icon={HelpCircle} label={t('questionBank.metrics.total')} value={metrics.total} />
-      <ModuleCommandMetricCard icon={Filter} label={t('questionBank.metrics.filtered')} value={shown} />
-      <ModuleCommandMetricCard icon={Sparkles} label={t('questionBank.metrics.easy')} value={metrics.easy} />
-      <ModuleCommandMetricCard icon={BarChart3} label={t('questionBank.metrics.medium')} value={metrics.medium} />
-      <ModuleCommandMetricCard icon={Layers} label={t('questionBank.metrics.hard')} value={metrics.hard} />
-      <ModuleCommandMetricCard icon={ClipboardList} label={t('questionBank.metrics.tests')} value={metrics.totalTests} />
-      <ModuleCommandMetricCard icon={FileCheck} label={t('questionBank.metrics.categories')} value={metrics.categories} />
-    </div>
-  );
+  const items = [
+    { icon: HelpCircle, label: t('questionBank.metrics.total'), value: metrics.total, accent: 'primary' as const },
+    { icon: Filter, label: t('questionBank.metrics.filtered'), value: shown, accent: 'info' as const },
+    { icon: Sparkles, label: t('questionBank.metrics.easy'), value: metrics.easy, accent: 'success' as const },
+    { icon: BarChart3, label: t('questionBank.metrics.medium'), value: metrics.medium, accent: 'warning' as const },
+    { icon: Layers, label: t('questionBank.metrics.hard'), value: metrics.hard, accent: 'destructive' as const },
+    { icon: ClipboardList, label: t('questionBank.metrics.tests'), value: metrics.totalTests, accent: 'indigo' as const },
+    { icon: FileCheck, label: t('questionBank.metrics.categories'), value: metrics.categories, accent: 'purple' as const },
+  ];
+
+  return <ModuleCommandMetricsGrid items={items} />;
 }

@@ -30,7 +30,7 @@ import { useEnrollmentColumnLayout } from "@/tenant/features/enrollments/hooks/u
  *
  * @returns {React.ReactElement} The Enrollments page component.
  */
-export default function Enrollments() {
+export default function EnrollmentsPage() {
   const { t } = useTranslation();
   const SUB_TABS = useMemo(
     () => [
@@ -128,8 +128,8 @@ export default function Enrollments() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <title>MMS - Enrollments Portal</title>
-      <meta name="description" content="Review and register class enrollments, verify student class allocations, and generate admissions reports." />
+      <title>MMS - {t("nav.enrollments")}</title>
+      <meta name="description" content={t("page.enrollments.subtitle")} />
       <PageHeader
         icon={ClipboardList}
         title={t("nav.enrollments")}
