@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   BarChart2, GitCompare, Wrench, LayoutDashboard, Sparkles, CreditCard 
 } from "lucide-react";
 
 import { useTranslation } from "@/hooks/useTranslation";
+import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import ReportFilters from "@/tenant/features/reports/components/ReportFilters";
 import ComparisonMode from "@/tenant/features/reports/components/ComparisonMode";
 import CustomReportBuilder from "@/tenant/features/reports/components/CustomReportBuilder";
@@ -47,12 +48,20 @@ const DEFAULT_FILTERS = {
 export default function ModuleReports({ category }: ModuleReportsProps) {
   const { t } = useTranslation();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [showComparison, setShowComparison] = useState(false);
-  const [showBuilder, setShowBuilder] = useState(false);
-  const [showWidgets, setShowWidgets] = useState(false);
-  const [showVisualizer, setShowVisualizer] = useState(false);
-  const [showCardBuilder, setShowCardBuilder] = useState(false);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder">("dashboard");
   const [visualizerEditConfig, setVisualizerEditConfig] = useState<VisualizerConfig | undefined>(undefined);
+
+  const REPORT_TABS = useMemo<readonly SubTab<"dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder">[]>(
+    () => [
+      { key: "dashboard", label: t("dashboard.title") || "Dashboard", icon: BarChart2 },
+      { key: "compare", label: t("reports.moduleTools.compare") || "Compare", icon: GitCompare },
+      { key: "builder", label: t("reports.moduleTools.reportBuilder") || "Report Builder", icon: Wrench },
+      { key: "widgets", label: t("reports.moduleTools.widgetBuilder") || "Widget Builder", icon: LayoutDashboard },
+      { key: "visualizer", label: t("reports.moduleTools.visualizerBuilder") || "Visualizer Builder", icon: Sparkles },
+      { key: "cardBuilder", label: t("reports.moduleTools.cardBuilder") || "Card Builder", icon: CreditCard },
+    ],
+    [t]
+  );
 
   const getInitialCollection = () => {
     switch (category) {
@@ -70,7 +79,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
 
   const handleEditVisual = (config: unknown) => {
     setVisualizerEditConfig(config as VisualizerConfig);
-    setShowVisualizer(true);
+    setActiveTab("visualizer");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -108,101 +117,59 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => { setShowComparison((o) => !o); setShowBuilder(false); setShowWidgets(false); setShowVisualizer(false); setShowCardBuilder(false); }}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${showComparison ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "border-border bg-card/50 backdrop-blur-md text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"}`}
-            type="button"
-          >
-            <GitCompare className="w-3.5 h-3.5" />
-            {t("reports.moduleTools.compare")}
-          </button>
-          <button
-            onClick={() => { setShowBuilder((o) => !o); setShowComparison(false); setShowWidgets(false); setShowVisualizer(false); setShowCardBuilder(false); }}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${showBuilder ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "border-border bg-card/50 backdrop-blur-md text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"}`}
-            type="button"
-          >
-            <Wrench className="w-3.5 h-3.5" />
-            {t("reports.moduleTools.reportBuilder")}
-          </button>
-          <button
-            onClick={() => { setShowWidgets((o) => !o); setShowComparison(false); setShowBuilder(false); setShowVisualizer(false); setShowCardBuilder(false); }}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${showWidgets ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "border-border bg-card/50 backdrop-blur-md text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"}`}
-            type="button"
-          >
-            <LayoutDashboard className="w-3.5 h-3.5" />
-            {t("reports.moduleTools.widgetBuilder")}
-          </button>
-          <button
-            onClick={() => { 
-              setShowVisualizer((o) => !o); 
-              if (showVisualizer) setVisualizerEditConfig(undefined);
-              setShowComparison(false); 
-              setShowBuilder(false); 
-              setShowWidgets(false); 
-              setShowCardBuilder(false); 
-            }}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${showVisualizer ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "border-border bg-card/50 backdrop-blur-md text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"}`}
-            type="button"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            {t("reports.moduleTools.visualizerBuilder")}
-          </button>
-          <button
-            onClick={() => { setShowCardBuilder((o) => !o); setShowComparison(false); setShowBuilder(false); setShowWidgets(false); setShowVisualizer(false); }}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${showCardBuilder ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "border-border bg-card/50 backdrop-blur-md text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"}`}
-            type="button"
-          >
-            <CreditCard className="w-3.5 h-3.5" />
-            {t("reports.moduleTools.cardBuilder")}
-          </button>
-        </div>
+        <SubTabBar
+          tabs={REPORT_TABS}
+          value={activeTab}
+          onChange={setActiveTab}
+          panelIdPrefix="reports-tools"
+          className="max-lg:w-full lg:w-auto"
+        />
       </div>
 
       {/* Panel overlays */}
-      <AnimatePresence>
-        {showComparison && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-             <div className="pb-4"><ComparisonMode category={category} onClose={() => setShowComparison(false)} /></div>
+      <AnimatePresence mode="wait">
+        {activeTab === "compare" && (
+          <motion.div key="compare" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+             <div className="pb-4"><ComparisonMode category={category} onClose={() => setActiveTab("dashboard")} /></div>
           </motion.div>
         )}
-        {showBuilder && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-             <div className="pb-4"><CustomReportBuilder initialSource={category} onClose={() => setShowBuilder(false)} /></div>
+        {activeTab === "builder" && (
+          <motion.div key="builder" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+             <div className="pb-4"><CustomReportBuilder initialSource={category} onClose={() => setActiveTab("dashboard")} /></div>
           </motion.div>
         )}
-        {showWidgets && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+        {activeTab === "widgets" && (
+          <motion.div key="widgets" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
              <div className="pb-4"><PinnedWidgets category={category} /></div>
           </motion.div>
         )}
-        {showVisualizer && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+        {activeTab === "visualizer" && (
+          <motion.div key="visualizer" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
              <div className="pb-4">
-               <DynamicChartVisualizer 
-                 initialConfig={visualizerEditConfig}
-                 onSave={(updatedConfig) => {
-                   try {
-                     const customVisuals = getObject<Record<string, VisualizerConfig>>("report_custom_visuals", {});
-                     customVisuals[updatedConfig.id] = updatedConfig;
-                     saveObject("report_custom_visuals", customVisuals);
-                   } catch (error) {
-                     console.error("Failed to save custom visual configuration", error);
-                   }
-                   window.dispatchEvent(new Event("local-database-update"));
-                   setShowVisualizer(false);
-                   setVisualizerEditConfig(undefined);
-                 }}
-                 onClose={() => {
-                   setShowVisualizer(false);
-                   setVisualizerEditConfig(undefined);
-                 }}
-               />
-             </div>
+                <DynamicChartVisualizer 
+                  initialConfig={visualizerEditConfig}
+                  onSave={(updatedConfig) => {
+                    try {
+                      const customVisuals = getObject<Record<string, VisualizerConfig>>("report_custom_visuals", {});
+                      customVisuals[updatedConfig.id] = updatedConfig;
+                      saveObject("report_custom_visuals", customVisuals);
+                    } catch (error) {
+                      console.error("Failed to save custom visual configuration", error);
+                    }
+                    window.dispatchEvent(new Event("local-database-update"));
+                    setActiveTab("dashboard");
+                    setVisualizerEditConfig(undefined);
+                  }}
+                  onClose={() => {
+                    setActiveTab("dashboard");
+                    setVisualizerEditConfig(undefined);
+                  }}
+                />
+              </div>
           </motion.div>
         )}
-        {showCardBuilder && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+        {activeTab === "cardBuilder" && (
+          <motion.div key="cardBuilder" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
              <div className="pb-4"><DynamicCardBuilder initialCollection={getInitialCollection()} /></div>
           </motion.div>
         )}

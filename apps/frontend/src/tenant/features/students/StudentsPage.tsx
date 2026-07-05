@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -87,6 +88,18 @@ function applyGrNumberMigration(
 export default function Students() {
   const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
+  const { can } = usePermissions();
+  const canWrite = can("students.write");
+  const canViewReports = can("analytics.view");
+  const canViewSetup = can("configuration.view") || can("settings.global.write");
+
+  const visibleTabs = useMemo(() => {
+    return PAGE_TABS.filter((tab) => {
+      if (tab.id === "setup") return canViewSetup;
+      if (tab.id === "reports") return canViewReports;
+      return true;
+    });
+  }, [PAGE_TABS, canViewSetup, canViewReports]);
   const { data: serverCount } = useStudentCount();
   const { createStudent, updateStudent, deleteStudent } = useStudentMutations();
   const { settings, statuses: studentStatusOptions, genderFilters } = useStudentConfig();
@@ -203,20 +216,22 @@ export default function Students() {
           : t("page.students.subtitle")
       }
       headerActions={
-        <ActionButton
-          variant="primary"
-          icon={UserPlus}
-          onClick={() => { setEditStudent(null); setShowStudentForm(true); }}
-        >
-          {t("action.addStudent")}
-        </ActionButton>
+        canWrite ? (
+          <ActionButton
+            variant="primary"
+            icon={UserPlus}
+            onClick={() => { setEditStudent(null); setShowStudentForm(true); }}
+          >
+            {t("action.addStudent")}
+          </ActionButton>
+        ) : undefined
       }
       metricsStrip={
         <StudentsCommandMetrics total={serverCount ?? shownCount} shown={shownCount} />
       }
     >
       <ResponsiveAccordionTabs
-        tabs={PAGE_TABS}
+        tabs={visibleTabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         panelIdPrefix="students-tab"

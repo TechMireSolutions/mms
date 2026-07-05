@@ -17,6 +17,9 @@ export const invoiceRecordSchema = z.object({
   paidDate: z.string().nullable(),
   method: z.string().nullable(),
   paidAmt: z.number().optional(),
+  deletedAt: z.string().optional(),
+  deletedBy: z.string().optional(),
+  deletionReason: z.string().optional(),
 });
 
 export type Invoice = z.infer<typeof invoiceRecordSchema>;
@@ -33,6 +36,9 @@ export const paymentRecordSchema = z.object({
   receivedByUserId: z.string().optional(),
   receivedBy: z.string().optional(),
   note: z.string(),
+  deletedAt: z.string().optional(),
+  deletedBy: z.string().optional(),
+  deletionReason: z.string().optional(),
 });
 
 export type Payment = z.infer<typeof paymentRecordSchema>;

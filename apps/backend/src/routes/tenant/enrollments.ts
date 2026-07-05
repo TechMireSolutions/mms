@@ -6,7 +6,7 @@ import { ENROLLMENTS_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
 import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
+import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
 import {
   getUserColumnPreferencesForModule,
   setUserColumnPreferencesForModule,
@@ -17,6 +17,7 @@ import {
   createEnrollment,
   updateEnrollmentById,
   deleteEnrollmentById,
+  restoreEnrollmentById,
 } from '../../services/enrollmentService.js';
 import { enrollmentRecordSchema } from '../../validation/enrollmentSchemas.js';
 
@@ -90,19 +91,38 @@ export default async function enrollmentsRoutes(
   });
 
   // --- Delete ---
-  fastify.delete('/:id', async (request, reply) => {
+  fastify.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, ENROLLMENTS_COLLECTION)) return sendForbidden(reply);
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
+    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
+    if (!body.ok) return replyValidationError(reply, body.message);
     try {
-      const deleted = await deleteEnrollmentById(params.data.id);
+      const deleted = await deleteEnrollmentById(params.data.id, String(user.id), body.data.deletionReason);
       if (!deleted) {
         return reply.status(404).send({ type: 'not_found', message: 'Enrollment not found' });
       }
       return reply.send({ success: true });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to delete enrollment' });
+    }
+  });
+
+  // --- Restore ---
+  fastify.post('/:id/restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, ENROLLMENTS_COLLECTION)) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    try {
+      const restored = await restoreEnrollmentById(params.data.id);
+      if (!restored) {
+        return reply.status(404).send({ type: 'not_found', message: 'Enrollment not found or not deleted' });
+      }
+      return reply.send({ success: true });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore enrollment' });
     }
   });
 

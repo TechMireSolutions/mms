@@ -6,7 +6,7 @@ import { FINANCE_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
 import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
+import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
 import {
   getUserColumnPreferencesForModule,
   setUserColumnPreferencesForModule,
@@ -17,10 +17,12 @@ import {
   createInvoice,
   updateInvoiceById,
   deleteInvoiceById,
+  restoreInvoiceById,
   loadPayments,
   createPayment,
   updatePaymentById,
   deletePaymentById,
+  restorePaymentById,
 } from '../../services/financeService.js';
 import { invoiceRecordSchema, paymentRecordSchema } from '../../validation/financeSchemas.js';
 
@@ -92,19 +94,37 @@ export default async function financeRoutes(
     }
   });
 
-  fastify.delete('/invoices/:id', async (request, reply) => {
+  fastify.delete<{ Params: { id: string } }>('/invoices/:id', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
+    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
+    if (!body.ok) return replyValidationError(reply, body.message);
     try {
-      const deleted = await deleteInvoiceById(params.data.id);
+      const deleted = await deleteInvoiceById(params.data.id, String(user.id), body.data.deletionReason);
       if (!deleted) {
         return reply.status(404).send({ type: 'not_found', message: 'Invoice not found' });
       }
       return reply.send({ success: true });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to delete invoice' });
+    }
+  });
+
+  fastify.post('/invoices/:id/restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    try {
+      const restored = await restoreInvoiceById(params.data.id);
+      if (!restored) {
+        return reply.status(404).send({ type: 'not_found', message: 'Invoice not found or not deleted' });
+      }
+      return reply.send({ success: true });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore invoice' });
     }
   });
 
@@ -153,19 +173,37 @@ export default async function financeRoutes(
     }
   });
 
-  fastify.delete('/payments/:id', async (request, reply) => {
+  fastify.delete<{ Params: { id: string } }>('/payments/:id', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, PAYMENT_COLLECTION)) return sendForbidden(reply);
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
+    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
+    if (!body.ok) return replyValidationError(reply, body.message);
     try {
-      const deleted = await deletePaymentById(params.data.id);
+      const deleted = await deletePaymentById(params.data.id, String(user.id), body.data.deletionReason);
       if (!deleted) {
         return reply.status(404).send({ type: 'not_found', message: 'Payment not found' });
       }
       return reply.send({ success: true });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to delete payment' });
+    }
+  });
+
+  fastify.post('/payments/:id/restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, PAYMENT_COLLECTION)) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    try {
+      const restored = await restorePaymentById(params.data.id);
+      if (!restored) {
+        return reply.status(404).send({ type: 'not_found', message: 'Payment not found or not deleted' });
+      }
+      return reply.send({ success: true });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore payment' });
     }
   });
 

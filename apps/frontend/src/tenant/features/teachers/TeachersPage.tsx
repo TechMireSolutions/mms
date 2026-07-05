@@ -44,6 +44,17 @@ export default function Teachers(): React.JSX.Element {
   const { t } = useTranslation();
   const { can } = usePermissions();
   const canWrite = can('teachers.write');
+  const canViewReports = can('analytics.view');
+  const canViewSetup = can('configuration.view') || can('settings.global.write');
+
+  const visibleTabs = useMemo(() => {
+    return PAGE_TABS.filter((tab) => {
+      if (tab.id === 'setup') return canViewSetup;
+      if (tab.id === 'reports') return canViewReports;
+      return true;
+    });
+  }, [PAGE_TABS, canViewSetup, canViewReports]);
+
   const { data: serverCount } = useTeacherCount();
   const { createTeacher, updateTeacher, deleteTeacher } = useTeacherMutations();
   const [listPage, setListPage] = useState(1);
@@ -167,7 +178,7 @@ export default function Teachers(): React.JSX.Element {
       }
     >
       <ResponsiveAccordionTabs
-        tabs={PAGE_TABS}
+        tabs={visibleTabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         panelIdPrefix="teachers-tab"

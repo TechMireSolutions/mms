@@ -19,13 +19,146 @@ import {
   roleHasPermission,
   type Permission,
 } from '@mms/shared';
-
 const WRITE_ROLES = new Set(['admin', 'accountant', 'teacher', 'assistant_teacher']);
 
-const COLLECTION_READ_PERMISSION: Partial<Record<string, Permission>> = {
-  contacts: 'contacts.read',
-  students: 'students.read',
-  teachers: 'teachers.read',
+const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
+  contacts: CONTACTS_MODULE_CONTRACT.permissions.read,
+  students: STUDENTS_MODULE_CONTRACT.permissions.read,
+  teachers: TEACHERS_MODULE_CONTRACT.permissions.read,
+  sessions: SESSIONS_MODULE_CONTRACT.permissions.read,
+  enrollments: ENROLLMENTS_MODULE_CONTRACT.permissions.read,
+  attendance_records: ATTENDANCE_MODULE_CONTRACT.permissions.read,
+  finance_invoices: FINANCE_MODULE_CONTRACT.permissions.read,
+  finance_payments: FINANCE_MODULE_CONTRACT.permissions.read,
+  obligation_collections: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
+  obligation_types: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
+  mujtahids: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
+  mujtahid_reps: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
+  wakala_types: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
+  obligation_distributions: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
+  accounting_entries: ACCOUNTING_MODULE_CONTRACT.permissions.read,
+  accounting_accounts: ACCOUNTING_MODULE_CONTRACT.permissions.read,
+  accounting_fiscal_years: ACCOUNTING_MODULE_CONTRACT.permissions.read,
+  hasanat_distributions: HASANAT_MODULE_CONTRACT.permissions.read,
+  hasanat_batches: HASANAT_MODULE_CONTRACT.permissions.read,
+  hasanat_denoms: HASANAT_MODULE_CONTRACT.permissions.read,
+  hasanat_redemptions: HASANAT_MODULE_CONTRACT.permissions.read,
+  exams: EXAMINATIONS_MODULE_CONTRACT.permissions.read,
+  exam_results: EXAMINATIONS_MODULE_CONTRACT.permissions.read,
+  questions: QUESTION_BANK_MODULE_CONTRACT.permissions.read,
+  tests: QUESTION_BANK_MODULE_CONTRACT.permissions.read,
+  assessment_results: QUESTION_BANK_MODULE_CONTRACT.permissions.read,
+  users: USERS_MODULE_CONTRACT.permissions.read,
+};
+
+const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
+  contacts: CONTACTS_MODULE_CONTRACT.permissions.write,
+  students: STUDENTS_MODULE_CONTRACT.permissions.write,
+  teachers: TEACHERS_MODULE_CONTRACT.permissions.write,
+  sessions: SESSIONS_MODULE_CONTRACT.permissions.write,
+  enrollments: ENROLLMENTS_MODULE_CONTRACT.permissions.write,
+  attendance_records: ATTENDANCE_MODULE_CONTRACT.permissions.write,
+  finance_invoices: FINANCE_MODULE_CONTRACT.permissions.write,
+  finance_payments: FINANCE_MODULE_CONTRACT.permissions.write,
+  obligation_collections: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
+  obligation_types: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
+  mujtahids: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
+  mujtahid_reps: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
+  wakala_types: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
+  obligation_distributions: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
+  accounting_entries: ACCOUNTING_MODULE_CONTRACT.permissions.write,
+  accounting_accounts: ACCOUNTING_MODULE_CONTRACT.permissions.write,
+  accounting_fiscal_years: ACCOUNTING_MODULE_CONTRACT.permissions.write,
+  hasanat_distributions: HASANAT_MODULE_CONTRACT.permissions.write,
+  hasanat_batches: HASANAT_MODULE_CONTRACT.permissions.write,
+  hasanat_denoms: HASANAT_MODULE_CONTRACT.permissions.write,
+  hasanat_redemptions: HASANAT_MODULE_CONTRACT.permissions.write,
+  exams: EXAMINATIONS_MODULE_CONTRACT.permissions.write,
+  exam_results: EXAMINATIONS_MODULE_CONTRACT.permissions.write,
+  questions: QUESTION_BANK_MODULE_CONTRACT.permissions.write,
+  tests: QUESTION_BANK_MODULE_CONTRACT.permissions.write,
+  assessment_results: QUESTION_BANK_MODULE_CONTRACT.permissions.write,
+  users: USERS_MODULE_CONTRACT.permissions.write,
+};
+
+const OBJECT_READ_PERMISSION: Record<string, Permission> = {
+  global_settings: 'configuration.view',
+  branding: 'configuration.view',
+  workspace: 'configuration.view',
+  [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
+  [CONTACTS_MODULE_CONTRACT.configObjectKey]: CONTACTS_MODULE_CONTRACT.permissions.setupView,
+  [CONTACTS_MODULE_CONTRACT.preferencesObjectKey]: CONTACTS_MODULE_CONTRACT.permissions.setupView,
+  [CONTACTS_MODULE_CONTRACT.columnPreferencesObjectKey]: CONTACTS_MODULE_CONTRACT.permissions.read,
+  [CONTACTS_MODULE_CONTRACT.savedReportsObjectKey]: CONTACTS_MODULE_CONTRACT.permissions.read,
+  [STUDENTS_MODULE_CONTRACT.settingsObjectKey]: STUDENTS_MODULE_CONTRACT.permissions.setupView,
+  [STUDENTS_MODULE_CONTRACT.columnPreferencesObjectKey]: STUDENTS_MODULE_CONTRACT.permissions.read,
+  studentGuardianContactDefaults: STUDENTS_MODULE_CONTRACT.permissions.setupView,
+  [TEACHERS_MODULE_CONTRACT.settingsObjectKey]: TEACHERS_MODULE_CONTRACT.permissions.setupView,
+  [TEACHERS_MODULE_CONTRACT.columnPreferencesObjectKey]: TEACHERS_MODULE_CONTRACT.permissions.read,
+  [USERS_MODULE_CONTRACT.settingsObjectKey]: USERS_MODULE_CONTRACT.permissions.setupView,
+  [USERS_MODULE_CONTRACT.columnPreferencesObjectKey]: USERS_MODULE_CONTRACT.permissions.read,
+  [ATTENDANCE_MODULE_CONTRACT.settingsObjectKey]: ATTENDANCE_MODULE_CONTRACT.permissions.setupView,
+  [ATTENDANCE_MODULE_CONTRACT.columnPreferencesObjectKey]: ATTENDANCE_MODULE_CONTRACT.permissions.read,
+  [SESSIONS_MODULE_CONTRACT.settingsObjectKey]: SESSIONS_MODULE_CONTRACT.permissions.setupView,
+  [SESSIONS_MODULE_CONTRACT.columnPreferencesObjectKey]: SESSIONS_MODULE_CONTRACT.permissions.read,
+  [ENROLLMENTS_MODULE_CONTRACT.settingsObjectKey]: ENROLLMENTS_MODULE_CONTRACT.permissions.setupView,
+  [ENROLLMENTS_MODULE_CONTRACT.columnPreferencesObjectKey]: ENROLLMENTS_MODULE_CONTRACT.permissions.read,
+  [FINANCE_MODULE_CONTRACT.settingsObjectKey]: FINANCE_MODULE_CONTRACT.permissions.setupView,
+  [FINANCE_MODULE_CONTRACT.invoiceColumnPreferencesObjectKey]: FINANCE_MODULE_CONTRACT.permissions.read,
+  [FINANCE_MODULE_CONTRACT.paymentColumnPreferencesObjectKey]: FINANCE_MODULE_CONTRACT.permissions.read,
+  [OBLIGATIONS_MODULE_CONTRACT.settingsObjectKey]: OBLIGATIONS_MODULE_CONTRACT.permissions.setupView,
+  [OBLIGATIONS_MODULE_CONTRACT.columnPreferencesObjectKey]: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
+  [ACCOUNTING_MODULE_CONTRACT.settingsObjectKey]: ACCOUNTING_MODULE_CONTRACT.permissions.setupView,
+  [ACCOUNTING_MODULE_CONTRACT.journalColumnPreferencesObjectKey]: ACCOUNTING_MODULE_CONTRACT.permissions.read,
+  [ACCOUNTING_MODULE_CONTRACT.accountColumnPreferencesObjectKey]: ACCOUNTING_MODULE_CONTRACT.permissions.read,
+  [HASANAT_MODULE_CONTRACT.settingsObjectKey]: HASANAT_MODULE_CONTRACT.permissions.setupView,
+  [HASANAT_MODULE_CONTRACT.distributionColumnPreferencesObjectKey]: HASANAT_MODULE_CONTRACT.permissions.read,
+  [HASANAT_MODULE_CONTRACT.redemptionColumnPreferencesObjectKey]: HASANAT_MODULE_CONTRACT.permissions.read,
+  [EXAMINATIONS_MODULE_CONTRACT.settingsObjectKey]: EXAMINATIONS_MODULE_CONTRACT.permissions.setupView,
+  [EXAMINATIONS_MODULE_CONTRACT.examColumnPreferencesObjectKey]: EXAMINATIONS_MODULE_CONTRACT.permissions.read,
+  [EXAMINATIONS_MODULE_CONTRACT.resultsColumnPreferencesObjectKey]: EXAMINATIONS_MODULE_CONTRACT.permissions.read,
+  [QUESTION_BANK_MODULE_CONTRACT.settingsObjectKey]: QUESTION_BANK_MODULE_CONTRACT.permissions.setupView,
+  [QUESTION_BANK_MODULE_CONTRACT.columnPreferencesObjectKey]: QUESTION_BANK_MODULE_CONTRACT.permissions.read,
+};
+
+const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
+  global_settings: 'settings.global.write',
+  branding: 'settings.branding.write',
+  workspace: 'settings.global.write',
+  [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
+  [CONTACTS_MODULE_CONTRACT.configObjectKey]: CONTACTS_MODULE_CONTRACT.permissions.setupWrite,
+  [CONTACTS_MODULE_CONTRACT.preferencesObjectKey]: CONTACTS_MODULE_CONTRACT.permissions.setupWrite,
+  [CONTACTS_MODULE_CONTRACT.columnPreferencesObjectKey]: CONTACTS_MODULE_CONTRACT.permissions.read,
+  [CONTACTS_MODULE_CONTRACT.savedReportsObjectKey]: CONTACTS_MODULE_CONTRACT.permissions.read,
+  [STUDENTS_MODULE_CONTRACT.settingsObjectKey]: STUDENTS_MODULE_CONTRACT.permissions.setupWrite,
+  [STUDENTS_MODULE_CONTRACT.columnPreferencesObjectKey]: STUDENTS_MODULE_CONTRACT.permissions.read,
+  studentGuardianContactDefaults: STUDENTS_MODULE_CONTRACT.permissions.setupWrite,
+  [TEACHERS_MODULE_CONTRACT.settingsObjectKey]: TEACHERS_MODULE_CONTRACT.permissions.setupWrite,
+  [TEACHERS_MODULE_CONTRACT.columnPreferencesObjectKey]: TEACHERS_MODULE_CONTRACT.permissions.read,
+  [USERS_MODULE_CONTRACT.settingsObjectKey]: USERS_MODULE_CONTRACT.permissions.setupWrite,
+  [USERS_MODULE_CONTRACT.columnPreferencesObjectKey]: USERS_MODULE_CONTRACT.permissions.read,
+  [ATTENDANCE_MODULE_CONTRACT.settingsObjectKey]: ATTENDANCE_MODULE_CONTRACT.permissions.setupWrite,
+  [ATTENDANCE_MODULE_CONTRACT.columnPreferencesObjectKey]: ATTENDANCE_MODULE_CONTRACT.permissions.read,
+  [SESSIONS_MODULE_CONTRACT.settingsObjectKey]: SESSIONS_MODULE_CONTRACT.permissions.setupWrite,
+  [SESSIONS_MODULE_CONTRACT.columnPreferencesObjectKey]: SESSIONS_MODULE_CONTRACT.permissions.read,
+  [ENROLLMENTS_MODULE_CONTRACT.settingsObjectKey]: ENROLLMENTS_MODULE_CONTRACT.permissions.setupWrite,
+  [ENROLLMENTS_MODULE_CONTRACT.columnPreferencesObjectKey]: ENROLLMENTS_MODULE_CONTRACT.permissions.read,
+  [FINANCE_MODULE_CONTRACT.settingsObjectKey]: FINANCE_MODULE_CONTRACT.permissions.setupWrite,
+  [FINANCE_MODULE_CONTRACT.invoiceColumnPreferencesObjectKey]: FINANCE_MODULE_CONTRACT.permissions.read,
+  [FINANCE_MODULE_CONTRACT.paymentColumnPreferencesObjectKey]: FINANCE_MODULE_CONTRACT.permissions.read,
+  [OBLIGATIONS_MODULE_CONTRACT.settingsObjectKey]: OBLIGATIONS_MODULE_CONTRACT.permissions.setupWrite,
+  [OBLIGATIONS_MODULE_CONTRACT.columnPreferencesObjectKey]: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
+  [ACCOUNTING_MODULE_CONTRACT.settingsObjectKey]: ACCOUNTING_MODULE_CONTRACT.permissions.setupWrite,
+  [ACCOUNTING_MODULE_CONTRACT.journalColumnPreferencesObjectKey]: ACCOUNTING_MODULE_CONTRACT.permissions.read,
+  [ACCOUNTING_MODULE_CONTRACT.accountColumnPreferencesObjectKey]: ACCOUNTING_MODULE_CONTRACT.permissions.read,
+  [HASANAT_MODULE_CONTRACT.settingsObjectKey]: HASANAT_MODULE_CONTRACT.permissions.setupWrite,
+  [HASANAT_MODULE_CONTRACT.distributionColumnPreferencesObjectKey]: HASANAT_MODULE_CONTRACT.permissions.read,
+  [HASANAT_MODULE_CONTRACT.redemptionColumnPreferencesObjectKey]: HASANAT_MODULE_CONTRACT.permissions.read,
+  [EXAMINATIONS_MODULE_CONTRACT.settingsObjectKey]: EXAMINATIONS_MODULE_CONTRACT.permissions.setupWrite,
+  [EXAMINATIONS_MODULE_CONTRACT.examColumnPreferencesObjectKey]: EXAMINATIONS_MODULE_CONTRACT.permissions.read,
+  [EXAMINATIONS_MODULE_CONTRACT.resultsColumnPreferencesObjectKey]: EXAMINATIONS_MODULE_CONTRACT.permissions.read,
+  [QUESTION_BANK_MODULE_CONTRACT.settingsObjectKey]: QUESTION_BANK_MODULE_CONTRACT.permissions.setupWrite,
+  [QUESTION_BANK_MODULE_CONTRACT.columnPreferencesObjectKey]: QUESTION_BANK_MODULE_CONTRACT.permissions.read,
 };
 
 const ALLOWED_COLLECTIONS = new Set([
@@ -148,9 +281,6 @@ export function canReadCollection(user: User, collectionName: string): boolean {
     const ownerId = collectionName.split(':')[1];
     return ownerId === String(user.id);
   }
-  if (collectionName === 'users') {
-    return roleHasPermission(user.role, 'users.manage');
-  }
   const mapped = COLLECTION_READ_PERMISSION[collectionName];
   if (mapped) {
     return roleHasPermission(user.role, mapped);
@@ -177,8 +307,12 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
     const ownerId = collectionName.split(':')[1];
     return ownerId === String(user.id);
   }
-  if (collectionName === 'users' || collectionName === 'backups') {
+  if (collectionName === 'backups') {
     return user.role === 'admin';
+  }
+  const mapped = COLLECTION_WRITE_PERMISSION[collectionName];
+  if (mapped) {
+    return roleHasPermission(user.role, mapped);
   }
   return WRITE_ROLES.has(user.role);
 }
@@ -194,8 +328,9 @@ export function canReadObject(user: User, key: string): boolean {
   if (!isAllowedObjectKey(key)) {
     return false;
   }
-  if (key === EMAIL_INTEGRATION_OBJECT_KEY) {
-    return user.role === 'admin';
+  const mapped = OBJECT_READ_PERMISSION[key];
+  if (mapped) {
+    return roleHasPermission(user.role, mapped);
   }
   return WRITE_ROLES.has(user.role);
 }
@@ -210,8 +345,9 @@ export function canWriteObject(user: User, key: string): boolean {
   if (!isAllowedObjectKey(key)) {
     return false;
   }
-  if (key === 'global_settings' || key === 'branding' || key === EMAIL_INTEGRATION_OBJECT_KEY) {
-    return user.role === 'admin';
+  const mapped = OBJECT_WRITE_PERMISSION[key];
+  if (mapped) {
+    return roleHasPermission(user.role, mapped);
   }
   return WRITE_ROLES.has(user.role);
 }

@@ -4,13 +4,7 @@ import { Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 
-const STATUS_CONFIG: Record<string, { label: string, className: string, icon: React.ElementType }> = {
-  paid:      { label: "Paid",      className: "bg-success/10 text-success border-success/20", icon: CheckCircle2 },
-  pending:   { label: "Pending",   className: "bg-warning/10 text-warning border-warning/20",       icon: Clock },
-  overdue:   { label: "Overdue",   className: "bg-destructive/10 text-destructive border-destructive/20",             icon: AlertCircle },
-  partial:   { label: "Partial",   className: "bg-info/10 text-info border-info/20",          icon: Clock },
-  cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground border-border",      icon: X },
-};
+import { useTranslation } from "@/hooks/useTranslation";
 import { formatMoney } from "@mms/shared";
 
 interface InvoiceDetailProps {
@@ -29,7 +23,19 @@ interface InvoiceDetailProps {
  * @returns {React.ReactElement}
  */
 export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps) {
-  const statusConfig = STATUS_CONFIG[invoice.status] || STATUS_CONFIG.pending;
+  const { t } = useTranslation();
+
+  const statusConfig = React.useMemo(() => {
+    const config: Record<string, { label: string, className: string, icon: React.ElementType }> = {
+      paid:      { label: t("finance.invoiceStatus.paid"),      className: "bg-success/10 text-success border-success/20", icon: CheckCircle2 },
+      pending:   { label: t("finance.invoiceStatus.pending"),   className: "bg-warning/10 text-warning border-warning/20",       icon: Clock },
+      overdue:   { label: t("finance.invoiceStatus.overdue"),   className: "bg-destructive/10 text-destructive border-destructive/20",             icon: AlertCircle },
+      partial:   { label: t("finance.invoiceStatus.partial"),   className: "bg-info/10 text-info border-info/20",          icon: Clock },
+      cancelled: { label: t("finance.invoiceStatus.cancelled"), className: "bg-muted text-muted-foreground border-border",      icon: X },
+    };
+    return config[invoice.status] || config.pending;
+  }, [invoice.status, t]);
+
   const StatusIcon = statusConfig.icon;
 
   const rows = [

@@ -24,9 +24,10 @@ describe("rbacService", () => {
     expect(canWriteCollection(teacher, "users")).toBe(false);
   });
 
-  it("allows write roles on general collections", () => {
+  it("allows write roles on general collections if role has permission", () => {
     expect(canWriteCollection(teacher, "students")).toBe(true);
-    expect(canWriteCollection(accountant, "students")).toBe(true);
+    expect(canWriteCollection(accountant, "students")).toBe(false);
+    expect(canWriteCollection(accountant, "finance_invoices")).toBe(true);
   });
 
   it("denies unknown collection and object keys by default", () => {

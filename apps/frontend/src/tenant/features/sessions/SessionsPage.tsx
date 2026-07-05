@@ -34,12 +34,8 @@ import { type AppTranslationKey } from "@mms/shared";
 type SessionStatus = string;
 type SessionType = string;
 
-const STATUS_CLS: Record<string, string> = {
-  active: "bg-success/10 text-success border-success/20",
-  upcoming: "bg-info/10 text-info border-info/20",
-  completed: "bg-muted text-muted-foreground border-border",
-  cancelled: "bg-destructive/10 text-destructive border-destructive/20",
-};
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 const TYPE_COLORS: Record<string, string> = {
   "Hifz":            "bg-success/15 text-success",
@@ -52,13 +48,12 @@ const TYPE_COLORS: Record<string, string> = {
 interface SessionCardProps {
   session: Session;
   onClick: () => void;
-  statusLabel: string;
+  statusConfig: Record<string, StatusBadgeConfigItem>;
 }
 
-function SessionCard({ session, onClick, statusLabel }: SessionCardProps) {
+function SessionCard({ session, onClick, statusConfig }: SessionCardProps) {
   const totalEnrolled = session.classes?.reduce((sum, sessionClass) => sum + sessionClass.enrolled, 0) ?? 0;
   const totalCapacity = session.classes?.reduce((sum, sessionClass) => sum + sessionClass.capacity, 0) ?? 0;
-  const statusCls = STATUS_CLS[session.status as SessionStatus] ?? STATUS_CLS.active;
   const capacityPercent = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
 
   const formatSessionDate = (date: string | undefined) => formatDate(date, true);
@@ -83,9 +78,7 @@ function SessionCard({ session, onClick, statusLabel }: SessionCardProps) {
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[session.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
               {session.type}
             </span>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusCls}`}>
-              {statusLabel}
-            </span>
+            <StatusBadge status={session.status} config={statusConfig} size="sm" />
           </div>
           <h3 className="text-[14px] font-bold text-foreground truncate group-hover:text-primary transition-colors">{session.name}</h3>
           {session.description && (
@@ -208,6 +201,13 @@ export default function Sessions() {
     }
     return sessionStatusLabelsByValue;
   }, [statusOptions, t]);
+
+  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    active:    { label: statusLabels.active || t("sessions.status.active") || "Active",       cls: SEMANTIC_BADGE.success },
+    upcoming:  { label: statusLabels.upcoming || t("sessions.status.upcoming") || "Upcoming",   cls: SEMANTIC_BADGE.info },
+    completed: { label: statusLabels.completed || t("sessions.status.completed") || "Completed", cls: SEMANTIC_BADGE.muted },
+    cancelled: { label: statusLabels.cancelled || t("sessions.status.cancelled") || "Cancelled", cls: SEMANTIC_BADGE.destructive },
+  }), [statusLabels, t]);
 
   return (
     <ModulePageShell
@@ -347,8 +347,6 @@ export default function Sessions() {
                       {filtered.map((sessionItem) => {
                         const totalEnrolled = sessionItem.classes?.reduce((sum: number, sessionClass: { enrolled: number }) => sum + sessionClass.enrolled, 0) ?? 0;
                         const totalCapacity = sessionItem.classes?.reduce((sum: number, sessionClass: { capacity: number }) => sum + sessionClass.capacity, 0) ?? 0;
-                        const statusKey = sessionItem.status as SessionStatus;
-                        const statusCls = STATUS_CLS[statusKey] ?? STATUS_CLS.active;
                         return (
                           <tr key={sessionItem.id} onClick={() => setDetailSession(sessionItem)} className="hover:bg-muted/20 cursor-pointer transition-colors group">
                             {showName && (
@@ -378,9 +376,7 @@ export default function Sessions() {
                             )}
                             {showStatus && (
                               <td className="px-4 py-3">
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusCls}`}>
-                                  {statusLabels[statusKey] ?? statusLabels.active}
-                                </span>
+                                <StatusBadge status={sessionItem.status} config={statusConfig} size="sm" />
                               </td>
                             )}
                           </tr>
@@ -397,7 +393,7 @@ export default function Sessions() {
                     key={sessionItem.id}
                     session={sessionItem}
                     onClick={() => setDetailSession(sessionItem)}
-                    statusLabel={statusLabels[sessionItem.status as SessionStatus] ?? statusLabels.active}
+                    statusConfig={statusConfig}
                   />
                 ))}
               </div>

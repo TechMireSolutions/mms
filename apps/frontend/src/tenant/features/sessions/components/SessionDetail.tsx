@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { formatDate } from "@/lib/db";
+import { SubTabBar } from "@/components/ui/SubTabBar";
 
 import { ClassesTab } from "@/tenant/features/sessions/components/tabs/ClassesTab";
 import { TimetableTab } from "@/tenant/features/sessions/components/tabs/TimetableTab";
@@ -18,13 +19,13 @@ import { Session } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
 
 const TABS = [
-  { id: "classes",   label: "Classes",   icon: GraduationCap },
-  { id: "timetable", label: "Timetable", icon: Clock },
-  { id: "discounts", label: "Discounts", icon: Tag },
-  { id: "budget",    label: "Budget",    icon: DollarSign },
-  { id: "events",    label: "Events",    icon: Calendar },
-  { id: "tabarruk",  label: "Tabarruk",  icon: Gift },
-];
+  { key: "classes",   label: "Classes",   icon: GraduationCap },
+  { key: "timetable", label: "Timetable", icon: Clock },
+  { key: "discounts", label: "Discounts", icon: Tag },
+  { key: "budget",    label: "Budget",    icon: DollarSign },
+  { key: "events",    label: "Events",    icon: Calendar },
+  { key: "tabarruk",  label: "Tabarruk",  icon: Gift },
+] as const;
 
 const STATUS_CONFIG: Record<string, string> = {
   active:    "bg-success/10 text-success border-success/20",
@@ -92,27 +93,14 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
       }
     >
 
-        {/* Tabs */}
-        <nav aria-label="Session Tabs" className="flex border-b border-border overflow-x-auto flex-shrink-0 px-2 bg-card">
-          {TABS.map((tabDefinition) => {
-            const Icon = tabDefinition.icon;
-            const active = tab === tabDefinition.id;
-            return (
-              <Button
-                key={tabDefinition.id}
-                variant="ghost"
-                onClick={() => setTab(tabDefinition.id)}
-                aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-1.5 px-3.5 py-3 text-[12px] font-semibold whitespace-nowrap border-b-2 rounded-none transition-all h-auto ${
-                  active ? "border-primary text-primary hover:text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-transparent"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" aria-hidden="true" />
-                {tabDefinition.label}
-              </Button>
-            );
-          })}
-        </nav>
+        <div className="flex border-b border-border bg-card flex-shrink-0 px-2 py-1.5 overflow-x-auto">
+          <SubTabBar
+            tabs={TABS}
+            value={tab}
+            onChange={setTab}
+            panelIdPrefix="session-detail-subtab"
+          />
+        </div>
 
         {/* Tab content */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
@@ -123,7 +111,7 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -8 }}
               transition={{ duration: 0.18 }}
-              aria-label={`${TABS.find((tabDefinition) => tabDefinition.id === tab)?.label} Content`}
+              aria-label={`${TABS.find((tabDefinition) => tabDefinition.key === tab)?.label} Content`}
             >
               <TabContent session={session} onUpdate={onUpdate} />
             </motion.section>

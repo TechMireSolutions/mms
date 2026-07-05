@@ -7,7 +7,6 @@ import {
   listAttendanceRecordsByWorkspace,
   findAttendanceRecordById,
   saveAttendanceRecord,
-  deleteAttendanceRecord,
   replaceAttendanceRecordsForWorkspace,
 } from '../db/repositories/attendanceRepository.js';
 
@@ -41,12 +40,34 @@ export async function updateAttendanceRecordById(id: string, record: AttendanceR
   return normalized;
 }
 
-export async function deleteAttendanceRecordById(id: string): Promise<boolean> {
+export async function deleteAttendanceRecordById(
+  id: string,
+  deletedBy: string,
+  deletionReason?: string,
+): Promise<boolean> {
   const tenant = getRequestTenant();
   if (!tenant) return false;
   const existing = await findAttendanceRecordById(tenant, id);
-  if (!existing) return false;
-  await deleteAttendanceRecord(tenant, id);
+  if (!existing || existing.deletedAt) return false;
+  const updated = {
+    ...existing,
+    deletedAt: new Date().toISOString(),
+    deletedBy,
+    deletionReason: deletionReason || undefined,
+  } as AttendanceRecord;
+  await saveAttendanceRecord(tenant, updated);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'attendance_records');
+  return true;
+}
+
+export async function restoreAttendanceRecordById(id: string): Promise<boolean> {
+  const tenant = getRequestTenant();
+  if (!tenant) return false;
+  const existing = await findAttendanceRecordById(tenant, id);
+  if (!existing || !existing.deletedAt) return false;
+  const { deletedAt: _deletedAt, deletedBy: _deletedBy, deletionReason: _deletionReason, ...rest } = existing;
+  await saveAttendanceRecord(tenant, rest as AttendanceRecord);
   const { broadcastTenantUpdate } = await import('./websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'attendance_records');
   return true;

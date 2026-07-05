@@ -13,6 +13,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { INVOICE_STATUSES, Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
 import { formatMoney, type AppTranslationKey, type ModuleColumnRegistryEntry } from "@mms/shared";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
@@ -51,13 +53,13 @@ export function InvoiceList({
     return t(key);
   };
 
-  const statusCls: Record<string, string> = {
-    paid: "bg-success/10 text-success border-success/20",
-    pending: "bg-warning/10 text-warning border-warning/20",
-    overdue: "bg-destructive/10 text-destructive border-destructive/20",
-    partial: "bg-info/10 text-info border-info/20",
-    cancelled: "bg-muted text-muted-foreground border-border",
-  };
+  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    paid:      { label: t("finance.invoiceStatus.paid"),      cls: SEMANTIC_BADGE.success },
+    pending:   { label: t("finance.invoiceStatus.pending"),   cls: SEMANTIC_BADGE.warning },
+    overdue:   { label: t("finance.invoiceStatus.overdue"),   cls: SEMANTIC_BADGE.destructive },
+    partial:   { label: t("finance.invoiceStatus.partial"),   cls: SEMANTIC_BADGE.info },
+    cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
+  }), [t]);
 
   const showInvoice = isColumnVisible ? isColumnVisible("invoice") : true;
   const showStudent = isColumnVisible ? isColumnVisible("student") : true;
@@ -197,7 +199,6 @@ export function InvoiceList({
                 <tr><td colSpan={visibleColCount} className="py-4"><EmptyState icon={ReceiptText} title={t("finance.empty.invoicesTitle")} description={t("finance.empty.invoicesSubtitle")} compact /></td></tr>
               ) : (
                 filtered.map((invoice, index) => {
-                  const statusClassName = statusCls[invoice.status] || statusCls.pending;
                   return (
                     <motion.tr
                       key={invoice.id}
@@ -247,7 +248,7 @@ export function InvoiceList({
                       )}
                       {showStatus && (
                         <td className="px-4 py-3">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusClassName}`}>{statusLabel(invoice.status)}</span>
+                          <StatusBadge status={invoice.status} config={statusConfig} size="sm" />
                         </td>
                       )}
                       {showDueDate && (

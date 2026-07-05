@@ -29,6 +29,9 @@ export const enrollmentRecordSchema = z.object({
   paymentStatus: z.enum(["paid", "pending", "none"]),
   notes: z.string(),
   timeline: z.array(enrollmentTimelineItemSchema),
+  deletedAt: z.string().optional(),
+  deletedBy: z.string().optional(),
+  deletionReason: z.string().optional(),
 });
 
 export type Enrollment = z.infer<typeof enrollmentRecordSchema>;

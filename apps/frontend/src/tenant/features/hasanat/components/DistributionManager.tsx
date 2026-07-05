@@ -25,11 +25,8 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const STATUS_CLS: Record<string, string> = {
-  active: "bg-info/10 text-info border-info/20",
-  redeemed: "bg-primary/10 text-primary border-primary/20",
-  returned: "bg-muted text-muted-foreground border-border",
-};
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 interface ColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
@@ -403,6 +400,11 @@ export function DistributionManager({
     }),
     [t],
   );
+  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    active:   { label: statusLabels.active,   cls: SEMANTIC_BADGE.info },
+    redeemed: { label: statusLabels.redeemed, cls: 'bg-primary/10 text-primary border-primary/20' },
+    returned: { label: statusLabels.returned, cls: SEMANTIC_BADGE.muted },
+  }), [statusLabels]);
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
@@ -461,7 +463,7 @@ export function DistributionManager({
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuLabel className="text-xs">{t("hasanat.filter.status")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {Object.keys(STATUS_CLS).map((status) => (
+            {Object.keys(statusConfig).map((status) => (
               <DropdownMenuCheckboxItem key={status} checked={filterStatus.includes(status)} onCheckedChange={() => toggleStatus(status)}>
                 {statusLabels[status as keyof typeof statusLabels]}
               </DropdownMenuCheckboxItem>
@@ -537,8 +539,6 @@ export function DistributionManager({
               ) : (
                 filtered.map((distribution, index) => {
                   const denomination = getDenomination(distribution.denominationId);
-                  const statusClassName = STATUS_CLS[distribution.status] || STATUS_CLS.active;
-                  const statusLabel = statusLabels[distribution.status as keyof typeof statusLabels] || distribution.status;
                   return (
                     <motion.tr key={distribution.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.03 }} className="hover:bg-muted/20 transition-colors group">
                       {showCard && (
@@ -581,7 +581,7 @@ export function DistributionManager({
                       )}
                       {showStatus && (
                         <td className="px-4 py-3">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusClassName}`}>{statusLabel}</span>
+                          <StatusBadge status={distribution.status} config={statusConfig} size="sm" />
                         </td>
                       )}
                       <td className="px-4 py-3">
@@ -595,7 +595,7 @@ export function DistributionManager({
                             <DropdownMenuContent align="end" className="w-36">
                               <DropdownMenuLabel className="text-xs">{t("hasanat.changeStatus")}</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              {Object.keys(STATUS_CLS).map((status) => (
+                              {Object.keys(statusConfig).map((status) => (
                                 <DropdownMenuCheckboxItem key={status} checked={distribution.status === status} onCheckedChange={() => changeStatus(distribution.id, status as "active" | "redeemed" | "returned")}>
                                   {statusLabels[status as keyof typeof statusLabels]}
                                 </DropdownMenuCheckboxItem>

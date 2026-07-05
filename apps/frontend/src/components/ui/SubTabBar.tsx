@@ -69,7 +69,10 @@ export function SubTabBar<K extends string>({
                     active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <span>{tab.label}</span>
+                  <span className="flex items-center gap-1.5">
+                    {tab.icon && <tab.icon className="h-3.5 w-3.5" />}
+                    <span>{tab.label}</span>
+                  </span>
                   <ChevronDown
                     className={cn(
                       "h-3.5 w-3.5 shrink-0 transition-transform duration-200",
@@ -105,13 +108,14 @@ export function SubTabBar<K extends string>({
                 type="button"
                 onClick={() => onChange(t.key)}
                 className={cn(
-                  "rounded-lg px-4 py-1.5 text-sm font-semibold transition-all",
+                  "rounded-lg px-4 py-1.5 text-sm font-semibold transition-all flex items-center gap-1.5",
                   value === t.key
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {t.label}
+                {t.icon && <t.icon className="h-3.5 w-3.5" />}
+                <span>{t.label}</span>
               </button>
             ))}
           </div>
@@ -129,13 +133,14 @@ export function SubTabBar<K extends string>({
           type="button"
           onClick={() => onChange(t.key)}
           className={cn(
-            "whitespace-nowrap rounded-lg px-4 py-1.5 text-sm font-semibold transition-all",
+            "whitespace-nowrap rounded-lg px-4 py-1.5 text-sm font-semibold transition-all flex items-center gap-1.5",
             value === t.key
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
-          {t.label}
+          {t.icon && <t.icon className="h-3.5 w-3.5" />}
+          <span>{t.label}</span>
         </button>
       ))}
     </div>

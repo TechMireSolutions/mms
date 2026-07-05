@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { SubTabBar, type SubTab as UINavTab } from "@/components/ui/SubTabBar";
 import { Users, UserCheck, UserX, TrendingUp } from "lucide-react";
 import { STUDENTS_MODULE_CONTRACT } from "@mms/shared";
 import type { Student } from '@/lib/data/studentsData';
@@ -85,6 +86,14 @@ function mapStudentRow(student: Student): ReportStudent {
 export default function StudentReport({ filters }: StudentReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("Student List");
+
+  const REPORT_TABS = useMemo<readonly UINavTab<SubTab>[]>(
+    () => [
+      { key: "Student List", label: t("students.report.studentListTab") || "Student List" },
+      { key: "Enrollment History", label: t("students.report.enrollmentHistoryTab") || "Enrollment History" },
+    ],
+    [t]
+  );
   const [listPage, setListPage] = useState(1);
 
   const { data: metrics } = useStudentsMetrics();
@@ -155,21 +164,12 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         <ReportSummaryCard icon={TrendingUp} label={t("students.report.genderSplit")}   value={`${male}M / ${female}F`}       color="blue"    />
       </div>
 
-      <div className="flex border-b border-border gap-0">
-        {SUB_TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveSubTab(tab)}
-            className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all ${
-              activeSubTab === tab
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {tab === "Student List" ? t("students.report.studentListTab") : t("students.report.enrollmentHistoryTab")}
-          </button>
-        ))}
-      </div>
+      <SubTabBar
+        tabs={REPORT_TABS}
+        value={activeSubTab}
+        onChange={setActiveSubTab}
+        panelIdPrefix="student-report-subtab"
+      />
 
       <ReportExportBar 
         title={activeSubTab === "Student List" ? t("students.report.studentListTab") : t("students.report.enrollmentHistoryTab")} 

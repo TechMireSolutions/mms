@@ -18,6 +18,7 @@ import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { apiJson } from "@/lib/apiClient";
 import { getCollection } from "@/lib/db";
 import { Button } from "@/components/ui/button";
+import { SubTabBar } from "@/components/ui/SubTabBar";
 import { Input } from "@/components/ui/input";
 
 const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
@@ -295,24 +296,14 @@ export default function ContactDetailDrawer({
           </div>
 
           
-          <div className="flex gap-1">
-            {detailTabs.map((t: { key: string; label: string; icon: LucideIcon | typeof Tag }) => {
-              const Icon = t.icon;
-              const isActive = activeTab === t.key;
-              return (
-                <Button
-                  key={t.key}
-                  variant="ghost"
-                  onClick={() => setActiveTab(t.key)}
-                  className={`flex-1 flex flex-col items-center min-h-[44px] justify-center gap-1.5 py-2 border-b-2 rounded-none transition-all shadow-none font-bold ${
-                    isActive ? "border-primary text-primary bg-primary/5" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold">{t.label}</span>
-                </Button>
-              );
-            })}
+          <div className="flex border-b border-border py-1 overflow-x-auto w-full max-w-sm">
+            <SubTabBar
+              tabs={detailTabs}
+              value={activeTab}
+              onChange={setActiveTab}
+              panelIdPrefix="contact-detail-drawer"
+              className="w-full max-w-sm"
+            />
           </div>
         </div>
 

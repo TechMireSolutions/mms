@@ -4,6 +4,7 @@ import { canReadCollection, canWriteCollection } from '../../services/rbacServic
 import {
   createAttendanceRecord,
   deleteAttendanceRecordById,
+  restoreAttendanceRecordById,
   loadAttendanceRecords,
   replaceAttendanceRecords,
   updateAttendanceRecordById,
@@ -11,7 +12,7 @@ import {
 import type { User } from '@mms/shared';
 import { computeAttendanceCommandMetrics, ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
+import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
 import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
 import {
   attendanceBulkSchema,
@@ -145,14 +146,32 @@ export default async function attendanceRoutes(
     if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
+    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
+    if (!body.ok) return replyValidationError(reply, body.message);
     try {
-      const deleted = await deleteAttendanceRecordById(params.data.id);
+      const deleted = await deleteAttendanceRecordById(params.data.id, String(user.id), body.data.deletionReason);
       if (!deleted) {
         return reply.status(404).send({ type: 'not_found', message: 'Attendance record not found' });
       }
       return reply.send({ success: true });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to delete attendance record' });
+    }
+  });
+
+  fastify.post('/:id/restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    try {
+      const restored = await restoreAttendanceRecordById(params.data.id);
+      if (!restored) {
+        return reply.status(404).send({ type: 'not_found', message: 'Attendance record not found or not deleted' });
+      }
+      return reply.send({ success: true });
+    } catch {
+      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore attendance record' });
     }
   });
 }

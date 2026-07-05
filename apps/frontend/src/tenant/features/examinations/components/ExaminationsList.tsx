@@ -19,13 +19,8 @@ import type { Enrollment } from "@/lib/data/enrollmentData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const STATUS_CLS: Record<string, string> = {
-  upcoming: "bg-info/10 text-info border-info/20",
-  ongoing: "bg-warning/10 text-warning border-warning/20",
-  completed: "bg-success/10 text-success border-success/20",
-  scheduled: "bg-primary/10 text-primary border-primary/20",
-  cancelled: "bg-muted text-muted-foreground border-border",
-};
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   upcoming: Circle,
@@ -126,6 +121,14 @@ export default function ExamsList({
   const showPassingMarks = isColumnVisible ? isColumnVisible("passingMarks") : true;
   const showClasses = isColumnVisible ? isColumnVisible("classes") : true;
 
+  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    upcoming:  { label: statusLabels.upcoming,  cls: SEMANTIC_BADGE.info },
+    ongoing:   { label: statusLabels.ongoing,   cls: SEMANTIC_BADGE.warning },
+    completed: { label: statusLabels.completed, cls: SEMANTIC_BADGE.success },
+    scheduled: { label: statusLabels.scheduled, cls: 'bg-primary/10 text-primary border-primary/20' },
+    cancelled: { label: statusLabels.cancelled, cls: SEMANTIC_BADGE.muted },
+  }), [statusLabels]);
+
   const renderExamMeta = (exam: Exam) => {
     const assignedClasses = classes.filter((sessionClass) => exam.classIds.includes(sessionClass.id));
     const classIds = new Set(exam.classIds);
@@ -138,10 +141,8 @@ export default function ExamsList({
         )
         .map((enrollment) => String(enrollment.studentId)),
     ).size;
-    const statusCls = STATUS_CLS[exam.status] || STATUS_CLS.upcoming;
     const StatusIcon = STATUS_ICONS[exam.status] || Circle;
-    const statusLabel = statusLabels[exam.status as keyof typeof statusLabels] || exam.status;
-    return { assignedClasses, studentCount, statusCls, StatusIcon, statusLabel };
+    return { assignedClasses, studentCount, StatusIcon };
   };
   return (
     <section className="space-y-4" aria-label={t("examinations.exams")}>
@@ -213,7 +214,8 @@ export default function ExamsList({
           {/* Card view for mobile/tablet */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:hidden" role="list" aria-label={t("examinations.exams")}>
             {filtered.map((exam, index) => {
-              const { assignedClasses, studentCount, statusCls, StatusIcon, statusLabel } = renderExamMeta(exam);
+              const { assignedClasses, studentCount, StatusIcon } = renderExamMeta(exam);
+              const conf = statusConfig[exam.status] || { label: exam.status, cls: SEMANTIC_BADGE.muted };
               return (
                 <motion.div
                   key={exam.id}
@@ -229,8 +231,8 @@ export default function ExamsList({
                     <div className="flex-1 min-w-0 pr-2">
                       {showStatus && (
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusCls} flex items-center gap-1`}>
-                            <StatusIcon className="w-2.5 h-2.5" aria-hidden="true" /> {statusLabel}
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${conf.cls} flex items-center gap-1`}>
+                            <StatusIcon className="w-2.5 h-2.5" aria-hidden="true" /> {conf.label}
                           </span>
                         </div>
                       )}
@@ -357,7 +359,7 @@ export default function ExamsList({
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   {filtered.map((exam, index) => {
-                    const { assignedClasses, statusCls, statusLabel } = renderExamMeta(exam);
+                    const { assignedClasses } = renderExamMeta(exam);
                     return (
                       <motion.tr key={exam.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.03 }} className="hover:bg-muted/20 transition-colors group">
                         {showName && (
@@ -376,7 +378,7 @@ export default function ExamsList({
                         )}
                         {showStatus && (
                           <td className="px-4 py-3">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusCls}`}>{statusLabel}</span>
+                            <StatusBadge status={exam.status} config={statusConfig} size="sm" />
                           </td>
                         )}
                         {showTotalMarks && (
