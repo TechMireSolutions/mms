@@ -10,6 +10,7 @@ import {
   type StudentDuplicateCheckInput,
   type StudentsListQuery,
   type StudentsWidgetQuery,
+  type Student,
 } from '@mms/shared';
 import {
   type StudentRecord,
@@ -42,7 +43,7 @@ export async function createStudent(record: StudentRecord): Promise<StudentRecor
   if (!tenant) throw new Error('Tenant context required');
   const resolvedId = String(record.id ?? `st-${Date.now()}`);
   const normalized = normalizeStoredStudent({ ...record, id: resolvedId }) as StudentRecord;
-  await saveStudent(tenant, normalized as any);
+  await saveStudent(tenant, normalized as Student);
   const { broadcastTenantUpdate } = await import('./websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'students');
   return normalized;
@@ -54,7 +55,7 @@ export async function updateStudentById(id: string, record: StudentRecord): Prom
   const existing = await findStudentById(tenant, id);
   if (!existing || existing.deletedAt) return null;
   const normalized = normalizeStoredStudent({ ...record, id }) as StudentRecord;
-  await saveStudent(tenant, normalized as any);
+  await saveStudent(tenant, normalized as Student);
   const { broadcastTenantUpdate } = await import('./websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'students');
   return normalized;
@@ -74,7 +75,7 @@ export async function deleteStudentById(
     deletedAt: new Date().toISOString(),
     deletedBy,
     deletionReason: deletionReason || undefined,
-  } as any;
+  } as Student;
   await saveStudent(tenant, updated);
   const { broadcastTenantUpdate } = await import('./websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'students');
@@ -87,7 +88,7 @@ export async function restoreStudentById(id: string): Promise<boolean> {
   const existing = await findStudentById(tenant, id);
   if (!existing || !existing.deletedAt) return false;
   const { deletedAt: _deletedAt, deletedBy: _deletedBy, deletionReason: _deletionReason, ...rest } = existing;
-  const restored = rest as any;
+  const restored = rest as Student;
   await saveStudent(tenant, restored);
   const { broadcastTenantUpdate } = await import('./websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'students');

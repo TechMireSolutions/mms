@@ -3,6 +3,7 @@ import {
   buildDynamicStudentSchema,
   normalizeStudentsSettings,
   type StudentsSettings,
+  type Contact,
 } from '@mms/shared';
 import { fetchObject } from './dbSyncService.js';
 import { loadContacts } from './contactService.js';
@@ -21,7 +22,7 @@ function getSubmittedBlueprintId(student: unknown): unknown {
 
 async function hydrateStudentValidationSubject(
   student: unknown,
-  getContacts: () => Promise<any[]>,
+  getContacts: () => Promise<Contact[]>,
 ): Promise<unknown> {
   if (!student || typeof student !== 'object' || Array.isArray(student)) {
     return student;
@@ -95,7 +96,7 @@ export async function validateStudentDynamic(
     schemaCache.set(cacheKey, schema);
   }
 
-  let cachedContacts: any[] | undefined;
+  let cachedContacts: Contact[] | undefined;
   const getContacts = async () => {
     if (!cachedContacts) {
       cachedContacts = await loadContacts();

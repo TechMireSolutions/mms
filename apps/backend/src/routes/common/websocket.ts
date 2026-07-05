@@ -1,10 +1,17 @@
 import type { FastifyInstance } from 'fastify';
 import { resolveSubdomainFromRequest } from '../../lib/tenantContext.js';
-import { registerConnection } from '../../services/websocketService.js';
+import { registerConnection, type MinimalWebSocket } from '../../services/websocketService.js';
+
+interface DecodedToken {
+  id: string;
+  tokenType: string;
+  workspaceSubdomain: string;
+}
 
 export default async function websocketRoutes(app: FastifyInstance): Promise<void> {
-  app.get('/ws', { websocket: true }, (connection: any, req) => {
-    const socket = connection.socket || connection;
+  app.get('/ws', { websocket: true }, (connection: unknown, req) => {
+    const connObj = connection as { socket?: MinimalWebSocket };
+    const socket = connObj.socket || (connection as MinimalWebSocket);
     const subdomain = resolveSubdomainFromRequest(
       req.headers.host,
       req.headers['x-forwarded-host']
@@ -16,7 +23,8 @@ export default async function websocketRoutes(app: FastifyInstance): Promise<voi
     }
 
     const cookies = app.parseCookie(req.headers.cookie ?? '');
-    const token = cookies.mms_access || (req.query as any)?.token;
+    const query = req.query as Record<string, string | undefined> | undefined;
+    const token = cookies.mms_access || query?.token;
 
     if (!token) {
       socket.close(4001, 'Unauthorized - Missing token');
@@ -24,7 +32,7 @@ export default async function websocketRoutes(app: FastifyInstance): Promise<voi
     }
 
     try {
-      const decoded = app.jwt.verify(token) as any;
+      const decoded = app.jwt.verify(token) as DecodedToken;
       if (!decoded || decoded.tokenType !== 'access') {
         socket.close(4001, 'Unauthorized - Invalid token type');
         return;
@@ -37,8 +45,8 @@ export default async function websocketRoutes(app: FastifyInstance): Promise<voi
 
       // Successful connection registration
       registerConnection(subdomain, socket, decoded.id);
-    } catch (err) {
-      socket.close(4001, 'Unauthorized - Verification failed');
+    } catch {
+      socket.close(4001, 'Unauthorized - Invalid token');
     }
   });
 }

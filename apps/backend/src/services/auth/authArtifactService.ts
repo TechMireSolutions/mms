@@ -38,7 +38,7 @@ export async function putAuthArtifact<T>(
     .values({
       id,
       kind,
-      payload: payload as any,
+      payload: payload as unknown as Record<string, unknown>,
       expiresAt,
     });
   return id;

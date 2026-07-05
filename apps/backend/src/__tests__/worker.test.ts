@@ -63,8 +63,8 @@ vi.mock('../db/dbClient.js', () => ({
 }));
 
 describe('worker background queue processor', () => {
-  let initialSigtermListeners: any[];
-  let initialSigintListeners: any[];
+  let initialSigtermListeners: Function[];
+  let initialSigintListeners: Function[];
 
   beforeEach(() => {
     initialSigtermListeners = process.listeners('SIGTERM');
@@ -77,8 +77,8 @@ describe('worker background queue processor', () => {
   afterEach(() => {
     process.removeAllListeners('SIGTERM');
     process.removeAllListeners('SIGINT');
-    initialSigtermListeners.forEach((l) => process.on('SIGTERM', l));
-    initialSigintListeners.forEach((l) => process.on('SIGINT', l));
+    initialSigtermListeners.forEach((l) => process.on('SIGTERM', l as (signal: "SIGTERM") => void));
+    initialSigintListeners.forEach((l) => process.on('SIGINT', l as (signal: "SIGINT") => void));
 
     vi.useRealTimers();
     vi.resetModules();
@@ -233,7 +233,7 @@ describe('worker background queue processor', () => {
     expect(shutdownListener).toBeDefined();
 
     // Trigger shutdown listener
-    await (shutdownListener as any)();
+    await (shutdownListener as () => void | Promise<void>)();
 
     // Verify child process was killed
     expect(lastSpawnedChild!.killed).toBe(true);

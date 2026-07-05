@@ -30,13 +30,13 @@ export async function runMigration021(): Promise<void> {
     const moduleId = CONFIG_KEY_TO_MODULE[logicalKey];
     if (!moduleId) continue;
 
-    const data = row.data as any;
+    const data = row.data as Record<string, unknown>;
     if (!data || typeof data !== 'object' || !Array.isArray(data.formTabs) || data.formTabs.length === 0) {
       continue;
     }
 
     const tenant = parsed?.subdomain ?? 'demo'; // fallback to demo if not scoped, but all settings objects are scoped
-    const formTabs = data.formTabs;
+    const formTabs = data.formTabs as Record<string, unknown>[];
 
     // Delete existing custom tabs for this tenant + module
     await db
@@ -48,18 +48,18 @@ export async function runMigration021(): Promise<void> {
         )
       );
 
-    const values = formTabs.map((tab: any, idx: number) => ({
+    const values = formTabs.map((tab, idx: number) => ({
       id: `${tenant}:${moduleId}:${tab.key}`,
       workspaceSubdomain: tenant,
       moduleId,
-      key: tab.key,
-      label: tab.label,
-      icon: tab.icon || null,
+      key: tab.key as string,
+      label: tab.label as string,
+      icon: (tab.icon as string) || null,
       enabled: tab.enabled !== false,
-      sortOrder: tab.order ?? idx,
-      permissions: tab.permissions || null,
-      description: tab.description || null,
-      color: tab.color || null,
+      sortOrder: (tab.order as number) ?? idx,
+      permissions: (tab.permissions as string[]) || null,
+      description: (tab.description as string) || null,
+      color: (tab.color as string) || null,
       isSystem: tab.isSystem === true,
     }));
 

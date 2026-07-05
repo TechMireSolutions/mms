@@ -108,7 +108,7 @@ export async function createDatabaseBackgroundJob(
     kind: job.kind,
     status: job.status,
     label: job.label,
-    payload: payload as any,
+    payload: payload as Record<string, unknown>,
     progressCurrent: job.progress?.current ?? null,
     progressTotal: job.progress?.total ?? null,
     hasDownload: job.hasDownload ?? false,

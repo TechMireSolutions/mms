@@ -578,9 +578,23 @@ const CONFIG_KEY_TO_MODULE: Record<string, string> = {
   'users_settings': 'users',
 };
 
-async function hydrateObjectData(key: string, data: any, tenant: string): Promise<any> {
+interface CustomTabInput {
+  key: string;
+  label: string;
+  icon?: string | null;
+  enabled?: boolean;
+  order?: number;
+  permissions?: string[] | null;
+  description?: string | null;
+  color?: string | null;
+  isSystem?: boolean;
+}
+
+async function hydrateObjectData(key: string, data: unknown, tenant: string): Promise<unknown> {
   const moduleId = CONFIG_KEY_TO_MODULE[key];
   if (!moduleId || !data || typeof data !== 'object') return data;
+
+  const dataObj = data as Record<string, unknown>;
 
   const tabRows = await activeDb()
     .select()
@@ -605,15 +619,16 @@ async function hydrateObjectData(key: string, data: any, tenant: string): Promis
     isSystem: row.isSystem,
   }));
 
-  return { ...data, formTabs };
+  return { ...dataObj, formTabs };
 }
 
-async function saveCustomTabsForObject(key: string, data: any, tenant: string): Promise<any> {
+async function saveCustomTabsForObject(key: string, data: unknown, tenant: string): Promise<unknown> {
   const moduleId = CONFIG_KEY_TO_MODULE[key];
   if (!moduleId || !data || typeof data !== 'object') return data;
 
-  const formTabs = data.formTabs;
-  const cleanedData = { ...data };
+  const dataObj = data as Record<string, unknown>;
+  const formTabs = dataObj.formTabs;
+  const cleanedData = { ...dataObj };
   delete cleanedData.formTabs;
 
   await activeDb()
@@ -626,20 +641,23 @@ async function saveCustomTabsForObject(key: string, data: any, tenant: string): 
     );
 
   if (Array.isArray(formTabs) && formTabs.length > 0) {
-    const values = formTabs.map((tab: any, idx: number) => ({
-      id: `${tenant}:${moduleId}:${tab.key}`,
-      workspaceSubdomain: tenant,
-      moduleId,
-      key: tab.key,
-      label: tab.label,
-      icon: tab.icon || null,
-      enabled: tab.enabled !== false,
-      sortOrder: tab.order ?? idx,
-      permissions: tab.permissions || null,
-      description: tab.description || null,
-      color: tab.color || null,
-      isSystem: tab.isSystem === true,
-    }));
+    const values = formTabs.map((tabRaw: unknown, idx: number) => {
+      const tab = tabRaw as CustomTabInput;
+      return {
+        id: `${tenant}:${moduleId}:${tab.key}`,
+        workspaceSubdomain: tenant,
+        moduleId,
+        key: tab.key,
+        label: tab.label,
+        icon: tab.icon || null,
+        enabled: tab.enabled !== false,
+        sortOrder: tab.order ?? idx,
+        permissions: tab.permissions || null,
+        description: tab.description || null,
+        color: tab.color || null,
+        isSystem: tab.isSystem === true,
+      };
+    });
 
     await activeDb().insert(schema.customTabs).values(values);
   }

@@ -42,7 +42,11 @@ describe('custom tabs relational migration and operations', () => {
         await saveObject(configKey, mockConfigPayload);
 
         // 2. Fetch the object and verify hydration
-        const fetched = await getObject(configKey) as any;
+        const fetched = await getObject(configKey) as Record<string, unknown> & {
+          version: number;
+          fields: Record<string, { key: string }>;
+          formTabs: { key: string; color?: string }[];
+        };
         expect(fetched).not.toBeNull();
         expect(fetched.version).toBe(42);
         expect(fetched.fields.firstName.key).toBe('firstName');
@@ -54,7 +58,9 @@ describe('custom tabs relational migration and operations', () => {
 
         // 3. Verify in getAllData
         const snapshot = await getAllData();
-        const snapshotConfig = snapshot.objects[configKey] as any;
+        const snapshotConfig = snapshot.objects[configKey] as Record<string, unknown> & {
+          formTabs: { key: string }[];
+        };
         expect(snapshotConfig).toBeDefined();
         expect(snapshotConfig.formTabs).toBeDefined();
         expect(snapshotConfig.formTabs.length).toBe(2);

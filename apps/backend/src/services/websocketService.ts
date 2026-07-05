@@ -1,6 +1,16 @@
+export interface MinimalWebSocket {
+  close(code?: number, reason?: string): void;
+  terminate(): void;
+  ping(): void;
+  send(data: string): void;
+  on(event: 'pong', listener: () => void): void;
+  on(event: 'close', listener: () => void): void;
+  on(event: 'error', listener: (err: Error) => void): void;
+}
+
 interface ActiveConnection {
   subdomain: string;
-  socket: any;
+  socket: MinimalWebSocket;
   userId: string;
 }
 
@@ -10,7 +20,7 @@ const activeConnections = new Set<ActiveConnection>();
  * Registers an active WebSocket connection for a given tenant subdomain and user ID.
  * Returns an unregister function to call when the connection closes.
  */
-export function registerConnection(subdomain: string, socket: any, userId: string): () => void {
+export function registerConnection(subdomain: string, socket: MinimalWebSocket, userId: string): () => void {
   const connection: ActiveConnection = { subdomain, socket, userId };
   activeConnections.add(connection);
 
@@ -37,7 +47,7 @@ export function registerConnection(subdomain: string, socket: any, userId: strin
   };
 
   socket.on('close', cleanup);
-  socket.on('error', (err: any) => {
+  socket.on('error', (err: Error) => {
     console.error(`[WS] Connection error for user "${userId}" on subdomain "${subdomain}":`, err);
     cleanup();
   });

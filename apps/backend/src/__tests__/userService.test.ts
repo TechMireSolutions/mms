@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadContacts } from '../services/contactService.js';
+import type { Contact } from '@mms/shared';
 
 const mockListTenantUsers = vi.fn();
 const mockFindTenantUserById = vi.fn();
@@ -66,7 +67,7 @@ describe('userService', () => {
         id: '42',
         name: 'Syed Ahmed Ali Naqvi',
         emails: [{ address: 'different@contact.local' }],
-      } as any,
+      } as Contact,
     ]);
 
     const result = await validateCredentials(
@@ -103,7 +104,7 @@ describe('userService', () => {
         id: '42',
         name: 'Admin',
         emails: [{ address: 'different@contact.local' }],
-      } as any,
+      } as Contact,
     ]);
 
     const result = await validateCredentials(

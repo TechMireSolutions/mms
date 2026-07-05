@@ -8,6 +8,7 @@ import {
   type TeacherEmployeeIdSettings,
   type TeachersListQuery,
   type TeachersWidgetQuery,
+  type Teacher,
 } from '@mms/shared';
 import {
   type TeacherRecord,
@@ -39,7 +40,7 @@ export async function createTeacher(record: TeacherRecord): Promise<TeacherRecor
   if (!tenant) throw new Error('Tenant context required');
   const resolvedId = String(record.id ?? `tch-${Date.now()}`);
   const normalized = normalizeStoredTeacher({ ...record, id: resolvedId }) as TeacherRecord;
-  await saveTeacher(tenant, normalized as any);
+  await saveTeacher(tenant, normalized as Teacher);
   const { broadcastTenantUpdate } = await import('./websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'teachers');
   return normalized;
@@ -51,7 +52,7 @@ export async function updateTeacherById(id: string, record: TeacherRecord): Prom
   const existing = await findTeacherById(tenant, id);
   if (!existing || existing.deletedAt) return null;
   const normalized = normalizeStoredTeacher({ ...record, id }) as TeacherRecord;
-  await saveTeacher(tenant, normalized as any);
+  await saveTeacher(tenant, normalized as Teacher);
   const { broadcastTenantUpdate } = await import('./websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'teachers');
   return normalized;
@@ -71,7 +72,7 @@ export async function deleteTeacherById(
     deletedAt: new Date().toISOString(),
     deletedBy,
     deletionReason: deletionReason || undefined,
-  } as any;
+  } as Teacher;
   await saveTeacher(tenant, updated);
   const { broadcastTenantUpdate } = await import('./websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'teachers');
@@ -84,7 +85,7 @@ export async function restoreTeacherById(id: string): Promise<boolean> {
   const existing = await findTeacherById(tenant, id);
   if (!existing || !existing.deletedAt) return false;
   const { deletedAt: _deletedAt, deletedBy: _deletedBy, deletionReason: _deletionReason, ...rest } = existing;
-  const restored = rest as any;
+  const restored = rest as Teacher;
   await saveTeacher(tenant, restored);
   const { broadcastTenantUpdate } = await import('./websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'teachers');
