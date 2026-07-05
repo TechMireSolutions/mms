@@ -135,12 +135,8 @@ export default function ContactsTable({
   canWrite = false,
   canDelete = false,
 }: ContactsTableProps): React.JSX.Element {
-  const { visibleColumns, prefs } = useContactConfig();
+  const { prefs } = useContactConfig();
   const { t } = useTranslation();
-  const visibleColumnIds = React.useMemo(
-    () => new Set(visibleColumns.map((col) => col.id)),
-    [visibleColumns],
-  );
   const [viewContact, setViewContact] = useState<Contact | null>(null);
 
   const allSelected  = contacts.length > 0 && selected.length === contacts.length;

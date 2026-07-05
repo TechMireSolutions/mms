@@ -124,6 +124,7 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
     serverContact,
     fieldPicks,
     entry.kind,
+    entry.id,
     contactId,
     upsertContact,
     updateContact,

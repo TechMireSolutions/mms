@@ -45,7 +45,6 @@ export interface UseContactsPageStateOptions {
   canViewReports: boolean;
   canViewSetup: boolean;
   pageActions: PageActions;
-  updatePrefs: (patch: Record<string, unknown>) => void;
   showDeletedArchives?: boolean;
   /** Server-paginated Work rows; when set, used for select-all, bulk export, and row lookup. */
   directoryRows?: Contact[];
@@ -64,7 +63,6 @@ export function useContactsPageState({
   canViewReports,
   canViewSetup,
   pageActions,
-  updatePrefs,
   showDeletedArchives = false,
   directoryRows,
   directoryRowsRef,

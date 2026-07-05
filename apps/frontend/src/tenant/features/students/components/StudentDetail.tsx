@@ -42,7 +42,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
   const contactList = contacts.data ?? [];
 
   const { settings } = useStudentConfig();
-  const fields = settings.fields || {};
+  const fields = useMemo(() => settings.fields || {}, [settings.fields]);
 
   const tabOrderMap = useMemo(() => {
     const tabs = settings.formTabs || [];

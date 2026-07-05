@@ -101,7 +101,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
       settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS,
       settings.requiredTabs || DEFAULT_STUDENT_REQUIRED_TABS
     );
-  }, [settings]);
+  }, [settings, fieldsEditor]);
 
   const handleSave = (): void => {
     const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({

@@ -59,6 +59,86 @@ function FormErrorBanner({ errors }: { errors: readonly string[] }): React.JSX.E
   );
 }
 
+interface DomProgressResult {
+  progress: number | undefined;
+  label: string | undefined;
+  ref: React.RefObject<HTMLDivElement | null>;
+}
+
+/**
+ * Tracks the filled progress of form inputs dynamically using the DOM.
+ */
+function useDomFormProgress(open: boolean, active: boolean): DomProgressResult {
+  const [progress, setProgress] = React.useState<number | undefined>(undefined);
+  const [label, setLabel] = React.useState<string | undefined>(undefined);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!open || !active) {
+      setProgress(undefined);
+      setLabel(undefined);
+      return;
+    }
+
+    const updateProgress = () => {
+      const container = ref.current;
+      if (!container) return;
+
+      const inputs = Array.from(container.querySelectorAll('input, select, textarea')) as (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)[];
+      if (inputs.length === 0) {
+        setProgress(undefined);
+        setLabel(undefined);
+        return;
+      }
+
+      const targetInputs = inputs.filter(el => {
+        const type = el.getAttribute('type');
+        if (type === 'submit' || type === 'button' || type === 'hidden') return false;
+        return el.offsetParent !== null;
+      });
+
+      if (targetInputs.length === 0) {
+        setProgress(undefined);
+        setLabel(undefined);
+        return;
+      }
+
+      const requiredInputs = targetInputs.filter(el => el.required || el.getAttribute('aria-required') === 'true' || el.classList.contains('required'));
+      const sourceList = requiredInputs.length > 0 ? requiredInputs : targetInputs;
+
+      const filledCount = sourceList.filter(el => {
+        if (el.type === 'checkbox' || el.type === 'radio') {
+          return (el as HTMLInputElement).checked;
+        }
+        return el.value.trim() !== '';
+      }).length;
+
+      const percentage = Math.round((filledCount / sourceList.length) * 100);
+      setProgress(percentage);
+      setLabel(`${filledCount}/${sourceList.length}`);
+    };
+
+    const container = ref.current;
+    if (!container) return;
+
+    updateProgress();
+
+    const observer = new MutationObserver(updateProgress);
+    observer.observe(container, { childList: true, subtree: true, attributes: true });
+
+    container.addEventListener('input', updateProgress);
+    container.addEventListener('change', updateProgress);
+
+    return () => {
+      container.removeEventListener('input', updateProgress);
+      container.removeEventListener('change', updateProgress);
+      observer.disconnect();
+    };
+  }, [open, active]);
+
+  return { progress, label, ref };
+}
+
 /**
  * Canonical add/edit entity dialog — `Modal` + optional `SubTabBar` + error banner + footer actions.
  */
@@ -101,69 +181,10 @@ export function FormModal<K extends string = string>({
 
   const hasTabs = !builderMode && tabs && tabs.length > 1 && activeTab !== undefined && onTabChange;
 
-  const [domProgress, setDomProgress] = React.useState<number | undefined>(undefined);
-  const [domLabel, setDomLabel] = React.useState<string | undefined>(undefined);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (open && !hasTabs && progress === undefined) {
-      const updateProgress = () => {
-        if (!containerRef.current) return;
-        const inputs = Array.from(containerRef.current.querySelectorAll('input, select, textarea')) as (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)[];
-        if (inputs.length === 0) {
-          setDomProgress(undefined);
-          setDomLabel(undefined);
-          return;
-        }
-
-        const targetInputs = inputs.filter(el => {
-          const type = el.getAttribute('type');
-          if (type === 'submit' || type === 'button' || type === 'hidden') return false;
-          return el.offsetParent !== null;
-        });
-
-        if (targetInputs.length === 0) {
-          setDomProgress(undefined);
-          setDomLabel(undefined);
-          return;
-        }
-
-        const requiredInputs = targetInputs.filter(el => el.required || el.getAttribute('aria-required') === 'true' || el.classList.contains('required'));
-        const sourceList = requiredInputs.length > 0 ? requiredInputs : targetInputs;
-
-        const filledCount = sourceList.filter(el => {
-          if (el.type === 'checkbox' || el.type === 'radio') {
-            return (el as HTMLInputElement).checked;
-          }
-          return el.value.trim() !== '';
-        }).length;
-
-        const percentage = Math.round((filledCount / sourceList.length) * 100);
-        setDomProgress(percentage);
-        setDomLabel(`${filledCount}/${sourceList.length}`);
-      };
-
-      const container = containerRef.current;
-      if (!container) return;
-
-      updateProgress();
-
-      const observer = new MutationObserver(updateProgress);
-      observer.observe(container, { childList: true, subtree: true, attributes: true });
-
-      container.addEventListener('input', updateProgress);
-      container.addEventListener('change', updateProgress);
-
-      return () => {
-        container.removeEventListener('input', updateProgress);
-        container.removeEventListener('change', updateProgress);
-        observer.disconnect();
-      };
-    } else {
-      setDomProgress(undefined);
-      setDomLabel(undefined);
-    }
-  }, [open, hasTabs, progress]);
+  const { progress: domProgress, label: domLabel, ref: containerRef } = useDomFormProgress(
+    open,
+    !hasTabs && progress === undefined,
+  );
 
   const panelClassName = tall ? 'h-[88vh] max-h-[700px]' : undefined;
 

@@ -81,7 +81,7 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
       settings.enabledTabs || ["basic"],
       settings.requiredTabs || []
     );
-  }, [settings]);
+  }, [settings, fieldsEditor]);
 
   const specializationOptions = specializations.length > 0 ? specializations : [...TEACHER_SPECIALIZATION_VALUES];
 

@@ -154,7 +154,7 @@ function ContactsInner() {
   const canViewReports = can(perms.reports);
   const canViewSetup = can(perms.setupView);
   const canEditSetup = can(perms.setupWrite);
-  const { prefs, countryCodesMap, updatePrefs } = useContactConfig();
+  const { prefs, countryCodesMap } = useContactConfig();
   const tableColumns = useContactColumns();
   const [showDeletedArchives, setShowDeletedArchives] = useState(false);
   const [listPage, setListPage] = useState(1);
@@ -198,7 +198,6 @@ function ContactsInner() {
     canViewReports,
     canViewSetup,
     pageActions,
-    updatePrefs,
     showDeletedArchives,
     directoryRowsRef: workDirectoryRowsRef,
   });
@@ -310,7 +309,10 @@ function ContactsInner() {
     return () => window.removeEventListener('message', handleOAuthMessage);
   }, [setActiveTab]);
 
-  const workContacts = useServerWork ? (workPageData?.contacts ?? []) : filtered;
+  const workContacts = useMemo(() => {
+    return useServerWork ? (workPageData?.contacts ?? []) : filtered;
+  }, [useServerWork, workPageData?.contacts, filtered]);
+
   workDirectoryRowsRef.current = useServerWork ? workContacts : undefined;
   const shownCount = useServerWork && workPageData ? workPageData.total : filtered.length;
   const workTruncated = useServerWork && !isListView && Boolean(workPageData?.hasMore);

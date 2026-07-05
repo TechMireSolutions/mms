@@ -80,7 +80,7 @@ export default function StudentList({
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const { settings, statuses } = useStudentConfig();
-  const fields = settings.fields || {};
+  const fields = useMemo(() => settings.fields || {}, [settings.fields]);
 
   const isFieldEnabled = React.useCallback((fieldKey: string): boolean => {
     for (const tabFields of Object.values(fields) as any[][]) {

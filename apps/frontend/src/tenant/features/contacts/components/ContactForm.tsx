@@ -457,17 +457,23 @@ export default function ContactForm({
               error={getFieldError("gender")}
               id="gender"
             >
-              <EditableSelect
-                options={
-                  genders.length > 0
-                    ? genders
-                    : ["male", "female", "other", "unspecified"]
-                }
-                value={contactDraft.gender || ""}
-                onChange={(val) => updateDraft({ gender: val.toLowerCase() })}
-                placeholder={t("contacts.form.selectOption")}
-                className="w-full"
-              />
+              {lockGender ? (
+                <div className="flex h-10 w-full items-center rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-muted-foreground select-none font-semibold">
+                  {(contactDraft.gender || "unspecified").charAt(0).toUpperCase() + (contactDraft.gender || "unspecified").slice(1)}
+                </div>
+              ) : (
+                <EditableSelect
+                  options={
+                    genders.length > 0
+                      ? genders
+                      : ["male", "female", "other", "unspecified"]
+                  }
+                  value={contactDraft.gender || ""}
+                  onChange={(val) => updateDraft({ gender: val.toLowerCase() })}
+                  placeholder={t("contacts.form.selectOption")}
+                  className="w-full"
+                />
+              )}
             </Field>
           )}
 

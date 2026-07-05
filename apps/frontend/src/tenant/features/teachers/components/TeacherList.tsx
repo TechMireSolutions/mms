@@ -52,7 +52,7 @@ export function TeacherList({
 }: TeacherListProps): React.JSX.Element {
   const { t } = useTranslation();
   const { settings, statuses } = useTeacherConfig();
-  const customFields = settings.customFields ?? [];
+  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
   const sortedCustomFields = useMemo(() => {
     const order = settings.fieldOrder ?? DEFAULT_TEACHERS_SETTINGS.fieldOrder ?? [];
     const orderByFieldId = Object.fromEntries(order.map((fieldId, index) => [fieldId, index]));
