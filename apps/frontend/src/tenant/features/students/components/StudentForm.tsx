@@ -76,7 +76,7 @@ export default function StudentForm({
     guardianName: student?.guardianName ?? "",
     status: student?.status ?? "active",
     grNumber: student?.grNumber ?? "",
-    registeredDate: student?.registeredDate ?? new Date().toISOString().split("T")[0],
+    registeredDate: student?.registeredDate ?? new Date().toISOString(),
     discountType: student?.discountType ?? "",
     discountPct: student?.discountPct ?? 0,
     registrationType: student?.registrationType ?? "",
@@ -129,7 +129,7 @@ export default function StudentForm({
   );
 
   const { data: nextGrNumber } = useStudentNextGrNumber({
-    registeredDate: studentDraft.registeredDate || new Date().toISOString().split("T")[0],
+    registeredDate: (studentDraft.registeredDate || new Date().toISOString()).split("T")[0],
     template: settings.grNumberTemplate,
     digits: settings.grNumberDigits,
     restartAnnually: settings.grNumberRestartAnnually,

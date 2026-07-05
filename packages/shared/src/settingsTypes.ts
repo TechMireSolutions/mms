@@ -1420,6 +1420,58 @@ export function formatDate(
 }
 
 /**
+ * Formats a Date object or date string with both date and time parts.
+ *
+ * @param {string | Date | null | undefined} date - The date to format.
+ * @param {boolean} [showMonthName=true] - Whether to show short month name.
+ * @returns {string} The formatted date and time string.
+ */
+export function formatDateTime(
+  date: string | Date | null | undefined,
+  showMonthName = true
+): string {
+  if (!date) return "—";
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(parsedDate.getTime())) return "—";
+
+  const datePart = formatDate(date, showMonthName);
+
+  let timezone = "UTC";
+  let language = "en";
+
+  if (typeof window !== "undefined") {
+    try {
+      let saved: string | null = localStorage.getItem("mms_global_settings");
+      if (!saved) {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.endsWith(":global_settings")) {
+            saved = localStorage.getItem(key);
+            break;
+          }
+        }
+      }
+      if (saved) {
+        const settings = JSON.parse(saved);
+        if (settings?.timezone) timezone = settings.timezone;
+        if (settings?.language) language = settings.language;
+      }
+    } catch {
+      // Ignored
+    }
+  }
+
+  const intlLocale = getIntlLocaleForLanguage(language);
+  const timeFormatter = new Intl.DateTimeFormat(intlLocale, {
+    timeZone: timezone,
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  
+  return `${datePart} ${timeFormatter.format(parsedDate)}`;
+}
+
+/**
  * Preferred client-side encode formats, best-first.
  * AVIF gives the smallest files; WebP is the broad-support fallback.
  */

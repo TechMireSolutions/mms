@@ -5,7 +5,7 @@ import {
   X, Edit2, MessageCircle, Phone, MessageSquare,
   Calendar, User, Clock, BookOpen, GraduationCap, Sparkles
 } from "lucide-react";
-import { formatDate } from "@/lib/db";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import {
   DEFAULT_STUDENT_ENABLED_TABS,
   type FieldDefinition,
@@ -259,7 +259,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                         <div className="flex-1 min-w-0 text-left">
                           <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">Registered Date</span>
                           <span className="text-xs font-semibold text-foreground">
-                            {student.registeredDate ? formatDate(student.registeredDate, true) : "—"}
+                            {student.registeredDate ? formatDateTime(student.registeredDate, true) : "—"}
                           </span>
                         </div>
                       </div>
