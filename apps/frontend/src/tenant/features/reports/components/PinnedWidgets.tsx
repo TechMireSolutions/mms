@@ -1158,12 +1158,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
 
-  const handleAddWidget = (newWidget: CustomWidget) => {
-    const nextWidgets = [...widgets, newWidget];
-    setWidgets(nextWidgets);
-    saveObject("kpi_custom_widgets", nextWidgets);
-    window.dispatchEvent(new Event("local-database-update"));
-  };
+
 
   const handleDeleteWidget = (id: string) => {
     const nextWidgets = widgets.filter((widget) => widget.id !== id);
@@ -1735,7 +1730,7 @@ export function WidgetBuilder({
     builderIcon, subTextType, fixedSubText, trend, trendType, builderRole
   ]);
 
-  const handleToggleSwitchStateLocal = (w: CustomWidget) => {
+  const handleToggleSwitchStateLocal = () => {
     // Local Switch preview toggle handler (noop)
   };
 

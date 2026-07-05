@@ -89,7 +89,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
   const availableBatches = batches.filter((batch) => batch.denominationId === data.denominationId && batch.remaining > 0);
   const totalAvailable = availableBatches.reduce((sum: number, batch: StockBatch) => sum + batch.remaining, 0);
 
-  const { fields, customFields, orderedFields } = useHasanatConfig();
+  const { fields, orderedFields } = useHasanatConfig();
 
   const isValid = useMemo(() => {
     if (totalAvailable === 0) return false;

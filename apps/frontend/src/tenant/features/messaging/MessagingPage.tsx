@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   MessageSquare, MessageCircle, Send, Search, 
   Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2
@@ -29,7 +29,7 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
   { id: 't3', label: 'Holiday Announcement', body: 'Dear {name}, please note that the madrasa will remain closed on...' },
 ];
 
-const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b']; // Info (SMS), Success (WA), Warning (Email)
+const CHART_COLORS = ['var(--color-info)', 'var(--color-success)', 'var(--color-warning)']; // Info (SMS), Success (WA), Warning (Email)
 
 export default function MessagingPage(): React.JSX.Element {
   const { t } = useTranslation();
@@ -38,7 +38,15 @@ export default function MessagingPage(): React.JSX.Element {
   const PAGE_TABS = useModuleTierTabs();
 
   // Load all system contacts using the contacts hook
-  const allContacts = useContactsCollection() || [];
+  const contactsCollectionRaw = useContactsCollection();
+  const allContacts = useMemo(() => contactsCollectionRaw || [], [contactsCollectionRaw]);
+
+  const [localTick, setLocalTick] = useState(0);
+  useEffect(() => {
+    const handler = () => setLocalTick((n) => n + 1);
+    window.addEventListener('local-database-update', handler);
+    return () => window.removeEventListener('local-database-update', handler);
+  }, []);
 
   // Local state
   const [activeTab, setActiveTab] = useState<'work' | 'reports' | 'setup'>('work');
@@ -68,11 +76,12 @@ export default function MessagingPage(): React.JSX.Element {
 
   // Load templates from DB (merged with defaults)
   const templates = useMemo(() => {
+    const _tick = localTick; // re-evaluate on local database update
     if (!user) return DEFAULT_TEMPLATES;
     const dbKey = `messages_templates_u:${user.id}`;
     const custom = getCollection<MessageTemplate>(dbKey) || [];
     return [...DEFAULT_TEMPLATES, ...custom];
-  }, [user, templateLabel, templateBody]);
+  }, [user, localTick]);
 
   // Handle template creation
   const handleCreateTemplate = (e: React.FormEvent): void => {
@@ -109,10 +118,11 @@ export default function MessagingPage(): React.JSX.Element {
 
   // Load sent messages history from DB
   const messageLogs = useMemo(() => {
+    const _tick = localTick; // re-evaluate on local database update
     if (!user) return [];
     const dbKey = `messages_u:${user.id}`;
     return getCollection<Message>(dbKey) || [];
-  }, [user, composerTarget]);
+  }, [user, localTick]);
 
   // Handle clearing log history
   const handleClearLogs = (): void => {

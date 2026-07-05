@@ -52,38 +52,30 @@ interface QuestionBankProps {
 export function QuestionBank({
   questions,
   onUpdate,
-  modalOpen: controlledOpen,
-  editQuestion: controlledEdit,
+  modalOpen: _controlledOpen,
+  editQuestion: _controlledEdit,
   onModalOpenChange,
   onEditQuestionChange,
   hideToolbarAdd = false,
-  listLayout = true,
+  listLayout: _listLayout = true,
   onFilteredCountChange,
   isColumnVisible,
   columnCustomizer,
 }: QuestionBankProps): React.ReactElement {
   const { t } = useTranslation();
   const config = useQuestionBankConfig(questions);
-  const [internalOpen, setInternalOpen] = useState(false);
-  const [internalEdit, setInternalEdit] = useState<Question | null>(null);
   const [search, setSearch] = useState('');
   const [filterCats, setFilterCats] = useState<string[]>([]);
   const [filterDiff, setFilterDiff] = useState<string[]>([]);
-
-  const isControlled = controlledOpen !== undefined;
-
   const setShowModal = (open: boolean): void => {
-    if (isControlled) onModalOpenChange?.(open);
-    else setInternalOpen(open);
+    onModalOpenChange?.(open);
     if (!open) {
-      if (isControlled) onEditQuestionChange?.(null);
-      else setInternalEdit(null);
+      onEditQuestionChange?.(null);
     }
   };
 
   const setEditingQuestion = (question: Question | null): void => {
-    if (isControlled) onEditQuestionChange?.(question);
-    else setInternalEdit(question);
+    onEditQuestionChange?.(question);
   };
 
   const showText = isColumnVisible ? isColumnVisible('text') : true;
@@ -99,7 +91,7 @@ export function QuestionBank({
       config.orderedFields.some(
         (field) => isQuestionSourceFieldId(field.id) && config.isFieldEnabled(field.id),
       ),
-    [config.orderedFields, config.isFieldEnabled, showSource],
+    [config, showSource],
   );
 
   const listMetaFields = useMemo(
@@ -116,7 +108,7 @@ export function QuestionBank({
           return isColumnVisible ? isColumnVisible(colKey) : true;
         },
       ),
-    [config.orderedFields, config.isFieldEnabled, isColumnVisible],
+    [config, isColumnVisible],
   );
 
   const filtered = useMemo(

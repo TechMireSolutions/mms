@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { UserActorSelect } from "@/components/ui/UserActorSelect";
-import { useTranslation } from "@/hooks/useTranslation";
+
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { notify } from "@/lib/notify";
 import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
@@ -20,7 +20,6 @@ interface PaymentFormProps {
 }
 
 export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps): React.JSX.Element {
-  const { t } = useTranslation();
   const { user: authUser } = useAuth();
   const balance = invoice ? invoice.finalAmt - (invoice.paidAmt || 0) : 0;
 

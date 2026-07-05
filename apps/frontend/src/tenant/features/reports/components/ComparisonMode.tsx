@@ -12,7 +12,7 @@ import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeRe
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { useContactsReportAnalytics } from '@/tenant/features/contacts/hooks/useContacts';
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
+
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
@@ -328,7 +328,7 @@ interface ComparisonModeProps {
 export default function ComparisonMode({ category, onClose }: ComparisonModeProps): React.JSX.Element {
   const { t } = useTranslation();
   const { primary, secondary } = useBrandPalette();
-  const { fieldConfig } = useContactConfig();
+
   const isContacts = category.toLowerCase() === "contacts";
   const [mode, setMode] = useState<"sessions" | "daterange">("sessions");
   const [valA, setValA] = useState<string>(isContacts ? "Lead" : "s1");

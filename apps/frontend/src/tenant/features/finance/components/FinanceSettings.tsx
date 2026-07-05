@@ -102,7 +102,7 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
       settings.enabledTabs || ["basic"],
       settings.requiredTabs || []
     );
-  }, [settings]);
+  }, [settings, fieldsEditor]);
 
   const handleSave = () => {
     const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({

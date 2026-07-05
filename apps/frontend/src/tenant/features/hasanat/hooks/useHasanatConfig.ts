@@ -61,8 +61,8 @@ export function useHasanatConfig() {
   }, []);
 
   const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = settings.customFields ?? [];
-  const fieldOrder = settings.fieldOrder ?? DEFAULT_HASANAT_SETTINGS.fieldOrder ?? [];
+  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
+  const fieldOrder = useMemo(() => settings.fieldOrder ?? DEFAULT_HASANAT_SETTINGS.fieldOrder ?? [], [settings.fieldOrder]);
 
   const orderedFields = useMemo(
     () => getSortedFields(DEFAULT_HASANAT_FIELD_DEFS, fieldOrder, fields, customFields),

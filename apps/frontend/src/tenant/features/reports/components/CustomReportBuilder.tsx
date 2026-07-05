@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical, Plus, Check, Trash2, FileSpreadsheet, FileText, Settings, Database, Sliders } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -202,7 +202,7 @@ interface CustomReportBuilderProps {
  */
 export default function CustomReportBuilder({ onClose, initialSource }: CustomReportBuilderProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { can, role: viewerRole } = usePermissions();
+  const { role: viewerRole } = usePermissions();
   const { fieldConfig } = useContactConfig();
 
   const [source, setSource] = useState<DataSource>(() => {
@@ -226,8 +226,8 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
     limit: STUDENTS_MODULE_CONTRACT.defaultPageSize,
     enabled: source === "students",
   });
-  const contactsColl = (contactsPreviewPage?.contacts ?? []) as unknown as Record<string, unknown>[];
-  const studentsColl = (studentsPreviewPage?.students ?? []) as unknown as Record<string, unknown>[];
+  const contactsColl = useMemo(() => (contactsPreviewPage?.contacts ?? []) as unknown as Record<string, unknown>[], [contactsPreviewPage?.contacts]);
+  const studentsColl = useMemo(() => (studentsPreviewPage?.students ?? []) as unknown as Record<string, unknown>[], [studentsPreviewPage?.students]);
   const sessionsFromQuery = useSessionsCollection();
   const sessionsColl = sessionsFromQuery as unknown as Record<string, unknown>[];
   const financialColl = useFinanceInvoicesCollection() as unknown as Record<string, unknown>[];
@@ -253,7 +253,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
   const [reportName, setReportName]       = useState<string>(() => t("reports.builder.defaultName"));
   const [previewData, setPreviewData]     = useState<PreviewRow[]>([]);
 
-  const resolveFieldLabel = (field: string): string => {
+  const resolveFieldLabel = useCallback((field: string): string => {
     if (source === "contacts") {
       return resolveContactReportFieldLabel(field, fieldConfig.fields, (key) => t(key as AppTranslationKey));
     }
@@ -262,7 +262,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       return t(fieldTranslationKey as AppTranslationKey);
     }
     return field;
-  };
+  }, [source, fieldConfig.fields, t]);
 
   const contactsFieldCatalog = useMemo(() => {
     if (source !== "contacts" || !viewerRole) return [];
@@ -431,7 +431,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
     }
 
     setPreviewData(processedRows.slice(0, 20));
-  }, [source, selectedFields, aggregate, groupBy, contactsColl, studentsColl, sessionsColl, financialColl, attendanceColl, hasanatColl, academicColl, t]);
+  }, [source, selectedFields, aggregate, groupBy, contactsColl, studentsColl, sessionsColl, financialColl, attendanceColl, hasanatColl, academicColl, t, resolveFieldLabel]);
 
   /** Appends a field to the selected columns list. */
   const addField = (field: string): void => {

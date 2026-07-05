@@ -44,7 +44,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
     [updateSettings, t],
   );
 
-  const { data: questionBankSettings, dirty, saving, upd, handleSave } = useSettingsDraft({
+  const { data: questionBankSettings, dirty, saving, upd } = useSettingsDraft({
     load,
     onPreview: () => {},
     onSave,
@@ -79,7 +79,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
       settings.enabledTabs || ["basic"],
       settings.requiredTabs || []
     );
-  }, [settings]);
+  }, [settings, fieldsEditor]);
 
   const executeSave = () => {
     const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({

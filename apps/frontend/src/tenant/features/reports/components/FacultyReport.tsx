@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { GraduationCap, BookOpen, Users, Clock } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -46,10 +46,10 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
   const teacherIds = useMemo(() => collectTeacherIdsFromSessions(sessions), [sessions]);
   const { data: teachers = [] } = useTeachersByIds(teacherIds);
 
-  const resolveClassTeacher = (teacherId: string, teacherName: string): string => {
+  const resolveClassTeacher = useCallback((teacherId: string, teacherName: string): string => {
     const fromRegistry = teacherNameById(teachers, teacherId);
     return fromRegistry || teacherName || t("teachers.report.unassigned");
-  };
+  }, [teachers, t]);
 
   const facultyWorkload = useMemo<FacultyWorkloadItem[]>(() => {
     const workloadByTeacherName: Record<string, { classes: Set<string>, sessions: Set<string>, students: number, hours: number }> = {};
@@ -72,7 +72,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
       totalStudents: workload.students,
       hoursPerWeek: workload.hours
     })).sort((firstFaculty, secondFaculty) => secondFaculty.totalStudents - firstFaculty.totalStudents);
-  }, [sessions, teachers]);
+  }, [sessions, resolveClassTeacher]);
 
   const totalFaculty = facultyWorkload.length;
   const totalStudents = facultyWorkload.reduce((total, faculty) => total + faculty.totalStudents, 0);

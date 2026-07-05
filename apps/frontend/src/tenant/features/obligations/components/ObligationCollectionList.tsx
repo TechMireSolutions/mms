@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, lazy, Suspense } from "react";
+import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from "react";
 import { Plus, Eye, Search, Receipt, Printer } from "lucide-react";
 import {
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
@@ -72,7 +72,7 @@ export function ObligationCollectionList({
   const senderIds = useMemo(() => collections.map((collection) => collection.sender_id), [collections]);
   const contacts = useMergedObligationContacts(senderIds);
 
-  const getContact = (contactId?: string | number | null) => contacts.find((contact) => String(contact.id) === String(contactId));
+  const getContact = useCallback((contactId?: string | number | null) => contacts.find((contact) => String(contact.id) === String(contactId)), [contacts]);
   const getRep = (repId: string) => reps.find((rep) => rep.id === repId);
   const getMujtahid = (repId: string) => {
     const rep = getRep(repId);
@@ -89,7 +89,7 @@ export function ObligationCollectionList({
       if (!sender.includes(searchQuery) && !receipt.includes(searchQuery)) return false;
     }
     return true;
-  }), [collections, debouncedSearch, typeFilter, contacts]);
+  }), [collections, debouncedSearch, typeFilter, getContact]);
 
   useEffect(() => {
     onFilteredCountChange?.(filtered.length);

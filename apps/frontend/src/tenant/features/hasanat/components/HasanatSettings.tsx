@@ -79,7 +79,7 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
       settings.enabledTabs || ["basic"],
       settings.requiredTabs || []
     );
-  }, [settings]);
+  }, [settings, fieldsEditor]);
 
   const handleSave = () => {
     const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({
