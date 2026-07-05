@@ -63,12 +63,12 @@ vi.mock('../db/dbClient.js', () => ({
 }));
 
 describe('worker background queue processor', () => {
-  let initialSigtermListeners: Function[];
-  let initialSigintListeners: Function[];
+  let initialSigtermListeners: ((signal: "SIGTERM") => void)[];
+  let initialSigintListeners: ((signal: "SIGINT") => void)[];
 
   beforeEach(() => {
-    initialSigtermListeners = process.listeners('SIGTERM');
-    initialSigintListeners = process.listeners('SIGINT');
+    initialSigtermListeners = process.listeners('SIGTERM') as ((signal: "SIGTERM") => void)[];
+    initialSigintListeners = process.listeners('SIGINT') as ((signal: "SIGINT") => void)[];
     vi.clearAllMocks();
     vi.useFakeTimers();
     lastSpawnedChild = null;
@@ -77,8 +77,8 @@ describe('worker background queue processor', () => {
   afterEach(() => {
     process.removeAllListeners('SIGTERM');
     process.removeAllListeners('SIGINT');
-    initialSigtermListeners.forEach((l) => process.on('SIGTERM', l as (signal: "SIGTERM") => void));
-    initialSigintListeners.forEach((l) => process.on('SIGINT', l as (signal: "SIGINT") => void));
+    initialSigtermListeners.forEach((l) => process.on('SIGTERM', l));
+    initialSigintListeners.forEach((l) => process.on('SIGINT', l));
 
     vi.useRealTimers();
     vi.resetModules();
