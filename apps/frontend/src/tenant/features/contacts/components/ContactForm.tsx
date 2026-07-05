@@ -51,6 +51,14 @@ import {
 import { FORM_CARD } from "@/components/ui/formStyles";
 import { SectionCard } from "@/components/ui/SectionCard";
 
+const getPhoneDisplayValue = (phone: PhoneNumber): string => {
+  const code = (phone.countryCode || "").trim();
+  const num = (phone.number || "").trim();
+  if (!code) return num;
+  if (num.startsWith("+") || num.startsWith(code) || num.startsWith("00")) return num;
+  return `${code} ${num}`.trim();
+};
+
 interface ContactFormProps {
   open?: boolean;
   contact?: Contact;
@@ -644,56 +652,41 @@ export default function ContactForm({
                     />
                   </div>
 
-                  <div className="flex gap-2.5">
-                    <div className="w-24 flex-shrink-0 relative flex items-center group/input">
-                      <span className="absolute left-3.5 text-xs text-muted-foreground/60 font-semibold select-none pointer-events-none">
-                        cc
-                      </span>
-                      <Input
-                        value={phone.countryCode || "+92"}
-                        onChange={(e) =>
-                          updatePhone(idx, { countryCode: e.target.value })
-                        }
-                        onBlur={() => handlePhoneBlur(idx)}
-                        placeholder="+92"
-                        className="pl-9 font-medium"
-                      />
-                    </div>
-                    <div className="flex-1 relative flex items-center group/input">
-                      <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                      <Input
-                        value={phone.number || ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          const trimmed = val.trim();
-                          if (
-                            trimmed.startsWith("+") ||
-                            trimmed.startsWith("00")
-                          ) {
-                            if (trimmed.length > 6) {
-                              const parsed = parsePhoneNumber(
-                                val,
-                                phone.countryCode || "+92",
-                                ["+92", "+1", "+44"],
-                              );
-                              updatePhone(idx, {
-                                countryCode: parsed.countryCode,
-                                number: parsed.number,
-                              });
-                              return;
-                            }
+                  <div className="relative flex items-center group/input w-full">
+                    <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                    <Input
+                      type="tel"
+                      value={getPhoneDisplayValue(phone)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const trimmed = val.trim();
+                        if (
+                          trimmed.startsWith("+") ||
+                          trimmed.startsWith("00")
+                        ) {
+                          if (trimmed.length > 6) {
+                            const parsed = parsePhoneNumber(
+                              val,
+                              phone.countryCode || "+92",
+                              ["+92", "+1", "+44"],
+                            );
+                            updatePhone(idx, {
+                              countryCode: parsed.countryCode,
+                              number: parsed.number,
+                            });
+                            return;
                           }
-                          updatePhone(idx, { number: val });
-                        }}
-                        onBlur={() => handlePhoneBlur(idx)}
-                        placeholder={t("contacts.form.phoneNumberPlaceholder")}
-                        className={cn(
-                          "pl-10",
-                          numError &&
-                            "border-destructive focus-visible:ring-destructive",
-                        )}
-                      />
-                    </div>
+                        }
+                        updatePhone(idx, { number: val });
+                      }}
+                      onBlur={() => handlePhoneBlur(idx)}
+                      placeholder={t("contacts.form.phoneNumberPlaceholder")}
+                      className={cn(
+                        "pl-10",
+                        numError &&
+                          "border-destructive focus-visible:ring-destructive",
+                      )}
+                    />
                   </div>
                   {numError && (
                     <p className="text-[10px] text-destructive mt-1 font-medium">
