@@ -1,10 +1,10 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { X, Award, Printer } from "lucide-react";
+import { Award, Printer } from "lucide-react";
 import { getRankSuffix, GradeInfo } from "@/tenant/features/examinations/components/gradeUtils";
 import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "@/lib/db";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/Modal";
 
 export interface StudentResultItem {
   pct: number;
@@ -50,28 +50,39 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
   const total = allResults.length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="result-card-title">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.94, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.94 }}
-        className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-sm z-10 overflow-hidden backdrop-blur-xl"
-      >
-        {/* Header gradient */}
-        <div className="px-6 pt-8 pb-6 text-center bg-card" style={{ background: `linear-gradient(135deg, ${grade.bg}, white)` }}>
+    <Modal
+      open
+      onClose={onClose}
+      title={result.student?.name || "Student Result"}
+      subtitle={`${result.cls?.name || ""} · ${result.student?.rollNo || ""}`}
+      icon={Award}
+      size="sm"
+      footer={
+        <div className="flex gap-2.5 w-full">
+          {result.passed && (
+            <Button
+              type="button"
+              onClick={onCertificate}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-warning/40 bg-warning/10 text-warning text-sm font-semibold hover:bg-warning/15"
+            >
+              <Award className="w-4 h-4" aria-hidden="true" /> Certificate
+            </Button>
+          )}
           <Button
-            variant="ghost"
             type="button"
-            onClick={onClose}
-            aria-label="Close card"
-            className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-black/10 text-muted-foreground"
+            onClick={() => window.print()}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm font-semibold hover:bg-muted/80"
           >
-            <X className="w-4 h-4" aria-hidden="true" />
+            <Printer className="w-4 h-4" aria-hidden="true" /> Print
           </Button>
-
-          {/* Circular progress */}
-          <div className="relative w-28 h-28 mx-auto mb-4" aria-hidden="true">
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        {/* Circular progress */}
+        <div className="p-4 rounded-xl border border-border bg-muted/20 text-center relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ background: `linear-gradient(135deg, ${grade.bg}, transparent)` }} />
+          <div className="relative w-28 h-28 mx-auto" aria-hidden="true">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
               <circle
@@ -92,9 +103,6 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
               <span className="text-[11px] text-muted-foreground font-semibold">{percentage}%</span>
             </div>
           </div>
-
-          <h2 id="result-card-title" className="text-[17px] font-bold text-foreground">{result.student?.name || "Student"}</h2>
-          <p className="text-[12px] text-muted-foreground">{result.cls?.name} · {result.student?.rollNo}</p>
         </div>
 
         {/* Stats */}
@@ -128,26 +136,7 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
           </div>
         </section>
 
-        {/* Actions */}
-        <div className="px-5 pb-5 flex gap-2.5">
-          {result.passed && (
-            <Button
-              type="button"
-              onClick={onCertificate}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-warning/40 bg-warning/10 text-warning text-sm font-semibold hover:bg-warning/15"
-            >
-              <Award className="w-4 h-4" aria-hidden="true" /> Certificate
-            </Button>
-          )}
-          <Button
-            type="button"
-            onClick={() => window.print()}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm font-semibold hover:bg-muted/80"
-          >
-            <Printer className="w-4 h-4" aria-hidden="true" /> Print
-          </Button>
-        </div>
-      </motion.div>
-    </div>
+      </div>
+    </Modal>
   );
 }

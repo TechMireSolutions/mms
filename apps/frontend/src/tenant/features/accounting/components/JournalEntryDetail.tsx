@@ -1,6 +1,6 @@
-import { X, Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
+import { Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { Modal } from "@/components/ui/Modal";
 import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -34,39 +34,38 @@ export function JournalEntryDetail({ entry, accounts, formatCurrency, onClose, o
   const totalCredit = entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }}
-        role="dialog" aria-modal="true" aria-labelledby="modal-title"
-        className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto backdrop-blur-xl">
-
-        {/* Header */}
-        <header className="flex items-center justify-between px-6 py-4 border-b border-border/40 sticky top-0 bg-card/75 backdrop-blur-md z-10">
-          <div className="flex items-center gap-3">
-            <h2 id="modal-title" className="text-base font-bold text-foreground font-mono m-0">{entry.ref}</h2>
-            <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
-            {entry.reversed_ref && (
-              <span className="text-[10px] font-semibold text-warning bg-warning/10 px-2 py-0.5 rounded-full border border-warning/30">
-                ↩ Reversal of {entry.reversed_ref}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {entry.status === "draft" && (
-              <Button type="button" variant="outline" size="sm" onClick={onEdit} className="flex items-center gap-1 text-xs font-semibold">
-                <Pencil className="w-3 h-3" aria-hidden="true" /> Edit
-              </Button>
-            )}
-            {entry.status === "posted" && onReverse && (
-              <Button type="button" variant="outline" size="sm" onClick={onReverse} className="flex items-center gap-1 text-xs font-semibold border-warning/30 text-warning hover:bg-warning/10 hover:text-warning">
-                <RotateCcw className="w-3 h-3" aria-hidden="true" /> Reverse
-              </Button>
-            )}
-            <Button type="button" variant="ghost" size="icon" aria-label="Close details" onClick={onClose} className="h-8 w-8 text-muted-foreground hover:text-foreground"><X className="w-4 h-4" aria-hidden="true" /></Button>
-          </div>
-        </header>
-
-        <div className="px-6 py-5 space-y-5">
+    <Modal
+      open
+      onClose={onClose}
+      title={entry.ref}
+      icon={Tag}
+      size="lg"
+      headerExtra={
+        <div className="flex items-center gap-2 flex-wrap mt-1">
+          <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
+          {entry.reversed_ref && (
+            <span className="text-[10px] font-semibold text-warning bg-warning/10 px-2 py-0.5 rounded-full border border-warning/30">
+              ↩ Reversal of {entry.reversed_ref}
+            </span>
+          )}
+        </div>
+      }
+      headerActions={
+        <div className="flex items-center gap-2">
+          {entry.status === "draft" && (
+            <Button type="button" variant="outline" size="sm" onClick={onEdit} className="flex items-center gap-1 text-xs font-semibold">
+              <Pencil className="w-3 h-3" aria-hidden="true" /> Edit
+            </Button>
+          )}
+          {entry.status === "posted" && onReverse && (
+            <Button type="button" variant="outline" size="sm" onClick={onReverse} className="flex items-center gap-1 text-xs font-semibold border-warning/30 text-warning hover:bg-warning/10 hover:text-warning">
+              <RotateCcw className="w-3 h-3" aria-hidden="true" /> Reverse
+            </Button>
+          )}
+        </div>
+      }
+    >
+      <div className="space-y-5">
           {/* Meta grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div>
@@ -151,9 +150,8 @@ export function JournalEntryDetail({ entry, accounts, formatCurrency, onClose, o
               ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Balanced entry — Debits equal Credits</>
               : <>Unbalanced — Difference: {Math.abs(totalDebit - totalCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}</>
             }
-          </div>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </Modal>
   );
 }

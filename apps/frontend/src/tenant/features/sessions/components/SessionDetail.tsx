@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, GraduationCap, Clock, Tag, DollarSign,
+  GraduationCap, Clock, Tag, DollarSign,
   Calendar, Gift, Edit2,
 } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 import { formatDate } from "@/lib/db";
 
 import { ClassesTab } from "@/tenant/features/sessions/components/tabs/ClassesTab";
@@ -64,40 +65,32 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
   const formatSessionDate = (date?: string | null) => formatDate(date, true);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="session-detail-title">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col z-10 backdrop-blur-xl"
-      >
-        {/* Header */}
-        <header className="px-6 py-4 border-b border-border/40 flex-shrink-0 bg-gradient-to-r from-primary/5 to-transparent">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_CONFIG[session.status] || STATUS_CONFIG.active}`}>
-                  {session.status?.toUpperCase()}
-                </span>
-                <span className="text-[11px] text-muted-foreground">{session.type}</span>
-              </div>
-              <h2 id="session-detail-title" className="text-base font-bold text-foreground leading-snug truncate m-0">{session.name}</h2>
-              <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
-                <span>{formatSessionDate(session.startDate)} → {formatSessionDate(session.endDate)}</span>
-                <span className="font-semibold text-foreground">{session.currency} {Number(session.baseFee).toLocaleString()} / month</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <Button onClick={() => onEdit(session)} variant="ghost" size="icon" aria-label="Edit Session" className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-                <Edit2 className="w-4 h-4" aria-hidden="true" />
-              </Button>
-              <Button onClick={onClose} variant="ghost" size="icon" aria-label="Close" className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-4 h-4" aria-hidden="true" />
-              </Button>
-            </div>
-          </div>
-        </header>
+    <Modal
+      open
+      onClose={onClose}
+      title={session.name}
+      subtitle={
+        <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
+          <span>{formatSessionDate(session.startDate)} → {formatSessionDate(session.endDate)}</span>
+          <span className="font-semibold text-foreground">{session.currency} {Number(session.baseFee).toLocaleString()} / month</span>
+        </div>
+      }
+      icon={GraduationCap}
+      size="lg"
+      headerExtra={
+        <div className="flex items-center gap-2 flex-wrap mb-1 mt-1">
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_CONFIG[session.status] || STATUS_CONFIG.active}`}>
+            {session.status?.toUpperCase()}
+          </span>
+          <span className="text-[11px] text-muted-foreground">{session.type}</span>
+        </div>
+      }
+      headerActions={
+        <Button onClick={() => onEdit(session)} variant="ghost" size="icon" aria-label="Edit Session" className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+          <Edit2 className="w-4 h-4" aria-hidden="true" />
+        </Button>
+      }
+    >
 
         {/* Tabs */}
         <nav aria-label="Session Tabs" className="flex border-b border-border overflow-x-auto flex-shrink-0 px-2 bg-card">
@@ -136,7 +129,6 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
             </motion.section>
           </AnimatePresence>
         </div>
-      </motion.div>
-    </div>
+    </Modal>
   );
 }

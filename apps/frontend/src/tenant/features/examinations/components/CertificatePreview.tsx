@@ -1,6 +1,5 @@
 import React, { useRef } from "react";
-import { motion } from "framer-motion";
-import { X, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 import { getRankSuffix } from "@/tenant/features/examinations/components/gradeUtils";
 import { StudentResultItem } from "@/tenant/features/examinations/components/StudentResultCard";
 import { Exam } from '@/lib/data/examinationData';
@@ -8,6 +7,7 @@ import { formatDate } from "@/lib/db";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/Modal";
 
 interface CertificatePreviewProps {
   result: StudentResultItem;
@@ -62,40 +62,22 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
   const date = formatDate(exam.date, true);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cert-modal-title">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.94 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.94 }}
-        className="relative z-10 bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-2xl flex flex-col backdrop-blur-xl"
-      >
-        {/* Modal header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-muted/5">
-          <h3 id="cert-modal-title" className="text-sm font-bold text-foreground">Certificate Preview</h3>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold hover:bg-primary/90"
-            >
-              <Printer className="w-3.5 h-3.5" aria-hidden="true" /> Print / Download
-            </Button>
-            <Button
-              variant="ghost"
-              type="button"
-              onClick={onClose}
-              aria-label="Close preview"
-              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"
-            >
-              <X className="w-4 h-4" aria-hidden="true" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Certificate */}
-        <div className="p-5 overflow-y-auto">
-          <div ref={certRef}>
+    <Modal
+      open
+      onClose={onClose}
+      title="Certificate Preview"
+      size="lg"
+      headerActions={
+        <Button
+          type="button"
+          onClick={handlePrint}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold hover:bg-primary/90"
+        >
+          <Printer className="w-3.5 h-3.5" aria-hidden="true" /> Print / Download
+        </Button>
+      }
+    >
+      <div ref={certRef}>
             <div style={{
               width: "100%",
               background: PRINT_NEUTRAL.paper,
@@ -191,8 +173,6 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
               </div>
             </div>
           </div>
-        </div>
-      </motion.div>
-    </div>
+    </Modal>
   );
 }

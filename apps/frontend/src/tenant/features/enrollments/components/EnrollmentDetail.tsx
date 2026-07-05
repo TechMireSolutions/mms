@@ -1,6 +1,8 @@
 import React from "react";
-import { X, User, BookOpen, Layers, DollarSign, Clock, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import {
+  User, BookOpen, Layers, DollarSign, Clock, ArrowRight
+} from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 import { STATUS_MAP, Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { Button } from "@/components/ui/button";
@@ -87,47 +89,27 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
   const nextStatuses = TRANSITIONS[enrollment.status] || [];
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 p-4 pt-10 overflow-y-auto"
-      onClick={(event) => event.target === event.currentTarget && onClose()}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="enrollment-detail-title"
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-background rounded-2xl border border-border shadow-xl w-full max-w-xl space-y-4 p-5 mb-10"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 id="enrollment-detail-title" className="text-base font-bold text-foreground">{enrollment.studentName}</h2>
-              {student?.grNumber && (
-                <span className="bg-primary/5 text-primary text-[10px] px-2 py-0.5 rounded border border-primary/10 font-bold uppercase">
-                  GR: {student.grNumber}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">{enrollment.sessionName} · #{enrollment.id}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${enrollmentStatus.color}`}>{enrollmentStatus.label}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              aria-label="Close details"
-              className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="w-4 h-4" aria-hidden="true" />
-            </Button>
-          </div>
+    <Modal
+      open
+      onClose={onClose}
+      title={enrollment.studentName}
+      subtitle={`${enrollment.sessionName} · #${enrollment.id}`}
+      icon={User}
+      size="md"
+      headerExtra={
+        <div className="flex items-center gap-2 flex-wrap mt-1">
+          {student?.grNumber && (
+            <span className="bg-primary/5 text-primary text-[10px] px-2 py-0.5 rounded border border-primary/10 font-bold uppercase">
+              GR: {student.grNumber}
+            </span>
+          )}
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${enrollmentStatus.color}`}>
+            {enrollmentStatus.label}
+          </span>
         </div>
+      }
+    >
+      <div className="space-y-4">
 
         {/* Sections */}
         <Section icon={User} title="Student Info">
@@ -208,12 +190,10 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
             })}
           </div>
         )}
-
-        {/* Notes */}
         {enrollment.notes && (
-          <p className="text-xs text-muted-foreground px-1" role="note">📝 {enrollment.notes}</p>
+          <p className="text-xs text-muted-foreground px-1 mt-3" role="note">📝 {enrollment.notes}</p>
         )}
-      </motion.div>
-    </motion.div>
+      </div>
+    </Modal>
   );
 }
