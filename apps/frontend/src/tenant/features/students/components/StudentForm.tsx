@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { Calendar, FileText, GraduationCap, Hash, User, Users } from "lucide-react";
+import { Calendar, Clock, FileText, GraduationCap, Hash, User, Users } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
@@ -406,6 +406,16 @@ export default function StudentForm({
               />
             </Field>
 
+            <div className="sm:col-span-2">
+              <Field label={t("reports.fields.registeredDate") || "Registration Date & Time"}>
+                <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/20 px-3 py-2.5 min-h-[44px] text-sm text-muted-foreground select-none font-medium">
+                  <Clock className="w-4 h-4 text-muted-foreground/60 shrink-0" />
+                  <span>
+                    {studentDraft.registeredDate ? formatDateTime(studentDraft.registeredDate, true) : "—"}
+                  </span>
+                </div>
+              </Field>
+            </div>
           </div>
         </SectionCard>
       </div>
