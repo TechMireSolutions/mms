@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, serial } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, serial, primaryKey } from 'drizzle-orm/pg-core';
 import type { PlatformRole } from '@mms/shared';
 
 export const collections = pgTable('collections', {
@@ -294,51 +294,56 @@ export const accountingFiscalYears = pgTable('accounting_fiscal_years', {
 ]);
 
 export const questions = pgTable('questions', {
-  id: text('id').primaryKey(),
+  id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('questions_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('questions_custom_data_gin_idx').using('gin', table.customData),
 ]);
 
 export const tests = pgTable('tests', {
-  id: text('id').primaryKey(),
+  id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('tests_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('tests_custom_data_gin_idx').using('gin', table.customData),
 ]);
 
 export const assessmentResults = pgTable('assessment_results', {
-  id: text('id').primaryKey(),
+  id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('assessment_results_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('assessment_results_custom_data_gin_idx').using('gin', table.customData),
 ]);
 
 export const userActivityLogs = pgTable('user_activity_logs', {
-  id: text('id').primaryKey(),
+  id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('user_activity_logs_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('user_activity_logs_custom_data_gin_idx').using('gin', table.customData),
 ]);
 
 export const auditLogEntries = pgTable('audit_log_entries', {
-  id: text('id').primaryKey(),
+  id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('audit_log_entries_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('audit_log_entries_custom_data_gin_idx').using('gin', table.customData),
 ]);
