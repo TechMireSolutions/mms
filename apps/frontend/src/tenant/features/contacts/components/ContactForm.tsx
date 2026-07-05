@@ -59,6 +59,42 @@ const getPhoneDisplayValue = (phone: PhoneNumber): string => {
   return `${code} ${num}`.trim();
 };
 
+const cleanContactDraft = (draft: Partial<Contact>): Partial<Contact> => {
+  const result = { ...draft };
+
+  if (Array.isArray(result.phones)) {
+    result.phones = result.phones.filter((phone) => {
+      return (phone.number || "").trim().length > 0;
+    });
+  }
+
+  if (Array.isArray(result.emails)) {
+    result.emails = result.emails.filter((email) => {
+      return (email.address || "").trim().length > 0;
+    });
+  }
+
+  if (Array.isArray(result.addresses)) {
+    result.addresses = result.addresses.filter((address) => {
+      return (address.line1 || "").trim().length > 0;
+    });
+  }
+
+  if (Array.isArray(result.socials)) {
+    result.socials = result.socials.filter((social) => {
+      return (social.url || "").trim().length > 0;
+    });
+  }
+
+  if (Array.isArray(result.emergencyContacts)) {
+    result.emergencyContacts = result.emergencyContacts.filter((em) => {
+      return em.contactId != null && String(em.contactId).trim().length > 0;
+    });
+  }
+
+  return result;
+};
+
 interface ContactFormProps {
   open?: boolean;
   contact?: Contact;
@@ -150,6 +186,31 @@ export default function ContactForm({
           number: parsed.number,
         };
       });
+    }
+
+    // Auto-populate 1 empty row for lists if they are empty
+    if (!initial.phones || initial.phones.length === 0) {
+      initial.phones = [{ label: "Mobile", number: "", countryCode: "+92" }];
+    }
+    if (!initial.emails || initial.emails.length === 0) {
+      initial.emails = [{ label: "Personal", address: "" }];
+    }
+    if (!initial.addresses || initial.addresses.length === 0) {
+      initial.addresses = [
+        {
+          label: "Home",
+          line1: "",
+          city: defaultCity,
+          state: defaultProvince,
+          country: defaultCountry,
+        },
+      ];
+    }
+    if (!initial.socials || initial.socials.length === 0) {
+      initial.socials = [{ platform: "WhatsApp", url: "" }];
+    }
+    if (!initial.emergencyContacts || initial.emergencyContacts.length === 0) {
+      initial.emergencyContacts = [{ relationship: "Father", contactId: "" }];
     }
 
     return initial;
@@ -254,11 +315,12 @@ export default function ContactForm({
 
   const handleSave = () => {
     setValidationErrors([]);
-    const formErrors = validate(contactDraft);
+    const cleanedDraft = cleanContactDraft(contactDraft);
+    const formErrors = validate(cleanedDraft);
 
     // Custom Pakistani CNIC validation (13 digits)
-    if (contactDraft.cnic) {
-      const cleanCnic = contactDraft.cnic.replace(/\D/g, "");
+    if (cleanedDraft.cnic) {
+      const cleanCnic = cleanedDraft.cnic.replace(/\D/g, "");
       if (cleanCnic.length > 0 && cleanCnic.length !== 13) {
         formErrors.push({
           fieldId: "cnic",
@@ -285,10 +347,10 @@ export default function ContactForm({
     setSaving(true);
     try {
       // Normalize and format data
-      const firstName = toTitleCase((contactDraft.firstName || "").trim());
-      const lastName = toTitleCase((contactDraft.lastName || "").trim());
+      const firstName = toTitleCase((cleanedDraft.firstName || "").trim());
+      const lastName = toTitleCase((cleanedDraft.lastName || "").trim());
 
-      const normalizedPhones = (contactDraft.phones || []).map((phone) => {
+      const normalizedPhones = (cleanedDraft.phones || []).map((phone) => {
         const trimmedNumber = (phone.number || "").trim();
         let parsed;
         if (trimmedNumber.startsWith("+") || trimmedNumber.startsWith("00")) {
@@ -316,15 +378,15 @@ export default function ContactForm({
       });
 
       const contactRaw: Contact = {
-        ...contactDraft,
-        id: contactDraft.id || contact?.id || crypto.randomUUID(),
+        ...cleanedDraft,
+        id: cleanedDraft.id || contact?.id || crypto.randomUUID(),
         firstName,
         lastName,
         name: [firstName, lastName].filter(Boolean).join(" "),
         phones: normalizedPhones,
         updatedAt: new Date().toISOString().slice(0, 10),
         createdAt:
-          contactDraft.createdAt || new Date().toISOString().slice(0, 10),
+          cleanedDraft.createdAt || new Date().toISOString().slice(0, 10),
       } as Contact;
 
       const finalized = applyTitleCaseToContact(contactRaw) as Contact;
