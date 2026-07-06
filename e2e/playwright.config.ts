@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Ensure JWT_SECRET is set for the backend dev server in CI/test environments
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'e2e-test-jwt-secret-key-at-least-32-chars-long';
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
