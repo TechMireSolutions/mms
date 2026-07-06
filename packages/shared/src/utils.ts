@@ -107,7 +107,14 @@ const SYSTEM_EXCLUDED_KEYS = new Set([
 function isKeyIgnored(k?: string): boolean {
   if (!k) return false;
   const lk = k.toLowerCase();
-  return SYSTEM_EXCLUDED_KEYS.has(lk) || lk.endsWith("id") || lk.startsWith("_");
+  return (
+    SYSTEM_EXCLUDED_KEYS.has(lk) ||
+    lk.endsWith("id") ||
+    lk.startsWith("_") ||
+    lk.includes("hash") ||
+    lk.includes("password") ||
+    lk.includes("salt")
+  );
 }
 
 /**
