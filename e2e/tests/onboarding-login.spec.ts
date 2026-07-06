@@ -176,5 +176,86 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // 10. Assert welcome banner displays the logged-in user name
     await expect(page.locator('h1')).toContainText('Assalamu Alaikum, Test Admin');
+
+    // 11. Navigate to Contacts Page
+    console.log('Navigating to Contacts Page...');
+    await page.goto(`http://${subdomain}.localhost:5173/contacts`);
+    await page.waitForLoadState('networkidle');
+
+    // 12. Create a new Contact
+    await page.click('button:has-text("Add Contact")');
+    await page.waitForSelector('#firstName input');
+    
+    // Fill first name and last name
+    await page.fill('#firstName input', 'Jane');
+    await page.fill('#lastName input', 'Doe');
+
+    // Fill gender
+    await page.click('#gender button');
+    await page.click('role=option[name="Female"]');
+
+    // Fill date of birth and trigger blur
+    await page.fill('#dob input[type="text"]', '2015-05-15');
+    await page.click('h3:has-text("Basic Details")');
+
+    await page.click('button:has-text("Save")');
+    
+    // Wait for the modal dialog to close completely
+    await expect(page.locator('role=dialog')).toBeHidden();
+    
+    // Verify contact Jane Doe is listed and visible in the active contacts tab
+    await page.waitForSelector('tbody tr:has-text("Jane Doe") >> visible=true');
+    console.log('Contact Jane Doe successfully created.');
+
+    // 13. Navigate to Students Page
+    console.log('Navigating to Students Page...');
+    await page.goto(`http://${subdomain}.localhost:5173/students`);
+    await page.waitForLoadState('networkidle');
+
+    // 14. Create a new Student linking to the Contact
+    await page.click('button:has-text("Add Student")');
+    await page.waitForSelector('input[placeholder="Search contacts…"]');
+    await page.fill('input[placeholder="Search contacts…"]', 'Jane Doe');
+    await page.click('button:has-text("Jane Doe")');
+    await page.click('button:has-text("Save")');
+
+    // Wait for the modal dialog to close completely
+    await expect(page.locator('role=dialog')).toBeHidden();
+
+    // 15. Verify Student successfully created and listed
+    await page.waitForSelector('tbody tr:has-text("Jane Doe") >> visible=true');
+    console.log('Student Jane Doe successfully created and linked.');
+
+    // 16. Seed a test class and enrollment for Jane Doe via the backend script
+    console.log('Seeding session, class, and enrollment for student...');
+    const backendDir = path.resolve(__dirname, '../../apps/backend');
+    try {
+      const output = execSync(`npx tsx src/seed-test-class.ts ${subdomain}`, { cwd: backendDir, encoding: 'utf8' });
+      console.log(output);
+    } catch (err: any) {
+      console.error('Failed to seed class/enrollment:', err.stdout || err.stderr || err.message);
+      throw err;
+    }
+
+    // 17. Navigate to Attendance Page
+    console.log('Navigating to Attendance Page...');
+    await page.goto(`http://${subdomain}.localhost:5173/attendance`);
+    await page.waitForLoadState('networkidle');
+
+    // 18. Select Class in filters
+    await page.waitForSelector('#filter-class');
+    await page.selectOption('#filter-class', { label: 'Morning Quran Class' });
+    await page.waitForLoadState('networkidle');
+
+    // 19. Verify Jane Doe is listed in the roster
+    await page.waitForSelector('text=Jane Doe');
+    console.log('Jane Doe is visible in the class attendance list.');
+
+    // 20. Click submit attendance button
+    await page.click('button:has-text("Submit Attendance")');
+
+    // 21. Assert submitted success badge is visible
+    await page.waitForSelector('text=Submitted');
+    console.log('Attendance successfully marked and submitted.');
   });
 });
