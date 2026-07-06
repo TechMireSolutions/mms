@@ -243,7 +243,8 @@ export default async function authRoutes(
           parsed.data.currentPassword,
           parsed.data.newPassword,
         );
-        return reply.send({ success: true });
+        clearAuthCookies(reply);
+        return reply.send({ success: true, requiresSignIn: true });
       } catch (error: unknown) {
         const err = error as Error & { statusCode?: number; type?: string };
         return reply.status(err.statusCode ?? 500).send({

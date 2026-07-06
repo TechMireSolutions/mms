@@ -20,7 +20,7 @@ export interface AuthContextType {
   authError: AuthError | null;
   appPublicSettings: unknown | null;
   authChecked: boolean;
-  login: (email: string, password: string) => Promise<{ requires2FA: boolean; challengeId?: string }>;
+  login: (email: string, password: string) => Promise<{ user: User; requires2FA: boolean; challengeId?: string }>;
   logout: (shouldRedirect?: boolean) => void;
   navigateToLogin: () => void;
   checkUserAuth: (options?: { force?: boolean }) => Promise<void>;
@@ -46,7 +46,6 @@ export interface AuthContextType {
 export interface OnboardResult {
   user: User;
   workspace: Workspace;
-  handoffCode: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -127,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [applyAuthSession]);
 
-  const login = async (email: string, password: string): Promise<{ requires2FA: boolean; challengeId?: string }> => {
+  const login = async (email: string, password: string): Promise<{ user: User; requires2FA: boolean; challengeId?: string }> => {
     setIsLoadingAuth(true);
     setAuthError(null);
     try {
@@ -149,12 +148,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(authResponse.user);
           setIsAuthenticated(false);
           setAuthChecked(true);
-          return { requires2FA: true, challengeId: authResponse.challengeId };
+          return { user: authResponse.user, requires2FA: true, challengeId: authResponse.challengeId };
         }
 
         await applyAuthSession(authResponse.user);
         mark2FAVerified();
-        return { requires2FA: false };
+        return { user: authResponse.user, requires2FA: false };
       }
 
       const errorData = await response.json() as { message?: string };

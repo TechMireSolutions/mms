@@ -468,6 +468,9 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "account.passwordStrengthVeryStrong": "قوي جداً",
   "account.unlinkedTitle": "حساب غير مرتبط",
   "account.passwordRulesHint": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل وتحتوي على أحرف كبيرة وصغيرة وأرقام ورموز خاصة.",
+  "account.forcePasswordTitle": "غيّر كلمة المرور المؤقتة",
+  "account.forcePasswordBody": "أنشأ المسؤول كلمة مرور مؤقتة. اختر كلمة مرور جديدة قبل المتابعة. بعد التغيير، سجّل الدخول مرة أخرى بالبيانات الجديدة.",
+  "account.forcePasswordSubmit": "تغيير كلمة المرور وتسجيل الدخول مرة أخرى",
 
 
   "onboarding.stepInstitutionTitle": "المؤسسة والمظهر",
@@ -495,6 +498,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "onboarding.adminEmail": "بريد المسؤول",
   "onboarding.openWorkspace": "فتح {subdomain}.{domain}",
   "onboarding.redirecting": "جارٍ التحويل إلى مساحة العمل…",
+  "onboarding.signInWithTemporaryPassword": "سجّل الدخول بكلمة مرور المسؤول المؤقتة. سيُطلب منك تغييرها قبل استخدام مساحة العمل.",
   "onboarding.agreeTerms": "أوافق على شروط الخدمة وسياسة الخصوصية",
 
   "apex.landingTitle": "نظام إدارة المدارس",

@@ -38,5 +38,9 @@ export default function ProtectedRoute(): React.JSX.Element {
     );
   }
 
+  if (user?.mustChangePassword && location.pathname !== ROUTES.forcePasswordChange) {
+    return <Navigate to={ROUTES.forcePasswordChange} replace />;
+  }
+
   return <Outlet />;
 }

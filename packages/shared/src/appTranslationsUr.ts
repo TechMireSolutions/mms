@@ -466,6 +466,9 @@ export const APP_TRANSLATIONS_UR = {
   "account.passwordStrengthVeryStrong": "بہت مضبوط",
   "account.unlinkedTitle": "غیر منسلک پروفائل",
   "account.passwordRulesHint": "پاس ورڈ کم از کم 8 حروف طویل ہونا چاہیے اور اس میں بڑے، چھوٹے حروف، نمبر اور خصوصی علامات شامل ہونی چاہئیں۔",
+  "account.forcePasswordTitle": "عارضی پاس ورڈ تبدیل کریں",
+  "account.forcePasswordBody": "منتظم نے عارضی پاس ورڈ جاری کیا ہے۔ آگے بڑھنے سے پہلے نیا پاس ورڈ منتخب کریں۔ تبدیلی کے بعد نئے credentials کے ساتھ دوبارہ سائن اِن کریں۔",
+  "account.forcePasswordSubmit": "پاس ورڈ تبدیل کریں اور دوبارہ سائن اِن کریں",
 
 
   "onboarding.stepInstitutionTitle": "ادارہ اور تھیم",
@@ -493,6 +496,7 @@ export const APP_TRANSLATIONS_UR = {
   "onboarding.adminEmail": "منتظم ای میل",
   "onboarding.openWorkspace": "{subdomain}.{domain} کھولیں",
   "onboarding.redirecting": "آپ کی ورک اسپیس پر بھیجا جا رہا ہے…",
+  "onboarding.signInWithTemporaryPassword": "عارضی admin پاس ورڈ سے سائن اِن کریں۔ ورک اسپیس استعمال کرنے سے پہلے آپ سے اسے تبدیل کروایا جائے گا۔",
   "onboarding.agreeTerms": "میں سروس کی شرائط اور پرائیویسی پالیسی سے متفق ہوں۔",
 
   "apex.landingTitle": "مدرسہ مینجمنٹ سسٹم",

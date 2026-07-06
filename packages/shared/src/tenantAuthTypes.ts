@@ -6,6 +6,8 @@ export interface TenantAuthFields {
   loginEmail: string;
   /** ISO timestamp when `loginEmail` was last verified. */
   emailVerifiedAt?: string;
+  /** True until the user changes an admin-issued temporary password. */
+  mustChangePassword?: boolean;
 }
 
 /** Persisted tenant user with optional auth credentials. */

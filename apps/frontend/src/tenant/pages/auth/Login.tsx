@@ -66,7 +66,7 @@ export default function Login(): React.ReactElement {
       const settings = getGlobalSettings();
       const needs2FA = requiresTwoFactor(settings, user) && !is2FAVerified();
       if (!needs2FA) {
-        navigate(redirectTo, { replace: true });
+        navigate(user?.mustChangePassword ? ROUTES.forcePasswordChange : redirectTo, { replace: true });
       }
     });
   }, [isAuthenticated, user, navigate, redirectTo]);
@@ -123,7 +123,7 @@ export default function Login(): React.ReactElement {
     setLoading(true);
     const trimmedEmail = email.trim();
     try {
-      const { requires2FA } = await login(trimmedEmail, password);
+      const { user: loggedInUser, requires2FA } = await login(trimmedEmail, password);
       persistRememberedEmail(trimmedEmail, rememberMe);
       if (requires2FA) {
         navigate(ROUTES.twoFactor, { replace: true, state: { from: redirectTo } });
@@ -131,7 +131,7 @@ export default function Login(): React.ReactElement {
       }
       clear2FAState();
       mark2FAVerified();
-      navigate(redirectTo, { replace: true });
+      navigate(loggedInUser.mustChangePassword ? ROUTES.forcePasswordChange : redirectTo, { replace: true });
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : t("auth.invalidCredentials"));
     } finally {

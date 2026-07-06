@@ -13,8 +13,6 @@ import { getRequestTenant } from '../../lib/tenantContext.js';
 import {
   findTenantUserRowById,
   listTenantUsersByWorkspace,
-  replaceTenantUsersForWorkspace,
-  type TenantUserRow,
 } from '../../db/repositories/tenantUserRepository.js';
 import { hashPassword, verifyPassword } from './passwordService.js';
 import { loadContacts, updateContactById } from '../contactService.js';
@@ -32,12 +30,14 @@ interface StoredUser {
   contactId?: string | number;
   loginEmail: string;
   emailVerifiedAt?: string;
+  mustChangePassword?: boolean;
 }
 
 export type PublicUser = User;
 
 /** Public user shape — no password hash. */
 type PersistedUser = StoredTenantUser & Record<string, unknown>;
+type IncomingUser = PersistedUser & { temporaryPassword?: string };
 
 const COLLECTION = 'users';
 
@@ -99,6 +99,7 @@ function asAuthUser(user: PersistedUser): StoredUser | null {
     contactId: user.contactId,
     emailVerifiedAt:
       typeof user.emailVerifiedAt === 'string' ? user.emailVerifiedAt : undefined,
+    mustChangePassword: user.mustChangePassword === true,
   };
 }
 
@@ -112,13 +113,43 @@ function toPublicUser(authUser: StoredUser): PublicUser {
     workspaceSubdomain: authUser.workspaceSubdomain,
     contactId: authUser.contactId,
     emailVerifiedAt: authUser.emailVerifiedAt,
+    mustChangePassword: authUser.mustChangePassword === true,
   };
 }
 
 export async function saveUsers(next: PersistedUser[]): Promise<void> {
   const subdomain = requireTenantSubdomain();
-  await replaceTenantUsersForWorkspace(subdomain, next as TenantUserRow[]);
-  await saveCollection(COLLECTION, next);
+  const existingUsers = await getRawUsers();
+  const existingById = new Map(existingUsers.map((user) => [String(user.id), user]));
+  const prepared = await Promise.all(
+    next.map(async (user) => {
+      const incoming = user as IncomingUser;
+      const existing = existingById.get(String(incoming.id));
+      const temporaryPassword = incoming.temporaryPassword?.trim();
+      const passwordHash = temporaryPassword
+        ? await hashPassword(temporaryPassword)
+        : typeof incoming.passwordHash === 'string' && incoming.passwordHash
+          ? incoming.passwordHash
+          : typeof existing?.passwordHash === 'string'
+            ? existing.passwordHash
+            : '';
+      const loginEmail = resolveTenantLoginEmail(incoming, typeof incoming.email === 'string' ? incoming.email : undefined)
+        || resolveTenantLoginEmail(existing ?? {}, typeof existing?.email === 'string' ? existing.email : undefined);
+      const mustChangePassword = temporaryPassword
+        ? incoming.mustChangePassword !== false
+        : incoming.mustChangePassword ?? existing?.mustChangePassword ?? false;
+      const { temporaryPassword: _temporaryPassword, ...rest } = incoming;
+      void _temporaryPassword;
+      return {
+        ...rest,
+        workspaceSubdomain: subdomain,
+        loginEmail,
+        passwordHash,
+        mustChangePassword,
+      };
+    }),
+  );
+  await saveCollection(COLLECTION, prepared);
 }
 
 export async function getWorkspaceUserRow(userId: string): Promise<PersistedUser | undefined> {
@@ -209,7 +240,7 @@ export async function createUser(
   password: string,
   role: string,
   workspaceSubdomain: string,
-  options?: { emailVerified?: boolean; contactId?: string | number },
+  options?: { emailVerified?: boolean; contactId?: string | number; mustChangePassword?: boolean },
 ): Promise<PublicUser> {
   const loginEmail = email.trim().toLowerCase();
   if (await findUserByLoginEmailAndWorkspace(loginEmail, workspaceSubdomain)) {
@@ -225,6 +256,7 @@ export async function createUser(
     role,
     workspaceSubdomain,
     passwordHash,
+    mustChangePassword: options?.mustChangePassword === true,
     createdAt: new Date().toISOString(),
     contactId: options?.contactId,
   };
@@ -295,6 +327,7 @@ export async function changeTenantUserPassword(
   users[index] = {
     ...row,
     passwordHash: await hashPassword(newPassword),
+    mustChangePassword: false,
   };
   await saveUsers(users);
 }

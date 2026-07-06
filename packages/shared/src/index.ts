@@ -11,6 +11,8 @@ export interface User {
   contactId?: string | number;
   loginEmail?: string;
   emailVerifiedAt?: string;
+  /** Forces the user through password change before normal workspace access. */
+  mustChangePassword?: boolean;
 }
 
 export * from './settingsTypes.js';

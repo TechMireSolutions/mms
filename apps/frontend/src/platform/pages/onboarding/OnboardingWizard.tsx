@@ -101,7 +101,6 @@ export default function OnboardingWizard(): React.JSX.Element {
   const [data, setData] = useState<OnboardingData>(initialData);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  const [handoffCode, setHandoffCode] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const wizardSteps = useMemo(
@@ -186,7 +185,7 @@ export default function OnboardingWizard(): React.JSX.Element {
 
     try {
       const appDomain = getAppDomain();
-      const result = await onboard({
+      await onboard({
         madrasaName: data.name || "MMS",
         tagline: data.tagline.trim() || DEFAULT_BRANDING_SETTINGS.tagline,
         adminName: `${data.firstName} ${data.lastName}`.trim(),
@@ -202,7 +201,6 @@ export default function OnboardingWizard(): React.JSX.Element {
         footerText: data.footerText.trim() || defaultFooterForMadrasa(data.name),
       });
 
-      setHandoffCode(result.handoffCode);
       setDone(true);
     } catch (err: unknown) {
       const message = isApiError(err)
@@ -216,8 +214,8 @@ export default function OnboardingWizard(): React.JSX.Element {
     }
   };
 
-  if (done && handoffCode) {
-    return <SuccessScreen data={data} handoffCode={handoffCode} />;
+  if (done) {
+    return <SuccessScreen data={data} />;
   }
 
   const showSignInLink = submitError?.toLowerCase().includes("already exists");
@@ -275,24 +273,12 @@ export default function OnboardingWizard(): React.JSX.Element {
 
 function SuccessScreen({
   data,
-  handoffCode,
 }: {
   data: OnboardingData;
-  handoffCode: string;
 }): React.JSX.Element {
   const { t } = useTranslation();
   const appDomain = getAppDomain();
-  const workspaceLoginUrl = tenantUrl(
-    data.subdomain || "your-madrasa",
-    `${ROUTES.login}?handoff=${encodeURIComponent(handoffCode)}`,
-  );
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      window.location.href = workspaceLoginUrl;
-    }, 2500);
-    return () => window.clearTimeout(timer);
-  }, [workspaceLoginUrl]);
+  const workspaceLoginUrl = tenantUrl(data.subdomain || "your-madrasa", ROUTES.login);
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
@@ -343,7 +329,7 @@ function SuccessScreen({
             {t("onboarding.openWorkspace", { subdomain: data.subdomain, domain: appDomain })}
             <ArrowRight className="w-4 h-4" aria-hidden />
           </a>
-          <p className="text-xs text-muted-foreground mt-2">{t("onboarding.redirecting")}</p>
+          <p className="text-xs text-muted-foreground mt-2">{t("onboarding.signInWithTemporaryPassword")}</p>
         </motion.div>
       </motion.div>
     </div>

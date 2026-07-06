@@ -592,6 +592,8 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
       phone: form.phone.trim(),
       role: form.role,
       status: form.setupMethod === "invite" ? "inactive" : form.status,
+      mustChangePassword: form.setupMethod === "password" ? form.forceReset !== false : false,
+      temporaryPassword: form.setupMethod === "password" ? form.password : undefined,
       twoFactorEnabled: form.twoFactorEnabled,
       lastLogin: "",
       createdDate: new Date().toISOString().split("T")[0],

@@ -9,6 +9,8 @@ export const workspaceUserRecordSchema = z.object({
   name: z.string(),
   email: z.string(),
   loginEmail: z.string().optional(),
+  mustChangePassword: z.boolean().optional(),
+  temporaryPassword: z.string().optional(),
   phone: z.string(),
   role: z.string(),
   status: userStatusSchema,

@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { requiresTwoFactor } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { DEFAULT_AUTH_REDIRECT } from "@/lib/config/routes";
+import { DEFAULT_AUTH_REDIRECT, ROUTES } from "@/lib/config/routes";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { is2FAVerified } from "@/lib/twoFactor";
 
@@ -16,6 +16,9 @@ export default function GuestRoute(): React.JSX.Element {
 
   if (isAuthenticated) {
     const needs2FA = requiresTwoFactor(settings, user) && !is2FAVerified();
+    if (user?.mustChangePassword && !needs2FA) {
+      return <Navigate to={ROUTES.forcePasswordChange} replace />;
+    }
     if (!needs2FA) {
       return <Navigate to={DEFAULT_AUTH_REDIRECT} replace />;
     }

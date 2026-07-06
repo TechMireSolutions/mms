@@ -14,6 +14,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
   const subdomain = `testmadrasa${Date.now()}`;
   const adminEmail = `admin@${subdomain}.com`;
   const adminPassword = 'Madrasa@1234'; // Must be at least 12 characters per password policy
+  const changedAdminPassword = 'Madrasa@5678'; // Must be at least 12 characters per password policy
   const platformEmail = 'platform@test.com';
   const platformPassword = 'Pa$$w0rd123';
 
@@ -29,7 +30,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     }
   });
 
-  test('should setup platform, onboard a new madrasa, and log in to the new tenant dashboard', async ({ page }) => {
+  test('should setup platform, onboard a new madrasa, force the first password change, and log in to the new tenant dashboard', async ({ page }) => {
     // Add console log listeners to capture errors in the page
     page.on('console', msg => {
       if (msg.type() === 'error' || msg.text().includes('error')) {
@@ -168,24 +169,38 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.goto(tenantLoginUrl);
     await page.waitForLoadState('networkidle');
 
-    // 8. Fills out the tenant login form
+    // 8. Fill out the tenant login form with the temporary onboarding password
     await page.fill('input[name="email"]', adminEmail);
     await page.fill('input[name="password"]', adminPassword);
     await page.click('button[type="submit"]');
 
-    // 9. Wait for navigation to dashboard (Vite home route redirects/resolves to `/`)
+    // 9. First login must force a password change before the tenant app is usable
+    await page.waitForURL(`http://${subdomain}.localhost:5173/force-password-change`);
+    await expect(page.locator('h1')).toContainText('Change your temporary password');
+    await page.fill('#current-password', adminPassword);
+    await page.fill('#new-password', changedAdminPassword);
+    await page.fill('#confirm-password', changedAdminPassword);
+    await page.click('button[type="submit"]');
+
+    // 10. Password change signs the tenant admin out so they can sign in with new credentials
+    await page.waitForURL(`http://${subdomain}.localhost:5173/login`);
+    await page.fill('input[name="email"]', adminEmail);
+    await page.fill('input[name="password"]', changedAdminPassword);
+    await page.click('button[type="submit"]');
+
+    // 11. Wait for navigation to dashboard (Vite home route redirects/resolves to `/`)
     await page.waitForURL(`http://${subdomain}.localhost:5173/`);
     await page.waitForLoadState('networkidle');
 
-    // 10. Assert welcome banner displays the logged-in user name
+    // 12. Assert welcome banner displays the logged-in user name
     await expect(page.locator('h1')).toContainText('Assalamu Alaikum, Test Admin');
 
-    // 11. Navigate to Contacts Page
+    // 13. Navigate to Contacts Page
     console.log('Navigating to Contacts Page...');
     await page.goto(`http://${subdomain}.localhost:5173/contacts`);
     await page.waitForLoadState('networkidle');
 
-    // 12. Create a new Contact
+    // 14. Create a new Contact
     await page.click('button:has-text("Add Contact")');
     await page.waitForSelector('#firstName input');
     

@@ -17,6 +17,7 @@ const TABLE_AUTH_KEYS = new Set([
   'pendingLoginEmail',
   'createdAt',
   'email',
+  'mustChangePassword',
 ]);
 
 function splitProfileFields(user: TenantUserRow): {
@@ -49,6 +50,7 @@ function splitProfileFields(user: TenantUserRow): {
         typeof user.pendingLoginEmail === 'string' ? user.pendingLoginEmail.toLowerCase() : null,
       createdAt:
         typeof user.createdAt === 'string' ? new Date(user.createdAt) : new Date(),
+      mustChangePassword: user.mustChangePassword === true,
       profileJson: Object.keys(profile).length > 0 ? profile : null,
     },
     profile,
@@ -67,6 +69,7 @@ function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUserRow {
     emailVerifiedAt: row.emailVerifiedAt?.toISOString(),
     pendingLoginEmail: row.pendingLoginEmail ?? undefined,
     createdAt: row.createdAt.toISOString(),
+    mustChangePassword: row.mustChangePassword,
   };
 
   if (row.profileJson) {

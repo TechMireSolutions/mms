@@ -3,7 +3,6 @@ import type { JWT } from '@fastify/jwt';
 import { requiresTwoFactor, type BrandingSocialLink } from '@mms/shared';
 import { validateCredentials, createUser, type PublicUser } from './userService.js';
 import { createWorkspace, assertWorkspaceActive } from '../workspaceService.js';
-import { createAuthHandoff } from './authHandoffService.js';
 import { saveObject } from '../../db/database.js';
 import type { Workspace } from '@mms/shared';
 import { buildBrandingFromOnboarding } from '@mms/shared';
@@ -53,7 +52,6 @@ export interface OnboardInput {
 
 export interface OnboardResult extends AuthResult {
   workspace: Workspace;
-  handoffCode: string;
 }
 
 export async function establishSession(
@@ -173,7 +171,9 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
     await saveObject('branding', fullBranding);
 
     await assertPasswordMeetsPolicy(input.password);
-    await createUser(input.email, input.adminName, input.password, 'admin', workspace.subdomain);
+    await createUser(input.email, input.adminName, input.password, 'admin', workspace.subdomain, {
+      mustChangePassword: true,
+    });
   });
 
   const user = await runWithTenant(workspace.subdomain, async () =>
@@ -183,7 +183,5 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
     throw new Error('Failed to create workspace administrator.');
   }
 
-  const handoffCode = await createAuthHandoff({ user });
-
-  return { user, workspace, handoffCode };
+  return { user, workspace };
 }

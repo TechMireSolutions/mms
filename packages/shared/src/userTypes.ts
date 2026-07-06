@@ -49,6 +49,10 @@ export interface WorkspaceUser {
   email: string;
   /** Auth sign-in identifier when user has credentials — may differ from contact email. */
   loginEmail?: string;
+  /** True when the account must change an admin-issued temporary password. */
+  mustChangePassword?: boolean;
+  /** Write-only temporary password accepted by users bulk save; never returned by list APIs. */
+  temporaryPassword?: string;
   phone: string;
   role: string;
   status: UserStatus;
@@ -354,6 +358,7 @@ export function normalizeWorkspaceUser(
     name,
     email: raw.email ?? '',
     loginEmail: typeof raw.loginEmail === 'string' ? raw.loginEmail : undefined,
+    mustChangePassword: raw.mustChangePassword === true,
     phone: raw.phone ?? '',
     role,
     status: raw.status ?? 'active',

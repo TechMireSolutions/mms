@@ -30,6 +30,7 @@ const Accounting = React.lazy(() => import("@/tenant/features/accounting/Account
 const Login = React.lazy(() => import("@/tenant/pages/auth/Login"));
 const ForgotPassword = React.lazy(() => import("@/tenant/pages/auth/ForgotPassword"));
 const TwoFactorAuth = React.lazy(() => import("@/tenant/pages/auth/TwoFactorAuth"));
+const ForcePasswordChange = React.lazy(() => import("@/tenant/pages/auth/ForcePasswordChange"));
 const Messaging = React.lazy(() => import("@/tenant/features/messaging/MessagingPage"));
 
 function RedirectToApex({ path }: { path: string }): React.JSX.Element {
@@ -79,6 +80,7 @@ function TenantRoutesInner(): React.JSX.Element {
         </Route>
 
         <Route element={<ProtectedRoute />}>
+          <Route path={ROUTES.forcePasswordChange} element={<ForcePasswordChange />} />
           <Route element={<AppLayout />}>
             <Route path={ROUTES.home} element={<Dashboard />} />
              <Route path={ROUTES.contacts} element={<Contacts />} />

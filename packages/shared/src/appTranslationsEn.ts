@@ -466,6 +466,9 @@ export const APP_TRANSLATIONS_EN = {
   "account.passwordStrengthVeryStrong": "Very strong",
   "account.unlinkedTitle": "Unlinked Profile",
   "account.passwordRulesHint": "Password must be at least 8 characters long and include uppercase, lowercase, numbers, and special characters.",
+  "account.forcePasswordTitle": "Change your temporary password",
+  "account.forcePasswordBody": "Your administrator issued a temporary password. Choose a new password before continuing. After this change, sign in again with your new credentials.",
+  "account.forcePasswordSubmit": "Change password and sign in again",
 
 
   "onboarding.stepInstitutionTitle": "Institution & theme",
@@ -493,6 +496,7 @@ export const APP_TRANSLATIONS_EN = {
   "onboarding.adminEmail": "Admin email",
   "onboarding.openWorkspace": "Open {subdomain}.{domain}",
   "onboarding.redirecting": "Redirecting to your workspace…",
+  "onboarding.signInWithTemporaryPassword": "Sign in with the temporary admin password. You will be asked to change it before using the workspace.",
   "onboarding.agreeTerms": "I agree to the terms of service and privacy policy",
   "apex.landingTitle": "Madrasa Management System",
   "apex.landingSubtitle": "Create a new institution workspace on its own address — {example} — then sign in on that subdomain.",

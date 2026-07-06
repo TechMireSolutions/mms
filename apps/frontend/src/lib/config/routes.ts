@@ -18,6 +18,7 @@ export const ROUTES = {
   obligations: "/obligations",
   users: "/users",
   profile: "/profile",
+  forcePasswordChange: "/force-password-change",
   settings: "/settings",
   messaging: "/messaging",
   login: "/login",

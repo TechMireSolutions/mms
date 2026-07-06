@@ -49,6 +49,7 @@ export const tenantUsers = pgTable('tenant_users', {
   contactId: text('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
   emailVerifiedAt: timestamp('email_verified_at', { mode: 'date' }),
   pendingLoginEmail: text('pending_login_email'),
+  mustChangePassword: boolean('must_change_password').notNull().default(false),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
   /** Non-auth profile fields from legacy JSON user rows. */
@@ -403,5 +404,4 @@ export const customTabs = pgTable('custom_tabs', {
   uniqueIndex('custom_tabs_workspace_module_key_idx').on(table.workspaceSubdomain, table.moduleId, table.key),
   index('custom_tabs_workspace_idx').on(table.workspaceSubdomain),
 ]);
-
 
