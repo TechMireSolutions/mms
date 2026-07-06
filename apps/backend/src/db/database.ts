@@ -52,7 +52,7 @@ import { runMigration030 } from './migrations/030_migrate_hasanat_to_tables.js';
 import { runMigration031 } from './migrations/031_migrate_accounting_to_tables.js';
 import { runMigration032 } from './migrations/032_migrate_question_bank_to_tables.js';
 import { runMigration033 } from './migrations/033_migrate_logs_to_tables.js';
-import { deleteTenantUsersByWorkspace, type TenantUserRow } from './repositories/tenantUserRepository.js';
+import { type TenantUserRow } from './repositories/tenantUserRepository.js';
 import { deleteAuthArtifactsForWorkspace, purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { setDb } from './dbClient.js';
@@ -412,10 +412,35 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
   }
 }
 
+function getQueryRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) return result as T[];
+  if (result && typeof result === 'object' && 'rows' in result && Array.isArray((result as { rows: unknown }).rows)) {
+    return (result as { rows: T[] }).rows;
+  }
+  return [];
+}
+
+async function deleteTenantRowsByColumn(columnName: 'workspace_subdomain' | 'tenant_id', tenant: string): Promise<void> {
+  const db = activeDb();
+  const result = await db.execute(sql`
+    SELECT table_name
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND column_name = ${columnName}
+  `);
+  const rows = getQueryRows<{ table_name: string }>(result);
+
+  for (const row of rows) {
+    await db.execute(sql`
+      DELETE FROM ${sql.raw(`"${row.table_name.replaceAll('"', '""')}"`)}
+      WHERE ${sql.raw(`"${columnName}"`)} = ${tenant}
+    `);
+  }
+}
+
 /**
- * Deletes all SQLite rows scoped to a workspace subdomain (collections, objects, tenant users).
- * Uses LIKE prefix batch deletes instead of per-row sequential deletes.
- * Does not modify the global workspaces registry.
+ * Deletes all database rows scoped to a workspace subdomain.
+ * Does not modify the global workspaces registry; platform deletion removes that separately.
  */
 export async function purgeTenantDataBySubdomain(subdomain: string): Promise<void> {
   const tenant = subdomain.trim().toLowerCase();
@@ -428,33 +453,8 @@ export async function purgeTenantDataBySubdomain(subdomain: string): Promise<voi
 
   await db.delete(schema.collections).where(like(schema.collections.name, `${prefix}%`));
   await db.delete(schema.objects).where(like(schema.objects.key, `${prefix}%`));
-  await deleteTenantUsersByWorkspace(tenant);
-  const { deleteContactsByWorkspace } = await import('./repositories/contactRepository.js');
-  await deleteContactsByWorkspace(tenant);
-  const { deleteStudentsByWorkspace } = await import('./repositories/studentRepository.js');
-  await deleteStudentsByWorkspace(tenant);
-  const { deleteTeachersByWorkspace } = await import('./repositories/teacherRepository.js');
-  await deleteTeachersByWorkspace(tenant);
-  const { deleteSessionsByWorkspace } = await import('./repositories/sessionRepository.js');
-  await deleteSessionsByWorkspace(tenant);
-  const { deleteAttendanceRecordsByWorkspace } = await import('./repositories/attendanceRepository.js');
-  await deleteAttendanceRecordsByWorkspace(tenant);
-  const { deleteEnrollmentsByWorkspace } = await import('./repositories/enrollmentRepository.js');
-  await deleteEnrollmentsByWorkspace(tenant);
-  const { deleteObligationsByWorkspace } = await import('./repositories/obligationRepository.js');
-  await deleteObligationsByWorkspace(tenant);
-  const { deleteFinanceByWorkspace } = await import('./repositories/financeRepository.js');
-  await deleteFinanceByWorkspace(tenant);
-  const { deleteExaminationsByWorkspace } = await import('./repositories/examinationRepository.js');
-  await deleteExaminationsByWorkspace(tenant);
-  const { deleteHasanatByWorkspace } = await import('./repositories/hasanatRepository.js');
-  await deleteHasanatByWorkspace(tenant);
-  const { deleteAccountingByWorkspace } = await import('./repositories/accountingRepository.js');
-  await deleteAccountingByWorkspace(tenant);
-  const { deleteQuestionBankByWorkspace } = await import('./repositories/questionBankRepository.js');
-  await deleteQuestionBankByWorkspace(tenant);
-  const { deleteLogsByWorkspace } = await import('./repositories/logsRepository.js');
-  await deleteLogsByWorkspace(tenant);
+  await deleteTenantRowsByColumn('tenant_id', tenant);
+  await deleteTenantRowsByColumn('workspace_subdomain', tenant);
   await deleteAuthArtifactsForWorkspace(tenant);
 }
 
