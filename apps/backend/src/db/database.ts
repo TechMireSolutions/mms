@@ -84,6 +84,7 @@ function resolveObjectStorageKey(key: string): string {
 
 let pool: pg.Pool;
 let _rootDb: DbClient;
+const DATA_MIGRATION_LOCK_KEY = 2145836401;
 
 function getRootDb(): DbClient {
   if (!_rootDb) throw new Error('Database not initialized');
@@ -143,15 +144,24 @@ export async function initDb(): Promise<void> {
       { id: '033', run: runMigration033 },
     ];
 
-    const applied = await _rootDb.select().from(schema.dataMigrations);
-    const appliedSet = new Set(applied.map((m) => m.id));
+    const migrationLockClient = await pool.connect();
+    try {
+      await migrationLockClient.query('select pg_advisory_lock($1::integer)', [DATA_MIGRATION_LOCK_KEY]);
 
-    for (const migration of dataMigrationsToRun) {
-      if (!appliedSet.has(migration.id)) {
-        console.log(`[Data Migration] Running pending data migration ${migration.id}...`);
-        await migration.run();
-        await _rootDb.insert(schema.dataMigrations).values({ id: migration.id });
+      const applied = await _rootDb.select().from(schema.dataMigrations);
+      const appliedSet = new Set(applied.map((m) => m.id));
+
+      for (const migration of dataMigrationsToRun) {
+        if (!appliedSet.has(migration.id)) {
+          console.log(`[Data Migration] Running pending data migration ${migration.id}...`);
+          await migration.run();
+          await _rootDb.insert(schema.dataMigrations).values({ id: migration.id }).onConflictDoNothing();
+          appliedSet.add(migration.id);
+        }
       }
+    } finally {
+      await migrationLockClient.query('select pg_advisory_unlock($1::integer)', [DATA_MIGRATION_LOCK_KEY]).catch(() => undefined);
+      migrationLockClient.release();
     }
     await purgeExpiredAuthArtifacts();
     await ensurePlatformSuperUserFromEnv();
