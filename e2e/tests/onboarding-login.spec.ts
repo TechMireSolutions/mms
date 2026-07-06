@@ -10,7 +10,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
   // Generate a unique subdomain for each test run to prevent tenant conflicts in the database
   const subdomain = `testmadrasa${Date.now()}`;
   const adminEmail = `admin@${subdomain}.com`;
-  const adminPassword = 'Madrasa@123';
+  const adminPassword = 'Madrasa@1234'; // Must be at least 12 characters per password policy
   const platformEmail = 'platform@test.com';
   const platformPassword = 'Pa$$w0rd123';
 
@@ -27,6 +27,18 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
   });
 
   test('should setup platform, onboard a new madrasa, and log in to the new tenant dashboard', async ({ page }) => {
+    // Add console log listeners to capture errors in the page
+    page.on('console', msg => {
+      if (msg.type() === 'error' || msg.text().includes('error')) {
+        console.log(`[BROWSER CONSOLE ERROR] ${msg.text()}`);
+      } else {
+        console.log(`[BROWSER CONSOLE] ${msg.text()}`);
+      }
+    });
+    page.on('pageerror', err => {
+      console.log(`[BROWSER UNHANDLED EXCEPTION] ${err.message}`);
+    });
+
     // 1. Navigate to the platform apex landing page
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -124,12 +136,27 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.fill('#confirmPassword', adminPassword);
     await page.check('#terms');
 
-    // Click "Create Workspace" to complete onboarding
-    await page.click('button:has-text("Create Workspace")');
-    await page.waitForLoadState('networkidle');
+    // Click "Create workspace" to complete onboarding
+    await page.click('button:has-text("Create workspace")');
+    
+    // Wait for success screen or error
+    console.log('Waiting for success screen or onboarding error...');
+    try {
+      await page.waitForFunction(() => {
+        const h1 = document.querySelector('h1');
+        const alert = document.querySelector('[role="alert"]');
+        return (h1 && h1.textContent?.includes('Welcome to')) || alert;
+      }, null, { timeout: 20000 });
+    } catch (waitErr) {
+      console.log('Wait condition timed out.');
+    }
 
-    // Wait for success screen
-    await page.waitForSelector('h1');
+    const onboardingError = page.locator('[role="alert"]');
+    if (await onboardingError.isVisible()) {
+      const errText = await onboardingError.textContent();
+      throw new Error(`Onboarding failed with error: "${errText}"`);
+    }
+
     await expect(page.locator('h1')).toContainText('Welcome to Test Madrasa!');
 
     // 7. Navigate directly to the new tenant subdomain login page
