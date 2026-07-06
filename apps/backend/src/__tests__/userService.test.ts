@@ -7,6 +7,7 @@ const mockFindTenantUserById = vi.fn();
 const mockReplaceTenantUsers = vi.fn();
 const mockGetCollection = vi.fn();
 const mockSaveCollection = vi.fn();
+const mockHashPassword = vi.fn();
 const mockVerifyPassword = vi.fn();
 const mockGetRequestTenant = vi.fn();
 
@@ -26,7 +27,7 @@ vi.mock('../lib/tenantContext.js', () => ({
 }));
 
 vi.mock('../services/auth/passwordService.js', () => ({
-  hashPassword: vi.fn(),
+  hashPassword: (...args: unknown[]) => mockHashPassword(...args),
   verifyPassword: (...args: unknown[]) => mockVerifyPassword(...args),
 }));
 
@@ -39,11 +40,12 @@ vi.mock('../services/globalSettingsService.js', () => ({
   assertPasswordMeetsPolicy: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { validateCredentials } from '../services/auth/userService.js';
+import { changeTenantUserPassword, saveUsers, validateCredentials } from '../services/auth/userService.js';
 
 describe('userService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockHashPassword.mockImplementation(async (password: string) => `hashed:${password}`);
     mockVerifyPassword.mockResolvedValue(true);
     mockGetRequestTenant.mockReturnValue('dar-ul-quran');
     vi.mocked(loadContacts).mockResolvedValue([]);
@@ -114,5 +116,81 @@ describe('userService', () => {
     );
 
     expect(result).toBeNull();
+  });
+
+  it('stores temporary passwords as forced password changes for tenant users in any role', async () => {
+    mockListTenantUsers.mockResolvedValue([]);
+
+    await saveUsers([
+      {
+        id: 'admin-1',
+        name: 'Admin User',
+        email: 'admin@workspace.local',
+        loginEmail: 'admin@workspace.local',
+        phone: '',
+        role: 'admin',
+        status: 'active',
+        temporaryPassword: 'TempAdmin123!',
+      },
+      {
+        id: 'teacher-1',
+        name: 'Teacher User',
+        email: 'teacher@workspace.local',
+        loginEmail: 'teacher@workspace.local',
+        phone: '',
+        role: 'teacher',
+        status: 'active',
+        temporaryPassword: 'TempTeacher123!',
+      },
+    ]);
+
+    expect(mockHashPassword).toHaveBeenCalledWith('TempAdmin123!');
+    expect(mockHashPassword).toHaveBeenCalledWith('TempTeacher123!');
+    const savedUsers = mockSaveCollection.mock.calls[0][1];
+    expect(savedUsers).toEqual([
+      expect.objectContaining({
+        id: 'admin-1',
+        role: 'admin',
+        workspaceSubdomain: 'dar-ul-quran',
+        passwordHash: 'hashed:TempAdmin123!',
+        mustChangePassword: true,
+      }),
+      expect.objectContaining({
+        id: 'teacher-1',
+        role: 'teacher',
+        workspaceSubdomain: 'dar-ul-quran',
+        passwordHash: 'hashed:TempTeacher123!',
+        mustChangePassword: true,
+      }),
+    ]);
+    expect(savedUsers[0]).not.toHaveProperty('temporaryPassword');
+    expect(savedUsers[1]).not.toHaveProperty('temporaryPassword');
+  });
+
+  it('clears the forced password change flag after changing the password', async () => {
+    mockListTenantUsers.mockResolvedValue([
+      {
+        id: 'teacher-1',
+        name: 'Teacher User',
+        email: 'teacher@workspace.local',
+        loginEmail: 'teacher@workspace.local',
+        role: 'teacher',
+        workspaceSubdomain: 'dar-ul-quran',
+        passwordHash: 'old-hash',
+        mustChangePassword: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    ]);
+
+    await changeTenantUserPassword('teacher-1', 'OldTemp123!', 'NewTeacher123!');
+
+    expect(mockVerifyPassword).toHaveBeenCalledWith('OldTemp123!', 'old-hash');
+    expect(mockHashPassword).toHaveBeenCalledWith('NewTeacher123!');
+    const savedUsers = mockSaveCollection.mock.calls[0][1];
+    expect(savedUsers[0]).toMatchObject({
+      id: 'teacher-1',
+      passwordHash: 'hashed:NewTeacher123!',
+      mustChangePassword: false,
+    });
   });
 });

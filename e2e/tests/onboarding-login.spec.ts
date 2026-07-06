@@ -143,13 +143,13 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     // Click "Create workspace" to complete onboarding
     await page.click('button:has-text("Create workspace")');
     
-    // Wait for success screen or error
-    console.log('Waiting for success screen or onboarding error...');
+    // Wait for platform home redirect or error
+    console.log('Waiting for platform home redirect or onboarding error...');
     try {
       await page.waitForFunction(() => {
         const h1 = document.querySelector('h1');
         const alert = document.querySelector('[role="alert"]');
-        return (h1 && h1.textContent?.includes('Welcome to')) || alert;
+        return (h1 && h1.textContent?.includes('Platform console')) || alert;
       }, null, { timeout: 20000 });
     } catch (waitErr) {
       console.log('Wait condition timed out.');
@@ -161,7 +161,8 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
       throw new Error(`Onboarding failed with error: "${errText}"`);
     }
 
-    await expect(page.locator('h1')).toContainText('Welcome to Test Madrasa!');
+    await expect(page).toHaveURL('http://localhost:5173/');
+    await expect(page.locator('h1')).toContainText('Platform console');
 
     // 7. Navigate directly to the new tenant subdomain login page
     const tenantLoginUrl = `http://${subdomain}.localhost:5173/login`;

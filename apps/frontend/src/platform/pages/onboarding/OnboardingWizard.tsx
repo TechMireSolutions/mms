@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, Sparkles } from "lucide-react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import WizardLayout from "@/platform/components/onboarding/WizardLayout";
 import { ROUTES } from "@/lib/config/routes";
-import { tenantUrl, getAppDomain } from "@/lib/config/tenantConfig";
+import { getAppDomain } from "@/lib/config/tenantConfig";
 import {
   DEFAULT_BRANDING_SETTINGS,
   DEFAULT_GLOBAL_SETTINGS,
@@ -97,10 +96,10 @@ export default function OnboardingWizard(): React.JSX.Element {
   } = usePlatformAuth();
   const { onboard } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<OnboardingData>(initialData);
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const wizardSteps = useMemo(
@@ -201,7 +200,7 @@ export default function OnboardingWizard(): React.JSX.Element {
         footerText: data.footerText.trim() || defaultFooterForMadrasa(data.name),
       });
 
-      setDone(true);
+      navigate(ROUTES.home, { replace: true });
     } catch (err: unknown) {
       const message = isApiError(err)
         ? err.message
@@ -213,10 +212,6 @@ export default function OnboardingWizard(): React.JSX.Element {
       setLoading(false);
     }
   };
-
-  if (done) {
-    return <SuccessScreen data={data} />;
-  }
 
   const showSignInLink = submitError?.toLowerCase().includes("already exists");
 
@@ -268,70 +263,5 @@ export default function OnboardingWizard(): React.JSX.Element {
         </button>
       </div>
     </WizardLayout>
-  );
-}
-
-function SuccessScreen({
-  data,
-}: {
-  data: OnboardingData;
-}): React.JSX.Element {
-  const { t } = useTranslation();
-  const appDomain = getAppDomain();
-  const workspaceLoginUrl = tenantUrl(data.subdomain || "your-madrasa", ROUTES.login);
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="max-w-md w-full text-center"
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
-          className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6"
-        >
-          <CheckCircle2 className="w-10 h-10 text-primary" aria-hidden />
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-warning" aria-hidden />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              {t("onboarding.successBadge")}
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mt-1">
-            {t("onboarding.successTitle", { name: data.name || "MMS" })}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{t("onboarding.successBody")}</p>
-
-          <div className="mt-6 bg-muted/50 rounded-xl p-4 border border-border text-left space-y-2">
-            <div className="flex items-center justify-between text-sm gap-4">
-              <span className="text-muted-foreground">{t("onboarding.workspaceUrl")}</span>
-              <span className="font-medium text-foreground font-mono text-xs">
-                {data.subdomain}.{appDomain}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-sm gap-4">
-              <span className="text-muted-foreground">{t("onboarding.adminEmail")}</span>
-              <span className="font-medium text-foreground truncate">{data.email}</span>
-            </div>
-          </div>
-
-          <a
-            href={workspaceLoginUrl}
-            className="mt-6 w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all"
-          >
-            {t("onboarding.openWorkspace", { subdomain: data.subdomain, domain: appDomain })}
-            <ArrowRight className="w-4 h-4" aria-hidden />
-          </a>
-          <p className="text-xs text-muted-foreground mt-2">{t("onboarding.signInWithTemporaryPassword")}</p>
-        </motion.div>
-      </motion.div>
-    </div>
   );
 }
