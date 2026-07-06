@@ -80,13 +80,19 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
 
   return (
     <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
-      <Button
-        type="button"
-        variant="ghost"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen((isOpen) => !isOpen)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((isOpen) => !isOpen);
+          }
+        }}
         aria-expanded={open}
         aria-controls="filters-panel"
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors h-auto rounded-none justify-between hover:text-foreground"
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer select-none border-b border-transparent text-foreground"
       >
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
@@ -109,7 +115,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
           )}
           {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
         </div>
-      </Button>
+      </div>
 
       <AnimatePresence>
         {open && (

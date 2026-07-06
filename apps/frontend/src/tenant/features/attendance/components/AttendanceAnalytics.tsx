@@ -12,9 +12,8 @@ import {
 } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
+import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { useStudentsByIds } from '@/tenant/features/students/hooks/useStudents';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
-import type { Enrollment } from '@/lib/data/enrollmentData';
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
 
 interface StatCardProps {
@@ -97,7 +96,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
     [primary, secondary, charts],
   );
   const sessions = useSessionsCollection();
-  const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const enrollments = useEnrollmentsCollection();
   
   const allClasses = useMemo(() => {
     return sessions.flatMap((session) =>

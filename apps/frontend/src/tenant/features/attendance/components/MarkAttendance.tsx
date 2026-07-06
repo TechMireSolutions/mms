@@ -19,8 +19,8 @@ import {
 import { ClassStudent, AttendanceRecord, AttendanceStatus, getAttendanceStatusInfo } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
+import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { useStudentsByIds } from '@/tenant/features/students/hooks/useStudents';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
 import type { Student } from "@/lib/data/studentsData";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
@@ -276,7 +276,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
   const { statuses, fields, customFields, orderedFields } = useAttendanceConfig();
   const { can } = usePermissions();
   const sessions = useSessionsCollection();
-  const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const enrollments = useEnrollmentsCollection();
   const studentIds = useMemo(() => {
     if (!filters.classId) return [];
     return enrollments
@@ -341,7 +341,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
   }, []);
 
   // Rebuild rows when class/date/roster changes — must be in useEffect, never in render body
-  const studentRosterKey = students.map((student) => student.id).join("|");
+  const studentRosterKey = students.map((student) => `${student.id}-${student.name}`).join("|");
   const stableKey = `${filters.classId}:${filters.date}:${studentRosterKey}`;
 
   useEffect(() => {

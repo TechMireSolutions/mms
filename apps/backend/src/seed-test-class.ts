@@ -44,9 +44,13 @@ async function main() {
   }
   console.log(`Found student record: ID=${janeStudent.id}`);
 
+  const sessionId = `${subdomain}-s1`;
+  const classId = `${subdomain}-c1`;
+  const enrollmentId = `${subdomain}-e1`;
+
   // 3. Insert session with class
   const sessionData = {
-    id: 's1',
+    id: sessionId,
     name: 'Quran Hifz Session 2026',
     type: 'Hifz',
     status: 'active',
@@ -56,7 +60,7 @@ async function main() {
     currency: 'PKR',
     classes: [
       {
-        id: 'c1',
+        id: classId,
         name: 'Morning Quran Class',
         ageMin: 5,
         ageMax: 18,
@@ -70,34 +74,34 @@ async function main() {
   };
 
   await db.insert(sessions).values({
-    id: 's1',
+    id: sessionId,
     workspaceSubdomain: subdomain,
     customData: sessionData,
   }).onConflictDoUpdate({
     target: sessions.id,
-    set: { customData: sessionData },
+    set: { customData: sessionData, workspaceSubdomain: subdomain },
   });
 
   // 4. Insert enrollment for Jane Doe in class c1
   const enrollmentData = {
-    id: 'e1',
+    id: enrollmentId,
     studentId: janeStudent.id,
     studentName: 'Jane Doe',
-    classId: 'c1',
+    classId: classId,
     className: 'Morning Quran Class',
-    sessionId: 's1',
+    sessionId: sessionId,
     sessionName: 'Quran Hifz Session 2026',
     status: 'active',
     enrolledDate: new Date().toISOString().split('T')[0],
   };
 
   await db.insert(enrollments).values({
-    id: 'e1',
+    id: enrollmentId,
     workspaceSubdomain: subdomain,
     customData: enrollmentData,
   }).onConflictDoUpdate({
     target: enrollments.id,
-    set: { customData: enrollmentData },
+    set: { customData: enrollmentData, workspaceSubdomain: subdomain },
   });
 
   console.log('Seeding completed successfully!');

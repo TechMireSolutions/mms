@@ -195,17 +195,30 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.click('role=option[name="Female"]');
 
     // Fill date of birth and trigger blur
-    await page.fill('#dob input[type="text"]', '2015-05-15');
-    await page.click('h3:has-text("Basic Details")');
+    await page.fill('#dob input[type="text"]', '15/05/2015');
+    await page.locator('#dob input[type="text"]').blur();
 
     await page.click('button:has-text("Save")');
     
     // Wait for the modal dialog to close completely
-    await expect(page.locator('role=dialog')).toBeHidden();
+    await expect(page.getByRole('dialog', { name: 'Add New Contact' })).toBeHidden();
     
     // Verify contact Jane Doe is listed and visible in the active contacts tab
     await page.waitForSelector('tbody tr:has-text("Jane Doe") >> visible=true');
     console.log('Contact Jane Doe successfully created.');
+
+    // Create Father Contact (John Doe)
+    console.log('Creating contact John Doe...');
+    await page.click('button:has-text("Add Contact")');
+    await page.waitForSelector('#firstName input');
+    await page.fill('#firstName input', 'John');
+    await page.fill('#lastName input', 'Doe');
+    await page.click('#gender button');
+    await page.click('role=option[name="Male"]');
+    await page.click('button:has-text("Save")');
+    await expect(page.getByRole('dialog', { name: 'Add New Contact' })).toBeHidden();
+    await page.waitForSelector('tbody tr:has-text("John Doe") >> visible=true');
+    console.log('Contact John Doe successfully created.');
 
     // 13. Navigate to Students Page
     console.log('Navigating to Students Page...');
@@ -216,11 +229,23 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.click('button:has-text("Add Student")');
     await page.waitForSelector('input[placeholder="Search contacts…"]');
     await page.fill('input[placeholder="Search contacts…"]', 'Jane Doe');
-    await page.click('button:has-text("Jane Doe")');
-    await page.click('button:has-text("Save")');
+    const janeOption = page.locator('button').filter({ hasText: 'Jane Doe' }).filter({ hasNotText: 'Create' }).first();
+    await janeOption.waitFor({ state: 'visible' });
+    await janeOption.dispatchEvent('mousedown');
+
+    // Link Father guardian (John Doe)
+    await page.fill('div:has(> span:text-is("Father")) input[placeholder="Search contacts…"]', 'John Doe');
+    const johnOption = page.locator('button').filter({ hasText: 'John Doe' }).filter({ hasNotText: 'Create' }).first();
+    await johnOption.waitFor({ state: 'visible' });
+    await johnOption.dispatchEvent('mousedown');
+    
+    // Wait for the next GR number query to resolve and populate the input field
+    await expect(page.locator('input[placeholder="e.g. 0001-2026"]')).not.toHaveValue('');
+    
+    await page.click('button:has-text("Register student")');
 
     // Wait for the modal dialog to close completely
-    await expect(page.locator('role=dialog')).toBeHidden();
+    await expect(page.getByRole('dialog', { name: 'Register student' })).toBeHidden();
 
     // 15. Verify Student successfully created and listed
     await page.waitForSelector('tbody tr:has-text("Jane Doe") >> visible=true');
@@ -243,19 +268,19 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.waitForLoadState('networkidle');
 
     // 18. Select Class in filters
-    await page.waitForSelector('#filter-class');
-    await page.selectOption('#filter-class', { label: 'Morning Quran Class' });
+    await page.waitForSelector('#filter-class >> visible=true');
+    await page.selectOption('#filter-class >> visible=true', { label: 'Morning Quran Class' });
     await page.waitForLoadState('networkidle');
 
     // 19. Verify Jane Doe is listed in the roster
-    await page.waitForSelector('text=Jane Doe');
+    await page.waitForSelector('text=Jane Doe >> visible=true');
     console.log('Jane Doe is visible in the class attendance list.');
 
     // 20. Click submit attendance button
-    await page.click('button:has-text("Submit Attendance")');
+    await page.click('button:has-text("Submit Attendance") >> visible=true');
 
     // 21. Assert submitted success badge is visible
-    await page.waitForSelector('text=Submitted');
+    await page.waitForSelector('text=Submitted >> visible=true');
     console.log('Attendance successfully marked and submitted.');
   });
 });

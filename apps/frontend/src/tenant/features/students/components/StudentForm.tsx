@@ -178,7 +178,7 @@ export default function StudentForm({
     const validationDraft = {
       ...studentDraft,
       gender: linkedGender,
-      dob: linkedDob,
+      dob: linkedContact?.dob || "",
     };
     const parseResult = schema.safeParse(validationDraft);
     if (!parseResult.success) {
@@ -197,7 +197,7 @@ export default function StudentForm({
         contactId: String(studentDraft.contactId),
         email,
         name: linkedContact?.name,
-        dob: linkedDob || undefined,
+        dob: linkedContact?.dob || undefined,
       });
 
       if (duplicateReason) {
