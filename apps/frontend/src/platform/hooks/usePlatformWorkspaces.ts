@@ -15,12 +15,12 @@ async function fetchPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> {
 
 /** Platform super-user list of all madrasas (includes disabled). */
 export function usePlatformWorkspaces() {
-  const { isPlatformAuthenticated } = usePlatformAuth();
+  const { platformUser, isPlatformAuthenticated } = usePlatformAuth();
 
   return useQuery({
     queryKey: PLATFORM_WORKSPACES_QUERY_KEY,
     queryFn: fetchPlatformWorkspaces,
-    enabled: isPlatformAuthenticated,
+    enabled: isPlatformAuthenticated && platformUser?.role === 'super_user',
     staleTime: 60_000,
   });
 }

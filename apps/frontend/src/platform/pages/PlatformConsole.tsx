@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Loader2, LogOut, Plus, UserCircle } from "lucide-react";
+import { ArrowRight, Loader2, LogOut, Plus, UserCircle, UserPlus } from "lucide-react";
 import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -25,6 +25,7 @@ function WorkspaceListFallback(): React.JSX.Element {
 export default function PlatformConsole(): React.JSX.Element {
   const { t } = useTranslation();
   const { platformUser, platformLogout } = usePlatformAuth();
+  const isSuperUser = platformUser?.role === "super_user";
 
   return (
     <PlatformPageShell>
@@ -40,19 +41,37 @@ export default function PlatformConsole(): React.JSX.Element {
           </p>
         </div>
 
-        <Button
-          asChild
-          className="w-full h-11 rounded-xl font-semibold"
-          onMouseEnter={() => {
-            void import("@/platform/pages/onboarding/OnboardingWizard");
-          }}
-        >
-          <Link to={ROUTES.onboarding}>
-            <Plus className="w-4 h-4" aria-hidden />
-            {t("auth.createMadrasa")}
-            <ArrowRight className="w-4 h-4" aria-hidden />
-          </Link>
-        </Button>
+        {isSuperUser ? (
+          <>
+            <Button
+              asChild
+              className="w-full h-11 rounded-xl font-semibold"
+              onMouseEnter={() => {
+                void import("@/platform/pages/onboarding/OnboardingWizard");
+              }}
+            >
+              <Link to={ROUTES.onboarding}>
+                <Plus className="w-4 h-4" aria-hidden />
+                {t("auth.createMadrasa")}
+                <ArrowRight className="w-4 h-4" aria-hidden />
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              className="w-full h-11 rounded-xl"
+              onMouseEnter={() => {
+                void import("@/platform/pages/PlatformAdmins");
+              }}
+            >
+              <Link to={ROUTES.platformAdmins}>
+                <UserPlus className="w-4 h-4" aria-hidden />
+                {t("platform.manageAdmins")}
+              </Link>
+            </Button>
+          </>
+        ) : null}
 
         <Suspense fallback={<WorkspaceListFallback />}>
           <PlatformWorkspaceList />

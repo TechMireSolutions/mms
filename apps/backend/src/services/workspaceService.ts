@@ -1,5 +1,4 @@
 import { randomBytes } from 'node:crypto';
-import { eq } from 'drizzle-orm';
 import {
   type Workspace,
   type PublicWorkspaceSummary,
@@ -14,19 +13,30 @@ import {
 } from '@mms/shared';
 import {
   getCollection,
+  getCollectionForUpdate,
   saveCollection,
   getObject,
   purgeTenantDataBySubdomain,
   runInTransaction,
 } from '../db/database.js';
-import { getDb } from '../db/dbClient.js';
-import { collections } from '../db/schema.js';
 import { getRequestTenant, runWithTenant } from '../lib/tenantContext.js';
 
 async function listWorkspaces(): Promise<Workspace[]> {
   const raw = await getCollection(WORKSPACES_COLLECTION);
   if (!Array.isArray(raw)) return [];
   return raw as Workspace[];
+}
+
+async function mutateWorkspaceRegistry<T>(
+  mutator: (workspaces: Workspace[]) => Promise<T>,
+): Promise<T> {
+  return runInTransaction(async () => {
+    const raw = await getCollectionForUpdate(WORKSPACES_COLLECTION);
+    const workspaces = Array.isArray(raw) ? (raw as Workspace[]) : [];
+    const result = await mutator(workspaces);
+    await saveCollection(WORKSPACES_COLLECTION, workspaces);
+    return result;
+  });
 }
 
 /** Public branding for a workspace subdomain (login shell, registry cards). */
@@ -83,17 +93,14 @@ export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> 
 /** Permanently removes a workspace registry entry and all tenant-scoped data. */
 export async function deleteWorkspace(subdomain: string): Promise<Workspace | null> {
   const normalized = normalizeSubdomainInput(subdomain);
-  const workspaces = await listWorkspaces();
-  const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
-  if (index === -1) return null;
-
-  const removed = workspaces[index];
-  await runInTransaction(async () => {
+  return mutateWorkspaceRegistry(async (workspaces) => {
+    const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
+    if (index === -1) return null;
+    const removed = workspaces[index];
     await purgeTenantDataBySubdomain(normalized);
     workspaces.splice(index, 1);
-    await saveCollection(WORKSPACES_COLLECTION, workspaces);
+    return removed;
   });
-  return removed;
 }
 
 export async function setWorkspaceEnabled(
@@ -101,13 +108,12 @@ export async function setWorkspaceEnabled(
   enabled: boolean,
 ): Promise<Workspace | null> {
   const normalized = normalizeSubdomainInput(subdomain);
-  const workspaces = await listWorkspaces();
-  const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
-  if (index === -1) return null;
-
-  workspaces[index] = { ...workspaces[index], enabled };
-  await saveCollection(WORKSPACES_COLLECTION, workspaces);
-  return workspaces[index];
+  return mutateWorkspaceRegistry(async (workspaces) => {
+    const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
+    if (index === -1) return null;
+    workspaces[index] = { ...workspaces[index], enabled };
+    return workspaces[index];
+  });
 }
 
 export async function assertWorkspaceActive(subdomain: string): Promise<Workspace> {
@@ -163,17 +169,16 @@ export async function syncWorkspaceFromBranding(
   branding: Pick<BrandingSettings, 'madrasaName' | 'tagline'>,
 ): Promise<void> {
   const normalized = normalizeSubdomainInput(subdomain);
-  const workspaces = await listWorkspaces();
-  const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
-  if (index === -1) return;
-
-  const current = workspaces[index];
-  workspaces[index] = {
-    ...current,
-    madrasaName: branding.madrasaName.trim() || current.madrasaName,
-    tagline: branding.tagline?.trim() || current.tagline,
-  };
-  await saveCollection(WORKSPACES_COLLECTION, workspaces);
+  await mutateWorkspaceRegistry(async (workspaces) => {
+    const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
+    if (index === -1) return;
+    const current = workspaces[index];
+    workspaces[index] = {
+      ...current,
+      madrasaName: branding.madrasaName.trim() || current.madrasaName,
+      tagline: branding.tagline?.trim() || current.tagline,
+    };
+  });
 }
 
 export async function createWorkspace(workspaceInput: {
@@ -182,22 +187,13 @@ export async function createWorkspace(workspaceInput: {
   tagline?: string;
   country?: string;
 }): Promise<Workspace> {
-  return runInTransaction(async () => {
+  return mutateWorkspaceRegistry(async (workspaces) => {
     const subdomain = normalizeSubdomainInput(workspaceInput.subdomain);
     if (!isValidSubdomain(subdomain)) {
       throw Object.assign(new Error('Invalid subdomain. Use 2–63 lowercase letters, numbers, and hyphens.'), {
         statusCode: 400,
       });
     }
-
-    const db = getDb();
-    // We lock the workspaces collection row to serialize concurrent writes and prevent race conditions
-    const rows = await db
-      .select()
-      .from(collections)
-      .where(eq(collections.name, WORKSPACES_COLLECTION));
-
-    const workspaces: Workspace[] = rows[0] ? (rows[0].data as Workspace[]) : [];
 
     if (workspaces.some((ws) => ws.subdomain === subdomain)) {
       throw Object.assign(new Error('This workspace subdomain is already taken.'), {
@@ -216,7 +212,6 @@ export async function createWorkspace(workspaceInput: {
     };
 
     workspaces.push(workspace);
-    await saveCollection(WORKSPACES_COLLECTION, workspaces);
     return workspace;
   });
 }

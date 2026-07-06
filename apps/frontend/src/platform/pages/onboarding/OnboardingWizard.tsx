@@ -89,7 +89,12 @@ const initialData: OnboardingData = {
 
 /** Platform-protected wizard to provision a new madrasa workspace. */
 export default function OnboardingWizard(): React.JSX.Element {
-  const { isPlatformAuthenticated, platformAuthChecked, isCheckingPlatformAuth } = usePlatformAuth();
+  const {
+    platformUser,
+    isPlatformAuthenticated,
+    platformAuthChecked,
+    isCheckingPlatformAuth,
+  } = usePlatformAuth();
   const { onboard } = useAuth();
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
@@ -115,6 +120,10 @@ export default function OnboardingWizard(): React.JSX.Element {
   }
 
   if (!isPlatformAuthenticated) {
+    return <Navigate to={ROUTES.home} replace />;
+  }
+
+  if (platformUser?.role !== "super_user") {
     return <Navigate to={ROUTES.home} replace />;
   }
 

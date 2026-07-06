@@ -15,7 +15,10 @@ import { resolveSubdomainFromRequest } from '../../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
 import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from '../../services/auth/authCookieService.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { authenticatePlatform } from '../../middleware/authenticatePlatform.js';
+import {
+  authenticatePlatform,
+  type PlatformAuthenticatedRequest,
+} from '../../middleware/authenticatePlatform.js';
 import { deleteAuthArtifact } from '../../services/auth/authArtifactService.js';
 import { getJwtExpiresIn } from '../../services/globalSettingsService.js';
 import { getPublicUserById, getTenantUserProfile, updateOwnLinkedContact, changeTenantUserPassword } from '../../services/auth/userService.js';
@@ -103,46 +106,54 @@ export default async function authRoutes(
       '/onboard',
       { preHandler: authenticatePlatform },
       async (request, reply) => {
-      const parsed = parseRequest(onboardBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      const body = parsed.data;
+        const { platformUser } = request as PlatformAuthenticatedRequest;
+        if (platformUser.role !== 'super_user') {
+          return reply.status(403).send({
+            type: 'forbidden',
+            message: 'Only platform super-users can create madrasas',
+          });
+        }
 
-      try {
-        const result = await onboardUser({
-          email: body.email,
-          adminName: body.adminName,
-          password: body.password,
-          subdomain: body.subdomain,
-          madrasaName: body.madrasaName,
-          tagline: body.tagline,
-          country: body.country,
-          primaryColor: body.primaryColor,
-          secondaryColor: body.secondaryColor,
-          logoUrl: body.logoUrl,
-          adminPhone: body.adminPhone,
-          website: body.website,
-          footerText: body.footerText,
-          // Extended fields
-          faviconUrl: body.faviconUrl,
-          legalName: body.legalName,
-          registrationNumber: body.registrationNumber,
-          addressLine1: body.addressLine1,
-          addressLine2: body.addressLine2,
-          city: body.city,
-          region: body.region,
-          postalCode: body.postalCode,
-          socialLinks: body.socialLinks,
-        });
-        return reply.send(result);
-      } catch (error: unknown) {
-        const err = error as Error & { statusCode?: number };
-        const statusCode = err.statusCode ?? 500;
-        return reply.status(statusCode).send({
-          type: statusCode === 409 ? 'conflict' : 'server_error',
-          message: err.message || 'Onboarding failed'
-        });
-      }
-    });
+        const parsed = parseRequest(onboardBodySchema, request.body);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+        const body = parsed.data;
+
+        try {
+          const result = await onboardUser({
+            email: body.email,
+            adminName: body.adminName,
+            password: body.password,
+            subdomain: body.subdomain,
+            madrasaName: body.madrasaName,
+            tagline: body.tagline,
+            country: body.country,
+            primaryColor: body.primaryColor,
+            secondaryColor: body.secondaryColor,
+            logoUrl: body.logoUrl,
+            adminPhone: body.adminPhone,
+            website: body.website,
+            footerText: body.footerText,
+            // Extended fields
+            faviconUrl: body.faviconUrl,
+            legalName: body.legalName,
+            registrationNumber: body.registrationNumber,
+            addressLine1: body.addressLine1,
+            addressLine2: body.addressLine2,
+            city: body.city,
+            region: body.region,
+            postalCode: body.postalCode,
+            socialLinks: body.socialLinks,
+          });
+          return reply.send(result);
+        } catch (error: unknown) {
+          const err = error as Error & { statusCode?: number };
+          const statusCode = err.statusCode ?? 500;
+          return reply.status(statusCode).send({
+            type: statusCode === 409 ? 'conflict' : 'server_error',
+            message: err.message || 'Onboarding failed'
+          });
+        }
+      });
 
     inner.post('/2fa/verify', async (request, reply) => {
       const parsed = parseRequest(challengeCodeBodySchema, request.body ?? {});

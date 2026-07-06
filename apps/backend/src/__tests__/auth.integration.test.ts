@@ -41,6 +41,7 @@ const mockHasPlatformUsers = vi.fn();
 const mockFindPlatformUserByEmail = vi.fn();
 const mockUpdatePlatformUserPassword = vi.fn();
 const mockGetStoredPlatformUserById = vi.fn();
+const mockListPlatformWorkspaces = vi.fn();
 
 vi.mock('../services/platform/platformUserService.js', () => ({
   validatePlatformCredentials: (...args: unknown[]) => mockValidatePlatformCredentials(...args),
@@ -69,6 +70,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
     getWorkspaceBySubdomain: vi.fn().mockImplementation(async (subdomain: string) =>
       subdomain === 'demo' ? demoWorkspace : null,
     ),
+    listPlatformWorkspaces: (...args: unknown[]) => mockListPlatformWorkspaces(...args),
   };
 });
 
@@ -94,6 +96,7 @@ describe('auth routes', () => {
       createdAt: '2026-01-01T00:00:00.000Z',
     });
     mockUpdatePlatformUserPassword.mockReset();
+    mockListPlatformWorkspaces.mockReset().mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -502,6 +505,54 @@ describe('platform auth routes', () => {
       },
     });
     expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('POST /api/auth/onboard rejects non-super-user platform sessions', async () => {
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      role: 'admin',
+      tokenType: 'platform_access',
+    });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/onboard',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+      payload: {
+        madrasaName: 'Test Madrasa',
+        adminName: 'Admin',
+        email: 'admin@test.com',
+        password: 'password123',
+        subdomain: 'testmadrasa',
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
+    await app.close();
+  });
+
+  it('GET /api/platform/workspaces rejects non-super-user platform sessions', async () => {
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      role: 'admin',
+      tokenType: 'platform_access',
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/workspaces',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
+    expect(mockListPlatformWorkspaces).not.toHaveBeenCalled();
     await app.close();
   });
 

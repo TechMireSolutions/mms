@@ -3,6 +3,7 @@ import { WORKSPACES_COLLECTION } from '@mms/shared';
 
 const mocks = vi.hoisted(() => ({
   getCollection: vi.fn(),
+  getCollectionForUpdate: vi.fn(),
   getObject: vi.fn(),
   purgeTenantDataBySubdomain: vi.fn(),
   runInTransaction: vi.fn(),
@@ -11,6 +12,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../db/database.js', () => ({
   getCollection: mocks.getCollection,
+  getCollectionForUpdate: mocks.getCollectionForUpdate,
   getObject: mocks.getObject,
   purgeTenantDataBySubdomain: mocks.purgeTenantDataBySubdomain,
   runInTransaction: mocks.runInTransaction,
@@ -26,6 +28,7 @@ import { deleteWorkspace } from '../services/workspaceService.js';
 describe('workspaceService', () => {
   beforeEach(() => {
     mocks.getCollection.mockReset();
+    mocks.getCollectionForUpdate.mockReset();
     mocks.getObject.mockReset().mockResolvedValue(null);
     mocks.purgeTenantDataBySubdomain.mockReset().mockResolvedValue(undefined);
     mocks.runInTransaction.mockReset().mockImplementation(async (cb: () => Promise<unknown>) => cb());
@@ -33,7 +36,7 @@ describe('workspaceService', () => {
   });
 
   it('purges all tenant data before removing a platform workspace registry entry', async () => {
-    mocks.getCollection.mockResolvedValue([
+    mocks.getCollectionForUpdate.mockResolvedValue([
       {
         id: 'ws-demo',
         subdomain: 'demo',

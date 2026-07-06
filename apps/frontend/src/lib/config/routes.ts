@@ -24,6 +24,7 @@ export const ROUTES = {
   forgotPassword: "/forgot-password",
   platformForgotPassword: "/platform/forgot-password",
   platformAccount: "/platform/account",
+  platformAdmins: "/platform/admins",
   twoFactor: "/2fa",
   onboarding: "/onboarding",
 } as const;
@@ -51,6 +52,7 @@ export const PLATFORM_ENTRY_PATHS: readonly string[] = [
 export const PLATFORM_PROTECTED_PATHS: readonly string[] = [
   ROUTES.onboarding,
   ROUTES.platformAccount,
+  ROUTES.platformAdmins,
 ];
 
 /**

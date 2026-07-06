@@ -22,7 +22,15 @@ export default async function platformWorkspaceRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticatePlatform);
 
-  fastify.get('/', async (_request, reply) => {
+  fastify.get('/', async (request, reply) => {
+    const { platformUser } = request as PlatformAuthenticatedRequest;
+    if (platformUser.role !== 'super_user') {
+      return reply.status(403).send({
+        type: 'forbidden',
+        message: 'Only platform super-users can view workspaces',
+      });
+    }
+
     const workspaces = await listPlatformWorkspaces();
     return reply.send({ workspaces });
   });

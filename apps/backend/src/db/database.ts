@@ -209,6 +209,26 @@ export async function getCollection(name: string): Promise<unknown[] | null> {
   }
 }
 
+export async function getCollectionForUpdate(name: string): Promise<unknown[] | null> {
+  try {
+    const storageName = resolveCollectionStorageName(name);
+    await activeDb().insert(schema.collections)
+      .values({ name: storageName, data: [] })
+      .onConflictDoNothing();
+    const result = await activeDb().execute(sql`
+      SELECT data
+      FROM collections
+      WHERE name = ${storageName}
+      FOR UPDATE
+    `);
+    const row = getQueryRows<{ data: unknown[] }>(result)[0];
+    return row?.data ?? null;
+  } catch (error) {
+    console.error(`Error locking collection "${name}":`, error);
+    throw error;
+  }
+}
+
 export async function saveCollection(name: string, data: unknown[]): Promise<void> {
   try {
     const storageName = resolveCollectionStorageName(name);
