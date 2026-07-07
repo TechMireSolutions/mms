@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useModuleTierTabs, useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
+import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useConfigSubTabs } from '@/tenant/hooks/useConfigSubTabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Users as UsersIcon, Activity, UserPlus } from 'lucide-react';

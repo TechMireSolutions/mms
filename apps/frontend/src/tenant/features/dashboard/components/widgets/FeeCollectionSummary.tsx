@@ -3,7 +3,7 @@ import { TrendingUp } from "lucide-react";
 import { Invoice } from '@/lib/data/financeData';
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatMoney, getIntlLocaleForLanguage, formatMonthYear, formatMonthName } from "@mms/shared";
+import { formatMoney, formatMonthYear, formatMonthName } from "@mms/shared";
 
 /**
  * FeeCollectionSummary Component
@@ -14,8 +14,7 @@ import { formatMoney, getIntlLocaleForLanguage, formatMonthYear, formatMonthName
  * @returns {React.ReactElement} The fee collection summary widget.
  */
 export default function FeeCollectionSummary({ title }: { title?: string }) {
-  const { t, language } = useTranslation();
-  const locale = getIntlLocaleForLanguage(language);
+  const { t } = useTranslation();
   const invoices = useLiveCollection<Invoice>("finance_invoices");
 
   // Calculate overall metrics

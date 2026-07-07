@@ -73,7 +73,6 @@ export function EnrollmentList({
     onFilteredCountChange?.(filtered.length);
   }, [filtered.length, onFilteredCountChange]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginatedEnrollments = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const { data: students = [] } = useStudentsByIds(paginatedEnrollments.map((enrollment) => enrollment.studentId));
 

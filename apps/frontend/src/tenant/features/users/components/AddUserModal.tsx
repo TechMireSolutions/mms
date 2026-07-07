@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input as UiInput } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Textarea } from "@/components/ui/textarea";
 import type { Contact } from "@mms/shared";
 import {
   getPasswordPolicyHintKey,
@@ -34,7 +35,7 @@ import ContactPicker from '@/tenant/features/contacts/components/contactLink/Con
 import { getGlobalSettings } from "@/lib/db";
 import { useUsersConfig } from "@/tenant/features/users/hooks/useUsersConfig";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { FORM_INPUT, FORM_LABEL, FORM_TEXTAREA } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 
 const STEP_DEFS = [
   { id: 1, labelKey: "users.addStepContact" as const, icon: User },
@@ -342,8 +343,8 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                 <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
                   <Label required={field.required}>{field.label}</Label>
                   {field.type === "textarea" ? (
-                    <textarea
-                      className={FORM_TEXTAREA + " min-h-[60px]"}
+                    <Textarea
+                      className="min-h-[60px]"
                       value={value as string}
                       onChange={(e) => updateFieldValue(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterField", { label: field.label.toLowerCase() })}

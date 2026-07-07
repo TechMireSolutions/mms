@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/DatePicker";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
 import { Field } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT, FORM_TEXTAREA, FORM_SELECT } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactById } from "@/tenant/features/contacts/hooks/useContacts";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
@@ -157,15 +159,11 @@ export function TeacherForm({
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Details</h3>
         </div>
         <Field label={t("teachers.field.specialization") || "Specialization"}>
-          <select
-            className={FORM_SELECT}
+          <FormSelect
             value={teacherDraft.specialization || "General"}
-            onChange={(event) => updateDraft({ specialization: event.target.value })}
-          >
-            {TEACHER_SPECIALIZATION_VALUES.map((specialization) => (
-              <option key={specialization} value={specialization}>{specialization}</option>
-            ))}
-          </select>
+            onChange={(val) => updateDraft({ specialization: val })}
+            options={TEACHER_SPECIALIZATION_VALUES}
+          />
         </Field>
 
         <Field label="Qualification">
@@ -204,20 +202,16 @@ export function TeacherForm({
         </Field>
 
         <Field label={t("teachers.field.status") || "Status"}>
-          <select
-            className={FORM_SELECT}
+          <FormSelect
             value={teacherDraft.status || "active"}
-            onChange={(event) => updateDraft({ status: event.target.value as any })}
-          >
-            {TEACHER_STATUS_VALUES.map((status) => {
+            onChange={(val) => updateDraft({ status: val as any })}
+            options={TEACHER_STATUS_VALUES.map((status) => {
               const translationKey = `teachers.status.${status}` as AppTranslationKey;
               const translated = t(translationKey);
               const label = translated === translationKey ? status.charAt(0).toUpperCase() + status.slice(1) : translated;
-              return (
-                <option key={status} value={status}>{label}</option>
-              );
+              return { value: status, label };
             })}
-          </select>
+          />
         </Field>
 
         <Field label="Join Date">
@@ -228,11 +222,11 @@ export function TeacherForm({
         </Field>
 
         <Field label={t("teachers.field.notes") || "Notes"}>
-          <textarea
+          <Textarea
             value={teacherDraft.notes || ""}
             onChange={(event) => updateDraft({ notes: event.target.value })}
             placeholder="Employment notes..."
-            className={`${FORM_TEXTAREA} min-h-[80px]`}
+            className="min-h-[80px]"
           />
         </Field>
       </section>

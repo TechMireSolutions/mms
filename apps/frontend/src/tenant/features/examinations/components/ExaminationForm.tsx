@@ -4,6 +4,7 @@ import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/FormPrimitives";
 
@@ -11,7 +12,7 @@ import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessi
 import { notify } from "@/lib/notify";
 import { Exam } from '@/lib/data/examinationData';
 import { toTitleCase } from "@mms/shared";
-import { FORM_INPUT, FORM_TEXTAREA } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 
 const SUBJECTS = ["Tajweed", "Hifz", "Islamic Studies", "Arabic", "Aqeedah", "Quran Recitation", "Fiqh"];
 
@@ -248,10 +249,9 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
 
             <div className="sm:col-span-2">
               <Field label="Description">
-                <textarea
+                <Textarea
                   id="exam-desc"
-                  className={FORM_TEXTAREA}
-                  rows={2}
+                  name="description"
                   value={examDraft.description || ""}
                   onChange={(event) => updateDraft({ description: event.target.value })}
                   placeholder="Optional notes about this exam…"

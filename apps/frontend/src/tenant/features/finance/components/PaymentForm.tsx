@@ -9,7 +9,8 @@ import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { notify } from "@/lib/notify";
 import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
-import { FORM_INPUT, FORM_SELECT } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { formatMoney } from "@mms/shared";
 
 interface PaymentFormProps {
@@ -157,16 +158,13 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
             </div>
 
             <Field label="Method *" error={errors.method}>
-              <select
-                className={`${FORM_SELECT} cursor-pointer`}
+              <FormSelect
+                id="payment-method"
+                name="method"
                 value={paymentDraft.method || "Cash"}
-                onChange={(event) => updateDraft({ method: event.target.value })}
-                required
-              >
-                {PAYMENT_METHODS.map((method) => (
-                  <option key={method} value={method}>{method}</option>
-                ))}
-              </select>
+                onChange={(val) => updateDraft({ method: val })}
+                options={PAYMENT_METHODS}
+              />
             </Field>
 
             <Field label="Date *" error={errors.date}>

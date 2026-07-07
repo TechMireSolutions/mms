@@ -20,7 +20,7 @@ import {
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
-import { getCollection, getObject, saveObject, formatDate } from "@/lib/db";
+import { getCollection, getObject, saveObject } from "@/lib/db";
 import { formatDateTime } from "@/lib/utils";
 import { METADATA_FIELDS, VisualizerConfig, type ReportCollection } from "@/tenant/features/reports/components/reportMetadata";
 

@@ -4,7 +4,11 @@ import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { CalculatedFee } from '@/lib/data/enrollmentData';
 import { useEnrollmentConfig } from "@/tenant/features/enrollments/hooks/useEnrollmentConfig";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA, FORM_CHECKBOX } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface RowProps {
   label: string;
@@ -131,13 +135,13 @@ export function Step6Confirmation({
                 <label htmlFor="enrollment-notes" className={FORM_LABEL}>
                   Notes {field.required ? "*" : ""}
                 </label>
-                <textarea
+                <Textarea
                   id="enrollment-notes"
+                  name="notes"
                   value={notes}
                   onChange={(event) => onNotesChange(event.target.value)}
-                  rows={3}
                   placeholder="Any additional notes about this enrollment…"
-                  className={FORM_TEXTAREA}
+                  className="min-h-[80px]"
                   required={field.required}
                 />
               </div>
@@ -152,42 +156,38 @@ export function Step6Confirmation({
                   {field.label} {field.required ? "*" : ""}
                 </label>
                 {field.type === "textarea" ? (
-                  <textarea
-                    className={FORM_TEXTAREA}
-                    rows={3}
+                  <Textarea
+                    id={`custom-${field.id}`}
+                    name={field.id}
                     value={fieldValue}
                     onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
                     required={field.required}
                   />
                 ) : field.type === "select" ? (
-                  <select
-                    className={FORM_SELECT}
+                  <FormSelect
+                    id={`custom-${field.id}`}
+                    name={field.id}
                     value={fieldValue}
-                    onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
-                    required={field.required}
-                  >
-                    <option value="">Select option…</option>
-                    {field.options?.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => onCustomFieldChange(field.id, val)}
+                    options={field.options || []}
+                    placeholder="Select option…"
+                  />
                 ) : field.type === "boolean" ? (
                   <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
+                    <Checkbox
+                      id={`custom-${field.id}`}
+                      name={field.id}
                       checked={!!fieldValue}
-                      onChange={(event) => onCustomFieldChange(field.id, event.target.checked)}
-                      className={FORM_CHECKBOX}
+                      onCheckedChange={(checked) => onCustomFieldChange(field.id, checked)}
                     />
                     <span className="text-xs font-medium text-foreground">{field.label}</span>
                   </label>
                 ) : (
-                  <input
+                  <Input
+                    id={`custom-${field.id}`}
+                    name={field.id}
                     type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "email" ? "email" : field.type === "url" ? "url" : "text"}
-                    className={FORM_INPUT}
                     value={fieldValue}
                     onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}

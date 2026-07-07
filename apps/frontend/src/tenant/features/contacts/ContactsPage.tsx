@@ -6,7 +6,7 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { getPrimaryPhone, hasWhatsApp, Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab, getDisplayName } from "@mms/shared";
 import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModuleTierTabs, useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useContacts, useContactsCollection, useContactsPaginated, useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";

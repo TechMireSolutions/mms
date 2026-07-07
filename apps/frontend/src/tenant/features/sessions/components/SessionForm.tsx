@@ -4,7 +4,9 @@ import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT, FORM_TEXTAREA, FORM_SELECT } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { notify } from "@/lib/notify";
@@ -145,32 +147,24 @@ export function SessionForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Session Type">
-            <select
-              className={FORM_SELECT}
+            <FormSelect
               value={sessionDraft.type || "Hifz"}
-              onChange={(event) => updateDraft({ type: event.target.value })}
-            >
-              {SESSION_TYPES.map((tOpt) => (
-                <option key={tOpt} value={tOpt}>{tOpt}</option>
-              ))}
-            </select>
+              onChange={(val) => updateDraft({ type: val })}
+              options={SESSION_TYPES}
+            />
           </Field>
 
           <Field label="Status">
-            <select
-              className={FORM_SELECT}
+            <FormSelect
               value={sessionDraft.status || "active"}
-              onChange={(event) => updateDraft({ status: event.target.value })}
-            >
-              {SESSION_STATUSES.map((statusOption) => {
+              onChange={(val) => updateDraft({ status: val })}
+              options={SESSION_STATUSES.map((statusOption) => {
                 const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
                 const translated = t(translationKey);
                 const label = translated === translationKey ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : translated;
-                return (
-                  <option key={statusOption} value={statusOption}>{label}</option>
-                );
+                return { value: statusOption, label };
               })}
-            </select>
+            />
           </Field>
         </div>
 
@@ -191,11 +185,11 @@ export function SessionForm({
         </div>
 
         <Field label="Description">
-          <textarea
+          <Textarea
             value={sessionDraft.description || ""}
             onChange={(event) => updateDraft({ description: event.target.value })}
             placeholder="Describe session details, schedule, requirements..."
-            className={`${FORM_TEXTAREA} min-h-[80px]`}
+            className="min-h-[80px]"
           />
         </Field>
       </section>
@@ -224,15 +218,11 @@ export function SessionForm({
         </Field>
 
         <Field label="Currency">
-          <select
-            className={FORM_SELECT}
+          <FormSelect
             value={sessionDraft.currency || "PKR"}
-            onChange={(event) => updateDraft({ currency: event.target.value })}
-          >
-            {CURRENCIES.map((currency) => (
-              <option key={currency} value={currency}>{currency}</option>
-            ))}
-          </select>
+            onChange={(val) => updateDraft({ currency: val })}
+            options={CURRENCIES}
+          />
         </Field>
       </section>
     </div>

@@ -35,7 +35,7 @@ interface FinancialReportProps {
   onEditVisual?: (config: unknown) => void;
 }
 
-import { formatMoney as PKR, getIntlLocaleForLanguage, formatMonthYear } from "@mms/shared";
+import { formatMoney as PKR, formatMonthYear } from "@mms/shared";
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
   paid:      "bg-success/10 text-success",
@@ -53,8 +53,7 @@ const STATUS_COLOR: Record<InvoiceStatus, string> = {
  * @returns The FinancialReport component.
  */
 export default function FinancialReport({ filters }: FinancialReportProps): React.JSX.Element {
-  const { t, language } = useTranslation();
-  const locale = getIntlLocaleForLanguage(language);
+  const { t } = useTranslation();
   const palette = useBrandPalette();
   const PIE_COLORS = useMemo(
     () => [palette.primary, palette.secondary, palette.charts[2], palette.charts[3], palette.charts[0]],

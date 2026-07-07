@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Search, UserPlus, Eye, Pencil, KeyRound,
+import { UserPlus, Eye, Pencil, KeyRound,
   CheckCircle2, XCircle,
   Power,
 } from 'lucide-react';
+import { SearchBar } from '@/components/ui/SearchBar';
+import { FormSelect } from '@/components/ui/FormSelect';
 import {
   type SystemUser,
   workspaceRoleLabel,
@@ -93,45 +94,41 @@ export function UsersList({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[180px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            id="user-search"
-            name="user-search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={t('users.searchPlaceholder')}
-            className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-        <select
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder={t('users.searchPlaceholder')}
+          className="min-w-[180px] flex-1"
+        />
+        <FormSelect
           id="role-filter"
           name="role-filter"
           value={roleFilter}
-          onChange={(event) => setRoleFilter(event.target.value)}
-          className="rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          onChange={setRoleFilter}
+          options={[
+            { value: 'all', label: t('users.filterAllRoles') },
+            ...workspaceRoles.map((workspaceRole) => ({
+              value: workspaceRole.id,
+              label: workspaceRoleLabel(workspaceRole, t),
+            })),
+          ]}
           aria-label={t('users.filterRole')}
-        >
-          <option value="all">{t('users.filterAllRoles')}</option>
-          {workspaceRoles.map((workspaceRole) => (
-            <option key={workspaceRole.id} value={workspaceRole.id}>
-              {workspaceRoleLabel(workspaceRole, t)}
-            </option>
-          ))}
-        </select>
-        <select
+          className="w-auto"
+        />
+        <FormSelect
           id="status-filter"
           name="status-filter"
           value={statusFilter}
-          onChange={(event) => setStatus(event.target.value)}
-          className="rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          onChange={setStatus}
+          options={[
+            { value: 'all', label: t('users.filterAllStatuses') },
+            { value: 'active', label: t('users.status.active') },
+            { value: 'inactive', label: t('users.status.inactive') },
+            { value: 'suspended', label: t('users.status.suspended') },
+          ]}
           aria-label={t('users.filterStatus')}
-        >
-          <option value="all">{t('users.filterAllStatuses')}</option>
-          <option value="active">{t('users.status.active')}</option>
-          <option value="inactive">{t('users.status.inactive')}</option>
-          <option value="suspended">{t('users.status.suspended')}</option>
-        </select>
+          className="w-auto"
+        />
       </div>
 
       <AnimatePresence>

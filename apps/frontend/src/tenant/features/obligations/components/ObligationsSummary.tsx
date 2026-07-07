@@ -15,8 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 
-import { useTranslation } from "@/hooks/useTranslation";
-import { getIntlLocaleForLanguage, formatMoney, formatMonthYear } from "@mms/shared";
+
+import { formatMoney, formatMonthYear } from "@mms/shared";
 
 interface StatCardProps {
   label: string;
@@ -99,8 +99,6 @@ export interface ObligationsSummaryProps {
 export function ObligationsSummary({
   collections, obligationTypes, reps, mujtahids, wakalaTypes, distributions
 }: ObligationsSummaryProps) {
-  const { t, language } = useTranslation();
-  const locale = getIntlLocaleForLanguage(language);
   const users = useMergedObligationUsers();
   const { primary, secondary, charts } = useBrandPalette();
   const COLORS = useMemo(() => [primary, charts[3], secondary, charts[4], charts[0], charts[2]], [primary, secondary, charts]);
@@ -241,7 +239,7 @@ export function ObligationsSummary({
       ...monthlyEntry,
       label: formatMonthYear(monthlyEntry.month + "-01"),
     }));
-  }, [filtered, locale]);
+  }, [filtered]);
 
   const hasFilters = dateFrom || dateTo || repFilter !== "all" || typeFilter !== "all" || userFilter !== "all" || search;
 

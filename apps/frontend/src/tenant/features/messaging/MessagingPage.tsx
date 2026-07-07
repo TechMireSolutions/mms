@@ -9,7 +9,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
-import { useModuleTierTabs, useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
+import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { ActionButton } from "@/components/ui/ActionButton";

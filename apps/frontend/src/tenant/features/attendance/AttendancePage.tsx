@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModuleTierTabs, useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCheck, ClipboardEdit, BookOpen, BarChart2,

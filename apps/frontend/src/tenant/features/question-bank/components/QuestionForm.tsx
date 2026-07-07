@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { useTranslation } from '@/hooks/useTranslation';
+import { Textarea } from '@/components/ui/textarea';
 import { notify } from '@/lib/notify';
-import { FORM_INPUT, FORM_SELECT, FORM_TEXTAREA, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_INPUT, FORM_SELECT, FORM_LABEL } from '@/components/ui/formStyles';
 import { Field } from "@/components/ui/FormPrimitives";
 import {
   APP_LANGUAGES,
@@ -195,10 +196,9 @@ export function QuestionForm({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Field label="Question Text" required error={errors.text}>
-                <textarea
+                <Textarea
                   id="qb-text"
-                  className={FORM_TEXTAREA}
-                  rows={3}
+                  name="text"
                   value={questionDraft.text || ''}
                   onChange={(e) => updateDraft({ text: e.target.value })}
                   placeholder="Type the question content..."
@@ -292,10 +292,9 @@ export function QuestionForm({
             {questionDraft.type === 'short' && (
               <div className="sm:col-span-2">
                 <Field label="Model Answer">
-                  <textarea
+                  <Textarea
                     id="qb-answer"
-                    className={FORM_TEXTAREA}
-                    rows={2}
+                    name="answer"
                     value={questionDraft.answer || ''}
                     onChange={(e) => updateDraft({ answer: e.target.value })}
                     placeholder="Enter the correct standard answer key..."

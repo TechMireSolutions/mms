@@ -3,7 +3,8 @@ import { ReceiptText, User, Hash, School, Calendar, DollarSign, Tag } from "luci
 import type { Invoice } from "@/lib/data/financeData";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/Modal";
 import { formatMoney } from "@mms/shared";
@@ -219,18 +220,19 @@ export function InvoiceForm({
               <label className={FORM_LABEL} htmlFor="invoice-discount-type">
                 Discount type
               </label>
-              <select
+              <FormSelect
                 id="invoice-discount-type"
-                className={FORM_SELECT}
+                name="discountType"
                 value={draft.discountType}
-                onChange={(event) => setField("discountType", event.target.value)}
-              >
-                <option value="">None</option>
-                <option value="manual">Manual</option>
-                <option value="sibling">Sibling</option>
-                <option value="scholarship">Scholarship</option>
-                <option value="staff">Staff</option>
-              </select>
+                onChange={(value) => setField("discountType", value)}
+                options={[
+                  { value: "", label: "None" },
+                  { value: "manual", label: "Manual" },
+                  { value: "sibling", label: "Sibling" },
+                  { value: "scholarship", label: "Scholarship" },
+                  { value: "staff", label: "Staff" }
+                ]}
+              />
             </div>
             <div>
               <label className={FORM_LABEL} htmlFor="invoice-discount-value">

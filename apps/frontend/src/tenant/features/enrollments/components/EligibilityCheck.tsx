@@ -2,7 +2,8 @@ import React, { useState, useMemo } from "react";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { calcAge } from '@/lib/data/studentsData';
 import { runFullEligibility, suggestClass, CheckResult } from '@/lib/data/enrollmentData';
-import { FORM_LABEL, FORM_SELECT } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { RegistryPersonSelect } from "@/components/ui/RegistryPersonSelect";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
@@ -61,15 +62,17 @@ export function EligibilityCheck(): React.ReactElement {
         />
         <div>
           <label htmlFor="select-session" className={FORM_LABEL}>Session</label>
-          <select
+          <FormSelect
             id="select-session"
+            name="select-session"
             value={sessionId}
-            onChange={(event) => setSessionId(event.target.value)}
-            className={FORM_SELECT}
-          >
-            <option value="">— Select session —</option>
-            {sessions.map((sessionOption) => <option key={sessionOption.id} value={sessionOption.id}>{sessionOption.name}</option>)}
-          </select>
+            onChange={setSessionId}
+            options={sessions.map((sessionOption) => ({
+              value: sessionOption.id,
+              label: sessionOption.name,
+            }))}
+            placeholder="— Select session —"
+          />
         </div>
       </div>
 

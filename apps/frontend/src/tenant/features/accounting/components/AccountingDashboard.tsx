@@ -9,7 +9,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { computeFinancials, Account, JournalEntry, AccountingSettings, FiscalYear } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
-import { getIntlLocaleForLanguage } from "@mms/shared";
+
 
 interface KpiCardProps {
   label: string;
@@ -120,8 +120,7 @@ interface AccountingDashboardProps {
  * @returns {React.ReactElement}
  */
 export function AccountingDashboard({ accounts, entries, settings: _settings, fiscalYears: _fiscalYears, formatCurrency }: AccountingDashboardProps) {
-  const { t, language } = useTranslation();
-  const locale = getIntlLocaleForLanguage(language);
+  const { t } = useTranslation();
   const { primary, secondary, charts } = useBrandPalette();
   const pieColors = useMemo(() => [...charts], [charts]);
 
@@ -148,7 +147,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
       ...monthTotal,
       month: formatMonthName(monthTotal.month + "-01"),
     }));
-  }, [postedEntries, accounts, locale]);
+  }, [postedEntries, accounts]);
 
   // Expense breakdown for pie
   const expenseBreakdown = useMemo(() => {

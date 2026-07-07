@@ -9,7 +9,8 @@ import { useContactById } from '@/tenant/features/contacts/hooks/useContacts';
 import { FormModal } from '@/components/ui/FormModal';
 import ContactPicker from '@/tenant/features/contacts/components/contactLink/ContactPicker';
 import { Button } from '@/components/ui/button';
-import { FORM_SELECT, FORM_CHECKBOX } from '@/components/ui/formStyles';
+import { FORM_CHECKBOX } from '@/components/ui/formStyles';
+import { FormSelect } from '@/components/ui/FormSelect';
 import {
   Form,
   FormControl,
@@ -143,18 +144,16 @@ export function InviteUserModal({
               <FormItem>
                 <FormLabel htmlFor="invite-status">{t('users.fieldStatus')}</FormLabel>
                 <FormControl>
-                  <select
+                  <FormSelect
                     id="invite-status"
+                    name="invite-status"
                     value={field.value}
-                    onChange={(event) => field.onChange(event.target.value as SystemUser['status'])}
-                    className={FORM_SELECT}
-                  >
-                    {USER_STATUS_VALUES.map((status) => (
-                      <option key={status} value={status}>
-                        {t(`users.status.${status}`)}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={field.onChange}
+                    options={USER_STATUS_VALUES.map((status) => ({
+                      value: status,
+                      label: t(`users.status.${status}`),
+                    }))}
+                  />
                 </FormControl>
               </FormItem>
             )}

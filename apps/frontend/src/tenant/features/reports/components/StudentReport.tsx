@@ -17,8 +17,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import EnrollmentChart from "@/tenant/features/dashboard/components/widgets/charts/EnrollmentChart";
 
 /** Sub-tab labels available within the student report. */
-const SUB_TABS = ["Student List", "Enrollment History"] as const;
-type SubTab = (typeof SUB_TABS)[number];
+const _SUB_TABS = ["Student List", "Enrollment History"] as const;
+type SubTab = (typeof _SUB_TABS)[number];
 
 export interface ReportStudent {
   id: string;

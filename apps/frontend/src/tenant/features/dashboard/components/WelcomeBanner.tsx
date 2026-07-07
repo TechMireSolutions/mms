@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
-import { getIntlLocaleForLanguage, formatDayName, formatLongDate, formatHijriDate } from '@mms/shared';
+import { formatDayName, formatLongDate, formatHijriDate } from '@mms/shared';
 import type { AppTranslationKey } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
@@ -27,7 +27,7 @@ const BADGE_BY_ROLE: Record<DashboardRole, AppTranslationKey> = {
 
 /** Dashboard welcome header with dashboardRole-specific messaging and localized date. */
 export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): React.JSX.Element {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const sessions = useSessionsCollection({ enabled: true });
   const { data: studentMetrics } = useStudentsMetrics({ enabled: dashboardRole === 'admin' });

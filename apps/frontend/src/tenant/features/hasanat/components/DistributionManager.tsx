@@ -13,7 +13,7 @@ import {
 } from "@mms/shared";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
-import { FORM_INPUT, FORM_TEXTAREA, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { RegistryPersonSelect } from "@/components/ui/RegistryPersonSelect";
 import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -304,8 +305,9 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                       {field.label} {field.required ? "*" : ""}
                     </label>
                     {field.type === "textarea" ? (
-                      <textarea
-                        className={FORM_TEXTAREA + " min-h-[80px] py-2"}
+                      <Textarea
+                        id={`custom-${field.id}`}
+                        name={field.id}
                         value={fieldValue as string}
                         onChange={(event) => updateField(field.id as any, event.target.value as any)}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}

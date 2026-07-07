@@ -9,7 +9,8 @@ import { useContactById } from '@/tenant/features/contacts/hooks/useContacts';
 import { FormModal } from '@/components/ui/FormModal';
 import ContactPicker from '@/tenant/features/contacts/components/contactLink/ContactPicker';
 import { Button } from '@/components/ui/button';
-import { FORM_SELECT, FORM_CHECKBOX } from '@/components/ui/formStyles';
+import { FormSelect } from '@/components/ui/FormSelect';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -139,18 +140,16 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
               <FormItem>
                 <FormLabel htmlFor="edit-user-status">{t('users.fieldStatus')}</FormLabel>
                 <FormControl>
-                  <select
+                  <FormSelect
                     id="edit-user-status"
+                    name="edit-user-status"
                     value={field.value}
-                    onChange={(event) => field.onChange(event.target.value as SystemUser['status'])}
-                    className={FORM_SELECT}
-                  >
-                    {USER_STATUS_VALUES.map((status) => (
-                      <option key={status} value={status}>
-                        {t(`users.status.${status}`)}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={field.onChange}
+                    options={USER_STATUS_VALUES.map((status) => ({
+                      value: status,
+                      label: t(`users.status.${status}`),
+                    }))}
+                  />
                 </FormControl>
               </FormItem>
             )}
@@ -161,13 +160,11 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
             render={({ field }) => (
               <FormItem>
                 <label htmlFor={field.name} className="flex cursor-pointer items-center gap-2">
-                  <input
+                  <Checkbox
                     id={field.name}
                     name={field.name}
-                    type="checkbox"
                     checked={field.value}
-                    onChange={(event) => field.onChange(event.target.checked)}
-                    className={FORM_CHECKBOX}
+                    onCheckedChange={field.onChange}
                   />
                   <span className="text-xs font-medium text-foreground">{t('users.field2fa')}</span>
                 </label>

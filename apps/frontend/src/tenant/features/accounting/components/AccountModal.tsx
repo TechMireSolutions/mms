@@ -5,7 +5,11 @@ import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccou
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA, FORM_CHECKBOX } from "@/components/ui/formStyles";
+import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 
 interface AccountModalProps {
   initial: Account | null;
@@ -73,7 +77,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="code">
                 <label htmlFor="account-code" className={FORM_LABEL}>Account Code *</label>
-                <input id="account-code" value={form.code || ""} onChange={(event) => setForm({ ...form, code: event.target.value })} placeholder="e.g. 1000" className={FORM_INPUT} required />
+                <Input id="account-code" name="code" value={form.code || ""} onChange={(event) => setForm({ ...form, code: event.target.value })} placeholder="e.g. 1000" required />
               </div>
             );
           }
@@ -82,9 +86,13 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="type">
                 <label htmlFor="account-type" className={FORM_LABEL}>Type *</label>
-                <select id="account-type" value={form.type || "Asset"} onChange={(event) => setForm({ ...form, type: event.target.value as AccountType, subtype: "" })} className={FORM_INPUT} required>
-                  {ACCOUNT_TYPES.map((accountType) => <option key={accountType} value={accountType}>{accountType}</option>)}
-                </select>
+                <FormSelect
+                  id="account-type"
+                  name="type"
+                  value={form.type || "Asset"}
+                  onChange={(val) => setForm({ ...form, type: val as AccountType, subtype: "" })}
+                  options={ACCOUNT_TYPES}
+                />
               </div>
             );
           }
@@ -93,7 +101,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="name" className="sm:col-span-2">
                 <label htmlFor="account-name" className={FORM_LABEL}>Account Name *</label>
-                <input id="account-name" value={form.name || ""} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Cash in Hand" className={FORM_INPUT} required />
+                <Input id="account-name" name="name" value={form.name || ""} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Cash in Hand" required />
               </div>
             );
           }
@@ -103,10 +111,14 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="subtype" className="sm:col-span-2">
                 <label htmlFor="account-subtype" className={FORM_LABEL}>Sub-type {isRequired ? "*" : ""}</label>
-                <select id="account-subtype" value={form.subtype || ""} onChange={(event) => setForm({ ...form, subtype: event.target.value })} className={FORM_INPUT} required={isRequired}>
-                  <option value="">— None —</option>
-                  {subtypes.map((subtype) => <option key={subtype} value={subtype}>{subtype}</option>)}
-                </select>
+                <FormSelect
+                  id="account-subtype"
+                  name="subtype"
+                  value={form.subtype || ""}
+                  onChange={(val) => setForm({ ...form, subtype: val })}
+                  options={subtypes}
+                  placeholder="— None —"
+                />
               </div>
             );
           }
@@ -116,7 +128,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="description" className="sm:col-span-2">
                 <label htmlFor="account-description" className={FORM_LABEL}>Description {isRequired ? "*" : ""}</label>
-                <input id="account-description" value={form.description || ""} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Optional description…" className={FORM_INPUT} required={isRequired} />
+                <Input id="account-description" name="description" value={form.description || ""} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Optional description…" required={isRequired} />
               </div>
             );
           }
@@ -129,39 +141,38 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                   {field.label} {field.required ? "*" : ""}
                 </label>
                 {field.type === "textarea" ? (
-                  <textarea
-                    className={FORM_TEXTAREA}
+                  <Textarea
+                    id={`account-${field.id}`}
+                    name={field.id}
                     value={value as string}
                     onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
                     required={field.required}
                   />
                 ) : field.type === "select" ? (
-                  <select
-                    className={FORM_SELECT}
+                  <FormSelect
+                    id={`account-${field.id}`}
+                    name={field.id}
                     value={value as string}
-                    onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
-                    required={field.required}
-                  >
-                    <option value="">Select option…</option>
-                    {field.options?.map((option: string) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => setForm((previousForm) => ({ ...previousForm, [field.id]: val }))}
+                    options={field.options || []}
+                    placeholder="— None —"
+                  />
                 ) : field.type === "boolean" ? (
                   <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
+                    <Checkbox
+                      id={`account-${field.id}`}
+                      name={field.id}
                       checked={!!value}
-                      onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.checked }))}
-                      className={FORM_CHECKBOX}
+                      onCheckedChange={(checked) => setForm((previousForm) => ({ ...previousForm, [field.id]: !!checked }))}
                     />
                     <span className="text-xs font-medium text-foreground">{field.label}</span>
                   </label>
                 ) : field.type === "number" ? (
-                  <input
+                  <Input
+                    id={`account-${field.id}`}
+                    name={field.id}
                     type="number"
-                    className={FORM_INPUT}
                     value={value as number}
                     onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
                     placeholder={field.placeholder || "Enter number…"}
@@ -169,14 +180,17 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                   />
                 ) : field.type === "date" ? (
                   <DatePicker
+                    id={`account-${field.id}`}
+                    name={field.id}
                     value={value as string}
                     onChange={(dateValue) => setForm((previousForm) => ({ ...previousForm, [field.id]: dateValue }))}
                     required={field.required}
                   />
                 ) : (
-                  <input
+                  <Input
+                    id={`account-${field.id}`}
+                    name={field.id}
                     type="text"
-                    className={FORM_INPUT}
                     value={value as string}
                     onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}

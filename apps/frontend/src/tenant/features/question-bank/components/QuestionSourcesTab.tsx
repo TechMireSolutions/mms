@@ -19,10 +19,11 @@ import {
   removeQuestionSourceBook,
 } from '@/lib/data/questionBankSourceBooks';
 import { FormModal } from '@/components/ui/FormModal';
-import { FORM_INPUT, FORM_TEXTAREA, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { Textarea } from '@/components/ui/textarea';
 
 
 type TranslateFn = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
@@ -51,10 +52,9 @@ function renderSourceInput(
     return (
       <div key={field.id} className="sm:col-span-2">
         <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
-        <textarea
+        <Textarea
           id={inputId}
-          className={`${FORM_TEXTAREA} resize-none`}
-          rows={2}
+          name={field.id}
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />
