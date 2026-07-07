@@ -190,6 +190,85 @@ export async function prepareContactRecord(contact: Contact, id?: string | numbe
   return applyTitleCaseToContact({ ...withPhones, id: resolvedId }) as Contact;
 }
 
+const SOURCE_AS_CHILD_TERMS = new Set(['father', 'mother', 'parent']);
+const SOURCE_AS_PARENT_TERMS = new Set(['son', 'daughter', 'child']);
+const SOURCE_AS_SIBLING_TERMS = new Set(['brother', 'sister', 'sibling']);
+const SPOUSE_TERMS = new Set(['spouse', 'husband', 'wife']);
+const SOURCE_AS_GUARDIAN_TERMS = new Set(['guardian']);
+const SOURCE_AS_DEPENDENT_TERMS = new Set(['dependent', 'ward']);
+
+function normalizeRelationshipTerm(relationship: unknown): string {
+  return typeof relationship === 'string' ? relationship.trim().toLowerCase() : '';
+}
+
+function genderedRelationship(contact: Contact, maleTerm: string, femaleTerm: string): string {
+  const gender = typeof contact.gender === 'string' ? contact.gender.trim().toLowerCase() : '';
+  return gender === 'female' || gender === 'f' || gender === 'woman' || gender === 'girl'
+    ? femaleTerm
+    : maleTerm;
+}
+
+function reciprocalEmergencyRelationship(sourceContact: Contact, assignedRelationship: unknown): string {
+  const relationship = normalizeRelationshipTerm(assignedRelationship);
+  if (SOURCE_AS_CHILD_TERMS.has(relationship)) return genderedRelationship(sourceContact, 'Son', 'Daughter');
+  if (SOURCE_AS_PARENT_TERMS.has(relationship)) return genderedRelationship(sourceContact, 'Father', 'Mother');
+  if (SOURCE_AS_SIBLING_TERMS.has(relationship)) return genderedRelationship(sourceContact, 'Brother', 'Sister');
+  if (SPOUSE_TERMS.has(relationship)) return 'Spouse';
+  if (SOURCE_AS_GUARDIAN_TERMS.has(relationship)) return 'Dependent';
+  if (SOURCE_AS_DEPENDENT_TERMS.has(relationship)) return 'Guardian';
+  return 'Other';
+}
+
+async function applyEmergencyReciprocalLinks(tenant: string, sourceContact: Contact): Promise<void> {
+  const sourceId = String(sourceContact.id);
+  const emergencyContacts = sourceContact.emergencyContacts ?? [];
+  const linkedIds = Array.from(
+    new Set(
+      emergencyContacts
+        .map((entry) => entry.contactId)
+        .filter((contactId) => contactId != null && String(contactId).trim() && String(contactId) !== sourceId)
+        .map(String),
+    ),
+  );
+  if (linkedIds.length === 0) return;
+
+  const linkedContacts = await findContactsByIds(tenant, linkedIds);
+  const linkedById = new Map(linkedContacts.map((contact) => [String(contact.id), contact]));
+  const updatesById = new Map<string, Contact>();
+
+  for (const emergencyContact of emergencyContacts) {
+    const linkedId = emergencyContact.contactId == null ? '' : String(emergencyContact.contactId);
+    if (!linkedId || linkedId === sourceId) continue;
+
+    const linkedContact = updatesById.get(linkedId) ?? linkedById.get(linkedId);
+    if (!linkedContact || linkedContact.deletedAt) continue;
+
+    const inverseRelationship = reciprocalEmergencyRelationship(sourceContact, emergencyContact.relationship);
+    const existingEmergencyContacts = linkedContact.emergencyContacts ?? [];
+    const existingIndex = existingEmergencyContacts.findIndex((entry) => String(entry.contactId) === sourceId);
+    const reciprocalEntry = {
+      contactId: sourceId,
+      relationship: inverseRelationship,
+    };
+    const nextEmergencyContacts =
+      existingIndex >= 0
+        ? existingEmergencyContacts.map((entry, index) =>
+            index === existingIndex ? { ...entry, ...reciprocalEntry } : entry,
+          )
+        : [...existingEmergencyContacts, reciprocalEntry];
+
+    updatesById.set(linkedId, {
+      ...linkedContact,
+      emergencyContacts: nextEmergencyContacts,
+    });
+  }
+
+  const updates = Array.from(updatesById.values());
+  if (updates.length > 0) {
+    await bulkSaveContacts(tenant, updates);
+  }
+}
+
 export async function upsertContact(contact: Contact): Promise<{
   contact: Contact;
   created: boolean;
@@ -210,6 +289,7 @@ export async function upsertContact(contact: Contact): Promise<{
   }
 
   await saveContact(tenant, saved);
+  await applyEmergencyReciprocalLinks(tenant, saved);
   await invalidateDuplicateScanCache();
   return { contact: saved, created, restoredFromDelete: restoredFromDelete || undefined };
 }
@@ -223,6 +303,7 @@ export async function updateContactById(id: string, contact: Contact): Promise<C
   }
   const contactWithId = await prepareContactRecord({ ...contact, id }, id);
   await saveContact(tenant, contactWithId);
+  await applyEmergencyReciprocalLinks(tenant, contactWithId);
   await invalidateDuplicateScanCache();
   return contactWithId;
 }

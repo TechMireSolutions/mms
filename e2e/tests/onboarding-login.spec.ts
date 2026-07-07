@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -8,6 +8,12 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'e2e-test-jwt-secret-key-at-l
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+async function waitForToastOverlayToClear(page: Page, context: string): Promise<void> {
+  await page
+    .waitForFunction(() => !document.querySelector('.fixed [data-state="open"]'), null, { timeout: 10000 })
+    .catch(() => console.log(`Toast overlay still visible ${context}.`));
+}
 
 test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
   // Generate a unique subdomain for each test run to prevent tenant conflicts in the database
@@ -225,6 +231,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     // Verify contact Jane Doe is listed and visible in the active contacts tab
     await page.waitForSelector('tbody tr:has-text("Jane Doe") >> visible=true');
     console.log('Contact Jane Doe successfully created.');
+    await waitForToastOverlayToClear(page, 'after creating Jane Doe; continuing with contact flow');
 
     // Create Father Contact (John Doe)
     console.log('Creating contact John Doe...');
@@ -234,6 +241,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.fill('#lastName input', 'Doe');
     await page.click('#gender button');
     await page.click('role=option[name="Male"]');
+    await waitForToastOverlayToClear(page, 'before saving John Doe');
     await page.click('button:has-text("Save")');
     await expect(page.getByRole('dialog', { name: 'Add New Contact' })).toBeHidden();
     await page.waitForSelector('tbody tr:has-text("John Doe") >> visible=true');
