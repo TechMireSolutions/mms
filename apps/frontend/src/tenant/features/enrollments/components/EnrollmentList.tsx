@@ -11,7 +11,6 @@ import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 
 const PAGE_SIZE = 12;

@@ -3,7 +3,6 @@ import { Pencil, Trash2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';

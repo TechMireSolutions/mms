@@ -9,7 +9,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 
 interface ColumnCustomizerProps {

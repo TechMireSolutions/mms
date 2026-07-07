@@ -8,7 +8,6 @@ import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
 import { useStudentsByIds, useStudentsPaginated } from "@/tenant/features/students/hooks/useStudents";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 interface Step1SelectStudentProps {
   value: Student | null | undefined;

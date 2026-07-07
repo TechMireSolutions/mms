@@ -5,7 +5,6 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { JournalEntry, Account } from '@/lib/data/accountingData';
 import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 // Money-in account IDs (asset accounts that receive income)
