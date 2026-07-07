@@ -1,10 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Invoice, Payment } from '@mms/shared';
 import { FINANCE_MODULE_CONTRACT } from '@mms/shared';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
-import { useSyncedCollection } from '@/hooks/useSyncedCollection';
+import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 export const FINANCE_INVOICES_QUERY_KEY = ['finance', 'invoices', 'list'] as const;
 export const FINANCE_PAYMENTS_QUERY_KEY = ['finance', 'payments', 'list'] as const;
@@ -12,60 +10,44 @@ export const FINANCE_METRICS_QUERY_KEY = ['finance', 'metrics'] as const;
 
 const FINANCE_API = FINANCE_MODULE_CONTRACT.restBasePath;
 
-async function fetchInvoices(): Promise<Invoice[]> {
-  const invoicesResponse = await apiJson<{ invoices: Invoice[] }>(`${FINANCE_API}/invoices`);
-  saveCollection('finance_invoices', invoicesResponse.invoices);
-  return invoicesResponse.invoices;
-}
-
-async function fetchPayments(): Promise<Payment[]> {
-  const paymentsResponse = await apiJson<{ payments: Payment[] }>(`${FINANCE_API}/payments`);
-  saveCollection('finance_payments', paymentsResponse.payments);
-  return paymentsResponse.payments;
-}
-
 export function useFinanceInvoices(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<Invoice>({
     queryKey: FINANCE_INVOICES_QUERY_KEY,
-    queryFn: fetchInvoices,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${FINANCE_API}/invoices`,
+    responseKey: 'invoices',
+    collectionName: 'finance_invoices',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useFinancePayments(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<Payment>({
     queryKey: FINANCE_PAYMENTS_QUERY_KEY,
-    queryFn: fetchPayments,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${FINANCE_API}/payments`,
+    responseKey: 'payments',
+    collectionName: 'finance_payments',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useFinanceInvoicesCollection(options?: { enabled?: boolean }): Invoice[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useFinanceInvoices({ enabled });
-  return useSyncedCollection<Invoice>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<Invoice>({
+    queryKey: FINANCE_INVOICES_QUERY_KEY,
+    apiPath: `${FINANCE_API}/invoices`,
+    responseKey: 'invoices',
     collectionName: 'finance_invoices',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useFinancePaymentsCollection(options?: { enabled?: boolean }): Payment[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useFinancePayments({ enabled });
-  return useSyncedCollection<Payment>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<Payment>({
+    queryKey: FINANCE_PAYMENTS_QUERY_KEY,
+    apiPath: `${FINANCE_API}/payments`,
+    responseKey: 'payments',
     collectionName: 'finance_payments',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useFinanceMutations() {

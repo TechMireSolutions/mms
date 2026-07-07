@@ -1,11 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { SessionsCommandMetricsSnapshot } from '@mms/shared';
 import { SESSIONS_MODULE_CONTRACT } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
-import { useSyncedCollection } from '@/hooks/useSyncedCollection';
+import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
 
 export const SESSIONS_QUERY_KEY = ['sessions', 'list'] as const;
@@ -13,21 +11,16 @@ export const SESSIONS_METRICS_QUERY_KEY = ['sessions', 'metrics'] as const;
 
 const SESSIONS_API = SESSIONS_MODULE_CONTRACT.restBasePath;
 
-async function fetchSessions(): Promise<Session[]> {
-  const sessionsResponse = await apiJson<{ sessions: Session[] }>(SESSIONS_API);
-  saveCollection('sessions', sessionsResponse.sessions);
-  return sessionsResponse.sessions;
-}
-
 export function useSessions(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<Session>({
     queryKey: SESSIONS_QUERY_KEY,
-    queryFn: fetchSessions,
-    enabled: isAuthenticated && queryEnabled,
+    apiPath: SESSIONS_API,
+    responseKey: 'sessions',
+    collectionName: 'sessions',
+    defaultData: SESSIONS_DATA,
     staleTime: 15_000,
-  });
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useSessionMutations() {
@@ -66,15 +59,15 @@ export function useSessionMutations() {
 
 /** Query-first sessions; falls back to localStorage cache (hydrated). */
 export function useSessionsCollection(options?: { enabled?: boolean }): Session[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useSessions({ enabled });
-  return useSyncedCollection<Session>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<Session>({
+    queryKey: SESSIONS_QUERY_KEY,
+    apiPath: SESSIONS_API,
+    responseKey: 'sessions',
     collectionName: 'sessions',
     defaultData: SESSIONS_DATA,
-    enabled,
-  });
+    staleTime: 15_000,
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useSessionsMetrics(options?: { enabled?: boolean }) {

@@ -1,43 +1,36 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Enrollment, EnrollmentsCommandMetricsSnapshot } from '@mms/shared';
 import { ENROLLMENTS_MODULE_CONTRACT } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
-import { useSyncedCollection } from '@/hooks/useSyncedCollection';
+import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 export const ENROLLMENTS_QUERY_KEY = ['enrollments', 'list'] as const;
 export const ENROLLMENTS_METRICS_QUERY_KEY = ['enrollments', 'metrics'] as const;
 
 const ENROLLMENTS_API = ENROLLMENTS_MODULE_CONTRACT.restBasePath;
 
-async function fetchEnrollments(): Promise<Enrollment[]> {
-  const enrollmentsResponse = await apiJson<{ enrollments: Enrollment[] }>(ENROLLMENTS_API);
-  saveCollection('enrollments', enrollmentsResponse.enrollments);
-  return getCollection<Enrollment>('enrollments', []);
-}
-
 export function useEnrollments(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<Enrollment>({
     queryKey: ENROLLMENTS_QUERY_KEY,
-    queryFn: fetchEnrollments,
-    enabled: isAuthenticated && queryEnabled,
+    apiPath: ENROLLMENTS_API,
+    responseKey: 'enrollments',
+    collectionName: 'enrollments',
     staleTime: 15_000,
-  });
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useEnrollmentsCollection(options?: { enabled?: boolean }): Enrollment[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useEnrollments({ enabled });
-  return useSyncedCollection<Enrollment>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess && (queryResult.data?.length ?? 0) > 0,
+  return useCollectionSync<Enrollment>({
+    queryKey: ENROLLMENTS_QUERY_KEY,
+    apiPath: ENROLLMENTS_API,
+    responseKey: 'enrollments',
     collectionName: 'enrollments',
-    enabled,
-  });
+    staleTime: 15_000,
+    enabled: options?.enabled,
+    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+  }).syncedData;
 }
 
 export function useEnrollmentsMetrics(options?: { enabled?: boolean }) {

@@ -1,11 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { AttendanceCommandMetricsSnapshot } from '@mms/shared';
 import { ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useSyncedCollection } from '@/hooks/useSyncedCollection';
+import { useCollectionSync } from '@/hooks/useCollectionSync';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 
@@ -14,21 +13,16 @@ export const ATTENDANCE_METRICS_QUERY_KEY = ['attendance', 'metrics'] as const;
 
 const ATTENDANCE_API = ATTENDANCE_MODULE_CONTRACT.restBasePath;
 
-async function fetchAttendanceRecords(): Promise<AttendanceRecord[]> {
-  const recordsResponse = await apiJson<{ records: AttendanceRecord[] }>(ATTENDANCE_API);
-  saveCollection('attendance_records', recordsResponse.records);
-  return recordsResponse.records;
-}
-
 export function useAttendanceRecords(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<AttendanceRecord>({
     queryKey: ATTENDANCE_QUERY_KEY,
-    queryFn: fetchAttendanceRecords,
-    enabled: isAuthenticated && queryEnabled,
+    apiPath: ATTENDANCE_API,
+    responseKey: 'records',
+    collectionName: 'attendance_records',
+    defaultData: ATTENDANCE_RECORDS,
     staleTime: 15_000,
-  });
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useAttendanceMutations() {
@@ -79,15 +73,15 @@ export function useAttendanceMutations() {
 
 /** Query-first attendance; falls back to localStorage cache (hydrated). */
 export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useAttendanceRecords({ enabled });
-  return useSyncedCollection<AttendanceRecord>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<AttendanceRecord>({
+    queryKey: ATTENDANCE_QUERY_KEY,
+    apiPath: ATTENDANCE_API,
+    responseKey: 'records',
     collectionName: 'attendance_records',
     defaultData: ATTENDANCE_RECORDS,
-    enabled,
-  });
+    staleTime: 15_000,
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useAttendanceMetrics(selectedDate: string, options?: { enabled?: boolean }) {

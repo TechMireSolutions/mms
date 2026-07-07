@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
   ObligationType,
   Mujtahid,
@@ -10,10 +10,9 @@ import type {
 } from '@mms/shared';
 import { OBLIGATIONS_MODULE_CONTRACT } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useSyncedCollection } from '@/hooks/useSyncedCollection';
+import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 export const OBLIGATIONS_TYPES_QUERY_KEY = ['obligations', 'types', 'list'] as const;
 export const OBLIGATIONS_MUJTAHIDS_QUERY_KEY = ['obligations', 'mujtahids', 'list'] as const;
@@ -25,172 +24,124 @@ export const OBLIGATIONS_METRICS_QUERY_KEY = ['obligations', 'metrics'] as const
 
 const OBLIGATIONS_API = OBLIGATIONS_MODULE_CONTRACT.restBasePath;
 
-async function fetchTypes(): Promise<ObligationType[]> {
-  const typesResponse = await apiJson<{ types: ObligationType[] }>(`${OBLIGATIONS_API}/types`);
-  saveCollection('obligation_types', typesResponse.types);
-  return typesResponse.types;
-}
-
-async function fetchMujtahids(): Promise<Mujtahid[]> {
-  const mujtahidsResponse = await apiJson<{ mujtahids: Mujtahid[] }>(`${OBLIGATIONS_API}/mujtahids`);
-  saveCollection('mujtahids', mujtahidsResponse.mujtahids);
-  return mujtahidsResponse.mujtahids;
-}
-
-async function fetchReps(): Promise<MujtahidRep[]> {
-  const repsResponse = await apiJson<{ reps: MujtahidRep[] }>(`${OBLIGATIONS_API}/reps`);
-  saveCollection('mujtahid_reps', repsResponse.reps);
-  return repsResponse.reps;
-}
-
-async function fetchWakala(): Promise<WakalaType[]> {
-  const wakalaResponse = await apiJson<{ wakalaTypes: WakalaType[] }>(`${OBLIGATIONS_API}/wakala`);
-  saveCollection('wakala_types', wakalaResponse.wakalaTypes);
-  return wakalaResponse.wakalaTypes;
-}
-
-async function fetchDistributions(): Promise<ObligationDistribution[]> {
-  const distributionsResponse = await apiJson<{ distributions: ObligationDistribution[] }>(`${OBLIGATIONS_API}/distributions`);
-  saveCollection('obligation_distributions', distributionsResponse.distributions);
-  return distributionsResponse.distributions;
-}
-
-async function fetchCollections(): Promise<ObligationCollection[]> {
-  const collectionsResponse = await apiJson<{ collections: ObligationCollection[] }>(`${OBLIGATIONS_API}/collections`);
-  saveCollection('obligation_collections', collectionsResponse.collections);
-  return collectionsResponse.collections;
-}
-
 export function useObligationsTypes(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<ObligationType>({
     queryKey: OBLIGATIONS_TYPES_QUERY_KEY,
-    queryFn: fetchTypes,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${OBLIGATIONS_API}/types`,
+    responseKey: 'types',
+    collectionName: 'obligation_types',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useObligationsTypesCollection(options?: { enabled?: boolean }): ObligationType[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useObligationsTypes({ enabled });
-  return useSyncedCollection<ObligationType>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<ObligationType>({
+    queryKey: OBLIGATIONS_TYPES_QUERY_KEY,
+    apiPath: `${OBLIGATIONS_API}/types`,
+    responseKey: 'types',
     collectionName: 'obligation_types',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useObligationsMujtahids(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<Mujtahid>({
     queryKey: OBLIGATIONS_MUJTAHIDS_QUERY_KEY,
-    queryFn: fetchMujtahids,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${OBLIGATIONS_API}/mujtahids`,
+    responseKey: 'mujtahids',
+    collectionName: 'mujtahids',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useObligationsMujtahidsCollection(options?: { enabled?: boolean }): Mujtahid[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useObligationsMujtahids({ enabled });
-  return useSyncedCollection<Mujtahid>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<Mujtahid>({
+    queryKey: OBLIGATIONS_MUJTAHIDS_QUERY_KEY,
+    apiPath: `${OBLIGATIONS_API}/mujtahids`,
+    responseKey: 'mujtahids',
     collectionName: 'mujtahids',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useObligationsReps(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<MujtahidRep>({
     queryKey: OBLIGATIONS_REPS_QUERY_KEY,
-    queryFn: fetchReps,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${OBLIGATIONS_API}/reps`,
+    responseKey: 'reps',
+    collectionName: 'mujtahid_reps',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useObligationsRepsCollection(options?: { enabled?: boolean }): MujtahidRep[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useObligationsReps({ enabled });
-  return useSyncedCollection<MujtahidRep>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<MujtahidRep>({
+    queryKey: OBLIGATIONS_REPS_QUERY_KEY,
+    apiPath: `${OBLIGATIONS_API}/reps`,
+    responseKey: 'reps',
     collectionName: 'mujtahid_reps',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useObligationsWakala(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<WakalaType>({
     queryKey: OBLIGATIONS_WAKALA_QUERY_KEY,
-    queryFn: fetchWakala,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${OBLIGATIONS_API}/wakala`,
+    responseKey: 'wakalaTypes',
+    collectionName: 'wakala_types',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useObligationsWakalaCollection(options?: { enabled?: boolean }): WakalaType[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useObligationsWakala({ enabled });
-  return useSyncedCollection<WakalaType>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<WakalaType>({
+    queryKey: OBLIGATIONS_WAKALA_QUERY_KEY,
+    apiPath: `${OBLIGATIONS_API}/wakala`,
+    responseKey: 'wakalaTypes',
     collectionName: 'wakala_types',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useObligationsDistributions(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<ObligationDistribution>({
     queryKey: OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY,
-    queryFn: fetchDistributions,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${OBLIGATIONS_API}/distributions`,
+    responseKey: 'distributions',
+    collectionName: 'obligation_distributions',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useObligationsDistributionsCollection(options?: { enabled?: boolean }): ObligationDistribution[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useObligationsDistributions({ enabled });
-  return useSyncedCollection<ObligationDistribution>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<ObligationDistribution>({
+    queryKey: OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY,
+    apiPath: `${OBLIGATIONS_API}/distributions`,
+    responseKey: 'distributions',
     collectionName: 'obligation_distributions',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useObligationsCollections(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<ObligationCollection>({
     queryKey: OBLIGATIONS_COLLECTIONS_QUERY_KEY,
-    queryFn: fetchCollections,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${OBLIGATIONS_API}/collections`,
+    responseKey: 'collections',
+    collectionName: 'obligation_collections',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useObligationsCollectionsCollection(options?: { enabled?: boolean }): ObligationCollection[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useObligationsCollections({ enabled });
-  return useSyncedCollection<ObligationCollection>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<ObligationCollection>({
+    queryKey: OBLIGATIONS_COLLECTIONS_QUERY_KEY,
+    apiPath: `${OBLIGATIONS_API}/collections`,
+    responseKey: 'collections',
     collectionName: 'obligation_collections',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useObligationsMetrics(options?: { enabled?: boolean }) {

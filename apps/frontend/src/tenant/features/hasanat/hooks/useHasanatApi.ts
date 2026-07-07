@@ -1,11 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Denomination, StockBatch, Distribution, Redemption, HasanatCommandMetricsSnapshot } from '@mms/shared';
 import { HASANAT_MODULE_CONTRACT } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useSyncedCollection } from '@/hooks/useSyncedCollection';
+import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 export const HASANAT_DENOMS_QUERY_KEY = ['hasanat', 'denoms', 'list'] as const;
 export const HASANAT_BATCHES_QUERY_KEY = ['hasanat', 'batches', 'list'] as const;
@@ -15,116 +14,84 @@ export const HASANAT_METRICS_QUERY_KEY = ['hasanat', 'metrics', 'snapshot'] as c
 
 const HASANAT_API = HASANAT_MODULE_CONTRACT.restBasePath;
 
-async function fetchDenoms(): Promise<Denomination[]> {
-  const denomsResponse = await apiJson<{ denoms: Denomination[] }>(`${HASANAT_API}/denoms`);
-  saveCollection('hasanat_denoms', denomsResponse.denoms);
-  return denomsResponse.denoms;
-}
-
-async function fetchBatches(): Promise<StockBatch[]> {
-  const batchesResponse = await apiJson<{ batches: StockBatch[] }>(`${HASANAT_API}/batches`);
-  saveCollection('hasanat_batches', batchesResponse.batches);
-  return batchesResponse.batches;
-}
-
-async function fetchDistributions(): Promise<Distribution[]> {
-  const distributionsResponse = await apiJson<{ distributions: Distribution[] }>(`${HASANAT_API}/distributions`);
-  saveCollection('hasanat_distributions', distributionsResponse.distributions);
-  return distributionsResponse.distributions;
-}
-
-async function fetchRedemptions(): Promise<Redemption[]> {
-  const redemptionsResponse = await apiJson<{ redemptions: Redemption[] }>(`${HASANAT_API}/redemptions`);
-  saveCollection('hasanat_redemptions', redemptionsResponse.redemptions);
-  return redemptionsResponse.redemptions;
-}
-
 export function useHasanatDenoms(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<Denomination>({
     queryKey: HASANAT_DENOMS_QUERY_KEY,
-    queryFn: fetchDenoms,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${HASANAT_API}/denoms`,
+    responseKey: 'denoms',
+    collectionName: 'hasanat_denoms',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useHasanatDenomsCollection(options?: { enabled?: boolean }): Denomination[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useHasanatDenoms({ enabled });
-  return useSyncedCollection<Denomination>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<Denomination>({
+    queryKey: HASANAT_DENOMS_QUERY_KEY,
+    apiPath: `${HASANAT_API}/denoms`,
+    responseKey: 'denoms',
     collectionName: 'hasanat_denoms',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useHasanatBatches(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<StockBatch>({
     queryKey: HASANAT_BATCHES_QUERY_KEY,
-    queryFn: fetchBatches,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${HASANAT_API}/batches`,
+    responseKey: 'batches',
+    collectionName: 'hasanat_batches',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useHasanatBatchesCollection(options?: { enabled?: boolean }): StockBatch[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useHasanatBatches({ enabled });
-  return useSyncedCollection<StockBatch>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<StockBatch>({
+    queryKey: HASANAT_BATCHES_QUERY_KEY,
+    apiPath: `${HASANAT_API}/batches`,
+    responseKey: 'batches',
     collectionName: 'hasanat_batches',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useHasanatDistributions(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<Distribution>({
     queryKey: HASANAT_DISTRIBUTIONS_QUERY_KEY,
-    queryFn: fetchDistributions,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${HASANAT_API}/distributions`,
+    responseKey: 'distributions',
+    collectionName: 'hasanat_distributions',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useHasanatDistributionsCollection(options?: { enabled?: boolean }): Distribution[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useHasanatDistributions({ enabled });
-  return useSyncedCollection<Distribution>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<Distribution>({
+    queryKey: HASANAT_DISTRIBUTIONS_QUERY_KEY,
+    apiPath: `${HASANAT_API}/distributions`,
+    responseKey: 'distributions',
     collectionName: 'hasanat_distributions',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useHasanatRedemptions(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<Redemption>({
     queryKey: HASANAT_REDEMPTIONS_QUERY_KEY,
-    queryFn: fetchRedemptions,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${HASANAT_API}/redemptions`,
+    responseKey: 'redemptions',
+    collectionName: 'hasanat_redemptions',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useHasanatRedemptionsCollection(options?: { enabled?: boolean }): Redemption[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useHasanatRedemptions({ enabled });
-  return useSyncedCollection<Redemption>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<Redemption>({
+    queryKey: HASANAT_REDEMPTIONS_QUERY_KEY,
+    apiPath: `${HASANAT_API}/redemptions`,
+    responseKey: 'redemptions',
     collectionName: 'hasanat_redemptions',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useHasanatMetrics(options?: { enabled?: boolean }) {

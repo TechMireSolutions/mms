@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
   QuestionBankCommandMetricsSnapshot,
   QuestionBankQuestion,
@@ -7,10 +7,9 @@ import type {
 } from '@mms/shared';
 import { QUESTION_BANK_MODULE_CONTRACT } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useSyncedCollection } from '@/hooks/useSyncedCollection';
+import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 const QUESTION_BANK_API = QUESTION_BANK_MODULE_CONTRACT.restBasePath;
 
@@ -20,88 +19,64 @@ export const QUESTION_BANK_QUESTIONS_QUERY_KEY = [QUESTION_BANK_MODULE_CONTRACT.
 export const QUESTION_BANK_TESTS_QUERY_KEY = [QUESTION_BANK_MODULE_CONTRACT.moduleId, 'tests', 'list'] as const;
 export const QUESTION_BANK_RESULTS_QUERY_KEY = [QUESTION_BANK_MODULE_CONTRACT.moduleId, 'results', 'list'] as const;
 
-async function fetchQuestions(): Promise<QuestionBankQuestion[]> {
-  const questionsResponse = await apiJson<{ questions: QuestionBankQuestion[] }>(`${QUESTION_BANK_API}/questions`);
-  saveCollection('questions', questionsResponse.questions);
-  return questionsResponse.questions;
-}
-
 export function useQuestionBankQuestions(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<QuestionBankQuestion>({
     queryKey: QUESTION_BANK_QUESTIONS_QUERY_KEY,
-    queryFn: fetchQuestions,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${QUESTION_BANK_API}/questions`,
+    responseKey: 'questions',
+    collectionName: 'questions',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useQuestionBankQuestionsCollection(options?: { enabled?: boolean }): QuestionBankQuestion[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useQuestionBankQuestions({ enabled });
-  return useSyncedCollection<QuestionBankQuestion>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<QuestionBankQuestion>({
+    queryKey: QUESTION_BANK_QUESTIONS_QUERY_KEY,
+    apiPath: `${QUESTION_BANK_API}/questions`,
+    responseKey: 'questions',
     collectionName: 'questions',
-    enabled,
-  });
-}
-
-async function fetchTests(): Promise<QuestionBankTest[]> {
-  const testsResponse = await apiJson<{ tests: QuestionBankTest[] }>(`${QUESTION_BANK_API}/tests`);
-  saveCollection('tests', testsResponse.tests);
-  return testsResponse.tests;
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useQuestionBankTests(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<QuestionBankTest>({
     queryKey: QUESTION_BANK_TESTS_QUERY_KEY,
-    queryFn: fetchTests,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${QUESTION_BANK_API}/tests`,
+    responseKey: 'tests',
+    collectionName: 'tests',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useQuestionBankTestsCollection(options?: { enabled?: boolean }): QuestionBankTest[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useQuestionBankTests({ enabled });
-  return useSyncedCollection<QuestionBankTest>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<QuestionBankTest>({
+    queryKey: QUESTION_BANK_TESTS_QUERY_KEY,
+    apiPath: `${QUESTION_BANK_API}/tests`,
+    responseKey: 'tests',
     collectionName: 'tests',
-    enabled,
-  });
-}
-
-async function fetchResults(): Promise<QuestionBankResult[]> {
-  const resultsResponse = await apiJson<{ results: QuestionBankResult[] }>(`${QUESTION_BANK_API}/assessment-results`);
-  saveCollection('assessment_results', resultsResponse.results);
-  return resultsResponse.results;
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useQuestionBankResults(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<QuestionBankResult>({
     queryKey: QUESTION_BANK_RESULTS_QUERY_KEY,
-    queryFn: fetchResults,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${QUESTION_BANK_API}/assessment-results`,
+    responseKey: 'results',
+    collectionName: 'assessment_results',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useQuestionBankResultsCollection(options?: { enabled?: boolean }): QuestionBankResult[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useQuestionBankResults({ enabled });
-  return useSyncedCollection<QuestionBankResult>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
+  return useCollectionSync<QuestionBankResult>({
+    queryKey: QUESTION_BANK_RESULTS_QUERY_KEY,
+    apiPath: `${QUESTION_BANK_API}/assessment-results`,
+    responseKey: 'results',
     collectionName: 'assessment_results',
-    enabled,
-  });
+    enabled: options?.enabled,
+  }).syncedData;
 }
 
 export function useQuestionBankMutations() {

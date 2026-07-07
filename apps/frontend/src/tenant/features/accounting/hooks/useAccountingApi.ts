@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
   AccountingCommandMetricsSnapshot,
   Account,
@@ -7,10 +7,9 @@ import type {
 } from '@mms/shared';
 import { ACCOUNTING_MODULE_CONTRACT } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
-import { useSyncedCollection } from '@/hooks/useSyncedCollection';
+import { saveCollection } from '@/lib/db';
+import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 const ACCOUNTING_API = ACCOUNTING_MODULE_CONTRACT.restBasePath;
 
@@ -20,88 +19,67 @@ export const ACCOUNTING_ACCOUNTS_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleI
 export const ACCOUNTING_ENTRIES_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId, 'entries', 'list'] as const;
 export const ACCOUNTING_FISCAL_YEARS_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId, 'fiscal_years', 'list'] as const;
 
-async function fetchAccounts(): Promise<Account[]> {
-  const accountsResponse = await apiJson<{ accounts: Account[] }>(`${ACCOUNTING_API}/accounts`);
-  saveCollection('accounting_accounts', accountsResponse.accounts);
-  return getCollection<Account>('accounting_accounts', []);
-}
-
 export function useAccountingAccounts(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<Account>({
     queryKey: ACCOUNTING_ACCOUNTS_QUERY_KEY,
-    queryFn: fetchAccounts,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${ACCOUNTING_API}/accounts`,
+    responseKey: 'accounts',
+    collectionName: 'accounting_accounts',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useAccountingAccountsCollection(options?: { enabled?: boolean }): Account[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useAccountingAccounts({ enabled });
-  return useSyncedCollection<Account>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess && (queryResult.data?.length ?? 0) > 0,
+  return useCollectionSync<Account>({
+    queryKey: ACCOUNTING_ACCOUNTS_QUERY_KEY,
+    apiPath: `${ACCOUNTING_API}/accounts`,
+    responseKey: 'accounts',
     collectionName: 'accounting_accounts',
-    enabled,
-  });
-}
-
-async function fetchEntries(): Promise<JournalEntry[]> {
-  const entriesResponse = await apiJson<{ entries: JournalEntry[] }>(`${ACCOUNTING_API}/entries`);
-  saveCollection('accounting_entries', entriesResponse.entries);
-  return getCollection<JournalEntry>('accounting_entries', []);
+    enabled: options?.enabled,
+    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+  }).syncedData;
 }
 
 export function useAccountingEntries(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<JournalEntry>({
     queryKey: ACCOUNTING_ENTRIES_QUERY_KEY,
-    queryFn: fetchEntries,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${ACCOUNTING_API}/entries`,
+    responseKey: 'entries',
+    collectionName: 'accounting_entries',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useAccountingEntriesCollection(options?: { enabled?: boolean }): JournalEntry[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useAccountingEntries({ enabled });
-  return useSyncedCollection<JournalEntry>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess && (queryResult.data?.length ?? 0) > 0,
+  return useCollectionSync<JournalEntry>({
+    queryKey: ACCOUNTING_ENTRIES_QUERY_KEY,
+    apiPath: `${ACCOUNTING_API}/entries`,
+    responseKey: 'entries',
     collectionName: 'accounting_entries',
-    enabled,
-  });
-}
-
-async function fetchFiscalYears(): Promise<FiscalYear[]> {
-  const fiscalYearsResponse = await apiJson<{ fiscalYears: FiscalYear[] }>(`${ACCOUNTING_API}/fiscal-years`);
-  saveCollection('accounting_fiscal_years', fiscalYearsResponse.fiscalYears);
-  return getCollection<FiscalYear>('accounting_fiscal_years', []);
+    enabled: options?.enabled,
+    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+  }).syncedData;
 }
 
 export function useAccountingFiscalYears(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
+  return useCollectionSync<FiscalYear>({
     queryKey: ACCOUNTING_FISCAL_YEARS_QUERY_KEY,
-    queryFn: fetchFiscalYears,
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
-  });
+    apiPath: `${ACCOUNTING_API}/fiscal-years`,
+    responseKey: 'fiscalYears',
+    collectionName: 'accounting_fiscal_years',
+    enabled: options?.enabled,
+  }).queryResult;
 }
 
 export function useAccountingFiscalYearsCollection(options?: { enabled?: boolean }): FiscalYear[] {
-  const enabled = options?.enabled ?? true;
-  const queryResult = useAccountingFiscalYears({ enabled });
-  return useSyncedCollection<FiscalYear>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess && (queryResult.data?.length ?? 0) > 0,
+  return useCollectionSync<FiscalYear>({
+    queryKey: ACCOUNTING_FISCAL_YEARS_QUERY_KEY,
+    apiPath: `${ACCOUNTING_API}/fiscal-years`,
+    responseKey: 'fiscalYears',
     collectionName: 'accounting_fiscal_years',
-    enabled,
-  });
+    enabled: options?.enabled,
+    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+  }).syncedData;
 }
 
 export function useAccountingMutations() {
