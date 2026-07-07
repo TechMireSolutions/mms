@@ -5,7 +5,7 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 
 export const ENROLLMENTS_QUERY_KEY = ['enrollments', 'list'] as const;
 export const ENROLLMENTS_METRICS_QUERY_KEY = ['enrollments', 'metrics'] as const;
@@ -25,19 +25,19 @@ export function useEnrollments(options?: { enabled?: boolean }) {
     queryKey: ENROLLMENTS_QUERY_KEY,
     queryFn: fetchEnrollments,
     enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
+    staleTime: 15_000,
   });
 }
 
 export function useEnrollmentsCollection(options?: { enabled?: boolean }): Enrollment[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryEnrollments = [] } = useEnrollments({ enabled });
-  const localEnrollments = useLiveCollection<Enrollment>('enrollments', [], { enabled });
-  if (!enabled) return [];
-  if (queryEnrollments.length > 0) {
-    return queryEnrollments;
-  }
-  return localEnrollments;
+  const queryResult = useEnrollments({ enabled });
+  return useSyncedCollection<Enrollment>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess && (queryResult.data?.length ?? 0) > 0,
+    collectionName: 'enrollments',
+    enabled,
+  });
 }
 
 export function useEnrollmentsMetrics(options?: { enabled?: boolean }) {

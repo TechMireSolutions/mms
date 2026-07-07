@@ -10,7 +10,7 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 
 const ACCOUNTING_API = ACCOUNTING_MODULE_CONTRACT.restBasePath;
 
@@ -39,13 +39,13 @@ export function useAccountingAccounts(options?: { enabled?: boolean }) {
 
 export function useAccountingAccountsCollection(options?: { enabled?: boolean }): Account[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryAccounts = [] } = useAccountingAccounts({ enabled });
-  const localAccounts = useLiveCollection<Account>('accounting_accounts', [], { enabled });
-  if (!enabled) return [];
-  if (queryAccounts.length > 0) {
-    return queryAccounts;
-  }
-  return localAccounts;
+  const queryResult = useAccountingAccounts({ enabled });
+  return useSyncedCollection<Account>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess && (queryResult.data?.length ?? 0) > 0,
+    collectionName: 'accounting_accounts',
+    enabled,
+  });
 }
 
 async function fetchEntries(): Promise<JournalEntry[]> {
@@ -67,13 +67,13 @@ export function useAccountingEntries(options?: { enabled?: boolean }) {
 
 export function useAccountingEntriesCollection(options?: { enabled?: boolean }): JournalEntry[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryEntries = [] } = useAccountingEntries({ enabled });
-  const localEntries = useLiveCollection<JournalEntry>('accounting_entries', [], { enabled });
-  if (!enabled) return [];
-  if (queryEntries.length > 0) {
-    return queryEntries;
-  }
-  return localEntries;
+  const queryResult = useAccountingEntries({ enabled });
+  return useSyncedCollection<JournalEntry>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess && (queryResult.data?.length ?? 0) > 0,
+    collectionName: 'accounting_entries',
+    enabled,
+  });
 }
 
 async function fetchFiscalYears(): Promise<FiscalYear[]> {
@@ -95,13 +95,13 @@ export function useAccountingFiscalYears(options?: { enabled?: boolean }) {
 
 export function useAccountingFiscalYearsCollection(options?: { enabled?: boolean }): FiscalYear[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryFiscalYears = [] } = useAccountingFiscalYears({ enabled });
-  const localFiscalYears = useLiveCollection<FiscalYear>('accounting_fiscal_years', [], { enabled });
-  if (!enabled) return [];
-  if (queryFiscalYears.length > 0) {
-    return queryFiscalYears;
-  }
-  return localFiscalYears;
+  const queryResult = useAccountingFiscalYears({ enabled });
+  return useSyncedCollection<FiscalYear>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess && (queryResult.data?.length ?? 0) > 0,
+    collectionName: 'accounting_fiscal_years',
+    enabled,
+  });
 }
 
 export function useAccountingMutations() {

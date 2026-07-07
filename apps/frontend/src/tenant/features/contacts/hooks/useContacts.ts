@@ -21,7 +21,7 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 import { enqueueContactsOutbox } from '@/lib/contacts/contactsSyncOutbox';
 
 const CONTACTS_API = CONTACTS_MODULE_CONTRACT.restBasePath;
@@ -555,11 +555,11 @@ export function useContactsSavedReportMutations() {
 export function useContactsCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Contact[] {
   const enabled = options?.enabled ?? true;
   const includeDeleted = options?.includeDeleted ?? false;
-  const { data: queryContacts, isSuccess } = useContacts({ enabled, includeDeleted });
-  const localContacts = useLiveCollection<Contact>(CONTACTS_MODULE_CONTRACT.collectionKey, [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess) {
-    return queryContacts ?? [];
-  }
-  return localContacts;
+  const queryResult = useContacts({ enabled, includeDeleted });
+  return useSyncedCollection<Contact>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: CONTACTS_MODULE_CONTRACT.collectionKey,
+    enabled,
+  });
 }
