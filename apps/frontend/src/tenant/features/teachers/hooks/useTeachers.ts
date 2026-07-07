@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import type { Teacher, TeachersCommandMetricsSnapshot, TeachersListPageResult, TeachersWidgetAggregateResult } from '@mms/shared';
 import { normalizeStoredTeacher, TEACHERS_MODULE_CONTRACT, teachersWidgetQueryFromWidget } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { TEACHER_COUNT_QUERY_KEY } from '@/tenant/features/teachers/hooks/useTeacherCount';
@@ -148,16 +149,10 @@ export function useTeacherNextEmployeeId(params: TeacherNextEmployeeIdParams = {
 }
 
 export function useTeachersMetrics(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: TEACHERS_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const metricsResponse = await apiJson<{ metrics: TeachersCommandMetricsSnapshot }>(`${TEACHERS_API}/metrics`);
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
+  return useServerMetrics<TeachersCommandMetricsSnapshot>({
+    moduleId: TEACHERS_MODULE_CONTRACT.moduleId,
+    apiPath: TEACHERS_MODULE_CONTRACT.restBasePath,
+    enabled: options?.enabled,
   });
 }
 

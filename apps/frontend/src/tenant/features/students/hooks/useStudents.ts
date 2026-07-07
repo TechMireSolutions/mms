@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { normalizeStoredStudent, STUDENTS_MODULE_CONTRACT, type StudentDuplicateCheckInput, type StudentDuplicateReason, type StudentsCommandMetricsSnapshot, type StudentsListPageResult, studentsWidgetQueryFromWidget, type StudentsWidgetAggregateResult } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { STUDENT_COUNT_QUERY_KEY } from '@/tenant/features/students/hooks/useStudentCount';
@@ -186,16 +187,10 @@ export async function checkStudentRegistrationDuplicate(
 }
 
 export function useStudentsMetrics(options?: { enabled?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: STUDENTS_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const metricsResponse = await apiJson<{ metrics: StudentsCommandMetricsSnapshot }>(`${STUDENTS_API}/metrics`);
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
+  return useServerMetrics<StudentsCommandMetricsSnapshot>({
+    moduleId: STUDENTS_MODULE_CONTRACT.moduleId,
+    apiPath: STUDENTS_MODULE_CONTRACT.restBasePath,
+    enabled: options?.enabled,
   });
 }
 

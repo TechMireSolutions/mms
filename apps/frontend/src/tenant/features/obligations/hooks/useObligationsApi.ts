@@ -9,6 +9,7 @@ import type {
   ObligationsCommandMetricsSnapshot,
 } from '@mms/shared';
 import { OBLIGATIONS_MODULE_CONTRACT } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
@@ -180,16 +181,11 @@ export function useObligationsCollectionsCollection(options?: { enabled?: boolea
   return localCollections;
 }
 
-export function useObligationsMetrics() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: OBLIGATIONS_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const metricsResponse = await apiJson<{ metrics: ObligationsCommandMetricsSnapshot }>(`${OBLIGATIONS_API}/metrics`);
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated,
-    staleTime: 30_000,
+export function useObligationsMetrics(options?: { enabled?: boolean }) {
+  return useServerMetrics<ObligationsCommandMetricsSnapshot>({
+    moduleId: OBLIGATIONS_MODULE_CONTRACT.moduleId,
+    apiPath: OBLIGATIONS_MODULE_CONTRACT.restBasePath,
+    enabled: options?.enabled,
   });
 }
 

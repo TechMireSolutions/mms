@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AttendanceCommandMetricsSnapshot } from '@mms/shared';
 import { ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
@@ -88,18 +89,11 @@ export function useAttendanceRecordsCollection(options?: { enabled?: boolean }):
   return localRecords;
 }
 
-export function useAttendanceMetrics(selectedDate: string) {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: [...ATTENDANCE_METRICS_QUERY_KEY, selectedDate] as const,
-    queryFn: async () => {
-      const queryString = selectedDate ? `?date=${encodeURIComponent(selectedDate)}` : '';
-      const metricsResponse = await apiJson<{ metrics: AttendanceCommandMetricsSnapshot }>(
-        `${ATTENDANCE_API}/metrics${queryString}`,
-      );
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated,
-    staleTime: 30_000,
+export function useAttendanceMetrics(selectedDate: string, options?: { enabled?: boolean }) {
+  return useServerMetrics<AttendanceCommandMetricsSnapshot>({
+    moduleId: ATTENDANCE_MODULE_CONTRACT.moduleId,
+    apiPath: ATTENDANCE_MODULE_CONTRACT.restBasePath,
+    extraParam: selectedDate,
+    enabled: options?.enabled,
   });
 }

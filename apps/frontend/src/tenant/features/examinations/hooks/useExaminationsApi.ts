@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Exam, ExamResult, ExaminationsCommandMetricsSnapshot } from '@mms/shared';
 import { EXAMINATIONS_MODULE_CONTRACT } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
@@ -68,16 +69,11 @@ export function useExaminationsResultsCollection(options?: { enabled?: boolean }
   return localResults;
 }
 
-export function useExaminationsMetrics() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: EXAMINATIONS_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const metricsResponse = await apiJson<{ metrics: ExaminationsCommandMetricsSnapshot }>(`${EXAMINATIONS_API}/metrics`);
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated,
-    staleTime: 30_000,
+export function useExaminationsMetrics(options?: { enabled?: boolean }) {
+  return useServerMetrics<ExaminationsCommandMetricsSnapshot>({
+    moduleId: EXAMINATIONS_MODULE_CONTRACT.moduleId,
+    apiPath: EXAMINATIONS_MODULE_CONTRACT.restBasePath,
+    enabled: options?.enabled,
   });
 }
 

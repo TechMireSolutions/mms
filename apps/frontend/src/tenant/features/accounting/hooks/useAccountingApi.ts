@@ -6,6 +6,7 @@ import type {
   FiscalYear,
 } from '@mms/shared';
 import { ACCOUNTING_MODULE_CONTRACT } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
@@ -152,15 +153,10 @@ export function useAccountingMutations() {
   return { replaceAccounts, replaceEntries, replaceFiscalYears };
 }
 
-export function useAccountingMetrics() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: ACCOUNTING_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const metricsResponse = await apiJson<{ metrics: AccountingCommandMetricsSnapshot }>(`${ACCOUNTING_API}/metrics`);
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated,
-    staleTime: 30_000,
+export function useAccountingMetrics(options?: { enabled?: boolean }) {
+  return useServerMetrics<AccountingCommandMetricsSnapshot>({
+    moduleId: ACCOUNTING_MODULE_CONTRACT.moduleId,
+    apiPath: ACCOUNTING_MODULE_CONTRACT.restBasePath,
+    enabled: options?.enabled,
   });
 }

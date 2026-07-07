@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Denomination, StockBatch, Distribution, Redemption, HasanatCommandMetricsSnapshot } from '@mms/shared';
 import { HASANAT_MODULE_CONTRACT } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
@@ -126,16 +127,11 @@ export function useHasanatRedemptionsCollection(options?: { enabled?: boolean })
   return localRedemptions;
 }
 
-export function useHasanatMetrics() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: HASANAT_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const metricsResponse = await apiJson<{ metrics: HasanatCommandMetricsSnapshot }>(`${HASANAT_API}/metrics`);
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated,
-    staleTime: 30_000,
+export function useHasanatMetrics(options?: { enabled?: boolean }) {
+  return useServerMetrics<HasanatCommandMetricsSnapshot>({
+    moduleId: HASANAT_MODULE_CONTRACT.moduleId,
+    apiPath: HASANAT_MODULE_CONTRACT.restBasePath,
+    enabled: options?.enabled,
   });
 }
 

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Enrollment, EnrollmentsCommandMetricsSnapshot } from '@mms/shared';
 import { ENROLLMENTS_MODULE_CONTRACT } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
@@ -39,16 +40,11 @@ export function useEnrollmentsCollection(options?: { enabled?: boolean }): Enrol
   return localEnrollments;
 }
 
-export function useEnrollmentsMetrics() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: ENROLLMENTS_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const metricsResponse = await apiJson<{ metrics: EnrollmentsCommandMetricsSnapshot }>(`${ENROLLMENTS_API}/metrics`);
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated,
-    staleTime: 30_000,
+export function useEnrollmentsMetrics(options?: { enabled?: boolean }) {
+  return useServerMetrics<EnrollmentsCommandMetricsSnapshot>({
+    moduleId: ENROLLMENTS_MODULE_CONTRACT.moduleId,
+    apiPath: ENROLLMENTS_MODULE_CONTRACT.restBasePath,
+    enabled: options?.enabled,
   });
 }
 

@@ -6,6 +6,7 @@ import type {
   QuestionBankResult,
 } from '@mms/shared';
 import { QUESTION_BANK_MODULE_CONTRACT } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
@@ -152,15 +153,10 @@ export function useQuestionBankMutations() {
   return { replaceQuestions, replaceTests, replaceResults };
 }
 
-export function useQuestionBankMetrics() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: QUESTION_BANK_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const metricsResponse = await apiJson<{ metrics: QuestionBankCommandMetricsSnapshot }>(`${QUESTION_BANK_API}/metrics`);
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated,
-    staleTime: 30_000,
+export function useQuestionBankMetrics(options?: { enabled?: boolean }) {
+  return useServerMetrics<QuestionBankCommandMetricsSnapshot>({
+    moduleId: QUESTION_BANK_MODULE_CONTRACT.moduleId,
+    apiPath: QUESTION_BANK_MODULE_CONTRACT.restBasePath,
+    enabled: options?.enabled,
   });
 }

@@ -17,6 +17,7 @@ import {
   type ContactsSavedReportShareScope,
   type ContactsWorkDrillDown,
 } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
@@ -98,16 +99,10 @@ export async function fetchAllContactsForQuery(
 }
 
 export function useContactsMetrics(options?: { enabled?: boolean }) {
-  const { isAuthenticated } = useAuth();
-  const enabled = options?.enabled ?? true;
-  return useQuery({
-    queryKey: CONTACTS_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const metricsResponse = await apiJson<{ metrics: ContactsCommandMetricsSnapshot }>(`${CONTACTS_API}/metrics`);
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated && enabled,
-    staleTime: 30_000,
+  return useServerMetrics<ContactsCommandMetricsSnapshot>({
+    moduleId: CONTACTS_MODULE_CONTRACT.moduleId,
+    apiPath: CONTACTS_MODULE_CONTRACT.restBasePath,
+    enabled: options?.enabled,
   });
 }
 

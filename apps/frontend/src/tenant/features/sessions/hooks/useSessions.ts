@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SessionsCommandMetricsSnapshot } from '@mms/shared';
 import { SESSIONS_MODULE_CONTRACT } from '@mms/shared';
+import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
@@ -80,15 +81,10 @@ export function useSessionsCollection(options?: { enabled?: boolean }): Session[
   return localSessions;
 }
 
-export function useSessionsMetrics() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: SESSIONS_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const metricsResponse = await apiJson<{ metrics: SessionsCommandMetricsSnapshot }>(`${SESSIONS_API}/metrics`);
-      return metricsResponse.metrics;
-    },
-    enabled: isAuthenticated,
-    staleTime: 30_000,
+export function useSessionsMetrics(options?: { enabled?: boolean }) {
+  return useServerMetrics<SessionsCommandMetricsSnapshot>({
+    moduleId: SESSIONS_MODULE_CONTRACT.moduleId,
+    apiPath: SESSIONS_MODULE_CONTRACT.restBasePath,
+    enabled: options?.enabled,
   });
 }
