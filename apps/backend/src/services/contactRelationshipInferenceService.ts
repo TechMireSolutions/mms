@@ -22,6 +22,7 @@ interface RelationshipLink {
   contactId: string;
   role: RelationshipRole;
   relationship?: string;
+  inferred: boolean;
 }
 
 interface PlannedRelationship {
@@ -30,6 +31,8 @@ interface PlannedRelationship {
   relationship: string;
   overwriteExisting: boolean;
   priority: number;
+  inferredFromContactId: string;
+  inferenceDepth: number;
 }
 
 const ROLE_BY_TERM = new Map<string, RelationshipRole>([
@@ -215,6 +218,7 @@ function linksForContact(contact: Contact): RelationshipLink[] {
       contactId,
       relationship: entry.relationship,
       role: relationshipRole(entry.relationship),
+      inferred: 'inferred' in entry && entry.inferred === true,
     };
   };
 
@@ -223,14 +227,20 @@ function linksForContact(contact: Contact): RelationshipLink[] {
     .filter((entry): entry is RelationshipLink => Boolean(entry));
 }
 
-function hasDirectRelationship(contact: Contact, contactId: string): boolean {
-  return linksForContact(contact).some((entry) => entry.contactId === contactId);
+function hasManualRelationship(contact: Contact, contactId: string): boolean {
+  return linksForContact(contact).some((entry) => entry.contactId === contactId && !entry.inferred);
 }
 
-function setEmergencyRelationship(contact: Contact, contactId: string, relationship: string): Contact {
+function setEmergencyRelationship(contact: Contact, planned: PlannedRelationship): Contact {
   const emergencyContacts = contact.emergencyContacts ?? [];
-  const existingIndex = emergencyContacts.findIndex((entry) => String(entry.contactId) === contactId);
-  const relationshipEntry = { contactId, relationship };
+  const existingIndex = emergencyContacts.findIndex((entry) => String(entry.contactId) === planned.contactId);
+  const relationshipEntry: EmergencyContact = {
+    contactId: planned.contactId,
+    relationship: planned.relationship,
+    inferred: true,
+    inferredFromContactId: planned.inferredFromContactId,
+    inferenceDepth: planned.inferenceDepth,
+  };
   const nextEmergencyContacts =
     existingIndex >= 0
       ? emergencyContacts.map((entry, index) => (index === existingIndex ? { ...entry, ...relationshipEntry } : entry))
@@ -294,6 +304,8 @@ export async function applyContactRelationshipInference(tenant: string, sourceCo
       relationship: relationshipLabel(inverseDirectRole, sourceContact),
       overwriteExisting: true,
       priority: DIRECT_RELATIONSHIP_PRIORITY,
+      inferredFromContactId: sourceId,
+      inferenceDepth: 1,
     });
 
     if (!PRIMARY_TRIGGER_ROLES.has(sourceLink.role)) continue;
@@ -306,7 +318,7 @@ export async function applyContactRelationshipInference(tenant: string, sourceCo
       const inferredRole = composeRelationship(sourceLink.role, targetLink.role);
       if (!inferredRole) continue;
       const hasExplicitMiddlePair =
-        hasDirectRelationship(sourceContact, targetLink.contactId) || hasDirectRelationship(middle, sourceId);
+        hasManualRelationship(sourceContact, targetLink.contactId) || hasManualRelationship(middle, sourceId);
       if (hasExplicitMiddlePair) continue;
 
       planRelationship(planned, {
@@ -315,6 +327,8 @@ export async function applyContactRelationshipInference(tenant: string, sourceCo
         relationship: relationshipLabel(inferredRole, middle),
         overwriteExisting: false,
         priority: INFERRED_RELATIONSHIP_PRIORITY,
+        inferredFromContactId: sourceLink.contactId,
+        inferenceDepth: 2,
       });
       planRelationship(planned, {
         ownerId: targetLink.contactId,
@@ -322,6 +336,8 @@ export async function applyContactRelationshipInference(tenant: string, sourceCo
         relationship: relationshipLabel(inverseRole(inferredRole), sourceContact),
         overwriteExisting: false,
         priority: INFERRED_RELATIONSHIP_PRIORITY,
+        inferredFromContactId: sourceLink.contactId,
+        inferenceDepth: 2,
       });
 
       for (const middleLink of linksForContact(middle)) {
@@ -332,7 +348,7 @@ export async function applyContactRelationshipInference(tenant: string, sourceCo
         const farRole = composeRelationship(inferredRole, middleLink.role);
         if (!farRole) continue;
         const hasExplicitFarPair =
-          hasDirectRelationship(sourceContact, middleLink.contactId) || hasDirectRelationship(far, sourceId);
+          hasManualRelationship(sourceContact, middleLink.contactId) || hasManualRelationship(far, sourceId);
         if (hasExplicitFarPair) continue;
 
         planRelationship(planned, {
@@ -341,6 +357,8 @@ export async function applyContactRelationshipInference(tenant: string, sourceCo
           relationship: relationshipLabel(farRole, far),
           overwriteExisting: false,
           priority: INFERRED_RELATIONSHIP_PRIORITY,
+          inferredFromContactId: sourceLink.contactId,
+          inferenceDepth: 3,
         });
         planRelationship(planned, {
           ownerId: middleLink.contactId,
@@ -348,6 +366,8 @@ export async function applyContactRelationshipInference(tenant: string, sourceCo
           relationship: relationshipLabel(inverseRole(farRole), sourceContact),
           overwriteExisting: false,
           priority: INFERRED_RELATIONSHIP_PRIORITY,
+          inferredFromContactId: sourceLink.contactId,
+          inferenceDepth: 3,
         });
       }
     }
@@ -357,11 +377,8 @@ export async function applyContactRelationshipInference(tenant: string, sourceCo
   for (const relationship of planned.values()) {
     const owner = updatesById.get(relationship.ownerId) ?? contactsById.get(relationship.ownerId);
     if (!owner || owner.deletedAt) continue;
-    if (!relationship.overwriteExisting && hasDirectRelationship(owner, relationship.contactId)) continue;
-    updatesById.set(
-      relationship.ownerId,
-      setEmergencyRelationship(owner, relationship.contactId, relationship.relationship),
-    );
+    if (!relationship.overwriteExisting && hasManualRelationship(owner, relationship.contactId)) continue;
+    updatesById.set(relationship.ownerId, setEmergencyRelationship(owner, relationship));
   }
 
   const updates = Array.from(updatesById.values());

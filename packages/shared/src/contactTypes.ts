@@ -52,6 +52,9 @@ export interface EmergencyContact {
   relationship?: string;
   phone?: string;
   contactId?: string | number;
+  inferred?: boolean;
+  inferredFromContactId?: string;
+  inferenceDepth?: number;
 }
 
 export interface ContactRelationship {
