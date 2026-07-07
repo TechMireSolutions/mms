@@ -1,5 +1,5 @@
 import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
 import { DayPicker, DayPickerProps } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
@@ -57,6 +57,7 @@ function Calendar({
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
+        dropdowns: "flex justify-center gap-1.5 items-center z-20",
         ...classNames,
       }}
       components={{
@@ -65,6 +66,28 @@ function Calendar({
             return <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
           }
           return <ChevronRight className={cn("h-4 w-4", className)} {...props} />
+        },
+        Dropdown: ({ className, options, value, onChange, ...props }) => {
+          return (
+            <div className="relative inline-flex items-center">
+              <select
+                className={cn(
+                  "appearance-none bg-transparent pl-2.5 pr-6 py-1 text-xs font-semibold rounded-md border border-border hover:bg-muted/50 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all",
+                  className
+                )}
+                value={value}
+                onChange={onChange}
+                {...props}
+              >
+                {options?.map((opt) => (
+                  <option key={opt.value} value={opt.value} disabled={opt.disabled} className="bg-background text-foreground">
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="h-3 w-3 absolute right-1.5 pointer-events-none opacity-50" />
+            </div>
+          )
         }
       }}
       {...props} />)

@@ -3,7 +3,7 @@ import { Calendar as CalendarIcon, X } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { getObject } from "@/lib/db"
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings"
 import {
   type GlobalSettings,
   DEFAULT_GLOBAL_SETTINGS,
@@ -44,13 +44,7 @@ export function DatePicker({
   const resolvedId = id || fallbackId
   const resolvedName = name || fallbackId
 
-  const settings = React.useMemo(() => {
-    try {
-      return getObject<GlobalSettings>("global_settings", DEFAULT_GLOBAL_SETTINGS)
-    } catch {
-      return DEFAULT_GLOBAL_SETTINGS
-    }
-  }, [])
+  const settings = useGlobalSettings()
 
   const dateFormat = normalizeDateFormat(
     settings.dateFormat,
@@ -68,9 +62,16 @@ export function DatePicker({
     [],
   )
 
+  const lastParsedRef = React.useRef<string | null>(null)
+  const lastFormatRef = React.useRef<string>(dateFormat)
+
   // Sync external value change
   React.useEffect(() => {
-    setInputValue(formatValueToDisplay(value || "", dateFormat))
+    if (value !== lastParsedRef.current || dateFormat !== lastFormatRef.current) {
+      setInputValue(formatValueToDisplay(value || "", dateFormat))
+      lastParsedRef.current = value || null
+      lastFormatRef.current = dateFormat
+    }
   }, [value, dateFormat, formatValueToDisplay])
 
   const dateValue = React.useMemo(() => {
@@ -97,8 +98,25 @@ export function DatePicker({
     return rules.length > 0 ? rules : undefined
   }, [min, max])
 
+  const startMonth = React.useMemo(() => {
+    if (min) {
+      const [y] = min.split("-").map(Number)
+      if (!isNaN(y)) return new Date(y, 0)
+    }
+    return new Date(new Date().getFullYear() - 100, 0)
+  }, [min])
+
+  const endMonth = React.useMemo(() => {
+    if (max) {
+      const [y] = max.split("-").map(Number)
+      if (!isNaN(y)) return new Date(y, 11)
+    }
+    return new Date(new Date().getFullYear() + 10, 11)
+  }, [max])
+
   const handleSelect = (date: Date | undefined) => {
     if (!date) {
+      lastParsedRef.current = ""
       onChange?.("")
       setInputValue("")
       setOpen(false)
@@ -108,6 +126,7 @@ export function DatePicker({
     const m = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
     const formatted = `${y}-${m}-${day}`
+    lastParsedRef.current = formatted
     onChange?.(formatted)
     setInputValue(formatValueToDisplay(formatted, dateFormat))
     setOpen(false)
@@ -123,14 +142,17 @@ export function DatePicker({
       const parsedDate = new Date(year, month - 1, day)
       if (min && parsedDate < new Date(min)) return
       if (max && parsedDate > new Date(max)) return
+      lastParsedRef.current = parsed
       onChange?.(parsed)
     } else if (nextInputValue === "") {
+      lastParsedRef.current = ""
       onChange?.("")
     }
   }
 
   const handleBlur = () => {
     if (!inputValue) {
+      lastParsedRef.current = ""
       onChange?.("")
       return
     }
@@ -145,6 +167,7 @@ export function DatePicker({
         setInputValue(formatValueToDisplay(value || "", dateFormat))
         return
       }
+      lastParsedRef.current = parsed
       onChange?.(parsed)
       setInputValue(formatValueToDisplay(parsed, dateFormat))
     } else {
@@ -155,6 +178,7 @@ export function DatePicker({
 
   const handleClear = (event: React.MouseEvent) => {
     event.stopPropagation()
+    lastParsedRef.current = ""
     onChange?.("")
     setInputValue("")
   }
@@ -176,6 +200,9 @@ export function DatePicker({
             selected={dateValue}
             onSelect={handleSelect}
             disabled={disabledDays}
+            captionLayout="dropdown"
+            startMonth={startMonth}
+            endMonth={endMonth}
             autoFocus
           />
         </PopoverContent>
