@@ -45,5 +45,6 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 - **Unified Phone & Zero-Click Form Rows**: Consolidated split phone fields in ContactForm into a single input field, and implemented automatic first-row pre-population for form lists (phones, emails, addresses, socials, emergency contacts) with background cleanups.
 - **DRY Metrics & Modernized Dashboards**: Extracted quick metrics cards into a central `<ModuleCommandMetricsGrid />` component across all 11 modules, and upgraded reports/KPI dashboard widgets with semantic accents and staggered Framer Motion transitions.
 - **Unified SEO & Container Layouts**: Converted hardcoded SEO header strings to localized translation mappings (`t()`) and unified margins/spacing limits consistently across all pages.
+- **Design System Primitives**: Refactored raw HTML `<select>`, `<textarea>`, `<input>`, and Radix checkbox controls across all 11 modules to use `FormSelect`, `Textarea`, `Input`, `SearchBar`, and `Checkbox` design system primitives. Cleaned up all unused variables and linter warnings to achieve a 100% clean compilation and lint state.
 
 Do not reintroduce resolved violations.

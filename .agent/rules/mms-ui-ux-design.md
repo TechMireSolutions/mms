@@ -9,11 +9,13 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 ## 1. Component & Design Token Constraints
 
 ### Primitive Component Enforcement
-- **No Raw HTML Elements**: NEVER use raw UI tags (`<button>`, `<input>`, `<select>`, `<table>`) where design system primitives are available.
+- **No Raw HTML Elements**: NEVER use raw UI tags (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, checkboxes) where design system primitives are available.
 - **Utilize Central Primitives**: Use:
   - `Button` (`@/components/ui/button`)
   - `Input` (`@/components/ui/input`)
-  - `FormSelect` / `EditableSelect` (`@/components/ui/FormPrimitives`)
+  - `FormSelect` / `EditableSelect` (`@/components/ui/FormSelect` / `@/components/ui/FormPrimitives`)
+  - `Textarea` (`@/components/ui/textarea`)
+  - `Checkbox` (`@/components/ui/checkbox`)
   - `Switch` (`@/components/ui/switch`)
   - `FormModal` / `Modal` (`@/components/ui/FormModal`)
   - `DataTable` (`@/components/ui/DataTable`)

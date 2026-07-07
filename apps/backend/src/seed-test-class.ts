@@ -20,8 +20,8 @@ async function main() {
   const contactRows = await db.select().from(contacts).where(eq(contacts.workspaceSubdomain, subdomain));
   console.log(`Found ${contactRows.length} contact rows in database.`);
   const janeContact = contactRows.find(r => {
-    const data = r.customData as any;
-    return data.firstName?.toLowerCase().includes('jane') || data.name?.toLowerCase().includes('jane');
+    const data = r.customData as Record<string, unknown>;
+    return String(data?.firstName || '').toLowerCase().includes('jane') || String(data?.name || '').toLowerCase().includes('jane');
   });
 
   if (!janeContact) {
@@ -34,8 +34,8 @@ async function main() {
   const studentRows = await db.select().from(students).where(eq(students.workspaceSubdomain, subdomain));
   console.log(`Found ${studentRows.length} student rows in database.`);
   const janeStudent = studentRows.find(r => {
-    const data = r.customData as any;
-    return String(data.contactId) === String(janeContact.id);
+    const data = r.customData as Record<string, unknown>;
+    return String(data?.contactId || '') === String(janeContact.id);
   });
 
   if (!janeStudent) {
