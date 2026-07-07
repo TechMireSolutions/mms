@@ -270,8 +270,12 @@ export const COUNTRY_CODES = [
 ];
 
 export const RELATIONSHIPS = [
-  "Father", "Mother", "Son", "Daughter", "Brother", "Sister",
-  "Guardian", "Spouse", "Other",
+  "Father", "Mother", "Parent", "Son", "Daughter", "Child", "Brother", "Sister", "Sibling",
+  "Grandfather", "Grandmother", "Grandparent", "Grandson", "Granddaughter", "Grandchild",
+  "Uncle", "Aunt", "Aunt/Uncle", "Nephew", "Niece", "Niece/Nephew", "Cousin",
+  "Father-In-Law", "Mother-In-Law", "Parent-In-Law", "Son-In-Law", "Daughter-In-Law", "Child-In-Law",
+  "Brother-In-Law", "Sister-In-Law", "Sibling-In-Law",
+  "Guardian", "Dependent", "Spouse", "Other",
 ];
 
 export const TAB_REGISTRY: TabDefinition[] = [
@@ -318,7 +322,7 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
   ],
   emergency: [
     { key: "contactId",    label: "Contact",      type: "text",   description: "Contact picker — links existing contacts as emergency contacts.", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },
-    { key: "relationship", label: "Relationship", type: "select", description: "Relationship with the emergency contact (e.g. Father, Mother, Spouse).", options: ["Father", "Mother", "Son", "Daughter", "Brother", "Sister", "Guardian", "Spouse", "Other"], defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
+    { key: "relationship", label: "Relationship", type: "select", description: "Relationship with the emergency contact (e.g. Father, Mother, Spouse).", options: RELATIONSHIPS, defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
   ],
 };
 

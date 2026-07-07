@@ -41,6 +41,7 @@ import {
   Address,
   SocialLink,
   EmergencyContact,
+  RELATIONSHIPS,
 } from "@mms/shared";
 import {
   Field,
@@ -1228,16 +1229,7 @@ export default function ContactForm({
                         options={
                           relationshipOptions.length > 0
                             ? relationshipOptions
-                            : [
-                                "Father",
-                                "Mother",
-                                "Guardian",
-                                "Spouse",
-                                "Sibling",
-                                "Uncle",
-                                "Aunt",
-                                "Other",
-                              ]
+                            : RELATIONSHIPS
                         }
                         value={em.relationship || "Father"}
                         onChange={(val) =>
