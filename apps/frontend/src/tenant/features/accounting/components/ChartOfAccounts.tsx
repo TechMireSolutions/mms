@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Plus, Pencil, Search, Download, EyeOff, Eye } from "lucide-react";
+import { Plus, Pencil, Download, EyeOff, Eye } from "lucide-react";
+import { SearchBar } from "@/components/ui/SearchBar";
 import { AnimatePresence } from "framer-motion";
 import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
 import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
@@ -116,17 +117,12 @@ export function ChartOfAccounts({
     <section aria-label="Chart of Accounts" className="space-y-4">
       {/* Toolbar */}
       <nav aria-label="Account controls" className="flex flex-wrap gap-2 items-center">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <Input 
-            type="search"
-            aria-label="Search accounts"
-            value={search} 
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search accounts…"
-            className="pl-9 pr-4" 
-          />
-        </div>
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Search accounts…"
+          className="flex-1 min-w-[180px]"
+        />
         <FormSelect 
           aria-label="Filter by account type"
           value={typeFilter} 

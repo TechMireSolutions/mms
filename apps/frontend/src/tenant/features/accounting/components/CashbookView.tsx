@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { formatDate } from "@/lib/utils";
-import { Search, TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
+import { SearchBar } from "@/components/ui/SearchBar";
 import { JournalEntry, Account } from '@/lib/data/accountingData';
 import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
@@ -124,17 +125,12 @@ export function CashbookView({ entries, accounts: _accounts, formatCurrency }: C
 
       {/* Filters */}
       <nav aria-label="Filter transactions" className="flex flex-wrap gap-2">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <Input 
-            type="search"
-            aria-label="Search transactions"
-            value={search} 
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search transactions…"
-            className="pl-9 pr-4" 
-          />
-        </div>
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Search transactions…"
+          className="flex-1 min-w-[180px]"
+        />
         {(["all","in","out","transfer"] as const).map((filterOption) => (
           <Button 
             key={filterOption}

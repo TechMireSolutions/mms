@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from "react";
-import { Search, Pencil, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Pencil, Trash2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { ListPagination } from "@/components/ui/ListPagination";
 import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
@@ -117,17 +119,12 @@ export function AttendanceRecords({
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap gap-2 items-center">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <label htmlFor="search-student" className="sr-only">{t("attendance.searchStudent")}</label>
-          <Input
-            id="search-student"
-            value={search}
-            onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-            placeholder={t("attendance.searchStudent")}
-            className="pl-9 pr-4"
-          />
-        </div>
+        <SearchBar
+          value={search}
+          onChange={(val) => { setSearch(val); setPage(1); }}
+          placeholder={t("attendance.searchStudent")}
+          className="flex-1 min-w-[180px]"
+        />
 
         <div className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold" role="group" aria-label={t("attendance.filter.status")}>
           <Button
@@ -299,33 +296,14 @@ export function AttendanceRecords({
         </div>
       </article>
 
-      <footer className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{t("attendance.pagination.summary", { count: filtered.length, page, totalPages })}</span>
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
-            disabled={page === 1}
-            aria-label={t("attendance.pagination.previous")}
-            className="h-8 w-8"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
-            disabled={page === totalPages}
-            aria-label={t("attendance.pagination.next")}
-            className="h-8 w-8"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-      </footer>
+      <ListPagination
+        page={page}
+        total={filtered.length}
+        limit={PAGE_SIZE}
+        onPageChange={setPage}
+        i18nNamespace="attendance"
+        variant="summary"
+      />
     </section>
   );
 }

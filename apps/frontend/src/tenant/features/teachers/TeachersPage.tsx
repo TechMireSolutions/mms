@@ -26,7 +26,7 @@ import { useTeachersPaginated, useTeacherMutations, type TeacherRecord } from '@
 import { useTeacherColumnLayout } from '@/tenant/features/teachers/hooks/useTeacherColumnLayout';
 import { ModuleColumnCustomizer } from '@/components/ui/ModuleColumnCustomizer';
 import { TeachersCommandMetrics } from "@/tenant/features/teachers/components/TeachersCommandMetrics";
-import { TeachersListPagination } from "@/tenant/features/teachers/components/TeachersListPagination";
+import { ListPagination } from "@/components/ui/ListPagination";
 import { useTeacherConfig } from '@/tenant/features/teachers/hooks/useTeacherConfig';
 import { notify } from '@/lib/notify';
 
@@ -298,12 +298,14 @@ export default function Teachers(): React.JSX.Element {
                       isColumnVisible={isColumnVisible}
                     />
                     {useServerWork && workPageData && (
-                      <TeachersListPagination
+                      <ListPagination
                         page={workPageData.page}
                         total={workPageData.total}
                         limit={workPageData.limit}
                         hasMore={workPageData.hasMore}
                         onPageChange={setListPage}
+                        i18nNamespace="teachers"
+                        variant="range"
                       />
                     )}
                     {useServerWork && isWorkPageFetching && (

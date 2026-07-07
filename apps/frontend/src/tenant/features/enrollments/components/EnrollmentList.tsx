@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Search, Eye, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Eye, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { ListPagination } from "@/components/ui/ListPagination";
 import { ENROLLMENT_STATUSES, STATUS_MAP, Enrollment, EnrollmentStatus } from '@/lib/data/enrollmentData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
@@ -103,17 +105,12 @@ export function EnrollmentList({
   return (
     <section className="space-y-4" aria-label="Enrollment list interface">
       <div className="flex flex-wrap gap-2 items-center">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" aria-hidden="true" />
-          <Input
-            type="search"
-            value={search === " " ? "" : search}
-            onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-            placeholder={t("enrollments.searchPlaceholder")}
-            aria-label={t("enrollments.searchPlaceholder")}
-            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl"
-          />
-        </div>
+        <SearchBar
+          value={search === " " ? "" : search}
+          onChange={(val) => { setSearch(val); setPage(1); }}
+          placeholder={t("enrollments.searchPlaceholder")}
+          className="flex-1 min-w-[180px]"
+        />
 
         <div className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold" role="group" aria-label={t("enrollments.filter.status")}>
           <Button
@@ -292,31 +289,14 @@ export function EnrollmentList({
           </Card>
       )}
 
-      <div className="flex items-center justify-between text-xs text-muted-foreground" role="navigation" aria-label={t("enrollments.pagination.label")}>
-        <span>{t("enrollments.pagination.summary", { count: filtered.length, page, totalPages })}</span>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
-            disabled={page === 1}
-            aria-label={t("enrollments.pagination.previous")}
-            className="p-1.5 w-8 h-8 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
-            disabled={page === totalPages}
-            aria-label={t("enrollments.pagination.next")}
-            className="p-1.5 w-8 h-8 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
-          >
-            <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
-          </Button>
-        </div>
-      </div>
+      <ListPagination
+        page={page}
+        total={filtered.length}
+        limit={PAGE_SIZE}
+        onPageChange={setPage}
+        i18nNamespace="enrollments"
+        variant="summary"
+      />
     </section>
   );
 }

@@ -13,9 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  CheckCircle2, XCircle, Save, Send, Users, Search,
+  CheckCircle2, XCircle, Save, Send, Users,
   WifiOff, Wifi, MapPin, Scan, UploadCloud,
 } from "lucide-react";
+import { SearchBar } from "@/components/ui/SearchBar";
 import { ClassStudent, AttendanceRecord, AttendanceStatus, getAttendanceStatusInfo } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
@@ -602,17 +603,12 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-        <label htmlFor="search-mark" className="sr-only">{t("attendance.searchStudent")}</label>
-        <Input 
-          id="search-mark"
-          value={search} 
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder={t("attendance.searchStudent")}
-          className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
-        />
-      </div>
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder={t("attendance.searchStudent")}
+        className="w-full"
+      />
 
       {/* Attendance Grid */}
       <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">

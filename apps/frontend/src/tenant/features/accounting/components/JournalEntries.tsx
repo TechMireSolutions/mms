@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { formatDate } from "@/lib/utils";
 import {
-  Plus, Eye, Pencil, Trash2, Search, CheckCircle2,
+  Plus, Eye, Pencil, Trash2, CheckCircle2,
   RotateCcw, Filter, Download, BookOpen,
   DollarSign, Heart, Zap, UserCheck, Layers,
   Sparkles,
   TrendingUp
 } from "lucide-react";
+import { SearchBar } from "@/components/ui/SearchBar";
 import { AnimatePresence } from "framer-motion";
 import { JournalEntryForm } from "@/tenant/features/accounting/components/JournalEntryForm";
 import { JournalEntryDetail } from "@/tenant/features/accounting/components/JournalEntryDetail";
@@ -396,17 +397,12 @@ export function JournalEntries({
       <nav aria-label="Journal controls" className="flex flex-wrap gap-2 items-center">
         <ModeToggle />
         <div className="flex-1" />
-        <div className="relative min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <Input
-            type="search"
-            aria-label="Search entries"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by ref or description…"
-            className="pl-9 pr-4"
-          />
-        </div>
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Search by ref or description…"
+          className="min-w-[180px]"
+        />
         <FormSelect 
           aria-label="Filter by status"
           value={statusFilter} 

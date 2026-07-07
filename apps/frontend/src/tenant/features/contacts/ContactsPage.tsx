@@ -25,7 +25,7 @@ import ContactsToolbar from "@/tenant/features/contacts/components/ContactsToolb
 import { ContactsCommandMetrics } from "@/tenant/features/contacts/components/ContactsCommandMetrics";
 import ContactsDataBanner from "@/tenant/features/contacts/components/ContactsDataBanner";
 import ContactsSyncConflictPanel from "@/tenant/features/contacts/components/ContactsSyncConflictPanel";
-import ContactsListPagination from "@/tenant/features/contacts/components/ContactsListPagination";
+import { ListPagination } from "@/components/ui/ListPagination";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
@@ -603,13 +603,15 @@ function ContactsInner() {
                         />
                       </div>
                       {useServerWork && workPageData && (
-                        <ContactsListPagination
-                          page={workPageData.page}
-                          total={workPageData.total}
-                          limit={workPageData.limit}
-                          hasMore={workPageData.hasMore}
-                          onPageChange={setListPage}
-                        />
+                         <ListPagination
+                           page={workPageData.page}
+                           total={workPageData.total}
+                           limit={workPageData.limit}
+                           hasMore={workPageData.hasMore}
+                           onPageChange={setListPage}
+                           i18nNamespace="contacts"
+                           variant="range"
+                         />
                       )}
                       {useServerWork && isWorkPageFetching && (
                         <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>

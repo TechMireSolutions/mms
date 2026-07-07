@@ -30,7 +30,7 @@ import { useStudentsPaginated, useStudentMutations, fetchAllStudentsForQuery, ty
 import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
-import StudentsListPagination from "@/tenant/features/students/components/StudentsListPagination";
+import { ListPagination } from "@/components/ui/ListPagination";
 import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
 
 const STUDENTS_GR_MIGRATION_KEY = "mms_students_gr_migration_v1";
@@ -372,12 +372,14 @@ export default function Students() {
                     }}
                   />
                   {useServerWork && isListView && workPageData && (
-                    <StudentsListPagination
+                    <ListPagination
                       page={workPageData.page}
                       total={workPageData.total}
                       limit={workPageData.limit}
                       hasMore={workPageData.hasMore}
                       onPageChange={setListPage}
+                      i18nNamespace="students"
+                      variant="range"
                     />
                   )}
                   {useServerWork && isWorkPageFetching && (

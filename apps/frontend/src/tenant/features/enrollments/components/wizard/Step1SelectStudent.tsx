@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { Search, User, Calendar } from "lucide-react";
+import { User, Calendar } from "lucide-react";
+import { SearchBar } from "@/components/ui/SearchBar";
 import { STUDENTS_MODULE_CONTRACT } from "@mms/shared";
 import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session } from '@/lib/data/sessionsData';
@@ -56,17 +57,12 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
         <p className="text-sm text-muted-foreground mt-0.5">Choose a registered student to enroll.</p>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" aria-hidden="true" />
-        <Input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search students by name…"
-          aria-label="Search students by name"
-          className="pl-9 pr-4 py-2 text-sm rounded-xl"
-        />
-      </div>
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search students by name…"
+        className="w-full"
+      />
 
       <div className="space-y-2 max-h-80 overflow-y-auto pr-1" role="radiogroup" aria-label="Students list">
         {!isFetching && students.length === 0 && (

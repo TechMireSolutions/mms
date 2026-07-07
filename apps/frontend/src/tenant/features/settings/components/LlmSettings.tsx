@@ -16,6 +16,7 @@ import {
   MessageSquare,
   RotateCcw,
 } from 'lucide-react';
+import { SearchBar } from '@/components/ui/SearchBar';
 import { motion, useDragControls } from 'framer-motion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContext';
@@ -520,16 +521,12 @@ export default function LlmSettings(): React.JSX.Element {
             </SettingsCallout>
 
             {configs.length > 0 && (
-              <div className="relative flex items-center">
-                <Search className="absolute left-3 h-4 w-4 text-muted-foreground/75" />
-                <Input
-                  type="text"
-                  placeholder={t('settings.llmSearchPlaceholder')}
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  className="pl-9 h-9 text-xs"
-                />
-              </div>
+              <SearchBar
+                placeholder={t('settings.llmSearchPlaceholder')}
+                value={searchQuery}
+                onChange={setSearchQuery}
+                className="w-full"
+              />
             )}
 
             {configs.length === 0 ? (
