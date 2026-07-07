@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
-import { ExportToolbar } from "@/tenant/features/obligations/components/ExportToolbar";
+import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell, PieChart, Pie } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useDebounce } from "@/hooks/useDebounce";

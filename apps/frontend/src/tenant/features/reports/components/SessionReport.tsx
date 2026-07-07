@@ -8,8 +8,8 @@ import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { getIntlLocaleForLanguage, type Enrollment } from '@mms/shared';
-import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
-import ReportExportBar from "@/tenant/features/reports/components/ReportExportBar";
+import { StatCard } from "@/components/ui/StatCard";
+import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -147,10 +147,10 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={CalendarCheck} label={t("sessions.report.activeSessions")}  value={activeSessionsCount} color="primary" />
-        <ReportSummaryCard icon={Users}         label={t("sessions.report.totalEnrolled")}   value={totalEnrolled}    color="blue"    />
-        <ReportSummaryCard icon={BarChart2}     label={t("sessions.report.totalCapacity")}   value={totalCapacity}    color="violet"  />
-        <ReportSummaryCard icon={TrendingUp}    label={t("sessions.report.avgUtilisation")}  value={`${averageUtilization}%`} color="green"   />
+        <StatCard icon={CalendarCheck} label={t("sessions.report.activeSessions")}  value={activeSessionsCount} color="primary" />
+        <StatCard icon={Users}         label={t("sessions.report.totalEnrolled")}   value={totalEnrolled}    color="blue"    />
+        <StatCard icon={BarChart2}     label={t("sessions.report.totalCapacity")}   value={totalCapacity}    color="violet"  />
+        <StatCard icon={TrendingUp}    label={t("sessions.report.avgUtilisation")}  value={`${averageUtilization}%`} color="green"   />
       </div>
 
       {/* Charts */}
@@ -184,7 +184,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
       </div>
 
       {/* Table */}
-      <ReportExportBar 
+      <ExportToolbar 
         title={t("sessions.report.capacityReportTitle")} 
         data={sessionCapacityData}
         headers={[

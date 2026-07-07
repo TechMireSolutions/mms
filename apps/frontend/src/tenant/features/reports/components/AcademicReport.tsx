@@ -9,8 +9,8 @@ import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { getGrade } from '@mms/shared';
 import { useTranslation } from "@/hooks/useTranslation";
-import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
-import ReportExportBar from "@/tenant/features/reports/components/ReportExportBar";
+import { StatCard } from "@/components/ui/StatCard";
+import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 /** Grade badge colour mapping. */
@@ -161,10 +161,10 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={BookOpen}   label={t("examinations.report.totalRecords")} value={academicResultsData.length} color="primary" />
-        <ReportSummaryCard icon={TrendingUp} label={t("examinations.report.classAvg")}     value={`${averageMarks}%`} color="blue"    />
-        <ReportSummaryCard icon={Trophy}     label={t("examinations.report.topScore")}     value={`${topScore}%`}      color="amber"   />
-        <ReportSummaryCard icon={Star}       label={t("examinations.report.passRate")}     value={`${passRate}%`} color="green"   />
+        <StatCard icon={BookOpen}   label={t("examinations.report.totalRecords")} value={academicResultsData.length} color="primary" />
+        <StatCard icon={TrendingUp} label={t("examinations.report.classAvg")}     value={`${averageMarks}%`} color="blue"    />
+        <StatCard icon={Trophy}     label={t("examinations.report.topScore")}     value={`${topScore}%`}      color="amber"   />
+        <StatCard icon={Star}       label={t("examinations.report.passRate")}     value={`${passRate}%`} color="green"   />
       </div>
 
       {/* Charts row */}
@@ -229,8 +229,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
         </div>
       )}
 
-      {/* Results table */}
-      <ReportExportBar 
+      <ExportToolbar 
         title={t("examinations.report.examResultsTitle")} 
         data={academicResultsData}
         headers={[

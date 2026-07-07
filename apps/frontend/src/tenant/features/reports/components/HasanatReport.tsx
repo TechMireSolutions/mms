@@ -7,8 +7,8 @@ import {
 } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
-import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
-import ReportExportBar from "@/tenant/features/reports/components/ReportExportBar";
+import { StatCard } from "@/components/ui/StatCard";
+import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -165,10 +165,10 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={Star}         label={t("hasanat.report.totalDistributed")} value={totalDistributed.toLocaleString()} color="primary" />
-        <ReportSummaryCard icon={Gift}         label={t("hasanat.report.totalRedeemed")}    value={totalRedeemed.toLocaleString()}    color="green"   />
-        <ReportSummaryCard icon={TrendingDown} label={t("hasanat.report.balance")}           value={totalBalance.toLocaleString()}     color="amber"   />
-        <ReportSummaryCard icon={Users}        label={t("hasanat.report.redemptionRate")}   value={`${redemptionRate}%`}             color="blue"    />
+        <StatCard icon={Star}         label={t("hasanat.report.totalDistributed")} value={totalDistributed.toLocaleString()} color="primary" />
+        <StatCard icon={Gift}         label={t("hasanat.report.totalRedeemed")}    value={totalRedeemed.toLocaleString()}    color="green"   />
+        <StatCard icon={TrendingDown} label={t("hasanat.report.balance")}           value={totalBalance.toLocaleString()}     color="amber"   />
+        <StatCard icon={Users}        label={t("hasanat.report.redemptionRate")}   value={`${redemptionRate}%`}             color="blue"    />
       </div>
 
       {/* Charts */}
@@ -222,8 +222,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
         </div>
       </div>
 
-      {/* Distribution table */}
-      <ReportExportBar 
+      <ExportToolbar 
         title={t("hasanat.report.distributionTitle")} 
         data={distribution}
         headers={[

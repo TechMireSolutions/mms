@@ -14,7 +14,7 @@ import {
 } from "@/tenant/features/question-bank/hooks/useQuestionBankApi";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
-import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
+import { StatCard } from "@/components/ui/StatCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 function sumScores(scores: Record<string, number>): number {
@@ -64,25 +64,25 @@ export default function QuestionBankReport(): React.JSX.Element {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <ReportSummaryCard
+        <StatCard
           icon={ClipboardList}
           label={t("questionBank.report.totalQuestions")}
           value={questions.length}
           color="primary"
         />
-        <ReportSummaryCard
+        <StatCard
           icon={FileCheck2}
           label={t("questionBank.report.generatedTests")}
           value={tests.length}
           color="blue"
         />
-        <ReportSummaryCard
+        <StatCard
           icon={Users}
           label={t("questionBank.report.submissions")}
           value={questionBankResults.length}
           color="violet"
         />
-        <ReportSummaryCard
+        <StatCard
           icon={Target}
           label={t("questionBank.report.avgScore")}
           value={`${avgScore}%`}

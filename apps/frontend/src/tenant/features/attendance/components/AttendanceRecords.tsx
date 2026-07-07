@@ -10,26 +10,16 @@ import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAtten
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/tenant/features/attendance/components/StatusBadge";
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
-import type { AppTranslationKey, ModuleColumnRegistryEntry } from "@mms/shared";
+import type { AppTranslationKey } from "@mms/shared";
 
 const PAGE_SIZE = 15;
 
-interface ColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
-  labels: {
-    trigger: string;
-    title: string;
-    visibleAndOrder: string;
-    hidden: string;
-    fixed: string;
-    hideColumn: (label: string) => string;
-  };
-}
+
 
 interface AttendanceRecordsProps {
   filters: AttendanceFilterState;
@@ -37,7 +27,7 @@ interface AttendanceRecordsProps {
   records: AttendanceRecord[];
   setRecords: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
   isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ColumnCustomizerProps;
+  columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 export function AttendanceRecords({
@@ -239,7 +229,7 @@ export function AttendanceRecords({
                   {showTimeIn && (
                     <td className="px-3 py-2.5">
                       {editing === attendanceRecord.id
-                        ? <input type="time" value={attendanceRecord.timeIn} onChange={(event) => updateRecord(attendanceRecord.id, "timeIn", event.target.value)}
+                        ? <Input type="time" value={attendanceRecord.timeIn} onChange={(event) => updateRecord(attendanceRecord.id, "timeIn", event.target.value)}
                             aria-label={t("attendance.columns.timeIn")}
                             className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none" />
                         : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeIn || "—"}</span>
@@ -249,7 +239,7 @@ export function AttendanceRecords({
                   {showTimeOut && (
                     <td className="px-3 py-2.5">
                       {editing === attendanceRecord.id
-                        ? <input type="time" value={attendanceRecord.timeOut} onChange={(event) => updateRecord(attendanceRecord.id, "timeOut", event.target.value)}
+                        ? <Input type="time" value={attendanceRecord.timeOut} onChange={(event) => updateRecord(attendanceRecord.id, "timeOut", event.target.value)}
                             aria-label={t("attendance.columns.timeOut")}
                             className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none" />
                         : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeOut || "—"}</span>

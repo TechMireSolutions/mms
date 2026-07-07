@@ -4,8 +4,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
-import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
-import ReportExportBar from "@/tenant/features/reports/components/ReportExportBar";
+import { StatCard } from "@/components/ui/StatCard";
+import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -151,10 +151,10 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
   return (
     <div className="space-y-4 text-left">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={UserCheck} label={t("attendance.report.avgAttendance")} value={`${avgRate}%`} color="green" />
-        <ReportSummaryCard icon={Users} label={t("attendance.report.classesCount")} value={summary.length} color="primary" />
-        <ReportSummaryCard icon={Award} label={t("attendance.report.perfectAttendance")} value={perfect} color="amber" />
-        <ReportSummaryCard icon={AlertTriangle} label={t("attendance.report.belowThreshold")} value={belowThreshold} color="red" />
+        <StatCard icon={UserCheck} label={t("attendance.report.avgAttendance")} value={`${avgRate}%`} color="green" />
+        <StatCard icon={Users} label={t("attendance.report.classesCount")} value={summary.length} color="primary" />
+        <StatCard icon={Award} label={t("attendance.report.perfectAttendance")} value={perfect} color="amber" />
+        <StatCard icon={AlertTriangle} label={t("attendance.report.belowThreshold")} value={belowThreshold} color="red" />
       </div>
 
       {/* Chart */}
@@ -174,7 +174,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
       )}
 
       {/* Class Summary Table */}
-      <ReportExportBar 
+      <ExportToolbar 
         title={t("attendance.report.summaryTitle")} 
         data={summary}
         headers={[
@@ -225,7 +225,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
       {/* Student Attendance */}
       <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
         <h3 className="text-sm font-semibold text-foreground">{t("attendance.report.studentDetailTitle")}</h3>
-        <ReportExportBar 
+        <ExportToolbar 
           title={t("attendance.report.studentDetailTitle")} 
           data={studentAttendanceRows}
           headers={[

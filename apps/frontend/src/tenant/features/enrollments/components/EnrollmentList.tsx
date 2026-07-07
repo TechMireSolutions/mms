@@ -7,26 +7,14 @@ import { ListPagination } from "@/components/ui/ListPagination";
 import { ENROLLMENT_STATUSES, STATUS_MAP, Enrollment, EnrollmentStatus } from '@/lib/data/enrollmentData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 
 const PAGE_SIZE = 12;
 
-interface ColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
-  labels: {
-    trigger: string;
-    title: string;
-    visibleAndOrder: string;
-    hidden: string;
-    fixed: string;
-    hideColumn: (label: string) => string;
-  };
-}
+
 
 interface EnrollmentListProps {
   enrollments: Enrollment[];
@@ -35,7 +23,7 @@ interface EnrollmentListProps {
   onCancel: (id: string) => void;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ColumnCustomizerProps;
+  columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 /**

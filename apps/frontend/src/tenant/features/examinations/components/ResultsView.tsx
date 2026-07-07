@@ -12,29 +12,17 @@ import { getGrade } from "@/tenant/features/examinations/components/gradeUtils";
 import { StudentResultCard, StudentResultItem } from "@/tenant/features/examinations/components/StudentResultCard";
 import { CertificatePreview } from "@/tenant/features/examinations/components/CertificatePreview";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
 
-interface ColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
-  labels: {
-    trigger: string;
-    title: string;
-    visibleAndOrder: string;
-    hidden: string;
-    fixed: string;
-    hideColumn: (label: string) => string;
-  };
-}
+
 
 interface ResultsViewProps {
   exams: Exam[];
   results: ExamResult[];
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ColumnCustomizerProps;
+  columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 interface RankedResult extends StudentResultItem {

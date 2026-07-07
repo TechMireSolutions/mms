@@ -6,30 +6,18 @@ import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/da
 import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 
-interface ColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
-  labels: {
-    trigger: string;
-    title: string;
-    visibleAndOrder: string;
-    hidden: string;
-    fixed: string;
-    hideColumn: (label: string) => string;
-  };
-}
+
 
 interface ChartOfAccountsProps {
   accounts: Account[];
   onChange: (accounts: Account[]) => void;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ColumnCustomizerProps;
+  columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 /**

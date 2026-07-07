@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Users, UserCheck, MessageCircle, Loader2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsReportAnalytics } from "@/tenant/features/contacts/hooks/useContacts";
-import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
+import { StatCard } from "@/components/ui/StatCard";
 import ContactsSavedReports from "@/tenant/features/contacts/components/ContactsSavedReports";
 import type { ContactsWorkDrillDown } from "@mms/shared";
 
@@ -35,9 +35,9 @@ export default function ContactReport(props: ContactReportProps): React.JSX.Elem
   return (
     <div className="space-y-6 text-left p-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <ReportSummaryCard icon={Users} label={t("contacts.report.totalContacts")} value={totalContacts} color="primary" />
-        <ReportSummaryCard icon={UserCheck} label={t("contacts.report.activeContacts")} value={activeContacts} color="green" />
-        <ReportSummaryCard icon={MessageCircle} label={t("contacts.report.whatsappVerified")} value={`${whatsappRate}%`} color="amber" />
+        <StatCard icon={Users} label={t("contacts.report.totalContacts")} value={totalContacts} color="primary" />
+        <StatCard icon={UserCheck} label={t("contacts.report.activeContacts")} value={activeContacts} color="green" />
+        <StatCard icon={MessageCircle} label={t("contacts.report.whatsappVerified")} value={`${whatsappRate}%`} color="amber" />
       </div>
 
       <ContactsSavedReports suggestedDrillDown={lastDrillDown} />

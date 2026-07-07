@@ -18,22 +18,10 @@ import {
   QUESTION_TYPE_ICONS,
   splitQuestionCompoundAnswer,
   type QuestionBankQuestion as Question,
-  type ModuleColumnRegistryEntry,
 } from '@mms/shared';
-import { ModuleColumnCustomizer } from '@/components/ui/ModuleColumnCustomizer';
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 
-interface ColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
-  labels: {
-    trigger: string;
-    title: string;
-    visibleAndOrder: string;
-    hidden: string;
-    fixed: string;
-    hideColumn: (label: string) => string;
-  };
-}
+
 
 interface QuestionBankProps {
   questions: Question[];
@@ -46,7 +34,7 @@ interface QuestionBankProps {
   listLayout?: boolean;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ColumnCustomizerProps;
+  columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 export function QuestionBank({

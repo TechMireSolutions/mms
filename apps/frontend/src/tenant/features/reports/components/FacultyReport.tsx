@@ -8,8 +8,8 @@ import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessi
 import { useTeachersByIds } from '@/tenant/features/teachers/hooks/useTeachers';
 import { collectTeacherIdsFromSessions } from '@/lib/registryResolve';
 import { teacherNameById } from '@/lib/teachers/teacherAssignment';
-import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
-import ReportExportBar from "@/tenant/features/reports/components/ReportExportBar";
+import { StatCard } from "@/components/ui/StatCard";
+import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface FacultyWorkloadItem {
@@ -84,10 +84,10 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={GraduationCap} label={t("teachers.report.totalFaculty")}        value={totalFaculty}          color="primary" />
-        <ReportSummaryCard icon={Users}         label={t("teachers.report.totalStudents")}        value={totalStudents}         color="blue"    />
-        <ReportSummaryCard icon={Clock}         label={t("teachers.report.weeklyHours")}          value={`${totalHours}h`}      color="violet"  />
-        <ReportSummaryCard icon={BookOpen}      label={t("teachers.report.avgStudentsFaculty")}  value={avgStudents}           color="green"   />
+        <StatCard icon={GraduationCap} label={t("teachers.report.totalFaculty")}        value={totalFaculty}          color="primary" />
+        <StatCard icon={Users}         label={t("teachers.report.totalStudents")}        value={totalStudents}         color="blue"    />
+        <StatCard icon={Clock}         label={t("teachers.report.weeklyHours")}          value={`${totalHours}h`}      color="violet"  />
+        <StatCard icon={BookOpen}      label={t("teachers.report.avgStudentsFaculty")}  value={avgStudents}           color="green"   />
       </div>
 
       {/* Chart */}
@@ -106,7 +106,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
       </div>
 
       {/* Table */}
-      <ReportExportBar 
+      <ExportToolbar 
         title={t("teachers.report.workloadReportTitle")} 
         data={facultyWorkload}
         headers={[

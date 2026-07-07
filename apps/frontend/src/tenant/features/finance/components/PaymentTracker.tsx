@@ -6,26 +6,15 @@ import { Payment } from '@/lib/data/financeData';
 import { PAYMENT_METHOD_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import { formatMoney, type ModuleColumnRegistryEntry } from "@mms/shared";
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { formatMoney } from "@mms/shared";
 
-interface ColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
-  labels: {
-    trigger: string;
-    title: string;
-    visibleAndOrder: string;
-    hidden: string;
-    fixed: string;
-    hideColumn: (label: string) => string;
-  };
-}
+
 
 interface PaymentTrackerProps {
   payments: Payment[];
   isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ColumnCustomizerProps;
+  columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 export function PaymentTracker({

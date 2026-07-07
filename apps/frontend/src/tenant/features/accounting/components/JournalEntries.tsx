@@ -20,8 +20,7 @@ import { SubTabBar } from "@/components/ui/SubTabBar";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -58,18 +57,6 @@ function parseNaturalLanguage(text: string): QuickActionType | null {
   return null;
 }
 
-interface ColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
-  labels: {
-    trigger: string;
-    title: string;
-    visibleAndOrder: string;
-    hidden: string;
-    fixed: string;
-    hideColumn: (label: string) => string;
-  };
-}
 
 interface JournalEntriesProps {
   entries: JournalEntry[];
@@ -80,7 +67,7 @@ interface JournalEntriesProps {
   formatCurrency: (amount: number) => string;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ColumnCustomizerProps;
+  columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────

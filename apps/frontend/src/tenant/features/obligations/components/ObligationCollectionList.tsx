@@ -8,8 +8,7 @@ import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMergedObligationContacts } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -27,18 +26,6 @@ function fmtDate(date?: string | null): string {
   return formatDate(date);
 }
 
-interface ColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
-  labels: {
-    trigger: string;
-    title: string;
-    visibleAndOrder: string;
-    hidden: string;
-    fixed: string;
-    hideColumn: (label: string) => string;
-  };
-}
 
 export interface ObligationCollectionListProps {
   collections: ObligationCollection[];
@@ -49,7 +36,7 @@ export interface ObligationCollectionListProps {
   onView: (collection: ObligationCollection) => void;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ColumnCustomizerProps;
+  columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 export function ObligationCollectionList({

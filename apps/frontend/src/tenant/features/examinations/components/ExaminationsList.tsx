@@ -11,8 +11,7 @@ import {
 import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "@/lib/db";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import type { ModuleColumnRegistryEntry } from "@mms/shared";
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import type { Enrollment } from "@/lib/data/enrollmentData";
@@ -32,18 +31,6 @@ const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
 
 const EXAM_STATUSES = ["upcoming", "ongoing", "completed", "scheduled", "cancelled"] as const;
 
-interface ColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
-  labels: {
-    trigger: string;
-    title: string;
-    visibleAndOrder: string;
-    hidden: string;
-    fixed: string;
-    hideColumn: (label: string) => string;
-  };
-}
 
 interface ExamsListProps {
   exams: Exam[];
@@ -52,7 +39,7 @@ interface ExamsListProps {
   listLayout?: boolean;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ColumnCustomizerProps;
+  columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 /**

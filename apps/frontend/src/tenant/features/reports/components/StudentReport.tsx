@@ -10,8 +10,8 @@ import {
   useStudentsPaginated,
   useStudentsWidgetAggregates,
 } from "@/tenant/features/students/hooks/useStudents";
-import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
-import ReportExportBar from "@/tenant/features/reports/components/ReportExportBar";
+import { StatCard } from "@/components/ui/StatCard";
+import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 import EnrollmentChart from "@/tenant/features/dashboard/components/widgets/charts/EnrollmentChart";
@@ -158,10 +158,10 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={Users}      label={t("students.report.totalStudents")} value={metrics?.total ?? 0}           color="primary" />
-        <ReportSummaryCard icon={UserCheck}  label={t("students.report.active")}         value={metrics?.active ?? 0}          color="green"   />
-        <ReportSummaryCard icon={UserX}      label={t("students.report.inactive")}       value={metrics?.inactive ?? 0}        color="red"     />
-        <ReportSummaryCard icon={TrendingUp} label={t("students.report.genderSplit")}   value={`${male}M / ${female}F`}       color="blue"    />
+        <StatCard icon={Users}      label={t("students.report.totalStudents")} value={metrics?.total ?? 0}           color="primary" />
+        <StatCard icon={UserCheck}  label={t("students.report.active")}         value={metrics?.active ?? 0}          color="green"   />
+        <StatCard icon={UserX}      label={t("students.report.inactive")}       value={metrics?.inactive ?? 0}        color="red"     />
+        <StatCard icon={TrendingUp} label={t("students.report.genderSplit")}   value={`${male}M / ${female}F`}       color="blue"    />
       </div>
 
       <SubTabBar
@@ -171,7 +171,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         panelIdPrefix="student-report-subtab"
       />
 
-      <ReportExportBar 
+      <ExportToolbar 
         title={activeSubTab === "Student List" ? t("students.report.studentListTab") : t("students.report.enrollmentHistoryTab")} 
         data={activeSubTab === "Student List" ? students : enrollments}
         headers={activeSubTab === "Student List" 

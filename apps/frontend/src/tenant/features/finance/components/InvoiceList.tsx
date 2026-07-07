@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Filter, ChevronDown, Eye, ReceiptText, X } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -12,29 +12,18 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { INVOICE_STATUSES, Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
-import { formatMoney, type AppTranslationKey, type ModuleColumnRegistryEntry } from "@mms/shared";
+import { formatMoney, type AppTranslationKey } from "@mms/shared";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
-interface ColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columns: ModuleColumnRegistryEntry[]) => void;
-  labels: {
-    trigger: string;
-    title: string;
-    visibleAndOrder: string;
-    hidden: string;
-    fixed: string;
-    hideColumn: (label: string) => string;
-  };
-}
+
 
 interface InvoiceListProps {
   invoices: Invoice[];
   onView: (invoice: Invoice) => void;
   onRecord: (invoice: Invoice) => void;
   isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ColumnCustomizerProps;
+  columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 export function InvoiceList({

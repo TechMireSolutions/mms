@@ -7,8 +7,8 @@ import {
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
-import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
-import ReportExportBar from "@/tenant/features/reports/components/ReportExportBar";
+import { StatCard } from "@/components/ui/StatCard";
+import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 import RevenueChart from "@/tenant/features/dashboard/components/widgets/charts/RevenueChart";
@@ -135,10 +135,10 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <ReportSummaryCard icon={DollarSign}  label={t("finance.report.totalCollected")}  value={PKR(totalCollected)}                   color="green"   />
-        <ReportSummaryCard icon={AlertCircle} label={t("finance.report.outstanding")}     value={PKR(totalOutstanding)}                 color="red"     />
-        <ReportSummaryCard icon={TrendingUp}  label={t("finance.report.netRevenue")}      value={PKR(totalCollected - totalOutstanding)} color="primary" />
-        <ReportSummaryCard icon={Tag}         label={t("finance.report.totalDiscounted")} value={PKR(totalDiscounted)}                  color="amber"   />
+        <StatCard icon={DollarSign}  label={t("finance.report.totalCollected")}  value={PKR(totalCollected)}                   color="green"   />
+        <StatCard icon={AlertCircle} label={t("finance.report.outstanding")}     value={PKR(totalOutstanding)}                 color="red"     />
+        <StatCard icon={TrendingUp}  label={t("finance.report.netRevenue")}      value={PKR(totalCollected - totalOutstanding)} color="primary" />
+        <StatCard icon={Tag}         label={t("finance.report.totalDiscounted")} value={PKR(totalDiscounted)}                  color="amber"   />
       </div>
 
       {/* Revenue trend */}
@@ -204,8 +204,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
         </div>
       </div>
 
-      {/* Invoice table */}
-      <ReportExportBar 
+      <ExportToolbar 
         title={t("finance.report.invoiceReportTitle")} 
         data={invoices}
         headers={[
