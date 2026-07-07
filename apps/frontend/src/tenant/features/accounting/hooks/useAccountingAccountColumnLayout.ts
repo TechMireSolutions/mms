@@ -5,17 +5,11 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useAccountingAccountColumnPrefs,
-  useAccountingAccountColumnPrefsMutation,
-} from '@/tenant/features/accounting/hooks/useAccountingApi';
 
 const STORAGE_SUFFIX = 'accounts';
 
 export function useAccountingAccountColumnLayout() {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useAccountingAccountColumnPrefs();
-  const { mutate: saveColumnPrefs } = useAccountingAccountColumnPrefsMutation();
 
   const storageModuleId = `${ACCOUNTING_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`;
 
@@ -34,9 +28,7 @@ export function useAccountingAccountColumnLayout() {
   return useModuleColumnLayout({
     moduleId: storageModuleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: `${ACCOUNTING_MODULE_CONTRACT.restBasePath}/accounts`,
     translationPrefix: 'accounting.columns',
   });
 }

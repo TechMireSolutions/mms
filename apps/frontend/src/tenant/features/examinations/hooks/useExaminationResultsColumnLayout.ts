@@ -5,17 +5,11 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useExaminationResultsColumnPreferences,
-  useExaminationResultsColumnPreferencesMutation,
-} from '@/tenant/features/examinations/hooks/useExaminationsApi';
 
 const STORAGE_SUFFIX = 'results';
 
 export function useExaminationResultsColumnLayout() {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useExaminationResultsColumnPreferences();
-  const { mutate: saveColumnPrefs } = useExaminationResultsColumnPreferencesMutation();
 
   const storageModuleId = `${EXAMINATIONS_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`;
 
@@ -36,9 +30,7 @@ export function useExaminationResultsColumnLayout() {
   return useModuleColumnLayout({
     moduleId: storageModuleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: `${EXAMINATIONS_MODULE_CONTRACT.restBasePath}/results`,
     translationPrefix: 'examinations.columns',
   });
 }

@@ -1,20 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import type { Teacher, ModuleColumnPref, TeachersCommandMetricsSnapshot, TeachersListPageResult, TeachersWidgetAggregateResult } from '@mms/shared';
+import type { Teacher, TeachersCommandMetricsSnapshot, TeachersListPageResult, TeachersWidgetAggregateResult } from '@mms/shared';
 import { normalizeStoredTeacher, TEACHERS_MODULE_CONTRACT, teachersWidgetQueryFromWidget } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { TEACHER_COUNT_QUERY_KEY } from '@/tenant/features/teachers/hooks/useTeacherCount';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
-import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
-
 export const TEACHERS_QUERY_KEY = ['teachers', 'list'] as const;
 export const TEACHERS_METRICS_QUERY_KEY = ['teachers', 'metrics'] as const;
 export const TEACHERS_WIDGET_AGGREGATES_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'widget-aggregates'] as const;
-export const TEACHER_COLUMN_PREFS_QUERY_KEY = [
-  TEACHERS_MODULE_CONTRACT.collectionKey,
-  'column-preferences',
-] as const;
 
 const TEACHERS_API = TEACHERS_MODULE_CONTRACT.restBasePath;
 
@@ -223,34 +217,5 @@ export function useTeachersWidgetAggregates(
     },
     enabled: isAuthenticated && enabled && teacherQueries.length > 0,
     staleTime: 30_000,
-  });
-}
-
-export function useTeacherColumnPrefs() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: TEACHER_COLUMN_PREFS_QUERY_KEY,
-    queryFn: async () => {
-      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(
-        `${TEACHERS_API}/column-preferences`,
-      );
-      return readModuleColumnPreferences(preferencesResponse);
-    },
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
-}
-
-export function useTeacherColumnPrefsMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (preferences: ModuleColumnPref[]) =>
-      apiJson<ModuleColumnPreferencesResponse>(`${TEACHERS_API}/column-preferences`, {
-        method: 'PUT',
-        body: writeModuleColumnPreferences(preferences),
-      }),
-    onSuccess: (preferencesResponse) => {
-      queryClient.setQueryData(TEACHER_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(preferencesResponse));
-    },
   });
 }

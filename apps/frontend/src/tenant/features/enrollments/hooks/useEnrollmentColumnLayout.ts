@@ -5,15 +5,9 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useEnrollmentColumnPreferences,
-  useEnrollmentColumnPreferencesMutation,
-} from '@/tenant/features/enrollments/hooks/useEnrollmentsApi';
 
 export function useEnrollmentColumnLayout() {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useEnrollmentColumnPreferences();
-  const { mutate: saveColumnPrefs } = useEnrollmentColumnPreferencesMutation();
 
   const tenantRegistry = useMemo(
     () =>
@@ -32,9 +26,7 @@ export function useEnrollmentColumnLayout() {
   return useModuleColumnLayout({
     moduleId: ENROLLMENTS_MODULE_CONTRACT.moduleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: ENROLLMENTS_MODULE_CONTRACT.restBasePath,
     translationPrefix: 'enrollments.columns',
   });
 }

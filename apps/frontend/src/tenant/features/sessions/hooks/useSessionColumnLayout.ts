@@ -5,15 +5,9 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useSessionColumnPrefs,
-  useSessionColumnPrefsMutation,
-} from '@/tenant/features/sessions/hooks/useSessions';
 
 export function useSessionColumnLayout() {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useSessionColumnPrefs();
-  const { mutate: saveColumnPrefs } = useSessionColumnPrefsMutation();
 
   const tenantRegistry = useMemo(
     () =>
@@ -31,9 +25,7 @@ export function useSessionColumnLayout() {
   return useModuleColumnLayout({
     moduleId: SESSIONS_MODULE_CONTRACT.moduleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: SESSIONS_MODULE_CONTRACT.restBasePath,
     translationPrefix: 'sessions.columns',
   });
 }

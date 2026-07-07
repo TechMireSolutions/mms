@@ -5,17 +5,11 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useFinancePaymentColumnPreferences,
-  useFinancePaymentColumnPreferencesMutation,
-} from '@/tenant/features/finance/hooks/useFinanceColumnPreferences';
 
 const STORAGE_SUFFIX = 'payments';
 
 export function useFinancePaymentColumnLayout() {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useFinancePaymentColumnPreferences();
-  const { mutate: saveColumnPrefs } = useFinancePaymentColumnPreferencesMutation();
 
   const storageModuleId = `${FINANCE_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`;
 
@@ -36,9 +30,7 @@ export function useFinancePaymentColumnLayout() {
   return useModuleColumnLayout({
     moduleId: storageModuleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: `${FINANCE_MODULE_CONTRACT.restBasePath}/payments`,
     translationPrefix: 'finance.columns',
   });
 }

@@ -5,17 +5,11 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useHasanatRedemptionColumnPreferences,
-  useHasanatRedemptionColumnPreferencesMutation,
-} from '@/tenant/features/hasanat/hooks/useHasanatApi';
 
 const STORAGE_SUFFIX = 'redemptions';
 
 export function useHasanatRedemptionColumnLayout() {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useHasanatRedemptionColumnPreferences();
-  const { mutate: saveColumnPrefs } = useHasanatRedemptionColumnPreferencesMutation();
 
   const storageModuleId = `${HASANAT_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`;
 
@@ -34,9 +28,7 @@ export function useHasanatRedemptionColumnLayout() {
   return useModuleColumnLayout({
     moduleId: storageModuleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: `${HASANAT_MODULE_CONTRACT.restBasePath}/redemptions`,
     translationPrefix: 'hasanat.columns',
   });
 }

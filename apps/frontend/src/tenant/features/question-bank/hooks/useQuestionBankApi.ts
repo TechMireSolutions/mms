@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
-  ModuleColumnPref,
   QuestionBankCommandMetricsSnapshot,
   QuestionBankQuestion,
   QuestionBankTest,
@@ -11,16 +10,10 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
-import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 const QUESTION_BANK_API = QUESTION_BANK_MODULE_CONTRACT.restBasePath;
 
 export const QUESTION_BANK_METRICS_QUERY_KEY = [QUESTION_BANK_MODULE_CONTRACT.moduleId, 'metrics'] as const;
-
-export const QUESTION_BANK_COLUMN_PREFS_QUERY_KEY = [
-  QUESTION_BANK_MODULE_CONTRACT.moduleId,
-  'column-preferences',
-] as const;
 
 export const QUESTION_BANK_QUESTIONS_QUERY_KEY = [QUESTION_BANK_MODULE_CONTRACT.moduleId, 'questions', 'list'] as const;
 export const QUESTION_BANK_TESTS_QUERY_KEY = [QUESTION_BANK_MODULE_CONTRACT.moduleId, 'tests', 'list'] as const;
@@ -169,32 +162,5 @@ export function useQuestionBankMetrics() {
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
-  });
-}
-
-export function useQuestionBankColumnPrefs() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: QUESTION_BANK_COLUMN_PREFS_QUERY_KEY,
-    queryFn: async () => {
-      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${QUESTION_BANK_API}/column-preferences`);
-      return readModuleColumnPreferences(preferencesResponse);
-    },
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
-}
-
-export function useQuestionBankColumnPrefsMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (preferences: ModuleColumnPref[]) =>
-      apiJson<ModuleColumnPreferencesResponse>(`${QUESTION_BANK_API}/column-preferences`, {
-        method: 'PUT',
-        body: writeModuleColumnPreferences(preferences),
-      }),
-    onSuccess: (preferencesResponse) => {
-      queryClient.setQueryData(QUESTION_BANK_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(preferencesResponse));
-    },
   });
 }

@@ -5,17 +5,11 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useHasanatDistributionColumnPreferences,
-  useHasanatDistributionColumnPreferencesMutation,
-} from '@/tenant/features/hasanat/hooks/useHasanatApi';
 
 const STORAGE_SUFFIX = 'distributions';
 
 export function useHasanatDistributionColumnLayout() {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useHasanatDistributionColumnPreferences();
-  const { mutate: saveColumnPrefs } = useHasanatDistributionColumnPreferencesMutation();
 
   const storageModuleId = `${HASANAT_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`;
 
@@ -37,9 +31,7 @@ export function useHasanatDistributionColumnLayout() {
   return useModuleColumnLayout({
     moduleId: storageModuleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: `${HASANAT_MODULE_CONTRACT.restBasePath}/distributions`,
     translationPrefix: 'hasanat.columns',
   });
 }

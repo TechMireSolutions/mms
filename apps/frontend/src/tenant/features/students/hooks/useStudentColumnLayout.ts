@@ -6,15 +6,9 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useStudentColumnPrefs,
-  useStudentColumnPrefsMutation,
-} from '@/tenant/features/students/hooks/useStudents';
 
 export function useStudentColumnLayout(settings: StudentsSettings) {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useStudentColumnPrefs();
-  const { mutate: saveColumnPrefs } = useStudentColumnPrefsMutation();
 
   const tenantRegistry = useMemo(
     () =>
@@ -31,9 +25,7 @@ export function useStudentColumnLayout(settings: StudentsSettings) {
   return useModuleColumnLayout({
     moduleId: STUDENTS_MODULE_CONTRACT.moduleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: STUDENTS_MODULE_CONTRACT.restBasePath,
     translationPrefix: 'students.columns',
   });
 }

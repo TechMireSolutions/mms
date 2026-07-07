@@ -6,7 +6,6 @@ import type {
   WakalaType,
   ObligationDistribution,
   ObligationCollection,
-  ModuleColumnPref,
   ObligationsCommandMetricsSnapshot,
 } from '@mms/shared';
 import { OBLIGATIONS_MODULE_CONTRACT } from '@mms/shared';
@@ -14,7 +13,6 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
-import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 export const OBLIGATIONS_TYPES_QUERY_KEY = ['obligations', 'types', 'list'] as const;
 export const OBLIGATIONS_MUJTAHIDS_QUERY_KEY = ['obligations', 'mujtahids', 'list'] as const;
@@ -23,11 +21,6 @@ export const OBLIGATIONS_WAKALA_QUERY_KEY = ['obligations', 'wakala', 'list'] as
 export const OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY = ['obligations', 'distributions', 'list'] as const;
 export const OBLIGATIONS_COLLECTIONS_QUERY_KEY = ['obligations', 'collections', 'list'] as const;
 export const OBLIGATIONS_METRICS_QUERY_KEY = ['obligations', 'metrics', 'snapshot'] as const;
-
-export const OBLIGATIONS_COLUMN_PREFS_QUERY_KEY = [
-  OBLIGATIONS_MODULE_CONTRACT.collectionKey,
-  'column-preferences',
-] as const;
 
 const OBLIGATIONS_API = OBLIGATIONS_MODULE_CONTRACT.restBasePath;
 
@@ -289,31 +282,4 @@ export function useObligationsMutations() {
     replaceDistributions,
     replaceCollections,
   };
-}
-
-export function useObligationColumnPreferences() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: OBLIGATIONS_COLUMN_PREFS_QUERY_KEY,
-    queryFn: async () => {
-      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${OBLIGATIONS_API}/column-preferences`);
-      return readModuleColumnPreferences(preferencesResponse);
-    },
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
-}
-
-export function useObligationColumnPreferencesMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (preferences: ModuleColumnPref[]) =>
-      apiJson<ModuleColumnPreferencesResponse>(`${OBLIGATIONS_API}/column-preferences`, {
-        method: 'PUT',
-        body: writeModuleColumnPreferences(preferences),
-      }),
-    onSuccess: (preferencesResponse) => {
-      queryClient.setQueryData(OBLIGATIONS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(preferencesResponse));
-    },
-  });
 }

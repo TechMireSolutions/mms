@@ -5,15 +5,9 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useObligationColumnPreferences,
-  useObligationColumnPreferencesMutation,
-} from '@/tenant/features/obligations/hooks/useObligationsApi';
 
 export function useObligationColumnLayout() {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useObligationColumnPreferences();
-  const { mutate: saveColumnPrefs } = useObligationColumnPreferencesMutation();
 
   const tenantRegistry = useMemo(
     () =>
@@ -32,9 +26,7 @@ export function useObligationColumnLayout() {
   return useModuleColumnLayout({
     moduleId: OBLIGATIONS_MODULE_CONTRACT.moduleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: OBLIGATIONS_MODULE_CONTRACT.restBasePath,
     translationPrefix: 'obligations.columns',
   });
 }

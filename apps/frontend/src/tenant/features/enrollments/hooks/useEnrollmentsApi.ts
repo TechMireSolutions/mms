@@ -1,18 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Enrollment, ModuleColumnPref, EnrollmentsCommandMetricsSnapshot } from '@mms/shared';
+import type { Enrollment, EnrollmentsCommandMetricsSnapshot } from '@mms/shared';
 import { ENROLLMENTS_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
-import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 export const ENROLLMENTS_QUERY_KEY = ['enrollments', 'list'] as const;
 export const ENROLLMENTS_METRICS_QUERY_KEY = ['enrollments', 'metrics'] as const;
-export const ENROLLMENTS_COLUMN_PREFS_QUERY_KEY = [
-  ENROLLMENTS_MODULE_CONTRACT.collectionKey,
-  'column-preferences',
-] as const;
 
 const ENROLLMENTS_API = ENROLLMENTS_MODULE_CONTRACT.restBasePath;
 
@@ -54,35 +49,6 @@ export function useEnrollmentsMetrics() {
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
-  });
-}
-
-export function useEnrollmentColumnPreferences() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: ENROLLMENTS_COLUMN_PREFS_QUERY_KEY,
-    queryFn: async () => {
-      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(
-        `${ENROLLMENTS_API}/column-preferences`,
-      );
-      return readModuleColumnPreferences(preferencesResponse);
-    },
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
-}
-
-export function useEnrollmentColumnPreferencesMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (preferences: ModuleColumnPref[]) =>
-      apiJson<ModuleColumnPreferencesResponse>(`${ENROLLMENTS_API}/column-preferences`, {
-        method: 'PUT',
-        body: writeModuleColumnPreferences(preferences),
-      }),
-    onSuccess: (response) => {
-      queryClient.setQueryData(ENROLLMENTS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
-    },
   });
 }
 

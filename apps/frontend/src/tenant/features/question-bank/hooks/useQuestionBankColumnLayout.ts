@@ -5,15 +5,9 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useQuestionBankColumnPrefs,
-  useQuestionBankColumnPrefsMutation,
-} from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
 
 export function useQuestionBankColumnLayout() {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useQuestionBankColumnPrefs();
-  const { mutate: saveColumnPrefs } = useQuestionBankColumnPrefsMutation();
 
   const tenantRegistry = useMemo(
     () =>
@@ -31,9 +25,7 @@ export function useQuestionBankColumnLayout() {
   return useModuleColumnLayout({
     moduleId: QUESTION_BANK_MODULE_CONTRACT.moduleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: QUESTION_BANK_MODULE_CONTRACT.restBasePath,
     translationPrefix: 'questionBank.columns',
   });
 }

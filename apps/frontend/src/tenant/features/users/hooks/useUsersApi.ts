@@ -1,17 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { WorkspaceUser, ActivityLog, ModuleColumnPref } from '@mms/shared';
+import type { WorkspaceUser, ActivityLog } from '@mms/shared';
 import { USERS_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
-import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 const USERS_API = USERS_MODULE_CONTRACT.restBasePath;
 
 export const USERS_LIST_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'users', 'list'] as const;
 export const ACTIVITY_LOGS_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'logs', 'list'] as const;
-export const USERS_COLUMN_PREFS_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'column-preferences'] as const;
 
 async function fetchUsers(): Promise<WorkspaceUser[]> {
   const usersResponse = await apiJson<{ users: WorkspaceUser[] }>(USERS_API);
@@ -67,33 +65,6 @@ export function useActivityLogsCollection(options?: { enabled?: boolean }): Acti
     return queryLogs;
   }
   return localLogs;
-}
-
-export function useUsersColumnPrefs() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: USERS_COLUMN_PREFS_QUERY_KEY,
-    queryFn: async () => {
-      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${USERS_API}/column-preferences`);
-      return readModuleColumnPreferences(preferencesResponse);
-    },
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
-}
-
-export function useUsersColumnPrefsMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (preferences: ModuleColumnPref[]) =>
-      apiJson<ModuleColumnPreferencesResponse>(`${USERS_API}/column-preferences`, {
-        method: 'PUT',
-        body: writeModuleColumnPreferences(preferences),
-      }),
-    onSuccess: (preferencesResponse) => {
-      queryClient.setQueryData(USERS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(preferencesResponse));
-    },
-  });
 }
 
 export function useUsersMutations() {

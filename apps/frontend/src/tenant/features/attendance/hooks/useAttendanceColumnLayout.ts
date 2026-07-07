@@ -5,15 +5,9 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useAttendanceColumnPrefs,
-  useAttendanceColumnPrefsMutation,
-} from '@/tenant/features/attendance/hooks/useAttendance';
 
 export function useAttendanceColumnLayout() {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useAttendanceColumnPrefs();
-  const { mutate: saveColumnPrefs } = useAttendanceColumnPrefsMutation();
 
   const tenantRegistry = useMemo(
     () =>
@@ -32,9 +26,7 @@ export function useAttendanceColumnLayout() {
   return useModuleColumnLayout({
     moduleId: ATTENDANCE_MODULE_CONTRACT.moduleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: ATTENDANCE_MODULE_CONTRACT.restBasePath,
     translationPrefix: 'attendance.columns',
   });
 }

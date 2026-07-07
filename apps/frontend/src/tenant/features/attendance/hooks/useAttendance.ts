@@ -1,20 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AttendanceCommandMetricsSnapshot, ModuleColumnPref } from '@mms/shared';
+import type { AttendanceCommandMetricsSnapshot } from '@mms/shared';
 import { ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
-import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 
 export const ATTENDANCE_QUERY_KEY = ['attendance', 'list'] as const;
 export const ATTENDANCE_METRICS_QUERY_KEY = ['attendance', 'metrics'] as const;
-export const ATTENDANCE_COLUMN_PREFS_QUERY_KEY = [
-  ATTENDANCE_MODULE_CONTRACT.collectionKey,
-  'column-preferences',
-] as const;
 
 const ATTENDANCE_API = ATTENDANCE_MODULE_CONTRACT.restBasePath;
 
@@ -106,34 +101,5 @@ export function useAttendanceMetrics(selectedDate: string) {
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
-  });
-}
-
-export function useAttendanceColumnPrefs() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: ATTENDANCE_COLUMN_PREFS_QUERY_KEY,
-    queryFn: async () => {
-      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(
-        `${ATTENDANCE_API}/column-preferences`,
-      );
-      return readModuleColumnPreferences(preferencesResponse);
-    },
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
-}
-
-export function useAttendanceColumnPrefsMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (preferences: ModuleColumnPref[]) =>
-      apiJson<ModuleColumnPreferencesResponse>(`${ATTENDANCE_API}/column-preferences`, {
-        method: 'PUT',
-        body: writeModuleColumnPreferences(preferences),
-      }),
-    onSuccess: (response) => {
-      queryClient.setQueryData(ATTENDANCE_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
-    },
   });
 }

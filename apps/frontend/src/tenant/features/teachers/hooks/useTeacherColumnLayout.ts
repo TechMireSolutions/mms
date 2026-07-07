@@ -6,15 +6,9 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
-import {
-  useTeacherColumnPrefs,
-  useTeacherColumnPrefsMutation,
-} from '@/tenant/features/teachers/hooks/useTeachers';
 
 export function useTeacherColumnLayout(settings: TeachersSettings) {
   const { t } = useTranslation();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useTeacherColumnPrefs();
-  const { mutate: saveColumnPrefs } = useTeacherColumnPrefsMutation();
 
   const tenantRegistry = useMemo(
     () =>
@@ -31,9 +25,7 @@ export function useTeacherColumnLayout(settings: TeachersSettings) {
   return useModuleColumnLayout({
     moduleId: TEACHERS_MODULE_CONTRACT.moduleId,
     tenantRegistry,
-    serverColumnPrefs,
-    columnPrefsLoaded,
-    saveColumnPrefs,
+    apiPath: TEACHERS_MODULE_CONTRACT.restBasePath,
     translationPrefix: 'teachers.columns',
   });
 }

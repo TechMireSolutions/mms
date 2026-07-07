@@ -1,25 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Exam, ExamResult, ModuleColumnPref, ExaminationsCommandMetricsSnapshot } from '@mms/shared';
+import type { Exam, ExamResult, ExaminationsCommandMetricsSnapshot } from '@mms/shared';
 import { EXAMINATIONS_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
-import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 export const EXAMINATIONS_EXAMS_QUERY_KEY = ['examinations', 'exams', 'list'] as const;
 export const EXAMINATIONS_RESULTS_QUERY_KEY = ['examinations', 'results', 'list'] as const;
 export const EXAMINATIONS_METRICS_QUERY_KEY = ['examinations', 'metrics', 'snapshot'] as const;
-
-export const EXAMINATIONS_EXAM_COLUMN_PREFS_QUERY_KEY = [
-  EXAMINATIONS_MODULE_CONTRACT.collectionKey,
-  'column-preferences',
-] as const;
-
-export const EXAMINATIONS_RESULTS_COLUMN_PREFS_QUERY_KEY = [
-  EXAMINATIONS_MODULE_CONTRACT.resultsCollectionKey,
-  'column-preferences',
-] as const;
 
 const EXAMINATIONS_API = EXAMINATIONS_MODULE_CONTRACT.restBasePath;
 
@@ -125,58 +114,4 @@ export function useExaminationsMutations() {
     replaceExams,
     replaceExamResults,
   };
-}
-
-export function useExaminationExamColumnPreferences() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: EXAMINATIONS_EXAM_COLUMN_PREFS_QUERY_KEY,
-    queryFn: async () => {
-      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${EXAMINATIONS_API}/exams/column-preferences`);
-      return readModuleColumnPreferences(preferencesResponse);
-    },
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
-}
-
-export function useExaminationExamColumnPreferencesMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (preferences: ModuleColumnPref[]) =>
-      apiJson<ModuleColumnPreferencesResponse>(`${EXAMINATIONS_API}/exams/column-preferences`, {
-        method: 'PUT',
-        body: writeModuleColumnPreferences(preferences),
-      }),
-    onSuccess: (response) => {
-      queryClient.setQueryData(EXAMINATIONS_EXAM_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
-    },
-  });
-}
-
-export function useExaminationResultsColumnPreferences() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: EXAMINATIONS_RESULTS_COLUMN_PREFS_QUERY_KEY,
-    queryFn: async () => {
-      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(`${EXAMINATIONS_API}/results/column-preferences`);
-      return readModuleColumnPreferences(preferencesResponse);
-    },
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
-}
-
-export function useExaminationResultsColumnPreferencesMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (preferences: ModuleColumnPref[]) =>
-      apiJson<ModuleColumnPreferencesResponse>(`${EXAMINATIONS_API}/results/column-preferences`, {
-        method: 'PUT',
-        body: writeModuleColumnPreferences(preferences),
-      }),
-    onSuccess: (response) => {
-      queryClient.setQueryData(EXAMINATIONS_RESULTS_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
-    },
-  });
 }

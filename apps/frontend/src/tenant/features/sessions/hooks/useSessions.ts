@@ -1,19 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ModuleColumnPref, SessionsCommandMetricsSnapshot } from '@mms/shared';
+import type { SessionsCommandMetricsSnapshot } from '@mms/shared';
 import { SESSIONS_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
-import { readModuleColumnPreferences, writeModuleColumnPreferences, type ModuleColumnPreferencesResponse } from '@/lib/moduleColumnPreferencesApi';
 
 export const SESSIONS_QUERY_KEY = ['sessions', 'list'] as const;
 export const SESSIONS_METRICS_QUERY_KEY = ['sessions', 'metrics'] as const;
-export const SESSION_COLUMN_PREFS_QUERY_KEY = [
-  SESSIONS_MODULE_CONTRACT.collectionKey,
-  'column-preferences',
-] as const;
 
 const SESSIONS_API = SESSIONS_MODULE_CONTRACT.restBasePath;
 
@@ -95,34 +90,5 @@ export function useSessionsMetrics() {
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
-  });
-}
-
-export function useSessionColumnPrefs() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: SESSION_COLUMN_PREFS_QUERY_KEY,
-    queryFn: async () => {
-      const preferencesResponse = await apiJson<ModuleColumnPreferencesResponse>(
-        `${SESSIONS_API}/column-preferences`,
-      );
-      return readModuleColumnPreferences(preferencesResponse);
-    },
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
-}
-
-export function useSessionColumnPrefsMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (preferences: ModuleColumnPref[]) =>
-      apiJson<ModuleColumnPreferencesResponse>(`${SESSIONS_API}/column-preferences`, {
-        method: 'PUT',
-        body: writeModuleColumnPreferences(preferences),
-      }),
-    onSuccess: (response) => {
-      queryClient.setQueryData(SESSION_COLUMN_PREFS_QUERY_KEY, readModuleColumnPreferences(response));
-    },
   });
 }
