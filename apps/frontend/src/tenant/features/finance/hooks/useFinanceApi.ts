@@ -4,7 +4,7 @@ import { FINANCE_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 
 export const FINANCE_INVOICES_QUERY_KEY = ['finance', 'invoices', 'list'] as const;
 export const FINANCE_PAYMENTS_QUERY_KEY = ['finance', 'payments', 'list'] as const;
@@ -48,24 +48,24 @@ export function useFinancePayments(options?: { enabled?: boolean }) {
 
 export function useFinanceInvoicesCollection(options?: { enabled?: boolean }): Invoice[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryInvoices, isSuccess } = useFinanceInvoices({ enabled });
-  const localInvoices = useLiveCollection<Invoice>('finance_invoices', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryInvoices) {
-    return queryInvoices;
-  }
-  return localInvoices;
+  const queryResult = useFinanceInvoices({ enabled });
+  return useSyncedCollection<Invoice>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'finance_invoices',
+    enabled,
+  });
 }
 
 export function useFinancePaymentsCollection(options?: { enabled?: boolean }): Payment[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryPayments, isSuccess } = useFinancePayments({ enabled });
-  const localPayments = useLiveCollection<Payment>('finance_payments', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryPayments) {
-    return queryPayments;
-  }
-  return localPayments;
+  const queryResult = useFinancePayments({ enabled });
+  return useSyncedCollection<Payment>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'finance_payments',
+    enabled,
+  });
 }
 
 export function useFinanceMutations() {

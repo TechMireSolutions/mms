@@ -5,7 +5,7 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
 
 export const SESSIONS_QUERY_KEY = ['sessions', 'list'] as const;
@@ -13,13 +13,8 @@ export const SESSIONS_METRICS_QUERY_KEY = ['sessions', 'metrics'] as const;
 
 const SESSIONS_API = SESSIONS_MODULE_CONTRACT.restBasePath;
 
-export interface SessionRecord {
-  id: string | number;
-  [key: string]: unknown;
-}
-
-async function fetchSessions(): Promise<SessionRecord[]> {
-  const sessionsResponse = await apiJson<{ sessions: SessionRecord[] }>(SESSIONS_API);
+async function fetchSessions(): Promise<Session[]> {
+  const sessionsResponse = await apiJson<{ sessions: Session[] }>(SESSIONS_API);
   saveCollection('sessions', sessionsResponse.sessions);
   return sessionsResponse.sessions;
 }
@@ -31,7 +26,7 @@ export function useSessions(options?: { enabled?: boolean }) {
     queryKey: SESSIONS_QUERY_KEY,
     queryFn: fetchSessions,
     enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
+    staleTime: 15_000,
   });
 }
 
@@ -44,8 +39,8 @@ export function useSessionMutations() {
   };
 
   const createSession = useMutation({
-    mutationFn: async (session: SessionRecord) =>
-      apiJson<{ session: SessionRecord }>(SESSIONS_API, {
+    mutationFn: async (session: Session) =>
+      apiJson<{ session: Session }>(SESSIONS_API, {
         method: 'POST',
         body: JSON.stringify(session),
       }),
@@ -53,8 +48,8 @@ export function useSessionMutations() {
   });
 
   const updateSession = useMutation({
-    mutationFn: async ({ id, session }: { id: string; session: SessionRecord }) =>
-      apiJson<{ session: SessionRecord }>(`${SESSIONS_API}/${id}`, {
+    mutationFn: async ({ id, session }: { id: string; session: Session }) =>
+      apiJson<{ session: Session }>(`${SESSIONS_API}/${id}`, {
         method: 'PUT',
         body: JSON.stringify(session),
       }),
@@ -72,13 +67,14 @@ export function useSessionMutations() {
 /** Query-first sessions; falls back to localStorage cache (hydrated). */
 export function useSessionsCollection(options?: { enabled?: boolean }): Session[] {
   const enabled = options?.enabled ?? true;
-  const { data: querySessions, isSuccess } = useSessions({ enabled });
-  const localSessions = useLiveCollection<Session>('sessions', SESSIONS_DATA, { enabled });
-  if (!enabled) return [];
-  if (isSuccess && querySessions) {
-    return querySessions as Session[];
-  }
-  return localSessions;
+  const queryResult = useSessions({ enabled });
+  return useSyncedCollection<Session>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'sessions',
+    defaultData: SESSIONS_DATA,
+    enabled,
+  });
 }
 
 export function useSessionsMetrics(options?: { enabled?: boolean }) {

@@ -5,7 +5,7 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 
 export const HASANAT_DENOMS_QUERY_KEY = ['hasanat', 'denoms', 'list'] as const;
 export const HASANAT_BATCHES_QUERY_KEY = ['hasanat', 'batches', 'list'] as const;
@@ -52,13 +52,13 @@ export function useHasanatDenoms(options?: { enabled?: boolean }) {
 
 export function useHasanatDenomsCollection(options?: { enabled?: boolean }): Denomination[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryDenominations, isSuccess } = useHasanatDenoms({ enabled });
-  const localDenominations = useLiveCollection<Denomination>('hasanat_denoms', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryDenominations) {
-    return queryDenominations;
-  }
-  return localDenominations;
+  const queryResult = useHasanatDenoms({ enabled });
+  return useSyncedCollection<Denomination>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'hasanat_denoms',
+    enabled,
+  });
 }
 
 export function useHasanatBatches(options?: { enabled?: boolean }) {
@@ -74,13 +74,13 @@ export function useHasanatBatches(options?: { enabled?: boolean }) {
 
 export function useHasanatBatchesCollection(options?: { enabled?: boolean }): StockBatch[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryBatches, isSuccess } = useHasanatBatches({ enabled });
-  const localBatches = useLiveCollection<StockBatch>('hasanat_batches', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryBatches) {
-    return queryBatches;
-  }
-  return localBatches;
+  const queryResult = useHasanatBatches({ enabled });
+  return useSyncedCollection<StockBatch>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'hasanat_batches',
+    enabled,
+  });
 }
 
 export function useHasanatDistributions(options?: { enabled?: boolean }) {
@@ -96,13 +96,13 @@ export function useHasanatDistributions(options?: { enabled?: boolean }) {
 
 export function useHasanatDistributionsCollection(options?: { enabled?: boolean }): Distribution[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryDistributions, isSuccess } = useHasanatDistributions({ enabled });
-  const localDistributions = useLiveCollection<Distribution>('hasanat_distributions', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryDistributions) {
-    return queryDistributions;
-  }
-  return localDistributions;
+  const queryResult = useHasanatDistributions({ enabled });
+  return useSyncedCollection<Distribution>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'hasanat_distributions',
+    enabled,
+  });
 }
 
 export function useHasanatRedemptions(options?: { enabled?: boolean }) {
@@ -118,13 +118,13 @@ export function useHasanatRedemptions(options?: { enabled?: boolean }) {
 
 export function useHasanatRedemptionsCollection(options?: { enabled?: boolean }): Redemption[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryRedemptions, isSuccess } = useHasanatRedemptions({ enabled });
-  const localRedemptions = useLiveCollection<Redemption>('hasanat_redemptions', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryRedemptions) {
-    return queryRedemptions;
-  }
-  return localRedemptions;
+  const queryResult = useHasanatRedemptions({ enabled });
+  return useSyncedCollection<Redemption>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'hasanat_redemptions',
+    enabled,
+  });
 }
 
 export function useHasanatMetrics(options?: { enabled?: boolean }) {

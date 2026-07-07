@@ -5,7 +5,7 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 
@@ -80,13 +80,14 @@ export function useAttendanceMutations() {
 /** Query-first attendance; falls back to localStorage cache (hydrated). */
 export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryRecords, isSuccess } = useAttendanceRecords({ enabled });
-  const localRecords = useLiveCollection<AttendanceRecord>('attendance_records', ATTENDANCE_RECORDS, { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryRecords) {
-    return queryRecords;
-  }
-  return localRecords;
+  const queryResult = useAttendanceRecords({ enabled });
+  return useSyncedCollection<AttendanceRecord>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'attendance_records',
+    defaultData: ATTENDANCE_RECORDS,
+    enabled,
+  });
 }
 
 export function useAttendanceMetrics(selectedDate: string, options?: { enabled?: boolean }) {

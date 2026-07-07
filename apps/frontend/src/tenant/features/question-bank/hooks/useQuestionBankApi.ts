@@ -10,7 +10,7 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 
 const QUESTION_BANK_API = QUESTION_BANK_MODULE_CONTRACT.restBasePath;
 
@@ -39,13 +39,13 @@ export function useQuestionBankQuestions(options?: { enabled?: boolean }) {
 
 export function useQuestionBankQuestionsCollection(options?: { enabled?: boolean }): QuestionBankQuestion[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryQuestions, isSuccess } = useQuestionBankQuestions({ enabled });
-  const localQuestions = useLiveCollection<QuestionBankQuestion>('questions', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryQuestions) {
-    return queryQuestions;
-  }
-  return localQuestions;
+  const queryResult = useQuestionBankQuestions({ enabled });
+  return useSyncedCollection<QuestionBankQuestion>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'questions',
+    enabled,
+  });
 }
 
 async function fetchTests(): Promise<QuestionBankTest[]> {
@@ -67,13 +67,13 @@ export function useQuestionBankTests(options?: { enabled?: boolean }) {
 
 export function useQuestionBankTestsCollection(options?: { enabled?: boolean }): QuestionBankTest[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryTests, isSuccess } = useQuestionBankTests({ enabled });
-  const localTests = useLiveCollection<QuestionBankTest>('tests', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryTests) {
-    return queryTests;
-  }
-  return localTests;
+  const queryResult = useQuestionBankTests({ enabled });
+  return useSyncedCollection<QuestionBankTest>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'tests',
+    enabled,
+  });
 }
 
 async function fetchResults(): Promise<QuestionBankResult[]> {
@@ -95,13 +95,13 @@ export function useQuestionBankResults(options?: { enabled?: boolean }) {
 
 export function useQuestionBankResultsCollection(options?: { enabled?: boolean }): QuestionBankResult[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryResults, isSuccess } = useQuestionBankResults({ enabled });
-  const localResults = useLiveCollection<QuestionBankResult>('assessment_results', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryResults) {
-    return queryResults;
-  }
-  return localResults;
+  const queryResult = useQuestionBankResults({ enabled });
+  return useSyncedCollection<QuestionBankResult>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'assessment_results',
+    enabled,
+  });
 }
 
 export function useQuestionBankMutations() {

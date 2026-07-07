@@ -13,7 +13,7 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 
 export const OBLIGATIONS_TYPES_QUERY_KEY = ['obligations', 'types', 'list'] as const;
 export const OBLIGATIONS_MUJTAHIDS_QUERY_KEY = ['obligations', 'mujtahids', 'list'] as const;
@@ -21,7 +21,7 @@ export const OBLIGATIONS_REPS_QUERY_KEY = ['obligations', 'reps', 'list'] as con
 export const OBLIGATIONS_WAKALA_QUERY_KEY = ['obligations', 'wakala', 'list'] as const;
 export const OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY = ['obligations', 'distributions', 'list'] as const;
 export const OBLIGATIONS_COLLECTIONS_QUERY_KEY = ['obligations', 'collections', 'list'] as const;
-export const OBLIGATIONS_METRICS_QUERY_KEY = ['obligations', 'metrics', 'snapshot'] as const;
+export const OBLIGATIONS_METRICS_QUERY_KEY = ['obligations', 'metrics'] as const;
 
 const OBLIGATIONS_API = OBLIGATIONS_MODULE_CONTRACT.restBasePath;
 
@@ -74,11 +74,13 @@ export function useObligationsTypes(options?: { enabled?: boolean }) {
 
 export function useObligationsTypesCollection(options?: { enabled?: boolean }): ObligationType[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryTypes, isSuccess } = useObligationsTypes({ enabled });
-  const localTypes = useLiveCollection<ObligationType>('obligation_types', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryTypes) return queryTypes;
-  return localTypes;
+  const queryResult = useObligationsTypes({ enabled });
+  return useSyncedCollection<ObligationType>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'obligation_types',
+    enabled,
+  });
 }
 
 export function useObligationsMujtahids(options?: { enabled?: boolean }) {
@@ -94,11 +96,13 @@ export function useObligationsMujtahids(options?: { enabled?: boolean }) {
 
 export function useObligationsMujtahidsCollection(options?: { enabled?: boolean }): Mujtahid[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryMujtahids, isSuccess } = useObligationsMujtahids({ enabled });
-  const localMujtahids = useLiveCollection<Mujtahid>('mujtahids', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryMujtahids) return queryMujtahids;
-  return localMujtahids;
+  const queryResult = useObligationsMujtahids({ enabled });
+  return useSyncedCollection<Mujtahid>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'mujtahids',
+    enabled,
+  });
 }
 
 export function useObligationsReps(options?: { enabled?: boolean }) {
@@ -114,11 +118,13 @@ export function useObligationsReps(options?: { enabled?: boolean }) {
 
 export function useObligationsRepsCollection(options?: { enabled?: boolean }): MujtahidRep[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryReps, isSuccess } = useObligationsReps({ enabled });
-  const localReps = useLiveCollection<MujtahidRep>('mujtahid_reps', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryReps) return queryReps;
-  return localReps;
+  const queryResult = useObligationsReps({ enabled });
+  return useSyncedCollection<MujtahidRep>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'mujtahid_reps',
+    enabled,
+  });
 }
 
 export function useObligationsWakala(options?: { enabled?: boolean }) {
@@ -134,11 +140,13 @@ export function useObligationsWakala(options?: { enabled?: boolean }) {
 
 export function useObligationsWakalaCollection(options?: { enabled?: boolean }): WakalaType[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryWakalaTypes, isSuccess } = useObligationsWakala({ enabled });
-  const localWakalaTypes = useLiveCollection<WakalaType>('wakala_types', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryWakalaTypes) return queryWakalaTypes;
-  return localWakalaTypes;
+  const queryResult = useObligationsWakala({ enabled });
+  return useSyncedCollection<WakalaType>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'wakala_types',
+    enabled,
+  });
 }
 
 export function useObligationsDistributions(options?: { enabled?: boolean }) {
@@ -154,11 +162,13 @@ export function useObligationsDistributions(options?: { enabled?: boolean }) {
 
 export function useObligationsDistributionsCollection(options?: { enabled?: boolean }): ObligationDistribution[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryDistributions, isSuccess } = useObligationsDistributions({ enabled });
-  const localDistributions = useLiveCollection<ObligationDistribution>('obligation_distributions', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryDistributions) return queryDistributions;
-  return localDistributions;
+  const queryResult = useObligationsDistributions({ enabled });
+  return useSyncedCollection<ObligationDistribution>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'obligation_distributions',
+    enabled,
+  });
 }
 
 export function useObligationsCollections(options?: { enabled?: boolean }) {
@@ -174,11 +184,13 @@ export function useObligationsCollections(options?: { enabled?: boolean }) {
 
 export function useObligationsCollectionsCollection(options?: { enabled?: boolean }): ObligationCollection[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryCollections, isSuccess } = useObligationsCollections({ enabled });
-  const localCollections = useLiveCollection<ObligationCollection>('obligation_collections', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryCollections) return queryCollections;
-  return localCollections;
+  const queryResult = useObligationsCollections({ enabled });
+  return useSyncedCollection<ObligationCollection>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'obligation_collections',
+    enabled,
+  });
 }
 
 export function useObligationsMetrics(options?: { enabled?: boolean }) {

@@ -4,7 +4,7 @@ import { USERS_MODULE_CONTRACT } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 
 const USERS_API = USERS_MODULE_CONTRACT.restBasePath;
 
@@ -30,13 +30,13 @@ export function useUsers(options?: { enabled?: boolean }) {
 
 export function useUsersCollection(options?: { enabled?: boolean }): WorkspaceUser[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryUsers, isSuccess } = useUsers({ enabled });
-  const localUsers = useLiveCollection<WorkspaceUser>('users', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryUsers) {
-    return queryUsers;
-  }
-  return localUsers;
+  const queryResult = useUsers({ enabled });
+  return useSyncedCollection<WorkspaceUser>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'users',
+    enabled,
+  });
 }
 
 async function fetchLogs(): Promise<ActivityLog[]> {
@@ -58,13 +58,13 @@ export function useActivityLogs(options?: { enabled?: boolean }) {
 
 export function useActivityLogsCollection(options?: { enabled?: boolean }): ActivityLog[] {
   const enabled = options?.enabled ?? true;
-  const { data: queryLogs, isSuccess } = useActivityLogs({ enabled });
-  const localLogs = useLiveCollection<ActivityLog>('user_activity_logs', [], { enabled });
-  if (!enabled) return [];
-  if (isSuccess && queryLogs) {
-    return queryLogs;
-  }
-  return localLogs;
+  const queryResult = useActivityLogs({ enabled });
+  return useSyncedCollection<ActivityLog>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: 'user_activity_logs',
+    enabled,
+  });
 }
 
 export function useUsersMutations() {

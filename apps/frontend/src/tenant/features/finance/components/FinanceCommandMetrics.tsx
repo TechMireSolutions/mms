@@ -1,7 +1,7 @@
 import React from "react";
 import { ReceiptText, AlertTriangle, CheckCircle2, Clock, CreditCard, PieChart } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useFinanceMetrics } from "@/tenant/features/finance/hooks/useFinanceColumnPreferences";
+import { useFinanceMetrics } from "@/tenant/features/finance/hooks/useFinanceMetrics";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 
 interface FinanceCommandMetricsProps {
