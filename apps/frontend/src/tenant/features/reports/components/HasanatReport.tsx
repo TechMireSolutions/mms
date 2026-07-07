@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell,
 } from "recharts";
-import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
 import ReportExportBar from "@/tenant/features/reports/components/ReportExportBar";

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
-import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { BarChart2, ClipboardList, FileCheck2, Target, Users } from "lucide-react";
 import type {
   QuestionBankQuestion,

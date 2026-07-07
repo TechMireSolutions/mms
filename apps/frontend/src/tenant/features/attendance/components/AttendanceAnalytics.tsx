@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import {
   calcClassStats, calcStudentRate, getMonthlyTrend, AttendanceRecord,
   AttendanceStatus,
@@ -16,59 +17,8 @@ import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/us
 import { useStudentsByIds } from '@/tenant/features/students/hooks/useStudents';
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
 
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  sub?: string;
-  icon: React.ElementType;
-  accent: "primary" | "success" | "warning" | "destructive" | "info" | "indigo" | "rose" | "teal" | "purple";
-  delayIndex: number;
-}
+import { StatCard } from "@/components/ui/StatCard";
 
-function StatCard({ label, value, sub, icon: Icon, accent, delayIndex }: StatCardProps) {
-  const stripeColors = {
-    primary: "bg-primary",
-    success: "bg-success",
-    warning: "bg-warning",
-    destructive: "bg-destructive",
-    info: "bg-info",
-    indigo: "bg-indigo-500",
-    rose: "bg-rose-500",
-    teal: "bg-teal-500",
-    purple: "bg-purple-500",
-  };
-
-  const bgColors = {
-    primary: "bg-primary/10 text-primary ring-primary/20",
-    success: "bg-success/10 text-success ring-success/20",
-    warning: "bg-warning/10 text-warning ring-warning/20",
-    destructive: "bg-destructive/10 text-destructive ring-destructive/20",
-    info: "bg-info/10 text-info ring-info/20",
-    indigo: "bg-indigo-500/10 text-indigo-500 ring-indigo-500/20",
-    rose: "bg-rose-500/10 text-rose-500 ring-rose-500/20",
-    teal: "bg-teal-500/10 text-teal-500 ring-teal-500/20",
-    purple: "bg-purple-500/10 text-purple-500 ring-purple-500/20",
-  };
-
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: delayIndex * 0.05, ease: "easeOut" }}
-      className="p-4 flex items-center gap-3 relative overflow-hidden rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300"
-    >
-      <div className={`absolute left-0 top-0 bottom-0 w-1.25 ${stripeColors[accent]}`} />
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ring-4 ${bgColors[accent]} ml-1`}>
-        <Icon className="w-5 h-5" aria-hidden="true" />
-      </div>
-      <div>
-        <p className="text-xl font-bold text-foreground leading-tight">{value}</p>
-        <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">{label}</p>
-        {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
-      </div>
-    </motion.article>
-  );
-}
 
 interface AnalyticsFilters {
   classId?: string;
@@ -195,7 +145,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
         >
           <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
             <h2 className="text-sm font-bold text-foreground mb-3 m-0">Attendance % by Class</h2>
-            <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer height={200}>
               <BarChart data={classStats} barSize={32}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
@@ -204,7 +154,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
                 <Bar dataKey="rate" name="Attendance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}
                   label={{ position: "top", fontSize: 10, fill: "hsl(var(--muted-foreground))", formatter: (value) => value !== undefined && value !== null ? `${value}%` : "" }} />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </Card>
         </motion.div>
 
@@ -216,7 +166,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
         >
           <Card accentColor="info" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
             <h2 className="text-sm font-bold text-foreground mb-3 m-0">Monthly Attendance Trend</h2>
-            <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer height={200}>
               <AreaChart data={monthlyTrend}>
                 <defs>
                   <linearGradient id="att-grad" x1="0" y1="0" x2="0" y2="1">
@@ -230,7 +180,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
                 <Tooltip formatter={(value) => `${value}%`} />
                 <Area type="monotone" dataKey="rate" name="Attendance%" stroke="hsl(var(--primary))" fill="url(#att-grad)" strokeWidth={2} dot={{ r: 3 }} />
               </AreaChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </Card>
         </motion.div>
 
@@ -242,7 +192,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
         >
           <Card accentColor="indigo" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
             <h2 className="text-sm font-bold text-foreground mb-3 m-0">Student Attendance Rates</h2>
-            <ResponsiveContainer width="100%" height={220} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer height={220}>
               <BarChart data={studentRates} layout="vertical" barSize={12}>
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
@@ -251,7 +201,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
                   fill="hsl(var(--primary))"
                   background={{ fill: "hsl(var(--muted))", radius: 4 }} />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </Card>
         </motion.div>
 
@@ -264,14 +214,14 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
           <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
             <h2 className="text-sm font-bold text-foreground mb-3 m-0">Status Distribution</h2>
             <div className="flex items-center gap-4">
-              <ResponsiveContainer width="60%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+              <SafeResponsiveContainer width="60%" height={200}>
                 <PieChart>
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value">
                     {pieData.map((entry, index) => <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
               <div className="space-y-2">
                 {statuses.map((status: AttendanceStatus, index: number) => (
                   <div key={status.id} className="flex items-center gap-2 text-xs">

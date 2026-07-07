@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis } from "recharts";
-import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveWidgetChartHex } from "@/lib/brandingChartPalette";
 import { computeWidgetChartData } from "@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils";

@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
-import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { Users, DollarSign, TrendingUp, BookOpen } from "lucide-react";
 import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
 

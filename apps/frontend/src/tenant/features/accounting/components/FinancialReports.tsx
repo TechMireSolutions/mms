@@ -7,30 +7,7 @@ import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 
-interface StatCardProps {
-  label: string;
-  value: string;
-  icon?: React.ElementType;
-  color: string;
-}
-
-function StatCard({ label, value, icon: Icon, color }: StatCardProps) {
-  return (
-    <article className={`rounded-xl border border-border px-5 py-4 ${color}`}>
-      <div className="flex items-start justify-between">
-        <div className="min-w-0 flex-1">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{label}</h4>
-          <p className="text-xl font-bold text-foreground mt-1 font-mono truncate m-0">{value}</p>
-        </div>
-        {Icon && (
-          <div className="ms-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card/60" aria-hidden="true">
-            <Icon className="w-5 h-5 text-current opacity-70" />
-          </div>
-        )}
-      </div>
-    </article>
-  );
-}
+import { StatCard } from "@/components/ui/StatCard";
 
 interface ReportRow {
   id: string;
@@ -257,11 +234,11 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Total Revenue"  value={formatCurrency(revenue)}   icon={TrendingUp}   color="bg-success/10" />
-        <StatCard label="Total Expenses" value={formatCurrency(expenses)}  icon={TrendingDown} color="bg-destructive/10" />
+        <StatCard label="Total Revenue"  value={formatCurrency(revenue)}   icon={TrendingUp}   accent="success" />
+        <StatCard label="Total Expenses" value={formatCurrency(expenses)}  icon={TrendingDown} accent="destructive" />
         <StatCard label="Net Surplus"    value={formatCurrency(Math.abs(netSurplus))}
-          icon={DollarSign} color={netSurplus >= 0 ? "bg-primary/5" : "bg-destructive/10"} />
-        <StatCard label="Total Assets"   value={formatCurrency(assets)}    icon={Scale}        color="bg-info/10" />
+          icon={DollarSign} accent={netSurplus >= 0 ? "primary" : "destructive"} />
+        <StatCard label="Total Assets"   value={formatCurrency(assets)}    icon={Scale}        accent="info" />
       </div>
 
       <SubTabBar

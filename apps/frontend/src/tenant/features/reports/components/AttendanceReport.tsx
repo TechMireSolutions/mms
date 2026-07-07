@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
-import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";

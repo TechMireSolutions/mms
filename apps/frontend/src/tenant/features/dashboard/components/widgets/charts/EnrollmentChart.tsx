@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
 import {
   ComposedChart, Area, Line, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, TooltipContentProps
+  Tooltip, TooltipContentProps
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import type { Enrollment } from '@/lib/data/enrollmentData';
 import { TrendingUp } from "lucide-react";
@@ -149,7 +150,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
         </div>
       </header>
       
-      <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+      <SafeResponsiveContainer height={200}>
         <ComposedChart data={enrollmentData} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
           <defs>
             {Object.entries(COLOR_MAP).map(([key, config]) => (
@@ -195,7 +196,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
             />
           )}
         </ComposedChart>
-      </ResponsiveContainer>
+      </SafeResponsiveContainer>
     </section>
   );
 }

@@ -19,6 +19,9 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
   - `Switch` (`@/components/ui/switch`)
   - `FormModal` / `Modal` (`@/components/ui/FormModal`)
   - `DataTable` (`@/components/ui/DataTable`)
+  - `StatCard` (`@/components/ui/StatCard`)
+  - `ExportToolbar` (`@/components/ui/ExportToolbar`)
+  - `SafeResponsiveContainer` (`@/components/ui/SafeResponsiveContainer`)
 - Extend central primitives safely when custom variations are needed. Do not implement ad-hoc primitives in feature folders.
 
 ### Design Token Strictness

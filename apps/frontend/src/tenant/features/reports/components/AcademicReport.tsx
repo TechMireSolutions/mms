@@ -3,7 +3,7 @@ import { BookOpen, Trophy, TrendingUp, Star } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
-import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/features/examinations/hooks/useExaminationsApi";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";

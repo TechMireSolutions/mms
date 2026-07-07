@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
 import {
   ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, TooltipContentProps, TooltipPayloadEntry,
+  Tooltip, TooltipContentProps, TooltipPayloadEntry,
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { getCollection } from "@/lib/db";
 import type { Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
@@ -199,7 +200,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
         </div>
       </div>
  
-      <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+      <SafeResponsiveContainer height={200}>
         <ComposedChart data={visibleRevenueData} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
           <defs>
             <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
@@ -235,7 +236,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
             </>
           )}
         </ComposedChart>
-      </ResponsiveContainer>
+      </SafeResponsiveContainer>
     </section>
   );
 }

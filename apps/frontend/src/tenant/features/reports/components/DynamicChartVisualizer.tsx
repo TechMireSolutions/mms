@@ -11,7 +11,7 @@ import {
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, 
   Legend, Tooltip, XAxis, YAxis, CartesianGrid
 } from "recharts";
-import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import {
   CHART_PALETTE_DEFS,
   DEFAULT_CHART_PALETTE_ID,

@@ -4,7 +4,7 @@ import { DollarSign, TrendingUp, AlertCircle, Tag } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
 import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";

@@ -3,7 +3,7 @@ import { GraduationCap, BookOpen, Users, Clock } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
-import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useTeachersByIds } from '@/tenant/features/teachers/hooks/useTeachers';
 import { collectTeacherIdsFromSessions } from '@/lib/registryResolve';

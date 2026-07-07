@@ -2,12 +2,13 @@ import React, { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import {
   BarChart2, TrendingUp, Users, Layers,
-  Search, Filter, ArrowUpRight, Receipt, AlertCircle, LucideIcon
+  Search, Filter, Receipt, AlertCircle, LucideIcon
 } from "lucide-react";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { ExportToolbar } from "@/tenant/features/obligations/components/ExportToolbar";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell, PieChart, Pie } from "recharts";
+import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useDebounce } from "@/hooks/useDebounce";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
@@ -18,46 +19,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 
 import { formatMoney, formatMonthYear } from "@mms/shared";
 
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  sub?: string;
-  icon: LucideIcon;
-  color?: "primary" | "emerald" | "blue" | "amber" | "purple";
-  trend?: number;
-}
-
-function StatCard({ label, value, sub, icon: Icon, color = "primary", trend }: StatCardProps) {
-  const accentMap: Record<string, string> = {
-    primary: "primary",
-    emerald: "success",
-    blue: "info",
-    amber: "warning",
-    purple: "indigo",
-  };
-  const cardColor = accentMap[color] || "primary";
-
-  return (
-    <Card accentColor={cardColor as any} className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 pl-5.5 space-y-2 shadow-sm hover:shadow-md transition-all duration-300">
-      <header className="flex items-center justify-between">
-        <div className={`w-9 h-9 rounded-xl bg-${cardColor === "success" ? "success" : cardColor === "info" ? "info" : cardColor === "warning" ? "warning" : cardColor === "indigo" ? "accent" : "primary"}/10 flex items-center justify-center`} aria-hidden="true">
-          <Icon className={`w-4.5 h-4.5 text-${cardColor === "success" ? "success" : cardColor === "info" ? "info" : cardColor === "warning" ? "warning" : cardColor === "indigo" ? "accent" : "primary"}`} style={{ width: 18, height: 18 }} />
-        </div>
-        {trend !== undefined && (
-          <span className={`text-[11px] font-bold flex items-center gap-0.5 ${trend >= 0 ? "text-success" : "text-destructive"}`} aria-label={trend >= 0 ? "Positive trend" : "Negative trend"}>
-            <ArrowUpRight className="w-3 h-3" style={{ transform: trend < 0 ? "rotate(180deg)" : undefined }} aria-hidden="true" />
-            {Math.abs(trend)}%
-          </span>
-        )}
-      </header>
-      <div>
-        <p className="text-xl font-bold text-foreground leading-tight m-0">{value}</p>
-        <h3 className="text-xs font-semibold text-muted-foreground mt-1 mb-0">{label}</h3>
-        {sub && <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{sub}</p>}
-      </div>
-    </Card>
-  );
-}
+import { StatCard } from "@/components/ui/StatCard";
 
 interface SectionTitleProps {
   icon: LucideIcon;
@@ -331,10 +293,10 @@ export function ObligationsSummary({
 
       {/* ── KPI Cards ── */}
       <section aria-label="Key Performance Indicators" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={Receipt}  label="Total Collections"     value={totalRecords}               color="primary" />
-        <StatCard icon={TrendingUp} label="Total Amount Received" value={formatMoney(totalAmount)}          color="emerald" />
-        <StatCard icon={Users}    label="Active Reps"            value={uniqueReps}                 color="blue" />
-        <StatCard icon={Layers}   label="Obligation Types"       value={typeBreakdown.length}        color="amber" />
+        <StatCard icon={Receipt}  label="Total Collections"     value={totalRecords}               accent="primary" />
+        <StatCard icon={TrendingUp} label="Total Amount Received" value={formatMoney(totalAmount)}          accent="emerald" />
+        <StatCard icon={Users}    label="Active Reps"            value={uniqueReps}                 accent="blue" />
+        <StatCard icon={Layers}   label="Obligation Types"       value={typeBreakdown.length}        accent="amber" />
       </section>
 
       {/* ── Charts row ── */}
@@ -343,7 +305,7 @@ export function ObligationsSummary({
           {/* Obligation Type Breakdown */}
           <Card accentColor="primary" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
             <SectionTitle icon={BarChart2} title="Collection by Obligation Type" subtitle="Total amount per type" />
-            <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer height={200}>
               <BarChart data={typeBreakdown} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
@@ -352,34 +314,34 @@ export function ObligationsSummary({
                   {typeBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Bar>
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </Card>
 
           {/* Monthly trend */}
           {monthlyTrend.length > 1 ? (
             <Card accentColor="indigo" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
               <SectionTitle icon={TrendingUp} title="Monthly Collection Trend" subtitle="Amounts received per month" />
-              <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+              <SafeResponsiveContainer height={200}>
                 <BarChart data={monthlyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
                   <Tooltip formatter={(v) => v !== undefined ? formatMoney(Number(v)) : ""} />
                   <Bar dataKey="total" fill={primary} radius={[6,6,0,0]} />
                 </BarChart>
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
             </Card>
           ) : (
             /* Pie fallback if single month */
             <Card accentColor="success" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
               <SectionTitle icon={Layers} title="Distribution by Type" subtitle="Share of total" />
-              <ResponsiveContainer width="100%" height={200} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+              <SafeResponsiveContainer height={200}>
                 <PieChart>
                   <Pie data={typeBreakdown} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${((percent ?? 0)*100).toFixed(0)}%`} labelLine={false}>
                     {typeBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={(v) => v !== undefined ? formatMoney(Number(v)) : ""} />
                 </PieChart>
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
             </Card>
           )}
         </section>

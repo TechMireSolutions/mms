@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
-  ResponsiveContainer, Cell, PieChart, Pie, Tooltip, TooltipContentProps,
+  Cell, PieChart, Pie, Tooltip, TooltipContentProps,
   ComposedChart, Area, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getCollection } from "@/lib/db";
 import { AttendanceRecord } from '@/lib/data/attendanceData';
@@ -149,7 +150,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
         </div>
       </header>
       
-      <ResponsiveContainer width="100%" height={170} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+      <SafeResponsiveContainer height={170}>
         <ComposedChart data={attendanceData} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
           <defs>
             <linearGradient id="attGrad" x1="0" y1="0" x2="0" y2="1">
@@ -196,7 +197,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
             </Bar>
           )}
         </ComposedChart>
-      </ResponsiveContainer>
+      </SafeResponsiveContainer>
     </section>
   );
 }
@@ -331,7 +332,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
 
         {chartType === "bar" && (
           <div className="flex-1 w-full" aria-hidden="true">
-            <ResponsiveContainer width="100%" height={120} minWidth={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer height={120}>
               <BarChart data={hasanatData} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
@@ -343,13 +344,13 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                   ))}
                 </Bar>
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </div>
         )}
 
         {chartType === "radar" && (
           <div className="flex-shrink-0 w-full sm:w-[150px] h-[120px]" aria-hidden="true">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="75%" data={hasanatData}>
                 <PolarGrid stroke="hsl(var(--border))" />
                 <PolarAngleAxis dataKey="name" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} />
@@ -357,7 +358,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                 <Radar name="Points" dataKey="value" stroke={activeColors.mem} fill={activeColors.mem} fillOpacity={0.35} />
                 <Tooltip content={<HasanatTooltip />} />
               </RadarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </div>
         )}
 

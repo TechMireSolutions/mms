@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
-import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { useContactsReportAnalytics } from '@/tenant/features/contacts/hooks/useContacts';

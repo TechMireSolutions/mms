@@ -46,5 +46,6 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 - **DRY Metrics & Modernized Dashboards**: Extracted quick metrics cards into a central `<ModuleCommandMetricsGrid />` component across all 11 modules, and upgraded reports/KPI dashboard widgets with semantic accents and staggered Framer Motion transitions.
 - **Unified SEO & Container Layouts**: Converted hardcoded SEO header strings to localized translation mappings (`t()`) and unified margins/spacing limits consistently across all pages.
 - **Design System Primitives**: Refactored raw HTML `<select>`, `<textarea>`, `<input>`, and Radix checkbox controls across all 11 modules to use `FormSelect`, `Textarea`, `Input`, `SearchBar`, and `Checkbox` design system primitives. Cleaned up all unused variables and linter warnings to achieve a 100% clean compilation and lint state.
+- **Consolidated Stats Cards, Export Toolbars & SafeResponsiveContainer**: Merged duplicate local metrics cards and data export toolbars across all feature modules and reports into unified, central primitives (`StatCard` and `ExportToolbar`). Relocated Recharts chart wrappers to the shared design system folder (`SafeResponsiveContainer`) and standardized imports to eliminate zero-width layout rendering warnings.
 
 Do not reintroduce resolved violations.
