@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { formatDate } from "@/lib/db";
+import { formatMoney } from "@mms/shared";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 
 import { ClassesTab } from "@/tenant/features/sessions/components/tabs/ClassesTab";
@@ -73,7 +74,7 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
       subtitle={
         <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
           <span>{formatSessionDate(session.startDate)} → {formatSessionDate(session.endDate)}</span>
-          <span className="font-semibold text-foreground">{session.currency} {Number(session.baseFee).toLocaleString()} / month</span>
+          <span className="font-semibold text-foreground">{formatMoney(session.baseFee, session.currency)} / month</span>
         </div>
       }
       icon={GraduationCap}

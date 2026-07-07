@@ -15,9 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 
-function fmt(amount: string | number | null | undefined, code = "PKR"): string {
-  return `${code} ${parseFloat(amount as string || "0").toLocaleString()}`;
-}
+import { useTranslation } from "@/hooks/useTranslation";
+import { getIntlLocaleForLanguage, formatMoney } from "@mms/shared";
 
 interface StatCardProps {
   label: string;
@@ -100,6 +99,8 @@ export interface ObligationsSummaryProps {
 export function ObligationsSummary({
   collections, obligationTypes, reps, mujtahids, wakalaTypes, distributions
 }: ObligationsSummaryProps) {
+  const { t, language } = useTranslation();
+  const locale = getIntlLocaleForLanguage(language);
   const users = useMergedObligationUsers();
   const { primary, secondary, charts } = useBrandPalette();
   const COLORS = useMemo(() => [primary, charts[3], secondary, charts[4], charts[0], charts[2]], [primary, secondary, charts]);
@@ -238,9 +239,9 @@ export function ObligationsSummary({
     });
     return Object.values(monthlyTrendByMonth).sort((a, b) => a.month.localeCompare(b.month)).map((monthlyEntry) => ({
       ...monthlyEntry,
-      label: new Date(monthlyEntry.month + "-01").toLocaleDateString("en-PK", { month: "short", year: "2-digit" }),
+      label: new Date(monthlyEntry.month + "-01").toLocaleDateString(locale, { month: "short", year: "2-digit" }),
     }));
-  }, [filtered]);
+  }, [filtered, locale]);
 
   const hasFilters = dateFrom || dateTo || repFilter !== "all" || typeFilter !== "all" || userFilter !== "all" || search;
 
@@ -333,7 +334,7 @@ export function ObligationsSummary({
       {/* ── KPI Cards ── */}
       <section aria-label="Key Performance Indicators" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard icon={Receipt}  label="Total Collections"     value={totalRecords}               color="primary" />
-        <StatCard icon={TrendingUp} label="Total Amount Received" value={fmt(totalAmount)}          color="emerald" />
+        <StatCard icon={TrendingUp} label="Total Amount Received" value={formatMoney(totalAmount)}          color="emerald" />
         <StatCard icon={Users}    label="Active Reps"            value={uniqueReps}                 color="blue" />
         <StatCard icon={Layers}   label="Obligation Types"       value={typeBreakdown.length}        color="amber" />
       </section>
@@ -348,7 +349,7 @@ export function ObligationsSummary({
               <BarChart data={typeBreakdown} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v) => v !== undefined ? fmt(Number(v)) : ""} />
+                <Tooltip formatter={(v) => v !== undefined ? formatMoney(Number(v)) : ""} />
                 <Bar dataKey="total" radius={[6,6,0,0]}>
                   {typeBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Bar>
@@ -364,7 +365,7 @@ export function ObligationsSummary({
                 <BarChart data={monthlyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(v) => v !== undefined ? fmt(Number(v)) : ""} />
+                  <Tooltip formatter={(v) => v !== undefined ? formatMoney(Number(v)) : ""} />
                   <Bar dataKey="total" fill={primary} radius={[6,6,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -378,7 +379,7 @@ export function ObligationsSummary({
                   <Pie data={typeBreakdown} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${((percent ?? 0)*100).toFixed(0)}%`} labelLine={false}>
                     {typeBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v) => v !== undefined ? fmt(Number(v)) : ""} />
+                  <Tooltip formatter={(v) => v !== undefined ? formatMoney(Number(v)) : ""} />
                 </PieChart>
               </ResponsiveContainer>
             </Card>
@@ -442,7 +443,7 @@ export function ObligationsSummary({
                       <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">{w.obligationType}</span>
                     </td>
                     <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">{w.count}</td>
-                    <td className="px-3 py-3 text-right font-mono font-bold text-success text-sm">{fmt(w.total)}</td>
+                    <td className="px-3 py-3 text-right font-mono font-bold text-success text-sm">{formatMoney(w.total)}</td>
                     <td className="px-3 py-3">
                       {w.distributions.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -460,7 +461,7 @@ export function ObligationsSummary({
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{wakalaSummary.length} wakala config{wakalaSummary.length !== 1 ? "s" : ""}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{fmt(totalAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{formatMoney(totalAmount)}</td>
                   <td />
                 </tr>
               </tfoot>
@@ -526,15 +527,15 @@ export function ObligationsSummary({
                       <div className="flex flex-wrap gap-1">
                         {Object.entries(r.byType).map(([name, amount]) => (
                           <span key={name} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted border border-border text-foreground whitespace-nowrap">
-                            {name}: {fmt(amount as number).replace("PKR ", "")}
+                            {name}: {formatMoney(amount as number).replace("PKR ", "")}
                           </span>
                         ))}
                       </div>
                     </td>
                     <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">{r.count}</td>
-                    <td className="px-3 py-3 text-right font-mono font-bold text-foreground text-sm">{fmt(r.total)}</td>
+                    <td className="px-3 py-3 text-right font-mono font-bold text-foreground text-sm">{formatMoney(r.total)}</td>
                     <td className="px-3 py-3 text-right">
-                      <span className="font-mono font-bold text-destructive text-sm">{fmt(r.due)}</span>
+                      <span className="font-mono font-bold text-destructive text-sm">{formatMoney(r.due)}</span>
                     </td>
                   </tr>
                 ))}
@@ -542,8 +543,8 @@ export function ObligationsSummary({
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{repSummary.length} rep{repSummary.length !== 1 ? "s" : ""}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-foreground text-xs">{fmt(totalAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{fmt(repSummary.reduce((sum, representativeSummary) => sum + representativeSummary.due, 0))}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-foreground text-xs">{formatMoney(totalAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{formatMoney(repSummary.reduce((sum, representativeSummary) => sum + representativeSummary.due, 0))}</td>
                 </tr>
               </tfoot>
             </table>
@@ -582,7 +583,7 @@ export function ObligationsSummary({
                   {t.count}
                 </span>
               </header>
-              <p className="text-lg font-bold text-foreground font-mono m-0">{fmt(t.total).replace("PKR ", "")}</p>
+              <p className="text-lg font-bold text-foreground font-mono m-0">{formatMoney(t.total).replace("PKR ", "")}</p>
               <p className="text-[10px] text-muted-foreground m-0">PKR · {t.count} collection{t.count !== 1 ? "s" : ""}</p>
               <div className="w-full bg-muted rounded-full h-1.5 mt-1" role="progressbar" aria-valuenow={totalAmount ? (t.total / totalAmount) * 100 : 0} aria-valuemin={0} aria-valuemax={100}>
                 <div className="h-1.5 rounded-full transition-all"

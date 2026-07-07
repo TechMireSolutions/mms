@@ -7,6 +7,7 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { formatMoney } from "@mms/shared";
 
 /** A single income or expense transaction entry. */
 interface TransactionEntry {
@@ -115,7 +116,6 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
     onUpdate({ ...session, budget: { ...budget, [entryKey]: budgetEntries.filter((budgetEntry) => budgetEntry.id !== id) } });
   };
 
-  const formatMoney = (amount: number) => `PKR ${amount.toLocaleString()}`;
 
   return (
     <div className="space-y-5">

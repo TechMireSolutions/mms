@@ -3,7 +3,7 @@ import { Plus, Eye, Search, Receipt, Printer } from "lucide-react";
 import {
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
-import { DEFAULT_CURRENCIES } from '@mms/shared';
+import { DEFAULT_CURRENCIES, formatMoney } from '@mms/shared';
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMergedObligationContacts } from "@/tenant/features/obligations/hooks/useObligationLookups";
@@ -18,7 +18,7 @@ const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/compo
 
 function fmtAmount(amount: string | number, currencyId: string, currencies: any[]): string {
   const currency = currencies.find((candidateCurrency) => candidateCurrency.id === currencyId);
-  return `${currency?.code || ""} ${parseFloat(amount as string).toLocaleString()}`;
+  return formatMoney(amount, currency?.code);
 }
 
 import { formatDate } from "@/lib/utils";

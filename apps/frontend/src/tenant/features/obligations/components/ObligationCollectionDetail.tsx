@@ -1,7 +1,7 @@
 import React, { useState, lazy, Suspense, useMemo } from "react";
 import { Receipt, Printer } from "lucide-react";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
-import { DEFAULT_CURRENCIES } from '@mms/shared';
+import { DEFAULT_CURRENCIES, formatMoney } from '@mms/shared';
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { ObligationModal } from "@/tenant/features/obligations/components/ObligationModal";
@@ -112,7 +112,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <Row label="Designated For" value={obType?.designated_for} />
           <Row label="Representative" value={rep?.name} />
           <Row label="Mujtahid" value={mujtahid?.name} />
-          <Row label="Amount" value={`${currency?.code || ""} ${selectedCollection.amount.toLocaleString()}`} mono />
+          <Row label="Amount" value={formatMoney(selectedCollection.amount, currency?.code)} mono />
           <Row label="Payment Mode" value={selectedCollection.payment_mode} />
           <Row label="Received By" value={user?.name} />
           <Row label="Created" value={fmtDate(selectedCollection.created_at)} />
@@ -145,7 +145,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
                       </td>
                       <td className="px-4 py-2.5 text-end font-mono text-xs font-semibold">{distribution.percentage}%</td>
                       <td className="px-5 py-2.5 text-end font-mono text-xs font-semibold text-foreground">
-                        {currency?.code} {((selectedCollection.amount * distribution.percentage) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {formatMoney((selectedCollection.amount * distribution.percentage) / 100, currency?.code)}
                       </td>
                     </tr>
                   ))}

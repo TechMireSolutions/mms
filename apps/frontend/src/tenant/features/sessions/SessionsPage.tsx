@@ -29,7 +29,7 @@ import { useSessionColumnLayout } from "@/tenant/features/sessions/hooks/useSess
 import { useSessionConfig } from "@/tenant/features/sessions/hooks/useSessionConfig";
 import { SessionsCommandMetrics } from "@/tenant/features/sessions/components/SessionsCommandMetrics";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import { type AppTranslationKey } from "@mms/shared";
+import { type AppTranslationKey, formatMoney } from "@mms/shared";
 
 type SessionStatus = string;
 type SessionType = string;
@@ -93,7 +93,7 @@ function SessionCard({ session, onClick, statusConfig }: SessionCardProps) {
         {[
           { icon: Calendar, label: "Start", value: formatSessionDate(session.startDate) },
           { icon: Users,    label: "Enrolled", value: `${totalEnrolled}/${totalCapacity || "—"}` },
-          { icon: DollarSign, label: "Fee", value: `${session.currency} ${Number(session.baseFee).toLocaleString()}` },
+          { icon: DollarSign, label: "Fee", value: formatMoney(session.baseFee, session.currency) },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="rounded-lg bg-muted/30 px-2.5 py-2">
             <div className="flex items-center gap-1 mb-0.5">
@@ -366,7 +366,7 @@ export default function Sessions() {
                             )}
                             {showFee && (
                               <td className="px-4 py-3 text-xs font-medium">
-                                {sessionItem.currency} {Number(sessionItem.baseFee).toLocaleString()}
+                                {formatMoney(sessionItem.baseFee, sessionItem.currency)}
                               </td>
                             )}
                             {showEnrolled && (

@@ -83,7 +83,7 @@ REST resources (pilots): `GET/POST/PUT/DELETE /api/students`, `/api/contacts`.
 
 1. Backend REST route + Zod (`mms-backend-api` skill)
 2. Query hooks on frontend (`useQuery` + `useMutation`, export `QUERY_KEY`)
-3. Optional hybrid: `saveCollection` in `queryFn` + `useXxxCollection()` for reads
+3. Optional hybrid: Use `useCollectionSync` to manage server querying, local caching, and offline synchronization in a unified manner.
 4. Stop using `/api/db/collections/:name` for that entity
 
 ## Concurrency

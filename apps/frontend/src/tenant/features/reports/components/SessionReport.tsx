@@ -7,7 +7,7 @@ import {
 import SafeResponsiveContainer from "@/tenant/features/reports/components/SafeResponsiveContainer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
-import type { Enrollment } from '@mms/shared';
+import { getIntlLocaleForLanguage, type Enrollment } from '@mms/shared';
 import ReportSummaryCard from "@/tenant/features/reports/components/ReportSummaryCard";
 import ReportExportBar from "@/tenant/features/reports/components/ReportExportBar";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -70,7 +70,8 @@ function utilisationColour(rate: number): string {
  * @returns The SessionReport component.
  */
 export default function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const locale = getIntlLocaleForLanguage(language);
   const sessions = useSessionsCollection();
   const enrollments = useLiveCollection<Enrollment>("enrollments");
 
@@ -92,29 +93,31 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
   }, [sessions]);
 
   const enrollmentTrends = useMemo<EnrollmentTrendItem[]>(() => {
-    const counts: Record<string, number> = {};
+    const counts: Record<number, number> = {};
     enrollments.forEach((enrollment) => {
       if (enrollment.enrolledDate) {
         const enrolledDate = new Date(enrollment.enrolledDate);
         if (!isNaN(enrolledDate.getTime())) {
-          const monthStr = enrolledDate.toLocaleDateString("en-US", { month: "short" });
-          counts[monthStr] = (counts[monthStr] || 0) + 1;
+          const m = enrolledDate.getMonth();
+          counts[m] = (counts[m] || 0) + 1;
         }
       }
     });
 
-    const orderedMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthFormatter = new Intl.DateTimeFormat(locale, { month: "short" });
     const trends: EnrollmentTrendItem[] = [];
-    orderedMonths.forEach((month) => {
-      if (counts[month] !== undefined) {
-        trends.push({ month, students: counts[month] });
+    for (let i = 0; i < 12; i++) {
+      if (counts[i] !== undefined) {
+        const monthName = monthFormatter.format(new Date(2023, i, 15));
+        trends.push({ month: monthName, students: counts[i] });
       }
-    });
+    }
     if (trends.length === 0) {
-      return [{ month: "Jan", students: enrollments.length }];
+      const currentMonthName = monthFormatter.format(new Date());
+      return [{ month: currentMonthName, students: enrollments.length }];
     }
     return trends;
-  }, [enrollments]);
+  }, [enrollments, locale]);
 
   const sessionCapacityData = useMemo<SessionCapacityItem[]>(() => {
     let filteredSessionCapacity = sessionCapacity;
