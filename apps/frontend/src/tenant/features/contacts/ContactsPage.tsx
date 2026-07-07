@@ -6,7 +6,7 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { getPrimaryPhone, hasWhatsApp, Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab, getDisplayName } from "@mms/shared";
 import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useModuleTierTabs, useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useContacts, useContactsCollection, useContactsPaginated, useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
@@ -163,17 +163,12 @@ function ContactsInner() {
   const { conflictCount } = useContactsSyncOutbox();
   const prevConflictCount = useRef(conflictCount);
   const openConflictReview = useCallback(() => setConflictPanelOpen(true), []);
-  const PAGE_TABS = useModuleTierTabs();
   const [fetchGateTab, setFetchGateTab] = useState("work");
-  const visibleTopTabIds = useMemo(
-    () =>
-      PAGE_TABS.filter((tab) => {
-        if (tab.id === "setup") return canViewSetup;
-        if (tab.id === "reports") return canViewReports;
-        return true;
-      }).map((tab) => tab.id),
-    [PAGE_TABS, canViewSetup, canViewReports],
-  );
+  const localVisibleTopTabs = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+  });
+  const visibleTopTabIds = useMemo(() => localVisibleTopTabs.map((t) => t.id), [localVisibleTopTabs]);
   const fetchGateEffectiveTab = resolveModuleTierTab(fetchGateTab, visibleTopTabIds);
   const needsFullContactsList = showDeletedArchives || fetchGateEffectiveTab === "setup";
 

@@ -9,6 +9,13 @@ export interface ModuleTierTab {
   icon: LucideIcon;
 }
 
+import { useMemo } from "react";
+
+export interface FilterTabsOptions {
+  canViewSetup?: boolean;
+  canViewReports?: boolean;
+}
+
 /** Standard three-tier module page tabs with localized labels. */
 export function useModuleTierTabs(): ModuleTierTab[] {
   const { t } = useTranslation();
@@ -32,5 +39,22 @@ export function useModuleTierTabs(): ModuleTierTab[] {
       icon: Settings,
     },
   ];
+}
+
+/**
+ * Encapsulates the tier tab visibility logic for standard module pages.
+ */
+export function useFilteredModuleTierTabs(options: FilterTabsOptions): ModuleTierTab[] {
+  const tabs = useModuleTierTabs();
+  const canViewSetup = options.canViewSetup ?? true;
+  const canViewReports = options.canViewReports ?? true;
+
+  return useMemo(() => {
+    return tabs.filter((tab) => {
+      if (tab.id === "setup") return canViewSetup;
+      if (tab.id === "reports") return canViewReports;
+      return true;
+    });
+  }, [tabs, canViewSetup, canViewReports]);
 }
 

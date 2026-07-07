@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
+import { useModuleTierTabs, useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useConfigSubTabs } from '@/tenant/hooks/useConfigSubTabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Users as UsersIcon, Activity, UserPlus } from 'lucide-react';
@@ -41,7 +41,6 @@ import { notify } from '@/lib/notify';
  * Users and roles — Work | Reports | Setup.
  */
 export default function Users(): React.JSX.Element {
-  const PAGE_TABS = useModuleTierTabs();
   const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
@@ -167,9 +166,9 @@ export default function Users(): React.JSX.Element {
     });
   };
 
-  const visibleTopTabs = PAGE_TABS.filter((tab) => {
-    if (tab.id === 'setup' || tab.id === 'reports') return isAdmin;
-    return true;
+  const visibleTopTabs = useFilteredModuleTierTabs({
+    canViewSetup: isAdmin,
+    canViewReports: isAdmin,
   });
 
   const effectiveTab = resolveModuleTierTab(

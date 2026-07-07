@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 
 import { useTranslation } from "@/hooks/useTranslation";
-import { getIntlLocaleForLanguage, formatMoney } from "@mms/shared";
+import { getIntlLocaleForLanguage, formatMoney, formatMonthYear } from "@mms/shared";
 
 interface StatCardProps {
   label: string;
@@ -239,7 +239,7 @@ export function ObligationsSummary({
     });
     return Object.values(monthlyTrendByMonth).sort((a, b) => a.month.localeCompare(b.month)).map((monthlyEntry) => ({
       ...monthlyEntry,
-      label: new Date(monthlyEntry.month + "-01").toLocaleDateString(locale, { month: "short", year: "2-digit" }),
+      label: formatMonthYear(monthlyEntry.month + "-01"),
     }));
   }, [filtered, locale]);
 

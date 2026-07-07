@@ -35,7 +35,7 @@ interface FinancialReportProps {
   onEditVisual?: (config: unknown) => void;
 }
 
-import { formatMoney as PKR, getIntlLocaleForLanguage } from "@mms/shared";
+import { formatMoney as PKR, getIntlLocaleForLanguage, formatMonthYear } from "@mms/shared";
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
   paid:      "bg-success/10 text-success",
@@ -69,7 +69,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       // Use due date or creation date for month bucket (mocking logic using due date)
       const dueDate = new Date(invoice.dueDate);
       if (isNaN(dueDate.getTime())) return;
-      const monthLabel = dueDate.toLocaleDateString(locale, { month: "short", year: "numeric" });
+      const monthLabel = formatMonthYear(dueDate);
       
       if (!monthlyTotals[monthLabel]) monthlyTotals[monthLabel] = { collected: 0, outstanding: 0, total: 0 };
       

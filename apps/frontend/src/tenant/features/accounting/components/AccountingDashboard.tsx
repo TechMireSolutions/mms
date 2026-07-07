@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatMonthName } from "@/lib/utils";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   TrendingUp, TrendingDown, Scale, DollarSign, AlertCircle, CheckCircle2, Clock,
@@ -146,7 +146,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
     });
     return Object.values(totalsByMonth).sort((firstMonth, secondMonth) => firstMonth.month.localeCompare(secondMonth.month)).slice(-6).map((monthTotal) => ({
       ...monthTotal,
-      month: new Date(monthTotal.month + "-01").toLocaleDateString(locale, { month: "short" }),
+      month: formatMonthName(monthTotal.month + "-01"),
     }));
   }, [postedEntries, accounts, locale]);
 

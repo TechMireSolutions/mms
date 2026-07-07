@@ -3,7 +3,7 @@ import { TrendingUp } from "lucide-react";
 import { Invoice } from '@/lib/data/financeData';
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatMoney, getIntlLocaleForLanguage } from "@mms/shared";
+import { formatMoney, getIntlLocaleForLanguage, formatMonthYear, formatMonthName } from "@mms/shared";
 
 /**
  * FeeCollectionSummary Component
@@ -62,15 +62,15 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
   const byClass = Object.values(classMap);
 
   const displayDate = useMemo(() => {
-    return new Date().toLocaleDateString(locale, { month: 'long', year: 'numeric' });
-  }, [locale]);
+    return formatMonthYear(new Date(), "long");
+  }, []);
 
   const comparisonMonthName = useMemo(() => {
     // March is month index 2 (Mar)
     const comparisonDate = new Date();
     comparisonDate.setMonth(2);
-    return comparisonDate.toLocaleDateString(locale, { month: 'short' });
-  }, [locale]);
+    return formatMonthName(comparisonDate);
+  }, []);
 
   return (
     <section aria-labelledby="fee-collection-heading" className="relative overflow-hidden group/summary bg-card/45 backdrop-blur-sm rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-all duration-300">

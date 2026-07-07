@@ -9,7 +9,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
-import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
+import { useModuleTierTabs, useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { ActionButton } from "@/components/ui/ActionButton";
@@ -36,7 +36,6 @@ export default function MessagingPage(): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { can } = usePermissions();
-  const PAGE_TABS = useModuleTierTabs();
 
   // Load all system contacts using the contacts hook
   const contactsCollectionRaw = useContactsCollection();
@@ -66,14 +65,9 @@ export default function MessagingPage(): React.JSX.Element {
   const [composerTarget, setComposerTarget] = useState<{ channel: 'sms' | 'whatsapp' | 'email'; recipients: MessagingRecipient[] } | null>(null);
 
   // Hide the setup tab if the user has no configuration permissions
-  const visibleTabs = useMemo(() => {
-    return PAGE_TABS.filter((tab) => {
-      if (tab.id === 'setup') {
-        return can('configuration.view');
-      }
-      return true;
-    });
-  }, [PAGE_TABS, can]);
+  const visibleTabs = useFilteredModuleTierTabs({
+    canViewSetup: can('configuration.view'),
+  });
 
   // Load templates from DB (merged with defaults)
   const templates = useMemo(() => {

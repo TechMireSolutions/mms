@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useModuleTierTabs, useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -86,20 +86,16 @@ function applyGrNumberMigration(
  * Implements the standard 3-tier tab system (Work | Reports | Setup).
  */
 export default function Students() {
-  const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
   const { can } = usePermissions();
   const canWrite = can("students.write");
   const canViewReports = can("analytics.view");
   const canViewSetup = can("configuration.view") || can("settings.global.write");
 
-  const visibleTabs = useMemo(() => {
-    return PAGE_TABS.filter((tab) => {
-      if (tab.id === "setup") return canViewSetup;
-      if (tab.id === "reports") return canViewReports;
-      return true;
-    });
-  }, [PAGE_TABS, canViewSetup, canViewReports]);
+  const visibleTabs = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+  });
   const { data: serverCount } = useStudentCount();
   const { createStudent, updateStudent, deleteStudent } = useStudentMutations();
   const { settings, statuses: studentStatusOptions, genderFilters } = useStudentConfig();

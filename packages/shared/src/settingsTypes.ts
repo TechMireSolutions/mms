@@ -1337,6 +1337,52 @@ export const DEFAULT_USERS_FIELD_DEFS: ModuleFieldDef[] = [
   { id: "role", label: "System Role", required: true },
 ];
 
+interface StoredGlobalSettings {
+  dateFormat: string;
+  timezone: string;
+  language: AppLanguageCode;
+}
+
+/**
+ * Retrieves the global settings from localStorage (safe for server rendering).
+ */
+function getStoredGlobalSettings(): StoredGlobalSettings {
+  let dateFormat = "DD/MM/YYYY";
+  let timezone = "UTC";
+  let language: AppLanguageCode = "en";
+
+  if (typeof window !== "undefined") {
+    try {
+      let saved: string | null = localStorage.getItem("mms_global_settings");
+      if (!saved) {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.endsWith(":global_settings")) {
+            saved = localStorage.getItem(key);
+            break;
+          }
+        }
+      }
+      if (saved) {
+        const settings = JSON.parse(saved);
+        if (settings?.dateFormat) {
+          dateFormat = settings.dateFormat;
+        }
+        if (settings?.timezone) {
+          timezone = settings.timezone;
+        }
+        if (settings?.language) {
+          language = normalizeAppLanguage(settings.language);
+        }
+      }
+    } catch {
+      // Ignored
+    }
+  }
+
+  return { dateFormat, timezone, language };
+}
+
 /**
  * Formats a Date object or date string according to the active global date format.
  *
@@ -1354,44 +1400,16 @@ export function formatDate(
   const parsedDate = typeof date === "string" ? new Date(date) : date;
   if (isNaN(parsedDate.getTime())) return "—";
 
-  let actualDateFormat = "DD/MM/YYYY";
+  const stored = getStoredGlobalSettings();
+  let actualDateFormat = stored.dateFormat;
   let actualShowMonthName = showMonthName;
-  let timezone = "UTC";
-  let language: AppLanguageCode = "en";
+  let timezone = stored.timezone;
+  let language = stored.language;
 
   if (typeof dateFormatOrShowMonthName === "boolean") {
     actualShowMonthName = dateFormatOrShowMonthName;
   } else if (typeof dateFormatOrShowMonthName === "string") {
     actualDateFormat = dateFormatOrShowMonthName;
-  }
-
-  if (typeof window !== "undefined") {
-    try {
-      let saved: string | null = localStorage.getItem("mms_global_settings");
-      if (!saved) {
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key?.endsWith(":global_settings")) {
-            saved = localStorage.getItem(key);
-            break;
-          }
-        }
-      }
-      if (saved) {
-        const settings = JSON.parse(saved);
-        if (typeof dateFormatOrShowMonthName !== "string" && settings?.dateFormat) {
-          actualDateFormat = settings.dateFormat;
-        }
-        if (settings?.timezone) {
-          timezone = settings.timezone;
-        }
-        if (settings?.language) {
-          language = normalizeAppLanguage(settings.language);
-        }
-      }
-    } catch {
-      // Ignored
-    }
   }
 
   const intlLocale = getIntlLocaleForLanguage(language);
@@ -1435,31 +1453,9 @@ export function formatDateTime(
   if (isNaN(parsedDate.getTime())) return "—";
 
   const datePart = formatDate(date, showMonthName);
-
-  let timezone = "UTC";
-  let language = "en";
-
-  if (typeof window !== "undefined") {
-    try {
-      let saved: string | null = localStorage.getItem("mms_global_settings");
-      if (!saved) {
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key?.endsWith(":global_settings")) {
-            saved = localStorage.getItem(key);
-            break;
-          }
-        }
-      }
-      if (saved) {
-        const settings = JSON.parse(saved);
-        if (settings?.timezone) timezone = settings.timezone;
-        if (settings?.language) language = settings.language;
-      }
-    } catch {
-      // Ignored
-    }
-  }
+  const stored = getStoredGlobalSettings();
+  const timezone = stored.timezone;
+  const language = stored.language;
 
   const intlLocale = getIntlLocaleForLanguage(language);
   const timeFormatter = new Intl.DateTimeFormat(intlLocale, {
@@ -1469,6 +1465,129 @@ export function formatDateTime(
   });
   
   return `${datePart} ${timeFormatter.format(parsedDate)}`;
+}
+
+/**
+ * Formats a Date object or date string as a month and year (e.g. "Jan 2026") using active global settings.
+ *
+ * @param {string | Date | null | undefined} date - The date to format.
+ * @param {"numeric" | "2-digit" | "long" | "short" | "narrow"} [monthStyle="short"] - The style of month.
+ * @returns {string} The formatted month and year string.
+ */
+export function formatMonthYear(
+  date: string | Date | null | undefined,
+  monthStyle: "numeric" | "2-digit" | "long" | "short" | "narrow" = "short"
+): string {
+  if (!date) return "—";
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(parsedDate.getTime())) return "—";
+
+  const stored = getStoredGlobalSettings();
+  const timezone = stored.timezone;
+  const language = stored.language;
+
+  const intlLocale = getIntlLocaleForLanguage(language);
+  return new Intl.DateTimeFormat(intlLocale, {
+    timeZone: timezone,
+    month: monthStyle,
+    year: "numeric",
+  }).format(parsedDate);
+}
+
+/**
+ * Formats a Date object or date string as a short month name (e.g. "Jan") using active global settings.
+ *
+ * @param {string | Date | null | undefined} date - The date to format.
+ * @returns {string} The formatted month name.
+ */
+export function formatMonthName(date: string | Date | null | undefined): string {
+  if (!date) return "—";
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(parsedDate.getTime())) return "—";
+
+  const stored = getStoredGlobalSettings();
+  const timezone = stored.timezone;
+  const language = stored.language;
+
+  const intlLocale = getIntlLocaleForLanguage(language);
+  return new Intl.DateTimeFormat(intlLocale, {
+    timeZone: timezone,
+    month: "short",
+  }).format(parsedDate);
+}
+
+/**
+ * Formats a Date object or date string as a weekday (e.g. "Monday") using active global settings.
+ *
+ * @param {string | Date | null | undefined} date - The date to format.
+ * @returns {string} The formatted weekday.
+ */
+export function formatDayName(date: string | Date | null | undefined): string {
+  if (!date) return "—";
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(parsedDate.getTime())) return "—";
+
+  const stored = getStoredGlobalSettings();
+  const timezone = stored.timezone;
+  const language = stored.language;
+
+  const intlLocale = getIntlLocaleForLanguage(language);
+  return new Intl.DateTimeFormat(intlLocale, {
+    timeZone: timezone,
+    weekday: "long",
+  }).format(parsedDate);
+}
+
+/**
+ * Formats a Date object or date string as a long date format (e.g. "January 2, 2000") using active global settings.
+ *
+ * @param {string | Date | null | undefined} date - The date to format.
+ * @returns {string} The formatted long date.
+ */
+export function formatLongDate(date: string | Date | null | undefined): string {
+  if (!date) return "—";
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(parsedDate.getTime())) return "—";
+
+  const stored = getStoredGlobalSettings();
+  const timezone = stored.timezone;
+  const language = stored.language;
+
+  const intlLocale = getIntlLocaleForLanguage(language);
+  return new Intl.DateTimeFormat(intlLocale, {
+    timeZone: timezone,
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(parsedDate);
+}
+
+/**
+ * Formats a Date object or date string as a Hijri date using active global settings.
+ *
+ * @param {string | Date | null | undefined} date - The date to format.
+ * @returns {string} The formatted Hijri date.
+ */
+export function formatHijriDate(date: string | Date | null | undefined): string {
+  if (!date) return "—";
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(parsedDate.getTime())) return "";
+
+  const stored = getStoredGlobalSettings();
+  const timezone = stored.timezone;
+  const language = stored.language;
+
+  const intlLocale = getIntlLocaleForLanguage(language);
+  try {
+    return new Intl.DateTimeFormat(intlLocale + "-u-ca-islamic", {
+      timeZone: timezone,
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(parsedDate);
+  } catch {
+    return "";
+  }
 }
 
 /**

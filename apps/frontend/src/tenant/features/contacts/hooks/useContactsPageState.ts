@@ -8,7 +8,7 @@ import {
   isContactDeleted,
   CONTACTS_MODULE_CONTRACT,
 } from "@mms/shared";
-import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useModuleTierTabs, useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { downloadContactsCsv, downloadContactsCsvChunked } from "@/lib/contacts/exportContactsCsv";
 import {
@@ -67,20 +67,14 @@ export function useContactsPageState({
   directoryRows,
   directoryRowsRef,
 }: UseContactsPageStateOptions) {
-  const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
   const { saveContact, removeContact, mergeContacts, importContacts, updateContact, bulkDeleteContacts, bulkRestoreContacts, restoreContact, logExportAudit } =
     pageActions;
 
-  const visibleTopTabs = useMemo(
-    () =>
-      PAGE_TABS.filter((tab) => {
-        if (tab.id === "setup") return canViewSetup;
-        if (tab.id === "reports") return canViewReports;
-        return true;
-      }),
-    [PAGE_TABS, canViewSetup, canViewReports],
-  );
+  const visibleTopTabs = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+  });
 
   const contacts = useMemo(() => {
     const country = prefs?.defaultCountry || "";

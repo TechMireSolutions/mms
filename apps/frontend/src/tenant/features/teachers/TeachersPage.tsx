@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
+import { useModuleTierTabs, useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,20 +40,16 @@ function teacherStatusLabel(t: (key: AppTranslationKey) => string, status: strin
  * Teachers — faculty roster and profiles. Standard 3-tier layout (Work | Reports | Setup).
  */
 export default function Teachers(): React.JSX.Element {
-  const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
   const { can } = usePermissions();
   const canWrite = can('teachers.write');
   const canViewReports = can('analytics.view');
   const canViewSetup = can('configuration.view') || can('settings.global.write');
 
-  const visibleTabs = useMemo(() => {
-    return PAGE_TABS.filter((tab) => {
-      if (tab.id === 'setup') return canViewSetup;
-      if (tab.id === 'reports') return canViewReports;
-      return true;
-    });
-  }, [PAGE_TABS, canViewSetup, canViewReports]);
+  const visibleTabs = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+  });
 
   const { data: serverCount } = useTeacherCount();
   const { createTeacher, updateTeacher, deleteTeacher } = useTeacherMutations();

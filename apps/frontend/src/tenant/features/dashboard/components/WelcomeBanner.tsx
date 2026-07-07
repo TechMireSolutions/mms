@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
-import { getIntlLocaleForLanguage } from '@mms/shared';
+import { getIntlLocaleForLanguage, formatDayName, formatLongDate, formatHijriDate } from '@mms/shared';
 import type { AppTranslationKey } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
@@ -32,30 +32,17 @@ export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): Re
   const sessions = useSessionsCollection({ enabled: true });
   const { data: studentMetrics } = useStudentsMetrics({ enabled: dashboardRole === 'admin' });
 
-  const locale = getIntlLocaleForLanguage(language);
   const dayName = useMemo(() => {
-    return new Date().toLocaleDateString(locale, { weekday: 'long' });
-  }, [locale]);
+    return formatDayName(new Date());
+  }, []);
 
   const gregDate = useMemo(() => {
-    return new Date().toLocaleDateString(locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  }, [locale]);
+    return formatLongDate(new Date());
+  }, []);
 
   const hijriDate = useMemo(() => {
-    try {
-      return new Date().toLocaleDateString(locale + '-u-ca-islamic', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      });
-    } catch {
-      return '';
-    }
-  }, [locale]);
+    return formatHijriDate(new Date());
+  }, []);
 
   const userId = user?.id ?? '';
   const userName = user?.name ?? '';

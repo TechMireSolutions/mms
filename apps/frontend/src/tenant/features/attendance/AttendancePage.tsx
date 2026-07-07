@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useModuleTierTabs, useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCheck, ClipboardEdit, BookOpen, BarChart2,
@@ -45,7 +45,6 @@ const DEFAULT_FILTERS = {
  * @returns {React.ReactElement} The Attendance page component.
  */
 export default function Attendance() {
-  const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
   const role = useViewerRole();
   const { can } = usePermissions();
@@ -78,10 +77,9 @@ export default function Attendance() {
   const canSeeAttendanceAnalytics = can("analytics.view")
     && (can("users.manage") || can("attendance.write") || can("enrollments.write") || !can("finance.write"));
 
-  const visibleTopTabs = PAGE_TABS.filter((tab) => {
-    if (tab.id === "setup") return can("settings.global.write");
-    if (tab.id === "reports") return canSeeAttendanceAnalytics;
-    return true;
+  const visibleTopTabs = useFilteredModuleTierTabs({
+    canViewSetup: can("settings.global.write"),
+    canViewReports: canSeeAttendanceAnalytics,
   });
 
   const visibleOperationsTabs = useMemo(
