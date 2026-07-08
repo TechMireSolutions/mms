@@ -1,7 +1,7 @@
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { DEFAULT_WIDGET_TITLE_KEYS } from "@/lib/dashboardWidgets";
 import { DASHBOARD_WIDGETS_KEY } from "@/lib/dashboardPreferences";
-import { getObject, saveObject } from "@/lib/db";
+import { getObject } from "@/lib/db";
 
 function withDefaultTitleKey(widget: CustomWidget): CustomWidget {
   const titleKey = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
