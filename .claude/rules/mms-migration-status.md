@@ -54,5 +54,6 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 - **RBAC Read Hardening**: Hardened `rbacService.ts` mapping and logic by explicitly checking permissions for `user_activity_logs` and `backups` collection reads/writes.
 - **Unused Component Cleanup & Initials DRY Refactoring**: Deleted leftover duplicate components (`ExportToolbar.tsx`, `SafeResponsiveContainer.tsx`, `ReportExportBar.tsx`, `ReportSummaryCard.tsx`) and refactored manual avatar initials formatting across 14 components to use the shared `getInitials` helper.
 - **Redundant StatsGrid Proxy & Date Formatting DRY**: Cleaned up the redundant `StatsGrid.tsx` proxy file by importing directly from `StatisticsGrid.tsx` in `DashboardPage.tsx`. Standardized raw `.toLocaleString()` date formatting calls across the frontend to utilize the centralized global settings-aware `formatDateTime` helper.
+- **Date & Money formatting consistency DRY**: Refactored raw date string renderings and manual `.toLocaleString()` calls on currency values in the frontend to resolve through settings-aware `formatDate` and `formatMoney` helpers, eliminating duplicate formatting code.
 
 Do not reintroduce resolved violations.

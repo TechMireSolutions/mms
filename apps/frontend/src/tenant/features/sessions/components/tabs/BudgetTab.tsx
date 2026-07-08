@@ -7,7 +7,7 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { formatMoney } from "@mms/shared";
+import { formatMoney, formatDate } from "@mms/shared";
 
 /** A single income or expense transaction entry. */
 interface TransactionEntry {
@@ -160,7 +160,7 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
                   <p className="text-[13px] font-medium text-foreground m-0">{incomeEntry.category}</p>
                   {incomeEntry.note && <p className="text-[11px] text-muted-foreground truncate m-0">{incomeEntry.note}</p>}
                 </div>
-                <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{incomeEntry.date}</p>
+                <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{formatDate(incomeEntry.date)}</p>
                 <p className="text-[13px] font-bold text-success flex-shrink-0 m-0">{formatMoney(incomeEntry.amount)}</p>
                 <Button aria-label={`Delete income ${incomeEntry.category}`} onClick={() => handleDelete("income", incomeEntry.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -195,7 +195,7 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
                   <p className="text-[13px] font-medium text-foreground m-0">{expenseEntry.category}</p>
                   {expenseEntry.note && <p className="text-[11px] text-muted-foreground truncate m-0">{expenseEntry.note}</p>}
                 </div>
-                <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{expenseEntry.date}</p>
+                <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{formatDate(expenseEntry.date)}</p>
                 <p className="text-[13px] font-bold text-destructive flex-shrink-0 m-0">{formatMoney(expenseEntry.amount)}</p>
                 <Button aria-label={`Delete expense ${expenseEntry.category}`} onClick={() => handleDelete("expense", expenseEntry.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />

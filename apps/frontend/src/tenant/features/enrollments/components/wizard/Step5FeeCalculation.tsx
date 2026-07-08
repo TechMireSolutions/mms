@@ -3,6 +3,7 @@ import { DollarSign, Tag, Info } from "lucide-react";
 import { calcFee, CalculatedFee } from '@/lib/data/enrollmentData';
 import { Student } from '@/lib/data/studentsData';
 import { Session } from '@/lib/data/sessionsData';
+import { formatMoney } from "@mms/shared";
 
 interface Step5FeeCalculationProps {
   student: Student | null | undefined;
@@ -41,7 +42,7 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
         <div className="divide-y divide-border">
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm text-muted-foreground">Base Fee ({session?.name || "Session"})</span>
-            <span className="text-sm font-semibold text-foreground">PKR {baseFee.toLocaleString()}</span>
+            <span className="text-sm font-semibold text-foreground">{formatMoney(baseFee)}</span>
           </div>
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">
@@ -52,12 +53,12 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
               )}
             </div>
             <span className={`text-sm font-semibold ${displayFee.discountAmt > 0 ? "text-success" : "text-muted-foreground"}`}>
-              {displayFee.discountAmt > 0 ? `– PKR ${displayFee.discountAmt.toLocaleString()}` : "PKR 0"}
+              {displayFee.discountAmt > 0 ? `– ${formatMoney(displayFee.discountAmt)}` : formatMoney(0)}
             </span>
           </div>
           <div className="flex items-center justify-between px-4 py-3 bg-primary/5">
             <span className="text-sm font-bold text-foreground">Final Amount Due</span>
-            <span className="text-lg font-bold text-primary">PKR {displayFee.finalFee.toLocaleString()}</span>
+            <span className="text-lg font-bold text-primary">{formatMoney(displayFee.finalFee)}</span>
           </div>
         </div>
       </div>

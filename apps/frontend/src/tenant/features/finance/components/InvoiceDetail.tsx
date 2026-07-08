@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatMoney } from "@mms/shared";
+import { formatMoney, formatDate } from "@mms/shared";
 
 interface InvoiceDetailProps {
   invoice: Invoice;
@@ -70,7 +70,7 @@ export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps
           <span className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${statusConfig.className}`}>
             <StatusIcon className="w-3 h-3" aria-hidden="true" /> {statusConfig.label}
           </span>
-          <span className="text-[11px] text-muted-foreground">Due: {invoice.dueDate}</span>
+          <span className="text-[11px] text-muted-foreground">Due: {formatDate(invoice.dueDate)}</span>
         </div>
 
         {/* Student & session info */}

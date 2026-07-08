@@ -3,6 +3,7 @@ import { User, BookOpen, Layers, DollarSign, CheckCircle2 } from "lucide-react";
 import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { CalculatedFee } from '@/lib/data/enrollmentData';
+import { formatMoney } from "@mms/shared";
 import { useEnrollmentConfig } from "@/tenant/features/enrollments/hooks/useEnrollmentConfig";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
@@ -114,11 +115,11 @@ export function Step6Confirmation({
         </Section>
 
         <Section icon={DollarSign} title="Fee">
-          <Row label="Base Fee" value={session ? `PKR ${session.baseFee?.toLocaleString()}` : "—"} />
-          <Row label={feeResult?.label || "Discount"} value={feeResult && feeResult.pct > 0 ? `– PKR ${feeResult.discountAmt?.toLocaleString()} (${feeResult.pct}%)` : "None"} />
+          <Row label="Base Fee" value={session ? formatMoney(session.baseFee) : "—"} />
+          <Row label={feeResult?.label || "Discount"} value={feeResult && feeResult.pct > 0 ? `– ${formatMoney(feeResult.discountAmt)} (${feeResult.pct}%)` : "None"} />
           <div className="flex items-center justify-between py-2">
             <span className="text-xs font-bold text-foreground">Total Due</span>
-            <span className="text-sm font-bold text-primary">PKR {feeResult?.finalFee?.toLocaleString() || "—"}</span>
+            <span className="text-sm font-bold text-primary">{formatMoney(feeResult?.finalFee)}</span>
           </div>
         </Section>
       </div>
@@ -207,7 +208,7 @@ export function Step6Confirmation({
         <p className="text-xs font-bold text-foreground">What happens next?</p>
         {[
           "Enrollment record created with Pending status",
-          "Invoice auto-generated for PKR " + (feeResult?.finalFee?.toLocaleString() || "—"),
+          "Invoice auto-generated for " + (formatMoney(feeResult?.finalFee) || "—"),
           "Notification sent to parent/guardian",
           "Status → Confirmed once payment is received",
         ].map((item, index) => (

@@ -10,6 +10,7 @@ import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/us
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { formatDate } from "@/lib/utils";
 
 import RevenueChart from "@/tenant/features/dashboard/components/widgets/charts/RevenueChart";
 import FeeCollectionSummary from "@/tenant/features/dashboard/components/widgets/FeeCollectionSummary";
@@ -248,7 +249,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                   <td className="px-3 py-2.5 text-muted-foreground">{PKR(inv.baseFee)}</td>
                   <td className="px-3 py-2.5 text-warning">{inv.discountAmt > 0 ? `-${PKR(inv.discountAmt)}` : "—"}</td>
                   <td className="px-3 py-2.5 font-semibold text-foreground">{PKR(inv.finalAmt)}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{inv.dueDate}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{formatDate(inv.dueDate)}</td>
                   <td className="px-3 py-2.5">
                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${STATUS_COLOR[inv.status as InvoiceStatus] ?? "bg-muted text-muted-foreground"}`}>
                       {t(`finance.invoiceStatus.${inv.status as InvoiceStatus}` as any)}

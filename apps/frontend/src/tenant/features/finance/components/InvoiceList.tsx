@@ -12,7 +12,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { INVOICE_STATUSES, Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
-import { formatMoney, type AppTranslationKey } from "@mms/shared";
+import { formatMoney, formatDate, type AppTranslationKey } from "@mms/shared";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
@@ -242,7 +242,7 @@ export function InvoiceList({
                       )}
                       {showDueDate && (
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className={`text-[12px] ${invoice.status === "overdue" ? "text-destructive font-semibold" : "text-muted-foreground"}`}>{invoice.dueDate}</span>
+                          <span className={`text-[12px] ${invoice.status === "overdue" ? "text-destructive font-semibold" : "text-muted-foreground"}`}>{formatDate(invoice.dueDate)}</span>
                         </td>
                       )}
                       <td className="px-4 py-3">

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
  * @returns Formatted date.
  */
 import { formatDate as sharedFormatDate } from "@/lib/utils";
+import { formatMoney } from "@mms/shared";
 
 function formatDate(date?: string): string {
   return sharedFormatDate(date);
@@ -96,7 +97,7 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
                     </div>
                     <div className="flex items-center gap-1 text-xs font-bold text-foreground">
                       <DollarSign className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                      PKR {session.baseFee?.toLocaleString()}
+                      {formatMoney(session.baseFee)}
                     </div>
                   </div>
                   {session.classes && session.classes.length > 0 && (

@@ -9,7 +9,7 @@ import { formatMoney } from "@mms/shared";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import MessageComposer from "@/components/ui/MessageComposer";
-import { getInitials } from "@/lib/utils";
+import { getInitials, formatDate } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 export interface OverdueStudent {
@@ -182,7 +182,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                     </td>
                     <td className="px-3 py-2.5">
                       <div>
-                        <p className="text-xs text-foreground m-0">{overdueStudent.dueDate}</p>
+                        <p className="text-xs text-foreground m-0">{formatDate(overdueStudent.dueDate)}</p>
                         <p className="text-[10px] text-destructive font-semibold m-0">
                           {t("dashboard.widgets.daysOverdue", { count: overdueStudent.daysOverdue })}
                         </p>

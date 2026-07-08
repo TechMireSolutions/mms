@@ -12,6 +12,7 @@ import { Step4ClassAssignment } from "@/tenant/features/enrollments/components/w
 import { Step5FeeCalculation } from "@/tenant/features/enrollments/components/wizard/Step5FeeCalculation";
 import { Step6Confirmation } from "@/tenant/features/enrollments/components/wizard/Step6Confirmation";
 import { suggestClass, runFullEligibility, Enrollment, CalculatedFee } from '@/lib/data/enrollmentData';
+import { formatMoney } from "@mms/shared";
 import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
@@ -112,7 +113,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
       customFields: customFieldValues,
       timeline: [
         { ts: new Date().toISOString(), event: "Enrollment created", by: "Admin" },
-        { ts: new Date().toISOString(), event: `Invoice generated (PKR ${feeResult.finalFee.toLocaleString()})`, by: "System" },
+        { ts: new Date().toISOString(), event: `Invoice generated (${formatMoney(feeResult.finalFee)})`, by: "System" },
       ],
     } as unknown as Enrollment;
     setDone(true);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2, Clock, HardDriveDownload, RefreshCw, AlertTriangle } from 'lucide-react';
-import { BACKUP_HISTORY_MAX, type WorkspaceBackupRecord } from '@mms/shared';
+import { BACKUP_HISTORY_MAX, formatDate, type WorkspaceBackupRecord } from '@mms/shared';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
@@ -88,7 +88,7 @@ export default function BackupHistorySection({
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0">
-                  <span className="text-xs font-medium text-muted-foreground/70">{backup.date}</span>
+                  <span className="text-xs font-medium text-muted-foreground/70">{formatDate(backup.date)}</span>
                   
                   <div className="flex items-center gap-2">
                     <Button

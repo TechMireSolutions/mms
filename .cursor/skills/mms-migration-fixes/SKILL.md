@@ -35,6 +35,7 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | REST collections migration | Migrated remaining frontend useLiveCollection lookups to TanStack Query REST endpoints |
 | Sentry client-side error reporting | Configured and integrated Sentry with global React ErrorBoundary fallback rendering in `main.tsx` |
 | RBAC read hardening | Hardened `rbacService.ts` mapping and logic by explicitly checking permissions for `user_activity_logs` and `backups` collection reads/writes |
+| Date & Money formatting consistency DRY | Refactored raw date string renderings and manual `.toLocaleString()` calls on currency values in the frontend to resolve through settings-aware `formatDate` and `formatMoney` helpers, eliminating duplicate formatting code |
 
 
 ## Open priorities

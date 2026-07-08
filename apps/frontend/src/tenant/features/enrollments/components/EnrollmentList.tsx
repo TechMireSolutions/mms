@@ -11,6 +11,7 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { formatDate, formatMoney } from "@mms/shared";
 
 const PAGE_SIZE = 12;
 
@@ -216,11 +217,11 @@ export function EnrollmentList({
                         <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{enrollment.className || "—"}</td>
                       )}
                       {showEnrolledDate && (
-                        <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{enrollment.enrolledDate}</td>
+                        <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{formatDate(enrollment.enrolledDate)}</td>
                       )}
                       {showFinalFee && (
                         <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">
-                          PKR {enrollment.finalFee?.toLocaleString()}
+                          {formatMoney(enrollment.finalFee)}
                           {enrollment.discountPct > 0 && (
                             <span className="ml-1 text-[10px] text-success font-normal" aria-label={`Discount percentage: ${enrollment.discountPct} percent`}>–{enrollment.discountPct}%</span>
                           )}

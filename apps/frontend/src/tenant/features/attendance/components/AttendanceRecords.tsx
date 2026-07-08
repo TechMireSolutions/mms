@@ -16,6 +16,7 @@ import { StatusBadge } from "@/tenant/features/attendance/components/StatusBadge
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import type { AppTranslationKey } from "@mms/shared";
+import { formatDate } from "@/lib/db";
 
 const PAGE_SIZE = 15;
 
@@ -208,7 +209,7 @@ export function AttendanceRecords({
               ) : paginatedRecords.map((attendanceRecord) => (
                 <motion.tr key={attendanceRecord.id} layout className="hover:bg-muted/20 transition-colors">
                   {showDate && (
-                    <td className="px-3 py-2.5 font-mono text-xs text-foreground whitespace-nowrap">{attendanceRecord.date}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-foreground whitespace-nowrap">{formatDate(attendanceRecord.date, true)}</td>
                   )}
                   {showClass && (
                     <td className="px-3 py-2.5 text-foreground whitespace-nowrap">{classLabel(attendanceRecord.classId)}</td>

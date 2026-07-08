@@ -10,7 +10,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUsersCollection } from "@/tenant/features/users/hooks/useUsersApi";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import type { SystemUser } from "@mms/shared";
+import { formatDate, type SystemUser } from "@mms/shared";
 import { useHasanatRedemptionsCollection, useHasanatMutations } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -246,7 +246,7 @@ export function RedemptionTracker({
                       </td>
                     )}
                     {showDate && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{redemption.date}</td>
+                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{formatDate(redemption.date)}</td>
                     )}
                     {showApprovedBy && (
                       <td className="px-4 py-3 text-[12px] text-muted-foreground">{redemption.approvedBy || "—"}</td>

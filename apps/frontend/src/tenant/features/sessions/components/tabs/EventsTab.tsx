@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { formatDate } from "@/lib/db";
 
 const TYPE_COLORS: Record<string, string> = {
   ceremony:   "bg-warning/10 text-warning border-warning/20",
@@ -169,7 +170,7 @@ export function EventsTab({ session, onUpdate }: EventsTabProps) {
                     </div>
                   </header>
                   <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground mb-2">
-                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.date}</span>
+                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" />{formatDate(sessionEvent.date, true)}</span>
                     {sessionEvent.time && <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.time}</span>}
                     {sessionEvent.location && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.location}</span>}
                   </div>

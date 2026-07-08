@@ -7,7 +7,7 @@ import { PAYMENT_METHOD_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { formatMoney } from "@mms/shared";
+import { formatMoney, formatDate } from "@mms/shared";
 
 
 
@@ -133,7 +133,7 @@ export function PaymentTracker({
                     className="hover:bg-muted/20 transition-colors"
                   >
                     {showDate && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{payment.date}</td>
+                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</td>
                     )}
                     {showStudent && (
                       <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{payment.studentName}</td>

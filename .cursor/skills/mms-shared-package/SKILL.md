@@ -1,6 +1,6 @@
 ---
 name: mms-shared-package
-description: Extends @mms/shared with types, settings defaults, contact schemas, and pure utilities shared by frontend and backend. Use when adding shared types, formatDate, parsePhoneNumber, settings interfaces, or moving duplicated logic to packages/shared.
+description: Extends @mms/shared with types, settings defaults, contact schemas, and pure utilities shared by frontend and backend. Use when adding shared types, formatDate, formatMoney, parsePhoneNumber, settings interfaces, or moving duplicated logic to packages/shared.
 ---
 
 # @mms/shared Package Workflow
@@ -15,7 +15,7 @@ packages/shared/src/
   brandingTheme.ts      # CSS token derivation, light/dark surfaces, WCAG AA contrast
   logoBrandColors.ts    # Accessible primary/secondary from logo palette
   logoPaletteSampling.ts
-  utils.ts              # formatDate, parsePhoneNumber, toTitleCase, applyTitleCaseRecursive, …
+  utils.ts              # formatDate, formatMoney, parsePhoneNumber, toTitleCase, applyTitleCaseRecursive, …
 ```
 
 Unit tests: `brandingTheme.test.ts`, `logoBrandColors.test.ts` — add tests for new pure helpers.

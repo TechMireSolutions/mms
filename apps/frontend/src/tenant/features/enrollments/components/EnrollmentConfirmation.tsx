@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { formatDate } from "@/lib/utils";
+import { formatMoney } from "@mms/shared";
 import { motion } from "framer-motion";
 import { CheckCircle2, Tag, Loader2, BookOpen, User, Clock, MapPin } from "lucide-react";
 import { Student, StudentSession } from '@/lib/data/studentsData';
@@ -25,7 +26,7 @@ function FeeRow({ label, amount, currency, isSub = false, isTotal = false, isDis
     <div className={`flex items-center justify-between py-2 ${isTotal ? "border-t border-border mt-1 pt-3" : ""}`}>
       <span className={`text-sm ${isTotal ? "font-bold text-foreground" : isSub ? "text-muted-foreground text-xs pl-3" : "text-foreground"}`}>{label}</span>
       <span className={`text-sm font-semibold ${isTotal ? "text-lg font-bold text-foreground" : isDiscount ? "text-success" : "text-foreground"}`}>
-        {isDiscount && amount > 0 ? "−" : ""}{currency} {Math.abs(amount).toLocaleString()}
+        {isDiscount && amount > 0 ? "−" : ""}{formatMoney(Math.abs(amount), currency)}
       </span>
     </div>
   );

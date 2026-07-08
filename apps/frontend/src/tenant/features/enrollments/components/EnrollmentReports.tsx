@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } fro
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { Users, DollarSign, TrendingUp, BookOpen } from "lucide-react";
 import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
+import { formatMoney } from "@mms/shared";
 
 interface KPIProps {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
@@ -95,7 +96,7 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
         <KPI icon={Users}      label="Total Enrollments" value={total}    sub={`${confirmed} confirmed`} />
         <KPI icon={TrendingUp} label="Confirmed"          value={confirmed} sub={`${pending} pending`}   color="bg-success/10 text-success" />
         <KPI icon={BookOpen}   label="Cancelled"          value={cancelled} sub="This period"            color="bg-destructive/10 text-destructive" />
-        <KPI icon={DollarSign} label="Revenue Due"        value={`PKR ${totalFees.toLocaleString()}`} sub={`Paid: PKR ${paidFees.toLocaleString()}`} color="bg-warning/10 text-warning" />
+        <KPI icon={DollarSign} label="Revenue Due"        value={formatMoney(totalFees)} sub={`Paid: ${formatMoney(paidFees)}`} color="bg-warning/10 text-warning" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -150,7 +151,7 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
                   <p className="text-sm font-semibold text-foreground">{sessionStats.name}</p>
                   <p className="text-xs text-muted-foreground">{sessionStats.count} enrollment{sessionStats.count !== 1 ? "s" : ""}</p>
                 </div>
-                <p className="text-sm font-bold text-primary">PKR {sessionStats.revenue.toLocaleString()}</p>
+                <p className="text-sm font-bold text-primary">{formatMoney(sessionStats.revenue)}</p>
               </div>
             ))
           )}
